@@ -275,20 +275,46 @@ function renderNowcast(mins){
 
 function renderStorms(storms){
   const sec=document.getElementById("stormSection");
-  const at=(storms||[]).filter(s=>s.id&&s.id.slice(0,2)==="al");
-  if(!at.length){sec.style.display="none";return}
-  const cls={TD:"Tropical Depression",TS:"Tropical Storm",HU:"Hurricane",MH:"Major Hurricane",PTC:"Post-Tropical Cyclone",STD:"Subtropical Depression",STS:"Subtropical Storm"};
-  document.getElementById("stormRows").innerHTML=at.map(s=>{
-    const d=Math.round(distMi(LAT,LON,s.latitudeNumeric,s.longitudeNumeric));
-    const mph=Math.round(+s.intensity*1.151), near=d<500;
+  if(!storms||!storms.length){sec.style.display="none";return}
+  document.getElementById("stormRows").innerHTML=storms.map(s=>{
+    const d=Math.round(distMi(LAT,LON,s.lat,s.lon)), near=d<500;
+    const meta=[s.mph?"winds "+s.mph+" mph":null, s.mb?s.mb+" mb":null,
+      s.dirDeg!=null?"moving "+dirTxt(s.dirDeg)+" "+s.spd+" mph":"stationary",
+      s.adv?"adv "+s.adv:null].filter(Boolean).join(" · ");
     return `<div class="storm-row">
-      <div class="s-name">${cls[s.classification]||s.classification} ${s.name}${near?' <em>· within 500 mi</em>':''}</div>
+      <div class="s-name">${s.type} ${s.name}${near?' <em>· within 500 mi</em>':''}</div>
       <div class="s-dist ${near?'storm-near':''}">${d.toLocaleString()} mi away</div>
-      <div class="s-meta">winds ${mph} mph · ${s.pressure} mb · moving ${dirTxt(s.movementDir)} ${s.movementSpeed} mph${s.adv?' · adv '+s.adv:''}</div>
+      <div class="s-meta">${meta}</div>
     </div>`;
   }).join("");
-  document.getElementById("stormNote").textContent=at.length+(at.length>1?" active systems":" active system");
+  document.getElementById("stormNote").textContent=storms.length+(storms.length>1?" active systems":" active system");
   sec.style.display="";
+}
+
+async function fetchStorms(){
+  try{
+    const lr=await fetch("https://api.weather.gov/products/types/TCP");
+    const lj=await lr.json();
+    const cutoff=Date.now()-9*3.6e6;
+    const items=(lj["@graph"]||[]).filter(p=>new Date(p.issuanceTime).getTime()>cutoff).slice(0,10);
+    const seen={},out=[];
+    for(const it of items){
+      const pr=await fetch("https://api.weather.gov/products/"+it.id);
+      const t=(await pr.json()).productText||"";
+      const bin=(t.match(/TCPAT(\d)/)||[])[1];
+      if(!bin||seen[bin])continue;
+      seen[bin]=1;
+      const m=t.match(/(Hurricane|Tropical Storm|Tropical Depression|Post-Tropical Cyclone|Subtropical Storm|Subtropical Depression|Potential Tropical Cyclone) ([A-Za-z][A-Za-z\-]*)(?: Intermediate)? Advisory Number (\w+)/);
+      const loc=t.match(/LOCATION\.\.\.([\d.]+)N\s+([\d.]+)W/);
+      const wind=t.match(/MAXIMUM SUSTAINED WINDS\.\.\.(\d+) MPH/);
+      const mov=t.match(/PRESENT MOVEMENT\.\.\.[A-Z]+ OR (\d+) DEGREES AT (\d+) MPH/);
+      const pres=t.match(/MINIMUM CENTRAL PRESSURE\.\.\.(\d+) MB/);
+      if(!m||!loc)continue;
+      out.push({type:m[1],name:m[2],adv:m[3],lat:+loc[1],lon:-loc[2],
+        mph:wind?+wind[1]:null,dirDeg:mov?+mov[1]:null,spd:mov?+mov[2]:null,mb:pres?+pres[1]:null});
+    }
+    return out;
+  }catch(e){return null}
 }
 
 function renderTides(preds){
@@ -481,12 +507,12 @@ async function refresh(){
   try{
     const yest=new Date(Date.now()-864e5);
     const bd=yest.toLocaleDateString("en-CA",{timeZone:"America/New_York"}).replace(/-/g,"");
-    const [wr,mr,tr,ar,sr]=await Promise.all([
+    const stormsP=fetchStorms();
+    const [wr,mr,tr,ar]=await Promise.all([
       fetch(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&hourly=temperature_2m,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,wind_speed_10m_max,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York&forecast_days=7&minutely_15=precipitation&forecast_minutely_15=12`),
       fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${MLAT}&longitude=${MLON}&daily=wave_height_max,wave_period_max&timezone=America%2FNew_York&forecast_days=1&length_unit=imperial`),
       fetch(`https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&datum=MLLW&station=${TIDE_STA}&time_zone=lst_ldt&units=english&interval=hilo&format=json&begin_date=${bd}&range=96`),
-      fetch(`https://api.weather.gov/alerts/active?point=${LAT},${LON}`),
-      fetch(`https://www.nhc.noaa.gov/CurrentStorms.json`)
+      fetch(`https://api.weather.gov/alerts/active?point=${LAT},${LON}`)
     ]);
     if(!wr.ok) throw new Error("wx fetch failed");
     const wj=await wr.json();
@@ -496,8 +522,7 @@ async function refresh(){
     try{const tj=await tr.json();tides=tj.predictions||null}catch(e){}
     let alerts=null;
     try{const aj=await ar.json();alerts=(aj.features||[]).map(f=>({event:f.properties.event,severity:f.properties.severity,ends:f.properties.ends,expires:f.properties.expires}))}catch(e){}
-    let storms=null;
-    try{const sj=await sr.json();storms=(sj.activeStorms||[]).map(s=>({id:s.id,name:s.name,classification:s.classification,intensity:s.intensity,pressure:s.pressure,latitudeNumeric:s.latitudeNumeric,longitudeNumeric:s.longitudeNumeric,movementDir:s.movementDir,movementSpeed:s.movementSpeed,adv:s.publicAdvisory&&s.publicAdvisory.advNum}))}catch(e){}
+    const storms=await stormsP;
     const nowcast=wj.minutely_15||null;
     const hi=wj.hourly.time.findIndex(t=>t>=wj.current.time.slice(0,13)+":00");
     const i0=Math.max(0,hi), s={
