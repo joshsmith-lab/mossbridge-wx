@@ -40,6 +40,15 @@ body{font-family:var(--disp);color:var(--ink);background:var(--paper);line-heigh
 .masthead{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);
   font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;gap:10px}
 .masthead .live{display:flex;align-items:center;gap:6px;white-space:nowrap;cursor:pointer}
+.masthead .addr{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.addr-short{display:none}
+@media(max-width:520px){
+  .addr-full{display:none}.addr-short{display:inline}
+  .masthead{font-size:10px;letter-spacing:.09em}
+  .chip{font-size:10.5px;padding:4px 9px}
+  .now{margin-top:18px}
+  .verdict{margin-top:15px}
+}
 .live-dot{width:6px;height:6px;border-radius:50%;background:var(--marker);animation:pulse 2.4s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 .now{display:flex;align-items:flex-start;gap:8px;margin-top:22px}
@@ -118,7 +127,7 @@ section{padding:26px 20px 0}
 
 <header class="sky" id="sky">
   <div class="masthead">
-    <span>8216 Moss Bridge Ct · Porters Neck</span>
+    <span class="addr"><span class="addr-full">8216 Moss Bridge Ct · Porters Neck</span><span class="addr-short">Moss Bridge · Porters Neck</span></span>
     <span class="live" id="refreshBtn" title="Tap to refresh"><span class="live-dot"></span><span id="stamp">—</span></span>
   </div>
   <div class="now">
