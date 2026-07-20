@@ -66,6 +66,24 @@ body{font-family:var(--disp);color:var(--ink);background:var(--paper);line-heigh
 .sky.night .chip{background:rgba(242,239,230,.13)}
 .arc-wrap{margin:4px -20px 0}
 .arc-wrap svg{display:block;width:100%;height:auto}
+.alert-strip{display:none;background:var(--marker);color:#FDF6F2;font-family:var(--mono);font-size:11px;
+  letter-spacing:.08em;text-transform:uppercase;padding:9px 12px;border-radius:10px;margin-bottom:14px}
+.alert-strip.on{display:block}
+.nowcast{display:none;margin:14px 0 0;padding:10px 12px;border-radius:10px;
+  background:rgba(62,124,166,.14);font-family:var(--mono);font-size:12px}
+.nowcast.on{display:flex;align-items:center;gap:12px;justify-content:space-between}
+.sky.night .nowcast{background:rgba(191,215,228,.16)}
+.nc-bars{display:flex;gap:3px;align-items:flex-end;height:20px}
+.nc-bars i{width:8px;border-radius:2px;background:#3E7CA6;display:block}
+.sky.night .nc-bars i{background:#9FC6DC}
+.storm-row{display:grid;grid-template-columns:1fr auto;gap:3px 12px;padding:11px 0;
+  border-bottom:1px solid var(--line);align-items:baseline}
+.storm-row:last-child{border-bottom:none}
+.storm-row .s-name{font-weight:600;font-size:15.5px;letter-spacing:-.01em}
+.storm-row .s-name em{font-style:normal;color:var(--marker)}
+.storm-row .s-dist{font-family:var(--mono);font-size:11px;color:var(--ink-faint);text-align:right;white-space:nowrap}
+.storm-row .s-dist.storm-near{color:var(--marker);font-weight:600}
+.storm-row .s-meta{grid-column:1/-1;font-family:var(--mono);font-size:11.5px;color:var(--ink-soft)}
 
 section{padding:26px 20px 0}
 .eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
@@ -126,6 +144,7 @@ section{padding:26px 20px 0}
 <div class="app">
 
 <header class="sky" id="sky">
+  <div class="alert-strip" id="alertStrip" role="alert"></div>
   <div class="masthead">
     <span class="addr"><span class="addr-full">8216 Moss Bridge Ct · Porters Neck</span><span class="addr-short">Moss Bridge · Porters Neck</span></span>
     <span class="live" id="refreshBtn" title="Tap to refresh"><span class="live-dot"></span><span id="stamp">—</span></span>
@@ -140,6 +159,7 @@ section{padding:26px 20px 0}
   </div>
   <p class="verdict" id="verdict">Loading conditions…</p>
   <div class="chips" id="chips"></div>
+  <div class="nowcast" id="nowcast"><span id="ncText"></span><span class="nc-bars" id="ncBars"></span></div>
   <div class="arc-wrap"><svg id="arcSvg" viewBox="0 0 760 150" xmlns="http://www.w3.org/2000/svg" aria-label="Sun position between sunrise and sunset"></svg></div>
 </header>
 
@@ -154,6 +174,11 @@ section{padding:26px 20px 0}
 <section id="tideSection">
   <div class="eyebrow"><b>Tide · Wrightsville Beach</b><span id="tideNote">loading…</span></div>
   <svg id="tideSvg" class="tide-svg" viewBox="0 0 760 150" xmlns="http://www.w3.org/2000/svg" aria-label="Tide curve, next 27 hours"></svg>
+</section>
+
+<section id="stormSection" style="display:none">
+  <div class="eyebrow"><b>Tropics · Atlantic</b><span id="stormNote"></span></div>
+  <div id="stormRows"></div>
 </section>
 
 <div class="cards">
@@ -186,7 +211,7 @@ section{padding:26px 20px 0}
   <div id="weekRows"></div>
 </div>
 
-<p class="foot">Forecast: Open-Meteo (NWS-blended), grid cell over Porters Neck · Marine: buoy grid off Mason Inlet · Tides: NOAA, Wrightsville Beach station 8658163.<br>
+<p class="foot">Forecast: Open-Meteo (NWS-blended), grid cell over Porters Neck · Marine: buoy grid off Mason Inlet · Tides: NOAA, Wrightsville Beach station 8658163 · Alerts: National Weather Service · Tropics: National Hurricane Center.<br>
 Refreshes on open and when you return to the app. Tap the timestamp to force it.</p>
 </div>
 
@@ -213,6 +238,58 @@ const hh=t=>{const h=+t.slice(11,13);return h===0?"12a":h===12?"12p":h<12?h+"a":
 const dayName=s=>new Date(s+"T12:00").toLocaleDateString("en-US",{weekday:"short"});
 const mmdd=s=>new Date(s+"T12:00").toLocaleDateString("en-US",{month:"numeric",day:"numeric"});
 const clock=d=>{let h=d.getHours(),m=d.getMinutes(),ap=h<12?"a":"p";h=h%12||12;return h+":"+String(m).padStart(2,"0")+ap};
+const toRad=x=>x*Math.PI/180;
+const distMi=(la1,lo1,la2,lo2)=>{const dLa=toRad(la2-la1),dLo=toRad(lo2-lo1);
+  const a=Math.sin(dLa/2)**2+Math.cos(toRad(la1))*Math.cos(toRad(la2))*Math.sin(dLo/2)**2;
+  return 2*3959*Math.asin(Math.sqrt(a))};
+
+function renderAlerts(alerts){
+  const el=document.getElementById("alertStrip");
+  if(!alerts||!alerts.length){el.className="alert-strip";el.textContent="";return}
+  const sev={Extreme:0,Severe:1,Moderate:2,Minor:3};
+  const a=[...alerts].sort((x,y)=>(sev[x.severity]??4)-(sev[y.severity]??4))[0];
+  const until=a.ends||a.expires;
+  let t=a.event;
+  if(until) t+=" · until "+clock(new Date(until));
+  if(alerts.length>1) t+=" · +"+(alerts.length-1)+" more";
+  el.textContent=t;el.className="alert-strip on";
+}
+
+function renderNowcast(mins){
+  const el=document.getElementById("nowcast");
+  if(!mins||!mins.time||!mins.precipitation){el.className="nowcast";return}
+  const th=0.1,p=mins.precipitation,n=Math.min(10,p.length);
+  let first=-1,last=-1;
+  for(let i=0;i<n;i++){if(p[i]>=th){if(first<0)first=i;last=i}}
+  if(first<0){el.className="nowcast";return}
+  const st=new Date(mins.time[first]),en=(last<n-1)?new Date(new Date(mins.time[last]).getTime()+9e5):null;
+  let txt;
+  if(first===0) txt=en?"Rain now, ending ~"+clock(en):"Rain now, continuing 2h+";
+  else txt=en?"Rain ~"+clock(st)+"–"+clock(en):"Rain starting ~"+clock(st);
+  document.getElementById("ncText").textContent=txt;
+  const mx=Math.max(...p.slice(0,n),0.5);
+  document.getElementById("ncBars").innerHTML=Array.from({length:n},(_,i)=>
+    `<i style="height:${Math.max(2,Math.round(p[i]/mx*20))}px;opacity:${p[i]>=th?1:.3}"></i>`).join("");
+  el.className="nowcast on";
+}
+
+function renderStorms(storms){
+  const sec=document.getElementById("stormSection");
+  const at=(storms||[]).filter(s=>s.id&&s.id.slice(0,2)==="al");
+  if(!at.length){sec.style.display="none";return}
+  const cls={TD:"Tropical Depression",TS:"Tropical Storm",HU:"Hurricane",MH:"Major Hurricane",PTC:"Post-Tropical Cyclone",STD:"Subtropical Depression",STS:"Subtropical Storm"};
+  document.getElementById("stormRows").innerHTML=at.map(s=>{
+    const d=Math.round(distMi(LAT,LON,s.latitudeNumeric,s.longitudeNumeric));
+    const mph=Math.round(+s.intensity*1.151), near=d<500;
+    return `<div class="storm-row">
+      <div class="s-name">${cls[s.classification]||s.classification} ${s.name}${near?' <em>· within 500 mi</em>':''}</div>
+      <div class="s-dist ${near?'storm-near':''}">${d.toLocaleString()} mi away</div>
+      <div class="s-meta">winds ${mph} mph · ${s.pressure} mb · moving ${dirTxt(s.movementDir)} ${s.movementSpeed} mph${s.adv?' · adv '+s.adv:''}</div>
+    </div>`;
+  }).join("");
+  document.getElementById("stormNote").textContent=at.length+(at.length>1?" active systems":" active system");
+  sec.style.display="";
+}
 
 function renderTides(preds){
   const sec=document.getElementById("tideSection");
@@ -334,6 +411,9 @@ function render(d,live){
   document.getElementById("hourlyNote").textContent=maxPop<20?"rain unlikely next 24h":"blue bars = rain chance";
 
   const tide=renderTides(d.tides);
+  renderAlerts(d.alerts);
+  renderNowcast(d.nowcast);
+  renderStorms(d.storms);
 
   const g=Math.round(c.wind_gusts_10m), wv=m.wave_height_max;
   const wl=document.getElementById("waterLead");
@@ -401,10 +481,12 @@ async function refresh(){
   try{
     const yest=new Date(Date.now()-864e5);
     const bd=yest.toLocaleDateString("en-CA",{timeZone:"America/New_York"}).replace(/-/g,"");
-    const [wr,mr,tr]=await Promise.all([
-      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&hourly=temperature_2m,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,wind_speed_10m_max,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York&forecast_days=7`),
+    const [wr,mr,tr,ar,sr]=await Promise.all([
+      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&hourly=temperature_2m,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,wind_speed_10m_max,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York&forecast_days=7&minutely_15=precipitation&forecast_minutely_15=12`),
       fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${MLAT}&longitude=${MLON}&daily=wave_height_max,wave_period_max&timezone=America%2FNew_York&forecast_days=1&length_unit=imperial`),
-      fetch(`https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&datum=MLLW&station=${TIDE_STA}&time_zone=lst_ldt&units=english&interval=hilo&format=json&begin_date=${bd}&range=96`)
+      fetch(`https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&datum=MLLW&station=${TIDE_STA}&time_zone=lst_ldt&units=english&interval=hilo&format=json&begin_date=${bd}&range=96`),
+      fetch(`https://api.weather.gov/alerts/active?point=${LAT},${LON}`),
+      fetch(`https://www.nhc.noaa.gov/CurrentStorms.json`)
     ]);
     if(!wr.ok) throw new Error("wx fetch failed");
     const wj=await wr.json();
@@ -412,12 +494,17 @@ async function refresh(){
     try{const mj=await mr.json();marine={wave_height_max:mj.daily.wave_height_max[0],wave_period_max:mj.daily.wave_period_max[0]}}catch(e){}
     let tides=null;
     try{const tj=await tr.json();tides=tj.predictions||null}catch(e){}
+    let alerts=null;
+    try{const aj=await ar.json();alerts=(aj.features||[]).map(f=>({event:f.properties.event,severity:f.properties.severity,ends:f.properties.ends,expires:f.properties.expires}))}catch(e){}
+    let storms=null;
+    try{const sj=await sr.json();storms=(sj.activeStorms||[]).map(s=>({id:s.id,name:s.name,classification:s.classification,intensity:s.intensity,pressure:s.pressure,latitudeNumeric:s.latitudeNumeric,longitudeNumeric:s.longitudeNumeric,movementDir:s.movementDir,movementSpeed:s.movementSpeed,adv:s.publicAdvisory&&s.publicAdvisory.advNum}))}catch(e){}
+    const nowcast=wj.minutely_15||null;
     const hi=wj.hourly.time.findIndex(t=>t>=wj.current.time.slice(0,13)+":00");
     const i0=Math.max(0,hi), s={
       time:wj.hourly.time.slice(i0,i0+24),temp:wj.hourly.temperature_2m.slice(i0,i0+24),
       pop:wj.hourly.precipitation_probability.slice(i0,i0+24),wind:wj.hourly.wind_speed_10m.slice(i0,i0+24),
       gust:wj.hourly.wind_gusts_10m.slice(i0,i0+24),uv:wj.hourly.uv_index.slice(i0,i0+24)};
-    const data={current:wj.current,daily:wj.daily,hourly:s,marine,tides};
+    const data={current:wj.current,daily:wj.daily,hourly:s,marine,tides,alerts,storms,nowcast};
     render(data,true);
     try{localStorage.setItem("mbwx",JSON.stringify(data))}catch(e){}
   }catch(e){
