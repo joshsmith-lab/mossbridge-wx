@@ -85,6 +85,7 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
   -webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:5px}
 .masthead .addr:active{opacity:.5}
 .masthead .addr svg{flex:0 0 auto;opacity:.6}
+.masthead .addr .addr-full,.masthead .addr .addr-short{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .addr-short{display:none}
 .live-dot{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 0 0 currentColor;
   animation:ping 2.8s var(--ease) infinite}
@@ -207,7 +208,7 @@ section{padding:28px 20px 0}
 
 @media(max-width:520px){
   .addr-full{display:none}.addr-short{display:inline}
-  .masthead{font-size:10px;letter-spacing:.1em}
+  .masthead{font-size:9.5px;letter-spacing:.07em}
   .chip{font-size:10.5px;padding:4px 9px}
   .now{margin-top:18px}
   .verdict{margin-top:16px}
@@ -304,12 +305,12 @@ Refreshes on open and when you return to the app. Tap the timestamp to force it.
 
 <script>
 const LOCS={
-  mb:{id:"mb",addrFull:"8216 Moss Bridge Ct · Porters Neck",addrShort:"Moss Bridge · Porters Neck",
+  mb:{id:"mb",addrFull:"8216 Moss Bridge Ct · Porters Neck",addrShort:"Moss Bridge Ct · Porters Neck",
       lat:34.2982,lon:-77.7896,scene:"marsh",
       marine:{lat:34.26,lon:-77.68},tide:8658163,tropics:true,
       outTitle:"On the water · Mason Inlet / ICW",
       foot:"Forecast: Open-Meteo (NWS-blended), grid cell over Porters Neck · Marine: buoy grid off Mason Inlet · Tides: NOAA, Wrightsville Beach station 8658163 · Alerts: National Weather Service · Tropics: National Hurricane Center."},
-  sp:{id:"sp",addrFull:"126 Bob Plumley Rd · Shady Spring",addrShort:"Bob Plumley · Shady Spring",
+  sp:{id:"sp",addrFull:"126 Bob Plumley Rd · Shady Spring",addrShort:"Bob Plumley Rd · Shady Spring",
       lat:37.8215,lon:-80.9942,scene:"ridge",
       outTitle:"Outside · Around the farm",
       foot:"Forecast: Open-Meteo (NWS-blended), grid cell over Shady Spring, WV · Alerts: National Weather Service."}
@@ -490,9 +491,9 @@ function renderScene(sunrise,sunset,now,cloud,dark,wind){
     const low=Math.sin(Math.PI*f)<.28;
     const disc=mix(low?"#F0A03C":"#F5C94D","#C8CFCE",veil*.72);
     if(veil<.85){glintX=x;glintCol=low?"#FFB86A":"#FFD98F";glintOp=1-veil}
-    body=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(38-veil*12).toFixed(0)}" fill="url(#sunglow)" opacity="${(1-veil*.8).toFixed(2)}"/>
-      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13" fill="${disc}" opacity="${(1-veil**2.2*.94).toFixed(2)}"/>
-      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1" opacity="${(1-veil).toFixed(2)}"/>`;
+    body=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(38-veil*12).toFixed(0)}" fill="url(#sunglow)" opacity="${Math.max(.16,1-veil*.8).toFixed(2)}"/>
+      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13" fill="${disc}" opacity="${Math.max(.32,1-veil**2.2*.94).toFixed(2)}"/>
+      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1" opacity="${Math.max(.15,1-veil).toFixed(2)}"/>`;
   }
   if(mp.alt>-.05&&(!up||mp.alt>.21)){        /* daytime moon only when it's genuinely up there */
     /* moon by true altitude / azimuth, mapped east→west across the arc */
