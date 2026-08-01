@@ -72,6 +72,9 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes fall{to{transform:translate3d(-14px,880px,0)}}
 @keyframes twinkle{0%,100%{opacity:var(--o)}50%{opacity:calc(var(--o) * .28)}}
 .star{animation:twinkle 4s ease-in-out infinite}
+@keyframes sway{from{transform:skewX(-1.5deg)}to{transform:skewX(1.5deg)}}
+.ff{opacity:0;animation:ffl ease-in-out infinite}
+@keyframes ffl{0%,100%{opacity:0}35%{opacity:.85}55%{opacity:.1}70%{opacity:.6}}
 
 .masthead{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);
   font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;gap:10px;opacity:.82}
@@ -456,7 +459,7 @@ function renderSkyFx(altDeg,cloud,windDir,wet,storm){
 
 /* ── the scene: arc, sun / moon, marsh horizon ──────── */
 const appW=()=>clamp(document.querySelector(".app").clientWidth||760,320,760);
-function renderScene(sunrise,sunset,now,cloud,dark){
+function renderScene(sunrise,sunset,now,cloud,dark,wind){
   const W=appW(),H=Math.round(150+(760-W)*.10),GY=H-30;   /* taller frame on a phone */
   const sp=sunPos(now), mp=moonPos(now), mph=moonPhase(now);
   const arcTop=24, arcSpan=W-60;
@@ -468,11 +471,12 @@ function renderScene(sunrise,sunset,now,cloud,dark){
   const dayFrac=(now-sunrise)/(sunset-sunrise);
   const up=dayFrac>0&&dayFrac<1;
   const veil=clamp(cloud/100,0,1);               /* cloud hides the disc */
-  let body="";
+  let body="",glintX=null,glintCol="#FFD98F",glintOp=0;
   if(up){
     const f=clamp(dayFrac,0,1), x=px(f), y=py(f);
     const low=Math.sin(Math.PI*f)<.28;
     const disc=mix(low?"#F0A03C":"#F5C94D","#C8CFCE",veil*.72);
+    if(veil<.85){glintX=x;glintCol=low?"#FFB86A":"#FFD98F";glintOp=1-veil}
     body=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(38-veil*12).toFixed(0)}" fill="url(#sunglow)" opacity="${(1-veil*.8).toFixed(2)}"/>
       <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13" fill="${disc}" opacity="${(1-veil**2.2*.94).toFixed(2)}"/>
       <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1" opacity="${(1-veil).toFixed(2)}"/>`;
@@ -487,6 +491,7 @@ function renderScene(sunrise,sunset,now,cloud,dark){
     const sweep=waxing?(ill>.5?0:1):(ill>.5?1:0);
     const term=`M ${x} ${y-r} A ${Math.abs(k).toFixed(2)} ${r} 0 0 ${sweep} ${x} ${y+r} A ${r} ${r} 0 0 ${waxing?0:1} ${x} ${y-r} Z`;
     const mOp=up?clamp(.44-sp.alt*180/Math.PI*.016,.14,.44):1;
+    if(glintX==null&&!up){glintX=x;glintCol="#E8F1FA";glintOp=.8*(1-veil*.7)}
     body+=`<g opacity="${mOp.toFixed(2)}">
       <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="26" fill="url(#moonglow)"/>
       <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="${dark?'rgba(255,255,255,.10)':'rgba(255,255,255,.28)'}"/>
@@ -497,33 +502,89 @@ function renderScene(sunrise,sunset,now,cloud,dark){
     </g>`;
   }
 
-  /* marsh: water band, grass clumps, a treeline, a dock piling */
-  const ink=dark?"#03121A":"#0A2029";
-  let grass="",turf="";
+  /* marsh: hazy maritime treeline, loblollies, spartina bank, dock, heron */
+  const ink=dark?"#04141C":"#0B222C";
+  const base=GY+10;
   const g=mulberry(991);
-  for(let x=-8;x<W+14;){                       /* tall clumps with gaps between them */
-    const blades=3+Math.floor(g()*5);
-    for(let k=0;k<blades;k++){
-      const ht=6+g()*18, lean=(1.4+g()*4.2)*(g()<.5?-1:1);
-      grass+=`M ${x.toFixed(1)} ${GY+10} q ${(lean*.55).toFixed(1)} ${(-ht*.62).toFixed(1)} ${lean.toFixed(1)} ${(-ht).toFixed(1)} `;
-      x+=2.2+g()*2.4;
+
+  /* far canopy — soft rounded masses, atmospheric via low opacity */
+  let tl=`M -12 ${base+4} `, tx=-12;
+  while(tx<W+12){
+    const bw=26+g()*58, ph=7+g()*13;
+    tl+=`Q ${(tx+bw*.5).toFixed(1)} ${(base-ph-5).toFixed(1)} ${(tx+bw).toFixed(1)} ${(base-2-g()*4).toFixed(1)} `;
+    tx+=bw;
+  }
+  tl+=`L ${W+12} ${base+6} Z`;
+
+  /* loblolly pines: bare trunk, umbrella crown */
+  const lob=(x,s)=>{const cy=base-31*s;
+    return `<g fill="${ink}" opacity=".5">
+    <path d="M ${(x-.9*s).toFixed(1)} ${base+2} L ${(x-.45*s).toFixed(1)} ${cy.toFixed(1)} L ${(x+.45*s).toFixed(1)} ${cy.toFixed(1)} L ${(x+.9*s).toFixed(1)} ${base+2} Z"/>
+    <path d="M ${x.toFixed(1)} ${(base-14*s).toFixed(1)} l ${(6*s).toFixed(1)} ${(-3.2*s).toFixed(1)}" stroke="${ink}" stroke-width="${(1.1*s).toFixed(1)}" stroke-linecap="round" fill="none"/>
+    <ellipse cx="${x.toFixed(1)}" cy="${cy.toFixed(1)}" rx="${(10*s).toFixed(1)}" ry="${(4.3*s).toFixed(1)}"/>
+    <ellipse cx="${(x-5.5*s).toFixed(1)}" cy="${(cy+4.2*s).toFixed(1)}" rx="${(6.4*s).toFixed(1)}" ry="${(3*s).toFixed(1)}"/>
+    <ellipse cx="${(x+6*s).toFixed(1)}" cy="${(cy+3.8*s).toFixed(1)}" rx="${(5.6*s).toFixed(1)}" ry="${(2.7*s).toFixed(1)}"/>
+    <ellipse cx="${x.toFixed(1)}" cy="${(cy+2.2*s).toFixed(1)}" rx="${(7.5*s).toFixed(1)}" ry="${(3.3*s).toFixed(1)}"/></g>`};
+  const pines=lob(W*.07,.95)+lob(W*.135,.6)+lob(W*.885,.8);
+
+  /* spartina: tapered filled blades, clustered tufts with real gaps */
+  const blade=(bx,ht,lean)=>`M ${(bx-.8).toFixed(1)} ${base} Q ${(bx+lean*.3-.4).toFixed(1)} ${(base-ht*.62).toFixed(1)} ${(bx+lean).toFixed(1)} ${(base-ht).toFixed(1)} Q ${(bx+lean*.38+.6).toFixed(1)} ${(base-ht*.46).toFixed(1)} ${(bx+.8).toFixed(1)} ${base} Z `;
+  let mid=`M -8 ${base+2} `; tx=-8;
+  while(tx<W+8){const bw=18+g()*30, ph=2+g()*4.5;
+    mid+=`Q ${(tx+bw*.5).toFixed(1)} ${(base-ph).toFixed(1)} ${(tx+bw).toFixed(1)} ${(base-g()*2).toFixed(1)} `;tx+=bw}
+  mid+=`L ${W+8} ${base+3} Z`;
+  let midBlades="";
+  for(let x=-4;x<W+6;x+=10+g()*18) midBlades+=blade(x,4+g()*5,(g()-.5)*5);
+  const dkX=W*.8;                              /* keep the dock clear of grass */
+  let tufA="",tufB="",ti=0;
+  for(let x=-6;x<W+10;){
+    const cnt=6+Math.floor(g()*5); let t="";
+    for(let k=0;k<cnt;k++){
+      const ht=11+g()*19, lean=(4+g()*8)*(g()<.5?-1:1);
+      if(x<dkX-36||x>dkX+26)t+=blade(x,ht,lean);
+      x+=2.2+g()*2.6;
     }
-    x+=5+g()*12;
+    if(ti++%2)tufB+=t; else tufA+=t;
+    x+=10+g()*22;
   }
-  for(let x=-6;x<W+10;x+=1.9+g()*1.6){         /* short turf so the bank reads as one mass */
-    const ht=2.5+g()*4.5,lean=(g()-.5)*2.6;
-    turf+=`M ${x.toFixed(1)} ${GY+10} q ${(lean*.5).toFixed(1)} ${(-ht*.6).toFixed(1)} ${lean.toFixed(1)} ${(-ht).toFixed(1)} `;
+  const swayDur=clamp(8.5-wind*.22,2.8,8.5);
+  const swayAt=(dl)=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;animation:sway ${swayDur.toFixed(1)}s ease-in-out ${dl}s infinite alternate"`;
+
+  /* dock on pilings, right of frame */
+  const dx=W*.8;
+  const dock=`<g fill="${ink}">
+    <rect x="${(dx-30).toFixed(1)}" y="${(base-6.5).toFixed(1)}" width="52" height="2.4" rx="1.2"/>
+    ${[dx-25,dx-6,dx+14].map((p,i)=>`<rect x="${(p-1.2).toFixed(1)}" y="${(base-9.5-(i===1?1:0)).toFixed(1)}" width="2.4" height="${21+i*1.5}" rx="1.1"/>`).join("")}
+  </g>`;
+
+  /* great blue heron in the shallows */
+  const hx=W*.22;
+  const heron=`<g transform="translate(${hx.toFixed(1)} ${(base-26.5).toFixed(1)})" fill="${ink}">
+    <path d="M 0.8 6.4 L 6 4.4 C 7.6 3.6 9.2 4.2 9.6 5.6 C 9.9 6.8 9.3 7.9 8.6 8.7 C 7.4 10.2 7.1 12 8.2 13.4 C 9.4 15 11.6 15.4 13.6 16.2 C 16.4 17.2 18.6 18.4 20 20.2 L 22.3 23.6 C 20.9 24.1 19.4 23.9 18.2 23.4 C 16.2 25.6 13.2 26.4 10.8 25.6 C 9 24.9 8 23.3 8 21.6 C 8 19.8 8.6 18.2 8 16.4 C 7.3 14.3 6.1 12.4 6.1 10.2 C 6.1 8.7 6 7.3 5.4 6.6 Z"/>
+    <path d="M 12.1 25.9 L 11.5 34.3 M 14.9 25.6 L 15.5 29.8 L 15.1 34.3" stroke="${ink}" stroke-width="1.15" fill="none" stroke-linecap="round"/>
+  </g>
+  <ellipse cx="${(hx+13).toFixed(1)}" cy="${(base+8.6).toFixed(1)}" rx="10" ry="1.2" fill="${dark?'#EAF2FF':'#FFFFFF'}" opacity=".16"/>`;
+
+  /* light on the water */
+  let glint="";
+  if(glintX!=null&&glintOp>.05){
+    glint=`<g fill="${glintCol}">
+      <rect x="${(glintX-14).toFixed(1)}" y="${(GY+12.5).toFixed(1)}" width="28" height="1.6" rx=".8" opacity="${(.42*glintOp).toFixed(2)}"/>
+      <rect x="${(glintX-8).toFixed(1)}" y="${(GY+17).toFixed(1)}" width="16" height="1.4" rx=".7" opacity="${(.3*glintOp).toFixed(2)}"/>
+      <rect x="${(glintX-4.5).toFixed(1)}" y="${(GY+21.5).toFixed(1)}" width="9" height="1.2" rx=".6" opacity="${(.2*glintOp).toFixed(2)}"/></g>`;
   }
-  const pine=(x,s)=>`<path d="M ${x.toFixed(1)} ${GY+6} L ${x.toFixed(1)} ${(GY-27*s).toFixed(1)}
-    M ${x.toFixed(1)} ${(GY-27*s).toFixed(1)} l ${(-7*s).toFixed(1)} ${(9*s).toFixed(1)} l ${(4*s).toFixed(1)} 0 l ${(-6*s).toFixed(1)} ${(8*s).toFixed(1)} l ${(5*s).toFixed(1)} 0 l ${(-6.5*s).toFixed(1)} ${(9*s).toFixed(1)} l ${(21*s).toFixed(1)} 0
-    l ${(-6.5*s).toFixed(1)} ${(-9*s).toFixed(1)} l ${(5*s).toFixed(1)} 0 l ${(-6*s).toFixed(1)} ${(-8*s).toFixed(1)} l ${(4*s).toFixed(1)} 0 Z" fill="${ink}"/>`;
-  const trees=pine(W*.055,1)+pine(W*.105,.7)+pine(W*.145,.86)+pine(W*.93,.92)+pine(W*.885,.62);
-  /* ICW channel daymark on its piling */
-  const dx=W*.315, dock=`<g fill="${ink}" opacity=".92">
-    <rect x="${(dx-1.4).toFixed(1)}" y="${(GY-22).toFixed(1)}" width="2.8" height="34" rx="1.2"/>
-    <path d="M ${(dx-6).toFixed(1)} ${(GY-30).toFixed(1)} h 12 v 9 h -12 Z"/>
-    <rect x="${(dx+8).toFixed(1)}" y="${(GY-6).toFixed(1)}" width="2.2" height="18" rx="1"/>
-    <rect x="${(dx-11).toFixed(1)}" y="${(GY-2).toFixed(1)}" width="2.2" height="14" rx="1"/></g>`;
+  let sparkle="";
+  for(let i=0;i<5;i++)
+    sparkle+=`<rect x="${(20+g()*(W-40)).toFixed(1)}" y="${(GY+12+g()*12).toFixed(1)}" width="${(6+g()*14).toFixed(1)}" height="1" rx=".5" fill="#FFFFFF" opacity="${(.07+g()*.08).toFixed(2)}"/>`;
+
+  /* gulls by day, fireflies after dark */
+  const gull=(gx,gy,s,o)=>`<path d="M ${(gx-5*s).toFixed(1)} ${gy.toFixed(1)} Q ${(gx-2.2*s).toFixed(1)} ${(gy-3*s).toFixed(1)} ${gx.toFixed(1)} ${gy.toFixed(1)} Q ${(gx+2.2*s).toFixed(1)} ${(gy-3*s).toFixed(1)} ${(gx+5*s).toFixed(1)} ${gy.toFixed(1)}" fill="none" stroke="currentColor" stroke-width="${(1.3*s).toFixed(1)}" stroke-linecap="round" opacity="${o}"/>`;
+  const gulls=up&&cloud<70?gull(W*.40,GY-70,1,".3")+gull(W*.455,GY-82,.72,".26"):"";
+  let flies="";
+  if(dark&&!PRM){const fr=mulberry(80126);
+    for(let i=0;i<7;i++)
+      flies+=`<circle cx="${(10+fr()*(W-20)).toFixed(1)}" cy="${(base-4-fr()*30).toFixed(1)}" r="1.3" fill="#FFE9A0" class="ff" style="animation-duration:${(3.5+fr()*3.5).toFixed(1)}s;animation-delay:-${(fr()*6).toFixed(1)}s"/>`;
+  }
 
   document.getElementById("sceneSvg").setAttribute("viewBox",`0 0 ${W} ${H}`);
   document.getElementById("sceneSvg").innerHTML=`
@@ -535,14 +596,20 @@ function renderScene(sunrise,sunset,now,cloud,dark){
         <stop offset="1" stop-color="${dark?'#081E28':'#4E86A8'}" stop-opacity=".85"/></linearGradient>
     </defs>
     <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
+    ${gulls}
     ${body}
+    <path d="${tl}" fill="${ink}" opacity=".26"/>
+    ${pines}
     <rect x="0" y="${GY+8}" width="${W}" height="${H-GY-8}" fill="url(#waterband)"/>
-    ${trees}
-    <path d="${turf}" fill="none" stroke="${ink}" stroke-width="1.5" stroke-linecap="round" opacity=".92"/>
-    <path d="${grass}" fill="none" stroke="${ink}" stroke-width="1.5" stroke-linecap="round" opacity=".92"/>
-    <path d="M -5 ${GY+10} L ${W+5} ${GY+10}" stroke="${ink}" stroke-width="3" opacity=".92"/>
+    ${sparkle}${glint}
+    <g opacity=".5"${swayAt(1.2)}><path d="${mid}" fill="${ink}"/><path d="${midBlades}" fill="${ink}"/></g>
+    <path d="M -5 ${base} L ${W+5} ${base}" stroke="${ink}" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>
+    <g opacity=".95"${swayAt(0)}><path d="${tufA}" fill="${ink}"/></g>
+    <g opacity=".95"${swayAt(swayDur*.5)}><path d="${tufB}" fill="${ink}"/></g>
     ${dock}
-    <path d="M 0 ${H-3} L ${W} ${H-3}" stroke="#8FC3D9" stroke-width="3.5" opacity=".6"/>`;
+    ${heron}
+    ${flies}
+    <path d="M 0 ${H-3} L ${W} ${H-3}" stroke="${dark?'#3E7CA6':'#8FC3D9'}" stroke-width="3" opacity="${dark?.4:.6}"/>`;
 
   return {sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05};
 }
@@ -745,7 +812,7 @@ function render(d,live){
   document.getElementById("themeColor").setAttribute("content",stops[0]);
 
   renderSkyFx(altDeg,c.cloud_cover,c.wind_direction_10m,wet,storm);
-  const scene=renderScene(sunrise,sunset,now,c.cloud_cover,dark);
+  const scene=renderScene(sunrise,sunset,now,c.cloud_cover,dark,c.wind_speed_10m||0);
 
   const cs=getComputedStyle(document.documentElement);
   const css={ink:cs.getPropertyValue("--ink").trim(),faint:cs.getPropertyValue("--ink-faint").trim(),
