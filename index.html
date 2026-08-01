@@ -719,8 +719,8 @@ function renderTides(preds,css){
     const f=clamp((t-a.time.getTime())/(b.time.getTime()-a.time.getTime()),0,1);
     return a.v+(b.v-a.v)*(1-Math.cos(Math.PI*f))/2;
   };
-  const W=Math.max(320,appW()-40),H=Math.round(140+(760-W)*.085),padX=8,topY=32,botY=H-24;
-  const fs=W<520?1.22:1;                          /* labels scale up on a phone */
+  const W=Math.max(320,appW()-40),H=Math.round(152+(760-W)*.09),padX=8,topY=32,botY=H-40;
+  const fs=W<360?1.08:W<520?1.22:1;               /* labels scale up on a phone */
   const vs=[];for(let t=t0;t<=t1;t+=9e5)vs.push(interp(t));
   const vMin=Math.min(...vs)-.35,vMax=Math.max(...vs)+.35;
   const X=t=>padX+(t-t0)/(t1-t0)*(W-2*padX);
@@ -728,16 +728,17 @@ function renderTides(preds,css){
   const pts=[];for(let t=t0;t<=t1;t+=9e5)pts.push([X(t),Y(interp(t))]);
   const path=spline(pts);
   const area=path+` L ${X(t1).toFixed(1)} ${botY} L ${X(t0).toFixed(1)} ${botY} Z`;
+  const nx=X(now.getTime()),ny=Y(interp(now.getTime()));
+  const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3.5" stroke-linejoin="round"`;
   let labels="";
   for(const p of P){
     const tm=p.time.getTime();if(tm<t0||tm>t1)continue;
     const x=X(tm),y=Y(p.v),up=p.type==="H";
-    const anchor=x<W*.10?"start":x>W*.90?"end":"middle";
-    labels+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.8" fill="${css.water}"/>
-    <text x="${x.toFixed(1)}" y="${(up?y-18:y+21).toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono" font-size="${(11*fs).toFixed(1)}" font-weight="600" fill="${css.ink}">${up?"HIGH":"LOW"} ${clock(p.time)}</text>
-    <text x="${x.toFixed(1)}" y="${(up?y-6:y+33).toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono" font-size="${(9.5*fs).toFixed(1)}" fill="${css.faint}">${p.v.toFixed(1)} ft</text>`;
+    const anchor=x<52*fs?"start":x>W-52*fs?"end":"middle";
+    if(Math.abs(x-nx)>=9)labels+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.8" fill="${css.water}"/>`;
+    labels+=`<text x="${x.toFixed(1)}" y="${(up?y-18:y+21).toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(11*fs).toFixed(1)}" font-weight="600" fill="${css.ink}" ${halo}>${up?"HIGH":"LOW"} ${clock(p.time)}</text>
+    <text x="${x.toFixed(1)}" y="${(up?y-6:y+33).toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(9.5*fs).toFixed(1)}" fill="${css.faint}" ${halo}>${p.v.toFixed(1)} ft</text>`;
   }
-  const nx=X(now.getTime()),ny=Y(interp(now.getTime()));
   document.getElementById("tideSvg").setAttribute("viewBox",`0 0 ${W} ${H}`);
   document.getElementById("tideSvg").innerHTML=`
     <defs><linearGradient id="tideFill" x1="0" y1="0" x2="0" y2="1">
@@ -771,7 +772,7 @@ function renderCompass(deg,mph,css){
       return `<line x1="${c+Math.sin(r)*(R-3)}" y1="${c-Math.cos(r)*(R-3)}" x2="${c+Math.sin(r)*R}" y2="${c-Math.cos(r)*R}" stroke="${css.faint}" stroke-width="1.2"/>`}).join("")}
     <line x1="${x2.toFixed(1)}" y1="${y2.toFixed(1)}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
     <path d="M ${x.toFixed(1)} ${y.toFixed(1)} l ${(-Math.sin(a-.5)*6).toFixed(1)} ${(Math.cos(a-.5)*6).toFixed(1)} M ${x.toFixed(1)} ${y.toFixed(1)} l ${(-Math.sin(a+.5)*6).toFixed(1)} ${(Math.cos(a+.5)*6).toFixed(1)}" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-    <text x="${c}" y="${c+3.5}" text-anchor="middle" font-family="Spline Sans Mono" font-size="9.5" font-weight="600" fill="${css.faint}">${Math.round(mph)}</text>
+    <text x="${c}" y="${c+3.5}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="9.5" font-weight="600" fill="${css.faint}">${Math.round(mph)}</text>
   </svg>`;
 }
 
@@ -881,25 +882,26 @@ function render(d,live){
       bands+=`<rect x="${x0.toFixed(1)}" y="12" width="${(x1-x0).toFixed(1)}" height="${base-12}" fill="url(#nightband)" rx="4"/>`;
       if(x1-x0>60)bands+=`<g transform="translate(${((x0+x1)/2).toFixed(1)},22)" fill="${css.faint}" opacity=".85">
         <path d="M 4 0 a 4.6 4.6 0 1 1-4.6-4.6 A 3.6 3.6 0 0 0 4 0 Z"/>
-        <text x="10" y="3" font-family="Spline Sans Mono" font-size="9.5" letter-spacing="1.1" fill="${css.faint}">AFTER DARK</text></g>`;
+        <text x="10" y="3" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="9.5" letter-spacing="1.1" fill="${css.faint}">AFTER DARK</text></g>`;
       bs=-1;
     }
   }
   let bars="",dots="",labels="";
+  const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3" stroke-linejoin="round"`;
   const hiI=h.temp.indexOf(Math.max(...h.temp)),loI=h.temp.indexOf(Math.min(...h.temp));
   for(let i=0;i<n;i++){
     if(h.pop[i]>=5){
       const bh=h.pop[i]*.42;
       bars+=`<rect x="${(X(i)-5.5).toFixed(1)}" y="${(base-bh).toFixed(1)}" width="11" height="${bh.toFixed(1)}" rx="3" fill="${css.water}" opacity="${h.pop[i]>=40?.55:.3}"/>`;
       if(h.pop[i]>=40&&i%2===0)
-        bars+=`<text x="${X(i).toFixed(1)}" y="${(base-bh-4).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono" font-size="8.5" fill="${css.water}">${h.pop[i]}</text>`;
+        bars+=`<text x="${X(i).toFixed(1)}" y="${(base-bh-4).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="8.5" fill="${css.water}" ${halo}>${h.pop[i]}</text>`;
     }
     if(i===hiI||i===loI||i===0){
       dots+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(h.temp[i]).toFixed(1)}" r="3.6" fill="${css.paper}" stroke="${tempColor(h.temp[i])}" stroke-width="2.4"/>
-      <text x="${X(i).toFixed(1)}" y="${(Y(h.temp[i])-11).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono" font-size="11.5" font-weight="600" fill="${css.ink}">${Math.round(h.temp[i])}°</text>`;
+      <text x="${X(i).toFixed(1)}" y="${(Y(h.temp[i])-11).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="11.5" font-weight="600" fill="${css.ink}" ${halo}>${Math.round(h.temp[i])}°</text>`;
     }else if(i%4===0){
       dots+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(h.temp[i]).toFixed(1)}" r="2" fill="${tempColor(h.temp[i])}" opacity=".8"/>
-      <text x="${X(i).toFixed(1)}" y="${(Y(h.temp[i])-9).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono" font-size="10" fill="${css.soft}">${Math.round(h.temp[i])}°</text>`;
+      <text x="${X(i).toFixed(1)}" y="${(Y(h.temp[i])-9).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="10" fill="${css.soft}" ${halo}>${Math.round(h.temp[i])}°</text>`;
     }
     labels+=`<span class="${i===0?"mark":""}">${i===0?"NOW":i%3===0?hh(h.time[i]):""}</span>`;
   }
