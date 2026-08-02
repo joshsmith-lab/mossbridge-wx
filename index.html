@@ -50,7 +50,7 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .app>*:nth-child(4){animation-delay:.19s}.app>*:nth-child(5){animation-delay:.25s}
 .app>*:nth-child(6){animation-delay:.31s}
 
-/* ‚îÄ‚îÄ sky ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ */
+/* ── sky ─────────────────────────────────────────────── */
 .sky{position:relative;overflow:hidden;color:var(--on-sky);isolation:isolate;
   padding:calc(18px + env(safe-area-inset-top)) 20px 0;
   background:linear-gradient(180deg,var(--sky1) 0%,var(--sky2) 46%,var(--sky3) 100%);
@@ -133,7 +133,7 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .scene{margin:2px -20px 0;position:relative;z-index:2}
 .scene svg{display:block;width:100%;height:auto}
 
-/* ‚îÄ‚îÄ sections ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ */
+/* ── sections ───────────────────────────────────────── */
 section{padding:28px 20px 0}
 .eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
   color:var(--ink-faint);display:flex;justify-content:space-between;align-items:baseline;margin-bottom:13px;gap:10px}
@@ -163,7 +163,7 @@ section{padding:28px 20px 0}
 .storm-row .s-dist.storm-near{color:var(--marker);font-weight:600}
 .storm-row .s-meta{grid-column:1/-1;font-family:var(--mono);font-size:11.5px;color:var(--ink-soft)}
 
-/* ‚îÄ‚îÄ cards ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ */
+/* ── cards ──────────────────────────────────────────── */
 .cards{display:grid;grid-template-columns:1fr;column-gap:34px;padding:16px 20px 0}
 @media(min-width:560px){.cards{grid-template-columns:1fr 1fr}.card.wide{grid-column:1/-1}}
 .card{border-top:1px solid var(--line);padding:16px 0 18px}
@@ -186,7 +186,7 @@ section{padding:28px 20px 0}
 .uv-scale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;
   color:var(--ink-faint);margin-top:5px;letter-spacing:.05em}
 
-/* ‚îÄ‚îÄ week ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ */
+/* ── week ───────────────────────────────────────────── */
 .week{padding:28px 20px 0}
 .day-row{display:grid;grid-template-columns:44px 20px 28px 1fr 32px 36px;gap:8px;align-items:center;
   padding:11px 0;border-bottom:1px solid var(--line)}
@@ -237,17 +237,17 @@ section{padding:28px 20px 0}
   <div class="alert-strip" id="alertStrip" role="alert"></div>
   <div class="masthead">
     <span class="addr" id="locBtn" role="button" title="Switch location"></span>
-    <span class="live" id="refreshBtn" title="Tap to refresh"><span class="live-dot"></span><span id="stamp">‚Äî</span></span>
+    <span class="live" id="refreshBtn" title="Tap to refresh"><span class="live-dot"></span><span id="stamp">—</span></span>
   </div>
   <div class="now">
-    <div class="big-temp" id="bigTemp"><span class="skel">00</span><span class="deg">¬∞</span></div>
+    <div class="big-temp" id="bigTemp"><span class="skel">00</span><span class="deg">°</span></div>
     <div class="now-meta">
       <div id="condLabel"><span class="skel">loading</span></div>
-      <div>feels <b id="feels">‚Äî</b></div>
-      <div>H <b id="hiNow">‚Äî</b> ¬∑ L <b id="loNow">‚Äî</b></div>
+      <div>feels <b id="feels">—</b></div>
+      <div>H <b id="hiNow">—</b> · L <b id="loNow">—</b></div>
     </div>
   </div>
-  <p class="verdict" id="verdict">Reading the sky‚Ä¶</p>
+  <p class="verdict" id="verdict">Reading the sky…</p>
   <div class="chips" id="chips"></div>
   <div class="nowcast" id="nowcast"><span id="ncText"></span><span class="nc-bars" id="ncBars"></span></div>
   <div class="scene"><svg id="sceneSvg" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-label="Sun and moon over the marsh horizon"></svg></div>
@@ -262,40 +262,40 @@ section{padding:28px 20px 0}
 </section>
 
 <section id="tideSection">
-  <div class="eyebrow"><b>Tide ¬∑ Wrightsville Beach</b><span id="tideNote">loading‚Ä¶</span></div>
+  <div class="eyebrow"><b>Tide · Wrightsville Beach</b><span id="tideNote">loading…</span></div>
   <svg id="tideSvg" class="tide-svg" viewBox="0 0 760 158" xmlns="http://www.w3.org/2000/svg" aria-label="Tide curve, next 27 hours"></svg>
 </section>
 
 <section id="stormSection" style="display:none">
-  <div class="eyebrow"><b>Tropics ¬∑ Atlantic</b><span id="stormNote"></span></div>
+  <div class="eyebrow"><b>Tropics · Atlantic</b><span id="stormNote"></span></div>
   <div id="stormRows"></div>
 </section>
 
 <div class="cards">
   <div class="card wide">
-    <h3 id="outTitle">‚Äî</h3>
-    <div class="lead" id="waterLead">‚Äî</div>
+    <h3 id="outTitle">—</h3>
+    <div class="lead" id="waterLead">—</div>
     <div class="card-flex">
       <div class="stat-row">
-        <span>wind from <b id="wWind">‚Äî</b></span>
-        <span>gusts <b id="wGust">‚Äî</b></span>
-        <span id="wWaveWrap">seas <b id="wWave">‚Äî</b></span>
-        <span id="wTideWrap">next tide <b id="wTide">‚Äî</b></span>
-        <span>best window <b id="wWindow">‚Äî</b></span>
+        <span>wind from <b id="wWind">—</b></span>
+        <span>gusts <b id="wGust">—</b></span>
+        <span id="wWaveWrap">seas <b id="wWave">—</b></span>
+        <span id="wTideWrap">next tide <b id="wTide">—</b></span>
+        <span>best window <b id="wWindow">—</b></span>
       </div>
     </div>
   </div>
   <div class="card">
-    <h3>UV ¬∑ sun exposure</h3>
-    <div class="lead" id="uvLead">‚Äî</div>
-    <div class="stat-row"><span>now <b id="uvNow">‚Äî</b></span><span>peak today <b id="uvPeak">‚Äî</b></span></div>
+    <h3>UV · sun exposure</h3>
+    <div class="lead" id="uvLead">—</div>
+    <div class="stat-row"><span>now <b id="uvNow">—</b></span><span>peak today <b id="uvPeak">—</b></span></div>
     <div class="uv-bar"><div class="uv-pin" id="uvPin"></div></div>
     <div class="uv-scale"><span>LOW</span><span>MODERATE</span><span>HIGH</span><span>EXTREME</span></div>
   </div>
   <div class="card">
     <h3>Evening outlook</h3>
-    <div class="lead" id="eveLead">‚Äî</div>
-    <div class="stat-row"><span>at sunset <b id="eveTemp">‚Äî</b></span><span>wind <b id="eveWind">‚Äî</b></span><span>rain <b id="evePop">‚Äî</b></span><span>moon <b id="moonTxt">‚Äî</b></span></div>
+    <div class="lead" id="eveLead">—</div>
+    <div class="stat-row"><span>at sunset <b id="eveTemp">—</b></span><span>wind <b id="eveWind">—</b></span><span>rain <b id="evePop">—</b></span><span>moon <b id="moonTxt">—</b></span></div>
   </div>
 </div>
 
@@ -310,15 +310,15 @@ Refreshes on open and when you return to the app. Tap the timestamp to force it.
 
 <script>
 const LOCS={
-  mb:{id:"mb",addrFull:"Moss Bridge Ct ¬∑ Porters Neck",addrShort:"Porters Neck",
+  mb:{id:"mb",addrFull:"Moss Bridge Ct · Porters Neck",addrShort:"Porters Neck",
       lat:34.2982,lon:-77.7896,scene:"marsh",
       marine:{lat:34.26,lon:-77.68},tide:8658163,tropics:true,
-      outTitle:"On the water ¬∑ Mason Inlet / ICW",
-      foot:"Forecast: Open-Meteo (NWS-blended), grid cell over Porters Neck ¬∑ Marine: buoy grid off Mason Inlet ¬∑ Tides: NOAA, Wrightsville Beach station 8658163 ¬∑ Alerts: National Weather Service ¬∑ Tropics: National Hurricane Center."},
-  sp:{id:"sp",addrFull:"Bob Plumley Rd ¬∑ Shady Spring",addrShort:"Shady Spring",
+      outTitle:"On the water · Mason Inlet / ICW",
+      foot:"Forecast: Open-Meteo (NWS-blended), grid cell over Porters Neck · Marine: buoy grid off Mason Inlet · Tides: NOAA, Wrightsville Beach station 8658163 · Alerts: National Weather Service · Tropics: National Hurricane Center."},
+  sp:{id:"sp",addrFull:"Bob Plumley Rd · Shady Spring",addrShort:"Shady Spring",
       lat:37.8215,lon:-80.9942,scene:"ridge",
-      outTitle:"Outside ¬∑ Around the farm",
-      foot:"Forecast: Open-Meteo (NWS-blended), grid cell over Shady Spring, WV ¬∑ Alerts: National Weather Service."}
+      outTitle:"Outside · Around the farm",
+      foot:"Forecast: Open-Meteo (NWS-blended), grid cell over Shady Spring, WV · Alerts: National Weather Service."}
 };
 let LOC;try{LOC=LOCS[localStorage.getItem("mbwx-loc")]||LOCS.mb}catch(e){LOC=LOCS.mb}
 let LAT=LOC.lat, LON=LOC.lon;
@@ -348,7 +348,7 @@ const distMi=(la1,lo1,la2,lo2)=>{const dLa=toRad(la2-la1),dLo=toRad(lo2-lo1);
   return 2*3959*Math.asin(Math.sqrt(a))};
 const PRM=matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/* ‚îÄ‚îÄ colour helpers ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ */
+/* ── colour helpers ─────────────────────────────────── */
 const hex2rgb=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
 const rgb2hex=c=>"#"+c.map(v=>Math.round(clamp(v,0,255)).toString(16).padStart(2,"0")).join("");
 const mix=(a,b,t)=>{const A=hex2rgb(a),B=hex2rgb(b);return rgb2hex([0,1,2].map(i=>A[i]+(B[i]-A[i])*t))};
@@ -363,7 +363,7 @@ const tempColor=t=>{
   return st[st.length-1][1];
 };
 
-/* ‚îÄ‚îÄ astronomy (SunCalc-derived) ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ */
+/* ── astronomy (SunCalc-derived) ────────────────────── */
 const RD=Math.PI/180, J1970=2440588, J2000=2451545, OB=RD*23.4397;
 const toDays=d=>d.valueOf()/864e5-.5+J1970-J2000;
 const ra=(l,b)=>Math.atan2(Math.sin(l)*Math.cos(OB)-Math.tan(b)*Math.sin(OB),Math.cos(l));
@@ -389,7 +389,7 @@ function moonPhase(date){const d=toDays(date),s=sunCoords(d),m=moonCoords(d),sd=
 const phaseName=p=>p<.03||p>.97?"new":p<.22?"waxing crescent":p<.28?"first quarter":p<.47?"waxing gibbous":
   p<.53?"full":p<.72?"waning gibbous":p<.78?"last quarter":"waning crescent";
 
-/* ‚îÄ‚îÄ sky palette by solar altitude ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ */
+/* ── sky palette by solar altitude ──────────────────── */
 const SKY=[
   [-90,["#04101A","#08202B","#123543"]],
   [-14,["#061725","#0E2739","#1D3E4E"]],
@@ -418,7 +418,7 @@ function skyStops(altDeg,cloud,wet,storm){
   return s;
 }
 
-/* ‚îÄ‚îÄ deterministic star field ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ */
+/* ── deterministic star field ───────────────────────── */
 function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
   t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 let STARS=null;
@@ -429,7 +429,7 @@ function starField(){
   return STARS;
 }
 
-/* ‚îÄ‚îÄ sky atmosphere layer ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ */
+/* ── sky atmosphere layer ───────────────────────────── */
 function renderSkyFx(altDeg,cloud,windDir,wet,storm){
   const night=clamp((-altDeg-2)/8,0,1);
   const st=starField();
@@ -476,7 +476,7 @@ function renderSkyFx(altDeg,cloud,windDir,wet,storm){
   document.getElementById("flash").className="flash"+(storm&&!PRM?" on":"");
 }
 
-/* ‚îÄ‚îÄ the scene: arc, sun / moon, marsh horizon ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ */
+/* ── the scene: arc, sun / moon, marsh horizon ──────── */
 const appW=()=>clamp(document.querySelector(".app").clientWidth||760,320,760);
 function renderScene(sunrise,sunset,now,cloud,dark,wind){
   const W=appW(),H=Math.round((LOC.scene==="ridge"?168:150)+(760-W)*.10),GY=H-30;   /* taller frame on a phone */
@@ -501,7 +501,7 @@ function renderScene(sunrise,sunset,now,cloud,dark,wind){
       <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1" opacity="${Math.max(.15,1-veil).toFixed(2)}"/>`;
   }
   if(mp.alt>-.05&&(!up||mp.alt>.21)){        /* daytime moon only when it's genuinely up there */
-    /* moon by true altitude / azimuth, mapped east‚Üíwest across the arc */
+    /* moon by true altitude / azimuth, mapped east→west across the arc */
     const az=(mp.az*180/Math.PI+180+360)%360;           /* 0=N, 90=E */
     const f=clamp((az-60)/240,.02,.98);
     const x=px(f), y=GY-Math.sin(clamp(mp.alt,0,Math.PI/2))*(GY-arcTop)*1.05;
@@ -525,7 +525,7 @@ function renderScene(sunrise,sunset,now,cloud,dark,wind){
     LOC.scene==="ridge"?"Sun and moon over Appalachian ridgelines and the farm pond":"Sun and moon over the marsh horizon");
 
   if(LOC.scene==="ridge"){
-    /* ‚îÄ‚îÄ Shady Spring: layered ridges, hardwoods, barn, fence, pond ‚îÄ‚îÄ */
+    /* ── Shady Spring: layered ridges, hardwoods, barn, fence, pond ── */
     const ink=dark?"#07161B":"#173029";
     const base=GY+10;
     const g=mulberry(3737);
@@ -647,7 +647,7 @@ function renderScene(sunrise,sunset,now,cloud,dark,wind){
   const base=GY+10;
   const g=mulberry(991);
 
-  /* far canopy ‚Äî soft rounded masses, atmospheric via low opacity */
+  /* far canopy — soft rounded masses, atmospheric via low opacity */
   let tl=`M -12 ${base+4} `, tx=-12;
   while(tx<W+12){
     const bw=26+g()*58, ph=7+g()*13;
@@ -761,7 +761,7 @@ function renderScene(sunrise,sunset,now,cloud,dark,wind){
   return {sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05};
 }
 
-/* ‚îÄ‚îÄ smooth path through points ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ */
+/* ── smooth path through points ─────────────────────── */
 function spline(p){
   if(p.length<2)return"";
   let d=`M ${p[0][0].toFixed(1)} ${p[0][1].toFixed(1)}`;
@@ -774,7 +774,7 @@ function spline(p){
   return d;
 }
 
-/* ‚îÄ‚îÄ alerts / nowcast / storms ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ */
+/* ── alerts / nowcast / storms ──────────────────────── */
 function renderAlerts(alerts){
   const el=document.getElementById("alertStrip");
   if(!alerts||!alerts.length){el.className="alert-strip";el.textContent="";return}
@@ -782,8 +782,8 @@ function renderAlerts(alerts){
   const a=[...alerts].sort((x,y)=>(sev[x.severity]??4)-(sev[y.severity]??4))[0];
   const until=a.ends||a.expires;
   let t=a.event;
-  if(until)t+=" ¬∑ until "+clock(new Date(until));
-  if(alerts.length>1)t+=" ¬∑ +"+(alerts.length-1)+" more";
+  if(until)t+=" · until "+clock(new Date(until));
+  if(alerts.length>1)t+=" · +"+(alerts.length-1)+" more";
   el.textContent=t;el.className="alert-strip on";
 }
 function renderNowcast(mins){
@@ -796,7 +796,7 @@ function renderNowcast(mins){
   const st=new Date(mins.time[first]),en=last<n-1?new Date(new Date(mins.time[last]).getTime()+9e5):null;
   let txt;
   if(first===0)txt=en?"Rain now, ending ~"+clock(en):"Rain now, continuing 2h+";
-  else txt=en?"Rain ~"+clock(st)+"‚Äì"+clock(en):"Rain starting ~"+clock(st);
+  else txt=en?"Rain ~"+clock(st)+"–"+clock(en):"Rain starting ~"+clock(st);
   document.getElementById("ncText").textContent=txt;
   const mx=Math.max(...p.slice(0,n),.5);
   document.getElementById("ncBars").innerHTML=Array.from({length:n},(_,i)=>
@@ -811,7 +811,7 @@ function renderStorms(storms){
     const d=Math.round(distMi(LAT,LON,s.lat,s.lon)),near=d<500;
     const meta=[s.mph?"winds "+s.mph+" mph":null,s.mb?s.mb+" mb":null,
       s.dirDeg!=null?"moving "+dirTxt(s.dirDeg)+" "+s.spd+" mph":"stationary",
-      s.adv?"adv "+s.adv:null].filter(Boolean).join(" ¬∑ ");
+      s.adv?"adv "+s.adv:null].filter(Boolean).join(" · ");
     return `<div class="storm-row">
       <div class="s-name"><span class="swirl">${SWIRL}</span>${s.type} ${s.name}${near?' <em>within 500 mi</em>':''}</div>
       <div class="s-dist ${near?'storm-near':''}">${d.toLocaleString()} mi away</div>
@@ -847,7 +847,7 @@ async function fetchStorms(){
   }catch(e){return null}
 }
 
-/* ‚îÄ‚îÄ tide ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ */
+/* ── tide ───────────────────────────────────────────── */
 function renderTides(preds,css){
   if(!preds||preds.length<2){document.getElementById("tideNote").textContent="tide data unavailable";return null}
   const P=preds.map(p=>({time:new Date(p.t.replace(" ","T")),v:+p.v,type:p.type})).sort((a,b)=>a.time-b.time);
@@ -894,32 +894,32 @@ function renderTides(preds,css){
   const next=P.find(p=>p.time>now);
   if(next){
     const rising=next.type==="H";
-    document.getElementById("tideNote").textContent=(rising?"rising ¬∑ high ":"falling ¬∑ low ")+clock(next.time);
+    document.getElementById("tideNote").textContent=(rising?"rising · high ":"falling · low ")+clock(next.time);
     return{rising,next,note:(rising?"high ":"low ")+clock(next.time)};
   }
   return null;
 }
 
-/* ‚îÄ‚îÄ wind vane ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ */
+/* ── wind vane ──────────────────────────────────────── */
 /* points into the wind, the way a rooftop vane does, so it agrees with the "from SW" beside it */
 const vane=deg=>`<svg class="vane" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><g transform="rotate(${Math.round(deg)} 6 6)"><path d="M6 1.5 L6 10.5 M3.6 4.3 L6 1.5 L8.4 4.3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g></svg>`;
 
-/* ‚îÄ‚îÄ count-up ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ */
+/* ── count-up ───────────────────────────────────────── */
 let animRun=0;
 function countTo(el,val){
   const target=Math.round(val);
-  if(PRM||el.dataset.v===String(target)){el.dataset.v=target;el.innerHTML=target+'<span class="deg">¬∞</span>';return}
+  if(PRM||el.dataset.v===String(target)){el.dataset.v=target;el.innerHTML=target+'<span class="deg">°</span>';return}
   el.dataset.v=target;
   const id=++animRun,from=Math.max(0,target-9),t0=performance.now();
   (function step(t){
     if(id!==animRun)return;
     const k=clamp((t-t0)/620,0,1),e=1-Math.pow(1-k,3);
-    el.innerHTML=Math.round(from+(target-from)*e)+'<span class="deg">¬∞</span>';
+    el.innerHTML=Math.round(from+(target-from)*e)+'<span class="deg">°</span>';
     if(k<1)requestAnimationFrame(step);
   })(t0);
 }
 
-/* ‚îÄ‚îÄ the headline: what today actually does ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ */
+/* ── the headline: what today actually does ─────────── */
 /* built from the hourly run, not the 7-day weather codes, because those codes flip
    day to day and made the old line promise a storm date it could not keep */
 function verdictText(c,dy,h){
@@ -938,8 +938,8 @@ function verdictText(c,dy,h){
      only carries what changes between now and bedtime */
   const cand=[];
   const feels=Math.round(c.apparent_temperature), hot=!overnight&&feels>=98, cold=feels<=25;
-  if(hot) cand.push(`Feels like ${feels}¬∞ out there, keep midday short`);
-  else if(cold) cand.push(`Feels like ${feels}¬∞, cover up before you go out`);
+  if(hot) cand.push(`Feels like ${feels}° out there, keep midday short`);
+  else if(cold) cand.push(`Feels like ${feels}°, cover up before you go out`);
 
   const wetI=win.find(i=>h.pop[i]>=40), maxPop=h.pop[peak(h.pop)];
   if(wetI!=null) cand.push(`Rain moves in around ${at(wetI)}, ${maxPop}% at the peak`);
@@ -949,14 +949,14 @@ function verdictText(c,dy,h){
   const gustI=peak(h.gust), hotI=peak(h.temp);
   if(h.gust[gustI]>=28) cand.push(`Gusts to ${Math.round(h.gust[gustI])} by ${at(gustI)}`);
   else if(!hot&&!cold&&!overnight&&h.temp[hotI]-c.temperature_2m>=5)
-    cand.push(`Topping out near ${Math.round(h.temp[hotI])}¬∞ by ${at(hotI)}`);
+    cand.push(`Topping out near ${Math.round(h.temp[hotI])}° by ${at(hotI)}`);
 
   let v=cand.slice(0,2).map(s=>s.endsWith(".")?s:s+".").join(" ");
 
   /* look ahead only when there is something worth quoting, cap it at three days, and always
      print the odds, so a 60% reads as a 60% instead of a date the forecast has to keep */
   if(overnight&&hr>=18&&dy.time.length>1)
-    v+=` Tomorrow: high ${Math.round(dy.temperature_2m_max[1])}¬∞, ${dy.precipitation_probability_max[1]}% rain.`;
+    v+=` Tomorrow: high ${Math.round(dy.temperature_2m_max[1])}°, ${dy.precipitation_probability_max[1]}% rain.`;
   else{
     let bi=-1;
     for(let i=1;i<=3&&i<dy.time.length;i++){
@@ -968,7 +968,7 @@ function verdictText(c,dy,h){
   return v;
 }
 
-/* ‚îÄ‚îÄ main render ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ */
+/* ── main render ────────────────────────────────────── */
 function render(d,live){
   const c=d.current,dy=d.daily,h=d.hourly,m=d.marine;
   const now=new Date(), sunrise=new Date(dy.sunrise[0]), sunset=new Date(dy.sunset[0]);
@@ -1005,12 +1005,12 @@ function render(d,live){
     water:cs.getPropertyValue("--water").trim(),paper:cs.getPropertyValue("--paper").trim(),
     wash:cs.getPropertyValue("--wash").trim(),marker:cs.getPropertyValue("--marker").trim()};
 
-  document.getElementById("stamp").textContent=(live?"live ¬∑ ":"cached ¬∑ ")+c.time.slice(11,16)+" ET";
+  document.getElementById("stamp").textContent=(live?"live · ":"cached · ")+c.time.slice(11,16)+" ET";
   countTo(document.getElementById("bigTemp"),c.temperature_2m);
-  document.getElementById("condLabel").textContent=WMO[c.weather_code]||"‚Äî";
-  document.getElementById("feels").textContent=Math.round(c.apparent_temperature)+"¬∞";
-  document.getElementById("hiNow").textContent=Math.round(dy.temperature_2m_max[0])+"¬∞";
-  document.getElementById("loNow").textContent=Math.round(dy.temperature_2m_min[0])+"¬∞";
+  document.getElementById("condLabel").textContent=WMO[c.weather_code]||"—";
+  document.getElementById("feels").textContent=Math.round(c.apparent_temperature)+"°";
+  document.getElementById("hiNow").textContent=Math.round(dy.temperature_2m_max[0])+"°";
+  document.getElementById("loNow").textContent=Math.round(dy.temperature_2m_min[0])+"°";
 
   document.getElementById("verdict").innerHTML=verdictText(c,dy,h);
 
@@ -1066,10 +1066,10 @@ function render(d,live){
     }
     if(i===hiI||i===loI||i===0){
       dots+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(h.temp[i]).toFixed(1)}" r="3.6" fill="${css.paper}" stroke="${tempColor(h.temp[i])}" stroke-width="2.4"/>
-      <text x="${X(i).toFixed(1)}" y="${(Y(h.temp[i])-11).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="11.5" font-weight="600" fill="${css.ink}" ${halo}>${Math.round(h.temp[i])}¬∞</text>`;
+      <text x="${X(i).toFixed(1)}" y="${(Y(h.temp[i])-11).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="11.5" font-weight="600" fill="${css.ink}" ${halo}>${Math.round(h.temp[i])}°</text>`;
     }else if(i%4===0){
       dots+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(h.temp[i]).toFixed(1)}" r="2" fill="${tempColor(h.temp[i])}" opacity=".8"/>
-      <text x="${X(i).toFixed(1)}" y="${(Y(h.temp[i])-9).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="10" fill="${css.soft}" ${halo}>${Math.round(h.temp[i])}¬∞</text>`;
+      <text x="${X(i).toFixed(1)}" y="${(Y(h.temp[i])-9).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="10" fill="${css.soft}" ${halo}>${Math.round(h.temp[i])}°</text>`;
     }
     labels+=`<span class="${i===0?"mark":""}">${i===0?"NOW":i%3===0?hh(h.time[i]):""}</span>`;
   }
@@ -1102,7 +1102,7 @@ function render(d,live){
   const maxPop=Math.max(...h.pop);
   const ncOn=document.getElementById("nowcast").classList.contains("on");
   document.getElementById("hourlyNote").textContent=
-    maxPop<20&&!ncOn?"rain unlikely next 24h":"blue bars = rain chance ¬∑ shaded = after dark";
+    maxPop<20&&!ncOn?"rain unlikely next 24h":"blue bars = rain chance · shaded = after dark";
 
   /* outside card: boating at Moss Bridge, farm weather at Bob Plumley */
   document.getElementById("outTitle").textContent=LOC.outTitle;
@@ -1124,7 +1124,7 @@ function render(d,live){
       else if(!tide.rising&&wCls==="go")wMsg+=" Tide falling, watch depth on the flats.";
     }
     document.getElementById("wWave").textContent=wv.toFixed(1)+" ft";
-    document.getElementById("wTide").textContent=tide?tide.note:"‚Äî";
+    document.getElementById("wTide").textContent=tide?tide.note:"—";
   }else{
     let dayPop=0;
     for(let i=0;i<n;i++){const hr=+h.time[i].slice(11,13);if(hr>=7&&hr<=19)dayPop=Math.max(dayPop,h.pop[i])}
@@ -1143,7 +1143,7 @@ function render(d,live){
     const score=coastal?h.gust[i]:h.gust[i]+h.pop[i]*.4;   /* farm window dodges rain too */
     if(hr>=7&&hr<=18&&score<bws){bws=score;bwi=i}
   }
-  document.getElementById("wWindow").textContent=bwi<0?"‚Äî":hh(h.time[bwi])+(h.time[bwi].slice(0,10)===dy.time[0]?" today":" tomorrow");
+  document.getElementById("wWindow").textContent=bwi<0?"—":hh(h.time[bwi])+(h.time[bwi].slice(0,10)===dy.time[0]?" today":" tomorrow");
 
   /* uv */
   const uvNow=c.uv_index,uvPk=dy.uv_index_max[0];
@@ -1151,7 +1151,7 @@ function render(d,live){
   ul.textContent=uvNow>=8?"Very high. Cover up.":uvNow>=6?"High. SPF and shade midday.":uvNow>=3?"Moderate. SPF if you're out an hour+.":"Low. You're fine.";
   ul.className="lead "+(uvNow>=6?"caution":"go");
   document.getElementById("uvNow").textContent=uvNow.toFixed(1);
-  document.getElementById("uvPeak").textContent=uvPk.toFixed(1)+" ~1‚Äì3p";
+  document.getElementById("uvPeak").textContent=uvPk.toFixed(1)+" ~1–3p";
   document.getElementById("uvPin").style.left=Math.min(97,uvNow/12*100)+"%";
 
   /* evening */
@@ -1161,7 +1161,7 @@ function render(d,live){
   const eveStorm=h.pop[ei]>=40;
   el.textContent=eveStorm?"Rain risk around sunset.":h.temp[ei]>=85?"Warm, breezy, dry. Good porch night.":"Mild and dry after sunset.";
   el.className="lead "+(eveStorm?"caution":"go");
-  document.getElementById("eveTemp").textContent=Math.round(h.temp[ei])+"¬∞";
+  document.getElementById("eveTemp").textContent=Math.round(h.temp[ei])+"°";
   document.getElementById("eveWind").textContent=Math.round(h.wind[ei])+" mph";
   document.getElementById("evePop").textContent=h.pop[ei]+"%";
   document.getElementById("moonTxt").textContent=Math.round(scene.moon.fraction*100)+"% "+phaseName(scene.moon.phase);
@@ -1175,13 +1175,13 @@ function render(d,live){
     return `<div class="day-row${i===0?" today":""}">
       <div class="dname">${i===0?"Today":dayName(t)}<small>${mmdd(t)}</small></div>
       <div class="icon${isStorm?" rough":""}">${icon(dy.weather_code[i],17)}</div>
-      <div class="t-lo">${Math.round(l)}¬∞</div>
+      <div class="t-lo">${Math.round(l)}°</div>
       <div class="range-track">
         <div class="range-scale"></div>
         <div class="range-fill" style="left:${left}%;width:${width}%;animation-delay:${i*55}ms;
           background:linear-gradient(90deg,${tempColor(l)},${tempColor(hx)})"></div>
       </div>
-      <div class="t-hi">${Math.round(hx)}¬∞</div>
+      <div class="t-hi">${Math.round(hx)}°</div>
       <div class="pop ${pop>=40?"wet":""}">${pop}%</div>
     </div>`;
   }).join("");
@@ -1199,7 +1199,7 @@ addEventListener("resize",()=>{clearTimeout(rzT);rzT=setTimeout(()=>{
   if(LAST&&Math.abs(appW()-LASTW)>16)render(LAST.d,LAST.live);
 },240)});
 
-/* ‚îÄ‚îÄ fetch ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ‚îÄ */
+/* ── fetch ──────────────────────────────────────────── */
 const cacheKey=id=>"mbwx-"+id;
 function readCache(id){try{const c=localStorage.getItem(cacheKey(id));return c?JSON.parse(c):null}catch(e){return null}}
 async function refresh(){
