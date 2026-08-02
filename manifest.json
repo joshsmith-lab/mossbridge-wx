@@ -1,6 +1,6 @@
 {
-  "name": "Moss Bridge Weather",
-  "short_name": "Moss Bridge",
+  "name": "Porch Weather",
+  "short_name": "Porch",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#FDFCF8",
