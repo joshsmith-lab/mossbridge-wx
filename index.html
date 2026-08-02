@@ -874,9 +874,9 @@ function renderTides(preds,css){
   for(const p of P){
     const tm=p.time.getTime();if(tm<t0||tm>t1)continue;
     const x=X(tm),y=Y(p.v),up=p.type==="H";
-    const anchor=x<52*fs?"start":x>W-52*fs?"end":"middle";
+    const anchor=x<32*fs?"start":x>W-32*fs?"end":"middle";
     if(Math.abs(x-nx)>=9)labels+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.8" fill="${css.water}"/>`;
-    labels+=`<text x="${x.toFixed(1)}" y="${(up?y-18:y+21).toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(11*fs).toFixed(1)}" font-weight="600" fill="${css.ink}" ${halo}>${up?"HIGH":"LOW"} ${clock(p.time)}</text>
+    labels+=`<text x="${x.toFixed(1)}" y="${(up?y-18:y+21).toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(11*fs).toFixed(1)}" font-weight="600" fill="${css.ink}" ${halo}>${clock(p.time)}</text>
     <text x="${x.toFixed(1)}" y="${(up?y-6:y+33).toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(9.5*fs).toFixed(1)}" fill="${css.faint}" ${halo}>${p.v.toFixed(1)} ft</text>`;
   }
   document.getElementById("tideSvg").setAttribute("viewBox",`0 0 ${W} ${H}`);
