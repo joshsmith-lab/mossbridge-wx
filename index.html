@@ -73,10 +73,13 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes twinkle{0%,100%{opacity:var(--o)}50%{opacity:calc(var(--o) * .28)}}
 .star{animation:twinkle 4s ease-in-out infinite}
 @keyframes sway{from{transform:skewX(var(--sway-neg,-.55deg))}to{transform:skewX(var(--sway,.55deg))}}
-.bird-wing{transform-box:fill-box;transform-origin:50% 60%;animation:wingFlex 11s ease-in-out infinite}
+.bird-wing{transform-box:fill-box;transform-origin:50% 60%;animation:wingFlex 6.5s ease-in-out infinite}
 @keyframes wingFlex{0%,32%,47%,76%,100%{transform:scaleY(1)}36%{transform:scaleY(.78)}40%{transform:scaleY(1.06)}44%{transform:scaleY(.9)}80%{transform:scaleY(.84)}84%{transform:scaleY(1.04)}88%{transform:scaleY(.94)}}
 .deer-ear{transform-box:fill-box;transform-origin:55% 85%;animation:earFlick 12.5s ease-in-out infinite}
 @keyframes earFlick{0%,78%,100%{transform:rotate(0)}82%{transform:rotate(-11deg)}86%{transform:rotate(3deg)}90%{transform:rotate(0)}}
+/* head and neck pivot at the shoulder: a long stretch of stillness, then a graze and a look up */
+.deer-head{transform-box:fill-box;transform-origin:17% 95%;animation:deerGraze 17s ease-in-out infinite}
+@keyframes deerGraze{0%,52%,100%{transform:rotate(0)}60%,74%{transform:rotate(4.8deg)}82%{transform:rotate(-2.2deg)}90%{transform:rotate(0)}}
 .water-glint{animation:glintBreathe 9s ease-in-out infinite alternate}
 @keyframes glintBreathe{from{opacity:.72}to{opacity:1}}
 .heron-breathe{transform-box:fill-box;transform-origin:50% 100%;animation:heronBreathe 13s ease-in-out infinite alternate}
@@ -136,8 +139,22 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .alert-strip.on{display:block;animation:alertIn .5s var(--ease) both}
 @keyframes alertIn{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:none}}
 .alert-strip::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 20%,rgba(255,255,255,.28) 50%,transparent 80%);
-  transform:translateX(-100%);animation:sweep 4.5s var(--ease) infinite}
+  transform:translateX(-100%);animation:sweep 4.5s var(--ease) infinite;pointer-events:none}
 @keyframes sweep{0%{transform:translateX(-100%)}55%,100%{transform:translateX(100%)}}
+.alert-strip[role=button]{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.alert-strip[role=button]:active{opacity:.85}
+.alert-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.alert-caret{flex:0 0 auto;width:7px;height:7px;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;
+  transform:rotate(45deg) translate(-2px,-2px);transition:transform .25s var(--ease);opacity:.8}
+.alert-strip.open .alert-caret{transform:rotate(-135deg) translate(-2px,-2px)}
+.alert-strip.open::after{animation:none;opacity:0}
+.alert-body{display:none;margin-top:9px;padding-top:9px;border-top:1px solid rgba(255,247,243,.28);
+  text-transform:none;letter-spacing:.01em;font-size:11.5px;line-height:1.55}
+.alert-strip.open .alert-body{display:block;animation:briefIn .28s var(--ease) both}
+.alert-body p{margin-bottom:5px}
+.alert-body p:last-child{margin-bottom:0}
+.alert-body b{text-transform:uppercase;letter-spacing:.08em;font-size:10px;opacity:.78;font-weight:600}
+.alert-more{opacity:.8}
 
 .nowcast{display:none;margin:15px 0 0;padding:11px 13px;border-radius:12px;
   background:var(--chip-bg,rgba(16,40,50,.09));backdrop-filter:blur(6px);font-family:var(--mono);font-size:12px}
@@ -167,7 +184,9 @@ section{padding:28px 20px 0}
 .hr-labels span{text-align:center}
 .hr-labels .mark{color:var(--marker);font-weight:600}
 .tide-svg{display:block;width:100%;height:auto}
-@keyframes bob{from{transform:rotate(-2.6deg) translateY(.5px)}to{transform:rotate(2.6deg) translateY(-.5px)}}
+@keyframes bob{from{transform:rotate(calc(var(--rock,2.6deg) * -1)) translateY(.6px)}to{transform:rotate(var(--rock,2.6deg)) translateY(-.6px)}}
+/* canopies are heavier than grass: same wind, half the throw, slower */
+@keyframes swayTree{from{transform:skewX(var(--tsway-neg,-.3deg))}to{transform:skewX(var(--tsway,.3deg))}}
 
 .storm-row{display:grid;grid-template-columns:1fr auto;gap:3px 12px;padding:12px 0;
   border-bottom:1px solid var(--line);align-items:baseline}
@@ -329,7 +348,7 @@ section{padding:28px 20px 0}
     <div class="uv-scale"><span>LOW</span><span>MODERATE</span><span>HIGH</span><span>EXTREME</span></div>
   </div>
   <div class="card">
-    <h3>Tonight</h3>
+    <h3>Tonight into tomorrow</h3>
     <div class="lead tonight-line" id="eveLine"><span id="eveLead">—</span><span id="moonTxt">—</span></div>
   </div>
 </div>
@@ -348,7 +367,7 @@ const LOCS={
   mb:{id:"mb",addrFull:"Moss Bridge Ct · Porters Neck",addrShort:"Porters Neck",
       lat:34.2982,lon:-77.7896,scene:"marsh",
       marine:{lat:34.26,lon:-77.68},tide:8658163,tropics:true,
-      outTitle:"On the water · Mason Inlet / ICW",
+      outTitle:"On the water · Figure 8",
       foot:"Forecast: Open-Meteo (NWS-blended), grid cell over Porters Neck · Marine: buoy grid off Mason Inlet · Tides: NOAA, Wrightsville Beach station 8658163 · Alerts: National Weather Service · Tropics: National Hurricane Center."},
   sp:{id:"sp",addrFull:"Bob Plumley Rd · Shady Spring",addrShort:"Shady Spring",
       lat:37.8215,lon:-80.9942,scene:"ridge",
@@ -435,6 +454,8 @@ function goldenWindow(around){
   if(!a||!b)return null;
   return a<b?{a,b}:{a:b,b:a};
 }
+const clock12=d=>{let h=d.getHours(),m=d.getMinutes();const ap=h<12?"am":"pm";h=h%12||12;
+  return h+":"+String(m).padStart(2,"0")+" "+ap};
 const spanTxt=(a,b)=>{const A=clock(a),B=clock(b);
   return A.slice(-1)===B.slice(-1)?A.slice(0,-1)+"–"+B:A+"–"+B};
 function moonPhaseIcon(m,size=21){
@@ -487,7 +508,7 @@ function starField(){
 }
 
 /* ── sky atmosphere layer ───────────────────────────── */
-function renderSkyFx(altDeg,cloud,windDir,wet,storm){
+function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd){
   const night=clamp((-altDeg-2)/8,0,1);
   const st=starField();
   const stars=night>.02?st.map(s=>{
@@ -496,7 +517,9 @@ function renderSkyFx(altDeg,cloud,windDir,wet,storm){
   }).join(""):"";
 
   const n=Math.round(clamp(cloud/100,0,1)*9);
-  const dur=[128,92,164], amp=[1,.72,1.28];
+  /* the sky moves at the speed of the day: calm air barely drifts, a blow pushes it along */
+  const rush=clamp(1+(Number(windSpd)||0)/11,1,4.2);
+  const dur=[128/rush,92/rush,164/rush], amp=[1,.72,1.28];
   const rr=mulberry(7311);
   let clouds="";
   for(let L=0;L<3;L++){
@@ -618,10 +641,12 @@ function renderScene(sunrise,sunset,now,weather,dark){
   }
 
   const deerAt=(x,y,s,flip=-1,opacity=1)=>`<g class="wildlife deer" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(flip*s).toFixed(2)},${s.toFixed(2)})" fill="${dark?"#07161B":"#173029"}" stroke="${dark?"#07161B":"#173029"}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
+    <g class="deer-head">
     <path d="M 17.5 -0.5 C 15.8 -3.2 14.4 -5.4 14.9 -8 C 15.4 -10.4 17.3 -11.6 19.4 -12" stroke-width="1.45" fill="none"/>
     <path d="M 14.8 -7.4 C 14.3 -9.4 14.1 -10.6 14 -12 M 15.9 -10.5 C 15.7 -12.4 15.6 -13.4 15.6 -14.6 M 17.7 -11.7 C 17.7 -13.1 17.7 -13.8 17.8 -14.8 M 16.8 -1.8 C 17.6 -3 18.2 -3.9 18.6 -4.9" stroke-width="1.2" fill="none"/>
     <path class="deer-ear" d="M 16.9 0.9 C 15.4 0.6 14.4 -0.2 13.9 -1.3 C 15.1 -1.3 16.4 -0.8 17.3 0 Z"/>
-    <path d="M 0.8 7.6 L 0 6.2 L 1.6 6.2 C 4 5.1 7 4.9 9.5 5.3 C 11 5.5 12.4 5.8 13.2 5.9 C 14.4 4.9 15.4 3.4 16.1 1.8 C 16.3 1.1 16.9 0.5 17.7 0.2 C 19 -0.2 20.4 0.4 21.4 1.4 L 23.4 3.4 C 23.6 3.8 23.3 4.3 22.8 4.3 L 21 4.1 C 20 4.9 19.2 5.6 18.4 5.8 C 17.6 6.6 17 7.6 16.6 8.6 C 16.2 9.8 16 10.4 15.8 10.9 C 13.4 12 8.4 12.1 5.2 11.3 C 3.2 10.8 2.1 9.2 1.7 7.7 Z"/>
+    <path d="M 12.6 6.4 C 13.8 5.6 15.2 3.6 16.1 1.8 C 16.3 1.1 16.9 0.5 17.7 0.2 C 19 -0.2 20.4 0.4 21.4 1.4 L 23.4 3.4 C 23.6 3.8 23.3 4.3 22.8 4.3 L 21 4.1 C 20 4.9 19.2 5.6 18.4 5.8 C 17.2 6.6 15.6 7.4 14.2 7.6 C 13.2 7.5 12.6 7 12.6 6.4 Z"/></g>
+    <path d="M 0.8 7.6 L 0 6.2 L 1.6 6.2 C 4 5.1 7 4.9 9.5 5.3 C 11 5.5 12.4 5.8 13.2 5.9 C 14.8 5.5 16.2 5.6 17.1 6.3 C 17.2 7 17 7.9 16.6 8.6 C 16.2 9.8 16 10.4 15.8 10.9 C 13.4 12 8.4 12.1 5.2 11.3 C 3.2 10.8 2.1 9.2 1.7 7.7 Z"/>
     <path d="M 14.6 11 L 14.9 16 L 14.6 20.8 M 12.9 11.3 L 13 20.8 M 4.4 11.2 L 3.7 15.6 L 4.6 20.8 M 6 11.4 L 5.9 20.8" stroke-width="1" fill="none"/></g>`;
   const critterInk=dark?"#07161B":"#173029";
   const owlAt=(x,y,s,opacity=.72)=>`<g class="wildlife owl" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
@@ -657,7 +682,7 @@ function renderScene(sunrise,sunset,now,weather,dark){
     };
     const ridges=ridge(52,16,150,.12)+ridge(36,12,95,.2)+ridge(20,9,66,.32);
 
-    const tree=(x,s,op)=>`<g fill="${ink}" opacity="${op}">
+    const tree=(x,s,op,dl=0)=>`<g fill="${ink}" opacity="${op}"${treeAt(dl)}>
       <path d="M ${(x-.55*s).toFixed(1)} ${base+2} L ${(x-.3*s).toFixed(1)} ${(base-13*s).toFixed(1)} L ${(x+.3*s).toFixed(1)} ${(base-13*s).toFixed(1)} L ${(x+.55*s).toFixed(1)} ${base+2} Z"/>
       <path d="M ${x.toFixed(1)} ${(base-8*s).toFixed(1)} L ${(x-3.4*s).toFixed(1)} ${(base-11*s).toFixed(1)} M ${x.toFixed(1)} ${(base-9.5*s).toFixed(1)} L ${(x+3.2*s).toFixed(1)} ${(base-12*s).toFixed(1)}" stroke="${ink}" stroke-width="${(.9*s).toFixed(1)}" fill="none" stroke-linecap="round"/>
       <ellipse cx="${x.toFixed(1)}" cy="${(base-17*s).toFixed(1)}" rx="${(8.6*s).toFixed(1)}" ry="${(6.2*s).toFixed(1)}"/>
@@ -698,7 +723,8 @@ function renderScene(sunrise,sunset,now,weather,dark){
       if(ti++%2)tufB+=t;else tufA+=t;
       x+=22+g()*40;
     }
-    const swayDur=clamp(11-wind*.18,4.6,11),swayAmt=clamp(.32+wind*.035,.32,1.35);
+    const swayDur=clamp(9.6-wind*.26,2.6,9.6),swayAmt=clamp(.45+wind*.085,.45,3.1);
+    const treeAt=dl=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;--tsway:${(swayAmt*.42).toFixed(2)}deg;--tsway-neg:${(-swayAmt*.42).toFixed(2)}deg;animation:swayTree ${(swayDur*1.45).toFixed(1)}s ease-in-out ${dl}s infinite alternate"`;
     const swayAt=dl=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;--sway:${swayAmt.toFixed(2)}deg;--sway-neg:${(-swayAmt).toFixed(2)}deg;animation:sway ${swayDur.toFixed(1)}s ease-in-out ${dl}s infinite alternate"`;
 
     let glint="";
@@ -754,7 +780,7 @@ function renderScene(sunrise,sunset,now,weather,dark){
       <g opacity=".9"${swayAt(1)}><path d="${tufA}" fill="${ink}"/></g>
       <g opacity=".9"${swayAt(swayDur*.55)}><path d="${tufB}" fill="${ink}"/></g>
       ${catsL}${catsR}
-      ${tree(W*.055,1.3,.62)}${tree(W*.105,.72,.48)}${tree(W*.955,1.05,.58)}
+      ${tree(W*.055,1.3,.62,0)}${tree(W*.105,.72,.48,swayDur*.7)}${tree(W*.955,1.05,.58,swayDur*1.15)}
       ${deer}
       ${owl}${rainyFrog}
       ${flies}
@@ -776,16 +802,19 @@ function renderScene(sunrise,sunset,now,weather,dark){
   }
   tl+=`L ${W+12} ${base+6} Z`;
 
+  const swayDur=clamp(9.2-wind*.26,2.4,9.2),swayAmt=clamp(.5+wind*.095,.5,3.4);
+  const treeAt=dl=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;--tsway:${(swayAmt*.42).toFixed(2)}deg;--tsway-neg:${(-swayAmt*.42).toFixed(2)}deg;animation:swayTree ${(swayDur*1.45).toFixed(1)}s ease-in-out ${dl}s infinite alternate"`;
+  const swayAt=(dl)=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;--sway:${swayAmt.toFixed(2)}deg;--sway-neg:${(-swayAmt).toFixed(2)}deg;animation:sway ${swayDur.toFixed(1)}s ease-in-out ${dl}s infinite alternate"`;
   /* loblolly pines: bare trunk, umbrella crown */
-  const lob=(x,s)=>{const cy=base-31*s;
-    return `<g fill="${ink}" opacity=".5">
+  const lob=(x,s,dl=0)=>{const cy=base-31*s;
+    return `<g fill="${ink}" opacity=".5"${treeAt(dl)}>
     <path d="M ${(x-.9*s).toFixed(1)} ${base+2} L ${(x-.45*s).toFixed(1)} ${cy.toFixed(1)} L ${(x+.45*s).toFixed(1)} ${cy.toFixed(1)} L ${(x+.9*s).toFixed(1)} ${base+2} Z"/>
     <path d="M ${x.toFixed(1)} ${(base-14*s).toFixed(1)} l ${(6*s).toFixed(1)} ${(-3.2*s).toFixed(1)}" stroke="${ink}" stroke-width="${(1.1*s).toFixed(1)}" stroke-linecap="round" fill="none"/>
     <ellipse cx="${x.toFixed(1)}" cy="${cy.toFixed(1)}" rx="${(10*s).toFixed(1)}" ry="${(4.3*s).toFixed(1)}"/>
     <ellipse cx="${(x-5.5*s).toFixed(1)}" cy="${(cy+4.2*s).toFixed(1)}" rx="${(6.4*s).toFixed(1)}" ry="${(3*s).toFixed(1)}"/>
     <ellipse cx="${(x+6*s).toFixed(1)}" cy="${(cy+3.8*s).toFixed(1)}" rx="${(5.6*s).toFixed(1)}" ry="${(2.7*s).toFixed(1)}"/>
     <ellipse cx="${x.toFixed(1)}" cy="${(cy+2.2*s).toFixed(1)}" rx="${(7.5*s).toFixed(1)}" ry="${(3.3*s).toFixed(1)}"/></g>`};
-  const pines=lob(W*.07,.95)+lob(W*.135,.6)+lob(W*.885,.8);
+  const pines=lob(W*.07,.95,0)+lob(W*.135,.6,swayDur*.75)+lob(W*.885,.8,swayDur*1.2);
 
   /* spartina: tapered filled blades, clustered tufts with real gaps */
   const blade=(bx,ht,lean)=>`M ${(bx-.8).toFixed(1)} ${base} Q ${(bx+lean*.3-.4).toFixed(1)} ${(base-ht*.62).toFixed(1)} ${(bx+lean).toFixed(1)} ${(base-ht).toFixed(1)} Q ${(bx+lean*.38+.6).toFixed(1)} ${(base-ht*.46).toFixed(1)} ${(bx+.8).toFixed(1)} ${base} Z `;
@@ -807,8 +836,6 @@ function renderScene(sunrise,sunset,now,weather,dark){
     if(ti++%2)tufB+=t; else tufA+=t;
     x+=10+g()*22;
   }
-  const swayDur=clamp(10.5-wind*.2,4.2,10.5),swayAmt=clamp(.34+wind*.04,.34,1.45);
-  const swayAt=(dl)=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;--sway:${swayAmt.toFixed(2)}deg;--sway-neg:${(-swayAmt).toFixed(2)}deg;animation:sway ${swayDur.toFixed(1)}s ease-in-out ${dl}s infinite alternate"`;
 
   /* dock on pilings, right of frame */
   const dx=W*.8;
@@ -917,16 +944,54 @@ function spline(p){
 }
 
 /* ── alerts / nowcast / storms ──────────────────────── */
+/* the gist, not the whole product: the NWS bullets if they are there, otherwise the opening lines */
+function alertGist(a){
+  const txt=(a.desc||"").replace(/\s*\n\s*/g," ").replace(/\s{2,}/g," ").trim();
+  if(!txt)return[];
+  const out=[];
+  const bullets=txt.match(/\*\s*(WHAT|WHERE|WHEN|IMPACTS)\.\.\.[^*]+/gi)||[];
+  for(const b of bullets.slice(0,4)){
+    const m=b.match(/\*\s*(WHAT|WHERE|WHEN|IMPACTS)\.\.\.\s*(.+)/i);
+    if(m)out.push({k:m[1].toLowerCase(),v:m[2].replace(/\s+$/,"").replace(/\.$/,"")});
+  }
+  if(out.length)return out;
+  const plain=txt.replace(/\*\s*/g," ").trim();
+  const cut=plain.slice(0,260);
+  const stop=cut.lastIndexOf(". ");
+  return[{k:"",v:(stop>90?cut.slice(0,stop+1):cut)+(plain.length>260&&stop<=90?"…":"")}];
+}
 function renderAlerts(alerts){
   const el=document.getElementById("alertStrip");
-  if(!alerts||!alerts.length){el.className="alert-strip";el.textContent="";return}
+  if(!alerts||!alerts.length){el.className="alert-strip";el.innerHTML="";el.removeAttribute("role");el.removeAttribute("tabindex");return}
   const sev={Extreme:0,Severe:1,Moderate:2,Minor:3};
-  const a=[...alerts].sort((x,y)=>(sev[x.severity]??4)-(sev[y.severity]??4))[0];
+  const sorted=[...alerts].sort((x,y)=>(sev[x.severity]??4)-(sev[y.severity]??4));
+  const a=sorted[0];
   const until=a.ends||a.expires;
   let t=a.event;
-  if(until)t+=" · until "+clock(new Date(until));
+  if(until)t+=" · until "+clock12(new Date(until));
   if(alerts.length>1)t+=" · +"+(alerts.length-1)+" more";
-  el.textContent=t;el.className="alert-strip on";
+  const gist=alertGist(a);
+  const others=sorted.slice(1).map(o=>o.event);
+  const body=gist.length||others.length
+    ?`<div class="alert-body">${gist.map(g=>`<p>${g.k?`<b>${g.k}</b> `:""}${esc(g.v)}</p>`).join("")}
+       ${others.length?`<p class="alert-more">also active: ${esc(others.join(", "))}</p>`:""}</div>`
+    :"";
+  el.innerHTML=`<span class="alert-head">${esc(t)}${body?'<span class="alert-caret" aria-hidden="true"></span>':""}</span>${body}`;
+  el.className="alert-strip on";
+  if(body){
+    el.setAttribute("role","button");el.setAttribute("tabindex","0");
+    el.setAttribute("aria-expanded",el.dataset.open==="1"?"true":"false");
+    if(el.dataset.open==="1")el.classList.add("open");
+  }else{el.removeAttribute("role");el.removeAttribute("tabindex")}
+}
+const esc=s=>String(s).replace(/[&<>"]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+function toggleAlert(){
+  const el=document.getElementById("alertStrip");
+  if(!el.classList.contains("on")||!el.querySelector(".alert-body"))return;
+  const open=!el.classList.contains("open");
+  el.classList.toggle("open",open);
+  el.dataset.open=open?"1":"0";
+  el.setAttribute("aria-expanded",open?"true":"false");
 }
 function renderNowcast(mins){
   const el=document.getElementById("nowcast");
@@ -994,7 +1059,7 @@ async function fetchStorms(){
 }
 
 /* ── tide ───────────────────────────────────────────── */
-function renderTides(preds,css){
+function renderTides(preds,css,gust){
   if(!preds||preds.length<2){document.getElementById("tideNote").textContent="tide data unavailable";return null}
   const P=preds.map(p=>({time:new Date(p.t.replace(" ","T")),v:+p.v,type:p.type})).sort((a,b)=>a.time-b.time);
   const now=new Date(),t0=now.getTime()-2.5*3.6e6,t1=now.getTime()+26*3.6e6;
@@ -1042,7 +1107,9 @@ function renderTides(preds,css){
   }
 
   /* the skiff rides the curve, so where it sits is how much water is under you right now */
-  const boat=`<g transform="translate(${nx.toFixed(1)} ${ny.toFixed(1)}) scale(1.15)"><g${PRM?"":' style="animation:bob 4.6s ease-in-out infinite alternate"'}>
+  const g0=Number(gust)||0;
+  const rockDeg=clamp(2.2+g0*.13,2.2,6.4),rockDur=clamp(2.9-g0*.055,1.15,2.9);
+  const boat=`<g transform="translate(${nx.toFixed(1)} ${ny.toFixed(1)}) scale(1.15)"><g${PRM?"":` style="--rock:${rockDeg.toFixed(1)}deg;animation:bob ${rockDur.toFixed(2)}s ease-in-out infinite alternate"`}>
     <path d="M -12.4 -3.4 L 12.8 -4.4 L 9 3.2 Q .5 5.2 -7.6 3.2 Z" fill="${css.ink}"/>
     <path d="M -2.6 -9.8 h 5.6 v 5.5 h -5.6 z" fill="${css.ink}"/>
     <path d="M 3.4 -7.6 h 3.6" stroke="${css.ink}" stroke-width="1.4" stroke-linecap="round"/>
@@ -1163,17 +1230,17 @@ function sunProtectionAdvice(c,dy,h,now){
     .filter(slot=>slot.day===today&&slot.uv>=3);
   const peak=Math.max(Number(dy.uv_index_max[0])||0,...slots.map(slot=>slot.uv));
   if(!slots.length){
-    if(now.getHours()>=17&&peak>=3)return{text:"Sunscreen time is over for today.",cls:"go"};
-    if(peak>=3)return{text:"Wear SPF 30+ from 10 a.m. to 5 p.m. Reapply after two hours outdoors.",cls:"caution"};
+    if(now.getHours()>=17&&peak>=3)return{text:"Sunscreen weather is over for today.",cls:"go"};
+    if(peak>=3)return{text:"Sunscreen weather from 10 a.m. to 5 p.m.",cls:"caution"};
     return{text:"UV stays low today.",cls:"go"};
   }
   const start=slots[0].time;
   const end=new Date(slots[slots.length-1].time.getTime()+3.6e6);
-  if(now>=end)return{text:"Sunscreen time is over for today.",cls:"go"};
+  if(now>=end)return{text:"Sunscreen weather is over for today.",cls:"go"};
   const timing=now>=start
-    ?`Wear SPF 30+ until ${spokenClock(end)}`
-    :`Wear SPF 30+ from ${spokenClock(start)} to ${spokenClock(end)}`;
-  return{text:timing+" Reapply after two hours outdoors.",cls:"caution"};
+    ?`Sunscreen weather until ${spokenClock(end)}`
+    :`Sunscreen weather from ${spokenClock(start)} to ${spokenClock(end)}`;
+  return{text:timing+".",cls:"caution"};
 }
 function dailyBrief(dy,i){
   const high=Math.round(dy.temperature_2m_max[i]);
@@ -1222,7 +1289,7 @@ function render(d,live){
   root.setProperty("--hl",bright?"#A93A16":"#FFC09B");
   document.getElementById("themeColor").setAttribute("content",stops[0]);
 
-  renderSkyFx(altDeg,c.cloud_cover,c.wind_direction_10m,wet,storm);
+  renderSkyFx(altDeg,c.cloud_cover,c.wind_direction_10m,wet,storm,c.wind_speed_10m);
   const scene=renderScene(sunrise,sunset,now,c,dark);
 
   const cs=getComputedStyle(document.documentElement);
@@ -1231,7 +1298,7 @@ function render(d,live){
     water:cs.getPropertyValue("--water").trim(),paper:cs.getPropertyValue("--paper").trim(),
     wash:cs.getPropertyValue("--wash").trim(),marker:cs.getPropertyValue("--marker").trim()};
 
-  document.getElementById("stamp").textContent=(live?"live · ":"cached · ")+c.time.slice(11,16)+" ET";
+  document.getElementById("stamp").textContent=(live?"live · ":"cached · ")+clock12(new Date(c.time))+" ET";
   countTo(document.getElementById("bigTemp"),c.temperature_2m);
   document.getElementById("condLabel").textContent=WMO[c.weather_code]||"—";
   document.getElementById("feels").textContent=Math.round(c.apparent_temperature)+"°";
@@ -1279,24 +1346,29 @@ function render(d,live){
   }
   const nextLight=goldWindows.find(gw=>gw.b>now)||null;
 
-  /* night bands from the daily sun table */
-  const isNight=t=>{
-    const day=t.slice(0,10),i=dy.time.indexOf(day);
-    if(i<0)return false;
-    return t<dy.sunrise[i]||t>dy.sunset[i];
-  };
-  let bands="",bs=-1;
-  for(let i=0;i<=n;i++){
-    const nt=i<n&&isNight(h.time[i]);
-    if(nt&&bs<0)bs=i;
-    if((!nt||i===n)&&bs>=0){
-      const x0=X(Math.max(0,bs-.5)),x1=X(Math.min(n-1,i-.5));
-      bands+=`<rect x="${x0.toFixed(1)}" y="12" width="${(x1-x0).toFixed(1)}" height="${base-12}" fill="url(#nightband)" rx="4"/>`;
-      if(x1-x0>60)bands+=`<g transform="translate(${((x0+x1)/2).toFixed(1)},22)" fill="${css.faint}" opacity=".85">
-        <path d="M 4 0 a 4.6 4.6 0 1 1-4.6-4.6 A 3.6 3.6 0 0 0 4 0 Z"/>
-        <text x="10" y="3" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="9.5" letter-spacing="1.1" fill="${css.faint}">AFTER DARK</text></g>`;
-      bs=-1;
+  /* night runs off the real sunset and sunrise on the same time axis as the gold, so the two
+     meet edge to edge instead of leaving a pale seam between them */
+  const suns=[];
+  for(let i=0;i<dy.time.length;i++){
+    const rise=new Date(dy.sunrise[i]).getTime(),set=new Date(dy.sunset[i]).getTime();
+    if(Number.isFinite(rise)&&Number.isFinite(set))suns.push({rise,set});
+  }
+  const darkSpans=[];
+  if(suns.length){
+    if(timelineStart<suns[0].rise)darkSpans.push([timelineStart,Math.min(suns[0].rise,timelineEnd)]);
+    for(let i=0;i<suns.length;i++){
+      const from=suns[i].set,to=i+1<suns.length?suns[i+1].rise:timelineEnd;
+      if(to>timelineStart&&from<timelineEnd)darkSpans.push([Math.max(from,timelineStart),Math.min(to,timelineEnd)]);
     }
+  }
+  let bands="";
+  for(const [from,to] of darkSpans){
+    const x0=xTime(from),x1=xTime(to);
+    if(x1-x0<2)continue;
+    bands+=`<rect x="${x0.toFixed(1)}" y="12" width="${(x1-x0).toFixed(1)}" height="${base-12}" fill="url(#nightband)" rx="4"/>`;
+    if(x1-x0>60)bands+=`<g transform="translate(${((x0+x1)/2).toFixed(1)},22)" fill="${css.faint}" opacity=".85">
+      <path d="M 4 0 a 4.6 4.6 0 1 1-4.6-4.6 A 3.6 3.6 0 0 0 4 0 Z"/>
+      <text x="10" y="3" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="9.5" letter-spacing="1.1" fill="${css.faint}">AFTER DARK</text></g>`;
   }
   let bars="",dots="",labels="";
   const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3" stroke-linejoin="round"`;
@@ -1326,8 +1398,8 @@ function render(d,live){
         <stop offset="1" stop-color="${tempColor(Math.min(...h.temp))}" stop-opacity="0"/></linearGradient>
       <linearGradient id="nightband" x1="0" y1="0" x2="1" y2="0">
         <stop offset="0" stop-color="${dark?"#000":css.ink}" stop-opacity="0"/>
-        <stop offset=".08" stop-color="${dark?"#000":css.ink}" stop-opacity="${dark?.26:.055}"/>
-        <stop offset=".92" stop-color="${dark?"#000":css.ink}" stop-opacity="${dark?.26:.055}"/>
+        <stop offset=".025" stop-color="${dark?"#000":css.ink}" stop-opacity="${dark?.26:.055}"/>
+        <stop offset=".975" stop-color="${dark?"#000":css.ink}" stop-opacity="${dark?.26:.055}"/>
         <stop offset="1" stop-color="${dark?"#000":css.ink}" stop-opacity="0"/></linearGradient>
       <linearGradient id="goldenband" x1="0" y1="0" x2="1" y2="0">
         <stop offset="0" stop-color="#F3B84F" stop-opacity="0"/>
@@ -1345,7 +1417,7 @@ function render(d,live){
     <line x1="${pad}" y1="${base}" x2="${W-pad}" y2="${base}" stroke="${css.line}" stroke-width="1"/>`;
   document.getElementById("hrLabels").innerHTML=labels;
   document.getElementById("tideSection").style.display=LOC.tide?"":"none";
-  const tide=LOC.tide?renderTides(d.tides,css):null;
+  const tide=LOC.tide?renderTides(d.tides,css,c.wind_gusts_10m):null;
   renderAlerts(d.alerts);
   renderNowcast(d.nowcast);
   renderStorms(d.storms);
@@ -1418,7 +1490,13 @@ function render(d,live){
     nightLow>=74?`Warm and mostly dry tonight, with a low around ${nightLow}°.`:
     `Mostly dry tonight, cooling to around ${nightLow}°.`;
   const gw=goldenWindow(sunset);
-  if(gw&&now<gw.b)tonightText+=now<gw.a?` Golden Hour is ${spokenSpan(gw.a,gw.b)}`:` Golden Hour lasts until ${spokenClock(gw.b)}`;
+  const saidTonight=!!(gw&&now<gw.b);
+  if(saidTonight)tonightText+=now<gw.a?` Golden Hour is ${spokenSpan(gw.a,gw.b)}`:` Golden Hour lasts until ${spokenClock(gw.b)}`;
+  /* the forward look lives here too, so both ends of the light sit in one place */
+  const gwAm=dy.sunrise[1]?goldenWindow(new Date(dy.sunrise[1])):null;
+  if(gwAm)tonightText+=saidTonight
+    ?` Tomorrow morning's runs ${spokenSpan(gwAm.a,gwAm.b)}`
+    :` Tomorrow morning's Golden Hour runs ${spokenSpan(gwAm.a,gwAm.b)}`;
   el.textContent=tonightText;
   document.getElementById("eveLine").className="lead tonight-line "+(nightPop>=35?"caution":"go");
   document.getElementById("moonTxt").innerHTML=moonPhaseIcon(scene.moon);
@@ -1503,7 +1581,7 @@ async function refresh(){
         return Number.isFinite(wave)?{wave_height_max:wave,wave_period_max:Number.isFinite(period)?period:null}:null;
       }).catch(()=>null):Promise.resolve(null),
       L.tide?fetchJSON(`https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&datum=MLLW&station=${L.tide}&time_zone=lst_ldt&units=english&interval=hilo&format=json&begin_date=${bd}&range=96`,6000).then(tj=>tj.predictions||null).catch(()=>null):Promise.resolve(null),
-      fetchJSON(`https://api.weather.gov/alerts/active?point=${L.lat},${L.lon}`,6000).then(aj=>(aj.features||[]).map(f=>({event:f.properties.event,severity:f.properties.severity,ends:f.properties.ends,expires:f.properties.expires}))).catch(()=>null),
+      fetchJSON(`https://api.weather.gov/alerts/active?point=${L.lat},${L.lon}`,6000).then(aj=>(aj.features||[]).map(f=>({event:f.properties.event,severity:f.properties.severity,ends:f.properties.ends,expires:f.properties.expires,desc:f.properties.description||"",inst:f.properties.instruction||""}))).catch(()=>null),
       stormsP
     ]);
     const nowcast=wj.minutely_15||null;
@@ -1544,6 +1622,9 @@ if(initialCached)render(initialCached,false);
 refresh();
 document.getElementById("locBtn").addEventListener("click",()=>setLoc(LOC.id==="mb"?"sp":"mb"));
 document.getElementById("refreshBtn").addEventListener("click",refresh);
+document.getElementById("alertStrip").addEventListener("click",toggleAlert);
+document.getElementById("alertStrip").addEventListener("keydown",e=>{
+  if(e.key==="Enter"||e.key===" "){e.preventDefault();toggleAlert()}});
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh()});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
