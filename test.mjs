@@ -39,6 +39,9 @@ test("plain-language and living-scene refinements stay in place", async () => {
 
   assert.match(html, /function dayStory\(c,dy,h\)/);
   assert.match(html, /function bestOutsideWindow\(h,coastal\)/);
+  // the window stays on today unless today is out of daylight or genuinely rough
+  assert.match(html, /const bToday=pick\(cands\.filter\(c=>c\.isToday\)\)/);
+  assert.match(html, /rough&&bTom&&bTom\.score<bToday\.score\*\.6/);
   assert.match(html, /Best outside stretch:/);
   assert.match(html, /id="goldenband"/);
   assert.match(html, /one local wildlife cue at a time/);
