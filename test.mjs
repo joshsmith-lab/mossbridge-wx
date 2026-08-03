@@ -31,7 +31,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /JSON\.stringify\(\{savedAt:Date\.now\(\),data\}\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v15/);
+  assert.match(worker, /mbwx-shell-v16/);
 });
 
 test("plain-language and living-scene refinements stay in place", async () => {
@@ -64,7 +64,8 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.doesNotMatch(html, /phaseName/);
   assert.match(html, /bird-wing/);
   assert.match(html, /deer-ear/);
-  assert.match(html, /Golden Hour/);
+  // "soupy" is earned, not decorative: real humidity sitting on real heat
+  assert.match(html, /soupy\?", soupy":humid\?", humid":""/);
   assert.match(html, />Sun &amp; heat</);
   assert.doesNotMatch(html, />UV · sun exposure</);
   assert.doesNotMatch(html, />Evening outlook</);
@@ -104,9 +105,13 @@ test("light, motion and alerts stay tuned", async () => {
   assert.match(html, /function alertGist\(a\)/);
   assert.match(html, /function toggleAlert\(\)/);
   assert.match(html, /class="alert-body"/);
-  // one place to look up the light at both ends of the night
+  // one place to look up the light at both ends of the night: a gold line, not a sentence
   assert.match(html, />Tonight into tomorrow</);
-  assert.match(html, /Tomorrow morning's/);
+  assert.match(html, /id="goldTimes"/);
+  assert.match(html, /class="gold-key">golden hour</);
+  assert.match(html, /\.gold-key\{/);
+  assert.doesNotMatch(html, /Golden Hour is /);
+  assert.doesNotMatch(html, /Tomorrow morning's Golden Hour runs /);
   // the water card is named for the water Josh actually runs
   assert.match(html, /On the water · Figure 8/);
   assert.doesNotMatch(html, /On the water · Mason Inlet/);
