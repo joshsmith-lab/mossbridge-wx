@@ -1160,8 +1160,7 @@ const spokenAt=t=>hh(t).replace("a"," a.m.").replace("p"," p.m.");
 const spokenClock=d=>clock(d).replace(":00","").replace(/a$/," a.m.").replace(/p$/," p.m.");
 const spokenSpan=(a,b)=>spanTxt(a,b).replace(/a$/," a.m.").replace(/p$/," p.m.");
 function bestOutsideWindow(h,coastal){
-  const run=3,n=h.temp.length;
-  let best=null;
+  const run=3,n=h.temp.length,day0=h.time[0].slice(0,10),cands=[];
   for(let i=0;i<=n-run;i++){
     const start=new Date(h.time[i]),last=new Date(h.time[i+run-1]);
     const end=new Date(last.getTime()+3.6e6);
@@ -1173,11 +1172,21 @@ function bestOutsideWindow(h,coastal){
       score+=pop*.72+gust*(coastal?.9:.65)+Math.max(0,temp-90)*2.2+Math.max(0,45-temp)*1.4;
     }
     if(maxPop>=70)score+=55;if(maxGust>=30)score+=42;
-    if(!best||score<best.score)best={start,end,score,maxPop,maxGust};
+    cands.push({start,end,score,maxPop,maxGust,isToday:h.time[i].slice(0,10)===day0});
   }
+  if(!cands.length)return null;
+  const pick=list=>list.reduce((b,c)=>!b||c.score<b.score?c:b,null);
+  const bToday=pick(cands.filter(c=>c.isToday)),bTom=pick(cands.filter(c=>!c.isToday));
+  /* this card is about today. Mornings almost always score better than afternoons, so comparing
+     across days silently sends you to tomorrow on a perfectly good afternoon. Only cross the
+     midnight line when today has no daylight window left, or today is rough and tomorrow is far
+     better. */
+  const rough=bToday&&(bToday.maxPop>=60||bToday.maxGust>=28);
+  const best=!bToday?bTom
+    :(rough&&bTom&&bTom.score<bToday.score*.6)?bTom
+    :bToday;
   if(!best)return null;
-  const today=h.time[0].slice(0,10),day=best.start.toLocaleDateString("en-CA");
-  best.text=spanTxt(best.start,best.end)+(day===today?" today":" tomorrow");
+  best.text=spanTxt(best.start,best.end)+(best.isToday?" today":" tomorrow");
   return best;
 }
 function dayStory(c,dy,h){
