@@ -31,7 +31,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /JSON\.stringify\(\{savedAt:Date\.now\(\),data\}\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v13/);
+  assert.match(worker, /mbwx-shell-v14/);
 });
 
 test("plain-language and living-scene refinements stay in place", async () => {
@@ -43,6 +43,15 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /id="goldenband"/);
   assert.match(html, /one quiet wildlife cue at a time/);
   assert.match(html, /seasonalFlies/);
+  assert.match(html, /function sunProtectionAdvice\(c,dy,h,now\)/);
+  assert.match(html, /Wear broad-spectrum SPF 30\+/);
+  assert.match(html, /function dailyBrief\(dy,i\)/);
+  assert.match(html, /class="day-detail"/);
+  assert.match(html, /moonPhaseIcon/);
+  assert.doesNotMatch(html, /phaseName/);
+  assert.match(html, /bird-wing/);
+  assert.match(html, /deer-ear/);
+  assert.match(html, /Golden Hour/);
   assert.match(html, />Sun &amp; heat</);
   assert.match(html, />Tonight</);
   assert.doesNotMatch(html, />UV · sun exposure</);
