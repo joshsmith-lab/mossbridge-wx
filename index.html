@@ -72,7 +72,13 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes fall{to{transform:translate3d(-14px,880px,0)}}
 @keyframes twinkle{0%,100%{opacity:var(--o)}50%{opacity:calc(var(--o) * .28)}}
 .star{animation:twinkle 4s ease-in-out infinite}
-@keyframes sway{from{transform:skewX(-1.5deg)}to{transform:skewX(1.5deg)}}
+@keyframes sway{from{transform:skewX(var(--sway-neg,-.55deg))}to{transform:skewX(var(--sway,.55deg))}}
+.bird-wing{transform-box:fill-box;transform-origin:50% 60%;animation:wingFlex 11s ease-in-out infinite}
+@keyframes wingFlex{0%,32%,47%,76%,100%{transform:scaleY(1)}36%{transform:scaleY(.78)}40%{transform:scaleY(1.06)}44%{transform:scaleY(.9)}80%{transform:scaleY(.84)}84%{transform:scaleY(1.04)}88%{transform:scaleY(.94)}}
+.deer-ear{transform-box:fill-box;transform-origin:55% 85%;animation:earFlick 12.5s ease-in-out infinite}
+@keyframes earFlick{0%,78%,100%{transform:rotate(0)}82%{transform:rotate(-11deg)}86%{transform:rotate(3deg)}90%{transform:rotate(0)}}
+.water-glint{animation:glintBreathe 9s ease-in-out infinite alternate}
+@keyframes glintBreathe{from{opacity:.72}to{opacity:1}}
 .ff{opacity:0;animation:ffl ease-in-out infinite}
 @keyframes ffl{0%,100%{opacity:0}35%{opacity:.85}55%{opacity:.1}70%{opacity:.6}}
 .mist-band{transform-box:fill-box;animation:mistBreath 13s ease-in-out infinite alternate}
@@ -192,9 +198,21 @@ section{padding:28px 20px 0}
 
 /* ── week ───────────────────────────────────────────── */
 .week{padding:28px 20px 0}
-.day-row{display:grid;grid-template-columns:44px 20px 28px 1fr 32px 36px;gap:8px;align-items:center;
+.day-row{display:grid;grid-template-columns:44px 20px 28px 1fr 32px 48px;gap:8px;align-items:center;
   padding:11px 0;border-bottom:1px solid var(--line)}
 .day-row:last-child{border-bottom:none}
+.day-detail{border-bottom:1px solid var(--line)}
+.day-detail:last-child{border-bottom:none}
+.day-detail summary{border-bottom:0;cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent}
+.day-detail summary::-webkit-details-marker{display:none}
+.day-detail summary::marker{content:""}
+.day-detail summary:focus-visible{outline:2px solid var(--water);outline-offset:4px;border-radius:4px}
+.day-detail[open] summary{padding-bottom:7px}
+.day-brief{margin:0 48px 13px 72px;color:var(--ink-soft);font-size:14.5px;line-height:1.5;text-wrap:pretty;
+  animation:briefIn .28s var(--ease) both}
+@keyframes briefIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+.day-chevron{width:10px;height:10px;display:inline-block;transition:transform .25s var(--ease);opacity:.55;flex:0 0 auto}
+.day-detail[open] .day-chevron{transform:rotate(180deg)}
 .day-row.today .dname{color:var(--marker)}
 .day-row .dname{font-family:var(--mono);font-size:12.5px;font-weight:600}
 .day-row .dname small{display:block;font-weight:400;color:var(--ink-faint);font-size:9.5px}
@@ -208,8 +226,9 @@ section{padding:28px 20px 0}
 .range-fill{position:absolute;top:6px;height:8px;border-radius:5px;transform-origin:left;
   animation:wipe .75s var(--ease) both}
 @keyframes wipe{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-.pop{font-family:var(--mono);font-size:11px;text-align:right;color:var(--ink-faint)}
+.pop{font-family:var(--mono);font-size:11px;text-align:right;color:var(--ink-faint);display:flex;align-items:center;justify-content:flex-end;gap:5px}
 .pop.wet{color:var(--water);font-weight:600}
+.moon-phase{display:block;width:21px;height:21px;color:var(--ink);opacity:.9}
 
 .foot{padding:32px 20px 0;font-family:var(--mono);font-size:10px;color:var(--ink-faint);line-height:1.75}
 .skel{display:inline-block;min-width:2.2em;border-radius:5px;background:var(--wash);color:transparent!important;
@@ -223,6 +242,7 @@ section{padding:28px 20px 0}
   .now{margin-top:18px}
   .verdict{margin-top:16px}
   .card-flex{gap:12px}
+  .day-brief{margin-left:0;margin-right:28px}
 }
 @media(prefers-reduced-motion:reduce){
   *,*::after{animation:none!important;transition:none!important}
@@ -299,7 +319,7 @@ section{padding:28px 20px 0}
   <div class="card">
     <h3>Tonight</h3>
     <div class="lead" id="eveLead">—</div>
-    <div class="stat-row"><span>around sunset <b id="eveTemp">—</b></span><span>best light <b id="goldTxt">—</b></span><span>wind <b id="eveWind">—</b></span><span>rain chance <b id="evePop">—</b></span><span>moon <b id="moonTxt">—</b></span></div>
+    <div class="stat-row"><span>around sunset <b id="eveTemp">—</b></span><span>golden hour <b id="goldTxt">—</b></span><span>wind <b id="eveWind">—</b></span><span>rain chance <b id="evePop">—</b></span><span>moon <b id="moonTxt">—</b></span></div>
   </div>
 </div>
 
@@ -406,8 +426,14 @@ function goldenWindow(around){
 }
 const spanTxt=(a,b)=>{const A=clock(a),B=clock(b);
   return A.slice(-1)===B.slice(-1)?A.slice(0,-1)+"–"+B:A+"–"+B};
-const phaseName=p=>p<.03||p>.97?"new":p<.22?"waxing crescent":p<.28?"first quarter":p<.47?"waxing gibbous":
-  p<.53?"full":p<.72?"waning gibbous":p<.78?"last quarter":"waning crescent";
+function moonPhaseIcon(m,size=21){
+  const x=10.5,y=10.5,r=7.1,ill=clamp(m.fraction,0,1),waxing=m.phase<.5;
+  const k=(1-2*ill)*r,sweep=waxing?(ill>.5?0:1):(ill>.5?1:0);
+  const term=`M ${x} ${y-r} A ${Math.max(.01,Math.abs(k)).toFixed(2)} ${r} 0 0 ${sweep} ${x} ${y+r} A ${r} ${r} 0 0 ${waxing?0:1} ${x} ${y-r} Z`;
+  return `<svg class="moon-phase" width="${size}" height="${size}" viewBox="0 0 21 21" role="img" aria-label="Moon phase">
+    <circle cx="${x}" cy="${y}" r="${r}" fill="currentColor" opacity=".14"/>
+    <path d="${term}" fill="currentColor"/></svg>`;
+}
 
 /* ── sky palette by solar altitude ──────────────────── */
 const SKY=[
@@ -582,7 +608,7 @@ function renderScene(sunrise,sunset,now,weather,dark){
   const deerAt=(x,y,s,flip=-1,opacity=1)=>`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(flip*s).toFixed(2)},${s.toFixed(2)})" fill="${dark?"#07161B":"#173029"}" stroke="${dark?"#07161B":"#173029"}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
     <path d="M 17.5 -0.5 C 15.8 -3.2 14.4 -5.4 14.9 -8 C 15.4 -10.4 17.3 -11.6 19.4 -12" stroke-width="1.45" fill="none"/>
     <path d="M 14.8 -7.4 C 14.3 -9.4 14.1 -10.6 14 -12 M 15.9 -10.5 C 15.7 -12.4 15.6 -13.4 15.6 -14.6 M 17.7 -11.7 C 17.7 -13.1 17.7 -13.8 17.8 -14.8 M 16.8 -1.8 C 17.6 -3 18.2 -3.9 18.6 -4.9" stroke-width="1.2" fill="none"/>
-    <path d="M 16.9 0.9 C 15.4 0.6 14.4 -0.2 13.9 -1.3 C 15.1 -1.3 16.4 -0.8 17.3 0 Z"/>
+    <path class="deer-ear" d="M 16.9 0.9 C 15.4 0.6 14.4 -0.2 13.9 -1.3 C 15.1 -1.3 16.4 -0.8 17.3 0 Z"/>
     <path d="M 0.8 7.6 L 0 6.2 L 1.6 6.2 C 4 5.1 7 4.9 9.5 5.3 C 11 5.5 12.4 5.8 13.2 5.9 C 14.4 4.9 15.4 3.4 16.1 1.8 C 16.3 1.1 16.9 0.5 17.7 0.2 C 19 -0.2 20.4 0.4 21.4 1.4 L 23.4 3.4 C 23.6 3.8 23.3 4.3 22.8 4.3 L 21 4.1 C 20 4.9 19.2 5.6 18.4 5.8 C 17.6 6.6 17 7.6 16.6 8.6 C 16.2 9.8 16 10.4 15.8 10.9 C 13.4 12 8.4 12.1 5.2 11.3 C 3.2 10.8 2.1 9.2 1.7 7.7 Z"/>
     <path d="M 14.6 11 L 14.9 16 L 14.6 20.8 M 12.9 11.3 L 13 20.8 M 4.4 11.2 L 3.7 15.6 L 4.6 20.8 M 6 11.4 L 5.9 20.8" stroke-width="1" fill="none"/></g>`;
 
@@ -646,13 +672,13 @@ function renderScene(sunrise,sunset,now,weather,dark){
       if(ti++%2)tufB+=t;else tufA+=t;
       x+=22+g()*40;
     }
-    const swayDur=clamp(9.5-wind*.2,3.4,9.5);
-    const swayAt=dl=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;animation:sway ${swayDur.toFixed(1)}s ease-in-out ${dl}s infinite alternate"`;
+    const swayDur=clamp(11-wind*.18,4.6,11),swayAmt=clamp(.32+wind*.035,.32,1.35);
+    const swayAt=dl=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;--sway:${swayAmt.toFixed(2)}deg;--sway-neg:${(-swayAmt).toFixed(2)}deg;animation:sway ${swayDur.toFixed(1)}s ease-in-out ${dl}s infinite alternate"`;
 
     let glint="";
     if(glintX!=null&&glintOp>.05){
       const gx=clamp(glintX,pondL+26,pondR-26);
-      glint=`<g fill="${glintCol}">
+      glint=`<g class="water-glint" fill="${glintCol}">
         <rect x="${(gx-12).toFixed(1)}" y="${(base+9).toFixed(1)}" width="24" height="1.5" rx=".75" opacity="${(.4*glintOp).toFixed(2)}"/>
         <rect x="${(gx-7).toFixed(1)}" y="${(base+13).toFixed(1)}" width="14" height="1.3" rx=".65" opacity="${(.28*glintOp).toFixed(2)}"/>
         <rect x="${(gx-4).toFixed(1)}" y="${(base+17).toFixed(1)}" width="8" height="1.1" rx=".55" opacity="${(.18*glintOp).toFixed(2)}"/></g>`;
@@ -672,7 +698,7 @@ function renderScene(sunrise,sunset,now,weather,dark){
     const deer=quietWeather&&sunAltDeg>-8&&sunAltDeg<7
       ?deerAt(W*.905,base+7-19.8,.95,-1,1):"";
 
-    const hawk=quietWeather&&up&&cloud<70?`<path d="M ${(W*.36-6).toFixed(1)} ${GY-88} Q ${(W*.36-2).toFixed(1)} ${GY-90.4} ${(W*.36).toFixed(1)} ${GY-88.6} Q ${(W*.36+2).toFixed(1)} ${GY-90.4} ${(W*.36+6).toFixed(1)} ${GY-88}" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".3"/>`:"";
+    const hawk=quietWeather&&up&&cloud<70?`<path class="bird-wing" style="animation-delay:-4.2s" d="M ${(W*.36-6).toFixed(1)} ${GY-88} Q ${(W*.36-2).toFixed(1)} ${GY-90.4} ${(W*.36).toFixed(1)} ${GY-88.6} Q ${(W*.36+2).toFixed(1)} ${GY-90.4} ${(W*.36+6).toFixed(1)} ${GY-88}" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".3"/>`:"";
     let flies="";
     if(seasonalFlies&&!PRM){const fr2=mulberry(51926);
       for(let i=0;i<10;i++)
@@ -752,8 +778,8 @@ function renderScene(sunrise,sunset,now,weather,dark){
     if(ti++%2)tufB+=t; else tufA+=t;
     x+=10+g()*22;
   }
-  const swayDur=clamp(8.5-wind*.22,2.8,8.5);
-  const swayAt=(dl)=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;animation:sway ${swayDur.toFixed(1)}s ease-in-out ${dl}s infinite alternate"`;
+  const swayDur=clamp(10.5-wind*.2,4.2,10.5),swayAmt=clamp(.34+wind*.04,.34,1.45);
+  const swayAt=(dl)=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;--sway:${swayAmt.toFixed(2)}deg;--sway-neg:${(-swayAmt).toFixed(2)}deg;animation:sway ${swayDur.toFixed(1)}s ease-in-out ${dl}s infinite alternate"`;
 
   /* dock on pilings, right of frame */
   const dx=W*.8;
@@ -781,7 +807,7 @@ function renderScene(sunrise,sunset,now,weather,dark){
   /* light on the water */
   let glint="";
   if(glintX!=null&&glintOp>.05){
-    glint=`<g fill="${glintCol}">
+    glint=`<g class="water-glint" fill="${glintCol}">
       <rect x="${(glintX-14).toFixed(1)}" y="${(GY+12.5).toFixed(1)}" width="28" height="1.6" rx=".8" opacity="${(.42*glintOp).toFixed(2)}"/>
       <rect x="${(glintX-8).toFixed(1)}" y="${(GY+17).toFixed(1)}" width="16" height="1.4" rx=".7" opacity="${(.3*glintOp).toFixed(2)}"/>
       <rect x="${(glintX-4.5).toFixed(1)}" y="${(GY+21.5).toFixed(1)}" width="9" height="1.2" rx=".6" opacity="${(.2*glintOp).toFixed(2)}"/></g>`;
@@ -806,8 +832,8 @@ function renderScene(sunrise,sunset,now,weather,dark){
   }
 
   /* one quiet wildlife cue at a time: heron at dawn, gulls by day, deer at dusk, fireflies at night */
-  const gull=(gx,gy,s,o)=>`<path d="M ${(gx-5*s).toFixed(1)} ${gy.toFixed(1)} Q ${(gx-2.2*s).toFixed(1)} ${(gy-3*s).toFixed(1)} ${gx.toFixed(1)} ${gy.toFixed(1)} Q ${(gx+2.2*s).toFixed(1)} ${(gy-3*s).toFixed(1)} ${(gx+5*s).toFixed(1)} ${gy.toFixed(1)}" fill="none" stroke="currentColor" stroke-width="${(1.3*s).toFixed(1)}" stroke-linecap="round" opacity="${o}"/>`;
-  const gulls=quietWeather&&up&&localHour>=10&&localHour<17&&cloud<70?gull(W*.40,GY-70,1,".3")+gull(W*.455,GY-82,.72,".26"):"";
+  const gull=(gx,gy,s,o,delay)=>`<path class="bird-wing" style="animation-delay:${delay}s" d="M ${(gx-5*s).toFixed(1)} ${gy.toFixed(1)} Q ${(gx-2.2*s).toFixed(1)} ${(gy-3*s).toFixed(1)} ${gx.toFixed(1)} ${gy.toFixed(1)} Q ${(gx+2.2*s).toFixed(1)} ${(gy-3*s).toFixed(1)} ${(gx+5*s).toFixed(1)} ${gy.toFixed(1)}" fill="none" stroke="currentColor" stroke-width="${(1.3*s).toFixed(1)}" stroke-linecap="round" opacity="${o}"/>`;
+  const gulls=quietWeather&&up&&localHour>=10&&localHour<17&&cloud<70?gull(W*.40,GY-70,1,".3",-2.6)+gull(W*.455,GY-82,.72,".26",-7.1):"";
   const marshDeer=quietWeather&&localHour>=15&&sunAltDeg>-8&&sunAltDeg<7
     ?deerAt(W*.66,base-20.8*.62,.62,1,.58):"";
   let flies="";
@@ -1012,6 +1038,7 @@ function countTo(el,val){
 
 /* ── the headline: what the day will actually feel like ─ */
 const spokenAt=t=>hh(t).replace("a"," a.m.").replace("p"," p.m.");
+const spokenClock=d=>clock(d).replace(":00","").replace(/a$/," a.m.").replace(/p$/," p.m.");
 function bestOutsideWindow(h,coastal){
   const run=3,n=h.temp.length;
   let best=null;
@@ -1077,6 +1104,43 @@ function dayStory(c,dy,h){
     second+=` Best outside stretch: <em>${best.text}</em>.`;
   return{html:first+" "+second,best};
 }
+function sunProtectionAdvice(c,dy,h,now){
+  const today=dy.time[0];
+  const slots=h.time.map((t,i)=>({time:new Date(t),uv:Number(h.uv[i])||0,day:t.slice(0,10)}))
+    .filter(slot=>slot.day===today&&slot.uv>=3);
+  const peak=Math.max(Number(dy.uv_index_max[0])||0,...slots.map(slot=>slot.uv));
+  if(!slots.length){
+    if(now.getHours()>=17&&peak>=3)return{text:"Today’s sunscreen window is over.",cls:"go"};
+    if(peak>=3)return{text:"Wear broad-spectrum SPF 30+ from about 10 a.m. to 5 p.m. Reapply every two hours outside and after swimming or sweating.",cls:"caution"};
+    return{text:"UV stays low today.",cls:"go"};
+  }
+  const start=slots[0].time;
+  const end=new Date(slots[slots.length-1].time.getTime()+3.6e6);
+  if(now>=end)return{text:"Today’s sunscreen window is over.",cls:"go"};
+  const timing=now>=start
+    ?`Wear broad-spectrum SPF 30+ until about ${spokenClock(end)}`
+    :`Wear broad-spectrum SPF 30+ from about ${spokenClock(start)} to ${spokenClock(end)}`;
+  const shade=peak>=8?" Use shade around midday.":"";
+  return{text:timing+" Reapply every two hours outside and after swimming or sweating."+shade,cls:"caution"};
+}
+function dailyBrief(dy,i){
+  const high=Math.round(dy.temperature_2m_max[i]);
+  const code=Number(dy.weather_code[i])||0;
+  const pop=Number(dy.precipitation_probability_max[i])||0;
+  const wind=Number(dy.wind_speed_10m_max?.[i])||0;
+  const feel=high>=92?"Hot":high>=82?"Warm":high>=68?"Mild":high>=52?"Cool":"Chilly";
+  const sky=code>=95?"a chance of storms":code>=80?"a few showers":code>=61?"periods of rain":
+    code>=51?"a little drizzle":code>=45?"some fog":code===3?"mostly cloudy skies":
+    code===2?"a mix of sun and clouds":code===1?"mostly sunny skies":"clear skies";
+  let note;
+  if(code>=95)note="Keep an eye on weather alerts.";
+  else if(code>=51||pop>=60)note="Plan around at least one wet stretch.";
+  else if(pop>=35)note="A passing shower is possible.";
+  else if(wind>=20)note="It may turn breezy.";
+  else if(high>=92)note="Keep the middle of the day short.";
+  else note="Most of the day should feel easy outside.";
+  return `${feel}, with ${sky}. ${note}`;
+}
 
 /* ── main render ────────────────────────────────────── */
 function render(d,live){
@@ -1126,16 +1190,13 @@ function render(d,live){
   document.getElementById("verdict").innerHTML=dayRead.html;
 
   const CI={wind:'<svg width="12" height="12" viewBox="0 0 16 16"><path d="M2 5.5h7.5a2 2 0 1 0-2-2M2 9h10a2 2 0 1 1-2 2M2 12.5h6" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>',
-    uv:'<svg width="12" height="12" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.8" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M8 1.4v1.6M8 13v1.6M1.4 8H3M13 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
-    moon:'<svg width="12" height="12" viewBox="0 0 16 16"><path d="M13 9.6A5.8 5.8 0 0 1 6.4 3 5.8 5.8 0 1 0 13 9.6Z" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linejoin="round"/></svg>'};
+    uv:'<svg width="12" height="12" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.8" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M8 1.4v1.6M8 13v1.6M1.4 8H3M13 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'};
   /* two chips, not four: gusts only appear when they are actually above the wind,
      and humidity is already carried by the feels-like number above */
   const wNow=Math.round(c.wind_speed_10m),gNow=Math.round(c.wind_gusts_10m);
-  document.getElementById("chips").innerHTML=[
-    [CI.wind,`${dirTxt(c.wind_direction_10m)} ${wNow}${gNow-wNow>=6?`, gusts ${gNow}`:""} mph`],
-    c.uv_index>=.5?[CI.uv,`uv ${c.uv_index.toFixed(1)}`]
-      :[CI.moon,`moon ${Math.round(scene.moon.fraction*100)}%`]
-  ].map(([ic,t])=>`<span class="chip">${ic}${t}</span>`).join("");
+  const chipData=[[CI.wind,`${dirTxt(c.wind_direction_10m)} ${wNow}${gNow-wNow>=6?`, gusts ${gNow}`:""} mph`]];
+  if(c.uv_index>=.5)chipData.push([CI.uv,`uv ${c.uv_index.toFixed(1)}`]);
+  document.getElementById("chips").innerHTML=chipData.map(([ic,t])=>`<span class="chip">${ic}${t}</span>`).join("");
 
   /* hourly */
   const W=820,Ht=168,pad=16,n=h.temp.length,base=Ht-30;
@@ -1240,7 +1301,7 @@ function render(d,live){
   const maxPop=Math.max(...h.pop);
   const ncOn=document.getElementById("nowcast").classList.contains("on");
   document.getElementById("hourlyNote").textContent=nextLight
-    ?`${nextLight.kind} light ${spanTxt(nextLight.a,nextLight.b)}`
+    ?`Golden Hour ${spanTxt(nextLight.a,nextLight.b)}`
     :maxPop<20&&!ncOn?"staying mostly dry":"blue bars show rain chance";
 
   /* outside card: boating at Moss Bridge, farm weather at Bob Plumley */
@@ -1283,14 +1344,10 @@ function render(d,live){
   const uvNow=c.uv_index,uvPk=dy.uv_index_max[0];
   const uvI=h.uv.indexOf(Math.max(...h.uv)),uvStrong=uvI>=0?Number(h.uv[uvI]):uvPk;
   const uvTomorrow=uvI>=0&&h.time[uvI].slice(0,10)!==dy.time[0];
-  const sunDone=(+c.time.slice(11,13)>=17&&uvNow<2)||uvNow<.2;
   const ul=document.getElementById("uvLead");
-  ul.textContent=sunDone?"The strong sun is done for today.":
-    uvNow>=8?"The sun is intense right now. Cover up and take shade breaks.":
-    uvNow>=6?"Strong sun right now. Bring sunscreen and look for shade.":
-    uvStrong>=6?"The sun gets strong around midday. Sunscreen will help if you're out.":
-    uvStrong>=3?"A little sunscreen helps if you're outside for a while.":"No special sun precautions today.";
-  ul.className="lead "+(!sunDone&&(uvNow>=6||uvStrong>=8)?"caution":"go");
+  const sunAdvice=sunProtectionAdvice(c,dy,h,now);
+  ul.textContent=sunAdvice.text;
+  ul.className="lead "+sunAdvice.cls;
   document.getElementById("uvNow").textContent=uvNow.toFixed(1);
   document.getElementById("uvPeak").textContent=uvStrong.toFixed(1)+(uvI>=0?" around "+hh(h.time[uvI])+(uvTomorrow?" tomorrow":""):"");
   document.getElementById("uvPin").style.left=Math.min(97,uvNow/12*100)+"%";
@@ -1308,29 +1365,37 @@ function render(d,live){
   document.getElementById("eveTemp").textContent=Math.round(h.temp[ei])+"°";
   document.getElementById("eveWind").textContent=Math.round(h.wind[ei])+" mph";
   document.getElementById("evePop").textContent=h.pop[ei]+"%";
-  document.getElementById("moonTxt").textContent=Math.round(scene.moon.fraction*100)+"% "+phaseName(scene.moon.phase);
+  document.getElementById("moonTxt").innerHTML=moonPhaseIcon(scene.moon);
   const gw=goldenWindow(sunset);
   document.getElementById("goldTxt").textContent=gw?spanTxt(gw.a,gw.b):"—";
 
   /* week */
   const lo=Math.min(...dy.temperature_2m_min),hi=Math.max(...dy.temperature_2m_max),span=hi-lo||1;
+  const openDay=document.querySelector(".day-detail[open]")?.dataset.day||null;
   document.getElementById("weekRows").innerHTML=dy.time.map((t,i)=>{
     const l=dy.temperature_2m_min[i],hx=dy.temperature_2m_max[i];
     const left=((l-lo)/span*100).toFixed(1),width=Math.max(4,(hx-l)/span*100).toFixed(1);
     const isStorm=dy.weather_code[i]>=95,pop=dy.precipitation_probability_max[i];
-    return `<div class="day-row${i===0?" today":""}">
-      <div class="dname">${i===0?"Today":dayName(t)}<small>${mmdd(t)}</small></div>
-      <div class="icon${isStorm?" rough":""}">${icon(dy.weather_code[i],17)}</div>
-      <div class="t-lo">${Math.round(l)}°</div>
-      <div class="range-track">
-        <div class="range-scale"></div>
-        <div class="range-fill" style="left:${left}%;width:${width}%;animation-delay:${i*55}ms;
-          background:linear-gradient(90deg,${tempColor(l)},${tempColor(hx)})"></div>
-      </div>
-      <div class="t-hi">${Math.round(hx)}°</div>
-      <div class="pop ${pop>=40?"wet":""}">${pop}%</div>
-    </div>`;
+    const row=`<span class="dname">${i===0?"Today":dayName(t)}<small>${mmdd(t)}</small></span>
+      <span class="icon${isStorm?" rough":""}">${icon(dy.weather_code[i],17)}</span>
+      <span class="t-lo">${Math.round(l)}°</span>
+      <span class="range-track">
+        <span class="range-scale"></span>
+        <span class="range-fill" style="left:${left}%;width:${width}%;animation-delay:${i*55}ms;
+          background:linear-gradient(90deg,${tempColor(l)},${tempColor(hx)})"></span>
+      </span>
+      <span class="t-hi">${Math.round(hx)}°</span>
+      <span class="pop ${pop>=40?"wet":""}">${pop}%${i?'<svg class="day-chevron" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>':""}</span>`;
+    if(i===0)return `<div class="day-row today">${row}</div>`;
+    return `<details class="day-detail" data-day="${t}"${openDay===t?" open":""}>
+      <summary class="day-row">${row}</summary>
+      <p class="day-brief">${dailyBrief(dy,i)}</p>
+    </details>`;
   }).join("");
+  const dayDetails=[...document.querySelectorAll(".day-detail")];
+  dayDetails.forEach(detail=>detail.addEventListener("toggle",()=>{
+    if(detail.open)dayDetails.forEach(other=>{if(other!==detail)other.open=false});
+  }));
   let wi=-1;
   for(let i=0;i<dy.time.length;i++){
     const p=dy.precipitation_probability_max[i];
