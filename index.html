@@ -79,6 +79,14 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes earFlick{0%,78%,100%{transform:rotate(0)}82%{transform:rotate(-11deg)}86%{transform:rotate(3deg)}90%{transform:rotate(0)}}
 .water-glint{animation:glintBreathe 9s ease-in-out infinite alternate}
 @keyframes glintBreathe{from{opacity:.72}to{opacity:1}}
+.heron-breathe{transform-box:fill-box;transform-origin:50% 100%;animation:heronBreathe 13s ease-in-out infinite alternate}
+@keyframes heronBreathe{from{transform:translateY(0)}to{transform:translateY(.7px)}}
+.owl-eyes{transform-box:fill-box;transform-origin:center;animation:wildlifeBlink 9s ease-in-out infinite}
+@keyframes wildlifeBlink{0%,91%,96%,100%{transform:scaleY(1)}93%,94%{transform:scaleY(.08)}}
+.frog-throat{transform-box:fill-box;transform-origin:center;animation:frogBreath 6.5s ease-in-out infinite alternate}
+@keyframes frogBreath{from{transform:scale(.88);opacity:.28}to{transform:scale(1.08);opacity:.55}}
+.crab-claw{transform-box:fill-box;transform-origin:bottom center;animation:clawLift 8s ease-in-out infinite}
+@keyframes clawLift{0%,72%,100%{transform:rotate(0)}78%{transform:rotate(-7deg)}84%{transform:rotate(3deg)}}
 .ff{opacity:0;animation:ffl ease-in-out infinite}
 @keyframes ffl{0%,100%{opacity:0}35%{opacity:.85}55%{opacity:.1}70%{opacity:.6}}
 .mist-band{transform-box:fill-box;animation:mistBreath 13s ease-in-out infinite alternate}
@@ -229,6 +237,9 @@ section{padding:28px 20px 0}
 .pop{font-family:var(--mono);font-size:11px;text-align:right;color:var(--ink-faint);display:flex;align-items:center;justify-content:flex-end;gap:5px}
 .pop.wet{color:var(--water);font-weight:600}
 .moon-phase{display:block;width:21px;height:21px;color:var(--ink);opacity:.9}
+.tonight-line{display:flex;align-items:flex-start;gap:12px;margin-bottom:0!important}
+.tonight-line>span:first-child{flex:1;min-width:0}
+.tonight-line .moon-phase{margin-top:2px;flex:0 0 auto}
 
 .foot{padding:32px 20px 0;font-family:var(--mono);font-size:10px;color:var(--ink-faint);line-height:1.75}
 .skel{display:inline-block;min-width:2.2em;border-radius:5px;background:var(--wash);color:transparent!important;
@@ -318,8 +329,7 @@ section{padding:28px 20px 0}
   </div>
   <div class="card">
     <h3>Tonight</h3>
-    <div class="lead" id="eveLead">—</div>
-    <div class="stat-row"><span>around sunset <b id="eveTemp">—</b></span><span>golden hour <b id="goldTxt">—</b></span><span>wind <b id="eveWind">—</b></span><span>rain chance <b id="evePop">—</b></span><span>moon <b id="moonTxt">—</b></span></div>
+    <div class="lead tonight-line" id="eveLine"><span id="eveLead">—</span><span id="moonTxt">—</span></div>
   </div>
 </div>
 
@@ -533,6 +543,7 @@ function renderScene(sunrise,sunset,now,weather,dark){
   const sp=sunPos(now), mp=moonPos(now), mph=moonPhase(now);
   const sunAltDeg=sp.alt*180/Math.PI,localHour=now.getHours(),month=now.getMonth();
   const seasonalFlies=dark&&month>=4&&month<=8&&temp>=60&&quietWeather&&wind<18;
+  const showFlies=seasonalFlies&&!PRM;
   const arcTop=24, arcSpan=W-60;
   const px=f=>30+f*arcSpan;
   const py=f=>GY-Math.sin(Math.PI*f)*(GY-arcTop);
@@ -605,12 +616,26 @@ function renderScene(sunrise,sunset,now,weather,dark){
     </g>`;
   }
 
-  const deerAt=(x,y,s,flip=-1,opacity=1)=>`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(flip*s).toFixed(2)},${s.toFixed(2)})" fill="${dark?"#07161B":"#173029"}" stroke="${dark?"#07161B":"#173029"}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
+  const deerAt=(x,y,s,flip=-1,opacity=1)=>`<g class="wildlife deer" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(flip*s).toFixed(2)},${s.toFixed(2)})" fill="${dark?"#07161B":"#173029"}" stroke="${dark?"#07161B":"#173029"}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
     <path d="M 17.5 -0.5 C 15.8 -3.2 14.4 -5.4 14.9 -8 C 15.4 -10.4 17.3 -11.6 19.4 -12" stroke-width="1.45" fill="none"/>
     <path d="M 14.8 -7.4 C 14.3 -9.4 14.1 -10.6 14 -12 M 15.9 -10.5 C 15.7 -12.4 15.6 -13.4 15.6 -14.6 M 17.7 -11.7 C 17.7 -13.1 17.7 -13.8 17.8 -14.8 M 16.8 -1.8 C 17.6 -3 18.2 -3.9 18.6 -4.9" stroke-width="1.2" fill="none"/>
     <path class="deer-ear" d="M 16.9 0.9 C 15.4 0.6 14.4 -0.2 13.9 -1.3 C 15.1 -1.3 16.4 -0.8 17.3 0 Z"/>
     <path d="M 0.8 7.6 L 0 6.2 L 1.6 6.2 C 4 5.1 7 4.9 9.5 5.3 C 11 5.5 12.4 5.8 13.2 5.9 C 14.4 4.9 15.4 3.4 16.1 1.8 C 16.3 1.1 16.9 0.5 17.7 0.2 C 19 -0.2 20.4 0.4 21.4 1.4 L 23.4 3.4 C 23.6 3.8 23.3 4.3 22.8 4.3 L 21 4.1 C 20 4.9 19.2 5.6 18.4 5.8 C 17.6 6.6 17 7.6 16.6 8.6 C 16.2 9.8 16 10.4 15.8 10.9 C 13.4 12 8.4 12.1 5.2 11.3 C 3.2 10.8 2.1 9.2 1.7 7.7 Z"/>
     <path d="M 14.6 11 L 14.9 16 L 14.6 20.8 M 12.9 11.3 L 13 20.8 M 4.4 11.2 L 3.7 15.6 L 4.6 20.8 M 6 11.4 L 5.9 20.8" stroke-width="1" fill="none"/></g>`;
+  const critterInk=dark?"#07161B":"#173029";
+  const owlAt=(x,y,s,opacity=.72)=>`<g class="wildlife owl" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
+    <path d="M -5.5 7 C -7 2 -6.2 -2.8 -3.2 -5.4 L 0 -3.4 L 3.2 -5.4 C 6.2 -2.8 7 2 5.5 7 C 3 9.2 -3 9.2 -5.5 7 Z"/>
+    <g class="owl-eyes"><circle cx="-2.1" cy=".2" r="1.15" fill="#F3D989" stroke="none"/><circle cx="2.1" cy=".2" r="1.15" fill="#F3D989" stroke="none"/><circle cx="-2.1" cy=".2" r=".42" fill="${critterInk}" stroke="none"/><circle cx="2.1" cy=".2" r=".42" fill="${critterInk}" stroke="none"/></g>
+    <path d="M -3 8.2 l -.8 2 M 3 8.2 l .8 2" fill="none" stroke-width=".8"/></g>`;
+  const frogAt=(x,y,s,opacity=.72)=>`<g class="wildlife frog" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" opacity="${opacity}">
+    <ellipse cx="0" cy="0" rx="5.2" ry="2.9"/><circle cx="-2.8" cy="-2.4" r="1.65"/><circle cx="2.8" cy="-2.4" r="1.65"/>
+    <circle cx="-2.8" cy="-2.7" r=".48" fill="#DCE8D8" stroke="none"/><circle cx="2.8" cy="-2.7" r=".48" fill="#DCE8D8" stroke="none"/>
+    <ellipse class="frog-throat" cx="0" cy="1.8" rx="2.4" ry="1.2" fill="#DCE8D8" stroke="none"/>
+    <path d="M -4 1.5 l -4 3 M 4 1.5 l 4 3" fill="none" stroke-width="1.1"/></g>`;
+  const crabAt=(x,y,s,opacity=.7)=>`<g class="wildlife crab" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
+    <ellipse cx="0" cy="0" rx="5.2" ry="3"/><path d="M -3.8 1.5 l -4 2.8 M -1.6 2.3 l -2.5 3.2 M 3.8 1.5 l 4 2.8 M 1.6 2.3 l 2.5 3.2" fill="none" stroke-width="1"/>
+    <g class="crab-claw"><path d="M -4 -1.4 l -4.2 -3 M -8.2 -4.4 l -1.8 -1 M -8.2 -4.4 l -.5 2" fill="none" stroke-width="1.2"/></g>
+    <path d="M 4 -1.4 l 4.2 -3 M 8.2 -4.4 l 1.8 -1 M 8.2 -4.4 l .5 2" fill="none" stroke-width="1.2"/></g>`;
 
   document.getElementById("sceneSvg").setAttribute("aria-label",
     LOC.scene==="ridge"?"Sun and moon over Appalachian ridgelines and the farm pond":"Sun and moon over the marsh horizon");
@@ -695,14 +720,16 @@ function renderScene(sunrise,sunset,now,weather,dark){
     const catsR=`<g opacity=".95"${swayAt(swayDur*.5)}>${cattail(pondR-12,20,-.9)+cattail(pondR-6,25,.8)}
       <path d="M ${(pondR-9).toFixed(1)} ${base+9} Q ${(pondR-16).toFixed(1)} ${base-4} ${(pondR-20).toFixed(1)} ${base-12}" stroke="${ink}" stroke-width="1.05" fill="none" stroke-linecap="round"/></g>`;
 
-    const deer=quietWeather&&sunAltDeg>-8&&sunAltDeg<7
+    const rainyFrog=(wet||storm)?frogAt(pondR-28,base+4,.82,.8):"";
+    const deer=!wet&&!storm&&!dark&&(fog||localHour<11||localHour>=16||sunAltDeg<7)
       ?deerAt(W*.905,base+7-19.8,.95,-1,1):"";
 
-    const hawk=quietWeather&&up&&cloud<70?`<path class="bird-wing" style="animation-delay:-4.2s" d="M ${(W*.36-6).toFixed(1)} ${GY-88} Q ${(W*.36-2).toFixed(1)} ${GY-90.4} ${(W*.36).toFixed(1)} ${GY-88.6} Q ${(W*.36+2).toFixed(1)} ${GY-90.4} ${(W*.36+6).toFixed(1)} ${GY-88}" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".3"/>`:"";
+    const hawk=!wet&&!storm&&!dark&&!deer?`<path class="wildlife bird-wing" style="animation-delay:-4.2s" d="M ${(W*.36-6).toFixed(1)} ${GY-88} Q ${(W*.36-2).toFixed(1)} ${GY-90.4} ${(W*.36).toFixed(1)} ${GY-88.6} Q ${(W*.36+2).toFixed(1)} ${GY-90.4} ${(W*.36+6).toFixed(1)} ${GY-88}" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".3"/>`:"";
+    const owl=!wet&&!storm&&dark&&!showFlies?owlAt(W*.83,base-8,.82,.68):"";
     let flies="";
-    if(seasonalFlies&&!PRM){const fr2=mulberry(51926);
+    if(showFlies){const fr2=mulberry(51926);
       for(let i=0;i<10;i++)
-        flies+=`<circle cx="${(8+fr2()*(W-16)).toFixed(1)}" cy="${(base-6-fr2()*34).toFixed(1)}" r="1.3" fill="#FFE9A0" class="ff" style="animation-duration:${(3.2+fr2()*3.8).toFixed(1)}s;animation-delay:-${(fr2()*6).toFixed(1)}s"/>`;
+        flies+=`<circle cx="${(8+fr2()*(W-16)).toFixed(1)}" cy="${(base-6-fr2()*34).toFixed(1)}" r="1.3" fill="#FFE9A0" class="wildlife ff" style="animation-duration:${(3.2+fr2()*3.8).toFixed(1)}s;animation-delay:-${(fr2()*6).toFixed(1)}s"/>`;
     }
 
     document.getElementById("sceneSvg").setAttribute("viewBox",`0 0 ${W} ${H}`);
@@ -728,6 +755,7 @@ function renderScene(sunrise,sunset,now,weather,dark){
       ${catsL}${catsR}
       ${tree(W*.055,1.3,.62)}${tree(W*.105,.72,.48)}${tree(W*.955,1.05,.58)}
       ${deer}
+      ${owl}${rainyFrog}
       ${flies}
       ${sunTimes}`;
     return {sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05};
@@ -789,10 +817,10 @@ function renderScene(sunrise,sunset,now,weather,dark){
   </g>`;
 
   /* great blue heron in the shallows */
-  const hx=W*.22;
-  const showHeron=quietWeather&&localHour<11&&sunAltDeg>-7&&sunAltDeg<16;
-  const heron=showHeron?`<g transform="translate(${hx.toFixed(1)} ${(base-32.7).toFixed(1)})" fill="${ink}">
-    <path d="M 0.3 8 L 7 6 C 8.2 5.4 9.6 5.5 10.4 6.3 L 13.6 8.6 L 10.7 7.9
+  const hx=W*.20;
+  const showHeron=!wet&&!storm&&!showFlies&&(dark||fog||localHour<12||localHour>=16);
+  const heron=showHeron?`<g class="wildlife heron" transform="translate(${hx.toFixed(1)} ${(base-43).toFixed(1)}) scale(1.25)" fill="${ink}">
+    <g class="heron-breathe"><path d="M 0.3 8 L 7 6 C 8.2 5.4 9.6 5.5 10.4 6.3 L 13.6 8.6 L 10.7 7.9
       C 10.9 9.6 10.2 11.4 9.2 13 C 8 15 7.8 17.2 8.9 19 C 10 20.6 12 21.4 13.8 22.2
       C 17 23.8 20.6 26 23.2 28.6 L 25.8 31.8 C 24.4 32.2 23 31.9 21.8 31.2
       C 19.4 32.8 16.2 33.2 13.9 32.2 C 12.2 31.4 11.4 29.8 11.4 28.2
@@ -800,9 +828,9 @@ function renderScene(sunrise,sunset,now,weather,dark){
       C 8.6 23.4 7.2 21.4 6.7 19.5 C 6.1 17.4 6.2 15.6 7 13.6
       C 7.9 11.6 8.6 10 8.6 8.9 C 8.5 8.3 8 7.9 7.2 7.7 Z"/>
     <path d="M 16.6 32.9 L 15.9 40.5 M 19.2 32.2 L 20.2 36 L 19.7 40.5" stroke="${ink}" stroke-width="1.1" fill="none" stroke-linecap="round"/>
-    <path d="M 14.4 40.7 h 3.4 M 18.3 40.7 h 3.4" stroke="${ink}" stroke-width=".9" fill="none" stroke-linecap="round"/>
+    <path d="M 14.4 40.7 h 3.4 M 18.3 40.7 h 3.4" stroke="${ink}" stroke-width=".9" fill="none" stroke-linecap="round"/></g>
   </g>
-  <ellipse cx="${(hx+17.5).toFixed(1)}" cy="${(base+8.6).toFixed(1)}" rx="10" ry="1.2" fill="${dark?'#EAF2FF':'#FFFFFF'}" opacity=".16"/>`:"";
+  <ellipse cx="${(hx+22).toFixed(1)}" cy="${(base+8.6).toFixed(1)}" rx="13" ry="1.3" fill="${dark?'#EAF2FF':'#FFFFFF'}" opacity=".16"/>`:"";
 
   /* light on the water */
   let glint="";
@@ -831,15 +859,15 @@ function renderScene(sunrise,sunset,now,weather,dark){
       waterWeather+=`<path d="M ${x.toFixed(1)} ${y.toFixed(1)} h ${w.toFixed(1)}" stroke="${dark?'#C9E2EB':'#153845'}" stroke-width=".7" stroke-linecap="round" opacity=".1"/>`;}
   }
 
-  /* one quiet wildlife cue at a time: heron at dawn, gulls by day, deer at dusk, fireflies at night */
-  const gull=(gx,gy,s,o,delay)=>`<path class="bird-wing" style="animation-delay:${delay}s" d="M ${(gx-5*s).toFixed(1)} ${gy.toFixed(1)} Q ${(gx-2.2*s).toFixed(1)} ${(gy-3*s).toFixed(1)} ${gx.toFixed(1)} ${gy.toFixed(1)} Q ${(gx+2.2*s).toFixed(1)} ${(gy-3*s).toFixed(1)} ${(gx+5*s).toFixed(1)} ${gy.toFixed(1)}" fill="none" stroke="currentColor" stroke-width="${(1.3*s).toFixed(1)}" stroke-linecap="round" opacity="${o}"/>`;
-  const gulls=quietWeather&&up&&localHour>=10&&localHour<17&&cloud<70?gull(W*.40,GY-70,1,".3",-2.6)+gull(W*.455,GY-82,.72,".26",-7.1):"";
-  const marshDeer=quietWeather&&localHour>=15&&sunAltDeg>-8&&sunAltDeg<7
-    ?deerAt(W*.66,base-20.8*.62,.62,1,.58):"";
+  /* one local wildlife cue at a time: heron morning/evening, shorebirds by day,
+     fireflies on warm summer nights, a quiet crab when the marsh turns wet */
+  const gull=(gx,gy,s,o,delay)=>`<path class="wildlife bird-wing" style="animation-delay:${delay}s" d="M ${(gx-5*s).toFixed(1)} ${gy.toFixed(1)} Q ${(gx-2.2*s).toFixed(1)} ${(gy-3*s).toFixed(1)} ${gx.toFixed(1)} ${gy.toFixed(1)} Q ${(gx+2.2*s).toFixed(1)} ${(gy-3*s).toFixed(1)} ${(gx+5*s).toFixed(1)} ${gy.toFixed(1)}" fill="none" stroke="currentColor" stroke-width="${(1.3*s).toFixed(1)}" stroke-linecap="round" opacity="${o}"/>`;
+  const gulls=!wet&&!storm&&!dark&&!showHeron?gull(W*.40,GY-70,1,".34",-2.6)+gull(W*.455,GY-82,.72,".28",-7.1):"";
+  const marshCrab=(wet||storm)?crabAt(W*.57,base-2,.82,.74):"";
   let flies="";
-  if(seasonalFlies&&!PRM){const fr=mulberry(80126);
+  if(showFlies){const fr=mulberry(80126);
     for(let i=0;i<7;i++)
-      flies+=`<circle cx="${(10+fr()*(W-20)).toFixed(1)}" cy="${(base-4-fr()*30).toFixed(1)}" r="1.3" fill="#FFE9A0" class="ff" style="animation-duration:${(3.5+fr()*3.5).toFixed(1)}s;animation-delay:-${(fr()*6).toFixed(1)}s"/>`;
+      flies+=`<circle cx="${(10+fr()*(W-20)).toFixed(1)}" cy="${(base-4-fr()*30).toFixed(1)}" r="1.3" fill="#FFE9A0" class="wildlife ff" style="animation-duration:${(3.5+fr()*3.5).toFixed(1)}s;animation-delay:-${(fr()*6).toFixed(1)}s"/>`;
   }
 
   document.getElementById("sceneSvg").setAttribute("viewBox",`0 0 ${W} ${H}`);
@@ -866,7 +894,7 @@ function renderScene(sunrise,sunset,now,weather,dark){
     <g opacity=".95"${swayAt(swayDur*.5)}><path d="${tufB}" fill="${ink}"/></g>
     ${dock}
     ${heron}
-    ${marshDeer}
+    ${marshCrab}
     ${flies}
     <path d="M 0 ${H-3} L ${W} ${H-3}" stroke="${dark?'#3E7CA6':'#8FC3D9'}" stroke-width="3" opacity="${dark?.4:.6}"/>
     ${sunTimes}`;
@@ -976,8 +1004,9 @@ function renderTides(preds,css){
     const f=clamp((t-a.time.getTime())/(b.time.getTime()-a.time.getTime()),0,1);
     return a.v+(b.v-a.v)*(1-Math.cos(Math.PI*f))/2;
   };
-  const W=Math.max(320,appW()-40),H=Math.round(152+(760-W)*.09),padX=8,topY=32,botY=H-40;
+  const W=Math.max(320,appW()-40),H=Math.round(162+(760-W)*.09),padX=8,topY=46,botY=H-28;
   const fs=W<360?1.08:W<520?1.22:1;               /* labels scale up on a phone */
+  const labelTimeY=15,labelValueY=29,labelRailY=35;
   const vs=[];for(let t=t0;t<=t1;t+=9e5)vs.push(interp(t));
   const vMin=Math.min(...vs)-.35,vMax=Math.max(...vs)+.35;
   const X=t=>padX+(t-t0)/(t1-t0)*(W-2*padX);
@@ -990,17 +1019,19 @@ function renderTides(preds,css){
   let labels="";
   for(const p of P){
     const tm=p.time.getTime();if(tm<t0||tm>t1)continue;
-    const x=X(tm),y=Y(p.v),up=p.type==="H";
+    const x=X(tm),y=Y(p.v);
     const anchor=x<32*fs?"start":x>W-32*fs?"end":"middle";
+    labels+=`<line x1="${x.toFixed(1)}" y1="${labelRailY}" x2="${x.toFixed(1)}" y2="${Math.max(labelRailY,y-5).toFixed(1)}" stroke="${css.line}" stroke-width="1" stroke-dasharray="1 4"/>
+    <text x="${x.toFixed(1)}" y="${labelTimeY}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(11*fs).toFixed(1)}" font-weight="600" fill="${css.ink}" ${halo}>${clock(p.time)}</text>
+    <text x="${x.toFixed(1)}" y="${labelValueY}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(9.5*fs).toFixed(1)}" fill="${css.faint}" ${halo}>${p.v.toFixed(1)} ft</text>`;
     if(Math.abs(x-nx)>=9)labels+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.8" fill="${css.water}"/>`;
-    labels+=`<text x="${x.toFixed(1)}" y="${(up?y-18:y+21).toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(11*fs).toFixed(1)}" font-weight="600" fill="${css.ink}" ${halo}>${clock(p.time)}</text>
-    <text x="${x.toFixed(1)}" y="${(up?y-6:y+33).toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(9.5*fs).toFixed(1)}" fill="${css.faint}" ${halo}>${p.v.toFixed(1)} ft</text>`;
   }
   document.getElementById("tideSvg").setAttribute("viewBox",`0 0 ${W} ${H}`);
   document.getElementById("tideSvg").innerHTML=`
     <defs><linearGradient id="tideFill" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="${css.water}" stop-opacity=".30"/>
       <stop offset="1" stop-color="${css.water}" stop-opacity=".02"/></linearGradient></defs>
+    <line x1="${padX}" y1="${labelRailY}" x2="${W-padX}" y2="${labelRailY}" stroke="${css.line}" stroke-width="1"/>
     <path d="${area}" fill="url(#tideFill)"/>
     <path d="${path}" fill="none" stroke="${css.water}" stroke-width="2.4" stroke-linecap="round"/>
     <line x1="${padX}" y1="${botY}" x2="${W-padX}" y2="${botY}" stroke="${css.line}" stroke-width="1"/>
@@ -1039,6 +1070,7 @@ function countTo(el,val){
 /* ── the headline: what the day will actually feel like ─ */
 const spokenAt=t=>hh(t).replace("a"," a.m.").replace("p"," p.m.");
 const spokenClock=d=>clock(d).replace(":00","").replace(/a$/," a.m.").replace(/p$/," p.m.");
+const spokenSpan=(a,b)=>spanTxt(a,b).replace(/a$/," a.m.").replace(/p$/," p.m.");
 function bestOutsideWindow(h,coastal){
   const run=3,n=h.temp.length;
   let best=null;
@@ -1110,18 +1142,17 @@ function sunProtectionAdvice(c,dy,h,now){
     .filter(slot=>slot.day===today&&slot.uv>=3);
   const peak=Math.max(Number(dy.uv_index_max[0])||0,...slots.map(slot=>slot.uv));
   if(!slots.length){
-    if(now.getHours()>=17&&peak>=3)return{text:"Today’s sunscreen window is over.",cls:"go"};
-    if(peak>=3)return{text:"Wear broad-spectrum SPF 30+ from about 10 a.m. to 5 p.m. Reapply every two hours outside and after swimming or sweating.",cls:"caution"};
+    if(now.getHours()>=17&&peak>=3)return{text:"Sunscreen time is over for today.",cls:"go"};
+    if(peak>=3)return{text:"Wear SPF 30+ from 10 a.m. to 5 p.m. Reapply after two hours outdoors.",cls:"caution"};
     return{text:"UV stays low today.",cls:"go"};
   }
   const start=slots[0].time;
   const end=new Date(slots[slots.length-1].time.getTime()+3.6e6);
-  if(now>=end)return{text:"Today’s sunscreen window is over.",cls:"go"};
+  if(now>=end)return{text:"Sunscreen time is over for today.",cls:"go"};
   const timing=now>=start
-    ?`Wear broad-spectrum SPF 30+ until about ${spokenClock(end)}`
-    :`Wear broad-spectrum SPF 30+ from about ${spokenClock(start)} to ${spokenClock(end)}`;
-  const shade=peak>=8?" Use shade around midday.":"";
-  return{text:timing+" Reapply every two hours outside and after swimming or sweating."+shade,cls:"caution"};
+    ?`Wear SPF 30+ until ${spokenClock(end)}`
+    :`Wear SPF 30+ from ${spokenClock(start)} to ${spokenClock(end)}`;
+  return{text:timing+" Reapply after two hours outdoors.",cls:"caution"};
 }
 function dailyBrief(dy,i){
   const high=Math.round(dy.temperature_2m_max[i]);
@@ -1352,22 +1383,24 @@ function render(d,live){
   document.getElementById("uvPeak").textContent=uvStrong.toFixed(1)+(uvI>=0?" around "+hh(h.time[uvI])+(uvTomorrow?" tomorrow":""):"");
   document.getElementById("uvPin").style.left=Math.min(97,uvNow/12*100)+"%";
 
-  /* evening */
-  const si=h.time.findIndex(t=>t.slice(0,13)===dy.sunset[0].slice(0,13));
-  const ei=si>=0?si:Math.min(4,n-1);
+  /* tonight: one useful read, rather than another row of weather instruments */
   const el=document.getElementById("eveLead");
-  const evePop=Number(h.pop[ei])||0,eveWind=Number(h.wind[ei])||0,eveTemp=Number(h.temp[ei])||0;
-  const eveFeel=eveTemp>=84?"Still warm":eveTemp>=68?"Comfortable":eveTemp>=54?"Cool":"Chilly";
-  const eveSky=evePop>=60?"and likely wet":evePop>=35?"with a possible shower":"and mostly dry";
-  const eveAir=eveWind>=18?", with a noticeable breeze":eveWind<=7?", with calm air":"";
-  el.textContent=`${eveFeel} ${eveSky}${eveAir} around sunset.`;
-  el.className="lead "+(evePop>=35?"caution":"go");
-  document.getElementById("eveTemp").textContent=Math.round(h.temp[ei])+"°";
-  document.getElementById("eveWind").textContent=Math.round(h.wind[ei])+" mph";
-  document.getElementById("evePop").textContent=h.pop[ei]+"%";
-  document.getElementById("moonTxt").innerHTML=moonPhaseIcon(scene.moon);
+  const tomorrowRise=new Date(dy.sunrise[1]||new Date(sunset.getTime()+10*3.6e6));
+  const nightStart=now<sunset?sunset:now;
+  const nightHours=h.time.map((t,i)=>({time:new Date(t),temp:Number(h.temp[i]),pop:Number(h.pop[i])||0}))
+    .filter(hour=>hour.time>=nightStart&&hour.time<=tomorrowRise&&Number.isFinite(hour.temp));
+  const fallbackLow=Number(dy.temperature_2m_min[Math.min(1,dy.temperature_2m_min.length-1)]);
+  const nightLow=Math.round(nightHours.length?Math.min(...nightHours.map(hour=>hour.temp)):fallbackLow);
+  const nightPop=nightHours.length?Math.max(...nightHours.map(hour=>hour.pop)):Number(dy.precipitation_probability_max[1])||0;
+  let tonightText=nightPop>=60?`Rain is likely at times tonight, with a low around ${nightLow}°.`:
+    nightPop>=35?`A shower is possible tonight, with a low around ${nightLow}°.`:
+    nightLow>=74?`Warm and mostly dry tonight, with a low around ${nightLow}°.`:
+    `Mostly dry tonight, cooling to around ${nightLow}°.`;
   const gw=goldenWindow(sunset);
-  document.getElementById("goldTxt").textContent=gw?spanTxt(gw.a,gw.b):"—";
+  if(gw&&now<gw.b)tonightText+=now<gw.a?` Golden Hour is ${spokenSpan(gw.a,gw.b)}`:` Golden Hour lasts until ${spokenClock(gw.b)}`;
+  el.textContent=tonightText;
+  document.getElementById("eveLine").className="lead tonight-line "+(nightPop>=35?"caution":"go");
+  document.getElementById("moonTxt").innerHTML=moonPhaseIcon(scene.moon);
 
   /* week */
   const lo=Math.min(...dy.temperature_2m_min),hi=Math.max(...dy.temperature_2m_max),span=hi-lo||1;
