@@ -295,7 +295,7 @@ section{padding:28px 20px 0}
   <div class="card">
     <h3>Evening outlook</h3>
     <div class="lead" id="eveLead">—</div>
-    <div class="stat-row"><span>at sunset <b id="eveTemp">—</b></span><span>wind <b id="eveWind">—</b></span><span>rain <b id="evePop">—</b></span><span>moon <b id="moonTxt">—</b></span></div>
+    <div class="stat-row"><span>at sunset <b id="eveTemp">—</b></span><span>golden hour <b id="goldTxt">—</b></span><span>wind <b id="eveWind">—</b></span><span>rain <b id="evePop">—</b></span><span>moon <b id="moonTxt">—</b></span></div>
   </div>
 </div>
 
@@ -386,6 +386,21 @@ function moonPhase(date){const d=toDays(date),s=sunCoords(d),m=moonCoords(d),sd=
   const ang=Math.atan2(Math.cos(s.dec)*Math.sin(s.ra-m.ra),
     Math.sin(s.dec)*Math.cos(m.dec)-Math.cos(s.dec)*Math.sin(m.dec)*Math.cos(s.ra-m.ra));
   return{fraction:(1+Math.cos(inc))/2,phase:.5+.5*inc*(ang<0?-1:1)/Math.PI}}
+/* golden hour runs from 6° of sun elevation down to -4°, the convention the photo apps use */
+function goldenWindow(around){
+  const altAt=ms=>sunPos(new Date(ms)).alt*180/Math.PI;
+  const cross=target=>{
+    let lo=around.getTime()-2.5*3.6e6, hi=around.getTime()+3*3.6e6;
+    if((altAt(lo)-target)*(altAt(hi)-target)>0)return null;
+    for(let i=0;i<44;i++){const m=(lo+hi)/2;
+      if((altAt(lo)-target)*(altAt(m)-target)<=0)hi=m;else lo=m}
+    return new Date((lo+hi)/2);
+  };
+  const a=cross(6),b=cross(-4);
+  return a&&b&&b>a?{a,b}:null;
+}
+const spanTxt=(a,b)=>{const A=clock(a),B=clock(b);
+  return A.slice(-1)===B.slice(-1)?A.slice(0,-1)+"–"+B:A+"–"+B};
 const phaseName=p=>p<.03||p>.97?"new":p<.22?"waxing crescent":p<.28?"first quarter":p<.47?"waxing gibbous":
   p<.53?"full":p<.72?"waning gibbous":p<.78?"last quarter":"waning crescent";
 
@@ -486,6 +501,35 @@ function renderScene(sunrise,sunset,now,cloud,dark,wind){
   const py=f=>GY-Math.sin(Math.PI*f)*(GY-arcTop);
   let arc=`M ${px(0)} ${py(0)}`;
   for(let f=.02;f<=1.001;f+=.02)arc+=` L ${px(f).toFixed(1)} ${py(f).toFixed(1)}`;
+
+  /* golden hour on the sun's own path: the sun sits between 6° and -4° of elevation, so the
+     visible half of it is the last stretch of arc before the horizon at each end */
+  const spanMs=sunset-sunrise;
+  const altAtF=f=>sunPos(new Date(sunrise.getTime()+f*spanMs)).alt*180/Math.PI;
+  let goldArc="";
+  if(spanMs>0){
+    const N=140, segs=[]; let s0=null;
+    for(let i=0;i<=N;i++){
+      const f=i/N;
+      if(altAtF(f)<=6){if(s0===null)s0=f}
+      else if(s0!==null){segs.push([s0,(i-1)/N]);s0=null}
+    }
+    if(s0!==null)segs.push([s0,1]);
+    for(const[a,b]of segs){
+      if(b-a<.004)continue;
+      let d=`M ${px(a).toFixed(1)} ${py(a).toFixed(1)}`;
+      for(let f=a+.006;f<b;f+=.006)d+=` L ${px(f).toFixed(1)} ${py(f).toFixed(1)}`;
+      d+=` L ${px(b).toFixed(1)} ${py(b).toFixed(1)}`;
+      const edge=a>.5?a:b;                      /* the 6° end, where the gold begins */
+      goldArc+=`<path d="${d}" fill="none" stroke="#F2B14A" stroke-width="9" stroke-linecap="round" opacity=".22"/>
+        <path d="${d}" fill="none" stroke="#E9A33C" stroke-width="3.4" stroke-linecap="round" opacity=".95"/>
+        <circle cx="${px(edge).toFixed(1)}" cy="${py(edge).toFixed(1)}" r="2.6" fill="#E9A33C"/>`;
+    }
+  }
+  /* sunrise and sunset, lifted off the arc into clean sky above the treeline */
+  const lab=(f,t)=>`<text x="${px(f).toFixed(1)}" y="${(py(f)-9).toFixed(1)}" text-anchor="middle">${t}</text>`;
+  const sunTimes=`<g font-family="Spline Sans Mono,ui-monospace,monospace" font-size="10" font-weight="600" fill="currentColor" opacity=".7">
+    ${lab(.11,clock(sunrise))}${lab(.89,clock(sunset))}</g>`;
 
   const dayFrac=(now-sunrise)/(sunset-sunrise);
   const up=dayFrac>0&&dayFrac<1;
@@ -605,9 +649,16 @@ function renderScene(sunrise,sunset,now,cloud,dark,wind){
       <path d="M ${(pondR-9).toFixed(1)} ${base+9} Q ${(pondR-16).toFixed(1)} ${base-4} ${(pondR-20).toFixed(1)} ${base-12}" stroke="${ink}" stroke-width="1.05" fill="none" stroke-linecap="round"/></g>`;
 
     const altD=sp.alt*180/Math.PI;
-    const deer=(altD>-9&&altD<7)?`<g transform="translate(${(W*.905).toFixed(1)} ${(base+7-17.7).toFixed(1)}) scale(-.85,.85)" fill="${ink}">
-      <path d="M 0.8 7.6 L 0 6.2 L 1.6 6.2 C 4 5.1 7 4.9 9.5 5.3 C 11 5.5 12.4 5.8 13.2 5.9 C 14.2 5.1 15 3.9 15.5 2.8 L 14.2 0 L 16.1 1.6 L 17.1 -1 L 18.1 1.5 C 18.9 1.8 19.8 2.4 20.5 3.1 L 21.3 3.7 C 20.9 4.3 20 4.5 19.1 4.4 C 17.9 5 17 6.2 16.6 7.4 C 16.2 8.6 16 9.8 15.8 10.8 C 13.4 11.9 8.4 12 5.2 11.2 C 3.2 10.7 2.1 9.2 1.7 7.7 Z"/>
-      <path d="M 14.6 11 L 14.9 16 L 14.6 20.8 M 13 11.2 L 13.1 20.8 M 4.4 11.1 L 3.7 15.6 L 4.6 20.8 M 6 11.3 L 5.9 20.8" stroke="${ink}" stroke-width="1" fill="none" stroke-linecap="round"/></g>`:"";
+    /* whitetail buck: main beam sweeps back then forward, three tines and a brow tine off it */
+    const deer=(altD>-9&&altD<7)?`<g transform="translate(${(W*.905).toFixed(1)} ${(base+7-19.8).toFixed(1)}) scale(-.95,.95)" fill="${ink}" stroke="${ink}" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M 17.5 -0.5 C 15.8 -3.2 14.4 -5.4 14.9 -8 C 15.4 -10.4 17.3 -11.6 19.4 -12" stroke-width="1.45" fill="none"/>
+      <path d="M 14.8 -7.4 C 14.3 -9.4 14.1 -10.6 14 -12" stroke-width="1.25" fill="none"/>
+      <path d="M 15.9 -10.5 C 15.7 -12.4 15.6 -13.4 15.6 -14.6" stroke-width="1.25" fill="none"/>
+      <path d="M 17.7 -11.7 C 17.7 -13.1 17.7 -13.8 17.8 -14.8" stroke-width="1.15" fill="none"/>
+      <path d="M 16.8 -1.8 C 17.6 -3 18.2 -3.9 18.6 -4.9" stroke-width="1.15" fill="none"/>
+      <path d="M 16.9 0.9 C 15.4 0.6 14.4 -0.2 13.9 -1.3 C 15.1 -1.3 16.4 -0.8 17.3 0 Z"/>
+      <path d="M 0.8 7.6 L 0 6.2 L 1.6 6.2 C 4 5.1 7 4.9 9.5 5.3 C 11 5.5 12.4 5.8 13.2 5.9 C 14.4 4.9 15.4 3.4 16.1 1.8 C 16.3 1.1 16.9 0.5 17.7 0.2 C 19 -0.2 20.4 0.4 21.4 1.4 L 23.4 3.4 C 23.6 3.8 23.3 4.3 22.8 4.3 L 21 4.1 C 20 4.9 19.2 5.6 18.4 5.8 C 17.6 6.6 17 7.6 16.6 8.6 C 16.2 9.8 16 10.4 15.8 10.9 C 13.4 12 8.4 12.1 5.2 11.3 C 3.2 10.8 2.1 9.2 1.7 7.7 Z"/>
+      <path d="M 14.6 11 L 14.9 16 L 14.6 20.8 M 12.9 11.3 L 13 20.8 M 4.4 11.2 L 3.7 15.6 L 4.6 20.8 M 6 11.4 L 5.9 20.8" stroke-width="1" fill="none"/></g>`:"";
 
     const hawk=up&&cloud<70?`<path d="M ${(W*.36-6).toFixed(1)} ${GY-88} Q ${(W*.36-2).toFixed(1)} ${GY-90.4} ${(W*.36).toFixed(1)} ${GY-88.6} Q ${(W*.36+2).toFixed(1)} ${GY-90.4} ${(W*.36+6).toFixed(1)} ${GY-88}" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".3"/>`:"";
     let flies="";
@@ -626,6 +677,7 @@ function renderScene(sunrise,sunset,now,cloud,dark,wind){
           <stop offset="1" stop-color="${dark?'#081E28':'#40758F'}" stop-opacity=".9"/></linearGradient>
       </defs>
       <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
+      ${goldArc}
       ${hawk}
       ${body}
       ${ridges}
@@ -638,7 +690,8 @@ function renderScene(sunrise,sunset,now,cloud,dark,wind){
       ${catsL}${catsR}
       ${tree(W*.055,1.3,.62)}${tree(W*.105,.72,.48)}${tree(W*.955,1.05,.58)}
       ${deer}
-      ${flies}`;
+      ${flies}
+      ${sunTimes}`;
     return {sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05};
   }
 
@@ -743,6 +796,7 @@ function renderScene(sunrise,sunset,now,cloud,dark,wind){
         <stop offset="1" stop-color="${dark?'#081E28':'#4E86A8'}" stop-opacity=".85"/></linearGradient>
     </defs>
     <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
+      ${goldArc}
     ${gulls}
     ${body}
     <path d="${tl}" fill="${ink}" opacity=".26"/>
@@ -756,7 +810,8 @@ function renderScene(sunrise,sunset,now,cloud,dark,wind){
     ${dock}
     ${heron}
     ${flies}
-    <path d="M 0 ${H-3} L ${W} ${H-3}" stroke="${dark?'#3E7CA6':'#8FC3D9'}" stroke-width="3" opacity="${dark?.4:.6}"/>`;
+    <path d="M 0 ${H-3} L ${W} ${H-3}" stroke="${dark?'#3E7CA6':'#8FC3D9'}" stroke-width="3" opacity="${dark?.4:.6}"/>
+    ${sunTimes}`;
 
   return {sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05};
 }
@@ -1102,7 +1157,7 @@ function render(d,live){
   const maxPop=Math.max(...h.pop);
   const ncOn=document.getElementById("nowcast").classList.contains("on");
   document.getElementById("hourlyNote").textContent=
-    maxPop<20&&!ncOn?"rain unlikely next 24h":"blue bars = rain chance · shaded = after dark";
+    maxPop<20&&!ncOn?"rain unlikely next 24h":"blue bars = rain chance";
 
   /* outside card: boating at Moss Bridge, farm weather at Bob Plumley */
   document.getElementById("outTitle").textContent=LOC.outTitle;
@@ -1165,6 +1220,8 @@ function render(d,live){
   document.getElementById("eveWind").textContent=Math.round(h.wind[ei])+" mph";
   document.getElementById("evePop").textContent=h.pop[ei]+"%";
   document.getElementById("moonTxt").textContent=Math.round(scene.moon.fraction*100)+"% "+phaseName(scene.moon.phase);
+  const gw=goldenWindow(sunset);
+  document.getElementById("goldTxt").textContent=gw?spanTxt(gw.a,gw.b):"—";
 
   /* week */
   const lo=Math.min(...dy.temperature_2m_min),hi=Math.max(...dy.temperature_2m_max),span=hi-lo||1;
