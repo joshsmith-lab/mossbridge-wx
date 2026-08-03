@@ -167,6 +167,7 @@ section{padding:28px 20px 0}
 .hr-labels span{text-align:center}
 .hr-labels .mark{color:var(--marker);font-weight:600}
 .tide-svg{display:block;width:100%;height:auto}
+@keyframes bob{from{transform:rotate(-2.6deg) translateY(.5px)}to{transform:rotate(2.6deg) translateY(-.5px)}}
 
 .storm-row{display:grid;grid-template-columns:1fr auto;gap:3px 12px;padding:12px 0;
   border-bottom:1px solid var(--line);align-items:baseline}
@@ -1004,40 +1005,60 @@ function renderTides(preds,css){
     const f=clamp((t-a.time.getTime())/(b.time.getTime()-a.time.getTime()),0,1);
     return a.v+(b.v-a.v)*(1-Math.cos(Math.PI*f))/2;
   };
-  const W=Math.max(320,appW()-40),H=Math.round(162+(760-W)*.09),padX=8,topY=46,botY=H-28;
-  const fs=W<360?1.08:W<520?1.22:1;               /* labels scale up on a phone */
-  const labelTimeY=15,labelValueY=29,labelRailY=35;
+  const W=Math.max(320,appW()-40),H=Math.round(152+(760-W)*.09),padX=8;
+  const fs=W<360?1.08:W<520?1.16:1;               /* labels scale up on a phone */
+  const topY=22,seaY=H-34,bedY=seaY+6,lowY=H-9,axisW=Math.round(26*fs),x0=padX+axisW;
   const vs=[];for(let t=t0;t<=t1;t+=9e5)vs.push(interp(t));
-  const vMin=Math.min(...vs)-.35,vMax=Math.max(...vs)+.35;
-  const X=t=>padX+(t-t0)/(t1-t0)*(W-2*padX);
-  const Y=v=>topY+(botY-topY)*(1-(v-vMin)/(vMax-vMin));
+  /* measured up from the chart datum, so the height of the water on screen is the water there */
+  const hiV=Math.max(...vs),base=Math.min(0,...vs);
+  const vTop=hiV+Math.max(.5,(hiV-base)*.2);
+  const X=t=>x0+(t-t0)/(t1-t0)*(W-padX-x0);
+  const Y=v=>seaY-(v-base)/(vTop-base)*(seaY-topY);
   const pts=[];for(let t=t0;t<=t1;t+=9e5)pts.push([X(t),Y(interp(t))]);
   const path=spline(pts);
-  const area=path+` L ${X(t1).toFixed(1)} ${botY} L ${X(t0).toFixed(1)} ${botY} Z`;
+  const area=path+` L ${X(t1).toFixed(1)} ${seaY} L ${X(t0).toFixed(1)} ${seaY} Z`;
+  const sand=mix(css.faint,"#C2A268",.55);
   const nx=X(now.getTime()),ny=Y(interp(now.getTime()));
   const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3.5" stroke-linejoin="round"`;
+
+  /* one depth scale instead of a height printed beside every peak */
+  let grid="";
+  for(let ft=Math.ceil(base/2)*2;ft<=hiV;ft+=2){
+    if(ft<=base+.05)continue;
+    const y=Y(ft);
+    grid+=`<line x1="${x0}" y1="${y.toFixed(1)}" x2="${W-padX}" y2="${y.toFixed(1)}" stroke="${css.line}" stroke-width="1" stroke-dasharray="2 7"/>
+    <text x="${(x0-6).toFixed(1)}" y="${(y+3.2).toFixed(1)}" text-anchor="end" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(9*fs).toFixed(1)}" fill="${css.faint}">${ft} ft</text>`;
+  }
+
+  /* highs ride above their own peak, lows share one aligned row under the waterline */
   let labels="";
   for(const p of P){
     const tm=p.time.getTime();if(tm<t0||tm>t1)continue;
-    const x=X(tm),y=Y(p.v);
-    const anchor=x<32*fs?"start":x>W-32*fs?"end":"middle";
-    labels+=`<line x1="${x.toFixed(1)}" y1="${labelRailY}" x2="${x.toFixed(1)}" y2="${Math.max(labelRailY,y-5).toFixed(1)}" stroke="${css.line}" stroke-width="1" stroke-dasharray="1 4"/>
-    <text x="${x.toFixed(1)}" y="${labelTimeY}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(11*fs).toFixed(1)}" font-weight="600" fill="${css.ink}" ${halo}>${clock(p.time)}</text>
-    <text x="${x.toFixed(1)}" y="${labelValueY}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(9.5*fs).toFixed(1)}" fill="${css.faint}" ${halo}>${p.v.toFixed(1)} ft</text>`;
-    if(Math.abs(x-nx)>=9)labels+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.8" fill="${css.water}"/>`;
+    const x=X(tm),y=Y(p.v),high=p.type==="H";
+    const anchor=x<x0+26*fs?"start":x>W-26*fs?"end":"middle";
+    const lift=high&&Math.abs(x-nx)<30?24:9;      /* step over the boat when now sits on the peak */
+    labels+=`<text x="${x.toFixed(1)}" y="${(high?y-lift:lowY).toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(11*fs).toFixed(1)}" font-weight="600" fill="${high?css.ink:css.soft}" ${halo}>${clock(p.time)}</text>`;
+    if(!high)labels+=`<line x1="${x.toFixed(1)}" y1="${(y+1).toFixed(1)}" x2="${x.toFixed(1)}" y2="${(bedY+2).toFixed(1)}" stroke="${css.line}" stroke-width="1"/>`;
   }
+
+  /* the skiff rides the curve, so where it sits is how much water is under you right now */
+  const boat=`<g transform="translate(${nx.toFixed(1)} ${ny.toFixed(1)}) scale(1.15)"><g${PRM?"":' style="animation:bob 4.6s ease-in-out infinite alternate"'}>
+    <path d="M -12.4 -3.4 L 12.8 -4.4 L 9 3.2 Q .5 5.2 -7.6 3.2 Z" fill="${css.ink}"/>
+    <path d="M -2.6 -9.8 h 5.6 v 5.5 h -5.6 z" fill="${css.ink}"/>
+    <path d="M 3.4 -7.6 h 3.6" stroke="${css.ink}" stroke-width="1.4" stroke-linecap="round"/>
+    <path d="M -17 1.4 h 3.4 M 14.6 .6 h 3.2" stroke="${css.water}" stroke-width="1.3" stroke-linecap="round" opacity=".8"/></g></g>`;
+
   document.getElementById("tideSvg").setAttribute("viewBox",`0 0 ${W} ${H}`);
   document.getElementById("tideSvg").innerHTML=`
     <defs><linearGradient id="tideFill" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="${css.water}" stop-opacity=".30"/>
-      <stop offset="1" stop-color="${css.water}" stop-opacity=".02"/></linearGradient></defs>
-    <line x1="${padX}" y1="${labelRailY}" x2="${W-padX}" y2="${labelRailY}" stroke="${css.line}" stroke-width="1"/>
+      <stop offset="0" stop-color="${css.water}" stop-opacity=".34"/>
+      <stop offset="1" stop-color="${css.water}" stop-opacity=".06"/></linearGradient></defs>
+    ${grid}
     <path d="${area}" fill="url(#tideFill)"/>
     <path d="${path}" fill="none" stroke="${css.water}" stroke-width="2.4" stroke-linecap="round"/>
-    <line x1="${padX}" y1="${botY}" x2="${W-padX}" y2="${botY}" stroke="${css.line}" stroke-width="1"/>
-    <line x1="${nx.toFixed(1)}" y1="${topY-12}" x2="${nx.toFixed(1)}" y2="${botY}" stroke="${css.ink}" stroke-width="1" stroke-dasharray="2 4" opacity=".3"/>
-    <circle cx="${nx.toFixed(1)}" cy="${ny.toFixed(1)}" r="9" fill="${css.water}" opacity=".18"/>
-    <circle cx="${nx.toFixed(1)}" cy="${ny.toFixed(1)}" r="4.5" fill="${css.paper}" stroke="${css.ink}" stroke-width="2"/>
+    <path d="M ${x0} ${seaY-.5} L ${W-padX} ${seaY-.5} L ${W-padX} ${bedY} Q ${(W*.72).toFixed(1)} ${bedY+2.5} ${((x0+W)/2).toFixed(1)} ${bedY-1} Q ${(W*.28).toFixed(1)} ${bedY-3.5} ${x0} ${bedY} Z" fill="${sand}" opacity=".55"/>
+    <line x1="${nx.toFixed(1)}" y1="${topY-10}" x2="${nx.toFixed(1)}" y2="${(ny-6).toFixed(1)}" stroke="${css.ink}" stroke-width="1" stroke-dasharray="2 4" opacity=".22"/>
+    ${boat}
     ${labels}`;
   const next=P.find(p=>p.time>now);
   if(next){
