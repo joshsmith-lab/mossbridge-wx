@@ -679,6 +679,17 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
      looking like glass, twenty-five is where it is all texture */
   const chopK=clamp((wind-5)/13,0,1);
   const wDur=clamp(12.5-wind*.36,4.4,12.5);
+  /* A gust crosses a bank the way it crosses the yard: one end first, then the rest.
+     The bank is cut into bands and each one lags the one upwind of it, travelling the
+     same way the clouds do so the sky and the grass never disagree. */
+  const gust=Math.max(wind,Number(weather.wind_gusts_10m)||0);
+  const downwind=(Number(weather.wind_direction_10m)||0)>180?-1:1;
+  const BANDS=6, wr=mulberry(60731);
+  /* seeded, so a clump keeps its own amplitude and its own slop in the wave across renders */
+  const bandAmp=Array.from({length:BANDS},()=>.82+wr()*.36);
+  const bandLag=Array.from({length:BANDS},()=>wr()*.12);
+  const waveDelay=(i,dur)=>-(dur*((downwind>0?i:BANDS-1-i)*.15+bandLag[i]));
+  const bandOf=x=>clamp(Math.floor(x/W*BANDS),0,BANDS-1);
   /* the specular track under whatever is in the sky: three bars breathing with the wind */
   const specular=(cx,topY,shift,sc=1)=>{
     if(glintX==null||glintOp<=.05)return"";
@@ -732,7 +743,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     };
     const ridges=ridge(52,16,150,.12)+ridge(36,12,95,.2)+ridge(20,9,66,.32);
 
-    const tree=(x,s,op,dl=0)=>`<g fill="${ink}" opacity="${op}"${treeAt(dl)}>
+    const tree=(x,s,op)=>`<g fill="${ink}" opacity="${op}"${treeAt(x)}>
       <path d="M ${(x-.55*s).toFixed(1)} ${base+2} L ${(x-.3*s).toFixed(1)} ${(base-13*s).toFixed(1)} L ${(x+.3*s).toFixed(1)} ${(base-13*s).toFixed(1)} L ${(x+.55*s).toFixed(1)} ${base+2} Z"/>
       <path d="M ${x.toFixed(1)} ${(base-8*s).toFixed(1)} L ${(x-3.4*s).toFixed(1)} ${(base-11*s).toFixed(1)} M ${x.toFixed(1)} ${(base-9.5*s).toFixed(1)} L ${(x+3.2*s).toFixed(1)} ${(base-12*s).toFixed(1)}" stroke="${ink}" stroke-width="${(.9*s).toFixed(1)}" fill="none" stroke-linecap="round"/>
       <ellipse cx="${x.toFixed(1)}" cy="${(base-17*s).toFixed(1)}" rx="${(8.6*s).toFixed(1)}" ry="${(6.2*s).toFixed(1)}"/>
@@ -764,18 +775,21 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     const fence=`<path d="${fp}${fr}" stroke="${ink}" stroke-width="1.05" fill="none" stroke-linecap="round" opacity=".5"/>`;
 
     const blade=(bx,ht,lean)=>`M ${(bx-.7).toFixed(1)} ${base+1} Q ${(bx+lean*.3-.4).toFixed(1)} ${(base+1-ht*.6).toFixed(1)} ${(bx+lean).toFixed(1)} ${(base+1-ht).toFixed(1)} Q ${(bx+lean*.38+.5).toFixed(1)} ${(base+1-ht*.46).toFixed(1)} ${(bx+.7).toFixed(1)} ${base+1} Z `;
-    let tufA="",tufB="",ti=0;
+    const tufts=Array.from({length:BANDS},()=>"");
     for(let x=-6;x<W+10;){
-      const cnt=3+Math.floor(g()*4);let t="";
+      const cnt=3+Math.floor(g()*4),x0=x;let t="";
       for(let k=0;k<cnt;k++){const ht=5+g()*9,lean=(2+g()*5)*(g()<.5?-1:1);
         if(x<pondL+6||x>pondR-6)t+=blade(x,ht,lean);   /* no grass in the water */
         x+=2.4+g()*3}
-      if(ti++%2)tufB+=t;else tufA+=t;
+      tufts[bandOf(x0)]+=t;
       x+=22+g()*40;
     }
-    const swayDur=clamp(9.6-wind*.26,2.6,9.6),swayAmt=clamp(.45+wind*.085,.45,3.1);
-    const treeAt=dl=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;--tsway:${(swayAmt*.42).toFixed(2)}deg;--tsway-neg:${(-swayAmt*.42).toFixed(2)}deg;animation:swayTree ${(swayDur*1.45).toFixed(1)}s ease-in-out ${dl}s infinite alternate"`;
-    const swayAt=dl=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;--sway:${swayAmt.toFixed(2)}deg;--sway-neg:${(-swayAmt).toFixed(2)}deg;animation:sway ${swayDur.toFixed(1)}s ease-in-out ${dl}s infinite alternate"`;
+    /* gusts push the throw past what the steady wind alone would give */
+    const swayDur=clamp(9.6-wind*.26,2.6,9.6),swayAmt=clamp(.45+wind*.085+(gust-wind)*.05,.45,3.6);
+    const treeDur=swayDur*1.45;
+    const treeAt=x=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;--tsway:${(swayAmt*.42*bandAmp[bandOf(x)]).toFixed(2)}deg;--tsway-neg:${(-swayAmt*.42*bandAmp[bandOf(x)]).toFixed(2)}deg;animation:swayTree ${treeDur.toFixed(1)}s ease-in-out ${waveDelay(bandOf(x),treeDur).toFixed(2)}s infinite alternate"`;
+    const swayAt=(dl,amt=swayAmt)=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;--sway:${amt.toFixed(2)}deg;--sway-neg:${(-amt).toFixed(2)}deg;animation:sway ${swayDur.toFixed(1)}s ease-in-out ${dl.toFixed(2)}s infinite alternate"`;
+    const bandAt=i=>swayAt(waveDelay(i,swayDur),swayAmt*bandAmp[i]);
 
     const glint=specular(clamp(glintX,pondL+26,pondR-26),base+9,0,.85);
     let sparkle="";
@@ -796,9 +810,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     const cattail=(x,ht,lean)=>`<path d="M ${x.toFixed(1)} ${base+9} L ${(x+lean).toFixed(1)} ${(base+9-ht+5).toFixed(1)}" stroke="${ink}" stroke-width="1.15" stroke-linecap="round" fill="none"/>
       <rect x="${(x+lean-1.25).toFixed(1)}" y="${(base+9-ht-2).toFixed(1)}" width="2.6" height="7" rx="1.25" fill="${ink}"/>
       <path d="M ${(x+lean+.1).toFixed(1)} ${(base+9-ht-2.4).toFixed(1)} L ${(x+lean+.2).toFixed(1)} ${(base+9-ht-5.6).toFixed(1)}" stroke="${ink}" stroke-width=".75" stroke-linecap="round" fill="none"/>`;
-    const catsL=`<g opacity=".95"${swayAt(0)}>${cattail(pondL+4,24,.9)+cattail(pondL+10,18,-.7)+cattail(pondL+15,27,1.1)}
+    const catsL=`<g opacity=".95"${bandAt(bandOf(pondL+10))}>${cattail(pondL+4,24,.9)+cattail(pondL+10,18,-.7)+cattail(pondL+15,27,1.1)}
       <path d="M ${(pondL+6).toFixed(1)} ${base+9} Q ${(pondL+14).toFixed(1)} ${base-6} ${(pondL+19).toFixed(1)} ${base-15} M ${(pondL+8).toFixed(1)} ${base+9} Q ${(pondL-1).toFixed(1)} ${base-3} ${(pondL-4).toFixed(1)} ${base-10}" stroke="${ink}" stroke-width="1.05" fill="none" stroke-linecap="round"/></g>`;
-    const catsR=`<g opacity=".95"${swayAt(swayDur*.5)}>${cattail(pondR-12,20,-.9)+cattail(pondR-6,25,.8)}
+    const catsR=`<g opacity=".95"${bandAt(bandOf(pondR-9))}>${cattail(pondR-12,20,-.9)+cattail(pondR-6,25,.8)}
       <path d="M ${(pondR-9).toFixed(1)} ${base+9} Q ${(pondR-16).toFixed(1)} ${base-4} ${(pondR-20).toFixed(1)} ${base-12}" stroke="${ink}" stroke-width="1.05" fill="none" stroke-linecap="round"/></g>`;
 
     const rainyFrog=(wet||storm)?frogAt(pondR-28,base+4,.82,.8):"";
@@ -831,10 +845,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       ${barn}
       ${fence}
       ${sparkle}${glint}${pondFx}
-      <g opacity=".9"${swayAt(1)}><path d="${tufA}" fill="${ink}"/></g>
-      <g opacity=".9"${swayAt(swayDur*.55)}><path d="${tufB}" fill="${ink}"/></g>
+      ${tufts.map((d,i)=>d?`<g opacity=".9"${bandAt(i)}><path d="${d}" fill="${ink}"/></g>`:"").join("")}
       ${catsL}${catsR}
-      ${tree(W*.055,1.3,.62,0)}${tree(W*.105,.72,.48,swayDur*.7)}${tree(W*.955,1.05,.58,swayDur*1.15)}
+      ${tree(W*.055,1.3,.62)}${tree(W*.105,.72,.48)}${tree(W*.955,1.05,.58)}
       ${deer}
       ${owl}${rainyFrog}
       ${flies}
@@ -856,19 +869,22 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   }
   tl+=`L ${W+12} ${base+6} Z`;
 
-  const swayDur=clamp(9.2-wind*.26,2.4,9.2),swayAmt=clamp(.5+wind*.095,.5,3.4);
-  const treeAt=dl=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;--tsway:${(swayAmt*.42).toFixed(2)}deg;--tsway-neg:${(-swayAmt*.42).toFixed(2)}deg;animation:swayTree ${(swayDur*1.45).toFixed(1)}s ease-in-out ${dl}s infinite alternate"`;
-  const swayAt=(dl)=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;--sway:${swayAmt.toFixed(2)}deg;--sway-neg:${(-swayAmt).toFixed(2)}deg;animation:sway ${swayDur.toFixed(1)}s ease-in-out ${dl}s infinite alternate"`;
+  /* gusts push the throw past what the steady wind alone would give */
+  const swayDur=clamp(9.2-wind*.26,2.4,9.2),swayAmt=clamp(.5+wind*.095+(gust-wind)*.055,.5,3.9);
+  const treeDur=swayDur*1.45;
+  const treeAt=x=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;--tsway:${(swayAmt*.42*bandAmp[bandOf(x)]).toFixed(2)}deg;--tsway-neg:${(-swayAmt*.42*bandAmp[bandOf(x)]).toFixed(2)}deg;animation:swayTree ${treeDur.toFixed(1)}s ease-in-out ${waveDelay(bandOf(x),treeDur).toFixed(2)}s infinite alternate"`;
+  const swayAt=(dl,amt=swayAmt)=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;--sway:${amt.toFixed(2)}deg;--sway-neg:${(-amt).toFixed(2)}deg;animation:sway ${swayDur.toFixed(1)}s ease-in-out ${dl.toFixed(2)}s infinite alternate"`;
+  const bandAt=i=>swayAt(waveDelay(i,swayDur),swayAmt*bandAmp[i]);
   /* loblolly pines: bare trunk, umbrella crown */
-  const lob=(x,s,dl=0)=>{const cy=base-31*s;
-    return `<g fill="${ink}" opacity=".5"${treeAt(dl)}>
+  const lob=(x,s)=>{const cy=base-31*s;
+    return `<g fill="${ink}" opacity=".5"${treeAt(x)}>
     <path d="M ${(x-.9*s).toFixed(1)} ${base+2} L ${(x-.45*s).toFixed(1)} ${cy.toFixed(1)} L ${(x+.45*s).toFixed(1)} ${cy.toFixed(1)} L ${(x+.9*s).toFixed(1)} ${base+2} Z"/>
     <path d="M ${x.toFixed(1)} ${(base-14*s).toFixed(1)} l ${(6*s).toFixed(1)} ${(-3.2*s).toFixed(1)}" stroke="${ink}" stroke-width="${(1.1*s).toFixed(1)}" stroke-linecap="round" fill="none"/>
     <ellipse cx="${x.toFixed(1)}" cy="${cy.toFixed(1)}" rx="${(10*s).toFixed(1)}" ry="${(4.3*s).toFixed(1)}"/>
     <ellipse cx="${(x-5.5*s).toFixed(1)}" cy="${(cy+4.2*s).toFixed(1)}" rx="${(6.4*s).toFixed(1)}" ry="${(3*s).toFixed(1)}"/>
     <ellipse cx="${(x+6*s).toFixed(1)}" cy="${(cy+3.8*s).toFixed(1)}" rx="${(5.6*s).toFixed(1)}" ry="${(2.7*s).toFixed(1)}"/>
     <ellipse cx="${x.toFixed(1)}" cy="${(cy+2.2*s).toFixed(1)}" rx="${(7.5*s).toFixed(1)}" ry="${(3.3*s).toFixed(1)}"/></g>`};
-  const pines=lob(W*.07,.95,0)+lob(W*.135,.6,swayDur*.75)+lob(W*.885,.8,swayDur*1.2);
+  const pines=lob(W*.07,.95)+lob(W*.135,.6)+lob(W*.885,.8);
 
   /* spartina: tapered filled blades, clustered tufts with real gaps */
   const blade=(bx,ht,lean)=>`M ${(bx-.8).toFixed(1)} ${base} Q ${(bx+lean*.3-.4).toFixed(1)} ${(base-ht*.62).toFixed(1)} ${(bx+lean).toFixed(1)} ${(base-ht).toFixed(1)} Q ${(bx+lean*.38+.6).toFixed(1)} ${(base-ht*.46).toFixed(1)} ${(bx+.8).toFixed(1)} ${base} Z `;
@@ -879,15 +895,15 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   let midBlades="";
   for(let x=-4;x<W+6;x+=10+g()*18) midBlades+=blade(x,4+g()*5,(g()-.5)*5);
   const dkX=W*.8;                              /* keep the dock clear of grass */
-  let tufA="",tufB="",ti=0;
+  const tufts=Array.from({length:BANDS},()=>"");
   for(let x=-6;x<W+10;){
-    const cnt=6+Math.floor(g()*5); let t="";
+    const cnt=6+Math.floor(g()*5), x0=x; let t="";
     for(let k=0;k<cnt;k++){
       const ht=11+g()*19, lean=(4+g()*8)*(g()<.5?-1:1);
       if(x<dkX-36||x>dkX+26)t+=blade(x,ht,lean);
       x+=2.2+g()*2.6;
     }
-    if(ti++%2)tufB+=t; else tufA+=t;
+    tufts[bandOf(x0)]+=t;
     x+=10+g()*22;
   }
 
@@ -973,10 +989,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     ${mist}
     <rect x="0" y="${GY+8}" width="${W}" height="${H-GY-8}" fill="url(#waterband)"/>
     ${sparkle}${glint}${waterWeather}
-    <g opacity=".5"${swayAt(1.2)}><path d="${mid}" fill="${ink}"/><path d="${midBlades}" fill="${ink}"/></g>
+    <g opacity=".5"${swayAt(-swayDur*.35,swayAmt*.7)}><path d="${mid}" fill="${ink}"/><path d="${midBlades}" fill="${ink}"/></g>
     <path d="M -5 ${base} L ${W+5} ${base}" stroke="${ink}" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>
-    <g opacity=".95"${swayAt(0)}><path d="${tufA}" fill="${ink}"/></g>
-    <g opacity=".95"${swayAt(swayDur*.5)}><path d="${tufB}" fill="${ink}"/></g>
+    ${tufts.map((d,i)=>d?`<g opacity=".95"${bandAt(i)}><path d="${d}" fill="${ink}"/></g>`:"").join("")}
     ${dock}
     ${heron}
     ${marshCrab}
