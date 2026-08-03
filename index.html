@@ -260,6 +260,17 @@ section{padding:28px 20px 0}
 .tonight-line{display:flex;align-items:flex-start;gap:12px;margin-bottom:0!important}
 .tonight-line>span:first-child{flex:1;min-width:0}
 .tonight-line .moon-phase{margin-top:2px;flex:0 0 auto}
+/* the light gets its own quiet line, wearing the same gold as the chart bands */
+.gold-times{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:10px;
+  font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+.gold-times b{color:var(--ink);font-weight:600}
+.gold-dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;align-self:center;
+  background:radial-gradient(circle at 35% 35%,#FFD98C,#F3B84F 72%);box-shadow:0 0 7px rgba(243,184,79,.75)}
+.gold-key{font-family:var(--mono);font-weight:600;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  background:linear-gradient(90deg,#A87413,#D99A2B 55%,#A87413);
+  -webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
+html[data-theme=dark] .gold-key{background:linear-gradient(90deg,#F3B84F,#FFD98C 55%,#F3B84F);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
 
 .foot{padding:32px 20px 0;font-family:var(--mono);font-size:10px;color:var(--ink-faint);line-height:1.75}
 .skel{display:inline-block;min-width:2.2em;border-radius:5px;background:var(--wash);color:transparent!important;
@@ -350,6 +361,7 @@ section{padding:28px 20px 0}
   <div class="card">
     <h3>Tonight into tomorrow</h3>
     <div class="lead tonight-line" id="eveLine"><span id="eveLead">—</span><span id="moonTxt">—</span></div>
+    <div class="gold-times" id="goldTimes"></div>
   </div>
 </div>
 
@@ -1197,15 +1209,18 @@ function dayStory(c,dy,h){
   const hr=+c.time.slice(11,13),evening=hr>=18,overnight=hr>=21||hr<5;
   const high=Math.round(dy.temperature_2m_max[0]),feels=Math.round(c.apparent_temperature);
   const humid=(c.relative_humidity_2m||0)>=70&&high>=78;
+  /* "soupy" is earned, not decorative: real humidity sitting on real heat */
+  const soupy=(c.relative_humidity_2m||0)>=74&&(evening||overnight?c.temperature_2m:high)>=88;
+  const damp=soupy?", soupy":humid?", humid":"";
   const tempWord=(evening?c.temperature_2m:high)>=94?"hot":(evening?c.temperature_2m:high)>=82?"warm":
     (evening?c.temperature_2m:high)>=68?"mild":(evening?c.temperature_2m:high)>=52?"cool":"chilly";
   const cloud=c.cloud_cover||0;
   let first;
   if([45,48].includes(c.weather_code))first="Fog is softening the morning, but visibility should improve.";
   else if([51,53,55,61,63,65,80,81,82].includes(c.weather_code))first="Rain is moving through right now.";
-  else if(overnight)first=`A ${tempWord}${humid?", humid":""} night with ${cloud>=65?"plenty of cloud cover":"some breaks in the sky"}.`;
-  else if(evening)first=`A ${tempWord}${humid?", humid":""} evening ${cloud>=70?"under a cloudy sky":cloud>=35?"with a few breaks in the clouds":"under a mostly clear sky"}.`;
-  else first=`A ${tempWord}${humid?", humid":""} day${cloud>=75?" under mostly gray skies":cloud>=38?" with clouds and breaks of sun":" with plenty of sun"}.`;
+  else if(overnight)first=`A ${tempWord}${damp} night with ${cloud>=65?"plenty of cloud cover":"some breaks in the sky"}.`;
+  else if(evening)first=`A ${tempWord}${damp} evening ${cloud>=70?"under a cloudy sky":cloud>=35?"with a few breaks in the clouds":"under a mostly clear sky"}.`;
+  else first=`A ${tempWord}${damp} day${cloud>=75?" under mostly gray skies":cloud>=38?" with clouds and breaks of sun":" with plenty of sun"}.`;
 
   const indices=Array.from({length:h.temp.length},(_,i)=>i).filter(i=>
     overnight||evening||h.time[i].slice(0,10)===dy.time[0]);
@@ -1433,8 +1448,8 @@ function render(d,live){
 
   const maxPop=Math.max(...h.pop);
   const ncOn=document.getElementById("nowcast").classList.contains("on");
-  document.getElementById("hourlyNote").textContent=nextLight
-    ?`Golden Hour ${spanTxt(nextLight.a,nextLight.b)}`
+  document.getElementById("hourlyNote").innerHTML=nextLight
+    ?`<span class="gold-key">golden hour</span> ${spanTxt(nextLight.a,nextLight.b)}`
     :maxPop<20&&!ncOn?"staying mostly dry":"blue bars show rain chance";
 
   /* outside card: boating at Moss Bridge, farm weather at Bob Plumley */
@@ -1451,7 +1466,7 @@ function render(d,live){
     if(wv===null){wMsg="I don't have a reliable marine reading right now. Check conditions before heading out.";wCls="caution"}
     else if(g>=30||wv>=5){wMsg="Too rough for an easy small-boat day. Wait it out or stay well inside.";wCls="no"}
     else if(g>=22||wv>=3){wMsg="Breezy and choppy. The ICW should be kinder than the inlet.";wCls="caution"}
-    else{wMsg="A comfortable day on the water, with light wind and manageable seas.";wCls="go"}
+    else{wMsg="An easy day on the water: light wind, manageable seas.";wCls="go"}
     if(wv!==null&&tide&&wCls!=="no"){
       const mins=(tide.next.time-now)/6e4;
       if(mins<75)wMsg+=tide.rising?" High tide is near "+clock(tide.next.time)+", making the inlet easier.":" Low tide is near "+clock(tide.next.time)+", so mind the shoals.";
@@ -1498,15 +1513,16 @@ function render(d,live){
     nightPop>=35?`A shower is possible tonight, with a low around ${nightLow}°.`:
     nightLow>=74?`Warm and mostly dry tonight, with a low around ${nightLow}°.`:
     `Mostly dry tonight, cooling to around ${nightLow}°.`;
-  const gw=goldenWindow(sunset);
-  const saidTonight=!!(gw&&now<gw.b);
-  if(saidTonight)tonightText+=now<gw.a?` Golden Hour is ${spokenSpan(gw.a,gw.b)}`:` Golden Hour lasts until ${spokenClock(gw.b)}`;
-  /* the forward look lives here too, so both ends of the light sit in one place */
-  const gwAm=dy.sunrise[1]?goldenWindow(new Date(dy.sunrise[1])):null;
-  if(gwAm)tonightText+=saidTonight
-    ?` Tomorrow morning's runs ${spokenSpan(gwAm.a,gwAm.b)}`
-    :` Tomorrow morning's Golden Hour runs ${spokenSpan(gwAm.a,gwAm.b)}`;
   el.textContent=tonightText;
+  /* both ends of the light on one gold line, out of the sentence's way */
+  const gw=goldenWindow(sunset);
+  const gwAm=dy.sunrise[1]?goldenWindow(new Date(dy.sunrise[1])):null;
+  const goldBits=[];
+  if(gw&&now<gw.b)goldBits.push(now>=gw.a?`<b>now, until ${clock(gw.b)}</b>`:`<b>${spanTxt(gw.a,gw.b)}</b> tonight`);
+  if(gwAm)goldBits.push(`<b>${spanTxt(gwAm.a,gwAm.b)}</b> tomorrow`);
+  document.getElementById("goldTimes").innerHTML=goldBits.length
+    ?`<span class="gold-dot" aria-hidden="true"></span><span class="gold-key">golden hour</span><span>${goldBits.join(" · ")}</span>`
+    :"";
   document.getElementById("eveLine").className="lead tonight-line "+(nightPop>=35?"caution":"go");
   document.getElementById("moonTxt").innerHTML=moonPhaseIcon(scene.moon);
 
