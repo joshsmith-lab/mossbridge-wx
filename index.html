@@ -108,10 +108,16 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .masthead .addr svg{flex:0 0 auto;opacity:.6}
 .masthead .addr .addr-full,.masthead .addr .addr-short{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .addr-short{display:none}
-.live-dot{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 0 0 currentColor;
-  animation:ping 2.8s var(--ease) infinite}
-@keyframes ping{0%{box-shadow:0 0 0 0 rgba(199,67,31,.5);opacity:1}70%{box-shadow:0 0 0 7px rgba(199,67,31,0);opacity:.55}100%{opacity:1}}
+/* the ring is a scaled pseudo-element, not a growing box-shadow: animating the spread
+   radius relaid out the whole page 60 times a second, all day, on a kitchen counter */
+.live-dot{width:6px;height:6px;border-radius:50%;background:currentColor;position:relative;
+  animation:pingDot 2.8s var(--ease) infinite}
+.live-dot::after{content:"";position:absolute;inset:-1px;border-radius:50%;
+  border:1px solid rgba(199,67,31,.5);animation:ping 2.8s var(--ease) infinite}
+@keyframes pingDot{0%,100%{opacity:1}70%{opacity:.55}}
+@keyframes ping{0%{transform:scale(.75);opacity:1}70%,100%{transform:scale(2.9);opacity:0}}
 .spin .live-dot{animation:none;opacity:.35}
+.spin .live-dot::after{animation:none;opacity:0}
 
 /* last baseline: the bottom meta line sits on the same line as the numerals, at any size */
 .now{display:flex;align-items:last baseline;gap:14px;margin-top:24px}

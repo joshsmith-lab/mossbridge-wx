@@ -1,0 +1,193 @@
+/**
+ * Scene and motion review for Porch Weather.
+ *
+ * tools/shots.mjs reviews the copy. This one reviews the picture: it forces the
+ * scenes that are hard to wait for (golden hour, a warm clear night, a storm, a
+ * fog morning, a hard blow) and reports, per scene:
+ *
+ *   - a screenshot of the sky block and of the scene on its own
+ *   - how many CSS animations are running, grouped by keyframe name
+ *   - whether the page holds perfectly still under prefers-reduced-motion
+ *   - how much layout and style recalculation the motion costs
+ *
+ *   npm i playwright && npx playwright install chromium
+ *   TZ=America/New_York node tools/scene.mjs            # everything
+ *   TZ=America/New_York node tools/scene.mjs golden fog # only matching scenes
+ *
+ * Run it with TZ=America/New_York: the scene runs off real `new Date()` and
+ * solar position, so the wall clock is what puts the sun where it needs to be.
+ *
+ * On forcing time: this shifts `Date` the way tools/shots.mjs does rather than
+ * using page.clock, because a faked clock also stops the CSS animations that
+ * are the entire subject of this harness. Shifting keeps the compositor running
+ * and still puts the sun, moon and season exactly where a scenario wants them.
+ */
+import { mkdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+import { serve, stage } from "./fixtures.mjs";
+
+const OUT = path.join(path.dirname(fileURLToPath(import.meta.url)), "shots", "scene");
+const FONT_DIR = process.env.PORCH_FONT_DIR || "";
+const PORT = Number(process.env.PORCH_PORT || 8801);
+const ONLY = process.argv.slice(2);
+
+let chromium;
+try {
+  ({ chromium } = await import("playwright"));
+} catch {
+  console.error("playwright is not installed.\n  npm i playwright && npx playwright install chromium");
+  process.exit(1);
+}
+
+/**
+ * Wall-clock times are real Porters Neck / Shady Spring times, chosen so the
+ * solar altitude lands where the scenario name says it does.
+ * `tidePhase` shifts the tide fixture so a scene can be caught on a falling or
+ * a rising tide.
+ */
+const CASES = [
+  // ── marsh ──────────────────────────────────────────────────────────────
+  { name: "01-marsh-calm-noon", loc: "mb", when: "2026-08-02T13:10:00", tidePhase: 0,
+    note: "high sun, UV 9.6, 5 mph: water should be barely breathing, heat shimmer over the flat",
+    o: { baseTemp: 88, nowTemp: 94, feels: 103, rh: 62, isDay: 1, code: 0, cloud: 6, nowWind: 5, nowDir: 200, nowGust: 8, nowUv: 9.6, uvMax: 10, windAmp: 4, gustAmp: 6,
+      popCurve: () => 3, dailyPop: (p) => p.fill(8) } },
+  { name: "02-marsh-windy-afternoon", loc: "mb", when: "2026-08-02T15:00:00", tidePhase: 3,
+    note: "25 mph gusting 38: chop on the water, restless spartina, wave travelling downwind",
+    o: { baseTemp: 82, nowTemp: 84, feels: 89, rh: 58, isDay: 1, code: 1, cloud: 26, nowWind: 25, nowDir: 235, nowGust: 38, nowUv: 6.4, uvMax: 8, windAmp: 16, gustAmp: 28,
+      popCurve: () => 10, dailyPop: (p) => p.fill(15) } },
+  { name: "03-marsh-golden-evening", loc: "mb", when: "2026-08-02T19:58:00", tidePhase: 0,
+    note: "sun between +6 and -4: the gold arc segment should be lit and breathing",
+    o: { baseTemp: 84, nowTemp: 86, feels: 92, rh: 70, isDay: 1, code: 1, cloud: 14, nowWind: 8, nowDir: 200, nowGust: 14, nowUv: 0.5, uvMax: 9, windAmp: 8, gustAmp: 13,
+      popCurve: () => 8, dailyPop: (p) => p.fill(15) } },
+  { name: "04-marsh-warm-clear-night", loc: "mb", when: "2026-08-02T23:10:00", tidePhase: 0,
+    note: "78F, clear, August: fireflies, earthshine on the moon, the odd shooting star",
+    o: { baseTemp: 79, nowTemp: 78, feels: 82, rh: 80, isDay: 0, code: 0, cloud: 8, nowWind: 4, nowDir: 38, nowGust: 7, nowUv: 0, uvMax: 9, windAmp: 5, gustAmp: 8,
+      popCurve: () => 5, dailyPop: (p) => p.fill(10) } },
+  { name: "05-marsh-storm-afternoon", loc: "mb", when: "2026-08-02T16:45:00", tidePhase: 0,
+    note: "code 95: angled rain, splash ticks, the rare bolt behind the treeline",
+    o: { baseTemp: 84, nowTemp: 81, feels: 88, rh: 88, isDay: 1, code: 95, cloud: 96, nowWind: 17, nowDir: 250, nowGust: 34, nowUv: 1.2, uvMax: 8, windAmp: 14, gustAmp: 26, nowcast: true,
+      popCurve: (i, hr) => (hr >= 14 && hr <= 21 ? 78 : 20), dailyPop: (p) => { p[0] = 85; p[1] = 65; } } },
+  { name: "06-marsh-fog-morning", loc: "mb", when: "2026-08-02T07:30:00", tidePhase: 0,
+    note: "code 45: layered mist over the water, the marsh's best mood",
+    o: { baseTemp: 74, nowTemp: 73, feels: 75, rh: 97, isDay: 1, code: 45, cloud: 88, nowWind: 3, nowDir: 120, nowGust: 6, nowUv: 0.6, uvMax: 7, windAmp: 4, gustAmp: 6,
+      popCurve: () => 12, dailyPop: (p) => p.fill(20) } },
+  { name: "07-marsh-drizzle-midday", loc: "mb", when: "2026-08-02T12:30:00", tidePhase: 0,
+    note: "code 53: sparse, slow drops. Must not look like the downpour beside it",
+    o: { baseTemp: 76, nowTemp: 77, feels: 80, rh: 90, isDay: 1, code: 53, cloud: 90, nowWind: 7, nowDir: 90, nowGust: 12, nowUv: 1.8, uvMax: 6, windAmp: 6, gustAmp: 10,
+      popCurve: () => 60, dailyPop: (p) => p.fill(65) } },
+  { name: "08-marsh-downpour-midday", loc: "mb", when: "2026-08-02T12:30:00", tidePhase: 0,
+    note: "code 82: dense, fast, hard angle. Must not look like the drizzle beside it",
+    o: { baseTemp: 76, nowTemp: 75, feels: 79, rh: 94, isDay: 1, code: 82, cloud: 98, nowWind: 21, nowDir: 240, nowGust: 33, nowUv: 1.1, uvMax: 6, windAmp: 14, gustAmp: 24,
+      popCurve: () => 90, dailyPop: (p) => p.fill(90) } },
+  // ── ridge ──────────────────────────────────────────────────────────────
+  { name: "09-ridge-clear-day", loc: "sp", when: "2026-08-02T14:00:00",
+    note: "hawk circling, hardwoods working, pond breathing",
+    o: { baseTemp: 74, nowTemp: 79, feels: 79, rh: 50, isDay: 1, code: 1, cloud: 15, nowWind: 11, nowDir: 285, nowGust: 19, nowUv: 6.8, uvMax: 8, windAmp: 8, gustAmp: 14,
+      popCurve: () => 6, dailyPop: (p) => p.fill(12) } },
+  // The app has no snow branch (WMO 71-77 are not in its wet list), so the
+  // coldest real ridge night is a cold overcast one. Named for what it is.
+  { name: "10-ridge-cold-night", loc: "sp", when: "2026-01-14T22:40:00",
+    note: "24F January overcast: owl, no fireflies, everything slow",
+    o: { baseTemp: 27, nowTemp: 24, feels: 16, rh: 76, isDay: 0, code: 3, cloud: 82, nowWind: 9, nowDir: 320, nowGust: 17, nowUv: 0, uvMax: 2, windAmp: 7, gustAmp: 13,
+      sunrise: "07:36", sunset: "17:22",
+      popCurve: () => 18, dailyPop: (p) => p.fill(25) } },
+];
+
+const cases = ONLY.length ? CASES.filter((c) => ONLY.some((q) => c.name.includes(q))) : CASES;
+if (!cases.length) { console.error(`no scene matched ${ONLY.join(" ")}`); process.exit(1); }
+
+mkdirSync(OUT, { recursive: true });
+const server = await serve(PORT, FONT_DIR);
+if (!FONT_DIR) console.warn("PORCH_FONT_DIR is unset: falling back to whatever Google Fonts returns.\n");
+
+const browser = await chromium.launch();
+const problems = [];
+
+/** Open a scenario, wait for it to settle, and hand back the page. */
+async function open(cs, { width, height = 932, reducedMotion }) {
+  const ctx = await browser.newContext({
+    viewport: { width, height }, deviceScaleFactor: 2,
+    timezoneId: "America/New_York", reducedMotion,
+  });
+  const page = await ctx.newPage();
+  const errs = [];
+  page.on("pageerror", (e) => errs.push(String(e)));
+  page.on("console", (m) => { if (m.type() === "error") errs.push("console: " + m.text()); });
+  await stage(page, { now: new Date(cs.when), loc: cs.loc, o: cs.o, tidePhase: cs.tidePhase || 0, fontDir: FONT_DIR, port: PORT });
+  await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: "domcontentloaded" });
+  await page.evaluate(() => document.fonts.ready).catch(() => {});
+  await page.waitForTimeout(1500);
+  return { ctx, page, errs };
+}
+
+for (const cs of cases) {
+  console.log(`\n### ${cs.name}\n    ${cs.note}`);
+
+  // ── the look, at phone width ──────────────────────────────────────────
+  {
+    const { ctx, page, errs } = await open(cs, { width: 430 });
+    for (const [sel, suffix] of [[".sky", "sky"], [".scene", "scene"], ["#tideSection", "tide"]]) {
+      try { await page.locator(sel).screenshot({ path: path.join(OUT, `${cs.name}-${suffix}.png`) }); } catch {}
+    }
+
+    const anim = await page.evaluate(() => {
+      const by = {};
+      for (const a of document.getAnimations()) {
+        const n = a.animationName || (a.effect && a.effect.getKeyframes && "(web-animation)") || "(unnamed)";
+        by[n] = (by[n] || 0) + 1;
+      }
+      return { total: document.getAnimations().length, by };
+    });
+    const top = Object.entries(anim.by).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k}:${v}`).join(" ");
+    console.log(`    animations ${anim.total}  ${top}`);
+    if (anim.total > 160) problems.push(`${cs.name}: ${anim.total} running animations`);
+
+    // ── what the motion costs: layout must stay flat while things move ──
+    const cdp = await ctx.newCDPSession(page);
+    await cdp.send("Performance.enable");
+    const read = async () => Object.fromEntries((await cdp.send("Performance.getMetrics")).metrics.map((m) => [m.name, m.value]));
+    const a = await read();
+    await page.waitForTimeout(6000);
+    const b = await read();
+    const layouts = b.LayoutCount - a.LayoutCount, styles = b.RecalcStyleCount - a.RecalcStyleCount;
+    console.log(`    over 6s: ${layouts} layouts, ${styles} style recalcs, ${((b.LayoutDuration - a.LayoutDuration) * 1000).toFixed(1)}ms in layout`);
+    if (layouts > 12) problems.push(`${cs.name}: ${layouts} layouts in 6s of idle motion (layout thrash)`);
+
+    if (errs.length) problems.push(`${cs.name} 430: ${errs.join(" | ")}`);
+    await ctx.close();
+  }
+
+  // ── the look at the widest the app ever gets ──────────────────────────
+  {
+    const { ctx, page, errs } = await open(cs, { width: 760, height: 1200 });
+    try { await page.locator(".sky").screenshot({ path: path.join(OUT, `${cs.name}-sky-760.png`) }); } catch {}
+    if (errs.length) problems.push(`${cs.name} 760: ${errs.join(" | ")}`);
+    await ctx.close();
+  }
+
+  // ── reduced motion: nothing may move, at all ──────────────────────────
+  {
+    const { ctx, page, errs } = await open(cs, { width: 430, reducedMotion: "reduce" });
+    const running = await page.evaluate(() => document.getAnimations().length);
+    const one = await page.locator(".sky").screenshot({ path: path.join(OUT, `${cs.name}-prm.png`) });
+    await page.waitForTimeout(1400);
+    const two = await page.locator(".sky").screenshot();
+    const still = Buffer.compare(one, two) === 0;
+    console.log(`    reduced motion: ${running} animations, ${still ? "held still" : "STILL MOVING"}`);
+    if (running) problems.push(`${cs.name}: ${running} animations survive prefers-reduced-motion`);
+    if (!still) problems.push(`${cs.name}: sky is not static under prefers-reduced-motion`);
+    if (errs.length) problems.push(`${cs.name} prm: ${errs.join(" | ")}`);
+    await ctx.close();
+  }
+}
+
+await browser.close();
+server.close();
+console.log(`\nwrote scene shots to ${OUT}`);
+if (problems.length) {
+  console.error(`\n${problems.length} problem(s):`);
+  for (const p of problems) console.error("  ! " + p);
+  process.exit(1);
+}
+console.log("no problems found");
