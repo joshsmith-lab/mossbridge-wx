@@ -31,6 +31,22 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /JSON\.stringify\(\{savedAt:Date\.now\(\),data\}\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
+  assert.match(worker, /mbwx-shell-v13/);
+});
+
+test("plain-language and living-scene refinements stay in place", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  assert.match(html, /function dayStory\(c,dy,h\)/);
+  assert.match(html, /function bestOutsideWindow\(h,coastal\)/);
+  assert.match(html, /Best outside stretch:/);
+  assert.match(html, /id="goldenband"/);
+  assert.match(html, /one quiet wildlife cue at a time/);
+  assert.match(html, /seasonalFlies/);
+  assert.match(html, />Sun &amp; heat</);
+  assert.match(html, />Tonight</);
+  assert.doesNotMatch(html, />UV · sun exposure</);
+  assert.doesNotMatch(html, />Evening outlook</);
 });
 
 test("installable assets exist", async () => {
