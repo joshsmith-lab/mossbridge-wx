@@ -878,14 +878,18 @@ function renderStorms(storms){
 }
 async function fetchStorms(){
   try{
-    const lr=await fetch("https://api.weather.gov/products/types/TCP");
-    const lj=await lr.json();
+    const lj=await fetchJSON("https://api.weather.gov/products/types/TCP",4500);
     const cutoff=Date.now()-9*3.6e6;
-    const items=(lj["@graph"]||[]).filter(p=>new Date(p.issuanceTime).getTime()>cutoff).slice(0,10);
+    const items=(lj["@graph"]||[]).filter(p=>
+      new Date(p.issuanceTime).getTime()>cutoff&&String(p.wmoCollectiveId||"").startsWith("WTNT")
+    ).slice(0,10);
+    const products=await Promise.allSettled(items.map(it=>
+      fetchJSON("https://api.weather.gov/products/"+it.id,3500)
+    ));
     const seen={},out=[];
-    for(const it of items){
-      const pr=await fetch("https://api.weather.gov/products/"+it.id);
-      const t=(await pr.json()).productText||"";
+    for(const result of products){
+      if(result.status!=="fulfilled")continue;
+      const t=result.value.productText||"";
       const bin=(t.match(/TCPAT(\d)/)||[])[1];
       if(!bin||seen[bin])continue;
       seen[bin]=1;
@@ -1162,24 +1166,25 @@ function render(d,live){
   /* outside card: boating at Moss Bridge, farm weather at Bob Plumley */
   document.getElementById("outTitle").textContent=LOC.outTitle;
   document.getElementById("footSrc").textContent=LOC.foot;
-  const coastal=!!m;
+  const coastal=!!LOC.marine;
   document.getElementById("wWaveWrap").style.display=coastal?"":"none";
   document.getElementById("wTideWrap").style.display=coastal?"":"none";
   const g=Math.round(c.wind_gusts_10m);
   const wl=document.getElementById("waterLead");
   let wMsg,wCls;
   if(coastal){
-    const wv=m.wave_height_max;
-    if(g>=30||wv>=5){wMsg="No-go. Gusts and seas past small-craft comfort.";wCls="no"}
+    const wv=m&&Number.isFinite(m.wave_height_max)?m.wave_height_max:null;
+    if(wv===null){wMsg="Marine forecast unavailable. Check conditions before heading out.";wCls="caution"}
+    else if(g>=30||wv>=5){wMsg="No-go. Gusts and seas past small-craft comfort.";wCls="no"}
     else if(g>=22||wv>=3){wMsg="Workable, not pleasant. Gusty with short-period chop; ICW better than the inlet.";wCls="caution"}
     else{wMsg="Good conditions. Light air, easy seas.";wCls="go"}
-    if(tide&&wCls!=="no"){
+    if(wv!==null&&tide&&wCls!=="no"){
       const mins=(tide.next.time-now)/6e4;
       if(mins<75)wMsg+=tide.rising?" Slack water near high "+clock(tide.next.time)+", easiest inlet run.":" Low at "+clock(tide.next.time)+", mind the shoals in the inlet.";
       else if(!tide.rising&&wCls==="go")wMsg+=" Tide falling, watch depth on the flats.";
     }
-    document.getElementById("wWave").textContent=wv.toFixed(1)+" ft";
-    document.getElementById("wTide").textContent=tide?tide.note:"—";
+    document.getElementById("wWave").textContent=wv===null?"unavailable":wv.toFixed(1)+" ft";
+    document.getElementById("wTide").textContent=tide?tide.note:"unavailable";
   }else{
     let dayPop=0;
     for(let i=0;i<n;i++){const hr=+h.time[i].slice(11,13);if(hr>=7&&hr<=19)dayPop=Math.max(dayPop,h.pop[i])}
@@ -1258,7 +1263,27 @@ addEventListener("resize",()=>{clearTimeout(rzT);rzT=setTimeout(()=>{
 
 /* ── fetch ──────────────────────────────────────────── */
 const cacheKey=id=>"mbwx-"+id;
-function readCache(id){try{const c=localStorage.getItem(cacheKey(id));return c?JSON.parse(c):null}catch(e){return null}}
+const CACHE_MAX_AGE=6*3.6e6;
+function readCache(id){
+  try{
+    const raw=localStorage.getItem(cacheKey(id));if(!raw)return null;
+    const cached=JSON.parse(raw);
+    if(cached&&cached.savedAt&&cached.data)
+      return Date.now()-cached.savedAt<=CACHE_MAX_AGE?cached.data:null;
+    /* Accept a same-day cache written by versions before cache timestamps existed. */
+    const today=new Date().toLocaleDateString("en-CA",{timeZone:"America/New_York"});
+    return cached&&cached.current&&String(cached.current.time||"").slice(0,10)===today?cached:null;
+  }catch(e){return null}
+}
+function writeCache(id,data){try{localStorage.setItem(cacheKey(id),JSON.stringify({savedAt:Date.now(),data}))}catch(e){}}
+async function fetchJSON(url,timeoutMs=7000){
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeoutMs);
+  try{
+    const response=await fetch(url,{signal:controller.signal});
+    if(!response.ok)throw new Error("request failed: "+response.status);
+    return await response.json();
+  }finally{clearTimeout(timer)}
+}
 async function refresh(){
   const L=LOC, btn=document.getElementById("refreshBtn");
   btn.classList.add("spin");
@@ -1266,22 +1291,18 @@ async function refresh(){
     const yest=new Date(Date.now()-864e5);
     const bd=yest.toLocaleDateString("en-CA",{timeZone:"America/New_York"}).replace(/-/g,"");
     const stormsP=L.tropics?fetchStorms():Promise.resolve(null);
-    const [wr,mr,tr,ar]=await Promise.all([
-      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${L.lat}&longitude=${L.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&hourly=temperature_2m,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,wind_speed_10m_max,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York&forecast_days=7&minutely_15=precipitation&forecast_minutely_15=12`),
-      L.marine?fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${L.marine.lat}&longitude=${L.marine.lon}&daily=wave_height_max,wave_period_max&timezone=America%2FNew_York&forecast_days=1&length_unit=imperial`):null,
-      L.tide?fetch(`https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&datum=MLLW&station=${L.tide}&time_zone=lst_ldt&units=english&interval=hilo&format=json&begin_date=${bd}&range=96`):null,
-      fetch(`https://api.weather.gov/alerts/active?point=${L.lat},${L.lon}`)
+    const [wj,marine,tides,alerts,storms]=await Promise.all([
+      fetchJSON(`https://api.open-meteo.com/v1/forecast?latitude=${L.lat}&longitude=${L.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&hourly=temperature_2m,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,wind_speed_10m_max,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York&forecast_days=7&minutely_15=precipitation&forecast_minutely_15=12`,10000),
+      L.marine?fetchJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${L.marine.lat}&longitude=${L.marine.lon}&daily=wave_height_max,wave_period_max&timezone=America%2FNew_York&forecast_days=1&length_unit=imperial`,6000).then(mj=>{
+        const waveRaw=mj&&mj.daily&&mj.daily.wave_height_max&&mj.daily.wave_height_max[0];
+        const periodRaw=mj&&mj.daily&&mj.daily.wave_period_max&&mj.daily.wave_period_max[0];
+        const wave=waveRaw==null?NaN:Number(waveRaw),period=periodRaw==null?NaN:Number(periodRaw);
+        return Number.isFinite(wave)?{wave_height_max:wave,wave_period_max:Number.isFinite(period)?period:null}:null;
+      }).catch(()=>null):Promise.resolve(null),
+      L.tide?fetchJSON(`https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&datum=MLLW&station=${L.tide}&time_zone=lst_ldt&units=english&interval=hilo&format=json&begin_date=${bd}&range=96`,6000).then(tj=>tj.predictions||null).catch(()=>null):Promise.resolve(null),
+      fetchJSON(`https://api.weather.gov/alerts/active?point=${L.lat},${L.lon}`,6000).then(aj=>(aj.features||[]).map(f=>({event:f.properties.event,severity:f.properties.severity,ends:f.properties.ends,expires:f.properties.expires}))).catch(()=>null),
+      stormsP
     ]);
-    if(!wr.ok)throw new Error("wx fetch failed");
-    const wj=await wr.json();
-    let marine=null;
-    if(L.marine){marine={wave_height_max:2.5,wave_period_max:5};
-      try{const mj=await mr.json();marine={wave_height_max:mj.daily.wave_height_max[0],wave_period_max:mj.daily.wave_period_max[0]}}catch(e){}}
-    let tides=null;
-    if(tr)try{const tj=await tr.json();tides=tj.predictions||null}catch(e){}
-    let alerts=null;
-    try{const aj=await ar.json();alerts=(aj.features||[]).map(f=>({event:f.properties.event,severity:f.properties.severity,ends:f.properties.ends,expires:f.properties.expires}))}catch(e){}
-    const storms=await stormsP;
     const nowcast=wj.minutely_15||null;
     const hi=wj.hourly.time.findIndex(t=>t>=wj.current.time.slice(0,13)+":00");
     const i0=Math.max(0,hi),s={
@@ -1291,7 +1312,7 @@ async function refresh(){
     const data={current:wj.current,daily:wj.daily,hourly:s,marine,tides,alerts,storms,nowcast};
     if(L!==LOC)return;                      /* user switched mid-fetch */
     render(data,true);
-    try{localStorage.setItem(cacheKey(L.id),JSON.stringify(data))}catch(e){}
+    writeCache(L.id,data);
   }catch(e){
     if(L!==LOC)return;
     const cached=readCache(L.id);
@@ -1315,6 +1336,8 @@ function setLoc(id){
   refresh();
 }
 paintAddr();
+const initialCached=readCache(LOC.id);
+if(initialCached)render(initialCached,false);
 refresh();
 document.getElementById("locBtn").addEventListener("click",()=>setLoc(LOC.id==="mb"?"sp":"mb"));
 document.getElementById("refreshBtn").addEventListener("click",refresh);
