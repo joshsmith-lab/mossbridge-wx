@@ -44,9 +44,10 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /one local wildlife cue at a time/);
   assert.match(html, /seasonalFlies/);
   assert.match(html, /function sunProtectionAdvice\(c,dy,h,now\)/);
-  assert.match(html, /Wear SPF 30\+/);
-  assert.doesNotMatch(html, /Wear broad-spectrum SPF 30\+/);
-  assert.match(html, /Reapply after two hours outdoors/);
+  assert.match(html, /Sunscreen weather from /);
+  assert.match(html, /Sunscreen weather until /);
+  assert.doesNotMatch(html, /Wear SPF 30\+/);
+  assert.doesNotMatch(html, /Reapply after two hours/);
   assert.match(html, /class="wildlife heron"/);
   assert.match(html, /const owlAt=/);
   assert.match(html, /const frogAt=/);
@@ -54,7 +55,6 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.doesNotMatch(html, /marshDeer/);
   assert.match(html, /one useful read, rather than another row of weather instruments/);
   assert.doesNotMatch(html, /id="eveWind"/);
-  assert.match(html, /const labelTimeY=15,labelValueY=29,labelRailY=35/);
   assert.match(html, /function dailyBrief\(dy,i\)/);
   assert.match(html, /class="day-detail"/);
   assert.match(html, /moonPhaseIcon/);
@@ -63,9 +63,50 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /deer-ear/);
   assert.match(html, /Golden Hour/);
   assert.match(html, />Sun &amp; heat</);
-  assert.match(html, />Tonight</);
   assert.doesNotMatch(html, />UV · sun exposure</);
   assert.doesNotMatch(html, />Evening outlook</);
+});
+
+test("tide chart reads as depth over the bottom", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  // height is measured up from the chart datum, never autoscaled to the window
+  assert.match(html, /const hiV=Math\.max\(\.\.\.vs\),base=Math\.min\(0,\.\.\.vs\)/);
+  assert.match(html, /seaY=H-34/);
+  // the old top rail with a height printed beside every extreme is gone
+  assert.doesNotMatch(html, /labelRailY/);
+  assert.doesNotMatch(html, /\$\{p\.v\.toFixed\(1\)\} ft/);
+  // lows share one aligned row, and the skiff rocks with the chop
+  assert.match(html, /lowY=H-9/);
+  assert.match(html, /rockDeg=clamp\(2\.2\+g0\*\.13/);
+  assert.match(html, /renderTides\(d\.tides,css,c\.wind_gusts_10m\)/);
+});
+
+test("light, motion and alerts stay tuned", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  // clock reads the way a person says it
+  assert.match(html, /const clock12=d=>/);
+  assert.match(html, /clock12\(new Date\(c\.time\)\)/);
+  // dusk and dark are drawn off the same clock, so they meet with no pale seam
+  assert.match(html, /const darkSpans=\[\]/);
+  assert.match(html, /id="goldenband"/);
+  // motion scales with the wind that is actually blowing
+  assert.match(html, /const rush=clamp\(1\+\(Number\(windSpd\)\|\|0\)\/11,1,4\.2\)/);
+  assert.match(html, /renderSkyFx\(altDeg,c\.cloud_cover,c\.wind_direction_10m,wet,storm,c\.wind_speed_10m\)/);
+  assert.match(html, /@keyframes swayTree/);
+  assert.match(html, /class="deer-head"/);
+  assert.match(html, /@keyframes deerGraze/);
+  // an alert opens to the gist instead of only shouting its title
+  assert.match(html, /function alertGist\(a\)/);
+  assert.match(html, /function toggleAlert\(\)/);
+  assert.match(html, /class="alert-body"/);
+  // one place to look up the light at both ends of the night
+  assert.match(html, />Tonight into tomorrow</);
+  assert.match(html, /Tomorrow morning's/);
+  // the water card is named for the water Josh actually runs
+  assert.match(html, /On the water · Figure 8/);
+  assert.doesNotMatch(html, /On the water · Mason Inlet/);
 });
 
 test("installable assets exist", async () => {
