@@ -80,8 +80,11 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 /* head and neck pivot at the shoulder: a long stretch of stillness, then a graze and a look up */
 .deer-head{transform-box:fill-box;transform-origin:17% 95%;animation:deerGraze 17s ease-in-out infinite}
 @keyframes deerGraze{0%,52%,100%{transform:rotate(0)}60%,74%{transform:rotate(4.8deg)}82%{transform:rotate(-2.2deg)}90%{transform:rotate(0)}}
-.water-glint{animation:glintBreathe 9s ease-in-out infinite alternate}
-@keyframes glintBreathe{from{opacity:.72}to{opacity:1}}
+/* the water answers the wind: near-still under 6 mph, working chop above 15. One keyframe
+   drives both the specular track and the chop dashes; the caller sets throw and opacity */
+.wmove{transform-box:fill-box;transform-origin:center;animation:wmove var(--wd,9s) ease-in-out infinite}
+@keyframes wmove{0%,100%{transform:translateX(calc(var(--wx,2px) * -1));opacity:var(--o0,.1)}
+  50%{transform:translateX(var(--wx,2px));opacity:var(--o1,.24)}}
 .heron-breathe{transform-box:fill-box;transform-origin:50% 100%;animation:heronBreathe 13s ease-in-out infinite alternate}
 @keyframes heronBreathe{from{transform:translateY(0)}to{transform:translateY(.7px)}}
 .owl-eyes{transform-box:fill-box;transform-origin:center;animation:wildlifeBlink 9s ease-in-out infinite}
@@ -96,6 +99,9 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes mistBreath{from{transform:translateX(-7px);opacity:.1}to{transform:translateX(9px);opacity:.22}}
 .water-ring{transform-box:fill-box;transform-origin:center;opacity:0;animation:waterRing 3.8s ease-out infinite}
 @keyframes waterRing{0%{opacity:0;transform:scale(.55)}18%{opacity:.3}100%{opacity:0;transform:scale(1.65)}}
+/* a ring where something moved: a brief event inside a long silence */
+.water-ring.slow{animation:waterRingSlow var(--rd,27s) ease-out infinite}
+@keyframes waterRingSlow{0%,84%{opacity:0;transform:scale(.45)}86%{opacity:.3}100%{opacity:0;transform:scale(2)}}
 
 .masthead{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);
   font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;gap:10px;opacity:.82}
@@ -576,7 +582,18 @@ function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd){
 
 /* ── the scene: arc, sun / moon, marsh horizon ──────── */
 const appW=()=>clamp(document.querySelector(".app").clientWidth||760,320,760);
-function renderScene(sunrise,sunset,now,weather,dark){
+/* which way the water is going right now, so the light on it can lean the same way:
+   1 rising, -1 falling, 0 when we have no predictions */
+function tideTrend(preds){
+  if(!preds||preds.length<2)return 0;
+  const now=Date.now();
+  for(const p of preds){
+    const t=new Date(String(p.t).replace(" ","T")).getTime();
+    if(t>now)return p.type==="H"?1:-1;
+  }
+  return 0;
+}
+function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const cloud=weather.cloud_cover||0,wind=weather.wind_speed_10m||0,code=weather.weather_code;
   const wet=[51,53,55,61,63,65,80,81,82,95,96,99].includes(code);
   const storm=[95,96,99].includes(code),fog=[45,48].includes(code),quietWeather=!wet&&!storm;
@@ -657,6 +674,21 @@ function renderScene(sunrise,sunset,now,weather,dark){
       <circle cx="${(x-1).toFixed(1)}" cy="${(y+4.4).toFixed(1)}" r="1.1" fill="rgba(20,49,63,.10)"/>
     </g>`;
   }
+
+  /* how hard the water is working: 0 glassy, 1 chop. Six knots is where a marsh stops
+     looking like glass, twenty-five is where it is all texture */
+  const chopK=clamp((wind-5)/13,0,1);
+  const wDur=clamp(12.5-wind*.36,4.4,12.5);
+  /* the specular track under whatever is in the sky: three bars breathing with the wind */
+  const specular=(cx,topY,shift,sc=1)=>{
+    if(glintX==null||glintOp<=.05)return"";
+    return `<g fill="${glintCol}">`+[[14,1.6,.42],[8,1.4,.3],[4.5,1.2,.2]].map(([hw,th,op],i)=>{
+      const o1=(op*glintOp).toFixed(2),o0=(op*glintOp*(.4+chopK*.22)).toFixed(2);
+      const st=PRM?"":` style="--wx:${(1+chopK*2.8).toFixed(1)}px;--o0:${o0};--o1:${o1};--wd:${(wDur*(1+i*.24)).toFixed(1)}s;animation-delay:-${(i*2.9).toFixed(1)}s"`;
+      return `<rect class="wmove" x="${(cx-hw*sc).toFixed(1)}" y="${(topY+i*4.5*sc+shift).toFixed(1)}" width="${(hw*2*sc).toFixed(1)}" height="${th}" rx="${(th/2).toFixed(2)}" opacity="${o1}"${st}/>`;
+    }).join("")+`</g>`;
+  };
+  const ringAt=(x,y,rx,dur,delay)=>`<ellipse class="water-ring slow" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${rx}" ry="${(rx*.3).toFixed(1)}" fill="none" stroke="${dark?'#B7D6E1':'#183C4B'}" stroke-width=".7" style="--rd:${dur}s;animation-delay:-${delay}s"/>`;
 
   const deerAt=(x,y,s,flip=-1,opacity=1)=>`<g class="wildlife deer" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(flip*s).toFixed(2)},${s.toFixed(2)})" fill="${dark?"#07161B":"#173029"}" stroke="${dark?"#07161B":"#173029"}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
     <g class="deer-head">
@@ -745,17 +777,21 @@ function renderScene(sunrise,sunset,now,weather,dark){
     const treeAt=dl=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;--tsway:${(swayAmt*.42).toFixed(2)}deg;--tsway-neg:${(-swayAmt*.42).toFixed(2)}deg;animation:swayTree ${(swayDur*1.45).toFixed(1)}s ease-in-out ${dl}s infinite alternate"`;
     const swayAt=dl=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;--sway:${swayAmt.toFixed(2)}deg;--sway-neg:${(-swayAmt).toFixed(2)}deg;animation:sway ${swayDur.toFixed(1)}s ease-in-out ${dl}s infinite alternate"`;
 
-    let glint="";
-    if(glintX!=null&&glintOp>.05){
-      const gx=clamp(glintX,pondL+26,pondR-26);
-      glint=`<g class="water-glint" fill="${glintCol}">
-        <rect x="${(gx-12).toFixed(1)}" y="${(base+9).toFixed(1)}" width="24" height="1.5" rx=".75" opacity="${(.4*glintOp).toFixed(2)}"/>
-        <rect x="${(gx-7).toFixed(1)}" y="${(base+13).toFixed(1)}" width="14" height="1.3" rx=".65" opacity="${(.28*glintOp).toFixed(2)}"/>
-        <rect x="${(gx-4).toFixed(1)}" y="${(base+17).toFixed(1)}" width="8" height="1.1" rx=".55" opacity="${(.18*glintOp).toFixed(2)}"/></g>`;
-    }
+    const glint=specular(clamp(glintX,pondL+26,pondR-26),base+9,0,.85);
     let sparkle="";
-    for(let i=0;i<4;i++)
+    for(let i=0;i<3;i++)
       sparkle+=`<rect x="${(pcx+(g()-.5)*prx*1.3).toFixed(1)}" y="${(base+7+g()*9).toFixed(1)}" width="${(5+g()*10).toFixed(1)}" height="1" rx=".5" fill="#FFFFFF" opacity="${(.06+g()*.07).toFixed(2)}"/>`;
+    /* a pond is small water: it ripples where the marsh chops, and rings where something rose */
+    let pondFx="";
+    if(wind>=6){const pw=mulberry(6613),count=2+Math.round(chopK*4);
+      for(let i=0;i<count;i++){
+        const x=pondL+24+pw()*(prx*2-48),y=base+8+pw()*11,w=(6+pw()*13)*(.55+chopK*.8);
+        const o1=(.07+chopK*.12).toFixed(2),o0=(.03+chopK*.04).toFixed(2);
+        const st=PRM?"":` style="--wx:${(.7+chopK*2).toFixed(1)}px;--o0:${o0};--o1:${o1};--wd:${(wDur*(.7+pw()*.5)).toFixed(1)}s;animation-delay:-${(pw()*11).toFixed(1)}s"`;
+        pondFx+=`<path class="wmove" d="M ${x.toFixed(1)} ${y.toFixed(1)} h ${w.toFixed(1)}" stroke="${dark?'#C9E2EB':'#153845'}" stroke-width=".7" stroke-linecap="round" opacity="${o1}"${st}/>`;
+      }
+    }
+    if(!PRM&&!wet&&!storm)pondFx+=ringAt(pcx-prx*.3,base+12,5,31,9)+ringAt(pcx+prx*.35,base+16,4,25,17);
 
     const cattail=(x,ht,lean)=>`<path d="M ${x.toFixed(1)} ${base+9} L ${(x+lean).toFixed(1)} ${(base+9-ht+5).toFixed(1)}" stroke="${ink}" stroke-width="1.15" stroke-linecap="round" fill="none"/>
       <rect x="${(x+lean-1.25).toFixed(1)}" y="${(base+9-ht-2).toFixed(1)}" width="2.6" height="7" rx="1.25" fill="${ink}"/>
@@ -794,7 +830,7 @@ function renderScene(sunrise,sunset,now,weather,dark){
       ${pond}
       ${barn}
       ${fence}
-      ${sparkle}${glint}
+      ${sparkle}${glint}${pondFx}
       <g opacity=".9"${swayAt(1)}><path d="${tufA}" fill="${ink}"/></g>
       <g opacity=".9"${swayAt(swayDur*.55)}><path d="${tufB}" fill="${ink}"/></g>
       ${catsL}${catsR}
@@ -878,16 +914,10 @@ function renderScene(sunrise,sunset,now,weather,dark){
   </g>
   <ellipse cx="${(hx+22).toFixed(1)}" cy="${(base+8.6).toFixed(1)}" rx="13" ry="1.3" fill="${dark?'#EAF2FF':'#FFFFFF'}" opacity=".16"/>`:"";
 
-  /* light on the water */
-  let glint="";
-  if(glintX!=null&&glintOp>.05){
-    glint=`<g class="water-glint" fill="${glintCol}">
-      <rect x="${(glintX-14).toFixed(1)}" y="${(GY+12.5).toFixed(1)}" width="28" height="1.6" rx=".8" opacity="${(.42*glintOp).toFixed(2)}"/>
-      <rect x="${(glintX-8).toFixed(1)}" y="${(GY+17).toFixed(1)}" width="16" height="1.4" rx=".7" opacity="${(.3*glintOp).toFixed(2)}"/>
-      <rect x="${(glintX-4.5).toFixed(1)}" y="${(GY+21.5).toFixed(1)}" width="9" height="1.2" rx=".6" opacity="${(.2*glintOp).toFixed(2)}"/></g>`;
-  }
+  /* light on the water. A falling tide leaves the track sitting further off the bank */
+  const glint=specular(glintX,GY+12.5,tideDir<0?2.4:tideDir>0?-1.6:0);
   let sparkle="";
-  for(let i=0;i<5;i++)
+  for(let i=0;i<3;i++)
     sparkle+=`<rect x="${(20+g()*(W-40)).toFixed(1)}" y="${(GY+12+g()*12).toFixed(1)}" width="${(6+g()*14).toFixed(1)}" height="1" rx=".5" fill="#FFFFFF" opacity="${(.07+g()*.08).toFixed(2)}"/>`;
 
   const morningMist=(localHour<11&&sunAltDeg>-8&&sunAltDeg<14&&humid>=82)||fog;
@@ -900,10 +930,19 @@ function renderScene(sunrise,sunset,now,weather,dark){
   if(wet&&!PRM){const wr=mulberry(7138);
     for(let i=0;i<8;i++)waterWeather+=`<ellipse class="water-ring" cx="${(18+wr()*(W-36)).toFixed(1)}" cy="${(GY+13+wr()*14).toFixed(1)}" rx="${(4+wr()*5).toFixed(1)}" ry="${(1.1+wr()).toFixed(1)}" fill="none" stroke="${dark?'#B7D6E1':'#183C4B'}" stroke-width=".7" style="animation-delay:-${(wr()*3.8).toFixed(1)}s"/>`;
   }
-  if(wind>=12){const ww=mulberry(4419),count=Math.min(8,Math.floor(wind/3));
-    for(let i=0;i<count;i++){const x=18+ww()*(W-70),y=GY+12+ww()*15,w=12+ww()*30;
-      waterWeather+=`<path d="M ${x.toFixed(1)} ${y.toFixed(1)} h ${w.toFixed(1)}" stroke="${dark?'#C9E2EB':'#153845'}" stroke-width=".7" stroke-linecap="round" opacity=".1"/>`;}
+  /* chop: three faint dashes barely moving at 6 mph, nine long ones working at 25 */
+  if(wind>=6){const ww=mulberry(4419),count=3+Math.round(chopK*6);
+    for(let i=0;i<count;i++){
+      const x=16+ww()*(W-64),y=GY+11+ww()*15,w=(8+ww()*18)*(.55+chopK*.9);
+      const o1=(.08+chopK*.14).toFixed(2),o0=(.03+chopK*.05).toFixed(2);
+      const st=PRM?"":` style="--wx:${(.8+chopK*2.6).toFixed(1)}px;--o0:${o0};--o1:${o1};--wd:${(wDur*(.62+ww()*.5)).toFixed(1)}s;animation-delay:-${(ww()*11).toFixed(1)}s"`;
+      waterWeather+=`<path class="wmove" d="M ${x.toFixed(1)} ${y.toFixed(1)} h ${w.toFixed(1)}" stroke="${dark?'#C9E2EB':'#153845'}" stroke-width=".7" stroke-linecap="round" opacity="${o1}"${st}/>`;
+    }
   }
+  /* and a ring, now and then, where a piling meets the water or the heron is standing */
+  if(!PRM&&!wet&&!storm)
+    waterWeather+=ringAt(dx-25,base+7,5,29,7)+ringAt(dx+14,base+10,4,37,21)
+      +(showHeron?ringAt(hx+22,base+8,5.5,23,13):"");
 
   /* one local wildlife cue at a time: heron morning/evening, shorebirds by day,
      fireflies on warm summer nights, a quiet crab when the marsh turns wet */
@@ -1320,7 +1359,7 @@ function render(d,live){
   document.getElementById("themeColor").setAttribute("content",stops[0]);
 
   renderSkyFx(altDeg,c.cloud_cover,c.wind_direction_10m,wet,storm,c.wind_speed_10m);
-  const scene=renderScene(sunrise,sunset,now,c,dark);
+  const scene=renderScene(sunrise,sunset,now,c,dark,LOC.tide?tideTrend(d.tides):0);
 
   const cs=getComputedStyle(document.documentElement);
   const css={ink:cs.getPropertyValue("--ink").trim(),faint:cs.getPropertyValue("--ink-faint").trim(),
