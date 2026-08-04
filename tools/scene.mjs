@@ -161,6 +161,29 @@ for (const cs of cases) {
     console.log(`    ${anim.running} running of ${anim.total}  ${top}`);
     if (anim.running > 120) problems.push(`${cs.name}: ${anim.running} animations still running`);
 
+    // ── nothing may be standing in the pond ────────────────────────────
+    // Residents are positioned as fractions of the frame width, and the ridge pond
+    // spans .13W to .73W, so an eyeballed fraction puts a rabbit in the water. The
+    // marsh is exempt: its water band covers the whole lower frame and the heron is
+    // supposed to be ankle deep in it.
+    if (cs.loc === "sp") {
+      const swimming = await page.evaluate(() => {
+        const svg = document.getElementById("sceneSvg");
+        const water = svg.querySelector('path[fill="url(#waterband)"]');
+        if (!water) return [];
+        const w = water.getBoundingClientRect(), out = [];
+        for (const el of svg.querySelectorAll(".wildlife")) {
+          const b = el.getBoundingClientRect();
+          const cx = b.left + b.width / 2, feet = b.bottom;
+          if (cx > w.left && cx < w.right && feet > w.top + 1 && feet < w.bottom)
+            out.push(`${el.getAttribute("class")} at x=${Math.round(cx - w.left)} into the pond`);
+        }
+        return out;
+      });
+      for (const s of swimming) problems.push(`${cs.name}: ${s}`);
+      console.log(`    pond: ${swimming.length ? "!! " + swimming.join("; ") : "nothing standing in it"}`);
+    }
+
     // ── what the motion costs: layout must stay flat while things move ──
     const cdp = await ctx.newCDPSession(page);
     await cdp.send("Performance.enable");

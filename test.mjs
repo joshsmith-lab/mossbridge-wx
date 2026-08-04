@@ -31,7 +31,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /JSON\.stringify\(\{savedAt:Date\.now\(\),data\}\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v18/);
+  assert.match(worker, /mbwx-shell-v19/);
 });
 
 test("every motion is driven by a reading, not by decoration", async () => {
