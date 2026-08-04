@@ -31,7 +31,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /JSON\.stringify\(\{savedAt:Date\.now\(\),data\}\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v20/);
+  assert.match(worker, /mbwx-shell-v21/);
 });
 
 test("every motion is driven by a reading, not by decoration", async () => {
@@ -102,6 +102,27 @@ test("it snows in Shady Spring", async () => {
   assert.match(html, /rf\.className="rainfx"\+\(snowing\?" snow":""\)/);
   // and the week's one-line brief no longer calls a heavy snow day "periods of rain"
   assert.match(html, /isSnow\(code\)\?\(code===75\|\|code===86\?"heavy snow"/);
+});
+
+test("the almanac fishes the farm pond, and the coast keeps the sunscreen", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  // solunar is folklore built on honest astronomy, and the code says so out loud
+  assert.match(html, /function solunarWindows\(now\)/);
+  assert.match(html, /The theory is folklore; the moon times are real/);
+  // majors are two hours around transit and underfoot, minors one hour around rise and set
+  assert.match(html, /const half=\(major\?60:30\)\*6e4/);
+  // the farm card gets the windows; a warned storm takes them away
+  assert.match(html, /const fishOn=!coastal&&!storm/);
+  assert.match(html, /id="wFishWrap"/);
+  // the ridge sun line states when, never what to wear; the kids' language stays coastal
+  assert.match(html, /function ridgeSunLine\(c,dy,h,now\)/);
+  assert.match(html, /LOC\.scene==="ridge"\?ridgeSunLine\(c,dy,h,now\):sunProtectionAdvice\(c,dy,h,now\)/);
+  assert.match(html, /Strongest sun /);
+  // the pond dimples during a bite window, off the same moon the card reads
+  assert.match(html, /solunarWindows\(now\)\.some\(w=>now>=w\.start&&now<=w\.end\)/);
+  // and the footer says where the bite times come from
+  assert.match(html, /Bite windows: solunar tables, computed from the moon/);
 });
 
 test("nothing new moves under prefers-reduced-motion", async () => {

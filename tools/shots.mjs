@@ -106,7 +106,7 @@ for (const cs of CASES) {
         return {
           verdict: T("verdict"), condition: T("condLabel"), stamp: T("stamp"),
           chips: [...document.querySelectorAll(".chip")].map((c) => c.textContent.trim()),
-          water: T("waterLead"), wind: T("wWind"), window: T("wWindow"),
+          water: T("waterLead"), wind: T("wWind"), window: T("wWindow"), fish: T("wFish"),
           sun: T("uvLead"), tonight: T("eveLead"),
           tideNote: T("tideNote"), hourlyNote: T("hourlyNote"), weekNote: T("weekNote"),
         };
