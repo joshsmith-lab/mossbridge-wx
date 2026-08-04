@@ -194,25 +194,26 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 /* last baseline: the bottom meta line sits on the same line as the numerals, at any size */
 .now{display:flex;align-items:last baseline;gap:14px;margin-top:24px}
 .big-temp{font-size:clamp(88px,27vw,140px);font-weight:300;line-height:.82;letter-spacing:-.045em;
-  font-variation-settings:"opsz" 96;font-feature-settings:"tnum" 1;text-shadow:0 1px 30px rgba(0,0,0,.06);
-  display:flex;align-items:flex-start}
-/* the mark is its own column, so tracking on the numerals can never crowd it */
+  font-variation-settings:"opsz" 96;font-feature-settings:"tnum" 1;text-shadow:0 1px 30px rgba(0,0,0,.06)}
+/* The mark rides the numerals as a superior glyph rather than a flex sibling. As a flex item it
+   was the block's last baseline, so "align-items:last baseline" on .now aligned the meta column
+   to the degree sign instead of to the digits, wedging it 35-55px low. */
 .deg{font-size:.28em;font-weight:400;line-height:1;letter-spacing:normal;opacity:.5;
-  margin:.42em 0 0 .1em;flex:0 0 auto}
+  display:inline-block;vertical-align:baseline;position:relative;top:-2.02em;margin-left:.1em}
 .now-meta{font-family:var(--mono);font-size:12.5px;opacity:.9}
 .now-meta div{margin-bottom:5px;white-space:nowrap}
 .now-meta div:last-child{margin-bottom:0}
 .now-meta b{font-weight:600}
 .verdict{margin:20px 0 2px;font-size:clamp(19px,5.1vw,27px);font-weight:550;letter-spacing:-.018em;
-  max-width:21em;text-wrap:balance}
+  line-height:1.22;max-width:21em;text-wrap:balance}
 .verdict em{font-style:normal;color:var(--hl,#B93A18);font-weight:650}
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 4px}
-.chip{font-family:var(--mono);font-size:11px;padding:5px 11px;border-radius:999px;
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 0}
+.chip{font-family:var(--mono);font-size:11.5px;padding:5px 11px;border-radius:999px;
   background:var(--chip-bg,rgba(16,40,50,.09));backdrop-filter:blur(6px);display:flex;align-items:center;gap:5px}
 .chip svg{display:block;opacity:.7}
 
-.alert-strip{display:none;background:var(--marker);color:#FFF7F3;font-family:var(--mono);font-size:11px;
-  letter-spacing:.07em;text-transform:uppercase;padding:10px 13px;border-radius:11px;margin-bottom:15px;
+.alert-strip{display:none;background:var(--marker);color:#FFF7F3;font-family:var(--mono);font-size:11.5px;
+  letter-spacing:.11em;text-transform:uppercase;padding:10px 13px;border-radius:11px;margin-bottom:15px;
   box-shadow:0 6px 22px -8px rgba(199,67,31,.75);position:relative;overflow:hidden}
 .alert-strip.on{display:block;animation:alertIn .5s var(--ease) both}
 @keyframes alertIn{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:none}}
@@ -221,7 +222,7 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes sweep{0%{transform:translateX(-100%)}55%,100%{transform:translateX(100%)}}
 .alert-strip[role=button]{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .alert-strip[role=button]:active{opacity:.85}
-.alert-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.alert-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
 .alert-caret{flex:0 0 auto;width:7px;height:7px;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;
   transform:rotate(45deg) translate(-2px,-2px);transition:transform .25s var(--ease);opacity:.8}
 .alert-strip.open .alert-caret{transform:rotate(-135deg) translate(-2px,-2px)}
@@ -229,21 +230,20 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .alert-body{display:none;margin-top:9px;padding-top:9px;border-top:1px solid rgba(255,247,243,.28);
   text-transform:none;letter-spacing:.01em;font-size:11.5px;line-height:1.55}
 .alert-strip.open .alert-body{display:block;animation:briefIn .28s var(--ease) both}
-.alert-body p{margin-bottom:5px}
+.alert-body p{margin-bottom:10px}
 .alert-body p:last-child{margin-bottom:0}
-.alert-body b{text-transform:uppercase;letter-spacing:.08em;font-size:10px;opacity:.78;font-weight:600}
+.alert-body b{text-transform:uppercase;letter-spacing:.11em;font-size:10.5px;opacity:.78;font-weight:600}
 .alert-more{opacity:.8}
 
 .nowcast{display:none;margin:15px 0 0;padding:11px 13px;border-radius:12px;
-  background:var(--chip-bg,rgba(16,40,50,.09));backdrop-filter:blur(6px);font-family:var(--mono);font-size:12px}
-.nowcast.on{display:flex;align-items:center;gap:12px;justify-content:space-between;
-  animation:alertIn .5s var(--ease) both}
+  background:var(--chip-bg,rgba(16,40,50,.09));backdrop-filter:blur(6px);font-family:var(--mono);font-size:12.5px}
+.nowcast.on{display:flex;align-items:center;gap:12px;animation:alertIn .5s var(--ease) both}
 .nc-bars{display:flex;gap:3px;align-items:flex-end;height:22px;flex:0 0 auto}
 .nc-bars i{width:8px;border-radius:2px 2px 1px 1px;background:currentColor;display:block;opacity:.85;
   transform-origin:bottom;animation:grow .5s var(--ease) both}
 @keyframes grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
 
-.scene{margin:2px -20px 0;position:relative;z-index:2}
+.scene{margin:14px -20px 0;position:relative;z-index:2}
 .scene svg{display:block;width:100%;height:auto}
 
 /* ── sections ───────────────────────────────────────── */
@@ -258,7 +258,7 @@ section{padding:28px 20px 0}
 .hourly-inner{min-width:820px}
 .hourly-inner svg{display:block;width:100%;height:auto}
 .hr-labels{display:grid;grid-template-columns:repeat(24,1fr);min-width:820px;font-family:var(--mono);
-  font-size:10px;color:var(--ink-faint);margin-top:5px}
+  font-size:10px;color:var(--ink-faint);margin-top:7px}
 .hr-labels span{text-align:center}
 .hr-labels .mark{color:var(--marker);font-weight:600}
 .tide-svg{display:block;width:100%;height:auto}
@@ -273,13 +273,13 @@ section{padding:28px 20px 0}
 .storm-row{display:grid;grid-template-columns:1fr auto;gap:3px 12px;padding:12px 0;
   border-bottom:1px solid var(--line);align-items:baseline}
 .storm-row:last-child{border-bottom:none}
-.storm-row .s-name{font-weight:600;font-size:15.5px;letter-spacing:-.012em;display:flex;align-items:center;gap:7px}
-.storm-row .s-name em{font-style:normal;color:var(--marker);font-size:11px;font-family:var(--mono);
+.storm-row .s-name{font-weight:600;font-size:16.5px;letter-spacing:-.012em;display:flex;align-items:center;gap:7px}
+.storm-row .s-name em{font-style:normal;color:var(--marker);font-size:11.5px;font-family:var(--mono);
   letter-spacing:.05em;text-transform:uppercase;border:1px solid var(--marker);border-radius:4px;padding:1px 5px}
 .storm-row .swirl{color:var(--marker);flex:0 0 auto;display:flex}
 .storm-row .swirl svg{display:block;animation:spin 9s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.storm-row .s-dist{font-family:var(--mono);font-size:11px;color:var(--ink-faint);text-align:right;white-space:nowrap}
+.storm-row .s-dist{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);text-align:right;white-space:nowrap}
 .storm-row .s-dist.storm-near{color:var(--marker);font-weight:600}
 .storm-row .s-meta{grid-column:1/-1;font-family:var(--mono);font-size:11.5px;color:var(--ink-soft)}
 
@@ -293,23 +293,27 @@ section{padding:28px 20px 0}
 .card .lead.go{color:var(--go)}.card .lead.caution{color:var(--heat)}.card .lead.no{color:var(--marker)}
 .card-flex{display:flex;gap:16px;align-items:flex-start}
 /* even columns, so labels and values line up down the card instead of wrapping ragged */
-.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:14px 18px;
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:15px 18px;
   font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);flex:1;letter-spacing:.02em;min-width:0}
-.stat-row b{color:var(--ink);font-weight:600;font-size:13.5px;letter-spacing:-.015em;white-space:nowrap;
-  display:flex;align-items:center;gap:4px}
+/* values wrap rather than overrun their neighbour: a time range is longer than a wind speed */
+.stat-row b{color:var(--ink);font-weight:600;font-size:13.5px;letter-spacing:0;
+  display:flex;flex-wrap:wrap;align-items:center;gap:2px 4px;min-width:0}
+/* a stat whose value is a span of clock times gets two tracks to say it in */
+.stat-row .wide-stat{grid-column:span 2}
 .stat-row span{display:flex;flex-direction:column;gap:3px;min-width:0}
 .vane{flex:0 0 auto;color:var(--water);opacity:.85}
 .uv-bar{height:6px;border-radius:4px;background:linear-gradient(90deg,#4E9E6E,#D9B437 38%,#C7431F 68%,#7A3A86);
   position:relative;margin-top:13px;opacity:.9}
 .uv-pin{position:absolute;top:-5px;width:3px;height:16px;background:var(--ink);border-radius:2px;
   box-shadow:0 0 0 2.5px var(--paper);transition:left 1s var(--ease)}
-.uv-scale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;
-  color:var(--ink-faint);margin-top:5px;letter-spacing:.05em}
+.uv-scale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;
+  color:var(--ink-faint);margin-top:6px;letter-spacing:.11em}
 
 /* ── week ───────────────────────────────────────────── */
-.week{padding:28px 20px 0}
-.day-row{display:grid;grid-template-columns:44px 20px 28px 1fr 32px 48px;gap:8px;align-items:center;
+.week{padding:12px 20px 0}
+.day-row{display:grid;grid-template-columns:44px 20px 28px 1fr 32px 48px;gap:8px;align-items:baseline;
   padding:11px 0;border-bottom:1px solid var(--line)}
+.day-row .icon,.day-row .range-track{align-self:center}
 .day-row:last-child{border-bottom:none}
 .day-detail{border-bottom:1px solid var(--line)}
 .day-detail:last-child{border-bottom:none}
@@ -318,55 +322,57 @@ section{padding:28px 20px 0}
 .day-detail summary::marker{content:""}
 .day-detail summary:focus-visible{outline:2px solid var(--water);outline-offset:4px;border-radius:4px}
 .day-detail[open] summary{padding-bottom:7px}
-.day-brief{margin:0 48px 13px 72px;color:var(--ink-soft);font-size:14.5px;line-height:1.5;text-wrap:pretty;
+.day-brief{margin:0 48px 11px 80px;color:var(--ink-soft);font-size:14.5px;line-height:1.5;text-wrap:pretty;
   animation:briefIn .28s var(--ease) both}
 @keyframes briefIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
 .day-chevron{width:10px;height:10px;display:inline-block;transition:transform .25s var(--ease);opacity:.55;flex:0 0 auto}
 .day-detail[open] .day-chevron{transform:rotate(180deg)}
 .day-row.today .dname{color:var(--marker)}
 .day-row .dname{font-family:var(--mono);font-size:12.5px;font-weight:600}
-.day-row .dname small{display:block;font-weight:400;color:var(--ink-faint);font-size:9.5px}
+.day-row .dname small{display:block;font-weight:400;color:var(--ink-faint);font-size:10.5px}
 .day-row .icon{color:var(--ink-soft);display:flex;align-items:center;justify-content:center}
 .day-row .icon.rough{color:var(--marker)}
 .day-row .icon svg{display:block}
-.t-lo{font-family:var(--mono);font-size:11px;color:var(--ink-faint);text-align:right;letter-spacing:-.02em}
-.t-hi{font-family:var(--mono);font-size:12px;color:var(--ink);font-weight:600;letter-spacing:-.02em}
+.t-lo{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);text-align:right;letter-spacing:0}
+.t-hi{font-family:var(--mono);font-size:12.5px;color:var(--ink);font-weight:600;letter-spacing:0}
 .range-track{position:relative;height:20px}
 .range-scale{position:absolute;inset:8px 0;height:4px;border-radius:3px;background:var(--wash)}
 .range-fill{position:absolute;top:6px;height:8px;border-radius:5px;transform-origin:left;
   animation:wipe .75s var(--ease) both}
 @keyframes wipe{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-.pop{font-family:var(--mono);font-size:11px;text-align:right;color:var(--ink-faint);display:flex;align-items:center;justify-content:flex-end;gap:5px}
+.pop{font-family:var(--mono);font-size:11.5px;text-align:right;color:var(--ink-faint);display:flex;align-items:center;justify-content:flex-end;gap:5px}
 .pop.wet{color:var(--water);font-weight:600}
 .moon-phase{display:block;width:21px;height:21px;color:var(--ink);opacity:.9}
-.tonight-line{display:flex;align-items:flex-start;gap:12px;margin-bottom:0!important}
-.tonight-line>span:first-child{flex:1;min-width:0}
-.tonight-line .moon-phase{margin-top:2px;flex:0 0 auto}
+/* the moon trails the sentence and wraps with it, instead of parking at the far right */
+.tonight-line{display:block;margin-bottom:0!important}
+.tonight-line .moon-phase{display:inline-block;vertical-align:-4px;margin-left:9px}
 /* the light gets its own quiet line, wearing the same gold as the chart bands */
 .gold-times{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:10px;
-  font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+  font-family:var(--mono);font-size:12.5px;color:var(--ink-soft);text-wrap:pretty}
 .gold-times b{color:var(--ink);font-weight:600}
 .gold-dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;align-self:center;
   background:radial-gradient(circle at 35% 35%,#FFD98C,#F3B84F 72%);box-shadow:0 0 7px rgba(243,184,79,.75)}
-.gold-key{font-family:var(--mono);font-weight:600;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+.gold-key{font-family:var(--mono);font-weight:600;font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
   background:linear-gradient(90deg,#A87413,#D99A2B 55%,#A87413);
   -webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
 html[data-theme=dark] .gold-key{background:linear-gradient(90deg,#F3B84F,#FFD98C 55%,#F3B84F);
   -webkit-background-clip:text;background-clip:text;color:transparent}
 
-.foot{padding:32px 20px 0;font-family:var(--mono);font-size:10px;color:var(--ink-faint);line-height:1.75}
+.foot{padding:32px 20px 0;font-family:var(--mono);font-size:10px;color:var(--ink-faint);line-height:1.6}
+.foot-note{display:block;margin-top:9px}
 .skel{display:inline-block;min-width:2.2em;border-radius:5px;background:var(--wash);color:transparent!important;
   animation:shimmer 1.5s ease-in-out infinite}
 @keyframes shimmer{0%,100%{opacity:.45}50%{opacity:.9}}
 
 @media(max-width:520px){
   .addr-full{display:none}.addr-short{display:inline}
-  .masthead{font-size:9.5px;letter-spacing:.07em}
+  .masthead{font-size:10.5px;letter-spacing:.11em}
   .chip{font-size:10.5px;padding:4px 9px}
   .now{margin-top:18px}
   .verdict{margin-top:16px}
   .card-flex{gap:12px}
-  .day-brief{margin-left:0;margin-right:28px}
+  .eyebrow{font-size:10px;letter-spacing:.09em}
+  .day-brief{margin-left:0;margin-right:48px}
 }
 @media(prefers-reduced-motion:reduce){
   *,*::after{animation:none!important;transition:none!important}
@@ -404,7 +410,7 @@ html[data-theme=dark] .gold-key{background:linear-gradient(90deg,#F3B84F,#FFD98C
 <section>
   <div class="eyebrow"><b>Next 24 hours</b><span id="hourlyNote"></span></div>
   <div class="hourly-scroll">
-    <div class="hourly-inner"><svg id="hourlySvg" viewBox="0 0 820 168" xmlns="http://www.w3.org/2000/svg" aria-label="Hourly temperature and rain chance"></svg></div>
+    <div class="hourly-inner"><svg id="hourlySvg" viewBox="0 0 820 144" xmlns="http://www.w3.org/2000/svg" aria-label="Hourly temperature and rain chance"></svg></div>
     <div class="hr-labels" id="hrLabels"></div>
   </div>
 </section>
@@ -429,15 +435,15 @@ html[data-theme=dark] .gold-key{background:linear-gradient(90deg,#F3B84F,#FFD98C
         <span>gusts <b id="wGust">—</b></span>
         <span id="wWaveWrap">seas <b id="wWave">—</b></span>
         <span id="wTideWrap">next tide <b id="wTide">—</b></span>
-        <span id="wFishWrap" style="display:none">fish bite <b id="wFish">—</b></span>
-        <span>best window <b id="wWindow">—</b></span>
+        <span id="wFishWrap" class="wide-stat" style="display:none">fish bite <b id="wFish">—</b></span>
+        <span class="wide-stat">best window <b id="wWindow">—</b></span>
       </div>
     </div>
   </div>
   <div class="card">
     <h3>Sun &amp; heat</h3>
     <div class="lead" id="uvLead">—</div>
-    <div class="stat-row"><span>right now <b id="uvNow">—</b></span><span>strongest <b id="uvPeak">—</b></span></div>
+    <div class="stat-row"><span>right now <b id="uvNow">—</b></span><span class="wide-stat">strongest <b id="uvPeak">—</b></span></div>
     <div class="uv-bar"><div class="uv-pin" id="uvPin"></div></div>
     <div class="uv-scale"><span>LOW</span><span>MODERATE</span><span>HIGH</span><span>EXTREME</span></div>
   </div>
@@ -453,8 +459,7 @@ html[data-theme=dark] .gold-key{background:linear-gradient(90deg,#F3B84F,#FFD98C
   <div id="weekRows"></div>
 </div>
 
-<p class="foot"><span id="footSrc"></span><br>
-Refreshes on open and when you return to the app. Tap the timestamp to force it. Tap the address to switch places.</p>
+<p class="foot"><span id="footSrc"></span><span class="foot-note">Refreshes on open and when you return to the app. Tap the timestamp to force it. Tap the address to switch places.</span></p>
 </div>
 
 <script>
@@ -581,7 +586,8 @@ function solunarWindows(now){
   return wins;
 }
 const clock12=d=>{let h=d.getHours(),m=d.getMinutes();const ap=h<12?"am":"pm";h=h%12||12;
-  return h+":"+String(m).padStart(2,"0")+" "+ap};
+  /* a hard space: the meridiem must never be left alone on the next line */
+  return h+":"+String(m).padStart(2,"0")+"\u00A0"+ap};
 const spanTxt=(a,b)=>{const A=clock(a),B=clock(b);
   return A.slice(-1)===B.slice(-1)?A.slice(0,-1)+"–"+B:A+"–"+B};
 function moonPhaseIcon(m,size=21){
@@ -1420,7 +1426,7 @@ function renderAlerts(alerts){
   const a=sorted[0];
   const until=a.ends||a.expires;
   let t=a.event;
-  if(until)t+=" · until "+clock12(new Date(until));
+  if(until)t+="\u00A0· until\u00A0"+clock12(new Date(until));
   if(alerts.length>1)t+=" · +"+(alerts.length-1)+" more";
   const gist=alertGist(a);
   const others=sorted.slice(1).map(o=>o.event);
@@ -1695,10 +1701,10 @@ function dayStory(c,dy,h){
   if(feels>=98&&!evening&&!overnight)second+=" Keep the middle of the day short.";
   else if(feels<=25)second+=" Bundle up before heading out.";
 
-  const best=bestOutsideWindow(h,!!LOC.marine);
-  if(best&&best.maxPop<55&&best.maxGust<28&&!currentlyWet)
-    second+=` Best outside stretch: <em>${best.text}</em>.`;
-  return{html:first+" "+second,best};
+  /* The window is a stat, and it is already printed as one on the card below. Appending it to
+     this paragraph said the same thing twice and ran the verdict to four lines on a phone,
+     right after a sentence that has just named the hour the rain arrives. */
+  return{html:first+" "+second,best:bestOutsideWindow(h,!!LOC.marine)};
 }
 /* The farm's sun line states when, not what to wear: the sunscreen language was built
    for the kids, and the kids are at the coast. */
@@ -1820,7 +1826,7 @@ function render(d,live){
   document.getElementById("chips").innerHTML=chipData.map(([ic,t])=>`<span class="chip">${ic}${t}</span>`).join("");
 
   /* hourly */
-  const W=820,Ht=168,pad=16,n=h.temp.length,base=Ht-30;
+  const W=820,Ht=144,pad=16,n=h.temp.length,base=Ht-6;
   const tMin=Math.min(...h.temp)-4,tMax=Math.max(...h.temp)+4;
   const X=i=>pad+i*(W-2*pad)/(n-1);
   const Y=t=>26+(base-40)*(1-(t-tMin)/(tMax-tMin));
@@ -1863,23 +1869,27 @@ function render(d,live){
       if(to>timelineStart&&from<timelineEnd)darkSpans.push([Math.max(from,timelineStart),Math.min(to,timelineEnd)]);
     }
   }
+  const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3" stroke-linejoin="round"`;
   let bands="";
   for(const [from,to] of darkSpans){
     const x0=xTime(from),x1=xTime(to);
     if(x1-x0<2)continue;
     bands+=`<rect x="${x0.toFixed(1)}" y="12" width="${(x1-x0).toFixed(1)}" height="${base-12}" fill="url(#nightband)" rx="4"/>`;
-    if(x1-x0>60)bands+=`<g transform="translate(${((x0+x1)/2).toFixed(1)},22)" fill="${css.faint}" opacity=".85">
-      <path d="M 4 0 a 4.6 4.6 0 1 1-4.6-4.6 A 3.6 3.6 0 0 0 4 0 Z"/>
-      <text x="10" y="3" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="9.5" letter-spacing="1.1" fill="${css.faint}">AFTER DARK</text></g>`;
+    /* the unit is centred on its own ink, and kept clear of both chart edges, so the label
+       names the band it sits in instead of running off the right side of the night */
+    if(x1-x0>90)bands+=`<g transform="translate(${clamp((x0+x1)/2,pad+52,W-pad-52).toFixed(1)},22)" fill="${css.faint}" opacity=".85">
+      <path d="M -37 0 a 4.6 4.6 0 1 1-4.6-4.6 A 3.6 3.6 0 0 0 -37 0 Z"/>
+      <text x="-31" y="3" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="9.5" letter-spacing="1.1" fill="${css.faint}" ${halo}>AFTER DARK</text></g>`;
   }
   let bars="",dots="",labels="";
-  const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3" stroke-linejoin="round"`;
   const hiI=h.temp.indexOf(Math.max(...h.temp)),loI=h.temp.indexOf(Math.min(...h.temp));
   for(let i=0;i<n;i++){
     if(h.pop[i]>=5){
       const bh=h.pop[i]*.42;
       bars+=`<rect x="${(X(i)-5.5).toFixed(1)}" y="${(base-bh).toFixed(1)}" width="11" height="${bh.toFixed(1)}" rx="3" fill="${css.water}" opacity="${h.pop[i]>=40?.55:.3}"/>`;
-      if(h.pop[i]>=40&&i%2===0)
+      /* i%4 is a subset of i%2, so every fourth hour the temperature label landed on the
+         same x and its paper halo punched a hole straight through this number */
+      if(h.pop[i]>=40&&i%4===2&&i!==hiI&&i!==loI)
         bars+=`<text x="${X(i).toFixed(1)}" y="${(base-bh-4).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="8.5" fill="${css.water}" ${halo}>${h.pop[i]}</text>`;
     }
     if(i===hiI||i===loI||i===0){
@@ -2030,7 +2040,7 @@ function render(d,live){
   const openDay=document.querySelector(".day-detail[open]")?.dataset.day||null;
   document.getElementById("weekRows").innerHTML=dy.time.map((t,i)=>{
     const l=dy.temperature_2m_min[i],hx=dy.temperature_2m_max[i];
-    const left=((l-lo)/span*100).toFixed(1),width=Math.max(4,(hx-l)/span*100).toFixed(1);
+    const left=((l-lo)/span*100).toFixed(1),width=Math.min(Math.max(4,(hx-l)/span*100),100-((l-lo)/span*100)).toFixed(1);
     const isStorm=dy.weather_code[i]>=95,pop=dy.precipitation_probability_max[i];
     const row=`<span class="dname">${i===0?"Today":dayName(t)}<small>${mmdd(t)}</small></span>
       <span class="icon${isStorm?" rough":""}">${icon(dy.weather_code[i],17)}</span>
@@ -2041,7 +2051,7 @@ function render(d,live){
           background:linear-gradient(90deg,${tempColor(l)},${tempColor(hx)})"></span>
       </span>
       <span class="t-hi">${Math.round(hx)}°</span>
-      <span class="pop ${pop>=40?"wet":""}">${pop}%${i?'<svg class="day-chevron" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>':""}</span>`;
+      <span class="pop ${pop>=40?"wet":""}">${pop}%${i?'<svg class="day-chevron" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>':'<span class="day-chevron" aria-hidden="true"></span>'}</span>`;
     if(i===0)return `<div class="day-row today">${row}</div>`;
     return `<details class="day-detail" data-day="${t}"${openDay===t?" open":""}>
       <summary class="day-row">${row}</summary>
