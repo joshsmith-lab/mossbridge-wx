@@ -429,6 +429,7 @@ html[data-theme=dark] .gold-key{background:linear-gradient(90deg,#F3B84F,#FFD98C
         <span>gusts <b id="wGust">—</b></span>
         <span id="wWaveWrap">seas <b id="wWave">—</b></span>
         <span id="wTideWrap">next tide <b id="wTide">—</b></span>
+        <span id="wFishWrap" style="display:none">fish bite <b id="wFish">—</b></span>
         <span>best window <b id="wWindow">—</b></span>
       </div>
     </div>
@@ -466,7 +467,7 @@ const LOCS={
   sp:{id:"sp",addrFull:"Bob Plumley Rd · Shady Spring",addrShort:"Shady Spring",
       lat:37.8215,lon:-80.9942,scene:"ridge",
       outTitle:"Outside · Around the farm",
-      foot:"Forecast: Open-Meteo (NWS-blended), grid cell over Shady Spring, WV · Alerts: National Weather Service."}
+      foot:"Forecast: Open-Meteo (NWS-blended), grid cell over Shady Spring, WV · Alerts: National Weather Service · Bite windows: solunar tables, computed from the moon."}
 };
 let LOC;try{LOC=LOCS[localStorage.getItem("mbwx-loc")]||LOCS.mb}catch(e){LOC=LOCS.mb}
 let LAT=LOC.lat, LON=LOC.lon;
@@ -556,6 +557,28 @@ function goldenWindow(around){
   const a=cross(6),b=cross(-4);
   if(!a||!b)return null;
   return a<b?{a,b}:{a:b,b:a};
+}
+/* Solunar: the almanac's theory that fish feed hardest when the moon is overhead or
+   underfoot (the majors, two hours each) and at moonrise and moonset (the minors, one
+   hour each). The theory is folklore; the moon times are real, computed from the same
+   astronomy that places the moon in the scene. Presented as the almanac's word, never
+   as a forecast. */
+function solunarWindows(now){
+  const t0=now.getTime()-3*3.6e6,STEP=12e4,N=Math.round(33*3.6e6/STEP);
+  const alt=Array.from({length:N},(_,i)=>moonPos(new Date(t0+i*STEP)).alt);
+  const wins=[];
+  for(let i=1;i<N-1;i++){
+    const t=t0+i*STEP;
+    let major=null;
+    if(alt[i]>alt[i-1]&&alt[i]>=alt[i+1])major=true;          /* transit: moon overhead */
+    else if(alt[i]<alt[i-1]&&alt[i]<=alt[i+1])major=true;     /* underfoot */
+    else if((alt[i-1]<0)!==(alt[i]<0))major=false;            /* moonrise or moonset */
+    if(major!==null){
+      const half=(major?60:30)*6e4;
+      wins.push({start:new Date(t-half),end:new Date(t+half),major});
+    }
+  }
+  return wins;
 }
 const clock12=d=>{let h=d.getHours(),m=d.getMinutes();const ap=h<12?"am":"pm";h=h%12||12;
   return h+":"+String(m).padStart(2,"0")+" "+ap};
@@ -1050,6 +1073,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       }
     }
     if(!PRM&&!wet&&!storm)pondFx+=ringAt(pcx-prx*.3,base+12,5,31,9)+ringAt(pcx+prx*.35,base+16,4,25,17);
+    /* when the almanac says the fish are moving, the pond dimples a little more often.
+       The card's bite window and this water agree, because they read the same moon. */
+    if(!PRM&&!wet&&!storm&&solunarWindows(now).some(w=>now>=w.start&&now<=w.end))
+      pondFx+=ringAt(pcx-prx*.08,base+13,4.5,13,4)+ringAt(pcx+prx*.16,base+10,3.5,17,11);
 
     const cattail=(x,ht,lean)=>`<path d="M ${x.toFixed(1)} ${base+9} L ${(x+lean).toFixed(1)} ${(base+9-ht+5).toFixed(1)}" stroke="${ink}" stroke-width="1.15" stroke-linecap="round" fill="none"/>
       <rect x="${(x+lean-1.25).toFixed(1)}" y="${(base+9-ht-2).toFixed(1)}" width="2.6" height="7" rx="1.25" fill="${ink}"/>
@@ -1585,6 +1612,9 @@ function countTo(el,val){
 /* ── the headline: what the day will actually feel like ─ */
 const spokenAt=t=>hh(t).replace("a"," a.m.").replace("p"," p.m.");
 const spokenClock=d=>clock(d).replace(":00","").replace(/a$/," a.m.").replace(/p$/," p.m.");
+/* a sentence ending on a spoken clock already carries its period: "until 4 p.m.." is a typo
+   the app was shipping every afternoon */
+const sentence=s=>s.endsWith(".")?s:s+".";
 const spokenSpan=(a,b)=>spanTxt(a,b).replace(/a$/," a.m.").replace(/p$/," p.m.");
 function bestOutsideWindow(h,coastal){
   const run=3,n=h.temp.length,day0=h.time[0].slice(0,10),cands=[];
@@ -1670,6 +1700,22 @@ function dayStory(c,dy,h){
     second+=` Best outside stretch: <em>${best.text}</em>.`;
   return{html:first+" "+second,best};
 }
+/* The farm's sun line states when, not what to wear: the sunscreen language was built
+   for the kids, and the kids are at the coast. */
+function ridgeSunLine(c,dy,h,now){
+  const today=dy.time[0];
+  const slots=h.time.map((t,i)=>({time:new Date(t),uv:Number(h.uv[i])||0,day:t.slice(0,10)}))
+    .filter(slot=>slot.day===today&&slot.uv>=3);
+  const peak=Math.max(Number(dy.uv_index_max[0])||0,...slots.map(slot=>slot.uv));
+  const cls=peak>=6?"caution":"go";
+  if(!slots.length){
+    if(now.getHours()>=17&&peak>=3)return{text:"The strong sun is done for today.",cls:"go"};
+    return peak>=3?{text:"Strongest sun 10 a.m. to 5 p.m.",cls}:{text:"Easy sun today.",cls:"go"};
+  }
+  const start=slots[0].time,end=new Date(slots[slots.length-1].time.getTime()+3.6e6);
+  if(now>=end)return{text:"The strong sun is done for today.",cls:"go"};
+  return{text:sentence(now>=start?`Strongest sun until ${spokenClock(end)}`:`Strongest sun ${spokenClock(start)} to ${spokenClock(end)}`),cls};
+}
 function sunProtectionAdvice(c,dy,h,now){
   const today=dy.time[0];
   const slots=h.time.map((t,i)=>({time:new Date(t),uv:Number(h.uv[i])||0,day:t.slice(0,10)}))
@@ -1686,7 +1732,7 @@ function sunProtectionAdvice(c,dy,h,now){
   const timing=now>=start
     ?`Sunscreen weather until ${spokenClock(end)}`
     :`Sunscreen weather from ${spokenClock(start)} to ${spokenClock(end)}`;
-  return{text:timing+".",cls:"caution"};
+  return{text:sentence(timing),cls:"caution"};
 }
 function dailyBrief(dy,i){
   const high=Math.round(dy.temperature_2m_max[i]);
@@ -1899,6 +1945,15 @@ function render(d,live){
   const coastal=!!LOC.marine;
   document.getElementById("wWaveWrap").style.display=coastal?"":"none";
   document.getElementById("wTideWrap").style.display=coastal?"":"none";
+  /* the almanac's bite windows, farm only, and never during a warned storm: a bite time
+     printed under a thunderstorm warning reads as an invitation */
+  const fishOn=!coastal&&!storm;
+  document.getElementById("wFishWrap").style.display=fishOn?"":"none";
+  if(fishOn){
+    const wins=solunarWindows(now).filter(w=>w.end>now).slice(0,2);
+    document.getElementById("wFish").textContent=wins.map(w=>
+      now>=w.start?"now–"+clock(w.end):spanTxt(w.start,w.end)).join(" · ")||"—";
+  }
   const g=Math.round(c.wind_gusts_10m);
   const wl=document.getElementById("waterLead");
   let wMsg,wCls;
@@ -1937,7 +1992,7 @@ function render(d,live){
   const uvI=h.uv.indexOf(Math.max(...h.uv)),uvStrong=uvI>=0?Number(h.uv[uvI]):uvPk;
   const uvTomorrow=uvI>=0&&h.time[uvI].slice(0,10)!==dy.time[0];
   const ul=document.getElementById("uvLead");
-  const sunAdvice=sunProtectionAdvice(c,dy,h,now);
+  const sunAdvice=LOC.scene==="ridge"?ridgeSunLine(c,dy,h,now):sunProtectionAdvice(c,dy,h,now);
   ul.textContent=sunAdvice.text;
   ul.className="lead "+sunAdvice.cls;
   document.getElementById("uvNow").textContent=uvNow.toFixed(1);

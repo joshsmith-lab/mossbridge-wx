@@ -152,6 +152,13 @@ Established with Josh and enforced by `test.mjs`:
 - Animals only appear in weather they would actually be out in. Frogs go under
   below 45F, fiddler crabs below 48F, and the cormorant and the cardinal exist
   because something still has to be out there when they do.
+- The farm's "fish bite" windows are solunar tables: almanac folklore built on
+  real moon transits from the app's own astronomy. That framing is deliberate.
+  Do not upgrade them into a forecast, and do not replace them with an API; the
+  honesty is that the moon times are real and the theory is the almanac's. The
+  pond's extra rise rings during a window read the same moon as the card, and
+  the windows disappear under a warned storm so they never read as an
+  invitation to stand in a thunderstorm with a rod.
 
 ## Known issues
 
