@@ -48,7 +48,7 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .app>*{animation:rise .6s var(--ease) both}
 .app>*:nth-child(2){animation-delay:.07s}.app>*:nth-child(3){animation-delay:.13s}
 .app>*:nth-child(4){animation-delay:.19s}.app>*:nth-child(5){animation-delay:.25s}
-.app>*:nth-child(6){animation-delay:.31s}
+.app>*:nth-child(6){animation-delay:.31s}.app>*:nth-child(7){animation-delay:.37s}
 
 /* ── sky ─────────────────────────────────────────────── */
 .sky{position:relative;overflow:hidden;color:var(--on-sky);isolation:isolate;
@@ -112,6 +112,17 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes deerGraze{0%,52%,100%{transform:rotate(0)}60%,74%{transform:rotate(4.8deg)}82%{transform:rotate(-2.2deg)}90%{transform:rotate(0)}}
 /* the water answers the wind: near-still under 6 mph, working chop above 15. One keyframe
    drives both the specular track and the chop dashes; the caller sets throw and opacity */
+/* a cloud shadow crossing the ground, at the speed the clouds themselves are moving */
+.cshadow{animation:cshadow var(--cd,90s) linear infinite}
+@keyframes cshadow{0%{transform:translateX(var(--x0,-200px));opacity:0}
+  16%,84%{opacity:var(--co,.1)}100%{transform:translateX(var(--x1,600px));opacity:0}}
+/* a vane hunts back and forth in a gusty wind and sits almost still in a steady one */
+.vane-hunt{transform-box:fill-box;transform-origin:center;animation:vaneHunt var(--vt,7s) ease-in-out infinite alternate}
+@keyframes vaneHunt{from{transform:rotate(calc(var(--vdir,0deg) - var(--vh,3deg)))}
+  to{transform:rotate(calc(var(--vdir,0deg) + var(--vh,3deg)))}}
+/* the scene settles into place once, when the app opens, and never again */
+@keyframes sceneIn{from{opacity:0;transform:translateY(7px) scale(1.014)}to{opacity:1;transform:none}}
+.scene.first{animation:sceneIn .9s var(--ease) both}
 .wmove{transform-box:fill-box;transform-origin:center;animation:wmove var(--wd,9s) ease-in-out infinite}
 @keyframes wmove{0%,100%{transform:translateX(calc(var(--wx,2px) * -1));opacity:var(--o0,.1)}
   50%{transform:translateX(var(--wx,2px));opacity:var(--o1,.24)}}
@@ -833,6 +844,19 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       <path d="${d}" fill="none" stroke="#FFF6DE" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".3"/>
       <path d="${d}" fill="none" stroke="#FFFDF4" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></g>`;
   };
+  /* A cloud shadow crossing the ground. Only drawn when there are discrete clouds to cast
+     one: a clear sky has nothing to throw a shadow and an overcast sky is all shadow
+     already. Speed comes off the wind and the side it crosses from matches the cloud
+     drift, so on a part-cloudy day the sky and the ground agree about the weather. */
+  const cloudShadows=(topY,h)=>{
+    if(PRM||storm||cloud<12||cloud>92)return"";
+    const sr=mulberry(8821),dur=clamp(150-wind*4.2,42,150);
+    return Array.from({length:cloud>45?2:1},()=>{
+      const w=W*(.44+sr()*.3), y=topY+sr()*h, ry=h*(.5+sr()*.4);
+      const from=downwind>0?-w:W+w, to=downwind>0?W+w:-w, d=dur*(.8+sr()*.5);
+      return `<ellipse cx="0" cy="${y.toFixed(1)}" rx="${(w/2).toFixed(0)}" ry="${ry.toFixed(1)}" fill="url(#cshade)" class="cshadow" style="--x0:${from.toFixed(0)}px;--x1:${to.toFixed(0)}px;--co:${(.05+cloud/100*.11).toFixed(3)};--cd:${d.toFixed(0)}s;animation-delay:-${(Date.now()/1000%d).toFixed(0)}s"/>`;
+    }).join("");
+  };
   const ringAt=(x,y,rx,dur,delay)=>`<ellipse class="water-ring slow" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${rx}" ry="${(rx*.3).toFixed(1)}" fill="none" stroke="${dark?'#B7D6E1':'#183C4B'}" stroke-width=".7" style="--rd:${dur}s;animation-delay:-${delay}s"/>`;
 
   const deerAt=(x,y,s,flip=-1,opacity=1)=>`<g class="wildlife deer" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(flip*s).toFixed(2)},${s.toFixed(2)})" fill="${dark?"#07161B":"#173029"}" stroke="${dark?"#07161B":"#173029"}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
@@ -960,7 +984,13 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     const barn=`<g transform="translate(${(W*.81-16.25).toFixed(1)} ${(base+2-25).toFixed(1)}) scale(1.25)" fill="${ink}" opacity=".8">
       <path d="M 2.6 20 L 2.6 9.6 L 1 10 L 6.2 3.2 L 10.8 1 L 15.2 1 L 19.8 3.2 L 25 10 L 23.4 9.6 L 23.4 20 Z"/>
       <path d="M 11.4 1 L 11.4 -1.2 L 14.6 -1.2 L 14.6 1 Z M 10.8 -1.2 L 13 -2.8 L 15.2 -1.2 Z"/>
-      <path d="M 6.2 3.3 L 19.8 3.3" stroke="#FFFFFF" stroke-width=".8" opacity=".14" fill="none"/></g>`;
+      <path d="M 6.2 3.3 L 19.8 3.3" stroke="#FFFFFF" stroke-width=".8" opacity=".14" fill="none"/>
+      ${/* the vane points into the wind the way the one on the card does, and hunts as hard
+           as the gusts are running over the steady wind */""}
+      <path d="M 13 -2.8 L 13 -6.4" stroke="${ink}" stroke-width=".7" stroke-linecap="round" fill="none"/>
+      <g transform="translate(13 -9.6)"><g class="vane-hunt" style="--vdir:${Math.round(Number(weather.wind_direction_10m)||0)}deg;--vh:${clamp((gust-wind)*.45,.6,7).toFixed(1)}deg;--vt:${clamp(9-(gust-wind)*.32,2.4,9).toFixed(1)}s">
+        <path d="M 0 -3.2 L 0 3.2" stroke="${ink}" stroke-width=".62" stroke-linecap="round" fill="none"/>
+        <path d="M -1 -1.7 L 0 -3.5 L 1 -1.7 Z"/><path d="M -2.1 1.3 L 2.1 1.3 L 1.3 3.5 L -1.3 3.5 Z"/></g></g></g>`;
 
     let fp="",fr="";const fpts=[];
     for(let x=-4;x<W+8;x+=24+g()*12){
@@ -998,7 +1028,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       sparkle+=`<rect x="${(pcx+(g()-.5)*prx*1.3).toFixed(1)}" y="${(base+7+g()*9).toFixed(1)}" width="${(5+g()*10).toFixed(1)}" height="1" rx=".5" fill="#FFFFFF" opacity="${(.06+g()*.07).toFixed(2)}"/>`;
     /* a pond is small water: it ripples where the marsh chops, and rings where something rose */
     let pondFx="";
-    if(wind>=6){const pw=mulberry(6613),count=2+Math.round(chopK*4);
+    {const pw=mulberry(6613),count=2+Math.round(chopK*4);
       for(let i=0;i<count;i++){
         const x=pondL+24+pw()*(prx*2-48),y=base+8+pw()*11,w=(6+pw()*13)*(.55+chopK*.8);
         const o1=(.07+chopK*.12).toFixed(2),o0=(.03+chopK*.04).toFixed(2);
@@ -1046,6 +1076,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
         <linearGradient id="waterband" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stop-color="${dark?'#0C2C3A':'#5E97AE'}" stop-opacity=".7"/>
           <stop offset="1" stop-color="${dark?'#081E28':'#40758F'}" stop-opacity=".9"/></linearGradient>
+        <radialGradient id="cshade"><stop offset="0" stop-color="#0A1E26" stop-opacity=".55"/><stop offset="1" stop-color="#0A1E26" stop-opacity="0"/></radialGradient>
       </defs>
       <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
       ${goldArc}
@@ -1056,6 +1087,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       ${pond}
       ${barn}
       ${fence}
+      ${cloudShadows(base-rTop*.85,rTop*.85+8)}
       ${sparkle}${glint}${pondFx}
       ${tufts.map((d,i)=>d?`<g opacity=".9"${bandAt(i)}><path d="${d}" fill="${ink}"/></g>`:"").join("")}
       ${catsL}${catsR}
@@ -1209,10 +1241,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       waterWeather+=`<path class="splash" d="M ${(10+sp2()*(W-20)).toFixed(1)} ${(base+2+sp2()*13).toFixed(1)} v ${(-1.4-rainK*1.8).toFixed(1)}" stroke="${dark?'#CFE6EE':'#EAF4F8'}" stroke-width=".9" stroke-linecap="round" style="--sd:${(1.15+sp2()*1.1).toFixed(2)}s;animation-delay:-${(sp2()*4).toFixed(2)}s"/>`;
   }
   /* chop: three faint dashes barely moving at 6 mph, nine long ones working at 25 */
-  if(wind>=6){const ww=mulberry(4419),count=3+Math.round(chopK*6);
+  {const ww=mulberry(4419),count=2+Math.round(chopK*7);
     for(let i=0;i<count;i++){
       const x=16+ww()*(W-64),y=GY+11+ww()*15,w=(8+ww()*18)*(.55+chopK*.9);
-      const o1=(.08+chopK*.14).toFixed(2),o0=(.03+chopK*.05).toFixed(2);
+      const o1=(.05+chopK*.17).toFixed(2),o0=(.02+chopK*.06).toFixed(2);
       const st=PRM?"":` style="--wx:${(.8+chopK*2.6).toFixed(1)}px;--o0:${o0};--o1:${o1};--wd:${(wDur*(.62+ww()*.5)).toFixed(1)}s;animation-delay:-${(ww()*11).toFixed(1)}s"`;
       waterWeather+=`<path class="wmove" d="M ${x.toFixed(1)} ${y.toFixed(1)} h ${w.toFixed(1)}" stroke="${dark?'#C9E2EB':'#153845'}" stroke-width=".7" stroke-linecap="round" opacity="${o1}"${st}/>`;
     }
@@ -1251,6 +1283,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       <linearGradient id="waterband" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="${dark?'#0C2C3A':'#6FA8C4'}" stop-opacity=".55"/>
         <stop offset="1" stop-color="${dark?'#081E28':'#4E86A8'}" stop-opacity=".85"/></linearGradient>
+      <radialGradient id="cshade"><stop offset="0" stop-color="#0A1E26" stop-opacity=".55"/><stop offset="1" stop-color="#0A1E26" stop-opacity="0"/></radialGradient>
       <linearGradient id="heathaze" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="#FFE9C0" stop-opacity="0"/>
         <stop offset=".5" stop-color="#FFE9C0" stop-opacity=".24"/>
@@ -1271,6 +1304,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     <path d="M -5 ${base} L ${W+5} ${base}" stroke="${ink}" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>
     ${snowing?`<path d="M -5 ${(base-1.5).toFixed(1)} L ${W+5} ${(base-1.5).toFixed(1)}" stroke="#F2F8FA" stroke-width="2.4" stroke-linecap="round" opacity=".45"/>`:""}
     ${tufts.map((d,i)=>d?`<g opacity=".95"${bandAt(i)}><path d="${d}" fill="${ink}"/></g>`:"").join("")}
+    ${cloudShadows(base-26,34)}
     ${heat}
     ${dock}
     ${marshResident}
@@ -1642,7 +1676,7 @@ function dailyBrief(dy,i){
 }
 
 /* ── main render ────────────────────────────────────── */
-let LINE_DRAWN=false;
+let LINE_DRAWN=false,SCENE_IN=false;
 function render(d,live){
   const c=d.current,dy=d.daily,h=d.hourly,m=d.marine;
   const now=new Date(), sunrise=new Date(dy.sunrise[0]), sunset=new Date(dy.sunset[0]);
@@ -1672,6 +1706,9 @@ function render(d,live){
 
   renderSkyFx(altDeg,c.cloud_cover,c.wind_direction_10m,wet,storm,c.wind_speed_10m,c.weather_code);
   const scene=renderScene(sunrise,sunset,now,c,dark,LOC.tide?tideTrend(d.tides):0);
+  /* the scene settles in the first time the app paints, and never on the refresh, resize
+     and foreground re-renders after that */
+  if(!SCENE_IN&&!PRM){SCENE_IN=true;document.querySelector(".scene").classList.add("first")}
 
   const cs=getComputedStyle(document.documentElement);
   const css={ink:cs.getPropertyValue("--ink").trim(),faint:cs.getPropertyValue("--ink-faint").trim(),

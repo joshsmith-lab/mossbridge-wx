@@ -39,7 +39,13 @@ test("every motion is driven by a reading, not by decoration", async () => {
 
   // water: wind sets the chop, the tide sets where the light sits on it
   assert.match(html, /const chopK=clamp\(\(wind-5\)\/13,0,1\)/);
-  assert.match(html, /if\(wind>=6\)\{const ww=mulberry\(4419\),count=3\+Math\.round\(chopK\*6\)/);
+  // water is never perfectly still, so a calm keeps two faint dashes rather than none
+  assert.match(html, /\{const ww=mulberry\(4419\),count=2\+Math\.round\(chopK\*7\)/);
+  // a cloud shadow needs discrete clouds: a clear sky casts none, an overcast one is all shadow
+  assert.match(html, /if\(PRM\|\|storm\|\|cloud<12\|\|cloud>92\)return""/);
+  // the barn vane points into the wind and hunts as hard as the gusts run over it
+  assert.match(html, /--vdir:\$\{Math\.round\(Number\(weather\.wind_direction_10m\)\|\|0\)\}deg/);
+  assert.match(html, /--vh:\$\{clamp\(\(gust-wind\)\*\.45,\.6,7\)/);
   assert.match(html, /function tideTrend\(preds\)/);
   assert.match(html, /renderScene\(sunrise,sunset,now,c,dark,LOC\.tide\?tideTrend\(d\.tides\):0\)/);
   assert.match(html, /specular\(glintX,GY\+12\.5,tideDir<0\?2\.4:tideDir>0\?-1\.6:0\)/);
