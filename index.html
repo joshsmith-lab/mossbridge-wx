@@ -240,6 +240,10 @@ section{padding:28px 20px 0}
 .hr-labels .mark{color:var(--marker);font-weight:600}
 .tide-svg{display:block;width:100%;height:auto}
 @keyframes bob{from{transform:rotate(calc(var(--rock,2.6deg) * -1)) translateY(.6px)}to{transform:rotate(var(--rock,2.6deg)) translateY(-.6px)}}
+/* the skiff leans the way the water is going: inland on a rising tide, seaward on a falling one */
+@keyframes setDrift{from{transform:translateX(0)}to{transform:translateX(var(--dx,0px))}}
+/* the temperature line draws itself in once, the first time you open the app */
+@keyframes drawLine{to{stroke-dashoffset:0}}
 /* canopies are heavier than grass: same wind, half the throw, slower */
 @keyframes swayTree{from{transform:skewX(var(--tsway-neg,-.3deg))}to{transform:skewX(var(--tsway,.3deg))}}
 
@@ -864,7 +868,8 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
 
     const barn=`<g transform="translate(${(W*.81-16.25).toFixed(1)} ${(base+2-25).toFixed(1)}) scale(1.25)" fill="${ink}" opacity=".8">
       <path d="M 2.6 20 L 2.6 9.6 L 1 10 L 6.2 3.2 L 10.8 1 L 15.2 1 L 19.8 3.2 L 25 10 L 23.4 9.6 L 23.4 20 Z"/>
-      <path d="M 11.4 1 L 11.4 -1.2 L 14.6 -1.2 L 14.6 1 Z M 10.8 -1.2 L 13 -2.8 L 15.2 -1.2 Z"/></g>`;
+      <path d="M 11.4 1 L 11.4 -1.2 L 14.6 -1.2 L 14.6 1 Z M 10.8 -1.2 L 13 -2.8 L 15.2 -1.2 Z"/>
+      <path d="M 6.2 3.3 L 19.8 3.3" stroke="#FFFFFF" stroke-width=".8" opacity=".14" fill="none"/></g>`;
 
     let fp="",fr="";const fpts=[];
     for(let x=-4;x<W+8;x+=24+g()*12){
@@ -990,7 +995,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     <ellipse cx="${x.toFixed(1)}" cy="${cy.toFixed(1)}" rx="${(10*s).toFixed(1)}" ry="${(4.3*s).toFixed(1)}"/>
     <ellipse cx="${(x-5.5*s).toFixed(1)}" cy="${(cy+4.2*s).toFixed(1)}" rx="${(6.4*s).toFixed(1)}" ry="${(3*s).toFixed(1)}"/>
     <ellipse cx="${(x+6*s).toFixed(1)}" cy="${(cy+3.8*s).toFixed(1)}" rx="${(5.6*s).toFixed(1)}" ry="${(2.7*s).toFixed(1)}"/>
-    <ellipse cx="${x.toFixed(1)}" cy="${(cy+2.2*s).toFixed(1)}" rx="${(7.5*s).toFixed(1)}" ry="${(3.3*s).toFixed(1)}"/></g>`};
+    <ellipse cx="${x.toFixed(1)}" cy="${(cy+2.2*s).toFixed(1)}" rx="${(7.5*s).toFixed(1)}" ry="${(3.3*s).toFixed(1)}"/>
+    <ellipse cx="${(x-2.4*s).toFixed(1)}" cy="${(cy-3.3*s).toFixed(1)}" rx="${(5.9*s).toFixed(1)}" ry="${(2.5*s).toFixed(1)}"/>
+    <ellipse cx="${(x+4.6*s).toFixed(1)}" cy="${(cy-2.1*s).toFixed(1)}" rx="${(4.4*s).toFixed(1)}" ry="${(2*s).toFixed(1)}"/>
+    <ellipse cx="${(x-8.6*s).toFixed(1)}" cy="${(cy+1.2*s).toFixed(1)}" rx="${(3.6*s).toFixed(1)}" ry="${(1.7*s).toFixed(1)}"/></g>`};
   const pines=lob(W*.07,.95)+lob(W*.135,.6)+lob(W*.885,.8);
 
   /* spartina: tapered filled blades, clustered tufts with real gaps */
@@ -1019,6 +1027,8 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const dock=`<g fill="${ink}">
     <rect x="${(dx-30).toFixed(1)}" y="${(base-6.5).toFixed(1)}" width="52" height="2.4" rx="1.2"/>
     ${[dx-25,dx-6,dx+14].map((p,i)=>`<rect x="${(p-1.2).toFixed(1)}" y="${(base-9.5-(i===1?1:0)).toFixed(1)}" width="2.4" height="${21+i*1.5}" rx="1.1"/>`).join("")}
+    ${/* each piling carries a little of itself down onto the water */""}
+    ${[dx-25,dx-6,dx+14].map((p,i)=>`<rect x="${(p-.5).toFixed(1)}" y="${(base+11.7+i*1.5-(i===1?1:0)).toFixed(1)}" width="1" height="${5+i}" opacity=".12"/>`).join("")}
   </g>`;
 
   /* great blue heron in the shallows */
@@ -1308,14 +1318,17 @@ function renderTides(preds,css,gust){
     if(!high)labels+=`<line x1="${x.toFixed(1)}" y1="${(y+1).toFixed(1)}" x2="${x.toFixed(1)}" y2="${(bedY+2).toFixed(1)}" stroke="${css.line}" stroke-width="1"/>`;
   }
 
-  /* the skiff rides the curve, so where it sits is how much water is under you right now */
+  /* the skiff rides the curve, so where it sits is how much water is under you right now,
+     and it sets the way the water is setting: three pixels inland on a rising tide */
   const g0=Number(gust)||0;
+  const next=P.find(p=>p.time>now);
+  const setDx=next?(next.type==="H"?3:-3):0;
   const rockDeg=clamp(2.2+g0*.13,2.2,6.4),rockDur=clamp(2.9-g0*.055,1.15,2.9);
-  const boat=`<g transform="translate(${nx.toFixed(1)} ${ny.toFixed(1)}) scale(1.15)"><g${PRM?"":` style="--rock:${rockDeg.toFixed(1)}deg;animation:bob ${rockDur.toFixed(2)}s ease-in-out infinite alternate"`}>
+  const boat=`<g transform="translate(${nx.toFixed(1)} ${ny.toFixed(1)}) scale(1.15)"><g${PRM||!setDx?"":` style="--dx:${setDx}px;animation:setDrift 9.5s ease-in-out infinite alternate"`}><g${PRM?"":` style="--rock:${rockDeg.toFixed(1)}deg;animation:bob ${rockDur.toFixed(2)}s ease-in-out infinite alternate"`}>
     <path d="M -12.4 -3.4 L 12.8 -4.4 L 9 3.2 Q .5 5.2 -7.6 3.2 Z" fill="${css.ink}"/>
     <path d="M -2.6 -9.8 h 5.6 v 5.5 h -5.6 z" fill="${css.ink}"/>
     <path d="M 3.4 -7.6 h 3.6" stroke="${css.ink}" stroke-width="1.4" stroke-linecap="round"/>
-    <path d="M -17 1.4 h 3.4 M 14.6 .6 h 3.2" stroke="${css.water}" stroke-width="1.3" stroke-linecap="round" opacity=".8"/></g></g>`;
+    <path d="M -17 1.4 h 3.4 M 14.6 .6 h 3.2" stroke="${css.water}" stroke-width="1.3" stroke-linecap="round" opacity=".8"/></g></g></g>`;
 
   document.getElementById("tideSvg").setAttribute("viewBox",`0 0 ${W} ${H}`);
   document.getElementById("tideSvg").innerHTML=`
@@ -1329,7 +1342,6 @@ function renderTides(preds,css,gust){
     <line x1="${nx.toFixed(1)}" y1="${topY-10}" x2="${nx.toFixed(1)}" y2="${(ny-6).toFixed(1)}" stroke="${css.ink}" stroke-width="1" stroke-dasharray="2 4" opacity=".22"/>
     ${boat}
     ${labels}`;
-  const next=P.find(p=>p.time>now);
   if(next){
     const rising=next.type==="H";
     document.getElementById("tideNote").textContent=(rising?"rising · high ":"falling · low ")+clock(next.time);
@@ -1476,6 +1488,7 @@ function dailyBrief(dy,i){
 }
 
 /* ── main render ────────────────────────────────────── */
+let LINE_DRAWN=false;
 function render(d,live){
   const c=d.current,dy=d.daily,h=d.hourly,m=d.marine;
   const now=new Date(), sunrise=new Date(dy.sunrise[0]), sunset=new Date(dy.sunset[0]);
@@ -1626,9 +1639,18 @@ function render(d,live){
     ${goldenBands}
     <path d="${area}" fill="url(#tfill)"/>
     ${bars}
-    <path d="${line}" fill="none" stroke="url(#tline)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="tline" d="${line}" fill="none" stroke="url(#tline)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
     ${dots}
     <line x1="${pad}" y1="${base}" x2="${W-pad}" y2="${base}" stroke="${css.line}" stroke-width="1"/>`;
+  /* the line draws itself in once, on the first render carrying live data. Not on the
+     cached paint that precedes it, or the fetch landing mid-draw would replace the path
+     and snap it to full; and not on the refresh, resize and foreground re-renders after
+     that, because an entrance you see twenty times a day is not an entrance */
+  if(live&&!LINE_DRAWN&&!PRM){
+    LINE_DRAWN=true;
+    const el=document.querySelector("#hourlySvg .tline"),len=Math.ceil(el.getTotalLength());
+    el.style.cssText=`stroke-dasharray:${len};stroke-dashoffset:${len};animation:drawLine .75s var(--ease) forwards`;
+  }
   document.getElementById("hrLabels").innerHTML=labels;
   document.getElementById("tideSection").style.display=LOC.tide?"":"none";
   const tide=LOC.tide?renderTides(d.tides,css,c.wind_gusts_10m):null;
