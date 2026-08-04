@@ -80,6 +80,16 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes bolt{0%,96.2%,100%{opacity:0}96.4%,96.7%{opacity:.8}96.9%{opacity:.08}97.1%,97.3%{opacity:.55}97.6%{opacity:0}}
 @keyframes twinkle{0%,100%{opacity:var(--o)}50%{opacity:calc(var(--o) * .28)}}
 .star{animation:twinkle 4s ease-in-out infinite}
+/* while you are inside golden hour, the gold on the arc breathes */
+.goldpulse{animation:goldBreathe 6s ease-in-out infinite}
+@keyframes goldBreathe{0%,100%{opacity:var(--ga,.7)}50%{opacity:calc(var(--ga,.7) * 1.15)}}
+/* one meteor every four minutes on a clear night, gone in seven hundred milliseconds */
+.meteor{opacity:0;animation:meteor 240s linear infinite}
+@keyframes meteor{0%,99.59%,100%{opacity:0;transform:translate(0,0)}
+  99.63%{opacity:.9}99.88%{opacity:0;transform:translate(var(--mx,120px),var(--my,54px))}}
+/* heat coming off the flat: a narrow band leaning half a degree either way */
+.heatband{transform-box:fill-box;transform-origin:50% 100%;animation:heatShimmer 3.4s ease-in-out infinite alternate}
+@keyframes heatShimmer{from{transform:skewX(-.55deg) translateY(.3px)}to{transform:skewX(.55deg) translateY(-.3px)}}
 @keyframes sway{from{transform:skewX(var(--sway-neg,-.55deg))}to{transform:skewX(var(--sway,.55deg))}}
 .bird-wing{transform-box:fill-box;transform-origin:50% 60%;animation:wingFlex 6.5s ease-in-out infinite}
 @keyframes wingFlex{0%,32%,47%,76%,100%{transform:scaleY(1)}36%{transform:scaleY(.78)}40%{transform:scaleY(1.06)}44%{transform:scaleY(.9)}80%{transform:scaleY(.84)}84%{transform:scaleY(1.04)}88%{transform:scaleY(.94)}}
@@ -574,10 +584,23 @@ const RAIN={51:[16,1.55,.55],53:[18,1.4,.62],55:[22,1.22,.72],
 function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd,code){
   const night=clamp((-altDeg-2)/8,0,1);
   const st=starField();
+  /* Only the low third of the sky scintillates. That is where you are looking through the
+     most air, so it is what actually happens, and a sky where all 110 stars twinkle in
+     step reads as decoration. It also takes the night scene from 110 running animations
+     down to about 30, which is the whole animation budget of every other scene. */
   const stars=night>.02?st.map(s=>{
     const o=(s.o*night*(1-clamp(cloud/100,0,1)*.85)).toFixed(2);
-    return `<circle class="star" cx="${s.x}%" cy="${s.y}%" r="${s.s.toFixed(2)}" fill="#FFF6E2" style="--o:${o};opacity:${o};animation-delay:-${s.d.toFixed(1)}s"/>`;
+    const tw=s.y>52;
+    return `<circle${tw?` class="star"`:""} cx="${s.x}%" cy="${s.y}%" r="${s.s.toFixed(2)}" fill="#FFF6E2" style="--o:${o};opacity:${o}${tw?`;animation-delay:-${s.d.toFixed(1)}s`:""}"/>`;
   }).join(""):"";
+  /* a shooting star on a clear night, seeded so it always takes the same line */
+  let meteor="";
+  if(night>.55&&cloud<30&&!PRM){
+    const m=mulberry(20260913);
+    const mx=(16+m()*50).toFixed(1),my=(6+m()*20).toFixed(1),dx=(48+m()*52).toFixed(0),dy=(20+m()*30).toFixed(0);
+    meteor=`<g class="meteor" style="--mx:${dx}px;--my:${dy}px;animation-delay:-${(Date.now()/1000%240).toFixed(1)}s">
+      <line x1="${(mx-2.4).toFixed(1)}%" y1="${(my-1.6).toFixed(1)}%" x2="${mx}%" y2="${my}%" stroke="url(#streak)" stroke-width="1.5" stroke-linecap="round"/></g>`;
+  }
 
   const n=Math.round(clamp(cloud/100,0,1)*9);
   /* the sky moves at the speed of the day: calm air barely drifts, a blow pushes it along */
@@ -599,14 +622,17 @@ function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd,code){
     clouds+=`<g fill="${night>.5?'#8FA6B4':'#FFFFFF'}" opacity="${op.toFixed(3)}" filter="url(#soft)"
       class="drift" style="animation:drift ${dur[L]/(PRM?1e6:1)}s ease-in-out ${rev} infinite alternate;transform:scale(${amp[L]})">${puffs}</g>`;
   }
+  /* inside golden hour the horizon carries more light, and it breathes with the arc */
+  const golden=altDeg>-4.5&&altDeg<6.5;
   const glow=altDeg>-8&&altDeg<14
-    ?`<ellipse cx="50%" cy="100%" rx="70%" ry="42%" fill="url(#hglow)"/>`:"";
+    ?`<ellipse cx="50%" cy="100%" rx="${golden?78:70}%" ry="${golden?48:42}%" fill="url(#hglow)"${golden&&!PRM?` class="goldpulse" style="--ga:1"`:""}/>`:"";
   document.getElementById("skyFx").innerHTML=
     `<svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <filter id="soft" x="-30%" y="-60%" width="160%" height="260%"><feGaussianBlur stdDeviation="9"/></filter>
-        <radialGradient id="hglow"><stop offset="0" stop-color="#FFD79A" stop-opacity=".5"/><stop offset="1" stop-color="#FFD79A" stop-opacity="0"/></radialGradient>
-      </defs>${glow}${stars}${clouds}</svg>`;
+        <radialGradient id="hglow"><stop offset="0" stop-color="#FFD79A" stop-opacity="${golden?.64:.5}"/><stop offset="1" stop-color="#FFD79A" stop-opacity="0"/></radialGradient>
+        <linearGradient id="streak" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF6E2" stop-opacity="0"/><stop offset="1" stop-color="#FFF6E2" stop-opacity=".95"/></linearGradient>
+      </defs>${glow}${stars}${meteor}${clouds}</svg>`;
 
   const rf=document.getElementById("rainFx");
   if(wet&&!PRM){
@@ -682,9 +708,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       const active=now.getTime()>=startMs&&now.getTime()<=endMs,past=now.getTime()>endMs;
       const weatherLight=storm?.12:wet?.24:clamp(1-cloud/150,.35,1);
       const strength=(active?1:past?.2:(a>.5?.92:.62))*weatherLight;
-      goldArc+=`<path d="${d}" fill="none" stroke="#FFD993" stroke-width="20" stroke-linecap="round" opacity="${(.07*strength).toFixed(2)}"/>
-        <path d="${d}" fill="none" stroke="#F5BC61" stroke-width="10" stroke-linecap="round" opacity="${(.14*strength).toFixed(2)}"/>
-        <path d="${d}" fill="none" stroke="#E9A33C" stroke-width="2.4" stroke-linecap="round" opacity="${(.72*strength).toFixed(2)}"/>`;
+      /* the stretch you are standing in breathes; the other end of the day stays put */
+      const band=(w,col,o)=>{const op=(o*strength).toFixed(2);
+        return `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" opacity="${op}"${active&&!PRM?` class="goldpulse" style="--ga:${op}"`:""}/>`};
+      goldArc+=band(20,"#FFD993",.07)+band(10,"#F5BC61",.14)+band(2.4,"#E9A33C",.72);
     }
   }
   /* sunrise and sunset, lifted off the arc into clean sky above the treeline */
@@ -699,11 +726,15 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   if(up){
     const f=clamp(dayFrac,0,1), x=px(f), y=py(f);
     const low=Math.sin(Math.PI*f)<.28;
-    const disc=mix(low?"#F0A03C":"#F5C94D","#C8CFCE",veil*.72);
+    /* near the horizon the atmosphere flattens the disc and takes it further orange */
+    const squash=clamp(.9+Math.max(0,sunAltDeg)/8*.1,.9,1);
+    const warm=clamp((8-sunAltDeg)/12,0,1);
+    const disc=mix(mix(low?"#F0A03C":"#F5C94D","#E8752A",warm*.5),"#C8CFCE",veil*.72);
     if(veil<.85){glintX=x;glintCol=low?"#FFB86A":"#FFD98F";glintOp=1-veil}
-    body=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(38-veil*12).toFixed(0)}" fill="url(#sunglow)" opacity="${Math.max(.16,1-veil*.8).toFixed(2)}"/>
-      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13" fill="${disc}" opacity="${Math.max(.32,1-veil**2.2*.94).toFixed(2)}"/>
-      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1" opacity="${Math.max(.15,1-veil).toFixed(2)}"/>`;
+    const gr=38-veil*12,cc=`cx="${x.toFixed(1)}" cy="${y.toFixed(1)}"`;
+    body=`<ellipse ${cc} rx="${gr.toFixed(0)}" ry="${(gr*squash).toFixed(0)}" fill="url(#sunglow)" opacity="${Math.max(.16,1-veil*.8).toFixed(2)}"/>
+      <ellipse ${cc} rx="13" ry="${(13*squash).toFixed(2)}" fill="${disc}" opacity="${Math.max(.32,1-veil**2.2*.94).toFixed(2)}"/>
+      <ellipse ${cc} rx="13" ry="${(13*squash).toFixed(2)}" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1" opacity="${Math.max(.15,1-veil).toFixed(2)}"/>`;
   }
   if(mp.alt>-.05&&(!up||mp.alt>.21)){        /* daytime moon only when it's genuinely up there */
     /* moon by true altitude / azimuth, mapped east→west across the arc */
@@ -719,6 +750,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     body+=`<g opacity="${mOp.toFixed(2)}">
       <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="26" fill="url(#moonglow)"/>
       <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="${dark?'rgba(255,255,255,.10)':'rgba(255,255,255,.28)'}"/>
+      ${!up&&ill<.5?`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="#CBDCE8" opacity="${(.02+(1-ill/.5)*.045).toFixed(3)}"/>`:""}
       <path d="${term}" fill="#F6F1DE"/>
       <circle cx="${(x-3).toFixed(1)}" cy="${(y-3).toFixed(1)}" r="2.1" fill="rgba(20,49,63,.13)"/>
       <circle cx="${(x+3.4).toFixed(1)}" cy="${(y+2.6).toFixed(1)}" r="1.5" fill="rgba(20,49,63,.11)"/>
@@ -1011,6 +1043,11 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   for(let i=0;i<3;i++)
     sparkle+=`<rect x="${(20+g()*(W-40)).toFixed(1)}" y="${(GY+12+g()*12).toFixed(1)}" width="${(6+g()*14).toFixed(1)}" height="1" rx=".5" fill="#FFFFFF" opacity="${(.07+g()*.08).toFixed(2)}"/>`;
 
+  /* on a high-UV midday the air over the flat comes off it. Marsh only: this is a
+     heat-soaked salt flat, not a ridge with shade on it */
+  const heatBand=(y,dl)=>`<rect class="heatband" x="-6" y="${y.toFixed(1)}" width="${W+12}" height="3.6" fill="url(#heathaze)" style="animation-delay:-${dl}s"/>`;
+  const heat=((Number(weather.uv_index)||0)>=8&&sunAltDeg>40&&!wet&&!storm&&!PRM)
+    ?heatBand(base-10,0)+heatBand(base-5.5,1.7):"";
   /* fog is the marsh's best mood, so it is worth three veils rather than two: different
      depths, drifting opposite ways at different speeds so the bank keeps disappearing */
   const morningMist=(localHour<11&&sunAltDeg>-8&&sunAltDeg<14&&humid>=82)||fog;
@@ -1066,6 +1103,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       <linearGradient id="waterband" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="${dark?'#0C2C3A':'#6FA8C4'}" stop-opacity=".55"/>
         <stop offset="1" stop-color="${dark?'#081E28':'#4E86A8'}" stop-opacity=".85"/></linearGradient>
+      <linearGradient id="heathaze" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#FFE9C0" stop-opacity="0"/>
+        <stop offset=".5" stop-color="#FFE9C0" stop-opacity=".24"/>
+        <stop offset="1" stop-color="#FFE9C0" stop-opacity="0"/></linearGradient>
     </defs>
     <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
       ${goldArc}
@@ -1080,6 +1121,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     <g opacity=".5"${swayAt(-swayDur*.35,swayAmt*.7)}><path d="${mid}" fill="${ink}"/><path d="${midBlades}" fill="${ink}"/></g>
     <path d="M -5 ${base} L ${W+5} ${base}" stroke="${ink}" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>
     ${tufts.map((d,i)=>d?`<g opacity=".95"${bandAt(i)}><path d="${d}" fill="${ink}"/></g>`:"").join("")}
+    ${heat}
     ${dock}
     ${heron}
     ${marshCrab}
