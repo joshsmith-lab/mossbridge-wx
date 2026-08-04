@@ -48,7 +48,7 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .app>*{animation:rise .6s var(--ease) both}
 .app>*:nth-child(2){animation-delay:.07s}.app>*:nth-child(3){animation-delay:.13s}
 .app>*:nth-child(4){animation-delay:.19s}.app>*:nth-child(5){animation-delay:.25s}
-.app>*:nth-child(6){animation-delay:.31s}
+.app>*:nth-child(6){animation-delay:.31s}.app>*:nth-child(7){animation-delay:.37s}
 
 /* ── sky ─────────────────────────────────────────────── */
 .sky{position:relative;overflow:hidden;color:var(--on-sky);isolation:isolate;
@@ -72,6 +72,16 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .rainfx i{position:absolute;top:-12%;width:var(--rw,1.2px);height:var(--rh,8%);border-radius:1px;
   background:linear-gradient(180deg,transparent,var(--rain,rgba(226,240,246,.62)));animation:fall linear infinite}
 @keyframes fall{to{transform:translate3d(var(--rx,-14px),880px,0)}}
+/* snow is the same generator wearing different clothes: round, slow, and it wanders on the
+   way down instead of falling in a line */
+.rainfx.snow{transform:none}
+.rainfx.snow i{width:var(--rw,3px);height:var(--rw,3px);border-radius:50%;
+  background:var(--snow,rgba(246,251,253,.92));animation-name:flake}
+@keyframes flake{0%{transform:translate3d(0,0,0)}
+  25%{transform:translate3d(calc(var(--rx,20px) * .45),220px,0)}
+  50%{transform:translate3d(calc(var(--rx,20px) * .3),440px,0)}
+  75%{transform:translate3d(calc(var(--rx,20px) * .85),660px,0)}
+  100%{transform:translate3d(var(--rx,20px),880px,0)}}
 /* rain hitting the flat: a tick that exists for two frames and is gone */
 .splash{transform-box:fill-box;transform-origin:bottom center;opacity:0;animation:splash var(--sd,1.7s) linear infinite}
 @keyframes splash{0%,90%,100%{opacity:0;transform:scaleY(.3)}92%{opacity:.55;transform:scaleY(1)}96%{opacity:.18;transform:scaleY(.6)}}
@@ -91,6 +101,8 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .heatband{transform-box:fill-box;transform-origin:50% 100%;animation:heatShimmer 3.4s ease-in-out infinite alternate}
 @keyframes heatShimmer{from{transform:skewX(-.55deg) translateY(.3px)}to{transform:skewX(.55deg) translateY(-.3px)}}
 @keyframes sway{from{transform:skewX(var(--sway-neg,-.55deg))}to{transform:skewX(var(--sway,.55deg))}}
+/* spanish moss hangs, so it pivots from the top and swings further than what holds it */
+.moss{transform-box:fill-box;transform-origin:50% 0;animation:sway var(--md,7s) ease-in-out infinite alternate}
 .bird-wing{transform-box:fill-box;transform-origin:50% 60%;animation:wingFlex 6.5s ease-in-out infinite}
 @keyframes wingFlex{0%,32%,47%,76%,100%{transform:scaleY(1)}36%{transform:scaleY(.78)}40%{transform:scaleY(1.06)}44%{transform:scaleY(.9)}80%{transform:scaleY(.84)}84%{transform:scaleY(1.04)}88%{transform:scaleY(.94)}}
 .deer-ear{transform-box:fill-box;transform-origin:55% 85%;animation:earFlick 12.5s ease-in-out infinite}
@@ -100,6 +112,17 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes deerGraze{0%,52%,100%{transform:rotate(0)}60%,74%{transform:rotate(4.8deg)}82%{transform:rotate(-2.2deg)}90%{transform:rotate(0)}}
 /* the water answers the wind: near-still under 6 mph, working chop above 15. One keyframe
    drives both the specular track and the chop dashes; the caller sets throw and opacity */
+/* a cloud shadow crossing the ground, at the speed the clouds themselves are moving */
+.cshadow{animation:cshadow var(--cd,90s) linear infinite}
+@keyframes cshadow{0%{transform:translateX(var(--x0,-200px));opacity:0}
+  16%,84%{opacity:var(--co,.1)}100%{transform:translateX(var(--x1,600px));opacity:0}}
+/* a vane hunts back and forth in a gusty wind and sits almost still in a steady one */
+.vane-hunt{transform-box:fill-box;transform-origin:center;animation:vaneHunt var(--vt,7s) ease-in-out infinite alternate}
+@keyframes vaneHunt{from{transform:rotate(calc(var(--vdir,0deg) - var(--vh,3deg)))}
+  to{transform:rotate(calc(var(--vdir,0deg) + var(--vh,3deg)))}}
+/* the scene settles into place once, when the app opens, and never again */
+@keyframes sceneIn{from{opacity:0;transform:translateY(7px) scale(1.014)}to{opacity:1;transform:none}}
+.scene.first{animation:sceneIn .9s var(--ease) both}
 .wmove{transform-box:fill-box;transform-origin:center;animation:wmove var(--wd,9s) ease-in-out infinite}
 @keyframes wmove{0%,100%{transform:translateX(calc(var(--wx,2px) * -1));opacity:var(--o0,.1)}
   50%{transform:translateX(var(--wx,2px));opacity:var(--o1,.24)}}
@@ -448,7 +471,14 @@ const LOCS={
 let LOC;try{LOC=LOCS[localStorage.getItem("mbwx-loc")]||LOCS.mb}catch(e){LOC=LOCS.mb}
 let LAT=LOC.lat, LON=LOC.lon;
 
-const WMO={0:"Clear",1:"Mostly clear",2:"Partly cloudy",3:"Cloudy",45:"Fog",48:"Fog",51:"Drizzle",53:"Drizzle",55:"Drizzle",61:"Light rain",63:"Rain",65:"Heavy rain",80:"Showers",81:"Showers",82:"Downpours",95:"Thunderstorms",96:"Storms w/ hail",99:"Severe storms"};
+const WMO={0:"Clear",1:"Mostly clear",2:"Partly cloudy",3:"Cloudy",45:"Fog",48:"Fog",51:"Drizzle",53:"Drizzle",55:"Drizzle",56:"Freezing drizzle",57:"Freezing drizzle",61:"Light rain",63:"Rain",65:"Heavy rain",66:"Freezing rain",67:"Freezing rain",71:"Light snow",73:"Snow",75:"Heavy snow",77:"Snow grains",80:"Showers",81:"Showers",82:"Downpours",85:"Snow showers",86:"Snow showers",95:"Thunderstorms",96:"Storms w/ hail",99:"Severe storms"};
+/* Shady Spring is at 2,500 feet in the Alleghenies and it snows there. Every one of these
+   codes used to fall through: the label went blank, the icon said rain, and the scene drew
+   a dry marsh. Freezing rain is the one that matters most, so it never gets called rain. */
+const SNOW=[71,73,75,77,85,86], ICE=[56,57,66,67];
+const isSnow=w=>SNOW.includes(w), isIce=w=>ICE.includes(w);
+const WETC=[51,53,55,61,63,65,80,81,82,95,96,99,...SNOW,...ICE];
+const isWet=w=>WETC.includes(w);
 const S='stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"';
 const CLOUD='M5.5 13.5h7a3 3 0 0 0 .4-6A4.2 4.2 0 0 0 4.7 8.6 2.7 2.7 0 0 0 5.5 13.5z';
 const GLYPHS={
@@ -457,9 +487,11 @@ const GLYPHS={
   cloud:`<path d="${CLOUD}" ${S}/>`,
   fog:`<path d="M5.5 10.5h7a3 3 0 0 0 .4-6A4.2 4.2 0 0 0 4.7 5.6 2.7 2.7 0 0 0 5.5 10.5z" ${S}/><path d="M4 13.2h10M6 15.6h6" ${S}/>`,
   rain:`<path d="${CLOUD}" ${S}/><path d="M6.5 15.2l-.7 1.6M9.5 15.2l-.7 1.6M12.5 15.2l-.7 1.6" ${S}/>`,
-  storm:`<path d="${CLOUD}" ${S}/><path d="M9.6 13.6 8 16.2h2l-1.4 2.4" ${S}/>`
+  storm:`<path d="${CLOUD}" ${S}/><path d="M9.6 13.6 8 16.2h2l-1.4 2.4" ${S}/>`,
+  snow:`<path d="${CLOUD}" ${S}/><path d="M6.4 15.9h.01M9.4 15.3h.01M12.4 16h.01M7.9 18h.01M10.9 17.7h.01" ${S}/>`,
+  ice:`<path d="${CLOUD}" ${S}/><path d="M6.6 15.2l-.7 1.6M12.4 15.2l-.7 1.6M9.5 15.4h.01M9 17.9h.01" ${S}/>`
 };
-const glyphFor=w=>w>=95?"storm":w>=51?"rain":w>=45?"fog":w===3?"cloud":w>=1?"part":"sun";
+const glyphFor=w=>w>=95?"storm":isIce(w)?"ice":isSnow(w)?"snow":w>=51?"rain":w>=45?"fog":w===3?"cloud":w>=1?"part":"sun";
 const icon=(w,sz)=>`<svg width="${sz||18}" height="${sz||18}" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">${GLYPHS[glyphFor(w)]}</svg>`;
 const dirTxt=d=>["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"][Math.round(d/22.5)%16];
 const hh=t=>{const h=+t.slice(11,13);return h===0?"12a":h===12?"12p":h<12?h+"a":(h-12)+"p"};
@@ -584,7 +616,12 @@ function starField(){
 const RAIN={51:[16,1.55,.55],53:[18,1.4,.62],55:[22,1.22,.72],
   61:[26,1.05,.82],63:[34,.86,.95],65:[50,.62,1.15],
   80:[26,1,.85],81:[34,.82,1],82:[54,.58,1.2],
-  95:[46,.72,1.05],96:[50,.66,1.15],99:[54,.6,1.25]};
+  95:[46,.72,1.05],96:[50,.66,1.15],99:[54,.6,1.25],
+  /* freezing rain is liquid on the way down, so it falls like rain and is only named
+     differently. Naming it "rain" is the one mistake here with consequences for a driver. */
+  56:[18,1.4,.62],57:[24,1.2,.75],66:[28,1,.85],67:[46,.66,1.1]};
+/* snow takes six to nine seconds to cross the same sky rain crosses in one */
+const SNOWFALL={71:[22,9,2.4],73:[40,7.4,2.9],75:[64,6,3.4],77:[30,8.2,1.8],85:[34,7,2.8],86:[58,6.2,3.2]};
 function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd,code){
   const night=clamp((-altDeg-2)/8,0,1);
   const st=starField();
@@ -638,19 +675,21 @@ function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd,code){
         <linearGradient id="streak" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF6E2" stop-opacity="0"/><stop offset="1" stop-color="#FFF6E2" stop-opacity=".95"/></linearGradient>
       </defs>${glow}${stars}${meteor}${clouds}</svg>`;
 
-  const rf=document.getElementById("rainFx");
+  const rf=document.getElementById("rainFx"),snowing=isSnow(code);
+  rf.className="rainfx"+(snowing?" snow":"");
   if(wet&&!PRM){
-    const [count,fallSec,weight]=RAIN[code]||RAIN[63];
-    /* the lean follows the same side as the cloud drift, so the whole sky agrees */
+    const [count,fallSec,weight]=snowing?(SNOWFALL[code]||SNOWFALL[73]):(RAIN[code]||RAIN[63]);
+    /* the lean follows the same side as the cloud drift, so the whole sky agrees. Snow is
+       slow enough that the wind carries it a long way sideways instead of tilting it. */
     const lean=clamp((Number(windSpd)||0)*.62,0,18)*(windDir>180?-1:1);
-    rf.style.setProperty("--rlean",lean.toFixed(1)+"deg");
-    rf.style.setProperty("--rx",(lean*4).toFixed(0)+"px");
-    rf.style.setProperty("--rw",(1.2*weight).toFixed(2)+"px");
+    rf.style.setProperty("--rlean",snowing?"0deg":lean.toFixed(1)+"deg");
+    rf.style.setProperty("--rx",(lean*(snowing?11:4)).toFixed(0)+"px");
+    rf.style.setProperty("--rw",(snowing?weight:1.2*weight).toFixed(2)+"px");
     rf.style.setProperty("--rh",(5.5+weight*3).toFixed(1)+"%");
     const r2=mulberry(4242);
     rf.innerHTML=Array.from({length:count},()=>{
-      const l=r2()*112-6, d=(fallSec*(.82+r2()*.4)).toFixed(2), dl=(r2()*1.6).toFixed(2);
-      return `<i style="left:${l.toFixed(1)}%;animation-duration:${d}s;animation-delay:-${dl}s;opacity:${(.28+r2()*.42*weight).toFixed(2)}"></i>`;
+      const l=r2()*112-6, d=(fallSec*(.82+r2()*.4)).toFixed(2), dl=(r2()*(snowing?9:1.6)).toFixed(2);
+      return `<i style="left:${l.toFixed(1)}%;animation-duration:${d}s;animation-delay:-${dl}s;opacity:${(snowing?.5+r2()*.5:.28+r2()*.42*weight).toFixed(2)}"></i>`;
     }).join("");
   } else rf.innerHTML="";
   document.getElementById("flash").className="flash"+(storm&&!PRM?" on":"");
@@ -671,7 +710,7 @@ function tideTrend(preds){
 }
 function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const cloud=weather.cloud_cover||0,wind=weather.wind_speed_10m||0,code=weather.weather_code;
-  const wet=[51,53,55,61,63,65,80,81,82,95,96,99].includes(code);
+  const wet=isWet(code),snowing=isSnow(code);
   const storm=[95,96,99].includes(code),fog=[45,48].includes(code),quietWeather=!wet&&!storm;
   const humid=weather.relative_humidity_2m||0,temp=weather.temperature_2m||60;
   const W=appW(),H=Math.round((LOC.scene==="ridge"?168:150)+(760-W)*.10),GY=H-30;   /* taller frame on a phone */
@@ -805,6 +844,19 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       <path d="${d}" fill="none" stroke="#FFF6DE" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".3"/>
       <path d="${d}" fill="none" stroke="#FFFDF4" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></g>`;
   };
+  /* A cloud shadow crossing the ground. Only drawn when there are discrete clouds to cast
+     one: a clear sky has nothing to throw a shadow and an overcast sky is all shadow
+     already. Speed comes off the wind and the side it crosses from matches the cloud
+     drift, so on a part-cloudy day the sky and the ground agree about the weather. */
+  const cloudShadows=(topY,h)=>{
+    if(PRM||storm||cloud<12||cloud>92)return"";
+    const sr=mulberry(8821),dur=clamp(150-wind*4.2,42,150);
+    return Array.from({length:cloud>45?2:1},()=>{
+      const w=W*(.44+sr()*.3), y=topY+sr()*h, ry=h*(.5+sr()*.4);
+      const from=downwind>0?-w:W+w, to=downwind>0?W+w:-w, d=dur*(.8+sr()*.5);
+      return `<ellipse cx="0" cy="${y.toFixed(1)}" rx="${(w/2).toFixed(0)}" ry="${ry.toFixed(1)}" fill="url(#cshade)" class="cshadow" style="--x0:${from.toFixed(0)}px;--x1:${to.toFixed(0)}px;--co:${(.05+cloud/100*.11).toFixed(3)};--cd:${d.toFixed(0)}s;animation-delay:-${(Date.now()/1000%d).toFixed(0)}s"/>`;
+    }).join("");
+  };
   const ringAt=(x,y,rx,dur,delay)=>`<ellipse class="water-ring slow" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${rx}" ry="${(rx*.3).toFixed(1)}" fill="none" stroke="${dark?'#B7D6E1':'#183C4B'}" stroke-width=".7" style="--rd:${dur}s;animation-delay:-${delay}s"/>`;
 
   const deerAt=(x,y,s,flip=-1,opacity=1)=>`<g class="wildlife deer" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(flip*s).toFixed(2)},${s.toFixed(2)})" fill="${dark?"#07161B":"#173029"}" stroke="${dark?"#07161B":"#173029"}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
@@ -826,6 +878,62 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     <circle cx="-2.8" cy="-2.7" r=".48" fill="#DCE8D8" stroke="none"/><circle cx="2.8" cy="-2.7" r=".48" fill="#DCE8D8" stroke="none"/>
     <ellipse class="frog-throat" cx="0" cy="1.8" rx="2.4" ry="1.2" fill="#DCE8D8" stroke="none"/>
     <path d="M -4 1.5 l -4 3 M 4 1.5 l 4 3" fill="none" stroke-width="1.1"/></g>`;
+  /* ── the residents ───────────────────────────────────────────────────────────
+     Something alive in every scene, at every hour, in every weather. Deliberately
+     small: five to ten units against a 430-unit frame, tucked against a silhouette
+     that is already there. On a phone they read as a shape you notice and then go
+     looking for. They barely move, which is how they can share a scene with the one
+     performing cue without turning the marsh into an aquarium. */
+  const critter=(x,y,s,o,body)=>`<g class="wildlife" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" stroke-linejoin="round" opacity="${o}">${body}</g>`;
+  /* oystercatcher: chunky body, absurd bill, working the mud */
+  const oysterCatcher=(x,y,s,o=.72)=>critter(x,y,s,o,
+    `<ellipse cx="0" cy="0" rx="4" ry="2.6"/>
+     <g class="crab-claw" style="transform-origin:80% 60%"><circle cx="-3.4" cy="-2.6" r="1.9"/>
+     <path d="M -5.1 -3 L -9 -2.2" stroke-width="1.15" fill="none"/></g>
+     <path d="M -1.2 2.4 L -1.6 5.4 M 1.4 2.4 L 1.2 5.4" stroke-width=".85" fill="none"/>
+     <path d="M 3.6 -1 L 6.2 -2.2" stroke-width="1.6" fill="none"/>`);
+  /* cormorant drying its wings on a piling, which is what they do all winter */
+  const cormorant=(x,y,s,o=.74)=>critter(x,y,s,o,
+    `<g class="heron-breathe"><ellipse cx="0" cy="0" rx="3" ry="4.2"/>
+     <path d="M -.6 -3.6 C -1.4 -6 -1 -8 .4 -9.2" stroke-width="1.3" fill="none"/>
+     <circle cx=".8" cy="-9.8" r="1.3"/><path d="M 2 -10.2 L 4.4 -9.6" stroke-width=".9" fill="none"/>
+     <path d="M -2.2 -2.2 C -4.8 -3.4 -6.8 -5 -7.4 -7.4 M 2.2 -2.2 C 4.8 -3.4 6.8 -5 7.4 -7.4" stroke-width="1.3" fill="none"/>
+     <path d="M -7.4 -7.4 L -6.2 -5.2 M 7.4 -7.4 L 6.2 -5.2" stroke-width="1" fill="none"/></g>
+     <path d="M -1 4 L -1.2 6 M 1.2 4 L 1.4 6" stroke-width=".85" fill="none"/>`);
+  /* raccoon at the waterline, hunched over whatever it just found */
+  const raccoon=(x,y,s,o=.7)=>critter(x,y,s,o,
+    `<g class="heron-breathe"><ellipse cx="0" cy="0" rx="5" ry="3.2"/>
+     <circle cx="-4.4" cy="-2.4" r="2.3"/>
+     <path d="M -6.6 -2.6 L -3.2 -3.2" stroke="#DCE8D8" stroke-width=".9" fill="none" opacity=".5"/>
+     <path d="M -6.2 -4.2 l -.8 -1.4 M -2.8 -4.4 l .6 -1.5" stroke-width=".8" fill="none"/></g>
+     <path d="M 4.6 -1 C 8 -1.8 9.4 -4.2 8.6 -6.6" stroke-width="1.9" fill="none"/>
+     <path d="M 6.4 -1.9 l .6 .9 M 8.2 -3.6 l .8 .7" stroke="#DCE8D8" stroke-width=".7" fill="none" opacity=".45"/>
+     <path d="M -2.4 3 L -2.6 5 M 2 3 L 2.2 5" stroke-width=".9" fill="none"/>`);
+  /* rabbit at the fence line, ears up, entirely still except for those */
+  const rabbit=(x,y,s,o=.72)=>critter(x,y,s,o,
+    `<ellipse cx="0" cy="0" rx="4.2" ry="2.9"/><circle cx="-3.6" cy="-2.8" r="2"/>
+     <path class="deer-ear" style="transform-origin:60% 90%" d="M -4.4 -4.4 C -5.2 -7 -4.8 -8.8 -3.9 -9.2 C -3.2 -8.4 -3.2 -6.4 -3.5 -4.6 Z"/>
+     <path d="M -2.8 -4.6 C -3 -7 -2.4 -8.4 -1.6 -8.6 C -1.2 -7.6 -1.4 -6 -1.9 -4.5 Z"/>
+     <circle cx="4.4" cy="-1.2" r="1.5"/>
+     <path d="M -1.6 2.6 L -1.8 4.4 M 1.8 2.6 L 2 4.4" stroke-width=".85" fill="none"/>`);
+  /* The one thing in either scene that gets a colour. A cardinal is the West Virginia
+     state bird and the only red thing in a snowbound field, so when everything else has
+     gone to grey, that is what is out there. */
+  const cardinal=(x,y,s,o=.92)=>`<g class="wildlife" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" opacity="${o}">
+    <g class="heron-breathe" fill="#B4331E" stroke="#B4331E" stroke-linejoin="round">
+    <ellipse cx="0" cy="0" rx="3.4" ry="2.6"/><circle cx="-2.6" cy="-2.2" r="1.9"/>
+    <path d="M -3.6 -3.8 L -2.4 -6.2 L -1 -3.6 Z"/><path d="M 3 .6 L 7 2.4 L 6.4 .2 Z"/>
+    <path d="M -4.4 -2 L -6.4 -1.2 L -4.3 -.5 Z" fill="#E8A33C" stroke="none"/>
+    <circle cx="-3" cy="-2.5" r=".45" fill="#2A1410" stroke="none"/></g>
+    <path d="M -.8 2.4 L -1 4 M 1.4 2.4 L 1.6 4" stroke="#B4331E" stroke-width=".8" fill="none" stroke-linecap="round"/></g>`;
+  /* fox crossing the field at dusk, brush low behind it */
+  const fox=(x,y,s,o=.7)=>critter(x,y,s,o,
+    `<ellipse cx="0" cy="0" rx="5.4" ry="2.5"/>
+     <path d="M -4.6 -1.4 L -8.4 -2.8 L -7.4 -4.6 L -5.6 -3.4 Z"/>
+     <path d="M -6.4 -4 L -6.9 -6.2 L -5.1 -5 Z M -4.6 -3.6 L -4.6 -5.6 L -3.2 -4.2 Z"/>
+     <path class="deer-tail" style="transform-origin:6% 30%" d="M 4.8 -.8 C 8.4 -1.6 10.4 -3.6 10 -6 C 8.2 -4.2 6.4 -2.8 4.4 -2.2 Z"/>
+     <path d="M -2.6 2.2 L -2.8 4.4 M 2.4 2.2 L 2.6 4.4 M .2 2.4 L 0 4.4" stroke-width=".85" fill="none"/>`);
+
   /* the scuttle rides an outer group: a CSS transform on the crab itself would throw away
      the translate that puts it on the bank */
   const crabAt=(x,y,s,opacity=.7)=>`<g class="crab-run" style="${phase(46)}"><g class="wildlife crab" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
@@ -850,7 +958,13 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       }
       return `<path d="${p}L ${W+12} ${base+6} Z" fill="${ink}" opacity="${op}"/>`;
     };
-    const ridges=ridge(52,16,150,.12)+ridge(36,12,95,.2)+ridge(20,9,66,.32);
+    /* Four folds instead of three, and they run to just over half the sky the scene has
+       to give. Shady Spring sits in the Alleghenies: the ridges are the view, so they get
+       real height and real relief, and the far ones fade the way distance actually fades
+       them. Heights come off the frame so a phone and a desktop see the same mountain. */
+    const rTop=(H-44)*.55;
+    const ridges=[[1,.09],[.77,.14],[.55,.21],[.32,.32]]
+      .map(([k,op])=>ridge(rTop*k,rTop*k*.36,W*(.11+.23*k),op)).join("");
 
     const tree=(x,s,op)=>`<g fill="${ink}" opacity="${op}"${treeAt(x)}>
       <path d="M ${(x-.55*s).toFixed(1)} ${base+2} L ${(x-.3*s).toFixed(1)} ${(base-13*s).toFixed(1)} L ${(x+.3*s).toFixed(1)} ${(base-13*s).toFixed(1)} L ${(x+.55*s).toFixed(1)} ${base+2} Z"/>
@@ -863,13 +977,20 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     const pondL=pcx-prx,pondR=pcx+prx;
     const ptop=`M ${pondL.toFixed(1)} ${base+6} Q ${(pondL+prx*.5).toFixed(1)} ${base+2.5} ${pcx.toFixed(1)} ${base+5} Q ${(pcx+prx*.5).toFixed(1)} ${base+7.5} ${pondR.toFixed(1)} ${base+6}`;
     const pond=`<rect x="0" y="${base-2}" width="${W}" height="${H-base+2}" fill="${ink}" opacity=".34"/>
+      ${snowing?`<rect x="0" y="${(base-2.5).toFixed(1)}" width="${W}" height="7" fill="#F2F8FA" opacity=".4"/>`:""}
       <path d="${ptop} A ${prx.toFixed(1)} ${pry} 0 0 1 ${pondL.toFixed(1)} ${base+6} Z" fill="url(#waterband)"/>
       <path d="${ptop}" fill="none" stroke="${ink}" stroke-width="1.3" opacity=".5"/>`;
 
     const barn=`<g transform="translate(${(W*.81-16.25).toFixed(1)} ${(base+2-25).toFixed(1)}) scale(1.25)" fill="${ink}" opacity=".8">
       <path d="M 2.6 20 L 2.6 9.6 L 1 10 L 6.2 3.2 L 10.8 1 L 15.2 1 L 19.8 3.2 L 25 10 L 23.4 9.6 L 23.4 20 Z"/>
       <path d="M 11.4 1 L 11.4 -1.2 L 14.6 -1.2 L 14.6 1 Z M 10.8 -1.2 L 13 -2.8 L 15.2 -1.2 Z"/>
-      <path d="M 6.2 3.3 L 19.8 3.3" stroke="#FFFFFF" stroke-width=".8" opacity=".14" fill="none"/></g>`;
+      <path d="M 6.2 3.3 L 19.8 3.3" stroke="#FFFFFF" stroke-width=".8" opacity=".14" fill="none"/>
+      ${/* the vane points into the wind the way the one on the card does, and hunts as hard
+           as the gusts are running over the steady wind */""}
+      <path d="M 13 -2.8 L 13 -6.4" stroke="${ink}" stroke-width=".7" stroke-linecap="round" fill="none"/>
+      <g transform="translate(13 -9.6)"><g class="vane-hunt" style="--vdir:${Math.round(Number(weather.wind_direction_10m)||0)}deg;--vh:${clamp((gust-wind)*.45,.6,7).toFixed(1)}deg;--vt:${clamp(9-(gust-wind)*.32,2.4,9).toFixed(1)}s">
+        <path d="M 0 -3.2 L 0 3.2" stroke="${ink}" stroke-width=".62" stroke-linecap="round" fill="none"/>
+        <path d="M -1 -1.7 L 0 -3.5 L 1 -1.7 Z"/><path d="M -2.1 1.3 L 2.1 1.3 L 1.3 3.5 L -1.3 3.5 Z"/></g></g></g>`;
 
     let fp="",fr="";const fpts=[];
     for(let x=-4;x<W+8;x+=24+g()*12){
@@ -907,7 +1028,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       sparkle+=`<rect x="${(pcx+(g()-.5)*prx*1.3).toFixed(1)}" y="${(base+7+g()*9).toFixed(1)}" width="${(5+g()*10).toFixed(1)}" height="1" rx=".5" fill="#FFFFFF" opacity="${(.06+g()*.07).toFixed(2)}"/>`;
     /* a pond is small water: it ripples where the marsh chops, and rings where something rose */
     let pondFx="";
-    if(wind>=6){const pw=mulberry(6613),count=2+Math.round(chopK*4);
+    {const pw=mulberry(6613),count=2+Math.round(chopK*4);
       for(let i=0;i<count;i++){
         const x=pondL+24+pw()*(prx*2-48),y=base+8+pw()*11,w=(6+pw()*13)*(.55+chopK*.8);
         const o1=(.07+chopK*.12).toFixed(2),o0=(.03+chopK*.04).toFixed(2);
@@ -925,13 +1046,22 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     const catsR=`<g opacity=".95"${bandAt(bandOf(pondR-9))}>${cattail(pondR-12,20,-.9)+cattail(pondR-6,25,.8)}
       <path d="M ${(pondR-9).toFixed(1)} ${base+9} Q ${(pondR-16).toFixed(1)} ${base-4} ${(pondR-20).toFixed(1)} ${base-12}" stroke="${ink}" stroke-width="1.05" fill="none" stroke-linecap="round"/></g>`;
 
-    const rainyFrog=(wet||storm)?frogAt(pondR-28,base+4,.82,.8):"";
+    /* a frog is out in warm rain, not in snow: below about 45 it is underground */
+    const rainyFrog=(wet||storm)&&temp>=45?frogAt(pondR-28,base+4,.82,.8):"";
     const deer=!wet&&!storm&&!dark&&(fog||localHour<11||localHour>=16||sunAltDeg<7)
       ?deerAt(W*.905,base+7-19.8,.95,-1,1):"";
 
     /* the hawk works a thermal over two and a half minutes rather than hanging on a pin */
-    const hawk=!wet&&!storm&&!dark&&!deer?`<g class="hawk-circle" style="--cx:${(W*.075).toFixed(0)}px;--cy:-8px;--cy2:-15px;${phase(150)}"><path class="wildlife bird-wing" style="animation-delay:-4.2s" d="M ${(W*.36-6).toFixed(1)} ${GY-88} Q ${(W*.36-2).toFixed(1)} ${GY-90.4} ${(W*.36).toFixed(1)} ${GY-88.6} Q ${(W*.36+2).toFixed(1)} ${GY-90.4} ${(W*.36+6).toFixed(1)} ${GY-88}" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".3"/></g>`:"";
+    /* the hawk rides above the tallest fold and is drawn in front of it, so raising the
+       ridges cannot quietly swallow the one thing moving in the sky */
+    const hwx=W*.36,hwy=base-rTop-30;
+    const hawk=!wet&&!storm&&!dark&&!deer?`<g class="hawk-circle" style="--cx:${(W*.075).toFixed(0)}px;--cy:-8px;--cy2:-15px;${phase(150)}"><path class="wildlife bird-wing" style="animation-delay:-4.2s" d="M ${(hwx-6).toFixed(1)} ${hwy.toFixed(1)} Q ${(hwx-2).toFixed(1)} ${(hwy-2.4).toFixed(1)} ${hwx.toFixed(1)} ${(hwy-.6).toFixed(1)} Q ${(hwx+2).toFixed(1)} ${(hwy-2.4).toFixed(1)} ${(hwx+6).toFixed(1)} ${hwy.toFixed(1)}" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".3"/></g>`:"";
     const owl=!wet&&!storm&&dark&&!showFlies?owlAt(W*.83,base-8,.82,.68):"";
+    /* the resident, same rule as the marsh: always there, almost never moves. The cardinal
+       turns up when it is cold, which is exactly when it is the only colour in the field. */
+    const ridgeResident=dark?fox(W*.655,base+5,.8)
+      :temp<48?cardinal(W*.285,base-8.5,.8)
+      :rabbit(W*.235,base+3,.78);
     let flies="";
     if(showFlies){const fr2=mulberry(51926);
       for(let i=0;i<flyCount;i++)
@@ -946,20 +1076,23 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
         <linearGradient id="waterband" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stop-color="${dark?'#0C2C3A':'#5E97AE'}" stop-opacity=".7"/>
           <stop offset="1" stop-color="${dark?'#081E28':'#40758F'}" stop-opacity=".9"/></linearGradient>
+        <radialGradient id="cshade"><stop offset="0" stop-color="#0A1E26" stop-opacity=".55"/><stop offset="1" stop-color="#0A1E26" stop-opacity="0"/></radialGradient>
       </defs>
       <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
       ${goldArc}
-      ${hawk}
       ${body}
       ${boltAt(W*.68,base-38,44170)}
       ${ridges}
+      ${hawk}
       ${pond}
       ${barn}
       ${fence}
+      ${cloudShadows(base-rTop*.85,rTop*.85+8)}
       ${sparkle}${glint}${pondFx}
       ${tufts.map((d,i)=>d?`<g opacity=".9"${bandAt(i)}><path d="${d}" fill="${ink}"/></g>`:"").join("")}
       ${catsL}${catsR}
       ${tree(W*.055,1.3,.62)}${tree(W*.105,.72,.48)}${tree(W*.955,1.05,.58)}
+      ${ridgeResident}
       ${deer}
       ${owl}${rainyFrog}
       ${flies}
@@ -1000,6 +1133,36 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     <ellipse cx="${(x+4.6*s).toFixed(1)}" cy="${(cy-2.1*s).toFixed(1)}" rx="${(4.4*s).toFixed(1)}" ry="${(2*s).toFixed(1)}"/>
     <ellipse cx="${(x-8.6*s).toFixed(1)}" cy="${(cy+1.2*s).toFixed(1)}" rx="${(3.6*s).toFixed(1)}" ry="${(1.7*s).toFixed(1)}"/></g>`};
   const pines=lob(W*.07,.95)+lob(W*.135,.6)+lob(W*.885,.8);
+
+  /* A live oak is the opposite shape to a loblolly and has to read as one: a short thick
+     trunk, limbs that reach out nearly level before they lift, and a crown two and a half
+     times wider than it is tall. It sits across the marsh, so it stays faint. */
+  const liveOak=(x,s,op)=>{
+    const gy=base+2, th=18*s, cy=gy-th-7*s, mr=mulberry(4417);
+    const P=(...a)=>a.map(v=>v.toFixed(1)).join(" ");
+    /* Moss hangs off the underside of the crown, and on a tree this far off it reads as a
+       ragged fringe rather than streamers. It is the lightest thing out there, so it swings
+       further than the canopy holding it. */
+    let moss="";
+    for(const[mx,my,len]of[[-21,3.2,6],[-16,4.8,8.5],[-10.5,6.2,5.5],[-4,6.6,8],[2,6.4,5.5],[8,6,8],[14,5,6],[19.5,3.6,7],[23,1.8,5.5]]){
+      const x0=x+mx*s, y0=cy+my*s, L=len*s*(.82+mr()*.4), w=1.15*s;
+      const amt=swayAmt*(1.7+mr()*1.1);
+      const st=PRM?"":` style="--sway:${amt.toFixed(2)}deg;--sway-neg:${(-amt).toFixed(2)}deg;--md:${(swayDur*(.72+mr()*.5)).toFixed(1)}s;animation-delay:-${(mr()*9).toFixed(1)}s"`;
+      moss+=`<path class="moss" d="M ${P(x0,y0)} Q ${P(x0-w*1.2,y0+L*.45)} ${P(x0-w*.3,y0+L)} Q ${P(x0+w,y0+L*.5)} ${P(x0+w*1.2,y0)} Z" opacity=".72"${st}/>`;
+    }
+    return `<g fill="${ink}" opacity="${op}"${treeAt(x)}>
+      <path d="M ${P(x-3.1*s,gy)} Q ${P(x-1.7*s,gy-th*.55)} ${P(x-2.2*s,gy-th)} L ${P(x+2.2*s,gy-th)} Q ${P(x+1.8*s,gy-th*.5)} ${P(x+3.3*s,gy)} Z"/>
+      <path d="M ${P(x-1.4*s,gy-th+2*s)} C ${P(x-9*s,gy-th-1*s)} ${P(x-16*s,gy-th)} ${P(x-24*s,gy-th-3*s)} M ${P(x+1.4*s,gy-th+2*s)} C ${P(x+9*s,gy-th-1.6*s)} ${P(x+16.5*s,gy-th-.4*s)} ${P(x+24.5*s,gy-th-3.4*s)} M ${P(x,gy-th+1*s)} C ${P(x-3*s,gy-th-4*s)} ${P(x-5*s,gy-th-6*s)} ${P(x-7*s,gy-th-8.5*s)}" stroke="${ink}" stroke-width="${(1.4*s).toFixed(1)}" fill="none" stroke-linecap="round"/>
+      <ellipse cx="${P(x)}" cy="${P(cy)}" rx="${(19*s).toFixed(1)}" ry="${(6.2*s).toFixed(1)}"/>
+      <ellipse cx="${P(x-12*s)}" cy="${P(cy+2.8*s)}" rx="${(10*s).toFixed(1)}" ry="${(4.6*s).toFixed(1)}"/>
+      <ellipse cx="${P(x+12.5*s)}" cy="${P(cy+2.2*s)}" rx="${(10.5*s).toFixed(1)}" ry="${(4.9*s).toFixed(1)}"/>
+      <ellipse cx="${P(x-3.5*s)}" cy="${P(cy-3.4*s)}" rx="${(11*s).toFixed(1)}" ry="${(4*s).toFixed(1)}"/>
+      <ellipse cx="${P(x+7.5*s)}" cy="${P(cy-2.6*s)}" rx="${(8*s).toFixed(1)}" ry="${(3.4*s).toFixed(1)}"/>
+      <ellipse cx="${P(x-20*s)}" cy="${P(cy+4.4*s)}" rx="${(6.6*s).toFixed(1)}" ry="${(2.9*s).toFixed(1)}"/>
+      <ellipse cx="${P(x+20.5*s)}" cy="${P(cy+3.8*s)}" rx="${(6.4*s).toFixed(1)}" ry="${(3*s).toFixed(1)}"/>
+      ${moss}</g>`;
+  };
+  const oak=liveOak(W*.47,1.15,.44);
 
   /* spartina: tapered filled blades, clustered tufts with real gaps */
   const blade=(bx,ht,lean)=>`M ${(bx-.8).toFixed(1)} ${base} Q ${(bx+lean*.3-.4).toFixed(1)} ${(base-ht*.62).toFixed(1)} ${(bx+lean).toFixed(1)} ${(base-ht).toFixed(1)} Q ${(bx+lean*.38+.6).toFixed(1)} ${(base-ht*.46).toFixed(1)} ${(bx+.8).toFixed(1)} ${base} Z `;
@@ -1068,8 +1231,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     ${mistVeil(W*.66,base-11,W*.36,6,.13,8,-9,21,7)}
     ${mistVeil(W*.46,base+3,W*.44,4.5,.11,-5,7,27,13)}</g>`:"";
 
+  /* snow does not ring the water and does not splash off the flat, so neither is drawn */
   let waterWeather="";
-  if(wet&&!PRM){const wr=mulberry(7138),rings=3+Math.round(rainK*5);
+  if(wet&&!snowing&&!PRM){const wr=mulberry(7138),rings=3+Math.round(rainK*5);
     for(let i=0;i<rings;i++)waterWeather+=`<ellipse class="water-ring" cx="${(18+wr()*(W-36)).toFixed(1)}" cy="${(GY+13+wr()*14).toFixed(1)}" rx="${(4+wr()*5).toFixed(1)}" ry="${(1.1+wr()).toFixed(1)}" fill="none" stroke="${dark?'#B7D6E1':'#183C4B'}" stroke-width=".7" style="animation-delay:-${(wr()*3.8).toFixed(1)}s"/>`;
     /* and where the rain lands on the flat: a tick that is there and gone */
     const sp2=mulberry(3391),ticks=3+Math.round(rainK*9);
@@ -1077,10 +1241,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       waterWeather+=`<path class="splash" d="M ${(10+sp2()*(W-20)).toFixed(1)} ${(base+2+sp2()*13).toFixed(1)} v ${(-1.4-rainK*1.8).toFixed(1)}" stroke="${dark?'#CFE6EE':'#EAF4F8'}" stroke-width=".9" stroke-linecap="round" style="--sd:${(1.15+sp2()*1.1).toFixed(2)}s;animation-delay:-${(sp2()*4).toFixed(2)}s"/>`;
   }
   /* chop: three faint dashes barely moving at 6 mph, nine long ones working at 25 */
-  if(wind>=6){const ww=mulberry(4419),count=3+Math.round(chopK*6);
+  {const ww=mulberry(4419),count=2+Math.round(chopK*7);
     for(let i=0;i<count;i++){
       const x=16+ww()*(W-64),y=GY+11+ww()*15,w=(8+ww()*18)*(.55+chopK*.9);
-      const o1=(.08+chopK*.14).toFixed(2),o0=(.03+chopK*.05).toFixed(2);
+      const o1=(.05+chopK*.17).toFixed(2),o0=(.02+chopK*.06).toFixed(2);
       const st=PRM?"":` style="--wx:${(.8+chopK*2.6).toFixed(1)}px;--o0:${o0};--o1:${o1};--wd:${(wDur*(.62+ww()*.5)).toFixed(1)}s;animation-delay:-${(ww()*11).toFixed(1)}s"`;
       waterWeather+=`<path class="wmove" d="M ${x.toFixed(1)} ${y.toFixed(1)} h ${w.toFixed(1)}" stroke="${dark?'#C9E2EB':'#153845'}" stroke-width=".7" stroke-linecap="round" opacity="${o1}"${st}/>`;
     }
@@ -1091,14 +1255,20 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       +(showHeron?ringAt(hx+22,base+8,5.5,23,13):"");
 
   /* one local wildlife cue at a time: heron morning/evening, shorebirds by day,
-     fireflies on warm summer nights, a quiet crab when the marsh turns wet */
+     fireflies on warm summer nights, a quiet crab when the marsh turns wet. That rule is
+     about the performing cue, the thing that moves and draws the eye, and it still holds.
+     Underneath it sits a resident, which is always there and almost never moves. */
+  const marshResident=dark?raccoon(W*.335,base+5,.82)
+    :temp<48?cormorant(dx-6,base-13,.8)
+    :oysterCatcher(W*.645,base+4,.78);
   const gull=(gx,gy,s,o,delay)=>`<path class="wildlife bird-wing" style="animation-delay:${delay}s" d="M ${(gx-5*s).toFixed(1)} ${gy.toFixed(1)} Q ${(gx-2.2*s).toFixed(1)} ${(gy-3*s).toFixed(1)} ${gx.toFixed(1)} ${gy.toFixed(1)} Q ${(gx+2.2*s).toFixed(1)} ${(gy-3*s).toFixed(1)} ${(gx+5*s).toFixed(1)} ${gy.toFixed(1)}" fill="none" stroke="currentColor" stroke-width="${(1.3*s).toFixed(1)}" stroke-linecap="round" opacity="${o}"/>`;
   /* one gull crosses the frame over about seventy seconds; the other holds its place
      higher up, so there is something to notice without two birds competing */
   const gulls=!wet&&!storm&&!dark&&!showHeron
     ?`<g class="gull-cross" style="--gx:${(W*.55).toFixed(0)}px;--gy:-16px;${phase(70)}">${gull(W*.16,GY-70,1,".34",-2.6)}</g>`
       +gull(W*.62,GY-84,.72,".28",-7.1):"";
-  const marshCrab=(wet||storm)?crabAt(W*.57,base-2,.82,.74):"";
+  /* fiddlers plug their burrows and go down when it turns cold, so they do too */
+  const marshCrab=(wet||storm)&&temp>=48?crabAt(W*.57,base-2,.82,.74):"";
   let flies="";
   if(showFlies){const fr=mulberry(80126);
     for(let i=0;i<flyCount;i++)
@@ -1113,6 +1283,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       <linearGradient id="waterband" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="${dark?'#0C2C3A':'#6FA8C4'}" stop-opacity=".55"/>
         <stop offset="1" stop-color="${dark?'#081E28':'#4E86A8'}" stop-opacity=".85"/></linearGradient>
+      <radialGradient id="cshade"><stop offset="0" stop-color="#0A1E26" stop-opacity=".55"/><stop offset="1" stop-color="#0A1E26" stop-opacity="0"/></radialGradient>
       <linearGradient id="heathaze" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="#FFE9C0" stop-opacity="0"/>
         <stop offset=".5" stop-color="#FFE9C0" stop-opacity=".24"/>
@@ -1124,15 +1295,19 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     ${body}
     ${boltAt(W*.62,base-14,90210)}
     <path d="${tl}" fill="${ink}" opacity=".26"/>
+    ${oak}
     ${pines}
     ${mist}
     <rect x="0" y="${GY+8}" width="${W}" height="${H-GY-8}" fill="url(#waterband)"/>
     ${sparkle}${glint}${waterWeather}
     <g opacity=".5"${swayAt(-swayDur*.35,swayAmt*.7)}><path d="${mid}" fill="${ink}"/><path d="${midBlades}" fill="${ink}"/></g>
     <path d="M -5 ${base} L ${W+5} ${base}" stroke="${ink}" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>
+    ${snowing?`<path d="M -5 ${(base-1.5).toFixed(1)} L ${W+5} ${(base-1.5).toFixed(1)}" stroke="#F2F8FA" stroke-width="2.4" stroke-linecap="round" opacity=".45"/>`:""}
     ${tufts.map((d,i)=>d?`<g opacity=".95"${bandAt(i)}><path d="${d}" fill="${ink}"/></g>`:"").join("")}
+    ${cloudShadows(base-26,34)}
     ${heat}
     ${dock}
+    ${marshResident}
     ${heron}
     ${marshCrab}
     ${flies}
@@ -1419,6 +1594,10 @@ function dayStory(c,dy,h){
   const cloud=c.cloud_cover||0;
   let first;
   if([45,48].includes(c.weather_code))first="Fog is softening the morning, but visibility should improve.";
+  /* freezing rain gets said plainly. It is the one condition here where the wrong word
+     could put somebody on a road they should have stayed off. */
+  else if(isIce(c.weather_code))first="Freezing rain is falling. Expect ice on anything untreated.";
+  else if(isSnow(c.weather_code))first=c.weather_code===75||c.weather_code===86?"Snow is coming down hard.":"Snow is falling right now.";
   else if([51,53,55,61,63,65,80,81,82].includes(c.weather_code))first="Rain is moving through right now.";
   else if(overnight)first=`A ${tempWord}${damp} night with ${cloud>=65?"plenty of cloud cover":"some breaks in the sky"}.`;
   else if(evening)first=`A ${tempWord}${damp} evening ${cloud>=70?"under a cloudy sky":cloud>=35?"with a few breaks in the clouds":"under a mostly clear sky"}.`;
@@ -1430,12 +1609,15 @@ function dayStory(c,dy,h){
   const peak=(arr)=>win.reduce((b,i)=>(Number(arr[i])||0)>(Number(arr[b])||0)?i:b,win[0]);
   const maxPop=Number(h.pop[peak(h.pop)])||0,wetI=win.find(i=>(Number(h.pop[i])||0)>=40);
   const gustI=peak(h.gust),maxGust=Number(h.gust[gustI])||0;
-  const currentlyWet=[51,53,55,61,63,65,80,81,82].includes(c.weather_code);
+  const currentlyWet=isWet(c.weather_code)&&![95,96,99].includes(c.weather_code);
   const when=i=>spokenAt(h.time[i])+(h.time[i].slice(0,10)===dy.time[0]?"":" tomorrow.");
   let second;
   if(currentlyWet){
     const dryI=win.find(i=>(Number(h.pop[i])||0)<30);
-    second=dryI==null?"Keep rain gear close for the next several hours.":`It should ease around ${when(dryI)}`;
+    const frozen=isSnow(c.weather_code)||isIce(c.weather_code);
+    second=dryI==null
+      ?(frozen?"Give yourself extra time if you have to go anywhere.":"Keep rain gear close for the next several hours.")
+      :`It should ease around ${when(dryI)}`;
   }else if(wetI!=null)
     second=maxPop>=70?`Rain is likely around ${when(wetI)}`:`A few showers may arrive around ${when(wetI)}`;
   else if(maxPop>=25)second="A stray shower is possible, but most of the day should stay dry.";
@@ -1474,11 +1656,17 @@ function dailyBrief(dy,i){
   const pop=Number(dy.precipitation_probability_max[i])||0;
   const wind=Number(dy.wind_speed_10m_max?.[i])||0;
   const feel=high>=92?"Hot":high>=82?"Warm":high>=68?"Mild":high>=52?"Cool":"Chilly";
-  const sky=code>=95?"a chance of storms":code>=80?"a few showers":code>=61?"periods of rain":
+  /* snow and ice are checked first: their codes sit above 61, so the old ladder called a
+     heavy snow day "periods of rain" */
+  const sky=code>=95?"a chance of storms":isIce(code)?"freezing rain":
+    isSnow(code)?(code===75||code===86?"heavy snow":code===77?"snow grains":"snow"):
+    code>=80?"a few showers":code>=61?"periods of rain":
     code>=51?"a little drizzle":code>=45?"some fog":code===3?"mostly cloudy skies":
     code===2?"a mix of sun and clouds":code===1?"mostly sunny skies":"clear skies";
   let note;
   if(code>=95)note="Keep an eye on weather alerts.";
+  else if(isIce(code))note="Ice is the problem, not the cold. Give the roads time.";
+  else if(isSnow(code))note="Plan on slow going.";
   else if(code>=51||pop>=60)note="Plan around at least one wet stretch.";
   else if(pop>=35)note="A passing shower is possible.";
   else if(wind>=20)note="It may turn breezy.";
@@ -1488,12 +1676,12 @@ function dailyBrief(dy,i){
 }
 
 /* ── main render ────────────────────────────────────── */
-let LINE_DRAWN=false;
+let LINE_DRAWN=false,SCENE_IN=false;
 function render(d,live){
   const c=d.current,dy=d.daily,h=d.hourly,m=d.marine;
   const now=new Date(), sunrise=new Date(dy.sunrise[0]), sunset=new Date(dy.sunset[0]);
   const sp=sunPos(now), altDeg=sp.alt*180/Math.PI;
-  const wet=[51,53,55,61,63,65,80,81,82,95,96,99].includes(c.weather_code);
+  const wet=isWet(c.weather_code);
   const storm=[95,96,99].includes(c.weather_code);
   const dark=altDeg< -3;
 
@@ -1518,6 +1706,9 @@ function render(d,live){
 
   renderSkyFx(altDeg,c.cloud_cover,c.wind_direction_10m,wet,storm,c.wind_speed_10m,c.weather_code);
   const scene=renderScene(sunrise,sunset,now,c,dark,LOC.tide?tideTrend(d.tides):0);
+  /* the scene settles in the first time the app paints, and never on the refresh, resize
+     and foreground re-renders after that */
+  if(!SCENE_IN&&!PRM){SCENE_IN=true;document.querySelector(".scene").classList.add("first")}
 
   const cs=getComputedStyle(document.documentElement);
   const css={ink:cs.getPropertyValue("--ink").trim(),faint:cs.getPropertyValue("--ink-faint").trim(),
@@ -1675,7 +1866,8 @@ function render(d,live){
   let wMsg,wCls;
   if(coastal){
     const wv=m&&Number.isFinite(m.wave_height_max)?m.wave_height_max:null;
-    if(wv===null){wMsg="I don't have a reliable marine reading right now. Check conditions before heading out.";wCls="caution"}
+    if(isIce(c.weather_code)||isSnow(c.weather_code)){wMsg="Frozen precipitation. Not a day for the boat whatever the seas are doing.";wCls="no"}
+    else if(wv===null){wMsg="I don't have a reliable marine reading right now. Check conditions before heading out.";wCls="caution"}
     else if(g>=30||wv>=5){wMsg="Too rough for an easy small-boat day. Wait it out or stay well inside.";wCls="no"}
     else if(g>=22||wv>=3){wMsg="Breezy and choppy. The ICW should be kinder than the inlet.";wCls="caution"}
     else{wMsg="An easy day on the water: light wind, manageable seas.";wCls="go"}
@@ -1691,6 +1883,8 @@ function render(d,live){
     for(let i=0;i<n;i++){const hr=+h.time[i].slice(11,13);if(hr>=7&&hr<=19)dayPop=Math.max(dayPop,h.pop[i])}
     if(g>=30){wMsg="Wind-whipped up here. Save the outside chores for tomorrow.";wCls="no"}
     else if(g>=22){wMsg="Blustery afternoon coming. Get outdoor work done early.";wCls="caution"}
+    else if(isIce(c.weather_code)){wMsg="Ice, not snow. Stay off the hill until it turns over.";wCls="no"}
+    else if(isSnow(c.weather_code)){wMsg="Snow coming down. Feed early and keep a path open.";wCls="caution"}
     else if(dayPop>=50){wMsg="Showers moving through. Slip outside between them.";wCls="caution"}
     else if(c.temperature_2m<=36){wMsg="Cold one. Bundle up for the morning rounds.";wCls="caution"}
     else{wMsg="Good day to be outside. Light wind, easy air.";wCls="go"}

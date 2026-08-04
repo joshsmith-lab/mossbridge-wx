@@ -89,8 +89,16 @@ const CASES = [
     note: "sun low enough for the buck to come out: graze, ear flick, tail flick",
     o: { baseTemp: 72, nowTemp: 74, feels: 74, rh: 58, isDay: 1, code: 1, cloud: 12, nowWind: 6, nowDir: 290, nowGust: 10, nowUv: 1.4, uvMax: 8, windAmp: 6, gustAmp: 10,
       popCurve: () => 5, dailyPop: (p) => p.fill(10) } },
-  // The app has no snow branch (WMO 71-77 are not in its wet list), so the
-  // coldest real ridge night is a cold overcast one. Named for what it is.
+  { name: "12-ridge-snow-day", loc: "sp", when: "2026-01-14T11:20:00",
+    note: "code 73: flakes drifting not streaking, dusting on the field, label says Snow",
+    o: { baseTemp: 28, nowTemp: 27, feels: 18, rh: 84, isDay: 1, code: 73, cloud: 95, nowWind: 8, nowDir: 315, nowGust: 15, nowUv: 0.7, uvMax: 2,
+      windAmp: 7, gustAmp: 12, sunrise: "07:36", sunset: "17:22",
+      popCurve: () => 85, dailyPop: (p) => p.fill(85) } },
+  { name: "13-marsh-freezing-rain", loc: "mb", when: "2026-01-14T08:10:00",
+    note: "code 67: falls like rain because it is rain, but must never be called rain",
+    o: { baseTemp: 33, nowTemp: 32, feels: 24, rh: 92, isDay: 1, code: 67, cloud: 97, nowWind: 12, nowDir: 40, nowGust: 21, nowUv: 0.4, uvMax: 2,
+      windAmp: 9, gustAmp: 16, sunrise: "07:14", sunset: "17:20",
+      popCurve: () => 90, dailyPop: (p) => p.fill(90) } },
   { name: "10-ridge-cold-night", loc: "sp", when: "2026-01-14T22:40:00",
     note: "24F January overcast: owl, no fireflies, everything slow",
     o: { baseTemp: 27, nowTemp: 24, feels: 16, rh: 76, isDay: 0, code: 3, cloud: 82, nowWind: 9, nowDir: 320, nowGust: 17, nowUv: 0, uvMax: 2, windAmp: 7, gustAmp: 13,

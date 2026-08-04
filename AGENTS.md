@@ -107,18 +107,19 @@ locations, an afternoon that should recommend today, and a washout), writes
 screenshots to `tools/shots/` and prints the generated copy, so wording changes
 are reviewable as text.
 
-`tools/scene.mjs` is for anything that moves. Eleven scenes force the light and
+`tools/scene.mjs` is for anything that moves. Thirteen scenes force the light and
 weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
-clear night, a storm, a fog morning, drizzle against a downpour, and the ridge
-by day, by evening with the buck out, and on a cold January night. Per scene it
-writes the sky and the scene on their own, counts the animations *still
-running* grouped by keyframe, reads `LayoutCount` off CDP while the scene idles,
-and proves the page holds perfectly still under `prefers-reduced-motion` by
-comparing two screenshots taken 1.4s apart. It exits non-zero on a page error,
-on layout thrash, or on anything that survives reduced motion.
+clear night, a storm, a fog morning, drizzle against a downpour, freezing rain
+on the coast, and the ridge by day, by evening with the buck out, on a snow day,
+and on a cold January night. Per scene it writes the sky and the scene on their
+own, counts the animations *still running* grouped by keyframe, reads
+`LayoutCount` off CDP while the scene idles, and proves the page holds perfectly
+still under `prefers-reduced-motion` by comparing two screenshots taken 1.4s
+apart. It exits non-zero on a page error, on layout thrash, or on anything that
+survives reduced motion.
 
 Two numbers worth knowing before you change motion: every scene idles at **0-1
-layouts per 6 seconds**, and the busiest scene runs **99 animations**. If either
+layouts per 6 seconds**, and the busiest scene runs **110 animations**. If either
 jumps, you have added something that is not a `transform` or an `opacity`.
 
 Notes: both shim `Date` rather than freezing the clock, because `page.clock`
@@ -141,7 +142,16 @@ Established with Josh and enforced by `test.mjs`:
 - Long ambient cycles take their phase from the wall clock (`phase(seconds)`),
   so a re-render drops them back where they were instead of restarting the wait.
   A 92-second heron strike that restarts on every foreground is never seen.
-- One local wildlife cue at a time. Refine the cues, do not stack them.
+- One local wildlife **cue** at a time. That rule is about the performing cue,
+  the thing that moves and takes the eye, and it still holds: refine the cues,
+  do not stack them.
+- Under the cue sits a **resident**, and there is always exactly one. It is
+  present at every hour in every weather, five to ten units against a 430-unit
+  frame, and it barely moves. Residents are why the scene is never empty; the
+  one-cue rule is why it is never busy. Do not let a resident start performing.
+- Animals only appear in weather they would actually be out in. Frogs go under
+  below 45F, fiddler crabs below 48F, and the cormorant and the cardinal exist
+  because something still has to be out there when they do.
 
 ## Known issues
 

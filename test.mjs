@@ -31,7 +31,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /JSON\.stringify\(\{savedAt:Date\.now\(\),data\}\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v17/);
+  assert.match(worker, /mbwx-shell-v18/);
 });
 
 test("every motion is driven by a reading, not by decoration", async () => {
@@ -39,7 +39,13 @@ test("every motion is driven by a reading, not by decoration", async () => {
 
   // water: wind sets the chop, the tide sets where the light sits on it
   assert.match(html, /const chopK=clamp\(\(wind-5\)\/13,0,1\)/);
-  assert.match(html, /if\(wind>=6\)\{const ww=mulberry\(4419\),count=3\+Math\.round\(chopK\*6\)/);
+  // water is never perfectly still, so a calm keeps two faint dashes rather than none
+  assert.match(html, /\{const ww=mulberry\(4419\),count=2\+Math\.round\(chopK\*7\)/);
+  // a cloud shadow needs discrete clouds: a clear sky casts none, an overcast one is all shadow
+  assert.match(html, /if\(PRM\|\|storm\|\|cloud<12\|\|cloud>92\)return""/);
+  // the barn vane points into the wind and hunts as hard as the gusts run over it
+  assert.match(html, /--vdir:\$\{Math\.round\(Number\(weather\.wind_direction_10m\)\|\|0\)\}deg/);
+  assert.match(html, /--vh:\$\{clamp\(\(gust-wind\)\*\.45,\.6,7\)/);
   assert.match(html, /function tideTrend\(preds\)/);
   assert.match(html, /renderScene\(sunrise,sunset,now,c,dark,LOC\.tide\?tideTrend\(d\.tides\):0\)/);
   assert.match(html, /specular\(glintX,GY\+12\.5,tideDir<0\?2\.4:tideDir>0\?-1\.6:0\)/);
@@ -73,6 +79,30 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /const setDx=next\?\(next\.type==="H"\?3:-3\):0/);
 });
 
+test("it snows in Shady Spring", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  // every one of these used to fall through: blank label, rain icon, and a dry scene
+  assert.match(html, /const SNOW=\[71,73,75,77,85,86\], ICE=\[56,57,66,67\]/);
+  assert.match(html, /const WETC=\[51,53,55,61,63,65,80,81,82,95,96,99,\.\.\.SNOW,\.\.\.ICE\]/);
+  for (const code of [56, 57, 66, 67, 71, 73, 75, 77, 85, 86])
+    assert.match(html, new RegExp(`${code}:"[A-Z]`), `WMO ${code} needs a label`);
+  assert.match(html, /71:"Light snow",73:"Snow",75:"Heavy snow"/);
+  // freezing precipitation is never called rain, and never called snow
+  assert.match(html, /66:"Freezing rain",67:"Freezing rain"/);
+  assert.match(html, /Freezing rain is falling\. Expect ice on anything untreated\./);
+  assert.doesNotMatch(html, /66:"Rain"|67:"Rain"/);
+  // the icon ladder checks ice and snow before it falls through to rain
+  assert.match(html, /glyphFor=w=>w>=95\?"storm":isIce\(w\)\?"ice":isSnow\(w\)\?"snow":w>=51\?"rain"/);
+  assert.match(html, /snow:`<path d="\$\{CLOUD\}"/);
+  // snow drifts rather than streaks, and takes six to nine seconds to cross the sky
+  assert.match(html, /const SNOWFALL=\{71:\[22,9,2\.4\]/);
+  assert.match(html, /@keyframes flake\{/);
+  assert.match(html, /rf\.className="rainfx"\+\(snowing\?" snow":""\)/);
+  // and the week's one-line brief no longer calls a heavy snow day "periods of rain"
+  assert.match(html, /isSnow\(code\)\?\(code===75\|\|code===86\?"heavy snow"/);
+});
+
 test("nothing new moves under prefers-reduced-motion", async () => {
   const html = await readFile(new URL("index.html", root), "utf8");
 
@@ -84,7 +114,7 @@ test("nothing new moves under prefers-reduced-motion", async () => {
   // and the generators that emit motion are gated before they ever build markup
   assert.match(html, /const phase=p=>PRM\?"":`animation-delay/);
   assert.match(html, /const showFlies=seasonalFlies&&!PRM/);
-  assert.match(html, /if\(wet&&!PRM\)\{const wr=mulberry\(7138\)/);
+  assert.match(html, /if\(wet&&!snowing&&!PRM\)\{const wr=mulberry\(7138\)/);
   assert.match(html, /if\(!storm\|\|PRM\)return""/);
   assert.match(html, /if\(!PRM&&!wet&&!storm\)/);
 });
@@ -164,7 +194,7 @@ test("light, motion and alerts stay tuned", async () => {
   assert.match(html, /renderSkyFx\(altDeg,c\.cloud_cover,c\.wind_direction_10m,wet,storm,c\.wind_speed_10m,c\.weather_code\)/);
   // rain is drawn from the code, not from one "it is wet" flag: a drizzle is not a downpour
   assert.match(html, /const RAIN=\{51:\[16,1\.55,\.55\]/);
-  assert.match(html, /const \[count,fallSec,weight\]=RAIN\[code\]\|\|RAIN\[63\]/);
+  assert.match(html, /const \[count,fallSec,weight\]=snowing\?\(SNOWFALL\[code\]\|\|SNOWFALL\[73\]\):\(RAIN\[code\]\|\|RAIN\[63\]\)/);
   // and it leans the way the clouds are already going
   assert.match(html, /const lean=clamp\(\(Number\(windSpd\)\|\|0\)\*\.62,0,18\)\*\(windDir>180\?-1:1\)/);
   assert.match(html, /rf\.style\.setProperty\("--rlean"/);
