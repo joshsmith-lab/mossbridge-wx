@@ -31,7 +31,71 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /JSON\.stringify\(\{savedAt:Date\.now\(\),data\}\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v16/);
+  assert.match(worker, /mbwx-shell-v17/);
+});
+
+test("every motion is driven by a reading, not by decoration", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  // water: wind sets the chop, the tide sets where the light sits on it
+  assert.match(html, /const chopK=clamp\(\(wind-5\)\/13,0,1\)/);
+  assert.match(html, /if\(wind>=6\)\{const ww=mulberry\(4419\),count=3\+Math\.round\(chopK\*6\)/);
+  assert.match(html, /function tideTrend\(preds\)/);
+  assert.match(html, /renderScene\(sunrise,sunset,now,c,dark,LOC\.tide\?tideTrend\(d\.tides\):0\)/);
+  assert.match(html, /specular\(glintX,GY\+12\.5,tideDir<0\?2\.4:tideDir>0\?-1\.6:0\)/);
+
+  // vegetation: gusts raise the throw, and the wave crosses the bank downwind
+  assert.match(html, /const gust=Math\.max\(wind,Number\(weather\.wind_gusts_10m\)\|\|0\)/);
+  assert.match(html, /const downwind=\(Number\(weather\.wind_direction_10m\)\|\|0\)>180\?-1:1/);
+  assert.match(html, /const waveDelay=\(i,dur\)=>-\(dur\*\(\(downwind>0\?i:BANDS-1-i\)\*\.15\+bandLag\[i\]\)\)/);
+  assert.match(html, /swayAmt=clamp\(\.5\+wind\*\.095\+\(gust-wind\)\*\.055,\.5,3\.9\)/);
+
+  // wildlife: one gull crosses, the rest keep the one-cue-at-a-time rule
+  assert.match(html, /class="gull-cross"/);
+  assert.match(html, /@keyframes gullCross/);
+  assert.match(html, /class="heron-strike"/);
+  assert.match(html, /const flyCount=Math\.round\(clamp\(3\+\(temp-60\)\*\.6,3,12\)\)/);
+  assert.match(html, /class="deer-tail"/);
+  assert.match(html, /class="crab-run"/);
+  assert.match(html, /class="hawk-circle"/);
+
+  // light: the sun flattens near the horizon, the meteor waits for a clear night
+  assert.match(html, /const squash=clamp\(\.9\+Math\.max\(0,sunAltDeg\)\/8\*\.1,\.9,1\)/);
+  assert.match(html, /if\(night>\.55&&cloud<30&&!PRM\)/);
+  assert.match(html, /const golden=altDeg>-4\.5&&altDeg<6\.5/);
+  // only the low third of the sky scintillates, so the night is ~30 animations not 110
+  assert.match(html, /const tw=s\.y>52/);
+  // heat haze is a marsh-at-high-UV thing, never a decoration
+  assert.match(html, /\(Number\(weather\.uv_index\)\|\|0\)>=8&&sunAltDeg>40&&!wet&&!storm&&!PRM/);
+
+  // charts: the line draws in once, on live data, and the skiff sets with the tide
+  assert.match(html, /if\(live&&!LINE_DRAWN&&!PRM\)/);
+  assert.match(html, /const setDx=next\?\(next\.type==="H"\?3:-3\):0/);
+});
+
+test("nothing new moves under prefers-reduced-motion", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  // the blanket rule that kills every animation and transition, including pseudo-elements
+  assert.match(html, /@media\(prefers-reduced-motion:reduce\)\{\s*\*,\*::after\{animation:none!important;transition:none!important\}/);
+  // elements that exist only to be animated must be invisible when they are not
+  for (const cls of ["water-ring", "ff", "splash", "bolt", "meteor"])
+    assert.match(html, new RegExp(`\\.${cls}\\{[^}]*opacity:0`), `.${cls} should rest at opacity 0`);
+  // and the generators that emit motion are gated before they ever build markup
+  assert.match(html, /const phase=p=>PRM\?"":`animation-delay/);
+  assert.match(html, /const showFlies=seasonalFlies&&!PRM/);
+  assert.match(html, /if\(wet&&!PRM\)\{const wr=mulberry\(7138\)/);
+  assert.match(html, /if\(!storm\|\|PRM\)return""/);
+  assert.match(html, /if\(!PRM&&!wet&&!storm\)/);
+});
+
+test("the live dot pulses without relaying out the page", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  // animating a box-shadow spread radius cost a full layout every frame, forever
+  assert.match(html, /@keyframes ping\{0%\{transform:scale\(\.75\);opacity:1\}/);
+  assert.doesNotMatch(html, /@keyframes ping\{0%\{box-shadow/);
+  assert.match(html, /\.live-dot::after\{/);
 });
 
 test("plain-language and living-scene refinements stay in place", async () => {
