@@ -775,9 +775,12 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     const disc=mix(mix(low?"#F0A03C":"#F5C94D","#E8752A",warm*.5),"#C8CFCE",veil*.72);
     if(veil<.85){glintX=x;glintCol=low?"#FFB86A":"#FFD98F";glintOp=1-veil}
     const gr=38-veil*12,cc=`cx="${x.toFixed(1)}" cy="${y.toFixed(1)}"`;
-    body=`<ellipse ${cc} rx="${gr.toFixed(0)}" ry="${(gr*squash).toFixed(0)}" fill="url(#sunglow)" opacity="${Math.max(.16,1-veil*.8).toFixed(2)}"/>
-      <ellipse ${cc} rx="13" ry="${(13*squash).toFixed(2)}" fill="${disc}" opacity="${Math.max(.32,1-veil**2.2*.94).toFixed(2)}"/>
-      <ellipse ${cc} rx="13" ry="${(13*squash).toFixed(2)}" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1" opacity="${Math.max(.15,1-veil).toFixed(2)}"/>`;
+    /* under a warned storm the sun is a rumour, not a lamp. The .32 floor exists so heavy
+       overcast still hints where the sun is; a storm does not get the hint. */
+    const sdim=storm?.24:1;
+    body=`<ellipse ${cc} rx="${gr.toFixed(0)}" ry="${(gr*squash).toFixed(0)}" fill="url(#sunglow)" opacity="${(Math.max(.16,1-veil*.8)*sdim).toFixed(2)}"/>
+      <ellipse ${cc} rx="13" ry="${(13*squash).toFixed(2)}" fill="${disc}" opacity="${(Math.max(.32,1-veil**2.2*.94)*sdim).toFixed(2)}"/>
+      <ellipse ${cc} rx="13" ry="${(13*squash).toFixed(2)}" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1" opacity="${(Math.max(.15,1-veil)*sdim).toFixed(2)}"/>`;
   }
   if(mp.alt>-.05&&(!up||mp.alt>.21)){        /* daytime moon only when it's genuinely up there */
     /* moon by true altitude / azimuth, mapped east→west across the arc */
@@ -788,7 +791,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     const k=(1-2*ill)*r, waxing=ph<.5;
     const sweep=waxing?(ill>.5?0:1):(ill>.5?1:0);
     const term=`M ${x} ${y-r} A ${Math.abs(k).toFixed(2)} ${r} 0 0 ${sweep} ${x} ${y+r} A ${r} ${r} 0 0 ${waxing?0:1} ${x} ${y-r} Z`;
-    const mOp=up?clamp(.44-sp.alt*180/Math.PI*.016,.14,.44):1;
+    const mOp=(up?clamp(.44-sp.alt*180/Math.PI*.016,.14,.44):1)*(storm?.3:1);
     if(glintX==null&&!up){glintX=x;glintCol="#E8F1FA";glintOp=.8*(1-veil*.7)}
     body+=`<g opacity="${mOp.toFixed(2)}">
       <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="26" fill="url(#moonglow)"/>
@@ -804,6 +807,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   /* how hard the water is working: 0 glassy, 1 chop. Six knots is where a marsh stops
      looking like glass, twenty-five is where it is all texture */
   const chopK=clamp((wind-5)/13,0,1);
+  /* fog takes the distance out of the world: everything far fades toward the sky, and the
+     close things stay. That difference in fading IS the fog; the veils only dress it. */
+  const fogFade=fog?.45:1;
   const wDur=clamp(12.5-wind*.36,4.4,12.5);
   /* A gust crosses a bank the way it crosses the yard: one end first, then the rest.
      The bank is cut into bands and each one lags the one upwind of it, travelling the
@@ -849,7 +855,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
      already. Speed comes off the wind and the side it crosses from matches the cloud
      drift, so on a part-cloudy day the sky and the ground agree about the weather. */
   const cloudShadows=(topY,h)=>{
-    if(PRM||storm||cloud<12||cloud>92)return"";
+    if(PRM||storm||fog||cloud<12||cloud>92)return"";   /* fog has no sun to cast one */
     const sr=mulberry(8821),dur=clamp(150-wind*4.2,42,150);
     return Array.from({length:cloud>45?2:1},()=>{
       const w=W*(.44+sr()*.3), y=topY+sr()*h, ry=h*(.5+sr()*.4);
@@ -969,8 +975,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
        real height and real relief, and the far ones fade the way distance actually fades
        them. Heights come off the frame so a phone and a desktop see the same mountain. */
     const rTop=(H-44)*.55;
+    /* in fog the far folds go first: the mountain view dissolves from the back forward */
     const ridges=[[1,.09],[.77,.14],[.55,.21],[.32,.32]]
-      .map(([k,op])=>ridge(rTop*k,rTop*k*.36,W*(.11+.23*k),op)).join("");
+      .map(([k,op])=>ridge(rTop*k,rTop*k*.36,W*(.11+.23*k),op*(fog?1-k*.68:1))).join("");
 
     const tree=(x,s,op)=>`<g fill="${ink}" opacity="${op}"${treeAt(x)}>
       <path d="M ${(x-.55*s).toFixed(1)} ${base+2} L ${(x-.3*s).toFixed(1)} ${(base-13*s).toFixed(1)} L ${(x+.3*s).toFixed(1)} ${(base-13*s).toFixed(1)} L ${(x+.55*s).toFixed(1)} ${base+2} Z"/>
@@ -983,19 +990,19 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     const pondL=pcx-prx,pondR=pcx+prx;
     const ptop=`M ${pondL.toFixed(1)} ${base+6} Q ${(pondL+prx*.5).toFixed(1)} ${base+2.5} ${pcx.toFixed(1)} ${base+5} Q ${(pcx+prx*.5).toFixed(1)} ${base+7.5} ${pondR.toFixed(1)} ${base+6}`;
     const pond=`<rect x="0" y="${base-2}" width="${W}" height="${H-base+2}" fill="${ink}" opacity=".34"/>
-      ${snowing?`<rect x="0" y="${(base-2.5).toFixed(1)}" width="${W}" height="7" fill="#F2F8FA" opacity=".4"/>`:""}
+      ${snowing?`<rect x="0" y="${(base-2.5).toFixed(1)}" width="${W}" height="${(H-base+6).toFixed(0)}" fill="#F2F8FA" opacity=".34"/>`:""}
       <path d="${ptop} A ${prx.toFixed(1)} ${pry} 0 0 1 ${pondL.toFixed(1)} ${base+6} Z" fill="url(#waterband)"/>
       <path d="${ptop}" fill="none" stroke="${ink}" stroke-width="1.3" opacity=".5"/>`;
 
     const barn=`<g transform="translate(${(W*.81-16.25).toFixed(1)} ${(base+2-25).toFixed(1)}) scale(1.25)" fill="${ink}" opacity=".8">
       <path d="M 2.6 20 L 2.6 9.6 L 1 10 L 6.2 3.2 L 10.8 1 L 15.2 1 L 19.8 3.2 L 25 10 L 23.4 9.6 L 23.4 20 Z"/>
       <path d="M 11.4 1 L 11.4 -1.2 L 14.6 -1.2 L 14.6 1 Z M 10.8 -1.2 L 13 -2.8 L 15.2 -1.2 Z"/>
-      <path d="M 6.2 3.3 L 19.8 3.3" stroke="#FFFFFF" stroke-width=".8" opacity=".14" fill="none"/>
+      <path d="M 6.2 3.3 L 19.8 3.3" stroke="#FFFFFF" stroke-width="${snowing?"1.4":".8"}" opacity="${snowing?".5":".14"}" fill="none"/>
       ${/* the vane points into the wind the way the one on the card does, and hunts as hard
            as the gusts are running over the steady wind */""}
-      <path d="M 13 -2.8 L 13 -6.4" stroke="${ink}" stroke-width=".7" stroke-linecap="round" fill="none"/>
-      <g transform="translate(13 -9.6)"><g class="vane-hunt" style="--vdir:${Math.round(Number(weather.wind_direction_10m)||0)}deg;--vh:${clamp((gust-wind)*.45,.6,7).toFixed(1)}deg;--vt:${clamp(9-(gust-wind)*.32,2.4,9).toFixed(1)}s">
-        <path d="M 0 -3.2 L 0 3.2" stroke="${ink}" stroke-width=".62" stroke-linecap="round" fill="none"/>
+      <path d="M 13 -2.8 L 13 -5.8" stroke="${ink}" stroke-width=".6" stroke-linecap="round" fill="none"/>
+      <g transform="translate(13 -8.2) scale(.72)"><g class="vane-hunt" style="--vdir:${Math.round(Number(weather.wind_direction_10m)||0)}deg;--vh:${clamp((gust-wind)*.45,.6,7).toFixed(1)}deg;--vt:${clamp(9-(gust-wind)*.32,2.4,9).toFixed(1)}s">
+        <path d="M 0 -3.2 L 0 3.2" stroke="${ink}" stroke-width=".58" stroke-linecap="round" fill="none"/>
         <path d="M -1 -1.7 L 0 -3.5 L 1 -1.7 Z"/><path d="M -2.1 1.3 L 2.1 1.3 L 1.3 3.5 L -1.3 3.5 Z"/></g></g></g>`;
 
     let fp="",fr="";const fpts=[];
@@ -1088,12 +1095,17 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
           <stop offset="0" stop-color="${dark?'#0C2C3A':'#5E97AE'}" stop-opacity=".7"/>
           <stop offset="1" stop-color="${dark?'#081E28':'#40758F'}" stop-opacity=".9"/></linearGradient>
         <radialGradient id="cshade"><stop offset="0" stop-color="#0A1E26" stop-opacity=".55"/><stop offset="1" stop-color="#0A1E26" stop-opacity="0"/></radialGradient>
+        <linearGradient id="fogveil" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity="0"/>
+          <stop offset=".55" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity=".34"/>
+          <stop offset="1" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity=".06"/></linearGradient>
       </defs>
       <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
       ${goldArc}
       ${body}
       ${boltAt(W*.68,base-38,44170)}
       ${ridges}
+      ${fog?`<rect x="0" y="${(base-rTop*.72).toFixed(1)}" width="${W}" height="${(rTop*.72+8).toFixed(1)}" fill="url(#fogveil)"/>`:""}
       ${hawk}
       ${pond}
       ${barn}
@@ -1133,7 +1145,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const bandAt=i=>swayAt(waveDelay(i,swayDur),swayAmt*bandAmp[i]);
   /* loblolly pines: bare trunk, umbrella crown */
   const lob=(x,s)=>{const cy=base-31*s;
-    return `<g fill="${ink}" opacity=".5"${treeAt(x)}>
+    return `<g fill="${ink}" opacity="${(.5*fogFade).toFixed(2)}"${treeAt(x)}>
     <path d="M ${(x-.9*s).toFixed(1)} ${base+2} L ${(x-.45*s).toFixed(1)} ${cy.toFixed(1)} L ${(x+.45*s).toFixed(1)} ${cy.toFixed(1)} L ${(x+.9*s).toFixed(1)} ${base+2} Z"/>
     <path d="M ${x.toFixed(1)} ${(base-14*s).toFixed(1)} l ${(6*s).toFixed(1)} ${(-3.2*s).toFixed(1)}" stroke="${ink}" stroke-width="${(1.1*s).toFixed(1)}" stroke-linecap="round" fill="none"/>
     <ellipse cx="${x.toFixed(1)}" cy="${cy.toFixed(1)}" rx="${(10*s).toFixed(1)}" ry="${(4.3*s).toFixed(1)}"/>
@@ -1149,7 +1161,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
      trunk, limbs that reach out nearly level before they lift, and a crown two and a half
      times wider than it is tall. It sits across the marsh, so it stays faint. */
   const liveOak=(x,s,op)=>{
-    const gy=base+2, th=18*s, cy=gy-th-7*s, mr=mulberry(4417);
+    const gy=base+2, th=23*s, cy=gy-th-7.5*s, mr=mulberry(4417);
     const P=(...a)=>a.map(v=>v.toFixed(1)).join(" ");
     /* Moss hangs off the underside of the crown, and on a tree this far off it reads as a
        ragged fringe rather than streamers. It is the lightest thing out there, so it swings
@@ -1173,7 +1185,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       <ellipse cx="${P(x+20.5*s)}" cy="${P(cy+3.8*s)}" rx="${(6.4*s).toFixed(1)}" ry="${(3*s).toFixed(1)}"/>
       ${moss}</g>`;
   };
-  const oak=liveOak(W*.47,1.15,.44);
+  const oak=liveOak(W*.47,1.24,.44*fogFade);
 
   /* spartina: tapered filled blades, clustered tufts with real gaps */
   const blade=(bx,ht,lean)=>`M ${(bx-.8).toFixed(1)} ${base} Q ${(bx+lean*.3-.4).toFixed(1)} ${(base-ht*.62).toFixed(1)} ${(bx+lean).toFixed(1)} ${(base-ht).toFixed(1)} Q ${(bx+lean*.38+.6).toFixed(1)} ${(base-ht*.46).toFixed(1)} ${(bx+.8).toFixed(1)} ${base} Z `;
@@ -1223,6 +1235,15 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
 
   /* light on the water. A falling tide leaves the track sitting further off the bank */
   const glint=specular(glintX,GY+12.5,tideDir<0?2.4:tideDir>0?-1.6:0);
+  /* the trees carry a little of themselves onto the water, the way the pilings already do:
+     broken vertical smears, widest under the oak because the oak is the biggest thing there */
+  const treeRefl=`<g fill="${ink}" opacity="${(.09*fogFade).toFixed(2)}">
+    <rect x="${(W*.47-1.4).toFixed(1)}" y="${(GY+12.5).toFixed(1)}" width="2.8" height="9" rx="1.2"/>
+    <rect x="${(W*.47-8.5).toFixed(1)}" y="${(GY+13.5).toFixed(1)}" width="1.7" height="6" rx=".85"/>
+    <rect x="${(W*.47+6).toFixed(1)}" y="${(GY+14).toFixed(1)}" width="1.7" height="5" rx=".85"/>
+    <rect x="${(W*.07-.9).toFixed(1)}" y="${(GY+12.5).toFixed(1)}" width="1.8" height="7" rx=".9"/>
+    <rect x="${(W*.135-.7).toFixed(1)}" y="${(GY+13).toFixed(1)}" width="1.4" height="5" rx=".7"/>
+    <rect x="${(W*.885-.8).toFixed(1)}" y="${(GY+12.5).toFixed(1)}" width="1.6" height="6" rx=".8"/></g>`;
   let sparkle="";
   for(let i=0;i<3;i++)
     sparkle+=`<rect x="${(20+g()*(W-40)).toFixed(1)}" y="${(GY+12+g()*12).toFixed(1)}" width="${(6+g()*14).toFixed(1)}" height="1" rx=".5" fill="#FFFFFF" opacity="${(.07+g()*.08).toFixed(2)}"/>`;
@@ -1295,6 +1316,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
         <stop offset="0" stop-color="${dark?'#0C2C3A':'#6FA8C4'}" stop-opacity=".55"/>
         <stop offset="1" stop-color="${dark?'#081E28':'#4E86A8'}" stop-opacity=".85"/></linearGradient>
       <radialGradient id="cshade"><stop offset="0" stop-color="#0A1E26" stop-opacity=".55"/><stop offset="1" stop-color="#0A1E26" stop-opacity="0"/></radialGradient>
+      <linearGradient id="fogveil" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity="0"/>
+        <stop offset=".55" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity=".34"/>
+        <stop offset="1" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity=".06"/></linearGradient>
       <linearGradient id="heathaze" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="#FFE9C0" stop-opacity="0"/>
         <stop offset=".5" stop-color="#FFE9C0" stop-opacity=".24"/>
@@ -1305,11 +1330,13 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     ${gulls}
     ${body}
     ${boltAt(W*.62,base-14,90210)}
-    <path d="${tl}" fill="${ink}" opacity=".26"/>
+    <path d="${tl}" fill="${ink}" opacity="${(.26*fogFade).toFixed(2)}"/>
     ${oak}
     ${pines}
+    ${fog?`<rect x="0" y="${(base-44).toFixed(1)}" width="${W}" height="52" fill="url(#fogveil)"/>`:""}
     ${mist}
     <rect x="0" y="${GY+8}" width="${W}" height="${H-GY-8}" fill="url(#waterband)"/>
+    ${treeRefl}
     ${sparkle}${glint}${waterWeather}
     <g opacity=".5"${swayAt(-swayDur*.35,swayAmt*.7)}><path d="${mid}" fill="${ink}"/><path d="${midBlades}" fill="${ink}"/></g>
     <path d="M -5 ${base} L ${W+5} ${base}" stroke="${ink}" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>
