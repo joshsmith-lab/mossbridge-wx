@@ -91,6 +91,8 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .heatband{transform-box:fill-box;transform-origin:50% 100%;animation:heatShimmer 3.4s ease-in-out infinite alternate}
 @keyframes heatShimmer{from{transform:skewX(-.55deg) translateY(.3px)}to{transform:skewX(.55deg) translateY(-.3px)}}
 @keyframes sway{from{transform:skewX(var(--sway-neg,-.55deg))}to{transform:skewX(var(--sway,.55deg))}}
+/* spanish moss hangs, so it pivots from the top and swings further than what holds it */
+.moss{transform-box:fill-box;transform-origin:50% 0;animation:sway var(--md,7s) ease-in-out infinite alternate}
 .bird-wing{transform-box:fill-box;transform-origin:50% 60%;animation:wingFlex 6.5s ease-in-out infinite}
 @keyframes wingFlex{0%,32%,47%,76%,100%{transform:scaleY(1)}36%{transform:scaleY(.78)}40%{transform:scaleY(1.06)}44%{transform:scaleY(.9)}80%{transform:scaleY(.84)}84%{transform:scaleY(1.04)}88%{transform:scaleY(.94)}}
 .deer-ear{transform-box:fill-box;transform-origin:55% 85%;animation:earFlick 12.5s ease-in-out infinite}
@@ -1001,6 +1003,36 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     <ellipse cx="${(x-8.6*s).toFixed(1)}" cy="${(cy+1.2*s).toFixed(1)}" rx="${(3.6*s).toFixed(1)}" ry="${(1.7*s).toFixed(1)}"/></g>`};
   const pines=lob(W*.07,.95)+lob(W*.135,.6)+lob(W*.885,.8);
 
+  /* A live oak is the opposite shape to a loblolly and has to read as one: a short thick
+     trunk, limbs that reach out nearly level before they lift, and a crown two and a half
+     times wider than it is tall. It sits across the marsh, so it stays faint. */
+  const liveOak=(x,s,op)=>{
+    const gy=base+2, th=18*s, cy=gy-th-7*s, mr=mulberry(4417);
+    const P=(...a)=>a.map(v=>v.toFixed(1)).join(" ");
+    /* Moss hangs off the underside of the crown, and on a tree this far off it reads as a
+       ragged fringe rather than streamers. It is the lightest thing out there, so it swings
+       further than the canopy holding it. */
+    let moss="";
+    for(const[mx,my,len]of[[-21,3.2,6],[-16,4.8,8.5],[-10.5,6.2,5.5],[-4,6.6,8],[2,6.4,5.5],[8,6,8],[14,5,6],[19.5,3.6,7],[23,1.8,5.5]]){
+      const x0=x+mx*s, y0=cy+my*s, L=len*s*(.82+mr()*.4), w=1.15*s;
+      const amt=swayAmt*(1.7+mr()*1.1);
+      const st=PRM?"":` style="--sway:${amt.toFixed(2)}deg;--sway-neg:${(-amt).toFixed(2)}deg;--md:${(swayDur*(.72+mr()*.5)).toFixed(1)}s;animation-delay:-${(mr()*9).toFixed(1)}s"`;
+      moss+=`<path class="moss" d="M ${P(x0,y0)} Q ${P(x0-w*1.2,y0+L*.45)} ${P(x0-w*.3,y0+L)} Q ${P(x0+w,y0+L*.5)} ${P(x0+w*1.2,y0)} Z" opacity=".72"${st}/>`;
+    }
+    return `<g fill="${ink}" opacity="${op}"${treeAt(x)}>
+      <path d="M ${P(x-3.1*s,gy)} Q ${P(x-1.7*s,gy-th*.55)} ${P(x-2.2*s,gy-th)} L ${P(x+2.2*s,gy-th)} Q ${P(x+1.8*s,gy-th*.5)} ${P(x+3.3*s,gy)} Z"/>
+      <path d="M ${P(x-1.4*s,gy-th+2*s)} C ${P(x-9*s,gy-th-1*s)} ${P(x-16*s,gy-th)} ${P(x-24*s,gy-th-3*s)} M ${P(x+1.4*s,gy-th+2*s)} C ${P(x+9*s,gy-th-1.6*s)} ${P(x+16.5*s,gy-th-.4*s)} ${P(x+24.5*s,gy-th-3.4*s)} M ${P(x,gy-th+1*s)} C ${P(x-3*s,gy-th-4*s)} ${P(x-5*s,gy-th-6*s)} ${P(x-7*s,gy-th-8.5*s)}" stroke="${ink}" stroke-width="${(1.4*s).toFixed(1)}" fill="none" stroke-linecap="round"/>
+      <ellipse cx="${P(x)}" cy="${P(cy)}" rx="${(19*s).toFixed(1)}" ry="${(6.2*s).toFixed(1)}"/>
+      <ellipse cx="${P(x-12*s)}" cy="${P(cy+2.8*s)}" rx="${(10*s).toFixed(1)}" ry="${(4.6*s).toFixed(1)}"/>
+      <ellipse cx="${P(x+12.5*s)}" cy="${P(cy+2.2*s)}" rx="${(10.5*s).toFixed(1)}" ry="${(4.9*s).toFixed(1)}"/>
+      <ellipse cx="${P(x-3.5*s)}" cy="${P(cy-3.4*s)}" rx="${(11*s).toFixed(1)}" ry="${(4*s).toFixed(1)}"/>
+      <ellipse cx="${P(x+7.5*s)}" cy="${P(cy-2.6*s)}" rx="${(8*s).toFixed(1)}" ry="${(3.4*s).toFixed(1)}"/>
+      <ellipse cx="${P(x-20*s)}" cy="${P(cy+4.4*s)}" rx="${(6.6*s).toFixed(1)}" ry="${(2.9*s).toFixed(1)}"/>
+      <ellipse cx="${P(x+20.5*s)}" cy="${P(cy+3.8*s)}" rx="${(6.4*s).toFixed(1)}" ry="${(3*s).toFixed(1)}"/>
+      ${moss}</g>`;
+  };
+  const oak=liveOak(W*.47,1.15,.44);
+
   /* spartina: tapered filled blades, clustered tufts with real gaps */
   const blade=(bx,ht,lean)=>`M ${(bx-.8).toFixed(1)} ${base} Q ${(bx+lean*.3-.4).toFixed(1)} ${(base-ht*.62).toFixed(1)} ${(bx+lean).toFixed(1)} ${(base-ht).toFixed(1)} Q ${(bx+lean*.38+.6).toFixed(1)} ${(base-ht*.46).toFixed(1)} ${(bx+.8).toFixed(1)} ${base} Z `;
   let mid=`M -8 ${base+2} `; tx=-8;
@@ -1124,6 +1156,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     ${body}
     ${boltAt(W*.62,base-14,90210)}
     <path d="${tl}" fill="${ink}" opacity=".26"/>
+    ${oak}
     ${pines}
     ${mist}
     <rect x="0" y="${GY+8}" width="${W}" height="${H-GY-8}" fill="url(#waterband)"/>
