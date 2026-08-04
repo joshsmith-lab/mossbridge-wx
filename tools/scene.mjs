@@ -85,6 +85,10 @@ const CASES = [
     note: "hawk circling, hardwoods working, pond breathing",
     o: { baseTemp: 74, nowTemp: 79, feels: 79, rh: 50, isDay: 1, code: 1, cloud: 15, nowWind: 11, nowDir: 285, nowGust: 19, nowUv: 6.8, uvMax: 8, windAmp: 8, gustAmp: 14,
       popCurve: () => 6, dailyPop: (p) => p.fill(12) } },
+  { name: "11-ridge-evening-deer", loc: "sp", when: "2026-08-02T18:40:00",
+    note: "sun low enough for the buck to come out: graze, ear flick, tail flick",
+    o: { baseTemp: 72, nowTemp: 74, feels: 74, rh: 58, isDay: 1, code: 1, cloud: 12, nowWind: 6, nowDir: 290, nowGust: 10, nowUv: 1.4, uvMax: 8, windAmp: 6, gustAmp: 10,
+      popCurve: () => 5, dailyPop: (p) => p.fill(10) } },
   // The app has no snow branch (WMO 71-77 are not in its wet list), so the
   // coldest real ridge night is a cold overcast one. Named for what it is.
   { name: "10-ridge-cold-night", loc: "sp", when: "2026-01-14T22:40:00",
