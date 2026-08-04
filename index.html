@@ -72,6 +72,16 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .rainfx i{position:absolute;top:-12%;width:var(--rw,1.2px);height:var(--rh,8%);border-radius:1px;
   background:linear-gradient(180deg,transparent,var(--rain,rgba(226,240,246,.62)));animation:fall linear infinite}
 @keyframes fall{to{transform:translate3d(var(--rx,-14px),880px,0)}}
+/* snow is the same generator wearing different clothes: round, slow, and it wanders on the
+   way down instead of falling in a line */
+.rainfx.snow{transform:none}
+.rainfx.snow i{width:var(--rw,3px);height:var(--rw,3px);border-radius:50%;
+  background:var(--snow,rgba(246,251,253,.92));animation-name:flake}
+@keyframes flake{0%{transform:translate3d(0,0,0)}
+  25%{transform:translate3d(calc(var(--rx,20px) * .45),220px,0)}
+  50%{transform:translate3d(calc(var(--rx,20px) * .3),440px,0)}
+  75%{transform:translate3d(calc(var(--rx,20px) * .85),660px,0)}
+  100%{transform:translate3d(var(--rx,20px),880px,0)}}
 /* rain hitting the flat: a tick that exists for two frames and is gone */
 .splash{transform-box:fill-box;transform-origin:bottom center;opacity:0;animation:splash var(--sd,1.7s) linear infinite}
 @keyframes splash{0%,90%,100%{opacity:0;transform:scaleY(.3)}92%{opacity:.55;transform:scaleY(1)}96%{opacity:.18;transform:scaleY(.6)}}
@@ -450,7 +460,14 @@ const LOCS={
 let LOC;try{LOC=LOCS[localStorage.getItem("mbwx-loc")]||LOCS.mb}catch(e){LOC=LOCS.mb}
 let LAT=LOC.lat, LON=LOC.lon;
 
-const WMO={0:"Clear",1:"Mostly clear",2:"Partly cloudy",3:"Cloudy",45:"Fog",48:"Fog",51:"Drizzle",53:"Drizzle",55:"Drizzle",61:"Light rain",63:"Rain",65:"Heavy rain",80:"Showers",81:"Showers",82:"Downpours",95:"Thunderstorms",96:"Storms w/ hail",99:"Severe storms"};
+const WMO={0:"Clear",1:"Mostly clear",2:"Partly cloudy",3:"Cloudy",45:"Fog",48:"Fog",51:"Drizzle",53:"Drizzle",55:"Drizzle",56:"Freezing drizzle",57:"Freezing drizzle",61:"Light rain",63:"Rain",65:"Heavy rain",66:"Freezing rain",67:"Freezing rain",71:"Light snow",73:"Snow",75:"Heavy snow",77:"Snow grains",80:"Showers",81:"Showers",82:"Downpours",85:"Snow showers",86:"Snow showers",95:"Thunderstorms",96:"Storms w/ hail",99:"Severe storms"};
+/* Shady Spring is at 2,500 feet in the Alleghenies and it snows there. Every one of these
+   codes used to fall through: the label went blank, the icon said rain, and the scene drew
+   a dry marsh. Freezing rain is the one that matters most, so it never gets called rain. */
+const SNOW=[71,73,75,77,85,86], ICE=[56,57,66,67];
+const isSnow=w=>SNOW.includes(w), isIce=w=>ICE.includes(w);
+const WETC=[51,53,55,61,63,65,80,81,82,95,96,99,...SNOW,...ICE];
+const isWet=w=>WETC.includes(w);
 const S='stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"';
 const CLOUD='M5.5 13.5h7a3 3 0 0 0 .4-6A4.2 4.2 0 0 0 4.7 8.6 2.7 2.7 0 0 0 5.5 13.5z';
 const GLYPHS={
@@ -459,9 +476,11 @@ const GLYPHS={
   cloud:`<path d="${CLOUD}" ${S}/>`,
   fog:`<path d="M5.5 10.5h7a3 3 0 0 0 .4-6A4.2 4.2 0 0 0 4.7 5.6 2.7 2.7 0 0 0 5.5 10.5z" ${S}/><path d="M4 13.2h10M6 15.6h6" ${S}/>`,
   rain:`<path d="${CLOUD}" ${S}/><path d="M6.5 15.2l-.7 1.6M9.5 15.2l-.7 1.6M12.5 15.2l-.7 1.6" ${S}/>`,
-  storm:`<path d="${CLOUD}" ${S}/><path d="M9.6 13.6 8 16.2h2l-1.4 2.4" ${S}/>`
+  storm:`<path d="${CLOUD}" ${S}/><path d="M9.6 13.6 8 16.2h2l-1.4 2.4" ${S}/>`,
+  snow:`<path d="${CLOUD}" ${S}/><path d="M6.4 15.9h.01M9.4 15.3h.01M12.4 16h.01M7.9 18h.01M10.9 17.7h.01" ${S}/>`,
+  ice:`<path d="${CLOUD}" ${S}/><path d="M6.6 15.2l-.7 1.6M12.4 15.2l-.7 1.6M9.5 15.4h.01M9 17.9h.01" ${S}/>`
 };
-const glyphFor=w=>w>=95?"storm":w>=51?"rain":w>=45?"fog":w===3?"cloud":w>=1?"part":"sun";
+const glyphFor=w=>w>=95?"storm":isIce(w)?"ice":isSnow(w)?"snow":w>=51?"rain":w>=45?"fog":w===3?"cloud":w>=1?"part":"sun";
 const icon=(w,sz)=>`<svg width="${sz||18}" height="${sz||18}" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">${GLYPHS[glyphFor(w)]}</svg>`;
 const dirTxt=d=>["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"][Math.round(d/22.5)%16];
 const hh=t=>{const h=+t.slice(11,13);return h===0?"12a":h===12?"12p":h<12?h+"a":(h-12)+"p"};
@@ -586,7 +605,12 @@ function starField(){
 const RAIN={51:[16,1.55,.55],53:[18,1.4,.62],55:[22,1.22,.72],
   61:[26,1.05,.82],63:[34,.86,.95],65:[50,.62,1.15],
   80:[26,1,.85],81:[34,.82,1],82:[54,.58,1.2],
-  95:[46,.72,1.05],96:[50,.66,1.15],99:[54,.6,1.25]};
+  95:[46,.72,1.05],96:[50,.66,1.15],99:[54,.6,1.25],
+  /* freezing rain is liquid on the way down, so it falls like rain and is only named
+     differently. Naming it "rain" is the one mistake here with consequences for a driver. */
+  56:[18,1.4,.62],57:[24,1.2,.75],66:[28,1,.85],67:[46,.66,1.1]};
+/* snow takes six to nine seconds to cross the same sky rain crosses in one */
+const SNOWFALL={71:[22,9,2.4],73:[40,7.4,2.9],75:[64,6,3.4],77:[30,8.2,1.8],85:[34,7,2.8],86:[58,6.2,3.2]};
 function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd,code){
   const night=clamp((-altDeg-2)/8,0,1);
   const st=starField();
@@ -640,19 +664,21 @@ function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd,code){
         <linearGradient id="streak" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF6E2" stop-opacity="0"/><stop offset="1" stop-color="#FFF6E2" stop-opacity=".95"/></linearGradient>
       </defs>${glow}${stars}${meteor}${clouds}</svg>`;
 
-  const rf=document.getElementById("rainFx");
+  const rf=document.getElementById("rainFx"),snowing=isSnow(code);
+  rf.className="rainfx"+(snowing?" snow":"");
   if(wet&&!PRM){
-    const [count,fallSec,weight]=RAIN[code]||RAIN[63];
-    /* the lean follows the same side as the cloud drift, so the whole sky agrees */
+    const [count,fallSec,weight]=snowing?(SNOWFALL[code]||SNOWFALL[73]):(RAIN[code]||RAIN[63]);
+    /* the lean follows the same side as the cloud drift, so the whole sky agrees. Snow is
+       slow enough that the wind carries it a long way sideways instead of tilting it. */
     const lean=clamp((Number(windSpd)||0)*.62,0,18)*(windDir>180?-1:1);
-    rf.style.setProperty("--rlean",lean.toFixed(1)+"deg");
-    rf.style.setProperty("--rx",(lean*4).toFixed(0)+"px");
-    rf.style.setProperty("--rw",(1.2*weight).toFixed(2)+"px");
+    rf.style.setProperty("--rlean",snowing?"0deg":lean.toFixed(1)+"deg");
+    rf.style.setProperty("--rx",(lean*(snowing?11:4)).toFixed(0)+"px");
+    rf.style.setProperty("--rw",(snowing?weight:1.2*weight).toFixed(2)+"px");
     rf.style.setProperty("--rh",(5.5+weight*3).toFixed(1)+"%");
     const r2=mulberry(4242);
     rf.innerHTML=Array.from({length:count},()=>{
-      const l=r2()*112-6, d=(fallSec*(.82+r2()*.4)).toFixed(2), dl=(r2()*1.6).toFixed(2);
-      return `<i style="left:${l.toFixed(1)}%;animation-duration:${d}s;animation-delay:-${dl}s;opacity:${(.28+r2()*.42*weight).toFixed(2)}"></i>`;
+      const l=r2()*112-6, d=(fallSec*(.82+r2()*.4)).toFixed(2), dl=(r2()*(snowing?9:1.6)).toFixed(2);
+      return `<i style="left:${l.toFixed(1)}%;animation-duration:${d}s;animation-delay:-${dl}s;opacity:${(snowing?.5+r2()*.5:.28+r2()*.42*weight).toFixed(2)}"></i>`;
     }).join("");
   } else rf.innerHTML="";
   document.getElementById("flash").className="flash"+(storm&&!PRM?" on":"");
@@ -673,7 +699,7 @@ function tideTrend(preds){
 }
 function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const cloud=weather.cloud_cover||0,wind=weather.wind_speed_10m||0,code=weather.weather_code;
-  const wet=[51,53,55,61,63,65,80,81,82,95,96,99].includes(code);
+  const wet=isWet(code),snowing=isSnow(code);
   const storm=[95,96,99].includes(code),fog=[45,48].includes(code),quietWeather=!wet&&!storm;
   const humid=weather.relative_humidity_2m||0,temp=weather.temperature_2m||60;
   const W=appW(),H=Math.round((LOC.scene==="ridge"?168:150)+(760-W)*.10),GY=H-30;   /* taller frame on a phone */
@@ -871,6 +897,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     const pondL=pcx-prx,pondR=pcx+prx;
     const ptop=`M ${pondL.toFixed(1)} ${base+6} Q ${(pondL+prx*.5).toFixed(1)} ${base+2.5} ${pcx.toFixed(1)} ${base+5} Q ${(pcx+prx*.5).toFixed(1)} ${base+7.5} ${pondR.toFixed(1)} ${base+6}`;
     const pond=`<rect x="0" y="${base-2}" width="${W}" height="${H-base+2}" fill="${ink}" opacity=".34"/>
+      ${snowing?`<rect x="0" y="${(base-2.5).toFixed(1)}" width="${W}" height="7" fill="#F2F8FA" opacity=".4"/>`:""}
       <path d="${ptop} A ${prx.toFixed(1)} ${pry} 0 0 1 ${pondL.toFixed(1)} ${base+6} Z" fill="url(#waterband)"/>
       <path d="${ptop}" fill="none" stroke="${ink}" stroke-width="1.3" opacity=".5"/>`;
 
@@ -933,7 +960,8 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     const catsR=`<g opacity=".95"${bandAt(bandOf(pondR-9))}>${cattail(pondR-12,20,-.9)+cattail(pondR-6,25,.8)}
       <path d="M ${(pondR-9).toFixed(1)} ${base+9} Q ${(pondR-16).toFixed(1)} ${base-4} ${(pondR-20).toFixed(1)} ${base-12}" stroke="${ink}" stroke-width="1.05" fill="none" stroke-linecap="round"/></g>`;
 
-    const rainyFrog=(wet||storm)?frogAt(pondR-28,base+4,.82,.8):"";
+    /* a frog is out in warm rain, not in snow: below about 45 it is underground */
+    const rainyFrog=(wet||storm)&&temp>=45?frogAt(pondR-28,base+4,.82,.8):"";
     const deer=!wet&&!storm&&!dark&&(fog||localHour<11||localHour>=16||sunAltDeg<7)
       ?deerAt(W*.905,base+7-19.8,.95,-1,1):"";
 
@@ -1109,8 +1137,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     ${mistVeil(W*.66,base-11,W*.36,6,.13,8,-9,21,7)}
     ${mistVeil(W*.46,base+3,W*.44,4.5,.11,-5,7,27,13)}</g>`:"";
 
+  /* snow does not ring the water and does not splash off the flat, so neither is drawn */
   let waterWeather="";
-  if(wet&&!PRM){const wr=mulberry(7138),rings=3+Math.round(rainK*5);
+  if(wet&&!snowing&&!PRM){const wr=mulberry(7138),rings=3+Math.round(rainK*5);
     for(let i=0;i<rings;i++)waterWeather+=`<ellipse class="water-ring" cx="${(18+wr()*(W-36)).toFixed(1)}" cy="${(GY+13+wr()*14).toFixed(1)}" rx="${(4+wr()*5).toFixed(1)}" ry="${(1.1+wr()).toFixed(1)}" fill="none" stroke="${dark?'#B7D6E1':'#183C4B'}" stroke-width=".7" style="animation-delay:-${(wr()*3.8).toFixed(1)}s"/>`;
     /* and where the rain lands on the flat: a tick that is there and gone */
     const sp2=mulberry(3391),ticks=3+Math.round(rainK*9);
@@ -1139,7 +1168,8 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const gulls=!wet&&!storm&&!dark&&!showHeron
     ?`<g class="gull-cross" style="--gx:${(W*.55).toFixed(0)}px;--gy:-16px;${phase(70)}">${gull(W*.16,GY-70,1,".34",-2.6)}</g>`
       +gull(W*.62,GY-84,.72,".28",-7.1):"";
-  const marshCrab=(wet||storm)?crabAt(W*.57,base-2,.82,.74):"";
+  /* fiddlers plug their burrows and go down when it turns cold, so they do too */
+  const marshCrab=(wet||storm)&&temp>=48?crabAt(W*.57,base-2,.82,.74):"";
   let flies="";
   if(showFlies){const fr=mulberry(80126);
     for(let i=0;i<flyCount;i++)
@@ -1172,6 +1202,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     ${sparkle}${glint}${waterWeather}
     <g opacity=".5"${swayAt(-swayDur*.35,swayAmt*.7)}><path d="${mid}" fill="${ink}"/><path d="${midBlades}" fill="${ink}"/></g>
     <path d="M -5 ${base} L ${W+5} ${base}" stroke="${ink}" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>
+    ${snowing?`<path d="M -5 ${(base-1.5).toFixed(1)} L ${W+5} ${(base-1.5).toFixed(1)}" stroke="#F2F8FA" stroke-width="2.4" stroke-linecap="round" opacity=".45"/>`:""}
     ${tufts.map((d,i)=>d?`<g opacity=".95"${bandAt(i)}><path d="${d}" fill="${ink}"/></g>`:"").join("")}
     ${heat}
     ${dock}
@@ -1461,6 +1492,10 @@ function dayStory(c,dy,h){
   const cloud=c.cloud_cover||0;
   let first;
   if([45,48].includes(c.weather_code))first="Fog is softening the morning, but visibility should improve.";
+  /* freezing rain gets said plainly. It is the one condition here where the wrong word
+     could put somebody on a road they should have stayed off. */
+  else if(isIce(c.weather_code))first="Freezing rain is falling. Expect ice on anything untreated.";
+  else if(isSnow(c.weather_code))first=c.weather_code===75||c.weather_code===86?"Snow is coming down hard.":"Snow is falling right now.";
   else if([51,53,55,61,63,65,80,81,82].includes(c.weather_code))first="Rain is moving through right now.";
   else if(overnight)first=`A ${tempWord}${damp} night with ${cloud>=65?"plenty of cloud cover":"some breaks in the sky"}.`;
   else if(evening)first=`A ${tempWord}${damp} evening ${cloud>=70?"under a cloudy sky":cloud>=35?"with a few breaks in the clouds":"under a mostly clear sky"}.`;
@@ -1472,12 +1507,15 @@ function dayStory(c,dy,h){
   const peak=(arr)=>win.reduce((b,i)=>(Number(arr[i])||0)>(Number(arr[b])||0)?i:b,win[0]);
   const maxPop=Number(h.pop[peak(h.pop)])||0,wetI=win.find(i=>(Number(h.pop[i])||0)>=40);
   const gustI=peak(h.gust),maxGust=Number(h.gust[gustI])||0;
-  const currentlyWet=[51,53,55,61,63,65,80,81,82].includes(c.weather_code);
+  const currentlyWet=isWet(c.weather_code)&&![95,96,99].includes(c.weather_code);
   const when=i=>spokenAt(h.time[i])+(h.time[i].slice(0,10)===dy.time[0]?"":" tomorrow.");
   let second;
   if(currentlyWet){
     const dryI=win.find(i=>(Number(h.pop[i])||0)<30);
-    second=dryI==null?"Keep rain gear close for the next several hours.":`It should ease around ${when(dryI)}`;
+    const frozen=isSnow(c.weather_code)||isIce(c.weather_code);
+    second=dryI==null
+      ?(frozen?"Give yourself extra time if you have to go anywhere.":"Keep rain gear close for the next several hours.")
+      :`It should ease around ${when(dryI)}`;
   }else if(wetI!=null)
     second=maxPop>=70?`Rain is likely around ${when(wetI)}`:`A few showers may arrive around ${when(wetI)}`;
   else if(maxPop>=25)second="A stray shower is possible, but most of the day should stay dry.";
@@ -1516,11 +1554,17 @@ function dailyBrief(dy,i){
   const pop=Number(dy.precipitation_probability_max[i])||0;
   const wind=Number(dy.wind_speed_10m_max?.[i])||0;
   const feel=high>=92?"Hot":high>=82?"Warm":high>=68?"Mild":high>=52?"Cool":"Chilly";
-  const sky=code>=95?"a chance of storms":code>=80?"a few showers":code>=61?"periods of rain":
+  /* snow and ice are checked first: their codes sit above 61, so the old ladder called a
+     heavy snow day "periods of rain" */
+  const sky=code>=95?"a chance of storms":isIce(code)?"freezing rain":
+    isSnow(code)?(code===75||code===86?"heavy snow":code===77?"snow grains":"snow"):
+    code>=80?"a few showers":code>=61?"periods of rain":
     code>=51?"a little drizzle":code>=45?"some fog":code===3?"mostly cloudy skies":
     code===2?"a mix of sun and clouds":code===1?"mostly sunny skies":"clear skies";
   let note;
   if(code>=95)note="Keep an eye on weather alerts.";
+  else if(isIce(code))note="Ice is the problem, not the cold. Give the roads time.";
+  else if(isSnow(code))note="Plan on slow going.";
   else if(code>=51||pop>=60)note="Plan around at least one wet stretch.";
   else if(pop>=35)note="A passing shower is possible.";
   else if(wind>=20)note="It may turn breezy.";
@@ -1535,7 +1579,7 @@ function render(d,live){
   const c=d.current,dy=d.daily,h=d.hourly,m=d.marine;
   const now=new Date(), sunrise=new Date(dy.sunrise[0]), sunset=new Date(dy.sunset[0]);
   const sp=sunPos(now), altDeg=sp.alt*180/Math.PI;
-  const wet=[51,53,55,61,63,65,80,81,82,95,96,99].includes(c.weather_code);
+  const wet=isWet(c.weather_code);
   const storm=[95,96,99].includes(c.weather_code);
   const dark=altDeg< -3;
 
@@ -1717,7 +1761,8 @@ function render(d,live){
   let wMsg,wCls;
   if(coastal){
     const wv=m&&Number.isFinite(m.wave_height_max)?m.wave_height_max:null;
-    if(wv===null){wMsg="I don't have a reliable marine reading right now. Check conditions before heading out.";wCls="caution"}
+    if(isIce(c.weather_code)||isSnow(c.weather_code)){wMsg="Frozen precipitation. Not a day for the boat whatever the seas are doing.";wCls="no"}
+    else if(wv===null){wMsg="I don't have a reliable marine reading right now. Check conditions before heading out.";wCls="caution"}
     else if(g>=30||wv>=5){wMsg="Too rough for an easy small-boat day. Wait it out or stay well inside.";wCls="no"}
     else if(g>=22||wv>=3){wMsg="Breezy and choppy. The ICW should be kinder than the inlet.";wCls="caution"}
     else{wMsg="An easy day on the water: light wind, manageable seas.";wCls="go"}
@@ -1733,6 +1778,8 @@ function render(d,live){
     for(let i=0;i<n;i++){const hr=+h.time[i].slice(11,13);if(hr>=7&&hr<=19)dayPop=Math.max(dayPop,h.pop[i])}
     if(g>=30){wMsg="Wind-whipped up here. Save the outside chores for tomorrow.";wCls="no"}
     else if(g>=22){wMsg="Blustery afternoon coming. Get outdoor work done early.";wCls="caution"}
+    else if(isIce(c.weather_code)){wMsg="Ice, not snow. Stay off the hill until it turns over.";wCls="no"}
+    else if(isSnow(c.weather_code)){wMsg="Snow coming down. Feed early and keep a path open.";wCls="caution"}
     else if(dayPop>=50){wMsg="Showers moving through. Slip outside between them.";wCls="caution"}
     else if(c.temperature_2m<=36){wMsg="Cold one. Bundle up for the morning rounds.";wCls="caution"}
     else{wMsg="Good day to be outside. Light wind, easy air.";wCls="go"}
