@@ -6,7 +6,7 @@
  * fog morning, a hard blow) and reports, per scene:
  *
  *   - a screenshot of the sky block and of the scene on its own
- *   - how many CSS animations are running, grouped by keyframe name
+ *   - how many CSS animations are still running, grouped by keyframe name
  *   - whether the page holds perfectly still under prefers-reduced-motion
  *   - how much layout and style recalculation the motion costs
  *
@@ -131,17 +131,23 @@ for (const cs of cases) {
       try { await page.locator(sel).screenshot({ path: path.join(OUT, `${cs.name}-${suffix}.png`) }); } catch {}
     }
 
+    // The count that matters for battery is what is still running. One-shot entrances
+    // (rise, wipe, grow) finish in under a second but linger in getAnimations() because
+    // they use fill:both, so counting them makes an idle page look busy.
     const anim = await page.evaluate(() => {
+      const all = document.getAnimations();
       const by = {};
-      for (const a of document.getAnimations()) {
-        const n = a.animationName || (a.effect && a.effect.getKeyframes && "(web-animation)") || "(unnamed)";
-        by[n] = (by[n] || 0) + 1;
+      let running = 0;
+      for (const a of all) {
+        if (a.playState !== "running") continue;
+        running++;
+        by[a.animationName || "(web-animation)"] = (by[a.animationName || "(web-animation)"] || 0) + 1;
       }
-      return { total: document.getAnimations().length, by };
+      return { running, total: all.length, by };
     });
     const top = Object.entries(anim.by).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k}:${v}`).join(" ");
-    console.log(`    animations ${anim.total}  ${top}`);
-    if (anim.total > 160) problems.push(`${cs.name}: ${anim.total} running animations`);
+    console.log(`    ${anim.running} running of ${anim.total}  ${top}`);
+    if (anim.running > 120) problems.push(`${cs.name}: ${anim.running} animations still running`);
 
     // ── what the motion costs: layout must stay flat while things move ──
     const cdp = await ctx.newCDPSession(page);

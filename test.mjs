@@ -97,7 +97,13 @@ test("light, motion and alerts stay tuned", async () => {
   assert.match(html, /id="goldenband"/);
   // motion scales with the wind that is actually blowing
   assert.match(html, /const rush=clamp\(1\+\(Number\(windSpd\)\|\|0\)\/11,1,4\.2\)/);
-  assert.match(html, /renderSkyFx\(altDeg,c\.cloud_cover,c\.wind_direction_10m,wet,storm,c\.wind_speed_10m\)/);
+  assert.match(html, /renderSkyFx\(altDeg,c\.cloud_cover,c\.wind_direction_10m,wet,storm,c\.wind_speed_10m,c\.weather_code\)/);
+  // rain is drawn from the code, not from one "it is wet" flag: a drizzle is not a downpour
+  assert.match(html, /const RAIN=\{51:\[16,1\.55,\.55\]/);
+  assert.match(html, /const \[count,fallSec,weight\]=RAIN\[code\]\|\|RAIN\[63\]/);
+  // and it leans the way the clouds are already going
+  assert.match(html, /const lean=clamp\(\(Number\(windSpd\)\|\|0\)\*\.62,0,18\)\*\(windDir>180\?-1:1\)/);
+  assert.match(html, /rf\.style\.setProperty\("--rlean"/);
   assert.match(html, /@keyframes swayTree/);
   assert.match(html, /class="deer-head"/);
   assert.match(html, /@keyframes deerGraze/);
