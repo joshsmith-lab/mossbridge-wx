@@ -59,12 +59,18 @@ and `sp` (Bob Plumley Rd, Shady Spring WV, inland).
 
 ## Deploying
 
-There is no working git push from an agent session. Confirmed absent on Josh's
-Mac: `gh`, a git credential helper, a keychain entry, and any SSH key. A cloud
-session's own GitHub token has no access to this repo.
+**`git push` works from an agent session on Josh's Mac now.** `credential.helper`
+is set to `osxkeychain` and the keychain holds a working credential; a
+`git push --dry-run` to a throwaway branch confirms it in a couple of seconds
+and creates nothing. Push the feature branch normally.
 
-The route that works is Josh's logged-in browser, through the GitHub web
-editor, on a feature branch:
+`gh` is still absent, so the pull request itself has to be opened in the
+browser. Push the branch, then hand Josh the compare URL:
+`https://github.com/joshsmith-lab/mossbridge-wx/compare/main...<branch>?expand=1`.
+
+A cloud session's own GitHub token still has no access to this repo, and the
+browser route below is still the fallback if the keychain credential is ever
+revoked:
 
 1. Open `https://github.com/joshsmith-lab/mossbridge-wx/edit/main/<file>`.
 2. Do **not** rely on synthetic `cmd+a` / `cmd+v` from the browser extension.
@@ -87,22 +93,55 @@ MacRoman and corrupts every multi-byte character.
 
 ## Verifying visually
 
-`tools/shots.mjs` renders the app across eight scenarios (day, night, storm,
-dusk, both locations, an afternoon that should recommend today, and a washout)
-against mocked API responses and a fixed clock, then writes screenshots to
-`tools/shots/` and prints the generated copy. Use it before shipping anything
-visual.
+Two harnesses, sharing their mocked upstreams through `tools/fixtures.mjs`.
 
 ```sh
 npm i playwright && npx playwright install chromium
-TZ=America/New_York node tools/shots.mjs
+TZ=America/New_York node tools/shots.mjs          # the copy
+TZ=America/New_York node tools/scene.mjs          # the picture and its motion
+TZ=America/New_York node tools/scene.mjs fog storm  # just the scenes you are working on
 ```
 
-Notes: it shims `Date` rather than freezing the clock, so CSS animations still
-run; run it with `TZ=America/New_York` or the mocked data and the page will
-disagree about what time it is; set `PORCH_FONT_DIR` to a folder holding
-`bricolage.woff2` and `spline.woff2` if Google Fonts is unreachable, otherwise
-type metrics are wrong and any alignment work is misleading.
+`tools/shots.mjs` renders eight scenarios (day, night, storm, dusk, both
+locations, an afternoon that should recommend today, and a washout), writes
+screenshots to `tools/shots/` and prints the generated copy, so wording changes
+are reviewable as text.
+
+`tools/scene.mjs` is for anything that moves. Eleven scenes force the light and
+weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
+clear night, a storm, a fog morning, drizzle against a downpour, and the ridge
+by day, by evening with the buck out, and on a cold January night. Per scene it
+writes the sky and the scene on their own, counts the animations *still
+running* grouped by keyframe, reads `LayoutCount` off CDP while the scene idles,
+and proves the page holds perfectly still under `prefers-reduced-motion` by
+comparing two screenshots taken 1.4s apart. It exits non-zero on a page error,
+on layout thrash, or on anything that survives reduced motion.
+
+Two numbers worth knowing before you change motion: every scene idles at **0-1
+layouts per 6 seconds**, and the busiest scene runs **99 animations**. If either
+jumps, you have added something that is not a `transform` or an `opacity`.
+
+Notes: both shim `Date` rather than freezing the clock, because `page.clock`
+would also stop the CSS animations that `scene.mjs` exists to look at; run them
+with `TZ=America/New_York` or the mocked data and the page will disagree about
+what time it is; set `PORCH_FONT_DIR` to a folder holding `bricolage.woff2` and
+`spline.woff2` if Google Fonts is unreachable, otherwise type metrics are wrong
+and any alignment work is misleading.
+
+## Motion rules
+
+Established with Josh and enforced by `test.mjs`:
+
+- Every motion is driven by a real reading (wind, gusts, tide, UV, temperature,
+  the WMO code). Nothing moves because movement is nice.
+- `transform` and `opacity` only. The one exception is the hourly line draw-in,
+  which is one-shot and PRM-gated.
+- Randomness goes through `mulberry(seed)`. `render()` re-runs on every refresh,
+  visibility change and resize, so `Math.random()` reshuffles the scene under you.
+- Long ambient cycles take their phase from the wall clock (`phase(seconds)`),
+  so a re-render drops them back where they were instead of restarting the wait.
+  A 92-second heron strike that restarts on every foreground is never seen.
+- One local wildlife cue at a time. Refine the cues, do not stack them.
 
 ## Known issues
 
