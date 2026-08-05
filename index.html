@@ -436,7 +436,7 @@ html[data-theme=dark] .gold-key{background:linear-gradient(90deg,#F3B84F,#FFD98C
         <span id="wWaveWrap">seas <b id="wWave">—</b></span>
         <span id="wTideWrap">next tide <b id="wTide">—</b></span>
         <span id="wFishWrap" class="wide-stat" style="display:none">fish bite <b id="wFish">—</b></span>
-        <span class="wide-stat">best window <b id="wWindow">—</b></span>
+        <span class="wide-stat"><span id="wWindowLbl">best window</span><b id="wWindow">—</b></span>
       </div>
     </div>
   </div>
@@ -1995,7 +1995,14 @@ function render(d,live){
   wl.textContent=wMsg;wl.className="lead "+wCls;
   document.getElementById("wWind").innerHTML=vane(c.wind_direction_10m)+dirTxt(c.wind_direction_10m)+" "+Math.round(c.wind_speed_10m)+" mph";
   document.getElementById("wGust").textContent=g+" mph";
-  document.getElementById("wWindow").textContent=dayRead.best?dayRead.best.text:"No clear window";
+  /* At the farm this stat is answering "when should I go do the outside jobs", and least
+     wind, least rain and least extreme heat is exactly that question. So it gets called what
+     Josh's parents call it. "Around the farm" is left off: the card header two lines up
+     already says it, and the house rule is that if something has been said, do not say it
+     again. On the water it stays "best window", which is the language for a boat. */
+  document.getElementById("wWindowLbl").textContent=coastal?"best window":"best time to piddle";
+  document.getElementById("wWindow").textContent=dayRead.best?dayRead.best.text
+    :coastal?"No clear window":"Not really today";
 
   /* uv */
   const uvNow=c.uv_index,uvPk=dy.uv_index_max[0];
