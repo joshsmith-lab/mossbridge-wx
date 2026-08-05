@@ -31,7 +31,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /JSON\.stringify\(\{savedAt:Date\.now\(\),data\}\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v22/);
+  assert.match(worker, /mbwx-shell-v23/);
 });
 
 test("every motion is driven by a reading, not by decoration", async () => {
@@ -161,7 +161,9 @@ test("plain-language and living-scene refinements stay in place", async () => {
   // the window is a stat, printed once, on the card. It used to be appended to the verdict
   // paragraph as well, which said it twice and ran the headline to four lines on a phone.
   assert.doesNotMatch(html, /Best outside stretch:/);
-  assert.match(html, /best window <b id="wWindow">/);
+  assert.match(html, /<span id="wWindowLbl">best window<\/span><b id="wWindow">/);
+  // the farm calls it what the farm calls it; the boat keeps the boat's language
+  assert.match(html, /coastal\?"best window":"best time to piddle"/);
   assert.match(html, /id="goldenband"/);
   assert.match(html, /one local wildlife cue at a time/);
   assert.match(html, /seasonalFlies/);
