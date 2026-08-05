@@ -31,7 +31,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /JSON\.stringify\(\{savedAt:Date\.now\(\),data\}\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v23/);
+  assert.match(worker, /mbwx-shell-v24/);
 });
 
 test("every motion is driven by a reading, not by decoration", async () => {
@@ -123,6 +123,23 @@ test("the almanac fishes the farm pond, and the coast keeps the sunscreen", asyn
   assert.match(html, /solunarWindows\(now\)\.some\(w=>now>=w\.start&&now<=w\.end\)/);
   // and the footer says where the bite times come from
   assert.match(html, /Bite windows: solunar tables, computed from the moon/);
+});
+
+test("golden hour reaches the whole page, and the two ends differ", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  assert.match(html, /function goldenHour\(altDeg,now,dark,root\)/);
+  assert.match(html, /goldenHour\(altDeg,now,dark,root\)/);
+  assert.match(html, /<div class="goldwash" id="goldWash"><\/div>/);
+  // the same +6 to -4 window the arc and the tonight card already use
+  assert.match(html, /const k=altDeg<=6&&altDeg>=-4\.5\?clamp\(\(6-altDeg\)\/10,0,1\):0/);
+  // morning and evening are different light, and the code carries both
+  assert.match(html, /const GOLD=\{am:\{lit:"#FFDED6",dark:"#41292C"\},pm:\{lit:"#FFD79C",dark:"#432A17"\}\}/);
+  assert.match(html, /const rising=sunPos\(new Date\(now\.getTime\(\)\+6e5\)\)\.alt>sunPos\(now\)\.alt/);
+  // outside the window every override is removed, so noon is the plain paper again
+  assert.match(html, /for\(const v of \["--paper","--wash","--line"\]\)root\.removeProperty\(v\)/);
+  // the ink never moves: only the paper leans, so nothing gets harder to read
+  assert.doesNotMatch(html, /root\.setProperty\("--ink"/);
 });
 
 test("nothing new moves under prefers-reduced-motion", async () => {

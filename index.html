@@ -43,6 +43,12 @@ body{font-family:var(--disp);color:var(--ink);background:var(--paper);line-heigh
 .grain{position:fixed;inset:0;z-index:90;pointer-events:none;opacity:.045;mix-blend-mode:multiply;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
+/* Golden hour is not only a sky event. When you open the app inside one, the paper should
+   look like it is catching the light too: this is the light spilling off the sky block and
+   down the page, and it stays with the viewport so the whole app reads as lit however far
+   you have scrolled. It sits under .app, which has no background of its own. */
+.goldwash{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0;
+  transition:opacity 1.6s var(--ease),background 1.6s var(--ease)}
 .app{max-width:760px;margin:0 auto;padding:0 0 calc(46px + env(safe-area-inset-bottom));position:relative;z-index:1}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .app>*{animation:rise .6s var(--ease) both}
@@ -381,6 +387,7 @@ html[data-theme=dark] .gold-key{background:linear-gradient(90deg,#F3B84F,#FFD98C
 </head>
 <body>
 <div class="grain"></div>
+<div class="goldwash" id="goldWash"></div>
 <div class="app">
 
 <header class="sky" id="sky">
@@ -1765,6 +1772,41 @@ function dailyBrief(dy,i){
   return `${feel}, with ${sky}. ${note}`;
 }
 
+/* ── golden hour, everywhere ────────────────────────── */
+/* The two ends of the day are not the same light and should not look it. Morning comes up
+   through air that has been still all night, so it runs clean and rose and it lifts. Evening
+   comes down through a day's worth of dust and haze, so it runs amber, sits heavier, and
+   reaches further down the page. Both are strongest nearest the horizon, which is why the
+   wash swells as the sun drops in the evening and fades as it climbs in the morning. */
+const GOLD={am:{lit:"#FFDED6",dark:"#41292C"},pm:{lit:"#FFD79C",dark:"#432A17"}};
+/* the stylesheet's own values, needed as the mix source; keep in step with :root and dark */
+const PAPER={lit:{paper:"#FAFAF6",wash:"#EFF2ED",line:"#E3E7E1"},
+             dark:{paper:"#0C1F28",wash:"#132C36",line:"#1C3844"}};
+const hexA=(h,a)=>{const c=hex2rgb(h);return`rgba(${c[0]},${c[1]},${c[2]},${a.toFixed(3)})`};
+function goldenHour(altDeg,now,dark,root){
+  const gw=document.getElementById("goldWash");
+  /* the same window the arc and the tonight card already use: +6° down to -4° */
+  const k=altDeg<=6&&altDeg>=-4.5?clamp((6-altDeg)/10,0,1):0;
+  if(k<=.02){
+    for(const v of ["--paper","--wash","--line"])root.removeProperty(v);
+    gw.style.opacity="0";return null;
+  }
+  const rising=sunPos(new Date(now.getTime()+6e5)).alt>sunPos(now).alt;
+  const key=rising?"am":"pm", theme=dark?"dark":"lit";
+  const tint=GOLD[key][theme], base=PAPER[theme];
+  /* the paper only leans; the ink never moves, so nothing gets harder to read */
+  root.setProperty("--paper",mix(base.paper,tint,k*.26));
+  root.setProperty("--wash",mix(base.wash,tint,k*.34));
+  root.setProperty("--line",mix(base.line,tint,k*.42));
+  /* Morning light is thinner and sits higher; evening is heavier and fills the room. Neither
+     is allowed to fall to nothing before the bottom of the screen, or the wash stops reading
+     as light in the room and starts reading as a gradient someone drew on the page. */
+  const top=(rising?.34:.46)*k, mid=(rising?.17:.25)*k, base2=(rising?.09:.15)*k;
+  gw.style.background=`linear-gradient(180deg,${hexA(tint,top)} 0%,${hexA(tint,mid)} ${rising?42:52}%,${hexA(tint,base2)} 100%)`;
+  gw.style.opacity="1";
+  return{k,rising};
+}
+
 /* ── main render ────────────────────────────────────── */
 let LINE_DRAWN=false,SCENE_IN=false;
 function render(d,live){
@@ -1792,6 +1834,7 @@ function render(d,live){
   root.setProperty("--rain",lum(stops[1])>.13?"rgba(22,48,64,.55)":"rgba(198,225,238,.66)");
   root.setProperty("--chip-bg",bright?"rgba(11,37,48,.13)":"rgba(238,246,249,.17)");
   root.setProperty("--hl",bright?"#A93A16":"#FFC09B");
+  goldenHour(altDeg,now,dark,root);
   document.getElementById("themeColor").setAttribute("content",stops[0]);
 
   renderSkyFx(altDeg,c.cloud_cover,c.wind_direction_10m,wet,storm,c.wind_speed_10m,c.weather_code);
