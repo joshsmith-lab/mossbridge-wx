@@ -946,50 +946,83 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       <circle cx="20.4" cy="-.5" r=".38" fill="${critterMark}" stroke="none"/></g>
     <path d="M 4.1 10.1 L 3.5 15.4 L 4.2 20.7 M 6 10.7 L 6.1 20.7 M 13.1 10.6 L 13.3 20.7" fill="none" stroke-width="1.05"/>
     <g class="deer-leg"><path d="M 15 10.1 L 15.6 15.1 L 15 20.7" fill="none" stroke-width="1.05"/></g></g>`;
-  const owlAt=(x,y,s,opacity=.72)=>`<g class="wildlife owl" data-species="owl" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
-    <path d="M -5.6 6.8 C -6.4 2.9 -5 -1 -2.7 -2.8 C -1.2 -3.8 1.2 -3.8 2.7 -2.8 C 5 -1 6.4 2.9 5.6 6.8 C 2.8 9.5 -2.8 9.5 -5.6 6.8 Z"/>
-    <path d="M -4.5 2 C -2.5 3.2 -1.3 5.6 0 8 M 4.5 2 C 2.5 3.2 1.3 5.6 0 8" fill="none" stroke="${critterMark}" stroke-width=".7" opacity=".38"/>
-    <g class="owl-head"><path d="M -5 -2 C -5.1 -4.5 -3.9 -6.5 -2.5 -7.8 L 0 -5.9 L 2.5 -7.8 C 3.9 -6.5 5.1 -4.5 5 -2 C 3.3 .6 -3.3 .6 -5 -2 Z"/>
-      <path d="M -3.9 -2.8 Q -2.1 -5 0 -2.6 Q 2.1 -5 3.9 -2.8 Q 2 -0.2 0 -1.9 Q -2 -.2 -3.9 -2.8 Z" fill="${critterMark}" stroke="none" opacity=".75"/>
-      <g class="owl-eyes"><circle cx="-2" cy="-2.7" r=".72" fill="#E4C66B" stroke="none"/><circle cx="2" cy="-2.7" r=".72" fill="#E4C66B" stroke="none"/><circle cx="-2" cy="-2.7" r=".27"/><circle cx="2" cy="-2.7" r=".27"/></g><path d="M 0 -2.1 l -.65 1.1 h 1.3 Z"/></g>
-    <path d="M -2.8 8.3 l -1 1.5 M 2.8 8.3 l 1 1.5" fill="none" stroke-width=".8"/></g>`;
-  const frogAt=(x,y,s,opacity=.72)=>`<g class="wildlife frog" data-species="frog" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
-    <path d="M -5.6 .8 C -4.2 -2.4 4.2 -2.4 5.6 .8 C 4 3.7 -4 3.7 -5.6 .8 Z"/><circle cx="-3" cy="-2" r="1.7"/><circle cx="3" cy="-2" r="1.7"/>
-    <circle cx="-3" cy="-2.3" r=".5" fill="${critterMark}" stroke="none"/><circle cx="3" cy="-2.3" r=".5" fill="${critterMark}" stroke="none"/>
-    <ellipse class="frog-throat" cx="0" cy="1.1" rx="2.3" ry="1.25" fill="${critterMark}" stroke="none" opacity=".5"/>
-    <path d="M -4.3 1.5 L -8 4.8 L -5 5.1 M 4.3 1.5 L 8 4.8 L 5 5.1" fill="none" stroke-width="1.15"/></g>`;
+  const owlAt=(x,y,s,opacity=.96)=>`<g class="wildlife owl" data-species="owl" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
+    <path d="M -5.4 7.2 C -6.6 3.0 -5.6 -1.6 -2.9 -3.6 C -4.2 -5.4 -4.2 -7.2 -3.0 -8.6 C -1.8 -7.6 -.9 -6.8 0 -6.8 C .9 -6.8 1.8 -7.6 3.0 -8.6 C 4.2 -7.2 4.2 -5.4 2.9 -3.6 C 5.6 -1.6 6.6 3.0 5.4 7.2 C 2.8 9.6 -2.8 9.6 -5.4 7.2 Z"/>
+    <g class="owl-head">
+      <path d="M -3.9 -3.4 Q -2.0 -5.8 0 -3.3 Q 2.0 -5.8 3.9 -3.4 Q 2.4 -.2 0 -1.6 Q -2.4 -.2 -3.9 -3.4 Z" fill="${critterMark}" stroke="none" opacity=".8"/>
+      <g class="owl-eyes"><circle cx="-1.9" cy="-3.4" r=".78" fill="#E4C66B" stroke="none"/><circle cx="1.9" cy="-3.4" r=".78" fill="#E4C66B" stroke="none"/><circle cx="-1.9" cy="-3.4" r=".3"/><circle cx="1.9" cy="-3.4" r=".3"/></g>
+      <path d="M 0 -2.9 l -.6 1.2 h 1.2 Z"/>
+    </g>
+    <path d="M 2.1 -1.8 C 4.3 .4 5.0 3.6 4.2 6.8" fill="none" stroke="${critterMark}" stroke-width=".7" opacity=".5"/>
+    <path d="M -2.9 1.2 h 2.1 M -3.3 3.0 h 2.7 M -3.2 4.8 h 2.3 M .8 2.0 h 1.9 M .7 3.9 h 1.7" fill="none" stroke="${critterMark}" stroke-width=".55" opacity=".6"/>
+    <path d="M -2.6 9.0 l -.9 1.6 M 2.6 9.0 l .9 1.6" fill="none" stroke-width=".85"/></g>`;
+  const frogAt=(x,y,s,opacity=.96)=>`<g class="wildlife frog" data-species="frog" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
+    <path d="M -7.2 .6 C -7.0 -1.0 -5.9 -2.2 -4.4 -2.6 C -3.9 -3.8 -2.6 -4.3 -1.6 -3.8 C 1.6 -4.6 5.0 -3.0 6.2 -.4 C 6.8 1.2 6.4 2.8 5.2 3.8 L -5.6 3.4 C -6.8 2.8 -7.3 1.8 -7.2 .6 Z"/>
+    <path d="M 2.4 -.2 C 4.9 -1.0 7.1 .4 7.1 2.4 C 7.1 3.6 6.2 4.4 5.0 4.4 C 3.5 4.4 2.4 3.3 2.4 1.9 Z"/>
+    <path d="M 6.6 4.1 C 7.6 4.3 8.6 4.3 9.6 4.1 M 9.6 4.1 l 1.6 -.4 M 9.6 4.1 l 1.5 .4 M 9.6 4.1 l .6 1.0" fill="none" stroke-width=".9"/>
+    <path d="M -3.8 1.6 L -4.1 4.3 M -4.1 4.3 l -1.2 .5 M -4.1 4.3 l 1.0 .6" fill="none" stroke-width=".9"/>
+    <circle cx="-4.0" cy="-3.1" r="1.3"/>
+    <circle cx="-4.25" cy="-3.4" r=".42" fill="${critterMark}" stroke="none"/>
+    <path d="M -7.0 .2 C -5.6 .9 -3.8 1.1 -2.2 .9" fill="none" stroke="${critterMark}" stroke-width=".55" opacity=".55"/>
+    <ellipse class="frog-throat" cx="-5.6" cy="2.0" rx="1.75" ry="1.3" fill="${critterMark}" stroke="none" opacity=".55"/>
+    <path d="M -3.4 -2.6 C -.6 -3.4 2.8 -2.8 5.0 -1.0" fill="none" stroke="${critterMark}" stroke-width=".6" opacity=".45"/></g>`;
   /* ── the residents ───────────────────────────────────────────────────────────
      small enough to stay secondary, but large enough for posture and negative space to
      survive a phone screen. They move at joints, with long rests between gestures, so a
      resident feels alive without becoming the scene's performer. */
   const critter=(species,x,y,s,o,body)=>`<g class="wildlife ${species}" data-species="${species}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" stroke-linejoin="round" opacity="${o}">${body}</g>`;
   /* oystercatcher: chunky body, absurd bill, working the mud */
-  const oysterCatcher=(x,y,s,o=.72)=>critter("oystercatcher",x,y,s,o,
-    `<path d="M -2.8 -1.8 C .2 -3.5 4.8 -2 5.2 .7 C 4 3 -1.8 3.4 -4 1.5 Z"/><path d="M .2 -2.3 C 1.5 -.8 1.7 1.6 .8 2.8" fill="none" stroke="${critterMark}" stroke-width=".8" opacity=".65"/>
-     <g class="shore-head"><circle cx="-3.8" cy="-2.4" r="2"/><circle cx="-4.3" cy="-2.8" r=".36" fill="${critterMark}" stroke="none"/><path d="M -5.6 -2.5 L -10.7 -1.7" stroke-width="1.25" fill="none"/></g>
-     <path d="M -1.4 2.8 L -1.7 6 M 1.7 2.7 L 1.6 6" stroke-width=".8" fill="none"/><path d="M 4.5 -.6 L 7 -2.2 L 5.8 .3 Z"/>`);
+  const oysterCatcher=(x,y,s,o=.96)=>critter("oystercatcher",x,y,s,o,
+    `<path d="M -3.4 -2.4 C -.4 -4.2 4.4 -2.8 5.4 -.2 C 5.8 1.4 4.8 2.9 3.0 3.4 C .4 4.1 -2.8 3.4 -4.2 1.6 Z"/>
+     <path d="M -3.6 1.9 C -1.6 3.2 1.4 3.5 3.4 2.8 C 2.2 3.9 -.4 4.2 -2.4 3.5 Z" fill="${critterMark}" stroke="none" opacity=".85"/>
+     <path d="M -1.2 -2.2 C 1.4 -1.6 3.0 0 3.4 1.8" fill="none" stroke="${critterMark}" stroke-width=".6" opacity=".4"/>
+     <g class="shore-head"><circle cx="-4.2" cy="-2.8" r="2.05"/><circle cx="-4.7" cy="-3.2" r=".4" fill="${critterMark}" stroke="none"/>
+       <path d="M -5.9 -2.4 L -11.6 -.4" stroke-width="1.35" fill="none"/>
+       <path d="M -6.0 -1.9 L -10.6 .1" stroke-width=".8" fill="none"/></g>
+     <path d="M -1.2 3.6 L -1.5 6.2 M -1.5 6.2 l -1.1 .5 M -1.5 6.2 l 1.0 .5 M 1.9 3.5 L 1.8 6.2 M 1.8 6.2 l -1.1 .5 M 1.8 6.2 l 1.0 .5" stroke-width=".85" fill="none"/>
+     <path d="M 5.2 -.6 L 7.8 -.9 L 6.6 .9 Z"/>`);
   /* cormorant drying its wings on a piling, which is what they do all winter */
-  const cormorant=(x,y,s,o=.74)=>critter("cormorant",x,y,s,o,
-    `<path d="M -3.4 3.8 C -4.4 .8 -3.5 -3.8 0 -5 C 3.5 -3.8 4.4 .8 3.4 3.8 C 1.6 5.2 -1.6 5.2 -3.4 3.8 Z"/>
-     <path d="M -.7 -4.4 C -1.5 -7.4 -.8 -10 .9 -11.5" stroke-width="1.25" fill="none"/><circle cx="1.3" cy="-12" r="1.45"/><path d="M 2.6 -12.2 L 5.3 -11.7 L 4.7 -11" stroke-width=".9" fill="none"/>
-     ${/* held out to dry, which is what they spend the winter doing. The trailing edge used
-          to zigzag to suggest separated primaries; at this size the notches fill in and the
-          wing reads as a mitten, so it is one clean taper instead. */""}
-     <path class="corm-wing" style="--set:-3deg" d="M -2.3 -2.2 C -5.4 -4.4 -8.8 -6.8 -11.2 -8.4 C -9.2 -5 -6.2 -2.2 -2.4 -.2 Z"/><path class="corm-wing" style="--set:3deg" d="M 2.3 -2.2 C 5.4 -4.4 8.8 -6.8 11.2 -8.4 C 9.2 -5 6.2 -2.2 2.4 -.2 Z"/>
-     <path d="M -1 4 L -1.2 6 M 1.2 4 L 1.4 6" stroke-width=".85" fill="none"/>`);
+  const cormorant=(x,y,s,o=.96)=>critter("cormorant",x,y,s,o,
+    `<path d="M -2.9 4.2 C -3.9 .8 -3.1 -3.2 0 -4.6 C 3.1 -3.2 3.9 .8 2.9 4.2 C 1.4 5.5 -1.4 5.5 -2.9 4.2 Z"/>
+     ${/* wings held out to dry, which is what they spend the winter doing: the wrist rises
+          above the shoulder, then the primaries droop down and out. The trailing edge stays
+          one clean taper because notches at this size fill in and go to mush. */""}
+     <path d="M -.9 -4.0 C -1.6 -5.8 -1.5 -7.6 -.7 -9.3 C -.4 -10.0 -.1 -10.6 .1 -11.3 L 1.4 -10.9 C 1.2 -10.2 .9 -9.6 .6 -9.0 C 0 -7.6 .1 -6.0 .8 -4.2 Z"/>
+     <path d="M -.2 -11.5 C -.2 -12.3 .5 -12.9 1.3 -12.9 C 2.0 -12.9 2.6 -12.4 2.6 -11.7 C 2.6 -11.1 2.1 -10.7 1.4 -10.7 C .7 -10.7 -.1 -11.0 -.2 -11.5 Z"/>
+     <path d="M 2.3 -12.4 L 6.1 -11.9 C 6.4 -11.8 6.4 -11.6 6.1 -11.5 C 6.3 -11.2 6.1 -11.0 5.7 -11.2 L 2.4 -11.5 Z"/>
+     <circle cx="1.1" cy="-12.0" r=".34" fill="${critterMark}" stroke="none"/>
+     <g class="corm-wing" style="--set:-3deg">
+       <path d="M -2.2 -2.6 C -4.6 -4.2 -6.6 -5.4 -8.4 -5.8 C -10.4 -4.4 -12.0 -2.2 -12.8 .4 C -10.6 -.8 -8.6 -1.2 -6.6 -.8 C -5.0 -.5 -3.6 -.2 -2.3 -.1 Z"/>
+       <path d="M -8.2 -5.0 C -9.8 -3.8 -11.0 -2.0 -11.7 -.2 M -6.9 -4.2 C -8.2 -3.2 -9.2 -1.8 -9.8 -.6" fill="none" stroke="${critterMark}" stroke-width=".5" opacity=".45"/>
+     </g>
+     <g class="corm-wing" style="--set:3deg">
+       <path d="M 2.2 -2.6 C 4.6 -4.2 6.6 -5.4 8.4 -5.8 C 10.4 -4.4 12.0 -2.2 12.8 .4 C 10.6 -.8 8.6 -1.2 6.6 -.8 C 5.0 -.5 3.6 -.2 2.3 -.1 Z"/>
+       <path d="M 8.2 -5.0 C 9.8 -3.8 11.0 -2.0 11.7 -.2 M 6.9 -4.2 C 8.2 -3.2 9.2 -1.8 9.8 -.6" fill="none" stroke="${critterMark}" stroke-width=".5" opacity=".45"/>
+     </g>
+     <path d="M -.6 4.8 L -1.6 7.8 L .2 7.6 L .6 4.9 Z"/>
+     <path d="M -1.5 4.6 l -.5 1.4 M 1.5 4.6 l .5 1.4" stroke-width=".8" fill="none"/>`);
   /* raccoon at the waterline, hunched over whatever it just found */
-  const raccoon=(x,y,s,o=.7)=>critter("raccoon",x,y,s,o,
-    `<path d="M -3 -2 C .2 -4 5.2 -2.9 6 0 C 5.2 3.2 -.2 4.1 -3.8 2 Z"/><g class="raccoon-head"><path d="M -3 -1.7 C -4.5 -4.6 -7.3 -4.7 -8.7 -2.5 L -8 1 C -6.2 2.3 -3.6 1.4 -2.6 -.5 Z"/><path d="M -8.1 -2.1 L -9.2 -4.2 L -7 -3.4 M -4.3 -3.4 L -2.8 -4.6 L -3.1 -2.6"/>
-      <path d="M -8 -1.8 Q -6.2 -3.1 -3.8 -1.8 Q -5.8 .1 -8 -1.8 Z" fill="${critterMark}" stroke="none" opacity=".72"/><circle cx="-6.2" cy="-1.7" r=".34"/><circle cx="-8.5" cy="-.4" r=".4" fill="${critterMark}" stroke="none"/></g>
-     <path d="M 5.3 -.8 C 9 -1.8 11.5 -4.2 10.4 -6.5" stroke-width="2.6" fill="none"/><path d="M 6.8 -1.6 l 1.2 1 M 8.8 -3 l 1.3 .8 M 10 -4.8 l 1.1 .4" stroke="${critterMark}" stroke-width=".85" opacity=".65"/>
-     <path d="M -1.7 2.9 L -2 5 M 3.1 2.8 L 3.3 5" stroke-width=".9" fill="none"/>`);
+  const raccoon=(x,y,s,o=.96)=>critter("raccoon",x,y,s,o,
+    `<path d="M -4.6 1.2 C -4.6 -1.8 -1.8 -4.4 1.6 -4.6 C 4.8 -4.8 7.2 -2.8 7.6 -.4 C 7.9 1.6 6.8 3.3 4.9 3.9 L -2.8 3.6 C -4.1 3.0 -4.7 2.2 -4.6 1.2 Z"/>
+     <path d="M 3.2 -3.6 C 5.4 -2.8 6.6 -.8 6.0 1.4" fill="none" stroke="${critterMark}" stroke-width=".6" opacity=".35"/>
+     <g class="raccoon-head">
+       <path d="M -3.4 -.6 C -4.0 -2.6 -5.8 -3.7 -7.6 -3.2 C -8.7 -2.8 -9.4 -1.9 -9.5 -.8 L -10.1 1.4 C -10.3 1.8 -10.0 2.1 -9.6 2.0 L -7.0 1.4 C -5.7 1.8 -4.2 1.3 -3.4 .3 Z"/>
+       <path d="M -5.2 -3.0 C -5.2 -4.1 -4.4 -4.8 -3.5 -4.5 C -3.2 -3.6 -3.6 -2.7 -4.4 -2.4 Z"/>
+       <path d="M -9.6 -.5 C -8.1 -1.4 -6.1 -1.5 -4.5 -.8 L -4.7 -.1 C -6.2 -.7 -8.0 -.6 -9.3 .2 Z" fill="${critterMark}" stroke="none" opacity=".95"/>
+       <circle cx="-6.9" cy="-.75" r=".46"/>
+       <circle cx="-9.9" cy="1.7" r=".52"/>
+     </g>
+     <path d="M -2.8 3.4 L -3.4 5.7 M -1.2 3.6 L -1.5 5.9 M -3.4 5.7 l -.9 .3 M -1.5 5.9 l -.9 .3" stroke-width=".9" fill="none"/>
+     <path d="M 4.6 3.8 L 4.9 5.8 l 1.2 .2" stroke-width=".95" fill="none"/>
+     <path d="M 7.2 .6 C 10.2 .8 12.4 -.4 13.2 -2.8" stroke-width="2.8" fill="none"/>
+     <path d="M 8.8 .75 l .5 -1.6 M 10.7 .3 l .8 -1.5 M 12.3 -1.0 l 1.2 -1.0" stroke="${critterMark}" stroke-width=".9" fill="none" opacity=".8"/>`);
   /* Three hens beside the barn. The previous pair of attempts both drew a body wider than
      it was tall, which is a duck: a duck is a horizontal body with a low tail, and a hen is
      an upright one with the mass low and forward and the tail carried high behind it. So the
      body here is as deep as it is long, the head sits well above the back on a real neck
      rather than poking off the front, and the tail is two clean sickles instead of a zigzag,
      for the same reason the gulls' wingtips are: notches at this size fill in and go to mush. */
-  const chickens=(x,y,s,o=.72)=>{
+  const chickens=(x,y,s,o=.96)=>{
     const hen=(dx,dy,hs,motion,period)=>{
       const headClass=motion==="peck"?"hen-peck":motion==="look"?"hen-look":"";
       const legClass=motion==="scratch"?"hen-scratch":"";
@@ -1022,19 +1055,36 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       <path d="M -5.2 -2.2 L -7.1 -1.2 L -5 -.7 Z" fill="#D89438" stroke="none"/><circle cx="-3.5" cy="-2.7" r=".35" fill="#F1D9A0" stroke="none"/></g>
     <path d="M -.8 3.2 L -1 5 M 1.5 3.1 L 1.7 5" stroke-width=".8" fill="none" stroke-linecap="round"/></g>`;
   /* fox crossing the field at dusk, brush low behind it */
-  const fox=(x,y,s,o=.7)=>critter("fox",x,y,s,o,
-    `<path d="M -4.3 -1.7 C -.6 -3.6 5 -2.6 6 .2 C 4.8 3.2 -.8 3.7 -4.7 1.7 Z"/><path d="M -.5 -2 C 1.6 -.4 2.1 1.6 1.2 3" fill="none" stroke="${critterMark}" stroke-width=".7" opacity=".32"/>
-     <g class="fox-head"><path d="M -3.8 -1.8 L -8.6 -3.4 L -7 -5.4 L -4.8 -4 Z"/><path d="M -7.3 -4.7 L -7.8 -7 L -5.8 -5.3 Z M -5.2 -4.3 L -5 -6.4 L -3.7 -4.6 Z"/><circle cx="-8.6" cy="-3.4" r=".43" fill="${critterMark}" stroke="none"/><circle cx="-6.4" cy="-4" r=".3" fill="${critterMark}" stroke="none"/></g>
-     <path class="fox-tail" d="M 5.5 -.8 C 9 -1.8 12 -4 11.7 -6.7 C 9.2 -5.1 6.7 -3.2 4.9 -1.9 Z"/><path d="M 10.1 -5.3 C 10.8 -5.8 11.3 -6.3 11.7 -6.7 C 11.9 -5.7 11.5 -4.7 10.8 -4 Z" fill="${critterMark}" stroke="none" opacity=".72"/>
-     <path d="M -2.9 2 L -3.1 5 M .1 2.8 L 0 5 M 4 1.8 L 4.3 4.8" stroke-width=".85" fill="none"/>`);
+  const fox=(x,y,s,o=.96)=>critter("fox",x,y,s,o,
+    `<path d="M -4.6 -1.9 C -2.4 -3.6 1.6 -3.9 4.2 -2.9 C 6.0 -2.1 6.6 -.4 6.0 1.2 C 5.4 2.7 3.6 3.5 1.8 3.3 L -3.6 2.3 C -5.2 1.5 -5.6 -.4 -4.6 -1.9 Z"/>
+     <path d="M -.7 -2.6 C 1.6 -1.6 2.4 .6 1.4 2.6" fill="none" stroke="${critterMark}" stroke-width=".6" opacity=".3"/>
+     <g class="fox-head">
+       <path d="M -4.2 -2.0 C -5.4 -3.4 -7.0 -4.0 -8.8 -3.7 L -10.6 -2.4 C -10.9 -2.2 -10.8 -1.9 -10.4 -1.9 C -9.0 -1.7 -7.8 -.9 -6.2 -1.0 C -5.4 -1.1 -4.6 -1.5 -4.2 -2.0 Z"/>
+       <path d="M -7.7 -3.6 L -7.9 -6.2 L -5.9 -4.2 Z M -5.4 -3.7 L -4.7 -6.0 L -3.5 -3.9 Z"/>
+       <circle cx="-8.3" cy="-2.6" r=".36" fill="${critterMark}" stroke="none"/>
+       <path d="M -9.9 -1.6 C -8.8 -.9 -7.4 -.7 -6.2 -.9" fill="none" stroke="${critterMark}" stroke-width=".55" opacity=".65"/>
+     </g>
+     <path d="M -3.4 2.3 L -4.4 4.4 L -4.0 6.4 M -1.4 2.9 L -.9 4.6 L -1.3 6.4 M 3.1 2.9 L 2.6 4.7 L 3.1 6.4 M 4.7 2.3 L 5.7 4.2 L 6.6 5.8" stroke-width=".95" fill="none"/>
+     <path class="fox-tail" d="M 5.9 .6 C 8.9 1.1 11.8 .7 13.8 -.7 C 14.9 -1.5 14.9 -2.8 13.9 -3.4 C 11.5 -2.9 8.4 -1.9 5.4 -.9 Z"/>
+     <path d="M 13.6 -3.3 C 14.4 -2.8 13.9 -1.1 13.9 -1.1 C 13.2 -1.5 12.8 -2.3 13.0 -3.1 Z" fill="${critterMark}" stroke="none" opacity=".85"/>`);
 
   /* the scuttle rides an outer group: a CSS transform on the crab itself would throw away
      the translate that puts it on the bank */
-  const crabAt=(x,y,s,opacity=.7)=>`<g class="crab-run" style="${phase(46)}"><g class="wildlife crab" data-species="fiddler-crab" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
-    <path d="M -5.5 -1 C -3.2 -3.3 3.2 -3.3 5.5 -1 L 4 2.8 C 1.4 4 -1.4 4 -4 2.8 Z"/><path d="M -3.8 2 l -4.5 2.7 M -1.7 3 l -3.1 3 M 3.8 2 l 4.5 2.7 M 1.7 3 l 3.1 3" fill="none" stroke-width="1"/>
-    <path d="M -2.3 -2.2 L -2.8 -4.4 M 2.3 -2.2 L 2.8 -4.4" stroke-width=".75" fill="none"/><circle cx="-2.8" cy="-4.6" r=".65"/><circle cx="2.8" cy="-4.6" r=".65"/>
-    <g class="crab-claw"><path d="M -4.5 -.6 L -8 -4.3" stroke-width="1.4" fill="none"/><path d="M -8 -4.3 C -11 -6.9 -12.5 -3 -10 -1.4 C -8.7 -2.6 -8 -3.4 -8 -4.3 Z"/></g>
-    <path d="M 4.5 -.6 L 8 -3.6 M 8 -3.6 l 2 -1 M 8 -3.6 l .8 2" fill="none" stroke-width="1.05"/></g></g>`;
+  const crabAt=(x,y,s,opacity=.96)=>`<g class="crab-run" style="${phase(46)}"><g class="wildlife crab" data-species="fiddler-crab" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
+    <path d="M -5.6 -1.4 C -3.6 -3.4 3.6 -3.4 5.6 -1.4 C 6.4 -.2 6.2 1.6 5.2 2.6 C 2.6 4.2 -2.6 4.2 -5.2 2.6 C -6.2 1.6 -6.4 -.2 -5.6 -1.4 Z"/>
+    <path d="M -3.8 -1.8 C -1.6 -2.8 1.6 -2.8 3.8 -1.8" fill="none" stroke="${critterMark}" stroke-width=".6" opacity=".45"/>
+    <path d="M -2.1 -2.6 L -2.5 -4.6 M 2.1 -2.6 L 2.5 -4.6" stroke-width=".8" fill="none"/>
+    <circle cx="-2.5" cy="-4.9" r=".62"/><circle cx="2.5" cy="-4.9" r=".62"/>
+    <circle cx="-2.65" cy="-5.05" r=".22" fill="${critterMark}" stroke="none"/><circle cx="2.35" cy="-5.05" r=".22" fill="${critterMark}" stroke="none"/>
+    <path d="M -4.6 1.2 L -7.2 2.2 L -9.0 4.8 M -2.6 2.8 L -4.4 4.4 L -5.2 6.4 M 4.6 1.2 L 7.2 2.2 L 9.0 4.8 M 2.6 2.8 L 4.4 4.4 L 5.2 6.4" fill="none" stroke-width=".95"/>
+    <g class="crab-claw">
+      <path d="M -4.9 -.2 L -7.0 -1.6" stroke-width="1.6" fill="none"/>
+      <path d="M -6.8 -3.2 C -8.6 -4.0 -10.6 -3.4 -11.2 -1.8 C -11.7 -.4 -10.9 1.0 -9.3 1.3 C -8.0 1.5 -6.8 .9 -6.3 -.2 C -5.9 -1.3 -6.1 -2.5 -6.8 -3.2 Z"/>
+      <path d="M -10.9 -2.4 C -12.6 -2.9 -14.0 -2.6 -14.9 -1.7 C -13.8 -1.4 -12.6 -1.3 -11.4 -1.5 Z"/>
+      <path d="M -10.8 -.6 C -12.2 -.5 -13.4 0 -14.2 .9 C -13.0 1.1 -11.7 1.0 -10.6 .5 Z"/>
+      <path d="M -9.8 -2.5 C -8.9 -1.9 -8.6 -.9 -9.0 .1" fill="none" stroke="${critterMark}" stroke-width=".55" opacity=".6"/>
+    </g>
+    <path d="M 4.8 -.4 L 7.0 -2.6 M 7.0 -2.6 l 1.8 -.6 M 7.0 -2.6 l .5 1.7" fill="none" stroke-width="1"/></g></g>`;
   /* A bird in the sky here is fourteen pixels across, and at that size it is a silhouette,
      not an anatomy drawing. The previous version stroked each wing as a constant-width line
      and then added two short strokes at the tip to suggest spread primaries. Splayed tips on
@@ -1169,7 +1219,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       <path d="M ${(pondR-9).toFixed(1)} ${base+9} Q ${(pondR-16).toFixed(1)} ${base-4} ${(pondR-20).toFixed(1)} ${base-12}" stroke="${ink}" stroke-width="1.05" fill="none" stroke-linecap="round"/></g>`;
 
     /* a frog is out in warm rain, not in snow: below about 45 it is underground */
-    const rainyFrog=(wet||storm)&&temp>=45?frogAt(pondR-30,base+3,1.1,.88):"";
+    const rainyFrog=(wet||storm)&&temp>=45?frogAt(pondR-30,base+3,1.1,1):"";
     const deer=!wet&&!storm&&!dark&&(fog||localHour<11||localHour>=16||sunAltDeg<7)
       ?deerAt(W*.905,base-13,1.08,-1,1):"";
 
@@ -1181,7 +1231,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     /* a second bird working the ridge line on a much longer clock, small and faint enough
        to read as distance. Turkey vultures are never not up there in these hills. */
     const soarer=!wet&&!storm&&!dark?`<g class="gull-cross" style="--gx:${(W*.62).toFixed(0)}px;--gy:-12px;--gd:134s;${phase(134)}">${flightBird("hawk",W*.16,base-rTop-34,.44,.2,-6.8,15)}</g>`:"";
-    const owl=!wet&&!storm&&dark&&!showFlies?owlAt(W*.83,base-11,1.08,.84):"";
+    const owl=!wet&&!storm&&dark&&!showFlies?owlAt(W*.83,base-11,1.08,1):"";
     /* The resident, same rule as the marsh: always there, almost never moves. The cardinal
        turns up when it is cold, which is exactly when it is the only colour in the field.
 
@@ -1189,9 +1239,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
        the frame, because the pond runs from .13W to .73W and eyeballed fractions put a
        rabbit in it. Anything standing on the ground here has to sit right of pondR. */
     const barnX=W*.81;
-    const ridgeResident=dark?fox(barnX-7,base+12,1.16,.94)
+    const ridgeResident=dark?fox(barnX-7,base+12,1.16,1)
       :temp<48?cardinal(barnX+6.5,base-23,.84)
-      :chickens(deer?pondR+14:barnX+20,base+12,.9,.86);
+      :chickens(deer?pondR+14:barnX+20,base+12,.9,1);
     let flies="";
     if(showFlies){const fr2=mulberry(51926);
       for(let i=0;i<flyCount;i++)
@@ -1333,13 +1383,25 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const hx=W*.20;
   const showHeron=!wet&&!storm&&!showFlies&&(dark||fog||localHour<12||localHour>=16);
   const heron=showHeron?`<g class="wildlife heron" data-species="great-blue-heron" transform="translate(${hx.toFixed(1)} ${(base-44).toFixed(1)}) scale(1.34)" fill="${ink}" stroke="${ink}" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M 12.5 25 C 15.5 21.5 23.5 22.2 27.5 26 C 29.8 28.4 29.1 31.4 26.4 33.2 C 21.8 35.8 15.1 34.3 12.6 30.4 Z"/>
-    <path d="M 17 25.1 C 21.2 24.2 25.6 26.2 26.7 29.5 C 23.8 32 18.3 31.5 15.6 28.6 Z" fill="${critterMark}" stroke="none" opacity=".4"/>
-    <path d="M 13.3 27.2 L 10.4 29.8 L 12.2 29.4 L 10.8 32.2 L 14.2 30.7"/>
-    <g class="heron-strike" style="${phase(92)}"><g class="heron-scan"><path d="M 15 26 C 12.2 22.4 10.9 19 11.5 15.7 C 12 12.8 14.1 10.7 13.1 8.4 C 12.3 6.5 10 5.8 7.4 6.2" fill="none" stroke-width="2.25"/>
-      <path d="M 7.8 4.8 C 5.7 3.4 2.4 3.7 .9 5.5 C 2.1 7.6 5.6 8.1 7.8 6.5 Z"/><circle cx="3.2" cy="5.2" r=".38" fill="${critterMark}" stroke="none"/>
-      <path d="M 1.3 5.4 L -6.8 6.4 L .9 6.4 Z"/><path d="M 7.4 5 C 9.7 3.5 10.5 1.9 10.7 .2" fill="none" stroke-width=".7"/></g></g>
-    <path d="M 18.1 33.3 L 17.1 42.4 M 22.1 33.5 L 23 38.1 L 22.4 42.4" fill="none" stroke-width="1.05"/><path d="M 15.6 42.5 h 3.3 M 21 42.5 h 3.3" fill="none" stroke-width=".8"/>
+    <path d="M 11.6 24.4 C 13.2 22.3 16.8 21.0 20.4 21.4 C 25.2 21.9 29.4 24.4 30.9 27.6 C 32.0 30.1 31.2 32.5 28.6 33.8 C 24.4 35.8 17.6 35.0 14.2 32.0 C 12.0 30.0 11.0 27.0 11.6 24.4 Z"/>
+    <path d="M 26.6 29.6 C 29.8 30.2 32.8 31.6 34.8 33.8 C 32.2 34.4 29.0 33.9 26.4 32.6 Z"/>
+    <path d="M 15.8 24.2 C 20.2 22.6 25.8 24.2 27.8 27.4 C 29.0 29.6 28.2 31.8 25.8 33.0 C 21.4 34.8 15.9 32.8 14.4 29.4 C 13.5 27.2 14.2 25.3 15.8 24.2 Z" fill="${critterMark}" stroke="none" opacity=".38"/>
+    <path d="M 18.2 25.6 C 21.6 25.4 24.6 26.8 26.2 29.0 M 17.0 27.8 C 20.0 27.8 22.8 28.9 24.4 30.7 M 18.4 30.4 C 20.4 30.5 22.2 31.2 23.4 32.2" fill="none" stroke-width=".6" opacity=".55"/>
+    <path d="M 22.4 21.8 C 26.0 21.2 29.6 21.8 32.4 23.6 M 25.0 22.6 C 27.8 22.4 30.4 23.2 32.6 25.0" fill="none" stroke-width=".6" opacity=".85"/>
+    <g class="heron-strike" style="${phase(92)}"><g class="heron-scan">
+      <path d="M 13.8 25.6 C 11.2 22.6 10.3 18.8 11.4 15.2 C 12.3 12.3 14.5 10.6 14.4 8.4 C 14.3 6.9 13.1 5.9 11.4 5.7 L 10.9 7.7 C 11.9 7.9 12.4 8.5 12.4 9.3 C 12.4 10.9 10.4 12.8 9.5 15.6 C 8.5 18.9 9.3 22.6 11.2 26.2 Z"/>
+      <path d="M 10.4 22.4 C 9.5 23.8 9.2 25.3 9.5 26.8 M 11.4 24.6 C 10.8 25.7 10.6 26.9 10.8 28.1 M 9.6 20.2 C 8.9 21.3 8.6 22.5 8.7 23.7" fill="none" stroke-width=".6"/>
+      <path d="M 12.2 5.9 C 11.4 4.3 9.4 3.5 7.0 3.7 C 5.4 3.9 4.2 4.5 3.9 5.4 C 4.8 6.8 7.2 7.5 9.6 7.2 C 10.9 7.0 11.9 6.6 12.2 5.9 Z"/>
+      <path d="M 11.6 4.9 C 10.6 3.8 8.6 3.3 6.6 3.6 C 8.0 4.1 9.6 4.4 11.0 5.0 Z"/>
+      <path d="M 10.6 4.3 C 12.6 3.5 14.6 3.4 16.2 4.1 M 11.2 5.1 C 13.0 4.7 14.8 4.9 16.2 5.7" fill="none" stroke-width=".6"/>
+      <path d="M 4.2 5.0 L -5.6 6.2 L 4.3 6.0 Z"/>
+      <path d="M 4.3 6.1 L -4.4 6.4 L 4.5 6.8 Z"/>
+      <circle cx="6.7" cy="5.2" r=".55" fill="${critterMark}" stroke="none"/>
+      <circle cx="6.75" cy="5.25" r=".24" fill="${ink}" stroke="none"/>
+      <path d="M 10.6 8.8 C 10.2 10.8 9.0 13.2 8.4 16.0" fill="none" stroke="${critterMark}" stroke-width=".55" opacity=".5"/>
+    </g></g>
+    <path d="M 18.4 34.2 L 17.7 38.0 L 18.3 42.6 M 23.6 34.4 L 24.6 38.4 L 23.8 42.6" fill="none" stroke-width="1.1"/>
+    <path d="M 18.3 42.6 l -2.5 .7 M 18.3 42.6 l 2.1 .7 M 18.3 42.6 l -.3 1.0 M 23.8 42.6 l -2.4 .7 M 23.8 42.6 l 2.2 .7 M 23.8 42.6 l -.2 1.0" fill="none" stroke-width=".7"/>
   </g>
   <ellipse cx="${(hx+22).toFixed(1)}" cy="${(base+8.6).toFixed(1)}" rx="13" ry="1.3" fill="${dark?'#EAF2FF':'#FFFFFF'}" opacity=".16"/>`:"";
 
@@ -1400,9 +1462,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
      fireflies on warm summer nights, a quiet crab when the marsh turns wet. That rule is
      about the performing cue, the thing that moves and draws the eye, and it still holds.
      Underneath it sits a resident, which is always there and almost never moves. */
-  const marshResident=dark?raccoon(W*.335,base+3,1.14,.9)
-    :temp<48?cormorant(dx-6,base-12,1.08,.9)
-    :oysterCatcher(W*.645,base+2,1.1,.88);
+  const marshResident=dark?raccoon(W*.335,base+3,1.14,1)
+    :temp<48?cormorant(dx-6,base-12,1.08,1)
+    :oysterCatcher(W*.645,base+2,1.1,1);
   /* Three gulls, on three different errands. One crosses the frame low over about seventy
      seconds, one holds its place higher up, and a third works back the other way much
      higher, smaller and fainter, on a slower clock. Gulls do not fly in formation and the
@@ -1413,7 +1475,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       +flightBird("gull",W*.62,GY-84,.56,.3,-7.1,10)
       +`<g class="gull-cross" style="--gx:-${(W*.46).toFixed(0)}px;--gy:9px;--gd:112s;${phase(112)}">${flightBird("gull",W*.80,GY-104,.42,.22,-5.4,12)}</g>`:"";
   /* fiddlers plug their burrows and go down when it turns cold, so they do too */
-  const marshCrab=(wet||storm)&&temp>=48?crabAt(W*.57,base-2,1.06,.86):"";
+  const marshCrab=(wet||storm)&&temp>=48?crabAt(W*.57,base-2,1.06,1):"";
   let flies="";
   if(showFlies){const fr=mulberry(80126);
     for(let i=0;i<flyCount;i++)
