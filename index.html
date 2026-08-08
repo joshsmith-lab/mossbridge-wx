@@ -111,8 +111,10 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 /* spanish moss hangs, so it pivots from the top and swings further than what holds it */
 .moss{transform-box:fill-box;transform-origin:50% 0;animation:sway var(--md,7s) ease-in-out infinite alternate}
 .flight-wing{transform-box:fill-box;animation:wingBeat var(--fd,7.4s) ease-in-out infinite}
-.wing-l{transform-origin:100% 65%;--rest:0deg;--lift:18deg;--press:-10deg}.wing-r{transform-origin:0 65%;--rest:0deg;--lift:-18deg;--press:10deg}
-@keyframes wingBeat{0%,31%,50%,76%,100%{transform:rotate(var(--rest))}36%{transform:rotate(var(--lift))}41%{transform:rotate(var(--press))}46%{transform:rotate(var(--lift))}81%{transform:rotate(var(--lift))}86%{transform:rotate(var(--press))}91%{transform:rotate(var(--rest))}}
+.wing-l{transform-origin:100% 60%;--rest:0deg;--lift:9deg;--press:-5deg}.wing-r{transform-origin:0 60%;--rest:0deg;--lift:-9deg;--press:5deg}
+/* gulls and hawks glide. One shallow beat inside a long rest reads as a bird;
+   rapid mirrored triangles read as a bat, however accurate the body may be. */
+@keyframes wingBeat{0%,58%,100%{transform:rotate(var(--rest))}65%{transform:rotate(var(--lift))}72%{transform:rotate(var(--press))}80%{transform:rotate(var(--rest))}}
 .deer-ear{transform-box:fill-box;transform-origin:55% 85%;animation:earFlick 12.5s ease-in-out infinite}
 @keyframes earFlick{0%,78%,100%{transform:rotate(0)}82%{transform:rotate(-11deg)}86%{transform:rotate(3deg)}90%{transform:rotate(0)}}
 /* head and neck pivot at the shoulder: a long stretch of stillness, then a graze and a look up */
@@ -128,8 +130,7 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
   16%,84%{opacity:var(--co,.1)}100%{transform:translateX(var(--x1,600px));opacity:0}}
 /* a vane hunts back and forth in a gusty wind and sits almost still in a steady one */
 .vane-hunt{transform-box:fill-box;transform-origin:center;animation:vaneHunt var(--vt,7s) ease-in-out infinite alternate}
-@keyframes vaneHunt{from{transform:rotate(calc(var(--vdir,0deg) - var(--vh,3deg)))}
-  to{transform:rotate(calc(var(--vdir,0deg) + var(--vh,3deg)))}}
+@keyframes vaneHunt{from{transform:rotate(var(--vh-neg,-3deg))}to{transform:rotate(var(--vh,3deg))}}
 /* the scene settles into place once, when the app opens, and never again */
 @keyframes sceneIn{from{opacity:0;transform:translateY(7px) scale(1.014)}to{opacity:1;transform:none}}
 .scene.first{animation:sceneIn .9s var(--ease) both}
@@ -880,7 +881,8 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
      The bank is cut into bands and each one lags the one upwind of it, travelling the
      same way the clouds do so the sky and the grass never disagree. */
   const gust=Math.max(wind,Number(weather.wind_gusts_10m)||0);
-  const downwind=(Number(weather.wind_direction_10m)||0)>180?-1:1;
+  const windFrom=((Number(weather.wind_direction_10m)||0)%360+360)%360;
+  const downwind=windFrom>180?-1:1;
   const BANDS=6, wr=mulberry(60731);
   /* seeded, so a clump keeps its own amplitude and its own slop in the wave across renders */
   const bandAmp=Array.from({length:BANDS},()=>.82+wr()*.36);
@@ -1023,10 +1025,17 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     <path d="M -2.3 -2.2 L -2.8 -4.4 M 2.3 -2.2 L 2.8 -4.4" stroke-width=".75" fill="none"/><circle cx="-2.8" cy="-4.6" r=".65"/><circle cx="2.8" cy="-4.6" r=".65"/>
     <g class="crab-claw"><path d="M -4.5 -.6 L -8 -4.3" stroke-width="1.4" fill="none"/><path d="M -8 -4.3 C -11 -6.9 -12.5 -3 -10 -1.4 C -8.7 -2.6 -8 -3.4 -8 -4.3 Z"/></g>
     <path d="M 4.5 -.6 L 8 -3.6 M 8 -3.6 l 2 -1 M 8 -3.6 l .8 2" fill="none" stroke-width="1.05"/></g></g>`;
-  const flightBird=(species,x,y,s,o,delay,dur)=>`<g class="wildlife ${species}" data-species="${species}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${critterInk}" stroke="${critterInk}" stroke-linejoin="round" opacity="${o}">
-    <ellipse cx="0" cy="0" rx="2.4" ry="1.15"/><path d="M 2 0 L 4.4 -1.2 L 3.7 .8 Z"/><path d="M -2 0 L -3.5 -.9 L -3.2 .9 Z"/>
-    <path class="flight-wing wing-l" style="--fd:${dur}s;animation-delay:${delay}s" d="M -.8 -.2 C -3 -2.2 -6.4 -3.4 -9 -2.7 C -7 -1.1 -4.6 .5 -.4 .7 Z"/>
-    <path class="flight-wing wing-r" style="--fd:${dur}s;animation-delay:${delay}s" d="M .8 -.2 C 3 -2.2 6.4 -3.4 9 -2.7 C 7 -1.1 4.6 .5 .4 .7 Z"/></g>`;
+  const flightBird=(species,x,y,s,o,delay,dur)=>{
+    const hawk=species==="hawk";
+    const body=hawk?`<path d="M -2 -.1 C -.8 -1.4 1.5 -1.4 2.6 -.1 C 1.7 1.3 -.8 1.5 -2 .4 Z"/><path d="M -1.8 .5 L -4 2.2 L -.8 1.4 Z"/>`
+      :`<path d="M -2 .1 C -.9 -1 1.4 -1.1 2.7 -.2 C 1.8 1.1 -.8 1.3 -2 .5 Z"/><circle cx="2.3" cy="-.55" r=".8"/><path d="M 2.9 -.7 L 5 -.35 L 2.9 0 Z"/><path d="M -1.8 .3 L -4 1.5 L -3.2 0 L -4 -1 Z"/>`;
+    const left=hawk?`M -.6 0 C -3 -1.7 -6.2 -1.7 -9.6 -.2 M -7.2 -.7 L -9.5 -1.6 M -7.5 0 L -9.8 .9`
+      :`M -.6 0 C -3 -1.2 -6.5 -3 -10 -2 M -7.5 -2.4 L -9.8 -3`;
+    const right=hawk?`M .6 0 C 3 -1.7 6.2 -1.7 9.6 -.2 M 7.2 -.7 L 9.5 -1.6 M 7.5 0 L 9.8 .9`
+      :`M .6 0 C 3 -1.2 6.5 -3 10 -2 M 7.5 -2.4 L 9.8 -3`;
+    return `<g class="wildlife ${species}" data-species="${species}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" stroke-linejoin="round" opacity="${o}">${body}
+      <path class="flight-wing wing-l" style="--fd:${dur}s;animation-delay:${delay}s" d="${left}" fill="none" stroke-width="${hawk?1.35:1.15}"/><path class="flight-wing wing-r" style="--fd:${dur}s;animation-delay:${delay}s" d="${right}" fill="none" stroke-width="${hawk?1.35:1.15}"/></g>`;
+  };
 
   document.getElementById("sceneSvg").setAttribute("aria-label",
     LOC.scene==="ridge"?"Sun and moon over Appalachian ridgelines and the farm pond":"Sun and moon over the marsh horizon");
@@ -1069,6 +1078,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       <path d="${ptop} A ${prx.toFixed(1)} ${pry} 0 0 1 ${pondL.toFixed(1)} ${base+6} Z" fill="url(#waterband)"/>
       <path d="${ptop}" fill="none" stroke="${ink}" stroke-width="1.3" opacity=".5"/>`;
 
+    const vaneHunt=clamp((gust-wind)*.45,.6,7),vaneTempo=clamp(9-(gust-wind)*.32,2.4,9);
     const barn=`<g transform="translate(${(W*.81-16.25).toFixed(1)} ${(base+2-25).toFixed(1)}) scale(1.25)" fill="${ink}" opacity=".8">
       <path d="M 2.6 20 L 2.6 9.6 L 1 10 L 6.2 3.2 L 10.8 1 L 15.2 1 L 19.8 3.2 L 25 10 L 23.4 9.6 L 23.4 20 Z"/>
       <path d="M 11.4 1 L 11.4 -1.2 L 14.6 -1.2 L 14.6 1 Z M 10.8 -1.2 L 13 -2.8 L 15.2 -1.2 Z"/>
@@ -1076,9 +1086,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       ${/* the vane points into the wind the way the one on the card does, and hunts as hard
            as the gusts are running over the steady wind */""}
       <path d="M 13 -2.8 L 13 -5.8" stroke="${ink}" stroke-width=".6" stroke-linecap="round" fill="none"/>
-      <g transform="translate(13 -8.2) scale(.72)"><g class="vane-hunt" style="--vdir:${Math.round(Number(weather.wind_direction_10m)||0)}deg;--vh:${clamp((gust-wind)*.45,.6,7).toFixed(1)}deg;--vt:${clamp(9-(gust-wind)*.32,2.4,9).toFixed(1)}s">
+      <g transform="translate(13 -8.2) scale(.72)"><g data-vane-bearing="${Math.round(windFrom)}" transform="rotate(${windFrom.toFixed(1)} 0 0)"><g class="vane-hunt" style="--vh-neg:-${vaneHunt.toFixed(1)}deg;--vh:${vaneHunt.toFixed(1)}deg;--vt:${vaneTempo.toFixed(1)}s">
         <path d="M 0 -3.2 L 0 3.2" stroke="${ink}" stroke-width=".58" stroke-linecap="round" fill="none"/>
-        <path d="M -1 -1.7 L 0 -3.5 L 1 -1.7 Z"/><path d="M -2.1 1.3 L 2.1 1.3 L 1.3 3.5 L -1.3 3.5 Z"/></g></g></g>`;
+        <path d="M -1 -1.7 L 0 -3.5 L 1 -1.7 Z"/><path d="M -2.1 1.3 L 2.1 1.3 L 1.3 3.5 L -1.3 3.5 Z"/></g></g></g></g>`;
 
     let fp="",fr="";const fpts=[];
     for(let x=-4;x<W+8;x+=24+g()*12){
@@ -1641,7 +1651,7 @@ function renderTides(preds,css,gust){
 
 /* ── wind vane ──────────────────────────────────────── */
 /* points into the wind, the way a rooftop vane does, so it agrees with the "from SW" beside it */
-const vane=deg=>`<svg class="vane" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><g transform="rotate(${Math.round(deg)} 6 6)"><path d="M6 1.5 L6 10.5 M3.6 4.3 L6 1.5 L8.4 4.3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g></svg>`;
+const vane=deg=>`<svg class="vane" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><g transform="rotate(${Math.round(((Number(deg)||0)%360+360)%360)} 6 6)"><path d="M6 1.5 L6 10.5 M3.6 4.3 L6 1.5 L8.4 4.3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g></svg>`;
 
 /* ── count-up ───────────────────────────────────────── */
 let animRun=0;

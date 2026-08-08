@@ -214,6 +214,18 @@ for (const cs of cases) {
       });
       for (const s of swimming) problems.push(`${cs.name}: ${s}`);
       console.log(`    pond: ${swimming.length ? "!! " + swimming.join("; ") : "nothing standing in it"}`);
+
+      // The forecast reports where the wind comes from. The vane's fixed SVG rotation must
+      // put its arrowhead on that bearing; the nested CSS animation only hunts around it.
+      const vane = await page.evaluate(() => {
+        const el = document.querySelector("[data-vane-bearing]");
+        if (!el) return null;
+        const m = el.getCTM(), dx = -3.5 * m.c, dy = -3.5 * m.d;
+        return { source: Number(el.dataset.vaneBearing), visual: (Math.atan2(dx, -dy) * 180 / Math.PI + 360) % 360 };
+      });
+      const vaneError = vane ? Math.abs(((vane.visual - cs.o.nowDir + 540) % 360) - 180) : 999;
+      console.log(`    vane: ${vane?.source ?? "missing"}° source, ${vane ? vane.visual.toFixed(1) : "missing"}° rendered axis`);
+      if (vaneError > .6) problems.push(`${cs.name}: vane is ${vaneError.toFixed(1)}° off the ${cs.o.nowDir}° wind source`);
     }
 
     // ── what the motion costs: layout must stay flat while things move ──
