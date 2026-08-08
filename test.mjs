@@ -31,7 +31,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /JSON\.stringify\(\{savedAt:Date\.now\(\),data\}\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v26/);
+  assert.match(worker, /mbwx-shell-v27/);
 });
 
 test("every motion is driven by a reading, not by decoration", async () => {
@@ -44,16 +44,17 @@ test("every motion is driven by a reading, not by decoration", async () => {
   // a cloud shadow needs discrete clouds and a sun: clear casts none, overcast is all
   // shadow already, and fog has no directional light at all
   assert.match(html, /if\(PRM\|\|storm\|\|fog\|\|cloud<12\|\|cloud>92\)return""/);
-  // the barn vane points into the wind and hunts as hard as the gusts run over it
-  assert.match(html, /--vdir:\$\{Math\.round\(Number\(weather\.wind_direction_10m\)\|\|0\)\}deg/);
-  assert.match(html, /--vh:\$\{clamp\(\(gust-wind\)\*\.45,\.6,7\)/);
+  // the barn vane's fixed SVG bearing is authoritative; CSS only adds a small gust hunt
+  assert.match(html, /const windFrom=\(\(Number\(weather\.wind_direction_10m\)\|\|0\)%360\+360\)%360/);
+  assert.match(html, /data-vane-bearing="\$\{Math\.round\(windFrom\)\}" transform="rotate\(\$\{windFrom\.toFixed\(1\)\} 0 0\)"/);
+  assert.match(html, /--vh-neg:-\$\{vaneHunt\.toFixed\(1\)\}deg/);
   assert.match(html, /function tideTrend\(preds\)/);
   assert.match(html, /renderScene\(sunrise,sunset,now,c,dark,LOC\.tide\?tideTrend\(d\.tides\):0\)/);
   assert.match(html, /specular\(glintX,GY\+12\.5,tideDir<0\?2\.4:tideDir>0\?-1\.6:0\)/);
 
   // vegetation: gusts raise the throw, and the wave crosses the bank downwind
   assert.match(html, /const gust=Math\.max\(wind,Number\(weather\.wind_gusts_10m\)\|\|0\)/);
-  assert.match(html, /const downwind=\(Number\(weather\.wind_direction_10m\)\|\|0\)>180\?-1:1/);
+  assert.match(html, /const downwind=windFrom>180\?-1:1/);
   assert.match(html, /const waveDelay=\(i,dur\)=>-\(dur\*\(\(downwind>0\?i:BANDS-1-i\)\*\.15\+bandLag\[i\]\)\)/);
   assert.match(html, /swayAmt=clamp\(\.5\+wind\*\.095\+\(gust-wind\)\*\.055,\.5,3\.9\)/);
 
@@ -62,6 +63,8 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /@keyframes gullCross/);
   assert.match(html, /class="heron-strike"/);
   assert.match(html, /class="flight-wing wing-l"/);
+  assert.match(html, /rapid mirrored triangles read as a bat/);
+  assert.match(html, /fill="none" stroke-width="\$\{hawk\?1\.35:1\.15\}"/);
   assert.match(html, /data-species="great-blue-heron"/);
   assert.match(html, /data-species="fiddler-crab"/);
   assert.match(html, /class="raccoon-head"/);
