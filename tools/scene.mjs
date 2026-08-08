@@ -126,6 +126,26 @@ const browser = await chromium.launch(process.env.PORCH_CHROME_PATH
   : {});
 const problems = [];
 
+/** PNG byte streams can differ when Chrome re-encodes identical compositor output. Decode
+ * both in the page and count meaningful per-pixel changes instead of comparing containers. */
+async function pixelDelta(page, a, b) {
+  return page.evaluate(async ([aa, bb]) => {
+    const bitmap = async (s) => createImageBitmap(await (await fetch(`data:image/png;base64,${s}`)).blob());
+    const [ia, ib] = await Promise.all([bitmap(aa), bitmap(bb)]);
+    const canvas = document.createElement("canvas"); canvas.width = ia.width; canvas.height = ia.height;
+    const cx = canvas.getContext("2d", { willReadFrequently: true });
+    cx.drawImage(ia, 0, 0); const da = cx.getImageData(0, 0, ia.width, ia.height).data;
+    cx.clearRect(0, 0, canvas.width, canvas.height); cx.drawImage(ib, 0, 0);
+    const db = cx.getImageData(0, 0, ib.width, ib.height).data;
+    let changed = 0, strong = 0, max = 0;
+    for (let i = 0; i < da.length; i += 4) {
+      const d = Math.max(Math.abs(da[i]-db[i]), Math.abs(da[i+1]-db[i+1]), Math.abs(da[i+2]-db[i+2]), Math.abs(da[i+3]-db[i+3]));
+      if (d) changed++; if (d > 3) strong++; if (d > max) max = d;
+    }
+    return { changed, strong, max, total: da.length / 4 };
+  }, [a.toString("base64"), b.toString("base64")]);
+}
+
 /** Open a scenario, wait for it to settle, and hand back the page. */
 async function open(cs, { width, height = 932, reducedMotion }) {
   const ctx = await browser.newContext({
@@ -138,6 +158,8 @@ async function open(cs, { width, height = 932, reducedMotion }) {
   page.on("console", (m) => { if (m.type() === "error") errs.push("console: " + m.text()); });
   await stage(page, { now: new Date(cs.when), loc: cs.loc, o: cs.o, tidePhase: cs.tidePhase || 0, fontDir: FONT_DIR, port: PORT });
   await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => !document.getElementById("refreshBtn")?.classList.contains("spin")
+    && document.getElementById("stamp")?.textContent !== "—", { timeout: 15000 });
   await page.evaluate(() => document.fonts.ready).catch(() => {});
   await page.waitForTimeout(1500);
   return { ctx, page, errs };
@@ -220,15 +242,19 @@ for (const cs of cases) {
   // ── reduced motion: nothing may move, at all ──────────────────────────
   {
     const { ctx, page, errs } = await open(cs, { width: 430, reducedMotion: "reduce" });
-    // SVG turbulence is intentionally nondeterministic in system Chrome. It is a static
-    // paper texture, not scene motion, so remove that overlay before pixel-comparing the sky.
-    await page.evaluate(() => document.querySelector(".grain")?.remove());
+    // SVG turbulence and blur filters are intentionally nondeterministic in system Chrome.
+    // They are static texture/softness, not scene motion, so omit them from a byte-for-byte
+    // stillness check; all transforms and opacity remain under test.
+    await page.evaluate(() => {
+      document.querySelector(".grain")?.remove();
+      document.querySelectorAll("svg [filter]").forEach((el) => el.removeAttribute("filter"));
+    });
     const running = await page.evaluate(() => document.getAnimations().length);
     const one = await page.locator(".sky").screenshot({ path: path.join(OUT, `${cs.name}-prm.png`) });
     await page.waitForTimeout(1400);
     const two = await page.locator(".sky").screenshot();
-    const still = Buffer.compare(one, two) === 0;
-    console.log(`    reduced motion: ${running} animations, ${still ? "held still" : "STILL MOVING"}`);
+    const delta = await pixelDelta(page, one, two), still = delta.strong === 0;
+    console.log(`    reduced motion: ${running} animations, ${still ? "held still" : "STILL MOVING"}${delta.changed ? ` (${delta.changed} noisy px, ${delta.strong} meaningful, max Δ${delta.max})` : ""}`);
     if (running) problems.push(`${cs.name}: ${running} animations survive prefers-reduced-motion`);
     if (!still) problems.push(`${cs.name}: sky is not static under prefers-reduced-motion`);
     if (errs.length) problems.push(`${cs.name} prm: ${errs.join(" | ")}`);

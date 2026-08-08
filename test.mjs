@@ -31,7 +31,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /JSON\.stringify\(\{savedAt:Date\.now\(\),data\}\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v25/);
+  assert.match(worker, /mbwx-shell-v26/);
 });
 
 test("every motion is driven by a reading, not by decoration", async () => {
@@ -57,10 +57,15 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /const waveDelay=\(i,dur\)=>-\(dur\*\(\(downwind>0\?i:BANDS-1-i\)\*\.15\+bandLag\[i\]\)\)/);
   assert.match(html, /swayAmt=clamp\(\.5\+wind\*\.095\+\(gust-wind\)\*\.055,\.5,3\.9\)/);
 
-  // wildlife: one gull crosses, the rest keep the one-cue-at-a-time rule
+  // wildlife: one gull crosses; articulated wings and species-specific joints replace bobbing blobs
   assert.match(html, /class="gull-cross"/);
   assert.match(html, /@keyframes gullCross/);
   assert.match(html, /class="heron-strike"/);
+  assert.match(html, /class="flight-wing wing-l"/);
+  assert.match(html, /data-species="great-blue-heron"/);
+  assert.match(html, /data-species="fiddler-crab"/);
+  assert.match(html, /class="raccoon-head"/);
+  assert.doesNotMatch(html, /heron-breathe/);
   assert.match(html, /const flyCount=Math\.round\(clamp\(3\+\(temp-60\)\*\.6,3,12\)\)/);
   assert.match(html, /class="deer-tail"/);
   assert.match(html, /class="crab-run"/);
@@ -205,7 +210,7 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /class="day-detail"/);
   assert.match(html, /moonPhaseIcon/);
   assert.doesNotMatch(html, /phaseName/);
-  assert.match(html, /bird-wing/);
+  assert.match(html, /flight-wing/);
   assert.match(html, /deer-ear/);
   // "soupy" is earned, not decorative: real humidity sitting on real heat
   assert.match(html, /soupy\?", soupy":humid\?", humid":""/);
