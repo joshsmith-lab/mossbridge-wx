@@ -148,9 +148,10 @@ Established with Josh and enforced by `test.mjs`:
   the thing that moves and takes the eye, and it still holds: refine the cues,
   do not stack them.
 - Under the cue sits a **resident**, and there is always exactly one. It is
-  present at every hour in every weather, five to ten units against a 430-unit
-  frame, and it barely moves. Residents are why the scene is never empty; the
-  one-cue rule is why it is never busy. Do not let a resident start performing.
+  present at every hour in every weather and stays subordinate, but it must be
+  large enough for posture, negative space and a species landmark to survive a
+  phone screen. Residents move only at real joints, with long rests between
+  gestures. The scene should feel alive, never busy.
 - Animals only appear in weather they would actually be out in. Frogs go under
   below 45F, fiddler crabs below 48F, and the cormorant and the cardinal exist
   because something still has to be out there when they do.
