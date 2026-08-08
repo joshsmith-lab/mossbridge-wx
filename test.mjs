@@ -31,7 +31,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /JSON\.stringify\(\{savedAt:Date\.now\(\),data\}\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v24/);
+  assert.match(worker, /mbwx-shell-v25/);
 });
 
 test("every motion is driven by a reading, not by decoration", async () => {
@@ -65,6 +65,11 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /class="deer-tail"/);
   assert.match(html, /class="crab-run"/);
   assert.match(html, /class="hawk-circle"/);
+  // the warm-weather farm residents now read as hens and move on separate, quiet clocks
+  assert.match(html, /\.hen-peck\{/);
+  assert.match(html, /\.hen-look\{/);
+  assert.match(html, /\.hen-scratch\{/);
+  assert.match(html, /@keyframes henPeck/);
 
   // light: the sun flattens near the horizon, the meteor waits for a clear night
   assert.match(html, /const squash=clamp\(\.9\+Math\.max\(0,sunAltDeg\)\/8\*\.1,\.9,1\)/);

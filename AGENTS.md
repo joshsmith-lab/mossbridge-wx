@@ -127,7 +127,9 @@ would also stop the CSS animations that `scene.mjs` exists to look at; run them
 with `TZ=America/New_York` or the mocked data and the page will disagree about
 what time it is; set `PORCH_FONT_DIR` to a folder holding `bricolage.woff2` and
 `spline.woff2` if Google Fonts is unreachable, otherwise type metrics are wrong
-and any alignment work is misleading.
+and any alignment work is misleading. If the Playwright package is present but
+its bundled browser is not, set `PORCH_CHROME_PATH` to the Chrome executable
+already installed on the machine.
 
 ## Motion rules
 

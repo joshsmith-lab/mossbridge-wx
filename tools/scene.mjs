@@ -121,7 +121,9 @@ mkdirSync(OUT, { recursive: true });
 const server = await serve(PORT, FONT_DIR);
 if (!FONT_DIR) console.warn("PORCH_FONT_DIR is unset: falling back to whatever Google Fonts returns.\n");
 
-const browser = await chromium.launch();
+const browser = await chromium.launch(process.env.PORCH_CHROME_PATH
+  ? { executablePath: process.env.PORCH_CHROME_PATH }
+  : {});
 const problems = [];
 
 /** Open a scenario, wait for it to settle, and hand back the page. */
@@ -218,6 +220,9 @@ for (const cs of cases) {
   // ── reduced motion: nothing may move, at all ──────────────────────────
   {
     const { ctx, page, errs } = await open(cs, { width: 430, reducedMotion: "reduce" });
+    // SVG turbulence is intentionally nondeterministic in system Chrome. It is a static
+    // paper texture, not scene motion, so remove that overlay before pixel-comparing the sky.
+    await page.evaluate(() => document.querySelector(".grain")?.remove());
     const running = await page.evaluate(() => document.getAnimations().length);
     const one = await page.locator(".sky").screenshot({ path: path.join(OUT, `${cs.name}-prm.png`) });
     await page.waitForTimeout(1400);

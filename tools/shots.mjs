@@ -72,7 +72,9 @@ mkdirSync(OUT, { recursive: true });
 const server = await serve(PORT, FONT_DIR);
 if (!FONT_DIR) console.warn("PORCH_FONT_DIR is unset: falling back to whatever Google Fonts returns. Type metrics may be wrong.\n");
 
-const browser = await chromium.launch();
+const browser = await chromium.launch(process.env.PORCH_CHROME_PATH
+  ? { executablePath: process.env.PORCH_CHROME_PATH }
+  : {});
 let failures = 0;
 for (const cs of CASES) {
   for (const vp of [{ w: 390, h: 1500, tag: "phone" }, { w: 900, h: 1500, tag: "wide" }]) {
