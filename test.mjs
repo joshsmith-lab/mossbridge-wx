@@ -31,7 +31,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /JSON\.stringify\(\{savedAt:Date\.now\(\),data\}\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v29/);
+  assert.match(worker, /mbwx-shell-v30/);
 });
 
 test("every motion is driven by a reading, not by decoration", async () => {
@@ -78,6 +78,12 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /const flyCount=Math\.round\(clamp\(3\+\(temp-60\)\*\.6,3,12\)\)/);
   assert.match(html, /class="deer-tail"/);
   assert.match(html, /class="crab-run"/);
+  // the residents are solid ink now: no more grass reading through a bird
+  assert.match(html, /const owlAt=\(x,y,s,opacity=\.96\)/);
+  assert.match(html, /const frogAt=\(x,y,s,opacity=\.96\)/);
+  assert.match(html, /const crabAt=\(x,y,s,opacity=\.96\)/);
+  assert.match(html, /const raccoon=\(x,y,s,o=\.96\)/);
+
   assert.match(html, /class="hawk-circle"/);
   // the warm-weather farm residents now read as hens and move on separate, quiet clocks
   assert.match(html, /\.hen-peck\{/);
