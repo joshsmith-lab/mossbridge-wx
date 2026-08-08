@@ -122,6 +122,18 @@ Two numbers worth knowing before you change motion: every scene idles at **0-1
 layouts per 6 seconds**, and the busiest scene runs **110 animations**. If either
 jumps, you have added something that is not a `transform` or an `opacity`.
 
+## On file size
+
+`index.html` is around 160 KB of source, and an early plan set 160 KB as a
+ceiling. That number was about the source file and it is not the number that
+matters. GitHub Pages serves the file gzipped, so what a phone actually
+downloads is **about 53 KB**, once, and the service worker caches it after
+that. Crossing the old line costs a phone roughly one extra kilobyte.
+
+So: do not delete working code to stay under a self-imposed source limit. Write
+what the app needs. If the transferred size ever approaches a few hundred KB,
+revisit it then, and measure the transferred size rather than the source size.
+
 Notes: both shim `Date` rather than freezing the clock, because `page.clock`
 would also stop the CSS animations that `scene.mjs` exists to look at; run them
 with `TZ=America/New_York` or the mocked data and the page will disagree about
