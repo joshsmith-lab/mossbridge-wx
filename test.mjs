@@ -31,7 +31,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /JSON\.stringify\(\{savedAt:Date\.now\(\),data\}\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v27/);
+  assert.match(worker, /mbwx-shell-v28/);
 });
 
 test("every motion is driven by a reading, not by decoration", async () => {
@@ -64,7 +64,13 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /class="heron-strike"/);
   assert.match(html, /class="flight-wing wing-l"/);
   assert.match(html, /rapid mirrored triangles read as a bat/);
-  assert.match(html, /fill="none" stroke-width="\$\{hawk\?1\.35:1\.15\}"/);
+  // A bird at fourteen pixels is a silhouette. Wings are filled tapers that come to a point;
+  // they used to be constant-width strokes with two short strokes at each tip standing in for
+  // spread primaries, and splayed tips on a constant-width wing is the shape of a bat's hand.
+  assert.match(html, /const flip=d=>d\.replace\(\/-\?\[\\d\.\]\+\/g,n=>i\+\+%2\?n:/);
+  assert.doesNotMatch(html, /M -7\.5 -2\.4 L -9\.8 -3|M -7\.2 -\.7 L -9\.5 -1\.6/);
+  // and they beat in a short burst before going back to a glide, rather than once
+  assert.match(html, /@keyframes wingBeat\{0%,52%,100%\{transform:rotate\(var\(--rest\)\)\}/);
   assert.match(html, /data-species="great-blue-heron"/);
   assert.match(html, /data-species="fiddler-crab"/);
   assert.match(html, /class="raccoon-head"/);

@@ -144,6 +144,13 @@ Established with Josh and enforced by `test.mjs`:
 - Long ambient cycles take their phase from the wall clock (`phase(seconds)`),
   so a re-render drops them back where they were instead of restarting the wait.
   A 92-second heron strike that restarts on every foreground is never seen.
+- **Draw silhouettes, not anatomy.** A bird in this sky is fourteen pixels across.
+  Literal feather detail at that size does not read as detail, it reads as the
+  wrong animal: constant-width wings with two short strokes at each tip for
+  spread primaries is exactly a bat's hand, and a zigzag trailing edge on a
+  drying cormorant fills in to a mitten. Wings are filled tapers that come to a
+  clean point. This was found twice, from two different directions, before it
+  was written down.
 - One local wildlife **cue** at a time. That rule is about the performing cue,
   the thing that moves and takes the eye, and it still holds: refine the cues,
   do not stack them.
