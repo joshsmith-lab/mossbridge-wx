@@ -405,13 +405,10 @@ section{padding:28px 20px 0}
 .gold-times{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:10px;
   font-family:var(--mono);font-size:12.5px;color:var(--ink-soft);text-wrap:pretty}
 .gold-times b{color:var(--ink);font-weight:600}
-.gold-dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;align-self:center;
-  background:radial-gradient(circle at 35% 35%,#FFD98C,#F3B84F 72%);box-shadow:0 0 7px rgba(243,184,79,.75)}
+.gold-dot{width:5px;height:5px;border-radius:50%;flex:0 0 auto;align-self:center;background:#C58A2A;opacity:.78}
 .gold-key{font-family:var(--mono);font-weight:600;font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
-  background:linear-gradient(90deg,#A87413,#D99A2B 55%,#A87413);
-  -webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
-html[data-theme=dark] .gold-key{background:linear-gradient(90deg,#F3B84F,#FFD98C 55%,#F3B84F);
-  -webkit-background-clip:text;background-clip:text;color:transparent}
+  color:#9A6B20;white-space:nowrap}
+html[data-theme=dark] .gold-key{color:#E8BC69}
 
 .foot{padding:32px 20px 0;font-family:var(--mono);font-size:10px;color:var(--ink-faint);line-height:1.6}
 .foot-note{display:block;margin-top:9px}
@@ -821,9 +818,8 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   let arc=`M ${px(0)} ${py(0)}`;
   for(let f=.02;f<=1.001;f+=.02)arc+=` L ${px(f).toFixed(1)} ${py(f).toFixed(1)}`;
 
-  /* Golden hour on the sun's own path. The old three-stroke bars were technically accurate
-     but looked like bits of highlighter caught in the grass. One clean amber thread now
-     follows the arc, and a small bead marks the +6° boundary where golden hour begins. */
+  /* Golden hour belongs to the same dotted path as the rest of the day. Warming only those
+     dots near either horizon keeps the timing legible without adding bars, glow or jewelry. */
   const spanMs=sunset-sunrise;
   const altAtF=f=>sunPos(new Date(sunrise.getTime()+f*spanMs)).alt*180/Math.PI;
   let goldArc="";
@@ -844,12 +840,8 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       const active=now.getTime()>=startMs&&now.getTime()<=endMs,past=now.getTime()>endMs;
       const weatherLight=storm?.12:wet?.24:clamp(1-cloud/150,.35,1);
       const strength=(active?1:past?.24:(a>.5?.9:.62))*weatherLight;
-      const op=(.78*strength).toFixed(2),glow=(.16*strength).toFixed(2);
-      const boundary=a<.5?b:a,bx=px(boundary),by=py(boundary);
-      const pulse=active&&!PRM?` class="goldpulse" style="--ga:${op}"`:"";
-      goldArc+=`<path d="${d}" fill="none" stroke="#FFD68A" stroke-width="7" stroke-linecap="round" opacity="${glow}"/>
-        <path d="${d}" fill="none" stroke="#E7A73D" stroke-width="2.1" stroke-linecap="round" opacity="${op}"${pulse}/>
-        <circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="2.4" fill="#F5BC61" stroke="rgba(255,255,255,.58)" stroke-width=".8" opacity="${Math.min(1,.4+strength*.6).toFixed(2)}"/>`;
+      const op=(.8*strength).toFixed(2);
+      goldArc+=`<path d="${d}" fill="none" stroke="#D39A3C" stroke-width="1.8" stroke-dasharray="1 7" stroke-linecap="round" opacity="${op}"/>`;
     }
   }
   /* Sunrise and sunset sit just outside their arc points. Centering the words on those
@@ -1180,11 +1172,12 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       <path d="${ptop}" fill="none" stroke="${ink}" stroke-width="1.3" opacity=".5"/>`;
 
     const barnX=W*.81,barnMark=dark?"#91A5A4":"#D9D5BE";
+    const animalLeft=barnX-48,animalRight=barnX+48,rightTreeX=W*.955;
     /* A real barn reads from its roof before any detail: broad eaves, a broken gambrel
        pitch, a tall central door and a small loft opening. The yard stays quiet around it
        so the building and its residents do not dissolve into the grass. */
     const vaneHunt=clamp((gust-wind)*.11,.15,1.25),vaneTempo=clamp(11-(gust-wind)*.2,4.5,11);
-    const barn=`<g transform="translate(${(barnX-21).toFixed(1)} ${(base-31).toFixed(1)}) scale(1.18)" fill="${ink}" opacity=".86">
+    const barn=`<g class="barn" data-scene-anchor="barn" transform="translate(${(barnX-21).toFixed(1)} ${(base-31).toFixed(1)}) scale(1.18)" fill="${ink}" opacity=".86">
       <path d="M 2 27 L 2 12 L 5 12 L 9.2 5.2 L 14.2 1.5 L 21.8 1.5 L 26.8 5.2 L 31 12 L 34 12 L 34 27 Z"/>
       <path d="M 1 12.2 L 5.2 11.1 L 9.5 4.5 L 14 .7 L 22 .7 L 26.5 4.5 L 30.8 11.1 L 35 12.2" fill="none" stroke="${barnMark}" stroke-width="${snowing?"1.45":".75"}" opacity="${snowing?".68":".32"}" stroke-linejoin="round"/>
       <rect x="13" y="15.5" width="10" height="11.5" rx=".35" fill="${barnMark}" opacity=".2"/>
@@ -1218,7 +1211,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     for(let x=-6;x<W+10;){
       const cnt=3+Math.floor(g()*4),x0=x;let t="";
       for(let k=0;k<cnt;k++){let ht=5+g()*9;const lean=(2+g()*5)*(g()<.5?-1:1);
-        const yard=x>barnX-31&&x<barnX+54;
+        const yard=x>animalLeft-18&&x<animalRight+22;
         if(yard)ht*=.3;                                /* a worn, legible barnyard */
         if(x<pondL+6||x>pondR-6)t+=blade(x,ht,lean);   /* no grass in the water */
         x+=2.4+g()*3}
@@ -1263,7 +1256,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     /* a frog is out in warm rain, not in snow: below about 45 it is underground */
     const rainyFrog=(wet||storm)&&temp>=45?frogAt(pondR-30,base+3,1.1,1):"";
     const deer=!wet&&!storm&&!dark&&(fog||localHour<11||localHour>=16||sunAltDeg<7)
-      ?deerAt(W*.905,base-13,1.08,-1,1):"";
+      ?deerAt(animalRight+10,base-13,1.08,-1,1):"";
 
     /* the hawk works a thermal over two and a half minutes rather than hanging on a pin */
     /* the hawk rides above the tallest fold and is drawn in front of it, so raising the
@@ -1273,16 +1266,16 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     /* a second bird working the ridge line on a much longer clock, small and faint enough
        to read as distance. Turkey vultures are never not up there in these hills. */
     const soarer=!wet&&!storm&&!dark?`<g class="gull-cross" style="--gx:${(W*.62).toFixed(0)}px;--gy:-12px;--gd:134s;${phase(134)}">${flightBird("hawk",W*.16,base-rTop-34,.44,.2,-6.8,15)}</g>`:"";
-    const owl=!wet&&!storm&&dark&&!showFlies?owlAt(W*.83,base-11,1.08,1):"";
+    const owl=!wet&&!storm&&dark&&!showFlies?owlAt(rightTreeX-10,base-29,1.08,1):"";
     /* The resident, same rule as the marsh: always there, almost never moves. The cardinal
        turns up when it is cold, which is exactly when it is the only colour in the field.
 
        Every one of these is placed off the barn and the pond rather than off a fraction of
        the frame, because the pond runs from .13W to .73W and eyeballed fractions put a
        rabbit in it. Anything standing on the ground here has to sit right of pondR. */
-    const ridgeResident=dark?fox(barnX-7,base+12,1.16,1)
-      :temp<48?cardinal(W*.946,base-18,.78)
-      :chickens(deer?pondR+14:barnX+20,base+12,.9,1);
+    const ridgeResident=deer?"":dark?fox(animalRight-14,base+12,1.16,1)
+      :temp<48?cardinal(rightTreeX-4,base-18,.78)
+      :chickens(animalRight+3,base+12,.9,1);
     let flies="";
     if(showFlies){const fr2=mulberry(51926);
       for(let i=0;i<flyCount;i++)
@@ -1317,7 +1310,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       ${sparkle}${glint}${pondFx}
       ${tufts.map((d,i)=>d?`<g opacity=".9"${bandAt(i)}><path d="${d}" fill="${ink}"/></g>`:"").join("")}
       ${catsL}${catsR}
-      ${tree(W*.055,1.3,.62)}${tree(W*.105,.72,.48)}${tree(W*.955,1.05,.58)}
+      ${tree(W*.055,1.3,.62)}${tree(W*.105,.72,.48)}${(owl||temp<48)?tree(rightTreeX,1.05,.58):""}
       ${ridgeResident}
       ${deer}
       ${owl}${rainyFrog}
@@ -1661,8 +1654,9 @@ function renderStorms(storms){
   if(!storms||!storms.length){sec.style.display="none";return}
   document.getElementById("stormRows").innerHTML=storms.map(s=>{
     const d=Math.round(distMi(LAT,LON,s.lat,s.lon)),near=d<500;
+    const motion=s.spd>0?(s.dirDeg!=null?"moving "+dirTxt(s.dirDeg)+" "+s.spd+" mph":"moving "+s.spd+" mph"):"stationary";
     const meta=[s.mph?"winds "+s.mph+" mph":null,s.mb?s.mb+" mb":null,
-      s.dirDeg!=null?"moving "+dirTxt(s.dirDeg)+" "+s.spd+" mph":"stationary",
+      motion,
       s.adv?"adv "+s.adv:null].filter(Boolean).join(" · ");
     return `<div class="storm-row">
       <div class="s-name"><span class="swirl">${SWIRL}</span>${s.type} ${s.name}${near?' <em>within 500 mi</em>':''}</div>
@@ -2035,7 +2029,7 @@ function showHourlyPeek(i,announce=false){
   if(announce){
     const spokenTime=PEEK_I===0?"Now":clock12(new Date(h.time[PEEK_I]));
     document.getElementById("hourlyPeekLive").textContent=
-      `${spokenTime}, ${temp} degrees${showFeels?`, feels like ${feels}`:""}, ${pop?`${pop} percent chance of rain`:"dry"}`;
+      `${spokenTime}, ${temp} degrees${showFeels?`, feels like ${feels}`:""}, ${pop>=5?`${pop} percent chance of rain`:"dry"}`;
   }
 }
 function setupHourlyPeek(){
@@ -2055,12 +2049,13 @@ function setupHourlyPeek(){
   svg.addEventListener("pointerup",e=>{
     if(e.pointerType!=="mouse"){PEEK_TOUCH_X=null;hideHourlyPeek(1400)}
   });
-  svg.addEventListener("pointercancel",()=>{hideHourlyPeek(1000)});
+  svg.addEventListener("pointercancel",()=>{PEEK_TOUCH_X=null;hideHourlyPeek(1000)});
   scroller.addEventListener("scroll",()=>{
     if(PEEK_TOUCH_X!==null){showHourlyPeek(hourlyPeekIndex(PEEK_TOUCH_X));hideHourlyPeek(1000)}
   },{passive:true});
   scroller.addEventListener("touchend",()=>{PEEK_TOUCH_X=null;hideHourlyPeek(1400)},{passive:true});
   explore.addEventListener("keydown",e=>{
+    if(!HOURLY_PEEK)return;
     let next=PEEK_I;
     if(e.key==="ArrowRight")next++;
     else if(e.key==="ArrowLeft")next--;
@@ -2336,23 +2331,28 @@ function render(d,live,savedAt=0){
   /* tonight: one useful read, rather than another row of weather instruments */
   const el=document.getElementById("eveLead");
   const tomorrowRise=new Date(dy.sunrise[1]||new Date(sunset.getTime()+10*3.6e6));
-  const nightStart=now<sunset?sunset:now;
+  const beforeSunrise=now<sunrise;
+  const nightStart=beforeSunrise?now:(now<sunset?sunset:now);
+  const nightEnd=beforeSunrise?sunrise:tomorrowRise;
   const nightHours=h.time.map((t,i)=>({time:new Date(t),temp:Number(h.temp[i]),pop:Number(h.pop[i])||0}))
-    .filter(hour=>hour.time>=nightStart&&hour.time<=tomorrowRise&&Number.isFinite(hour.temp));
-  const fallbackLow=Number(dy.temperature_2m_min[Math.min(1,dy.temperature_2m_min.length-1)]);
+    .filter(hour=>hour.time>=nightStart&&hour.time<=nightEnd&&Number.isFinite(hour.temp));
+  const fallbackDay=beforeSunrise?0:Math.min(1,dy.temperature_2m_min.length-1);
+  const fallbackLow=Number(dy.temperature_2m_min[fallbackDay]);
   const nightLow=Math.round(nightHours.length?Math.min(...nightHours.map(hour=>hour.temp)):fallbackLow);
-  const nightPop=nightHours.length?Math.max(...nightHours.map(hour=>hour.pop)):Number(dy.precipitation_probability_max[1])||0;
-  let tonightText=nightPop>=60?`Rain is likely at times tonight, with a low around ${nightLow}°.`:
-    nightPop>=35?`A shower is possible tonight, with a low around ${nightLow}°.`:
-    nightLow>=74?`Warm and mostly dry tonight, with a low around ${nightLow}°.`:
-    `Mostly dry tonight, cooling to around ${nightLow}°.`;
+  const nightPop=nightHours.length?Math.max(...nightHours.map(hour=>hour.pop)):Number(dy.precipitation_probability_max[fallbackDay])||0;
+  const nightWhen=beforeSunrise?"before morning":"tonight";
+  let tonightText=nightPop>=60?`Rain is likely at times ${nightWhen}, with a low around ${nightLow}°.`:
+    nightPop>=35?`A shower is possible ${nightWhen}, with a low around ${nightLow}°.`:
+    nightLow>=74?`Warm and mostly dry ${nightWhen}, with a low around ${nightLow}°.`:
+    `Mostly dry ${nightWhen}, cooling to around ${nightLow}°.`;
   el.textContent=tonightText;
   /* both ends of the light on one gold line, out of the sentence's way */
   const gw=goldenWindow(sunset);
-  const gwAm=dy.sunrise[1]?goldenWindow(new Date(dy.sunrise[1])):null;
+  const gwAm=beforeSunrise?goldenWindow(sunrise):(dy.sunrise[1]?goldenWindow(new Date(dy.sunrise[1])):null);
   const goldBits=[];
+  if(beforeSunrise&&gwAm)goldBits.push(now>=gwAm.a?`<b>now, until ${clock(gwAm.b)}</b>`:`<b>${spanTxt(gwAm.a,gwAm.b)}</b> this morning`);
   if(gw&&now<gw.b)goldBits.push(now>=gw.a?`<b>now, until ${clock(gw.b)}</b>`:`<b>${spanTxt(gw.a,gw.b)}</b> tonight`);
-  if(gwAm)goldBits.push(`<b>${spanTxt(gwAm.a,gwAm.b)}</b> tomorrow`);
+  if(!beforeSunrise&&gwAm)goldBits.push(`<b>${spanTxt(gwAm.a,gwAm.b)}</b> tomorrow`);
   document.getElementById("goldTimes").innerHTML=goldBits.length
     ?`<span class="gold-dot" aria-hidden="true"></span><span class="gold-key">golden hour</span><span>${goldBits.join(" · ")}</span>`
     :"";
@@ -2403,15 +2403,16 @@ addEventListener("resize",()=>{clearTimeout(rzT);rzT=setTimeout(()=>{
 /* ── fetch ──────────────────────────────────────────── */
 const cacheKey=id=>"mbwx-"+id;
 const CACHE_MAX_AGE=6*3.6e6;
+const todayET=()=>new Date().toLocaleDateString("en-CA",{timeZone:"America/New_York"});
+const forecastDay=data=>String(data?.current?.time||"").slice(0,10);
 function readCache(id){
   try{
     const raw=localStorage.getItem(cacheKey(id));if(!raw)return null;
     const cached=JSON.parse(raw);
     if(cached&&cached.savedAt&&cached.data)
-      return Date.now()-cached.savedAt<=CACHE_MAX_AGE?{data:cached.data,savedAt:cached.savedAt}:null;
+      return Date.now()-cached.savedAt<=CACHE_MAX_AGE&&forecastDay(cached.data)===todayET()?{data:cached.data,savedAt:cached.savedAt}:null;
     /* Accept a same-day cache written by versions before cache timestamps existed. */
-    const today=new Date().toLocaleDateString("en-CA",{timeZone:"America/New_York"});
-    if(cached&&cached.current&&String(cached.current.time||"").slice(0,10)===today){
+    if(cached&&cached.current&&forecastDay(cached)===todayET()){
       const observed=new Date(cached.current.time).getTime();
       return{data:cached,savedAt:Number.isFinite(observed)?observed:Date.now()};
     }

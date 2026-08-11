@@ -17,6 +17,7 @@ test("application scripts and manifest parse", async () => {
   assert.doesNotThrow(() => new vm.Script(inlineScript[1]));
   assert.doesNotThrow(() => new vm.Script(worker));
   assert.doesNotThrow(() => JSON.parse(manifestText));
+  assert.equal(JSON.parse(manifestText).background_color, "#FAFAF6");
 });
 
 test("reliability guardrails stay in place", async () => {
@@ -29,9 +30,50 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /const initialCached=readCache\(LOC\.id\)/);
   assert.match(html, /const CACHE_MAX_AGE=6\*3\.6e6/);
   assert.match(html, /JSON\.stringify\(\{savedAt:Date\.now\(\),data\}\)/);
+  assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v34/);
+  assert.match(worker, /mbwx-shell-v35/);
+  assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
+});
+
+test("a shared link with tracking text still opens from the offline shell", async () => {
+  const worker = await readFile(new URL("sw.js", root), "utf8");
+  const listeners = {};
+  let matchOptions, fetches = 0;
+  const cached = { source: "cached shell" };
+  const retried = { source: "network retry" };
+  let cacheResult = cached, succeedOnRetry = false;
+  const context = {
+    URL, AbortController, setTimeout, clearTimeout,
+    fetch: async () => { fetches++; if (succeedOnRetry && fetches === 2) return retried; throw new Error("offline"); },
+    caches: {
+      match: async (_request, options) => { matchOptions = options; return cacheResult; },
+      open: async () => ({ addAll: async () => {}, put: async () => {} }),
+      keys: async () => [], delete: async () => {},
+    },
+    self: {
+      addEventListener: (name, fn) => { listeners[name] = fn; },
+      skipWaiting: () => {}, clients: { claim: () => {} },
+    },
+  };
+  vm.runInNewContext(worker, context);
+  let response;
+  listeners.fetch({
+    request: { method: "GET", url: "https://joshsmith-lab.github.io/mossbridge-wx/?fbclid=family" },
+    respondWith: (promise) => { response = promise; },
+  });
+  assert.equal(await response, cached);
+  assert.equal(fetches, 1);
+  assert.equal(matchOptions.ignoreSearch, true);
+
+  cacheResult = null; succeedOnRetry = true; fetches = 0;
+  listeners.fetch({
+    request: { method: "GET", url: "https://joshsmith-lab.github.io/mossbridge-wx/?utm_source=message" },
+    respondWith: (promise) => { response = promise; },
+  });
+  assert.equal(await response, retried);
+  assert.equal(fetches, 2);
 });
 
 test("loading, cached data and the hourly explorer tell the truth", async () => {
@@ -48,6 +90,14 @@ test("loading, cached data and the hourly explorer tell the truth", async () => 
   assert.match(html, /return`updated \$\{mins\}m ago`/);
   assert.match(html, /classList\.toggle\("cached",!live\)/);
   assert.match(html, /\.cached \.live-dot\{animation:none/);
+  const cacheCode = html.match(/const cacheKey=id=>"mbwx-"\+id;[\s\S]*?\n}\n(?=function writeCache)/)?.[0];
+  assert.ok(cacheCode, "cache reader should be extractable for its rollover check");
+  const cacheContext = {
+    localStorage: { getItem: () => JSON.stringify({ savedAt: Date.now(), data: { current: { time: "2000-01-01T23:55" } } }) },
+    result: "not run",
+  };
+  vm.runInNewContext(`${cacheCode}\nresult=readCache("mb");`, cacheContext);
+  assert.equal(cacheContext.result, null, "a fresh timestamp must not make yesterday's forecast current");
 
   // Feels-like is real hourly data, revealed only when it differs enough to matter.
   assert.match(html, /hourly=temperature_2m,apparent_temperature,precipitation_probability/);
@@ -55,6 +105,9 @@ test("loading, cached data and the hourly explorer tell the truth", async () => 
   assert.match(html, /const showFeels=Math\.abs\(feels-temp\)>=3/);
   assert.match(html, /function setupHourlyPeek\(\)/);
   assert.match(html, /e\.key==="ArrowRight"/);
+  assert.match(html, /if\(!HOURLY_PEEK\)return/);
+  assert.match(html, /pop>=5\?`\$\{pop\} percent chance of rain`/);
+  assert.match(html, /pointercancel",\(\)=>\{PEEK_TOUCH_X=null/);
   assert.match(html, /id="hourlyPeekLive" aria-live="polite"/);
 
   // The two tiny-looking masthead controls remain full touch targets and keyboard operable.
@@ -62,6 +115,18 @@ test("loading, cached data and the hourly explorer tell the truth", async () => 
   assert.match(html, /id="refreshBtn" role="button" tabindex="0"/);
   assert.match(html, /min-height:44px/);
   assert.match(html, /keyboardClick\(document\.getElementById\("refreshBtn"\),refresh\)/);
+});
+
+test("overnight copy follows the night the family is actually in", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  assert.match(html, /const beforeSunrise=now<sunrise/);
+  assert.match(html, /const nightEnd=beforeSunrise\?sunrise:tomorrowRise/);
+  assert.match(html, /const fallbackDay=beforeSunrise\?0:Math\.min\(1/);
+  assert.match(html, /const nightWhen=beforeSunrise\?"before morning":"tonight"/);
+  assert.match(html, /beforeSunrise\?goldenWindow\(sunrise\)/);
+  // Missing storm direction does not turn a moving system into a stationary one.
+  assert.match(html, /const motion=s\.spd>0\?\(s\.dirDeg!=null\?"moving "/);
 });
 
 test("every motion is driven by a reading, not by decoration", async () => {
@@ -116,7 +181,11 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /const raccoon=\(x,y,s,o=\.96\)/);
   // residents stay intact; the landscape gives each silhouette a quiet natural pocket
   assert.match(html, /Math\.abs\(x-residentX\)<20\)ht\*=\.28/);
-  assert.match(html, /if\(yard\)ht\*=\.3/);
+  assert.match(html, /const animalLeft=barnX-48,animalRight=barnX\+48,rightTreeX=W\*\.955/);
+  assert.match(html, /const yard=x>animalLeft-18&&x<animalRight\+22/);
+  assert.match(html, /class="barn" data-scene-anchor="barn"/);
+  assert.match(html, /deerAt\(animalRight\+10/);
+  assert.match(html, /deer\?"":dark\?fox\(animalRight-14/);
   // the small shorebird's bill sits against open water, not the dark bank
   assert.match(html, /oysterCatcher\(residentX,base\+6,1\.1,1\)/);
   // Shady Spring gets asymmetric Appalachian folds, a real gambrel barn, and bare winter trees
@@ -206,9 +275,10 @@ test("golden hour reaches the whole page, and the two ends differ", async () => 
   assert.match(html, /for\(const v of \["--paper","--wash","--line"\]\)root\.removeProperty\(v\)/);
   // the ink never moves: only the paper leans, so nothing gets harder to read
   assert.doesNotMatch(html, /root\.setProperty\("--ink"/);
-  // the sun line uses a clean thread and one boundary bead, not stacked highlighter bars
-  assert.match(html, /stroke="#E7A73D" stroke-width="2\.1"/);
-  assert.match(html, /const boundary=a<\.5\?b:a,bx=px\(boundary\),by=py\(boundary\)/);
+  // the sun line warms the existing dotted path; no glow, bar or boundary bead is added
+  assert.match(html, /stroke="#D39A3C" stroke-width="1\.8" stroke-dasharray="1 7"/);
+  assert.doesNotMatch(html, /const boundary=a<\.5\?b:a,bx=px\(boundary\),by=py\(boundary\)/);
+  assert.doesNotMatch(html, /stroke="#FFD68A" stroke-width="7"/);
 });
 
 test("nothing new moves under prefers-reduced-motion", async () => {
