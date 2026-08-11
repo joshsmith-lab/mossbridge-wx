@@ -210,11 +210,13 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .masthead{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);
   font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;gap:10px;opacity:.82}
 .masthead .live{display:flex;align-items:center;gap:6px;white-space:nowrap;cursor:pointer;
-  -webkit-tap-highlight-color:transparent}
+  -webkit-tap-highlight-color:transparent;min-height:44px;padding:0 7px;margin:-14px -7px}
 .masthead .live:active{opacity:.5}
 .masthead .addr{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;cursor:pointer;
-  -webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:5px}
+  -webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:5px;
+  min-height:44px;padding:0 7px;margin:-14px -7px}
 .masthead .addr:active{opacity:.5}
+.masthead [role=button]:focus-visible{outline:2px solid currentColor;outline-offset:-5px;border-radius:8px}
 .masthead .addr svg{flex:0 0 auto;opacity:.6}
 .masthead .addr .addr-full,.masthead .addr .addr-short{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .addr-short{display:none}
@@ -228,6 +230,8 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes ping{0%{transform:scale(.75);opacity:1}70%,100%{transform:scale(2.9);opacity:0}}
 .spin .live-dot{animation:none;opacity:.35}
 .spin .live-dot::after{animation:none;opacity:0}
+.cached .live-dot{animation:none;opacity:.55}
+.cached .live-dot::after{animation:none;opacity:0}
 
 /* last baseline: the bottom meta line sits on the same line as the numerals, at any size */
 .now{display:flex;align-items:last baseline;gap:14px;margin-top:24px}
@@ -293,8 +297,21 @@ section{padding:28px 20px 0}
 
 .hourly-scroll{overflow-x:auto;margin:0 -20px;padding:0 20px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .hourly-scroll::-webkit-scrollbar{display:none}
-.hourly-inner{min-width:820px}
+.hourly-inner{min-width:820px;position:relative;outline:none}
+.hourly-inner:focus-visible{outline:2px solid var(--water);outline-offset:-2px;border-radius:8px}
 .hourly-inner svg{display:block;width:100%;height:auto}
+.hourly-peek{position:absolute;z-index:3;top:2px;left:var(--peek-label-x,50%);transform:translateX(-50%);
+  display:flex;align-items:baseline;gap:6px;white-space:nowrap;pointer-events:none;
+  padding:5px 9px;border:1px solid var(--line);border-radius:999px;background:var(--paper);
+  background:color-mix(in srgb,var(--paper) 92%,transparent);
+  box-shadow:0 5px 18px rgba(9,34,43,.09);font-family:var(--mono);font-size:10.5px;color:var(--ink-soft)}
+.hourly-peek b{font-size:12px;color:var(--ink);font-weight:650}
+.hourly-peek .feels.warm{color:var(--heat)}.hourly-peek .feels.cold{color:var(--water)}
+.hourly-cursor{position:absolute;z-index:2;left:var(--peek-x,16px);top:18px;height:120px;
+  border-left:1px solid var(--ink-soft);opacity:.7;pointer-events:none}
+.hourly-cursor::after{content:"";position:absolute;left:-4px;top:calc(var(--peek-y,60px) - 22px);
+  width:7px;height:7px;border-radius:50%;background:var(--paper);border:1.8px solid var(--ink)}
+.hourly-peek[hidden],.hourly-cursor[hidden]{display:none}
 .hr-labels{display:grid;grid-template-columns:repeat(24,1fr);min-width:820px;font-family:var(--mono);
   font-size:10px;color:var(--ink-faint);margin-top:7px}
 .hr-labels span{text-align:center}
@@ -400,6 +417,8 @@ html[data-theme=dark] .gold-key{background:linear-gradient(90deg,#F3B84F,#FFD98C
 .foot-note{display:block;margin-top:9px}
 .skel{display:inline-block;min-width:2.2em;border-radius:5px;background:var(--wash);color:transparent!important;
   animation:shimmer 1.5s ease-in-out infinite}
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;
+  overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 @keyframes shimmer{0%,100%{opacity:.45}50%{opacity:.9}}
 
 @media(max-width:520px){
@@ -429,8 +448,8 @@ html[data-theme=dark] .gold-key{background:linear-gradient(90deg,#F3B84F,#FFD98C
 
   <div class="alert-strip" id="alertStrip" role="alert"></div>
   <div class="masthead">
-    <span class="addr" id="locBtn" role="button" title="Switch location"></span>
-    <span class="live" id="refreshBtn" title="Tap to refresh"><span class="live-dot"></span><span id="stamp">—</span></span>
+    <span class="addr" id="locBtn" role="button" tabindex="0" aria-label="Switch location" title="Switch location"></span>
+    <span class="live" id="refreshBtn" role="button" tabindex="0" aria-label="Refresh weather" title="Tap to refresh"><span class="live-dot"></span><span id="stamp">—</span></span>
   </div>
   <div class="now">
     <div class="big-temp" id="bigTemp"><span class="skel">00</span><span class="deg">°</span></div>
@@ -449,8 +468,13 @@ html[data-theme=dark] .gold-key{background:linear-gradient(90deg,#F3B84F,#FFD98C
 <section>
   <div class="eyebrow"><b>Next 24 hours</b><span id="hourlyNote"></span></div>
   <div class="hourly-scroll">
-    <div class="hourly-inner"><svg id="hourlySvg" viewBox="0 0 820 144" xmlns="http://www.w3.org/2000/svg" aria-label="Hourly temperature and rain chance"></svg></div>
+    <div class="hourly-inner" id="hourlyExplore" role="group" tabindex="0" aria-label="Hourly forecast. Use left and right arrow keys to explore.">
+      <svg id="hourlySvg" viewBox="0 0 820 144" xmlns="http://www.w3.org/2000/svg" aria-label="Hourly temperature and rain chance"></svg>
+      <div class="hourly-cursor" id="hourlyCursor" hidden></div>
+      <div class="hourly-peek" id="hourlyPeek" hidden><span id="peekTime"></span><b id="peekTemp"></b><span class="feels" id="peekFeels"></span><span id="peekRain"></span></div>
+    </div>
     <div class="hr-labels" id="hrLabels"></div>
+    <span class="sr-only" id="hourlyPeekLive" aria-live="polite"></span>
   </div>
 </section>
 
@@ -1944,7 +1968,97 @@ function goldenHour(altDeg,now,dark,root){
 
 /* ── main render ────────────────────────────────────── */
 let LINE_DRAWN=false,SCENE_IN=false;
-function render(d,live){
+let HOURLY_PEEK=null,PEEK_I=0,PEEK_TOUCH_X=null,PEEK_HIDE=0;
+function hideHourlyPeek(delay=0){
+  clearTimeout(PEEK_HIDE);
+  const hide=()=>{
+    document.getElementById("hourlyPeek").hidden=true;
+    document.getElementById("hourlyCursor").hidden=true;
+  };
+  if(delay)PEEK_HIDE=setTimeout(hide,delay);else hide();
+}
+function hourlyPeekIndex(clientX){
+  if(!HOURLY_PEEK)return 0;
+  const svg=document.getElementById("hourlySvg"),r=svg.getBoundingClientRect();
+  const vx=(clientX-r.left)/Math.max(1,r.width)*820;
+  let best=0,dist=Infinity;
+  HOURLY_PEEK.x.forEach((x,i)=>{const d=Math.abs(x-vx);if(d<dist){dist=d;best=i}});
+  return best;
+}
+function showHourlyPeek(i,announce=false){
+  if(!HOURLY_PEEK)return;
+  clearTimeout(PEEK_HIDE);
+  const {h,x,y}=HOURLY_PEEK,n=h.time.length;
+  PEEK_I=clamp(i,0,n-1);
+  const temp=Math.round(Number(h.temp[PEEK_I]));
+  const rawFeel=h.feels?.[PEEK_I];
+  const apparent=rawFeel==null?NaN:Number(rawFeel);
+  const feels=Number.isFinite(apparent)?Math.round(apparent):temp;
+  const showFeels=Math.abs(feels-temp)>=3;
+  const pop=Math.round(Number(h.pop[PEEK_I])||0);
+  const time=PEEK_I===0?"now":hh(h.time[PEEK_I]);
+  const peek=document.getElementById("hourlyPeek"),cursor=document.getElementById("hourlyCursor");
+  document.getElementById("peekTime").textContent=time;
+  document.getElementById("peekTemp").textContent=temp+"°";
+  const feelEl=document.getElementById("peekFeels");
+  feelEl.hidden=!showFeels;feelEl.textContent=showFeels?"feels "+feels+"°":"";
+  feelEl.className="feels "+(feels>=temp?"warm":"cold");
+  document.getElementById("peekRain").textContent=pop>=5?"rain "+pop+"%":"dry";
+  const px=x[PEEK_I],labelX=clamp(px,112,708);
+  for(const el of [peek,cursor]){
+    el.style.setProperty("--peek-x",px.toFixed(1)+"px");
+    el.style.setProperty("--peek-y",y[PEEK_I].toFixed(1)+"px");
+    el.style.setProperty("--peek-label-x",labelX.toFixed(1)+"px");
+    el.hidden=false;
+  }
+  if(announce){
+    const spokenTime=PEEK_I===0?"Now":clock12(new Date(h.time[PEEK_I]));
+    document.getElementById("hourlyPeekLive").textContent=
+      `${spokenTime}, ${temp} degrees${showFeels?`, feels like ${feels}`:""}, ${pop?`${pop} percent chance of rain`:"dry"}`;
+  }
+}
+function setupHourlyPeek(){
+  const svg=document.getElementById("hourlySvg"),explore=document.getElementById("hourlyExplore");
+  const scroller=document.querySelector(".hourly-scroll");
+  svg.addEventListener("pointerdown",e=>{
+    if(e.pointerType!=="mouse")PEEK_TOUCH_X=e.clientX;
+    showHourlyPeek(hourlyPeekIndex(e.clientX));
+  });
+  svg.addEventListener("pointermove",e=>{
+    if(e.pointerType==="mouse"||PEEK_TOUCH_X!==null){
+      if(e.pointerType!=="mouse")PEEK_TOUCH_X=e.clientX;
+      showHourlyPeek(hourlyPeekIndex(e.clientX));
+    }
+  });
+  svg.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse")hideHourlyPeek()});
+  svg.addEventListener("pointerup",e=>{
+    if(e.pointerType!=="mouse"){PEEK_TOUCH_X=null;hideHourlyPeek(1400)}
+  });
+  svg.addEventListener("pointercancel",()=>{hideHourlyPeek(1000)});
+  scroller.addEventListener("scroll",()=>{
+    if(PEEK_TOUCH_X!==null){showHourlyPeek(hourlyPeekIndex(PEEK_TOUCH_X));hideHourlyPeek(1000)}
+  },{passive:true});
+  scroller.addEventListener("touchend",()=>{PEEK_TOUCH_X=null;hideHourlyPeek(1400)},{passive:true});
+  explore.addEventListener("keydown",e=>{
+    let next=PEEK_I;
+    if(e.key==="ArrowRight")next++;
+    else if(e.key==="ArrowLeft")next--;
+    else if(e.key==="Home")next=0;
+    else if(e.key==="End")next=(HOURLY_PEEK?.h.time.length||1)-1;
+    else return;
+    e.preventDefault();showHourlyPeek(next,true);
+    scroller.scrollLeft=clamp(HOURLY_PEEK.x[PEEK_I]-scroller.clientWidth/2,0,scroller.scrollWidth-scroller.clientWidth);
+  });
+  explore.addEventListener("blur",()=>hideHourlyPeek());
+}
+function cacheAgeText(savedAt){
+  const mins=Math.max(0,Math.round((Date.now()-savedAt)/6e4));
+  if(mins<2)return"updated just now";
+  if(mins<60)return`updated ${mins}m ago`;
+  const hours=Math.round(mins/60);
+  return`updated ${hours}h ago`;
+}
+function render(d,live,savedAt=0){
   const c=d.current,dy=d.daily,h=d.hourly,m=d.marine;
   const now=new Date(), sunrise=new Date(dy.sunrise[0]), sunset=new Date(dy.sunset[0]);
   const sp=sunPos(now), altDeg=sp.alt*180/Math.PI;
@@ -1984,7 +2098,8 @@ function render(d,live){
     water:cs.getPropertyValue("--water").trim(),paper:cs.getPropertyValue("--paper").trim(),
     wash:cs.getPropertyValue("--wash").trim(),marker:cs.getPropertyValue("--marker").trim()};
 
-  document.getElementById("stamp").textContent=(live?"live · ":"cached · ")+clock12(new Date(c.time))+" ET";
+  document.getElementById("stamp").textContent=live?"live · "+clock12(new Date(c.time))+" ET":cacheAgeText(savedAt||new Date(c.time).getTime());
+  document.getElementById("refreshBtn").classList.toggle("cached",!live);
   countTo(document.getElementById("bigTemp"),c.temperature_2m);
   document.getElementById("condLabel").textContent=WMO[c.weather_code]||"—";
   document.getElementById("feels").textContent=Math.round(c.apparent_temperature)+"°";
@@ -2009,6 +2124,9 @@ function render(d,live){
   const X=i=>pad+i*(W-2*pad)/(n-1);
   const Y=t=>26+(base-40)*(1-(t-tMin)/(tMax-tMin));
   const pts=h.temp.map((t,i)=>[X(i),Y(t)]);
+  HOURLY_PEEK={h,x:h.temp.map((_,i)=>X(i)),y:h.temp.map(t=>Y(t))};
+  PEEK_I=0;
+  hideHourlyPeek();
   const line=spline(pts);
   const area=line+` L ${X(n-1).toFixed(1)} ${base} L ${X(0).toFixed(1)} ${base} Z`;
 
@@ -2254,11 +2372,11 @@ function render(d,live){
   }
   document.getElementById("weekNote").textContent=wi<0?"mostly dry through the week"
     :`rain looks most likely ${wi===0?"today":dayName(dy.time[wi])}`;
-  LAST={d,live};LASTW=appW();
+  LAST={d,live,savedAt};LASTW=appW();
 }
 let LAST=null,LASTW=0,rzT;
 addEventListener("resize",()=>{clearTimeout(rzT);rzT=setTimeout(()=>{
-  if(LAST&&Math.abs(appW()-LASTW)>16)render(LAST.d,LAST.live);
+  if(LAST&&Math.abs(appW()-LASTW)>16)render(LAST.d,LAST.live,LAST.savedAt);
 },240)});
 
 /* ── fetch ──────────────────────────────────────────── */
@@ -2269,10 +2387,14 @@ function readCache(id){
     const raw=localStorage.getItem(cacheKey(id));if(!raw)return null;
     const cached=JSON.parse(raw);
     if(cached&&cached.savedAt&&cached.data)
-      return Date.now()-cached.savedAt<=CACHE_MAX_AGE?cached.data:null;
+      return Date.now()-cached.savedAt<=CACHE_MAX_AGE?{data:cached.data,savedAt:cached.savedAt}:null;
     /* Accept a same-day cache written by versions before cache timestamps existed. */
     const today=new Date().toLocaleDateString("en-CA",{timeZone:"America/New_York"});
-    return cached&&cached.current&&String(cached.current.time||"").slice(0,10)===today?cached:null;
+    if(cached&&cached.current&&String(cached.current.time||"").slice(0,10)===today){
+      const observed=new Date(cached.current.time).getTime();
+      return{data:cached,savedAt:Number.isFinite(observed)?observed:Date.now()};
+    }
+    return null;
   }catch(e){return null}
 }
 function writeCache(id,data){try{localStorage.setItem(cacheKey(id),JSON.stringify({savedAt:Date.now(),data}))}catch(e){}}
@@ -2292,7 +2414,7 @@ async function refresh(){
     const bd=yest.toLocaleDateString("en-CA",{timeZone:"America/New_York"}).replace(/-/g,"");
     const stormsP=L.tropics?fetchStorms():Promise.resolve(null);
     const [wj,marine,tides,alerts,storms]=await Promise.all([
-      fetchJSON(`https://api.open-meteo.com/v1/forecast?latitude=${L.lat}&longitude=${L.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&hourly=temperature_2m,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,wind_speed_10m_max,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York&forecast_days=7&minutely_15=precipitation&forecast_minutely_15=12`,10000),
+      fetchJSON(`https://api.open-meteo.com/v1/forecast?latitude=${L.lat}&longitude=${L.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,wind_speed_10m_max,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York&forecast_days=7&minutely_15=precipitation&forecast_minutely_15=12`,10000),
       L.marine?fetchJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${L.marine.lat}&longitude=${L.marine.lon}&daily=wave_height_max,wave_period_max&timezone=America%2FNew_York&forecast_days=1&length_unit=imperial`,6000).then(mj=>{
         const waveRaw=mj&&mj.daily&&mj.daily.wave_height_max&&mj.daily.wave_height_max[0];
         const periodRaw=mj&&mj.daily&&mj.daily.wave_period_max&&mj.daily.wave_period_max[0];
@@ -2307,6 +2429,7 @@ async function refresh(){
     const hi=wj.hourly.time.findIndex(t=>t>=wj.current.time.slice(0,13)+":00");
     const i0=Math.max(0,hi),s={
       time:wj.hourly.time.slice(i0,i0+24),temp:wj.hourly.temperature_2m.slice(i0,i0+24),
+      feels:wj.hourly.apparent_temperature?.slice(i0,i0+24),
       pop:wj.hourly.precipitation_probability.slice(i0,i0+24),wind:wj.hourly.wind_speed_10m.slice(i0,i0+24),
       gust:wj.hourly.wind_gusts_10m.slice(i0,i0+24),uv:wj.hourly.uv_index.slice(i0,i0+24)};
     const data={current:wj.current,daily:wj.daily,hourly:s,marine,tides,alerts,storms,nowcast};
@@ -2316,7 +2439,7 @@ async function refresh(){
   }catch(e){
     if(L!==LOC)return;
     const cached=readCache(L.id);
-    if(cached)render(cached,false);
+    if(cached)render(cached.data,false,cached.savedAt);
     else document.getElementById("verdict").textContent="No connection and no cached forecast yet. Reopen when you're back online.";
   }finally{btn.classList.remove("spin")}
 }
@@ -2326,21 +2449,72 @@ function paintAddr(){
   document.getElementById("locBtn").innerHTML=
     `<span class="addr-full">${LOC.addrFull}</span><span class="addr-short">${LOC.addrShort}</span>${SWAP}`;
 }
+function paintLocationShell(){
+  const coastal=!!LOC.marine;
+  document.getElementById("tideSection").style.display=coastal?"":"none";
+  document.getElementById("outTitle").textContent=LOC.outTitle;
+  document.getElementById("wWaveWrap").style.display=coastal?"":"none";
+  document.getElementById("wTideWrap").style.display=coastal?"":"none";
+  document.getElementById("wFishWrap").style.display=coastal?"none":"";
+  document.getElementById("wWindowLbl").textContent=coastal?"best window":"best time to piddle";
+  document.getElementById("footSrc").textContent=LOC.foot;
+  document.getElementById("sceneSvg").setAttribute("aria-label",coastal
+    ?"Sun and moon over the marsh horizon":"Sun and moon over Appalachian ridgelines and the farm pond");
+}
+function paintLoadingState(){
+  paintLocationShell();
+  const root=document.documentElement;
+  root.removeAttribute("data-theme");
+  for(const v of ["--sky1","--sky2","--sky3","--on-sky","--scrim","--rain","--chip-bg","--hl","--paper","--wash","--line"])
+    root.style.removeProperty(v);
+  document.getElementById("goldWash").style.opacity="0";
+  document.getElementById("stamp").textContent="loading";
+  document.getElementById("refreshBtn").classList.remove("cached");
+  document.getElementById("bigTemp").innerHTML='<span class="skel">00</span><span class="deg">°</span>';
+  document.getElementById("condLabel").innerHTML='<span class="skel">loading</span>';
+  for(const id of ["feels","hiNow","loNow"])document.getElementById(id).textContent="—";
+  document.getElementById("verdict").textContent="Reading the sky…";
+  for(const id of ["chips","skyFx","rainFx","sceneSvg","hourlySvg","hrLabels","weekRows","goldTimes","moonTxt"])
+    document.getElementById(id).innerHTML="";
+  document.getElementById("flash").className="flash";
+  document.getElementById("rainFx").className="rainfx";
+  document.getElementById("hourlyNote").textContent="";
+  document.getElementById("weekNote").textContent="";
+  document.getElementById("tideSvg").innerHTML="";
+  document.getElementById("tideNote").textContent="loading…";
+  document.getElementById("nowcast").className="nowcast";
+  document.getElementById("alertStrip").className="alert-strip";
+  document.getElementById("alertStrip").innerHTML="";
+  document.getElementById("stormSection").style.display="none";
+  document.getElementById("waterLead").textContent="—";
+  for(const id of ["wWind","wGust","wWave","wTide","wFish","wWindow","uvLead","uvNow","uvPeak","eveLead"])
+    document.getElementById(id).textContent="—";
+  HOURLY_PEEK=null;hideHourlyPeek();LAST=null;
+}
 function setLoc(id){
   if(LOC.id===id)return;
   LOC=LOCS[id];LAT=LOC.lat;LON=LOC.lon;
   try{localStorage.setItem("mbwx-loc",id)}catch(e){}
   paintAddr();
   const cached=readCache(id);
-  if(cached)render(cached,false);
+  if(cached)render(cached.data,false,cached.savedAt);
+  else paintLoadingState();
   refresh();
 }
 paintAddr();
+paintLocationShell();
+setupHourlyPeek();
 const initialCached=readCache(LOC.id);
-if(initialCached)render(initialCached,false);
+if(initialCached)render(initialCached.data,false,initialCached.savedAt);
+else paintLoadingState();
 refresh();
 document.getElementById("locBtn").addEventListener("click",()=>setLoc(LOC.id==="mb"?"sp":"mb"));
 document.getElementById("refreshBtn").addEventListener("click",refresh);
+const keyboardClick=(el,fn)=>el.addEventListener("keydown",e=>{
+  if(e.key==="Enter"||e.key===" "){e.preventDefault();fn()}
+});
+keyboardClick(document.getElementById("locBtn"),()=>setLoc(LOC.id==="mb"?"sp":"mb"));
+keyboardClick(document.getElementById("refreshBtn"),refresh);
 document.getElementById("alertStrip").addEventListener("click",toggleAlert);
 document.getElementById("alertStrip").addEventListener("keydown",e=>{
   if(e.key==="Enter"||e.key===" "){e.preventDefault();toggleAlert()}});

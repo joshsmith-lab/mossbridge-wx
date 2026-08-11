@@ -115,10 +115,46 @@ for (const cs of CASES) {
       });
       console.log(`\n### ${cs.name}`);
       console.log(JSON.stringify(copy, null, 1));
+
+      if (cs.name === "01-day-porters-neck") {
+        const box = await page.locator("#hourlySvg").boundingBox();
+        if (!box) { failures++; console.log("!! hourly explorer: chart has no box"); }
+        else {
+          await page.mouse.move(box.x + 96, box.y + 74);
+          const peek = page.locator("#hourlyPeek:not([hidden])");
+          const peekText = await peek.count() ? await peek.innerText() : "";
+          if (!/feels \d+°/.test(peekText)) { failures++; console.log(`!! hourly explorer: missing meaningful feels-like readout (${peekText || "hidden"})`); }
+          await page.locator("#hourlyExplore").screenshot({ path: path.join(OUT, `${cs.name}-peek.png`) });
+          await page.locator("#hourlyExplore").focus();
+          await page.keyboard.press("ArrowRight");
+          const spoken = await page.locator("#hourlyPeekLive").textContent();
+          if (!/degrees/.test(spoken || "")) { failures++; console.log("!! hourly explorer: arrow key did not announce an hour"); }
+        }
+      }
     }
     if (errs.length) { failures++; console.log(`!! ${cs.name} ${vp.tag}: ${errs.join(" | ")}`); }
     await ctx.close();
   }
+}
+
+// A fresh farm load must identify itself before any forecast request comes back. This catches
+// the old flash of Wrightsville Beach tides and a marsh description under Shady Spring.
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 900 }, timezoneId: "America/New_York" });
+  const page = await ctx.newPage();
+  await page.addInitScript(() => localStorage.setItem("mbwx-loc", "sp"));
+  await page.route("**api.open-meteo.com**", (r) => r.abort());
+  await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: "domcontentloaded" });
+  const shell = await page.evaluate(() => ({
+    tide: getComputedStyle(document.getElementById("tideSection")).display,
+    scene: document.getElementById("sceneSvg").getAttribute("aria-label"),
+    card: document.getElementById("outTitle").textContent,
+    window: document.getElementById("wWindowLbl").textContent,
+  }));
+  if (shell.tide !== "none" || !shell.scene.includes("Appalachian") || !shell.card.includes("farm") || shell.window !== "best time to piddle") {
+    failures++; console.log(`!! location-correct loading shell: ${JSON.stringify(shell)}`);
+  }
+  await ctx.close();
 }
 await browser.close();
 server.close();
