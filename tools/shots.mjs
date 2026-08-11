@@ -66,6 +66,10 @@ const CASES = [
     o: { baseTemp: 84, nowTemp: 88, feels: 97, rh: 80, isDay: 1, code: 3, cloud: 85, nowWind: 14, nowDir: 210, nowGust: 26, nowUv: 3.1, uvMax: 8, windAmp: 12, gustAmp: 22,
       popCurve: (i, hr) => (hr >= 13 && hr <= 20 ? 80 : 15),
       dailyPop: (p) => { p[0] = 85; p[1] = 20; } } },
+  // after midnight, "Tonight" means the hours still left before this morning's sunrise
+  { name: "09-after-midnight-porters-neck", loc: "mb", when: "2026-08-02T01:15:00",
+    o: { baseTemp: 80, nowTemp: 76, feels: 79, rh: 88, isDay: 0, code: 1, cloud: 20, nowWind: 4, nowDir: 35, nowGust: 7, nowUv: 0, uvMax: 9, windAmp: 5, gustAmp: 8,
+      popCurve: () => 3, dailyPop: (p) => p.fill(10) } },
 ];
 
 mkdirSync(OUT, { recursive: true });
@@ -126,10 +130,18 @@ for (const cs of CASES) {
           if (!/feels \d+°/.test(peekText)) { failures++; console.log(`!! hourly explorer: missing meaningful feels-like readout (${peekText || "hidden"})`); }
           await page.locator("#hourlyExplore").screenshot({ path: path.join(OUT, `${cs.name}-peek.png`) });
           await page.locator("#hourlyExplore").focus();
+          await page.evaluate(() => { HOURLY_PEEK.h.pop[1] = 3; PEEK_I = 0; });
           await page.keyboard.press("ArrowRight");
           const spoken = await page.locator("#hourlyPeekLive").textContent();
           if (!/degrees/.test(spoken || "")) { failures++; console.log("!! hourly explorer: arrow key did not announce an hour"); }
+          const visibleRain = await page.locator("#peekRain").textContent();
+          if (visibleRain !== "dry" || !/dry$/.test(spoken || "")) {
+            failures++; console.log(`!! hourly explorer: 3% mismatch (${visibleRain} / ${spoken})`);
+          }
         }
+      }
+      if (cs.name === "09-after-midnight-porters-neck" && !/before morning/.test(copy.tonight || "")) {
+        failures++; console.log(`!! after-midnight Tonight card describes the wrong night (${copy.tonight})`);
       }
     }
     if (errs.length) { failures++; console.log(`!! ${cs.name} ${vp.tag}: ${errs.join(" | ")}`); }
@@ -142,9 +154,13 @@ for (const cs of CASES) {
 {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 900 }, timezoneId: "America/New_York" });
   const page = await ctx.newPage();
+  const errs = [];
+  page.on("pageerror", (e) => errs.push(String(e)));
   await page.addInitScript(() => localStorage.setItem("mbwx-loc", "sp"));
   await page.route("**api.open-meteo.com**", (r) => r.abort());
   await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: "domcontentloaded" });
+  await page.locator("#hourlyExplore").focus();
+  await page.keyboard.press("ArrowRight");
   const shell = await page.evaluate(() => ({
     tide: getComputedStyle(document.getElementById("tideSection")).display,
     scene: document.getElementById("sceneSvg").getAttribute("aria-label"),
@@ -154,6 +170,7 @@ for (const cs of CASES) {
   if (shell.tide !== "none" || !shell.scene.includes("Appalachian") || !shell.card.includes("farm") || shell.window !== "best time to piddle") {
     failures++; console.log(`!! location-correct loading shell: ${JSON.stringify(shell)}`);
   }
+  if (errs.length) { failures++; console.log(`!! loading hourly explorer: ${errs.join(" | ")}`); }
   await ctx.close();
 }
 await browser.close();

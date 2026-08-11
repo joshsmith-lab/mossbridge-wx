@@ -57,7 +57,7 @@ const CASES = [
     o: { baseTemp: 82, nowTemp: 84, feels: 89, rh: 58, isDay: 1, code: 1, cloud: 26, nowWind: 25, nowDir: 235, nowGust: 38, nowUv: 6.4, uvMax: 8, windAmp: 16, gustAmp: 28,
       popCurve: () => 10, dailyPop: (p) => p.fill(15) } },
   { name: "03-marsh-golden-evening", loc: "mb", when: "2026-08-02T20:10:00", tidePhase: 0,
-    note: "sun between +6 and -4: the gold arc segment should be lit and breathing",
+    note: "sun between +6 and -4: the ordinary dotted arc should warm quietly near the horizon",
     o: { baseTemp: 84, nowTemp: 86, feels: 92, rh: 70, isDay: 1, code: 1, cloud: 14, nowWind: 8, nowDir: 200, nowGust: 14, nowUv: 0.5, uvMax: 9, windAmp: 8, gustAmp: 13,
       popCurve: () => 8, dailyPop: (p) => p.fill(15) } },
   { name: "04-marsh-warm-clear-night", loc: "mb", when: "2026-08-02T23:10:00", tidePhase: 0,
@@ -112,6 +112,11 @@ const CASES = [
     o: { baseTemp: 27, nowTemp: 24, feels: 16, rh: 76, isDay: 0, code: 3, cloud: 82, nowWind: 9, nowDir: 320, nowGust: 17, nowUv: 0, uvMax: 2, windAmp: 7, gustAmp: 13,
       sunrise: "07:36", sunset: "17:22",
       popCurve: () => 18, dailyPop: (p) => p.fill(25) } },
+  { name: "16-ridge-warm-rain", loc: "sp", when: "2026-05-12T15:20:00",
+    note: "warm rain: the frog should be readable beside the pond, with no grass through it",
+    o: { baseTemp: 64, nowTemp: 64, feels: 63, rh: 91, isDay: 1, code: 61, cloud: 90, nowWind: 8, nowDir: 245, nowGust: 14, nowUv: 1.4, uvMax: 5,
+      windAmp: 7, gustAmp: 12, sunrise: "06:14", sunset: "20:26",
+      popCurve: () => 72, dailyPop: (p) => p.fill(70) } },
 ];
 
 const cases = ONLY.length ? CASES.filter((c) => ONLY.some((q) => c.name.includes(q))) : CASES;
@@ -176,6 +181,11 @@ for (const cs of cases) {
       try { await page.locator(sel).screenshot({ path: path.join(OUT, `${cs.name}-${suffix}.png`) }); } catch {}
     }
 
+    const species = await page.locator("#sceneSvg [data-species]").evaluateAll((els) =>
+      [...new Set(els.map((el) => el.getAttribute("data-species")))].filter(Boolean));
+    console.log(`    wildlife: ${species.join(", ") || "none"}`);
+    if (!species.length) problems.push(`${cs.name}: no wildlife in scene`);
+
     // The count that matters for battery is what is still running. One-shot entrances
     // (rise, wipe, grow) finish in under a second but linger in getAnimations() because
     // they use fill:both, so counting them makes an idle page look busy.
@@ -206,6 +216,7 @@ for (const cs of cases) {
         if (!water) return [];
         const w = water.getBoundingClientRect(), out = [];
         for (const el of svg.querySelectorAll(".wildlife")) {
+          if (el.dataset.species === "frog") continue; // a pond frog belongs at the waterline
           const b = el.getBoundingClientRect();
           const cx = b.left + b.width / 2, feet = b.bottom;
           if (cx > w.left && cx < w.right && feet > w.top + 1 && feet < w.bottom)
@@ -215,6 +226,25 @@ for (const cs of cases) {
       });
       for (const s of swimming) problems.push(`${cs.name}: ${s}`);
       console.log(`    pond: ${swimming.length ? "!! " + swimming.join("; ") : "nothing standing in it"}`);
+
+      // Grounded silhouettes need open landscape around them. In particular, the barn is
+      // dark enough to turn a detailed deer or hen back into one large blob on a phone.
+      const barnSmudges = await page.evaluate(() => {
+        const barn = document.querySelector("#sceneSvg .barn");
+        if (!barn) return [];
+        const a = barn.getBoundingClientRect(), out = [];
+        for (const el of document.querySelectorAll("#sceneSvg [data-species]")) {
+          const species = el.getAttribute("data-species");
+          if (!["deer", "fox", "owl", "hens"].includes(species)) continue;
+          const b = el.getBoundingClientRect();
+          const overlap = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left))
+            * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+          if (overlap > 2) out.push(`${species} overlaps barn by ${Math.round(overlap)} px²`);
+        }
+        return out;
+      });
+      for (const s of barnSmudges) problems.push(`${cs.name}: ${s}`);
+      console.log(`    backdrop: ${barnSmudges.length ? "!! " + barnSmudges.join("; ") : "grounded wildlife clear of barn"}`);
 
       // The forecast reports where the wind comes from. Read the fully rendered vane,
       // including its tiny gust quiver, and keep the arrowhead on that source bearing.

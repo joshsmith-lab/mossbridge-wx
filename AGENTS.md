@@ -54,8 +54,9 @@ and `sp` (Bob Plumley Rd, Shady Spring WV, inland).
   Mornings almost always outscore afternoons, so `bestOutsideWindow` stays on
   today unless today is out of daylight or genuinely rough.
 - Golden hour is sun elevation +6° to -4°, the convention the photo apps use.
-  Blue hour is -4° to -6°. Sunrise and sunset are computed locally from
-  `sunPos`, not taken on faith from an API.
+  Blue hour is -4° to -6°. The displayed sunrise and sunset times come from the
+  forecast API; sun and moon positions and the golden-hour boundaries are
+  computed locally from `sunPos`.
 
 ## Deploying
 
@@ -102,12 +103,12 @@ TZ=America/New_York node tools/scene.mjs          # the picture and its motion
 TZ=America/New_York node tools/scene.mjs fog storm  # just the scenes you are working on
 ```
 
-`tools/shots.mjs` renders eight scenarios (day, night, storm, dusk, both
+`tools/shots.mjs` renders nine scenarios (day, night, after midnight, storm, dusk, both
 locations, an afternoon that should recommend today, and a washout), writes
 screenshots to `tools/shots/` and prints the generated copy, so wording changes
 are reviewable as text.
 
-`tools/scene.mjs` is for anything that moves. Thirteen scenes force the light and
+`tools/scene.mjs` is for anything that moves. Sixteen scenes force the light and
 weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
 clear night, a storm, a fog morning, drizzle against a downpour, freezing rain
 on the coast, and the ridge by day, by evening with the buck out, on a snow day,
@@ -166,11 +167,11 @@ Established with Josh and enforced by `test.mjs`:
 - One local wildlife **cue** at a time. That rule is about the performing cue,
   the thing that moves and takes the eye, and it still holds: refine the cues,
   do not stack them.
-- Under the cue sits a **resident**, and there is always exactly one. It is
-  present at every hour in every weather and stays subordinate, but it must be
-  large enough for posture, negative space and a species landmark to survive a
-  phone screen. Residents move only at real joints, with long rests between
-  gestures. The scene should feel alive, never busy.
+- Under the cue sits a **resident**, unless the cue is itself the grounded animal
+  occupying that habitat. It stays subordinate, but it must be large enough for
+  posture, negative space and a species landmark to survive a phone screen.
+  Residents move only at real joints, with long rests between gestures. The
+  scene should feel alive, never busy.
 - Animals only appear in weather they would actually be out in. Frogs go under
   below 45F, fiddler crabs below 48F, and the cormorant and the cardinal exist
   because something still has to be out there when they do.
@@ -191,4 +192,3 @@ Established with Josh and enforced by `test.mjs`:
   discussion is an NWS gridpoint fallback source: temperature, rain chance,
   wind, gusts and cloud all come through it, UV, the 15-minute nowcast and wave
   height do not.
-- Stale data should say how stale it is.
