@@ -31,7 +31,37 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /JSON\.stringify\(\{savedAt:Date\.now\(\),data\}\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v30/);
+  assert.match(worker, /mbwx-shell-v31/);
+});
+
+test("loading, cached data and the hourly explorer tell the truth", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  // A fresh farm load never flashes the coast's tide chart or scene description.
+  assert.match(html, /function paintLocationShell\(\)/);
+  assert.match(html, /tideSection"\)\.style\.display=coastal\?"":"none"/);
+  assert.match(html, /Sun and moon over Appalachian ridgelines and the farm pond/);
+  assert.match(html, /else paintLoadingState\(\);\s*refresh\(\);/);
+
+  // A cached forecast says how old it is, and its live pulse stands still.
+  assert.match(html, /function cacheAgeText\(savedAt\)/);
+  assert.match(html, /return`updated \$\{mins\}m ago`/);
+  assert.match(html, /classList\.toggle\("cached",!live\)/);
+  assert.match(html, /\.cached \.live-dot\{animation:none/);
+
+  // Feels-like is real hourly data, revealed only when it differs enough to matter.
+  assert.match(html, /hourly=temperature_2m,apparent_temperature,precipitation_probability/);
+  assert.match(html, /feels:wj\.hourly\.apparent_temperature\?\.slice\(i0,i0\+24\)/);
+  assert.match(html, /const showFeels=Math\.abs\(feels-temp\)>=3/);
+  assert.match(html, /function setupHourlyPeek\(\)/);
+  assert.match(html, /e\.key==="ArrowRight"/);
+  assert.match(html, /id="hourlyPeekLive" aria-live="polite"/);
+
+  // The two tiny-looking masthead controls remain full touch targets and keyboard operable.
+  assert.match(html, /id="locBtn" role="button" tabindex="0"/);
+  assert.match(html, /id="refreshBtn" role="button" tabindex="0"/);
+  assert.match(html, /min-height:44px/);
+  assert.match(html, /keyboardClick\(document\.getElementById\("refreshBtn"\),refresh\)/);
 });
 
 test("every motion is driven by a reading, not by decoration", async () => {

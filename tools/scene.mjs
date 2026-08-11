@@ -156,6 +156,7 @@ async function open(cs, { width, height = 932, reducedMotion }) {
   const errs = [];
   page.on("pageerror", (e) => errs.push(String(e)));
   page.on("console", (m) => { if (m.type() === "error") errs.push("console: " + m.text()); });
+  page.on("response", (r) => { if (r.status() >= 400) errs.push(`http ${r.status()}: ${r.url()}`); });
   await stage(page, { now: new Date(cs.when), loc: cs.loc, o: cs.o, tidePhase: cs.tidePhase || 0, fontDir: FONT_DIR, port: PORT });
   await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => !document.getElementById("refreshBtn")?.classList.contains("spin")

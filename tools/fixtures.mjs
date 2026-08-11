@@ -46,12 +46,16 @@ export const day = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.g
 /** A week of plausible hourly and daily data shaped like the Open-Meteo response. */
 export function forecast(now, o) {
   const start = new Date(now); start.setHours(0, 0, 0, 0);
-  const time = [], temp = [], pop = [], code = [], wind = [], gust = [], uv = [];
+  const time = [], temp = [], apparent = [], pop = [], code = [], wind = [], gust = [], uv = [];
+  const feelDelta = Number(o.feels) - Number(o.nowTemp);
   for (let i = 0; i < 24 * 7; i++) {
     const t = new Date(start.getTime() + i * 3600e3), hr = t.getHours();
     const diurnal = Math.sin(((hr - 5) / 24) * 2 * Math.PI);
     time.push(iso(t));
     temp.push(Math.round(o.baseTemp + diurnal * 9));
+    /* Heat index and wind chill fade toward the gentler end of the daily cycle. The exact
+       curve is less important than giving the touch explorer a plausible changing signal. */
+    apparent.push(Math.round(temp[i] + feelDelta * (.3 + .7 * Math.max(0, diurnal))));
     pop.push(Math.max(0, Math.round(o.popCurve(i, hr))));
     code.push(pop[i] >= 55 ? 80 : pop[i] >= 35 ? 3 : o.code);
     wind.push(Math.round(6 + Math.abs(diurnal) * o.windAmp));
@@ -74,7 +78,7 @@ export function forecast(now, o) {
       apparent_temperature: o.feels, is_day: o.isDay, weather_code: o.code, cloud_cover: o.cloud,
       wind_speed_10m: o.nowWind, wind_direction_10m: o.nowDir, wind_gusts_10m: o.nowGust, uv_index: o.nowUv,
     },
-    hourly: { time, temperature_2m: temp, precipitation_probability: pop, weather_code: code, wind_speed_10m: wind, wind_gusts_10m: gust, uv_index: uv },
+    hourly: { time, temperature_2m: temp, apparent_temperature: apparent, precipitation_probability: pop, weather_code: code, wind_speed_10m: wind, wind_gusts_10m: gust, uv_index: uv },
     daily: { time: dtime, weather_code: dcode, temperature_2m_max: dmax, temperature_2m_min: dmin, sunrise: dsun, sunset: dset, precipitation_probability_max: dpop, wind_speed_10m_max: dwmax, uv_index_max: duv },
     minutely_15: o.nowcast
       ? { time: Array.from({ length: 12 }, (_, i) => iso(new Date(now.getTime() + i * 9e5))), precipitation: [0, 0, 0, 0.2, 0.6, 0.9, 0.4, 0.1, 0, 0, 0, 0] }
