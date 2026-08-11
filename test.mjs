@@ -31,7 +31,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /JSON\.stringify\(\{savedAt:Date\.now\(\),data\}\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v32/);
+  assert.match(worker, /mbwx-shell-v33/);
 });
 
 test("loading, cached data and the hourly explorer tell the truth", async () => {
@@ -117,6 +117,9 @@ test("every motion is driven by a reading, not by decoration", async () => {
   // residents stay intact; the landscape gives each silhouette a quiet natural pocket
   assert.match(html, /Math\.abs\(x-residentX\)<20\)ht\*=\.28/);
   assert.match(html, /if\(yard\)ht\*=\.3/);
+  // the heron's full silhouette stays in the clear seam between reeds and dock
+  assert.match(html, /const hx=W\*\.26/);
+  assert.match(html, /translate\(\$\{hx\.toFixed\(1\)\} \$\{\(base-49\)\.toFixed\(1\)\}\) scale\(1\.34\)/);
   // Shady Spring gets asymmetric Appalachian folds, a real gambrel barn, and bare winter trees
   assert.match(html, /const ridgeProfiles=\[/);
   assert.match(html, /const winter=month===11\|\|month<=1\|\|snowing/);

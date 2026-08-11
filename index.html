@@ -1423,9 +1423,12 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   </g>`;
 
   /* great blue heron in the shallows */
-  const hx=W*.20;
+  /* Keep the heron's bill in the open seam between the oak fringe and the dock. At its
+     old .20W position the drawing was sound, but the bill collapsed into the darkest
+     reeds on an ordinary phone. This small diagonal nudge preserves the bird and motion. */
+  const hx=W*.26;
   const showHeron=!wet&&!storm&&!showFlies&&(dark||fog||localHour<12||localHour>=16);
-  const heron=showHeron?`<g class="wildlife heron" data-species="great-blue-heron" transform="translate(${hx.toFixed(1)} ${(base-44).toFixed(1)}) scale(1.34)" fill="${ink}" stroke="${ink}" stroke-linecap="round" stroke-linejoin="round">
+  const heron=showHeron?`<g class="wildlife heron" data-species="great-blue-heron" transform="translate(${hx.toFixed(1)} ${(base-49).toFixed(1)}) scale(1.34)" fill="${ink}" stroke="${ink}" stroke-linecap="round" stroke-linejoin="round">
     <path d="M 11.6 24.4 C 13.2 22.3 16.8 21.0 20.4 21.4 C 25.2 21.9 29.4 24.4 30.9 27.6 C 32.0 30.1 31.2 32.5 28.6 33.8 C 24.4 35.8 17.6 35.0 14.2 32.0 C 12.0 30.0 11.0 27.0 11.6 24.4 Z"/>
     <path d="M 26.6 29.6 C 29.8 30.2 32.8 31.6 34.8 33.8 C 32.2 34.4 29.0 33.9 26.4 32.6 Z"/>
     <path d="M 15.8 24.2 C 20.2 22.6 25.8 24.2 27.8 27.4 C 29.0 29.6 28.2 31.8 25.8 33.0 C 21.4 34.8 15.9 32.8 14.4 29.4 C 13.5 27.2 14.2 25.3 15.8 24.2 Z" fill="${critterMark}" stroke="none" opacity=".38"/>
