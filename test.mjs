@@ -31,7 +31,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /JSON\.stringify\(\{savedAt:Date\.now\(\),data\}\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v31/);
+  assert.match(worker, /mbwx-shell-v32/);
 });
 
 test("loading, cached data and the hourly explorer tell the truth", async () => {
@@ -74,9 +74,10 @@ test("every motion is driven by a reading, not by decoration", async () => {
   // a cloud shadow needs discrete clouds and a sun: clear casts none, overcast is all
   // shadow already, and fog has no directional light at all
   assert.match(html, /if\(PRM\|\|storm\|\|fog\|\|cloud<12\|\|cloud>92\)return""/);
-  // the barn vane's fixed SVG bearing is authoritative; CSS only adds a small gust hunt
+  // the barn vane's bearing is authoritative; even its real-world quiver stays within 1.25°
   assert.match(html, /const windFrom=\(\(Number\(weather\.wind_direction_10m\)\|\|0\)%360\+360\)%360/);
-  assert.match(html, /data-vane-bearing="\$\{Math\.round\(windFrom\)\}" transform="rotate\(\$\{windFrom\.toFixed\(1\)\} 0 0\)"/);
+  assert.match(html, /transform="rotate\(\$\{windFrom\.toFixed\(1\)\} 0 0\)"><g class="vane-hunt" data-vane-bearing="\$\{Math\.round\(windFrom\)\}"/);
+  assert.match(html, /const vaneHunt=clamp\(\(gust-wind\)\*\.11,\.15,1\.25\)/);
   assert.match(html, /--vh-neg:-\$\{vaneHunt\.toFixed\(1\)\}deg/);
   assert.match(html, /function tideTrend\(preds\)/);
   assert.match(html, /renderScene\(sunrise,sunset,now,c,dark,LOC\.tide\?tideTrend\(d\.tides\):0\)/);
@@ -113,6 +114,14 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /const frogAt=\(x,y,s,opacity=\.96\)/);
   assert.match(html, /const crabAt=\(x,y,s,opacity=\.96\)/);
   assert.match(html, /const raccoon=\(x,y,s,o=\.96\)/);
+  // residents stay intact; the landscape gives each silhouette a quiet natural pocket
+  assert.match(html, /Math\.abs\(x-residentX\)<20\)ht\*=\.28/);
+  assert.match(html, /if\(yard\)ht\*=\.3/);
+  // Shady Spring gets asymmetric Appalachian folds, a real gambrel barn, and bare winter trees
+  assert.match(html, /const ridgeProfiles=\[/);
+  assert.match(html, /const winter=month===11\|\|month<=1\|\|snowing/);
+  assert.match(html, /a broken gambrel/);
+  assert.match(html, /M 13\.4 16 L 22\.6 26\.5 M 22\.6 16 L 13\.4 26\.5/);
 
   assert.match(html, /class="hawk-circle"/);
   // the warm-weather farm residents now read as hens and move on separate, quiet clocks
@@ -195,6 +204,9 @@ test("golden hour reaches the whole page, and the two ends differ", async () => 
   assert.match(html, /for\(const v of \["--paper","--wash","--line"\]\)root\.removeProperty\(v\)/);
   // the ink never moves: only the paper leans, so nothing gets harder to read
   assert.doesNotMatch(html, /root\.setProperty\("--ink"/);
+  // the sun line uses a clean thread and one boundary bead, not stacked highlighter bars
+  assert.match(html, /stroke="#E7A73D" stroke-width="2\.1"/);
+  assert.match(html, /const boundary=a<\.5\?b:a,bx=px\(boundary\),by=py\(boundary\)/);
 });
 
 test("nothing new moves under prefers-reduced-motion", async () => {
