@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v35/);
+  assert.match(worker, /mbwx-shell-v36/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -237,9 +237,12 @@ test("it snows in Shady Spring", async () => {
   assert.match(html, /rf\.className="rainfx"\+\(snowing\?" snow":""\)/);
   // and the week's one-line brief no longer calls a heavy snow day "periods of rain"
   assert.match(html, /isSnow\(code\)\?\(code===75\|\|code===86\?"heavy snow"/);
+  assert.match(html, /code:wj\.hourly\.weather_code\.slice\(i0,i0\+24\)/);
+  assert.match(html, /nightPop>=35&&nightSnow\?`Snow is likely at times/);
+  assert.match(html, /isSnow\(dy\.weather_code\[wi\]\)\?"snow"/);
 });
 
-test("the almanac fishes the farm pond, and the coast keeps the sunscreen", async () => {
+test("the almanac fishes the farm pond, the coast keeps sunscreen, and Denver dresses for comfort", async () => {
   const html = await readFile(new URL("index.html", root), "utf8");
 
   // solunar is folklore built on honest astronomy, and the code says so out loud
@@ -248,12 +251,18 @@ test("the almanac fishes the farm pond, and the coast keeps the sunscreen", asyn
   // majors are two hours around transit and underfoot, minors one hour around rise and set
   assert.match(html, /const half=\(major\?60:30\)\*6e4/);
   // the farm card gets the windows; a warned storm takes them away
-  assert.match(html, /const fishOn=!coastal&&!storm/);
+  assert.match(html, /const fishOn=!!LOC\.fish&&!storm/);
   assert.match(html, /id="wFishWrap"/);
   // the ridge sun line states when, never what to wear; the kids' language stays coastal
   assert.match(html, /function ridgeSunLine\(c,dy,h,now\)/);
-  assert.match(html, /LOC\.scene==="ridge"\?ridgeSunLine\(c,dy,h,now\):sunProtectionAdvice\(c,dy,h,now\)/);
+  assert.match(html, /comfort\?comfortAdvice\(c,h\):LOC\.scene==="ridge"\?ridgeSunLine\(c,dy,h,now\):sunProtectionAdvice\(c,dy,h,now\)/);
   assert.match(html, /Strongest sun /);
+  // the travel slot replaces the UV meter with one concise, weather-aware clothing answer
+  assert.match(html, /function comfortAdvice\(c,h\)/);
+  assert.match(html, /comfort\?"What to wear":"Sun & heat"/);
+  assert.match(html, /Warm coat, gloves, and waterproof shoes/);
+  assert.match(html, /T-shirt weather\. Bring a light layer for tonight/);
+  assert.match(html, /id="uvDetails"/);
   // the pond dimples during a bite window, off the same moon the card reads
   assert.match(html, /solunarWindows\(now\)\.some\(w=>now>=w\.start&&now<=w\.end\)/);
   // and the footer says where the bite times come from
@@ -318,8 +327,10 @@ test("plain-language and living-scene refinements stay in place", async () => {
   // paragraph as well, which said it twice and ran the headline to four lines on a phone.
   assert.doesNotMatch(html, /Best outside stretch:/);
   assert.match(html, /<span id="wWindowLbl">best window<\/span><b id="wWindow">/);
-  // the farm calls it what the farm calls it; the boat keeps the boat's language
-  assert.match(html, /coastal\?"best window":"best time to piddle"/);
+  // each place keeps its own plain-language answer to "when should I go out?"
+  assert.match(html, /windowLabel:"best window"/);
+  assert.match(html, /windowLabel:"best time to piddle"/);
+  assert.match(html, /windowLabel:"best time to head out"/);
   assert.match(html, /id="goldenband"/);
   assert.match(html, /one local wildlife cue at a time/);
   assert.match(html, /seasonalFlies/);
@@ -343,9 +354,31 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /deer-ear/);
   // "soupy" is earned, not decorative: real humidity sitting on real heat
   assert.match(html, /soupy\?", soupy":humid\?", humid":""/);
-  assert.match(html, />Sun &amp; heat</);
+  assert.match(html, /id="sunTitle">Sun &amp; heat</);
   assert.doesNotMatch(html, />UV · sun exposure</);
   assert.doesNotMatch(html, />Evening outlook</);
+});
+
+test("Denver is an isolated third travel scene, not a rewrite of either family place", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  assert.match(html, /den:\{id:"den",addrFull:"Next up · Denver"/);
+  assert.match(html, /lat:39\.7392,lon:-104\.9903,scene:"front-range",kind:"trip"/);
+  assert.match(html, /const LOC_ORDER=\["mb","sp","den"\]/);
+  assert.match(html, /const nextLoc=\(\)=>LOC_ORDER\[\(LOC_ORDER\.indexOf\(LOC\.id\)\+1\)%LOC_ORDER\.length\]/);
+  assert.match(html, /if\(LOC\.scene==="front-range"\)/);
+  assert.match(html, /data-species="black-billed-magpie"/);
+  assert.match(html, /data-species="mule-deer"/);
+  assert.match(html, /data-species="cottontail"/);
+  assert.match(html, /high plains foreground, the Front Range, cottonwood and city edge/);
+  assert.match(html, /if\(Math\.abs\(x-residentX\)<30\)ht\*=\.22/);
+  assert.match(html, /Wells Fargo's rounded shoulder/);
+  assert.match(html, /class="denver-buildings" data-scene-anchor="denver-skyline"/);
+  assert.match(html, /class="city-window\$\{spark\?" spark":""\}"/);
+  assert.match(html, /@keyframes citySparkle/);
+  assert.match(html, /class="city-beacon"/);
+  assert.match(html, /sceneLabel:"Sun and moon over Denver and the Front Range"/);
+  assert.match(html, /cacheKey=id=>"mbwx-"\+id/);
 });
 
 test("tide chart reads as depth over the bottom", async () => {

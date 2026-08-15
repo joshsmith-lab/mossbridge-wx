@@ -9,9 +9,12 @@ A single-file, build-free PWA. `index.html` is the whole application,
 `sw.js` caches the shell, `manifest.json` makes it installable.
 
 Production is <https://joshsmith-lab.github.io/mossbridge-wx/>, served from
-`main`, and it is shared with family. Two locations live in the `LOCS` table:
+`main`, and it is shared with family. Three locations live in the `LOCS` table:
 `mb` (Moss Bridge Ct, Porters Neck NC, coastal, gets marine + tides + tropics)
-and `sp` (Bob Plumley Rd, Shady Spring WV, inland).
+and `sp` (Bob Plumley Rd, Shady Spring WV, inland) are permanent family places.
+`den` is the rotating travel entry, currently Denver. Give the next destination a
+new unique id and update `LOC_ORDER`; reusing `den` would briefly show cached Denver
+weather under the new place name.
 
 ## Ground rules
 
@@ -103,16 +106,18 @@ TZ=America/New_York node tools/scene.mjs          # the picture and its motion
 TZ=America/New_York node tools/scene.mjs fog storm  # just the scenes you are working on
 ```
 
-`tools/shots.mjs` renders nine scenarios (day, night, after midnight, storm, dusk, both
-locations, an afternoon that should recommend today, and a washout), writes
+`tools/shots.mjs` renders twelve scenarios (day, night, after midnight, storm, dusk,
+the three locations, an afternoon that should recommend today, a washout, and three
+Denver clothing conditions), writes
 screenshots to `tools/shots/` and prints the generated copy, so wording changes
 are reviewable as text.
 
-`tools/scene.mjs` is for anything that moves. Sixteen scenes force the light and
+`tools/scene.mjs` is for anything that moves. Twenty-two scenes force the light and
 weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
 clear night, a storm, a fog morning, drizzle against a downpour, freezing rain
 on the coast, and the ridge by day, by evening with the buck out, on a snow day,
-and on a cold January night. Per scene it writes the sky and the scene on their
+and on a cold January night, plus Denver in clear, golden, storm, snow, night, and
+windy conditions. Per scene it writes the sky and the scene on their
 own, counts the animations *still running* grouped by keyframe, reads
 `LayoutCount` off CDP while the scene idles, and proves the page holds perfectly
 still under `prefers-reduced-motion` by comparing two screenshots taken 1.4s

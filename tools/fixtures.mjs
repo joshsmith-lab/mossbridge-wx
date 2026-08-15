@@ -57,7 +57,8 @@ export function forecast(now, o) {
        curve is less important than giving the touch explorer a plausible changing signal. */
     apparent.push(Math.round(temp[i] + feelDelta * (.3 + .7 * Math.max(0, diurnal))));
     pop.push(Math.max(0, Math.round(o.popCurve(i, hr))));
-    code.push(pop[i] >= 55 ? 80 : pop[i] >= 35 ? 3 : o.code);
+    const frozen = [56, 57, 66, 67, 71, 73, 75, 77, 85, 86].includes(o.code);
+    code.push(frozen ? o.code : pop[i] >= 55 ? 80 : pop[i] >= 35 ? 3 : o.code);
     wind.push(Math.round(6 + Math.abs(diurnal) * o.windAmp));
     gust.push(Math.round(10 + Math.abs(diurnal) * o.gustAmp));
     uv.push(Math.max(0, +(Math.max(0, diurnal) * o.uvMax).toFixed(1)));

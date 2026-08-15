@@ -181,6 +181,16 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes raccoonSniff{0%,63%,100%{transform:rotate(0)}69%{transform:translate(-.4px,.3px) rotate(5deg)}74%{transform:rotate(-2deg)}79%{transform:translate(-.5px,.2px) rotate(4deg)}86%{transform:rotate(0)}}
 .perch-head{transform-box:fill-box;transform-origin:80% 80%;animation:headCock 17s ease-in-out infinite}
 @keyframes headCock{0%,66%,100%{transform:rotate(0)}72%,84%{transform:rotate(-9deg)}90%{transform:rotate(3deg)}}
+.magpie-tail{transform-box:fill-box;transform-origin:12% 45%;animation:magpieTail 19s ease-in-out infinite}
+@keyframes magpieTail{0%,68%,100%{transform:rotate(0)}73%{transform:rotate(4deg)}79%{transform:rotate(-2deg)}86%{transform:rotate(0)}}
+.rabbit-ear{transform-box:fill-box;transform-origin:50% 100%;animation:rabbitListen 16s ease-in-out infinite}
+@keyframes rabbitListen{0%,64%,100%{transform:rotate(0)}70%,82%{transform:rotate(var(--ear-turn,7deg))}88%{transform:rotate(calc(var(--ear-turn,7deg) * -.35))}}
+.rabbit-body{transform-box:fill-box;transform-origin:50% 100%;animation:rabbitBreathe 7s ease-in-out infinite alternate}
+@keyframes rabbitBreathe{from{transform:scaleY(.985)}to{transform:scaleY(1.015)}}
+.city-window.spark{animation:citySparkle var(--spark-d,12s) ease-in-out infinite}
+@keyframes citySparkle{0%,68%,100%{opacity:var(--spark-lo,.34)}74%,82%{opacity:var(--spark-hi,.92)}88%{opacity:var(--spark-lo,.34)}}
+.city-beacon{opacity:.15;animation:cityBeacon var(--beacon-d,7s) ease-in-out infinite}
+@keyframes cityBeacon{0%,78%,100%{opacity:.12}82%,87%{opacity:.82}91%{opacity:.12}}
 .fox-head{transform-box:fill-box;transform-origin:90% 80%;animation:foxSniff 23s ease-in-out infinite}
 @keyframes foxSniff{0%,66%,100%{transform:rotate(0)}72%{transform:rotate(5deg)}78%{transform:translateY(.5px) rotate(7deg)}85%{transform:rotate(-2deg)}92%{transform:rotate(0)}}
 .fox-tail{transform-box:fill-box;transform-origin:8% 50%;animation:foxBrush 18s ease-in-out infinite alternate}
@@ -501,11 +511,13 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
     </div>
   </div>
   <div class="card">
-    <h3>Sun &amp; heat</h3>
+    <h3 id="sunTitle">Sun &amp; heat</h3>
     <div class="lead" id="uvLead">—</div>
-    <div class="stat-row"><span>right now <b id="uvNow">—</b></span><span class="wide-stat">strongest <b id="uvPeak">—</b></span></div>
-    <div class="uv-bar"><div class="uv-pin" id="uvPin"></div></div>
-    <div class="uv-scale"><span>LOW</span><span>MODERATE</span><span>HIGH</span><span>EXTREME</span></div>
+    <div id="uvDetails">
+      <div class="stat-row"><span>right now <b id="uvNow">—</b></span><span class="wide-stat">strongest <b id="uvPeak">—</b></span></div>
+      <div class="uv-bar"><div class="uv-pin" id="uvPin"></div></div>
+      <div class="uv-scale"><span>LOW</span><span>MODERATE</span><span>HIGH</span><span>EXTREME</span></div>
+    </div>
   </div>
   <div class="card">
     <h3>Tonight into tomorrow</h3>
@@ -525,15 +537,23 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
 <script>
 const LOCS={
   mb:{id:"mb",addrFull:"Moss Bridge Ct · Porters Neck",addrShort:"Porters Neck",
-      lat:34.2982,lon:-77.7896,scene:"marsh",
+      lat:34.2982,lon:-77.7896,scene:"marsh",kind:"coast",windowLabel:"best window",
+      sceneLabel:"Sun and moon over the marsh horizon",
       marine:{lat:34.26,lon:-77.68},tide:8658163,tropics:true,
       outTitle:"On the water · Figure 8",
       foot:"Forecast: Open-Meteo (NWS-blended), grid cell over Porters Neck · Marine: buoy grid off Mason Inlet · Tides: NOAA, Wrightsville Beach station 8658163 · Alerts: National Weather Service · Tropics: National Hurricane Center."},
   sp:{id:"sp",addrFull:"Bob Plumley Rd · Shady Spring",addrShort:"Shady Spring",
-      lat:37.8215,lon:-80.9942,scene:"ridge",
+      lat:37.8215,lon:-80.9942,scene:"ridge",kind:"farm",fish:true,windowLabel:"best time to piddle",
+      sceneLabel:"Sun and moon over Appalachian ridgelines and the farm pond",
       outTitle:"Outside · Around the farm",
-      foot:"Forecast: Open-Meteo (NWS-blended), grid cell over Shady Spring, WV · Alerts: National Weather Service · Bite windows: solunar tables, computed from the moon."}
+      foot:"Forecast: Open-Meteo (NWS-blended), grid cell over Shady Spring, WV · Alerts: National Weather Service · Bite windows: solunar tables, computed from the moon."},
+  den:{id:"den",addrFull:"Next up · Denver",addrShort:"Denver",
+      lat:39.7392,lon:-104.9903,scene:"front-range",kind:"trip",windowLabel:"best time to head out",
+      sceneLabel:"Sun and moon over Denver and the Front Range",
+      outTitle:"Outside · Around Denver",
+      foot:"Forecast: Open-Meteo (NWS-blended), grid cell over Denver, CO · Alerts: National Weather Service."}
 };
+const LOC_ORDER=["mb","sp","den"];
 let LOC;try{LOC=LOCS[localStorage.getItem("mbwx-loc")]||LOCS.mb}catch(e){LOC=LOCS.mb}
 let LAT=LOC.lat, LON=LOC.lon;
 
@@ -802,7 +822,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const wet=isWet(code),snowing=isSnow(code);
   const storm=[95,96,99].includes(code),fog=[45,48].includes(code),quietWeather=!wet&&!storm;
   const humid=weather.relative_humidity_2m||0,temp=weather.temperature_2m||60;
-  const W=appW(),H=Math.round((LOC.scene==="ridge"?168:150)+(760-W)*.10),GY=H-30;   /* taller frame on a phone */
+  const W=appW(),H=Math.round((LOC.scene==="marsh"?150:168)+(760-W)*.10),GY=H-30;   /* taller frame on a phone */
   const sp=sunPos(now), mp=moonPos(now), mph=moonPhase(now);
   const sunAltDeg=sp.alt*180/Math.PI,localHour=now.getHours(),month=now.getMonth();
   const seasonalFlies=dark&&month>=4&&month<=8&&temp>=60&&quietWeather&&wind<18;
@@ -1126,8 +1146,171 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       <path class="flight-wing wing-l" ${st} d="M ${wing} Z"/><path class="flight-wing wing-r" ${st} d="M ${flip(wing)} Z"/></g>`;
   };
 
-  document.getElementById("sceneSvg").setAttribute("aria-label",
-    LOC.scene==="ridge"?"Sun and moon over Appalachian ridgelines and the farm pond":"Sun and moon over the marsh horizon");
+  /* Denver's wildlife is drawn for recognition at phone size: the magpie gets its long
+     stepped tail and white shoulder, the mule deer gets its large ears, and the cottontail
+     gets the one white punctuation mark that makes it unmistakable. */
+  const magpieAt=(x,y,s,opacity=1)=>`<g class="wildlife magpie" data-species="black-billed-magpie" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
+    <path class="magpie-tail" d="M 5.2 1.2 C 10.0 2.1 15.8 4.7 21.0 7.5 L 18.7 9.0 C 13.6 6.8 9.1 5.2 4.0 4.2 Z"/>
+    <path d="M -4.8 1.4 C -3.8 -2.8 1.2 -4.7 5.1 -2.4 C 8.3 -.5 8.4 4.2 5.3 6.3 C 1.8 8.8 -3.5 6.6 -4.8 1.4 Z"/>
+    <path d="M -4.0 -.7 C -6.1 -3.2 -9.7 -2.6 -10.8 -.1 C -11.8 2.2 -9.9 4.4 -7.2 4.0 C -5.0 3.7 -3.6 1.7 -4.0 -.7 Z"/>
+    <path d="M -10.1 -.7 L -15.2 .1 L -10.2 1.1 Z"/>
+    <path d="M -1.3 -2.8 C 1.6 -2.9 4.4 -1.3 5.7 1.0 C 3.5 .0 1.1 -.1 -1.0 .8 Z" fill="${critterMark}" stroke="none" opacity=".9"/>
+    <path d="M -.6 1.0 C 1.6 .1 4.2 .6 5.7 2.6 C 3.9 4.2 1.5 5.0 -.9 4.0 Z" fill="${critterMark}" stroke="none" opacity=".7"/>
+    <g class="perch-head"><circle cx="-8.2" cy="-.4" r=".55" fill="${critterMark}" stroke="none"/></g>
+    <path d="M -1.4 6.0 L -1.7 10.2 L -4.0 11.2 M 2.3 6.0 L 2.1 10.1 L 4.2 11.0" fill="none" stroke-width=".9"/>
+  </g>`;
+  const muleDeerAt=(x,y,s,flip=-1,opacity=1)=>`<g class="wildlife mule-deer" data-species="mule-deer" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(flip*s).toFixed(2)},${s.toFixed(2)})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
+    <path d="M 0 5 C 4 1.8 12.5 1.6 17.3 4.1 C 20.0 5.6 20.3 10.2 17.0 12.0 C 12.5 14.4 4.5 13.1 1.1 9.9 Z"/>
+    <g class="deer-head"><path d="M 2.4 5.4 C -.4 3.0 -3.0 -.2 -3.8 -3.0 C -4.5 -5.5 -3.1 -7.0 -.8 -6.3 C 1.1 -5.7 2.0 -3.7 1.4 -1.7 L 4.7 4.7 Z"/>
+      <path d="M -3.2 -5.1 C -6.1 -8.5 -8.0 -8.4 -7.9 -5.4 C -7.8 -3.0 -5.4 -2.8 -3.2 -4.3 Z"/>
+      <path class="deer-ear" d="M -.8 -6.1 C .7 -10.1 3.3 -10.7 3.7 -7.4 C 4.0 -4.9 1.7 -3.8 -.5 -4.8 Z"/>
+      <path class="deer-ear" d="M -3.4 -5.8 C -5.3 -9.6 -7.9 -9.8 -8.0 -6.5 C -8.1 -4.3 -5.8 -3.2 -3.7 -4.4 Z"/>
+      <circle cx="-3.0" cy="-4.1" r=".42" fill="${critterMark}" stroke="none"/>
+    </g>
+    <path class="deer-leg" d="M 3.4 10 L 2.8 17.2 L 1.2 20 M 7.2 11.5 L 7.1 18.3 L 8.5 20 M 14.1 11.4 L 13.7 18.4 L 12.2 20 M 17.0 10.0 L 18.0 17.3 L 19.2 19.8" fill="none" stroke-width="1.25"/>
+    <path class="deer-tail" d="M 17.2 4.4 C 20.7 2.9 22.8 3.7 22.6 5.5 C 22.3 7.0 20.1 7.7 17.9 7.1 Z"/>
+    <path d="M 20.3 3.8 C 21.7 3.5 22.6 4.1 22.5 5.1 C 21.6 5.0 20.8 4.7 20.3 3.8 Z" fill="${critterMark}" stroke="none" opacity=".55"/>
+  </g>`;
+  const cottontailAt=(x,y,s,opacity=1)=>`<g class="wildlife cottontail" data-species="cottontail" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
+    <g class="rabbit-body"><ellipse cx="1.5" cy="3.8" rx="7.2" ry="5.7"/><circle cx="-4.4" cy=".1" r="4.3"/>
+      <path class="rabbit-ear" style="--ear-turn:-8deg" d="M -6.1 -2.9 C -8.3 -8.8 -7.2 -12.0 -5.3 -10.7 C -3.7 -9.6 -3.8 -5.3 -4.5 -2.5 Z"/>
+      <path class="rabbit-ear" style="--ear-turn:7deg;animation-delay:-4s" d="M -3.8 -3.5 C -4.5 -10.1 -2.9 -12.2 -1.4 -10.2 C -.2 -8.5 -1.5 -4.7 -2.3 -2.5 Z"/>
+      <circle cx="-6.1" cy="-.6" r=".46" fill="${critterMark}" stroke="none"/><circle cx="8.0" cy="3.1" r="2.25" fill="${critterMark}" stroke="none" opacity=".95"/>
+      <path d="M -1.4 8.0 C 1.0 7.5 3.2 8.0 4.6 9.3 M 4.0 7.7 C 7.2 7.6 9.5 8.2 10.6 9.6" fill="none" stroke-width="1.2"/>
+    </g></g>`;
+
+  document.getElementById("sceneSvg").setAttribute("aria-label",LOC.sceneLabel);
+
+  if(LOC.scene==="front-range"){
+    /* ── Denver: high plains foreground, the Front Range, cottonwood and city edge ── */
+    const ink=dark?"#07161B":"#173029",base=GY+10,g=mulberry(5280);
+    const winter=month===11||month<=2||snowing,tempSnow=temp<38;
+    /* Seen from the plains, this is one long broken wall: foothill shoulders, a few sharp
+       summits, deep saddles and long descending ridges. Uneven spacing keeps it from reading
+       as a row of logo triangles. */
+    const far=`M -12 ${base-18} C ${W*.04} ${base-20},${W*.09} ${base-31},${W*.14} ${base-27}
+      L ${W*.205} ${base-43} L ${W*.236} ${base-39} L ${W*.285} ${base-63} L ${W*.307} ${base-58}
+      L ${W*.344} ${base-73} L ${W*.377} ${base-51} L ${W*.418} ${base-57} L ${W*.474} ${base-84}
+      L ${W*.493} ${base-72} L ${W*.522} ${base-77} L ${W*.558} ${base-48} L ${W*.612} ${base-55}
+      L ${W*.649} ${base-66} L ${W*.682} ${base-47} L ${W*.724} ${base-38} L ${W*.787} ${base-50}
+      L ${W*.842} ${base-39} L ${W*.902} ${base-29} C ${W*.94} ${base-34},${W*.97} ${base-31},${W+12} ${base-35}
+      L ${W+12} ${base+3} L -12 ${base+3} Z`;
+    const near=`M -12 ${base-7} C ${W*.08} ${base-20},${W*.16} ${base-13},${W*.25} ${base-24}
+      S ${W*.43} ${base-15},${W*.53} ${base-28} S ${W*.71} ${base-13},${W*.82} ${base-22}
+      S ${W*.95} ${base-11},${W+12} ${base-18} L ${W+12} ${base+4} L -12 ${base+4} Z`;
+    const snowCaps=(winter||tempSnow)?`<g fill="#F4F5EC" opacity="${dark?.16:.6}">
+      <path d="M ${W*.274} ${base-58} L ${W*.285} ${base-63} L ${W*.296} ${base-60} L ${W*.307} ${base-58} L ${W*.296} ${base-59} L ${W*.287} ${base-56} Z"/>
+      <path d="M ${W*.442} ${base-68} L ${W*.474} ${base-84} L ${W*.493} ${base-72} L ${W*.482} ${base-74} L ${W*.470} ${base-69} L ${W*.460} ${base-73} Z"/>
+      <path d="M ${W*.625} ${base-57} L ${W*.649} ${base-66} L ${W*.671} ${base-53} L ${W*.655} ${base-57} L ${W*.646} ${base-54} L ${W*.638} ${base-59} Z"/></g>`:"";
+    /* Denver is not five boxes at the foot of the mountains. From City Park the skyline is
+       a compact middle layer: the curved Wells Fargo tower, the tall plain face of Republic
+       Plaza, stepped crowns, antennas, and a dense base of older blocks. Geometry stays
+       simplified, but the cadence and rooflines belong to this city. */
+    /* The skyline has its own lower plane. Keep it broad enough to feel like Denver, but
+       never let its roofs replace the Front Range silhouette behind it. Separate x/y
+       scales preserve the city's horizontal weight while leaving the peaks fully visible. */
+    const citySX=clamp(.62+(W-390)*.00054,.62,.82),citySY=clamp(.42+(W-390)*.00035,.42,.55);
+    const cityX=(W-337*citySX)/2-W*.025,cityY=base+2,cityInk=ink,cityMark=dark?"#9BB2B7":"#E4E1D2";
+    /* Buildings are a solid foreground silhouette. Color changes with atmosphere, but
+       opacity does not: mountains should never ghost through a tower. */
+    const cityFill=dark?cityInk:storm?mix(cityInk,"#72827D",.24):mix(cityInk,"#516B67",.12);
+    const cityAwake=dark||sunAltDeg<8;
+    const cityLightK=dark?1:clamp((8-sunAltDeg)/10,0,.52);
+    const windowGrid=(x,y,w,h,cols,rows,seed)=>{
+      if(!cityAwake)return"";
+      const wr=mulberry(seed),mx=4,my=5,dx=(w-mx*2)/Math.max(1,cols-1),dy=(h-my*2)/Math.max(1,rows-1);
+      let out="";
+      for(let row=0;row<rows;row++)for(let col=0;col<cols;col++){
+        if(wr()<.38)continue;
+        const cool=wr()<.16,spark=dark&&wr()<.13,op=(cityLightK*(.38+wr()*.5)).toFixed(2);
+        const style=spark?` style="--spark-lo:${Math.max(.16,Number(op)*.45).toFixed(2)};--spark-hi:${Math.min(1,Number(op)*1.35).toFixed(2)};--spark-d:${(9+wr()*8).toFixed(1)}s;animation-delay:-${(wr()*13).toFixed(1)}s"`:"";
+        out+=`<rect class="city-window${spark?" spark":""}" x="${(x+mx+col*dx).toFixed(1)}" y="${(y+my+row*dy).toFixed(1)}" width="2.1" height="1.25" rx=".35" fill="${cool?'#C2DCE5':'#F1D38B'}" opacity="${op}"${style}/>`;
+      }
+      return out;
+    };
+    const skyline=`<g transform="translate(${cityX.toFixed(1)} ${cityY.toFixed(1)}) scale(${citySX.toFixed(4)},${citySY.toFixed(4)})">
+      ${cityAwake?`<ellipse cx="156" cy="-27" rx="176" ry="58" fill="url(#cityglow)" opacity="${dark?.38:.14}"/>`:""}
+      <g class="denver-buildings" data-scene-anchor="denver-skyline" fill="${cityFill}">
+        ${/* Wells Fargo's rounded shoulder is the left punctuation mark, not another roof box. */""}
+        <path d="M 0 0 V -60 C 0 -76 9 -87 24 -90 H 48 V 0 Z"/>
+        <rect x="40" y="-80" width="39" height="80" rx="1"/>
+        <path d="M 76 0 V -38 H 84 V -52 H 116 V 0 Z"/>
+        <path d="M 108 0 V -67 H 116 V -75 H 143 V -67 H 149 V 0 Z"/>
+        ${/* Republic Plaza: the calm tall face at the centre of the cluster. */""}
+        <rect x="145" y="-104" width="38" height="104" rx=".8"/>
+        <path d="M 177 0 V -58 H 186 V -68 H 212 V -58 H 220 V 0 Z"/>
+        <path d="M 212 0 V -79 H 224 V -87 H 254 V -79 H 263 V 0 Z"/>
+        <rect x="255" y="-62" width="30" height="62" rx=".8"/>
+        <path d="M 280 0 V -91 H 312 V -75 H 324 V 0 Z"/>
+        ${/* Older blocks knit the towers together without one enormous truck-like rectangle. */""}
+        <path d="M -13 0 V -17 H 4 V -24 H 21 V -14 H 36 V -26 H 56 V -18 H 70 V -31 H 91 V -20 H 105 V -27 H 126 V -18 H 143 V -25 H 165 V -16 H 184 V -30 H 203 V -20 H 222 V -25 H 242 V -17 H 259 V -29 H 279 V -19 H 297 V -24 H 337 V 0 Z"/>
+      </g>
+      <g fill="${cityMark}" opacity="${dark?.035:.10}">
+        <path d="M 0 -60 C 0 -76 9 -87 24 -90 H 31 L 22 -82 C 13 -75 9 -65 9 -52 V 0 H 0 Z"/>
+        <path d="M 40 -80 H 50 V 0 H 40 Z M 145 -104 H 156 V 0 H 145 Z M 212 -79 H 223 V 0 H 212 Z M 280 -91 H 291 V 0 H 280 Z"/>
+      </g>
+      <g fill="none" stroke="${cityMark}" stroke-linecap="round" opacity="${dark?.28:.32}">
+        <path d="M 4 -61 C 7 -74 14 -82 25 -85 H 46 M 43 -75 H 76 M 111 -63 H 146 M 149 -99 H 180 M 215 -75 H 261 M 284 -86 H 309" stroke-width="1.2"/>
+        <path d="M 24 -88 V -96 M 164 -104 V -114 M 239 -87 V -96 M 296 -91 V -102" stroke-width=".9"/>
+        <path d="M 7 -7 H 30 M 43 -7 H 73 M 83 -7 H 104 M 119 -7 H 140 M 187 -7 H 208 M 228 -7 H 250 M 260 -7 H 280 M 287 -7 H 318" stroke-width="1.1"/>
+        <path d="M 14 -58 V -11 M 57 -76 V -12 M 158 -99 V -10 M 173 -99 V -10 M 232 -81 V -10 M 300 -87 V -10" stroke-width=".55" opacity=".55"/>
+      </g>
+      <g>${windowGrid(0,-90,48,90,4,9,6811)}${windowGrid(40,-80,39,80,4,8,6812)}
+        ${windowGrid(84,-52,32,52,3,5,6813)}${windowGrid(108,-75,41,75,4,7,6814)}
+        ${windowGrid(145,-104,38,104,4,10,6815)}${windowGrid(177,-68,43,68,4,7,6816)}
+        ${windowGrid(212,-87,51,87,5,8,6817)}${windowGrid(255,-62,30,62,3,6,6818)}
+        ${windowGrid(280,-91,44,91,4,9,6819)}</g>
+      ${cityAwake?`<g fill="#D85A3B"><circle class="city-beacon" cx="164" cy="-114" r="1.15" style="--beacon-d:8.4s;animation-delay:-3s"/><circle class="city-beacon" cx="296" cy="-102" r="1" style="--beacon-d:10.5s;animation-delay:-7s"/></g>`:""}
+    </g>`;
+
+    const swayDur=clamp(9.2-wind*.26,2.4,9.2),swayAmt=clamp(.5+wind*.095+(gust-wind)*.055,.5,3.9),treeDur=swayDur*1.45;
+    const treeAt=x=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;--tsway:${(swayAmt*.42*bandAmp[bandOf(x)]).toFixed(2)}deg;--tsway-neg:${(-swayAmt*.42*bandAmp[bandOf(x)]).toFixed(2)}deg;animation:swayTree ${treeDur.toFixed(1)}s ease-in-out ${waveDelay(bandOf(x),treeDur).toFixed(2)}s infinite alternate"`;
+    const bandAt=i=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;--sway:${(swayAmt*bandAmp[i]).toFixed(2)}deg;--sway-neg:${(-swayAmt*bandAmp[i]).toFixed(2)}deg;animation:sway ${swayDur.toFixed(1)}s ease-in-out ${waveDelay(i,swayDur).toFixed(2)}s infinite alternate"`;
+    const cottonX=W*.11;
+    const cottonwood=`<g fill="${ink}" opacity=".78"${treeAt(cottonX)}>
+      <path d="M ${cottonX-3} ${base+3} C ${cottonX-1} ${base-22},${cottonX-4} ${base-39},${cottonX-1.5} ${base-57} L ${cottonX+1.5} ${base-57} C ${cottonX+4} ${base-39},${cottonX+1} ${base-21},${cottonX+3} ${base+3} Z"/>
+      <path d="M ${cottonX} ${base-45} L ${cottonX-14} ${base-59} M ${cottonX} ${base-38} L ${cottonX+15} ${base-53} M ${cottonX-1} ${base-52} L ${cottonX+5} ${base-76} M ${cottonX-2} ${base-47} L ${cottonX-8} ${base-69}" stroke="${ink}" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      ${/* one broken outline reads as a crown; stacked ellipses read as a topiary. */""}
+      <path d="M ${cottonX-2} ${base-42}
+        C ${cottonX-13} ${base-40},${cottonX-18} ${base-47},${cottonX-12} ${base-53}
+        C ${cottonX-22} ${base-57},${cottonX-20} ${base-66},${cottonX-10} ${base-68}
+        C ${cottonX-15} ${base-77},${cottonX-6} ${base-84},${cottonX+1} ${base-78}
+        C ${cottonX+8} ${base-86},${cottonX+18} ${base-79},${cottonX+13} ${base-70}
+        C ${cottonX+23} ${base-66},${cottonX+22} ${base-56},${cottonX+12} ${base-53}
+        C ${cottonX+17} ${base-45},${cottonX+8} ${base-39},${cottonX-2} ${base-42} Z"/>
+      <path d="M ${cottonX-14} ${base-54} C ${cottonX-19} ${base-49},${cottonX-26} ${base-52},${cottonX-24} ${base-59} C ${cottonX-22} ${base-64},${cottonX-16} ${base-64},${cottonX-11} ${base-61} Z"/>
+    </g>`;
+    const blade=(x,ht,lean)=>`M ${(x-.55).toFixed(1)} ${base+3} Q ${(x+lean*.25).toFixed(1)} ${(base+3-ht*.55).toFixed(1)} ${(x+lean).toFixed(1)} ${(base+3-ht).toFixed(1)} Q ${(x+lean*.3+.45).toFixed(1)} ${(base+3-ht*.42).toFixed(1)} ${(x+.55).toFixed(1)} ${base+3} Z `;
+    const residentX=W*.91,tufts=Array.from({length:BANDS},()=>"");
+    for(let x=-5;x<W+8;){const x0=x,cnt=3+Math.floor(g()*4);let d="";
+      for(let i=0;i<cnt;i++){let ht=5+g()*12;if(Math.abs(x-residentX)<30)ht*=.22;d+=blade(x,ht,(g()-.5)*9);x+=2.8+g()*3.4}
+      tufts[bandOf(x0)]+=d;x+=16+g()*30;
+    }
+    const ground=`<path d="M -12 ${base+1} Q ${W*.17} ${base-5} ${W*.34} ${base+1} T ${W*.68} ${base} T ${W+12} ${base-1} L ${W+12} ${H+4} L -12 ${H+4} Z" fill="${ink}" opacity=".46"/>`;
+    const lowSun=sunAltDeg<9,eveningCue=!dark&&!wet&&!storm&&(localHour<10||localHour>=17||lowSun);
+    const magpie=!dark?magpieAt(residentX,base-15,1.2,1):"";
+    const deer=eveningCue?muleDeerAt(W*.86,base-18,1.08,-1,1):"";
+    const rabbit=dark?cottontailAt(residentX,base-11,1.12,1):"";
+    const hawk=!dark&&!wet&&!storm&&!deer?`<g class="hawk-circle" style="--cx:${(W*.08).toFixed(0)}px;--cy:-8px;--cy2:-15px;${phase(158)}">${flightBird("hawk",W*.40,base-92,.84,.4,-5.5,19)}</g>`:"";
+
+    document.getElementById("sceneSvg").setAttribute("viewBox",`0 0 ${W} ${H}`);
+    document.getElementById("sceneSvg").innerHTML=`
+      <defs>
+        <radialGradient id="sunglow"><stop offset="0" stop-color="#FFD86E" stop-opacity=".55"/><stop offset=".42" stop-color="#FFCB55" stop-opacity=".22"/><stop offset="1" stop-color="#FFC94F" stop-opacity="0"/></radialGradient>
+        <radialGradient id="moonglow"><stop offset="0" stop-color="#EAF2FF" stop-opacity=".42"/><stop offset="1" stop-color="#EAF2FF" stop-opacity="0"/></radialGradient>
+        <radialGradient id="cshade"><stop offset="0" stop-color="#0A1E26" stop-opacity=".55"/><stop offset="1" stop-color="#0A1E26" stop-opacity="0"/></radialGradient>
+        <radialGradient id="cityglow"><stop offset="0" stop-color="#E8B964" stop-opacity=".34"/><stop offset=".55" stop-color="#D99B55" stop-opacity=".12"/><stop offset="1" stop-color="#D99B55" stop-opacity="0"/></radialGradient>
+      </defs>
+      <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
+      ${goldArc}${body}${boltAt(W*.69,base-42,80631)}
+      <path d="${far}" fill="${ink}" opacity="${fog?.08:.17}"/>${snowCaps}
+      <path d="${near}" fill="${ink}" opacity="${fog?.12:.27}"/>
+      ${cloudShadows(base-35,34)}${hawk}${skyline}${cottonwood}${ground}
+      ${snowing?`<path d="M -12 ${base+1} Q ${W*.28} ${base-3} ${W*.52} ${base+1} T ${W+12} ${base-1} L ${W+12} ${base+5} L -12 ${base+5} Z" fill="#F4F7F2" opacity=".42"/>`:""}
+      ${tufts.map((d,i)=>d?`<g fill="${ink}" opacity=".82"${bandAt(i)}><path d="${d}"/></g>`:"").join("")}
+      ${deer}${magpie}${rabbit}${sunTimes}`;
+    return {sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05};
+  }
 
   if(LOC.scene==="ridge"){
     /* ── Shady Spring: layered ridges, hardwoods, barn, fence, pond ── */
@@ -1921,6 +2104,28 @@ function sunProtectionAdvice(c,dy,h,now){
     :`Sunscreen weather from ${spokenClock(start)} to ${spokenClock(end)}`;
   return{text:sentence(timing),cls:"caution"};
 }
+/* Denver answers the question a visitor actually has: what will feel comfortable while
+   walking around. One short base layer, plus only the weather-specific thing that matters. */
+function comfortAdvice(c,h){
+  const feels=Math.round(Number(c.apparent_temperature)||Number(c.temperature_2m)||60);
+  const next=Math.min(12,h.temp.length),later=h.temp.slice(0,next).map(Number).filter(Number.isFinite);
+  const low=later.length?Math.min(...later):feels;
+  const rainNow=isWet(c.weather_code),rainSoon=Math.max(0,...h.pop.slice(0,Math.min(6,h.pop.length)).map(Number))>=45;
+  const gust=Math.round(Number(c.wind_gusts_10m)||0);
+  if(isIce(c.weather_code)||isSnow(c.weather_code))
+    return{text:"Warm coat, gloves, and waterproof shoes.",cls:"caution"};
+  let text,cls="go";
+  if(feels<=32){text="Wear a warm coat and gloves.";cls="caution"}
+  else if(feels<=45){text="Wear a warm jacket.";cls="caution"}
+  else if(feels<=58)text=low<=40?"Wear a jacket. Add a warm layer for tonight.":"Wear a jacket.";
+  else if(feels<=70)text=low<=56?"Wear a light layer now. Bring a jacket for tonight.":"Wear a light layer.";
+  else if(feels<=84)text=low<=62?"T-shirt weather. Bring a light layer for tonight.":"T-shirt weather.";
+  else{text=low<=68?"Dress light. Bring a light layer for tonight.":"Dress light for the heat.";cls="caution"}
+  if(rainNow||rainSoon)text=feels<=58?"Wear a jacket that can handle rain.":"Take a rain jacket.";
+  else if(gust>=24&&feels<=58)text="Wear a warm, windproof jacket.";
+  else if(gust>=24&&feels<=70)text="Wear a windproof layer.";
+  return{text,cls};
+}
 function dailyBrief(dy,i){
   const high=Math.round(dy.temperature_2m_max[i]);
   const code=Number(dy.weather_code[i])||0;
@@ -2261,7 +2466,7 @@ function render(d,live,savedAt=0){
     ?`<span class="gold-key">golden hour</span> ${spanTxt(nextLight.a,nextLight.b)}`
     :maxPop<20&&!ncOn?"staying mostly dry":"blue bars show rain chance";
 
-  /* outside card: boating at Moss Bridge, farm weather at Bob Plumley */
+  /* outside card: boating at Moss Bridge, farm weather at Bob Plumley, walking in Denver */
   document.getElementById("outTitle").textContent=LOC.outTitle;
   document.getElementById("footSrc").textContent=LOC.foot;
   const coastal=!!LOC.marine;
@@ -2269,7 +2474,7 @@ function render(d,live,savedAt=0){
   document.getElementById("wTideWrap").style.display=coastal?"":"none";
   /* the almanac's bite windows, farm only, and never during a warned storm: a bite time
      printed under a thunderstorm warning reads as an invitation */
-  const fishOn=!coastal&&!storm;
+  const fishOn=!!LOC.fish&&!storm;
   document.getElementById("wFishWrap").style.display=fishOn?"":"none";
   if(fishOn){
     const wins=solunarWindows(now).filter(w=>w.end>now).slice(0,2);
@@ -2293,7 +2498,7 @@ function render(d,live,savedAt=0){
     }
     document.getElementById("wWave").textContent=wv===null?"unavailable":wv.toFixed(1)+" ft";
     document.getElementById("wTide").textContent=tide?tide.note:"unavailable";
-  }else{
+  }else if(LOC.kind==="farm"){
     let dayPop=0;
     for(let i=0;i<n;i++){const hr=+h.time[i].slice(11,13);if(hr>=7&&hr<=19)dayPop=Math.max(dayPop,h.pop[i])}
     if(g>=30){wMsg="Wind-whipped up here. Save the outside chores for tomorrow.";wCls="no"}
@@ -2303,6 +2508,16 @@ function render(d,live,savedAt=0){
     else if(dayPop>=50){wMsg="Showers moving through. Slip outside between them.";wCls="caution"}
     else if(c.temperature_2m<=36){wMsg="Cold one. Bundle up for the morning rounds.";wCls="caution"}
     else{wMsg="Good day to be outside. Light wind, easy air.";wCls="go"}
+  }else{
+    let dayPop=0;
+    for(let i=0;i<n;i++){const hr=+h.time[i].slice(11,13);if(hr>=7&&hr<=20)dayPop=Math.max(dayPop,h.pop[i])}
+    if(isIce(c.weather_code)){wMsg="Icy underfoot. Give the roads and sidewalks time.";wCls="no"}
+    else if(isSnow(c.weather_code)){wMsg="Snowy and slick. Keep the day close and easy.";wCls="caution"}
+    else if(g>=30){wMsg="Very windy. Choose a sheltered walk or wait for it to ease.";wCls="no"}
+    else if(g>=22){wMsg="Breezy out. A windproof layer is the move.";wCls="caution"}
+    else if(dayPop>=50){wMsg="Showers may interrupt things. Keep a dry window in mind.";wCls="caution"}
+    else if(c.apparent_temperature<=40){wMsg="Cold, but manageable in the right layers.";wCls="caution"}
+    else{wMsg="Good walking weather. Light wind, easy air.";wCls="go"}
   }
   wl.textContent=wMsg;wl.className="lead "+wCls;
   document.getElementById("wWind").innerHTML=vane(c.wind_direction_10m)+dirTxt(c.wind_direction_10m)+" "+Math.round(c.wind_speed_10m)+" mph";
@@ -2312,16 +2527,19 @@ function render(d,live,savedAt=0){
      Josh's parents call it. "Around the farm" is left off: the card header two lines up
      already says it, and the house rule is that if something has been said, do not say it
      again. On the water it stays "best window", which is the language for a boat. */
-  document.getElementById("wWindowLbl").textContent=coastal?"best window":"best time to piddle";
+  document.getElementById("wWindowLbl").textContent=LOC.windowLabel;
   document.getElementById("wWindow").textContent=dayRead.best?dayRead.best.text
-    :coastal?"No clear window":"Not really today";
+    :coastal?"No clear window":LOC.kind==="farm"?"Not really today":"No easy stretch today";
 
   /* uv */
   const uvNow=c.uv_index,uvPk=dy.uv_index_max[0];
   const uvI=h.uv.indexOf(Math.max(...h.uv)),uvStrong=uvI>=0?Number(h.uv[uvI]):uvPk;
   const uvTomorrow=uvI>=0&&h.time[uvI].slice(0,10)!==dy.time[0];
   const ul=document.getElementById("uvLead");
-  const sunAdvice=LOC.scene==="ridge"?ridgeSunLine(c,dy,h,now):sunProtectionAdvice(c,dy,h,now);
+  const comfort=LOC.kind==="trip";
+  document.getElementById("sunTitle").textContent=comfort?"What to wear":"Sun & heat";
+  document.getElementById("uvDetails").style.display=comfort?"none":"";
+  const sunAdvice=comfort?comfortAdvice(c,h):LOC.scene==="ridge"?ridgeSunLine(c,dy,h,now):sunProtectionAdvice(c,dy,h,now);
   ul.textContent=sunAdvice.text;
   ul.className="lead "+sunAdvice.cls;
   document.getElementById("uvNow").textContent=uvNow.toFixed(1);
@@ -2334,14 +2552,17 @@ function render(d,live,savedAt=0){
   const beforeSunrise=now<sunrise;
   const nightStart=beforeSunrise?now:(now<sunset?sunset:now);
   const nightEnd=beforeSunrise?sunrise:tomorrowRise;
-  const nightHours=h.time.map((t,i)=>({time:new Date(t),temp:Number(h.temp[i]),pop:Number(h.pop[i])||0}))
+  const nightHours=h.time.map((t,i)=>({time:new Date(t),temp:Number(h.temp[i]),pop:Number(h.pop[i])||0,code:Number(h.code?.[i])||0}))
     .filter(hour=>hour.time>=nightStart&&hour.time<=nightEnd&&Number.isFinite(hour.temp));
   const fallbackDay=beforeSunrise?0:Math.min(1,dy.temperature_2m_min.length-1);
   const fallbackLow=Number(dy.temperature_2m_min[fallbackDay]);
   const nightLow=Math.round(nightHours.length?Math.min(...nightHours.map(hour=>hour.temp)):fallbackLow);
   const nightPop=nightHours.length?Math.max(...nightHours.map(hour=>hour.pop)):Number(dy.precipitation_probability_max[fallbackDay])||0;
+  const nightSnow=nightHours.some(hour=>isSnow(hour.code)),nightIce=nightHours.some(hour=>isIce(hour.code));
   const nightWhen=beforeSunrise?"before morning":"tonight";
-  let tonightText=nightPop>=60?`Rain is likely at times ${nightWhen}, with a low around ${nightLow}°.`:
+  let tonightText=nightPop>=35&&nightIce?`Freezing rain is possible ${nightWhen}, with a low around ${nightLow}°.`:
+    nightPop>=35&&nightSnow?`Snow is likely at times ${nightWhen}, with a low around ${nightLow}°.`:
+    nightPop>=60?`Rain is likely at times ${nightWhen}, with a low around ${nightLow}°.`:
     nightPop>=35?`A shower is possible ${nightWhen}, with a low around ${nightLow}°.`:
     nightLow>=74?`Warm and mostly dry ${nightWhen}, with a low around ${nightLow}°.`:
     `Mostly dry ${nightWhen}, cooling to around ${nightLow}°.`;
@@ -2391,8 +2612,9 @@ function render(d,live,savedAt=0){
     const p=dy.precipitation_probability_max[i];
     if(p>=60&&(wi<0||p>dy.precipitation_probability_max[wi]))wi=i;
   }
+  const weekWet=wi>=0?(isSnow(dy.weather_code[wi])?"snow":isIce(dy.weather_code[wi])?"ice":"rain"):"";
   document.getElementById("weekNote").textContent=wi<0?"mostly dry through the week"
-    :`rain looks most likely ${wi===0?"today":dayName(dy.time[wi])}`;
+    :`${weekWet} looks most likely ${wi===0?"today":dayName(dy.time[wi])}`;
   LAST={d,live,savedAt};LASTW=appW();
 }
 let LAST=null,LASTW=0,rzT;
@@ -2452,7 +2674,7 @@ async function refresh(){
     const i0=Math.max(0,hi),s={
       time:wj.hourly.time.slice(i0,i0+24),temp:wj.hourly.temperature_2m.slice(i0,i0+24),
       feels:wj.hourly.apparent_temperature?.slice(i0,i0+24),
-      pop:wj.hourly.precipitation_probability.slice(i0,i0+24),wind:wj.hourly.wind_speed_10m.slice(i0,i0+24),
+      pop:wj.hourly.precipitation_probability.slice(i0,i0+24),code:wj.hourly.weather_code.slice(i0,i0+24),wind:wj.hourly.wind_speed_10m.slice(i0,i0+24),
       gust:wj.hourly.wind_gusts_10m.slice(i0,i0+24),uv:wj.hourly.uv_index.slice(i0,i0+24)};
     const data={current:wj.current,daily:wj.daily,hourly:s,marine,tides,alerts,storms,nowcast};
     if(L!==LOC)return;                      /* user switched mid-fetch */
@@ -2477,11 +2699,13 @@ function paintLocationShell(){
   document.getElementById("outTitle").textContent=LOC.outTitle;
   document.getElementById("wWaveWrap").style.display=coastal?"":"none";
   document.getElementById("wTideWrap").style.display=coastal?"":"none";
-  document.getElementById("wFishWrap").style.display=coastal?"none":"";
-  document.getElementById("wWindowLbl").textContent=coastal?"best window":"best time to piddle";
+  document.getElementById("wFishWrap").style.display=LOC.fish?"":"none";
+  document.getElementById("wWindowLbl").textContent=LOC.windowLabel;
   document.getElementById("footSrc").textContent=LOC.foot;
-  document.getElementById("sceneSvg").setAttribute("aria-label",coastal
-    ?"Sun and moon over the marsh horizon":"Sun and moon over Appalachian ridgelines and the farm pond");
+  document.getElementById("sceneSvg").setAttribute("aria-label",LOC.sceneLabel);
+  const comfort=LOC.kind==="trip";
+  document.getElementById("sunTitle").textContent=comfort?"What to wear":"Sun & heat";
+  document.getElementById("uvDetails").style.display=comfort?"none":"";
 }
 function paintLoadingState(){
   paintLocationShell();
@@ -2530,12 +2754,13 @@ const initialCached=readCache(LOC.id);
 if(initialCached)render(initialCached.data,false,initialCached.savedAt);
 else paintLoadingState();
 refresh();
-document.getElementById("locBtn").addEventListener("click",()=>setLoc(LOC.id==="mb"?"sp":"mb"));
 document.getElementById("refreshBtn").addEventListener("click",refresh);
 const keyboardClick=(el,fn)=>el.addEventListener("keydown",e=>{
   if(e.key==="Enter"||e.key===" "){e.preventDefault();fn()}
 });
-keyboardClick(document.getElementById("locBtn"),()=>setLoc(LOC.id==="mb"?"sp":"mb"));
+const nextLoc=()=>LOC_ORDER[(LOC_ORDER.indexOf(LOC.id)+1)%LOC_ORDER.length];
+document.getElementById("locBtn").addEventListener("click",()=>setLoc(nextLoc()));
+keyboardClick(document.getElementById("locBtn"),()=>setLoc(nextLoc()));
 keyboardClick(document.getElementById("refreshBtn"),refresh);
 document.getElementById("alertStrip").addEventListener("click",toggleAlert);
 document.getElementById("alertStrip").addEventListener("keydown",e=>{
