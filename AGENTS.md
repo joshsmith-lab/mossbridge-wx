@@ -201,6 +201,13 @@ Established with Josh and enforced by `test.mjs`:
   posture, negative space and a species landmark to survive a phone screen.
   Residents move only at real joints, with long rests between gestures. The
   scene should feel alive, never busy.
+- **Two grounded residents cannot share a lane.** The open ground beside the
+  Denver skyline is about 115px wide on a phone. Standing a mule deer next to a
+  magpie there forced the deer down to magpie height, and a deer the size of a
+  magpie is not a deer, it is a rodent. Give the lane to one animal at a time and
+  gate them on something true: mule deer take it at first and last light, the
+  magpie has the rest of the day. Where a resident's size is fighting the frame,
+  the answer is a schedule, not a smaller animal.
 - Animals only appear in weather they would actually be out in. Frogs go under
   below 45F, fiddler crabs below 48F, and the cormorant and the cardinal exist
   because something still has to be out there when they do.
