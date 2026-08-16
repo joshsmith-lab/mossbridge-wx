@@ -26,6 +26,7 @@ import { serve, stage } from "./fixtures.mjs";
 const OUT = path.join(path.dirname(fileURLToPath(import.meta.url)), "shots");
 const FONT_DIR = process.env.PORCH_FONT_DIR || "";
 const PORT = Number(process.env.PORCH_PORT || 8799);
+const ONLY = process.argv.slice(2);
 
 let chromium;
 try {
@@ -70,7 +71,19 @@ const CASES = [
   { name: "09-after-midnight-porters-neck", loc: "mb", when: "2026-08-02T01:15:00",
     o: { baseTemp: 80, nowTemp: 76, feels: 79, rh: 88, isDay: 0, code: 1, cloud: 20, nowWind: 4, nowDir: 35, nowGust: 7, nowUv: 0, uvMax: 9, windAmp: 5, gustAmp: 8,
       popCurve: () => 3, dailyPop: (p) => p.fill(10) } },
+  { name: "10-denver-mild-afternoon", loc: "den", when: "2026-08-15T16:00:00",
+    o: { baseTemp: 61, nowTemp: 72, feels: 70, rh: 30, isDay: 1, code: 1, cloud: 14, nowWind: 8, nowDir: 145, nowGust: 15, nowUv: 7.1, uvMax: 9, windAmp: 7, gustAmp: 12, sunrise: "08:12", sunset: "21:52",
+      popCurve: () => 4, dailyPop: (p) => p.fill(8) } },
+  { name: "11-denver-windy-cool", loc: "den", when: "2026-10-10T16:10:00",
+    o: { baseTemp: 49, nowTemp: 54, feels: 48, rh: 25, isDay: 1, code: 1, cloud: 24, nowWind: 23, nowDir: 255, nowGust: 36, nowUv: 4.3, uvMax: 6, windAmp: 16, gustAmp: 27, sunrise: "09:06", sunset: "20:29",
+      popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "12-denver-snow-morning", loc: "den", when: "2026-01-14T13:15:00",
+    o: { baseTemp: 27, nowTemp: 28, feels: 19, rh: 78, isDay: 1, code: 73, cloud: 88, nowWind: 8, nowDir: 35, nowGust: 16, nowUv: 1, uvMax: 2, windAmp: 7, gustAmp: 13, sunrise: "09:18", sunset: "18:58",
+      popCurve: () => 80, dailyPop: (p) => p.fill(82) } },
 ];
+
+const cases = ONLY.length ? CASES.filter((c) => ONLY.some((q) => c.name.includes(q))) : CASES;
+if (!cases.length) { console.error(`no screenshot matched ${ONLY.join(" ")}`); process.exit(1); }
 
 mkdirSync(OUT, { recursive: true });
 const server = await serve(PORT, FONT_DIR);
@@ -80,7 +93,7 @@ const browser = await chromium.launch(process.env.PORCH_CHROME_PATH
   ? { executablePath: process.env.PORCH_CHROME_PATH }
   : {});
 let failures = 0;
-for (const cs of CASES) {
+for (const cs of cases) {
   for (const vp of [{ w: 390, h: 1500, tag: "phone" }, { w: 900, h: 1500, tag: "wide" }]) {
     const ctx = await browser.newContext({ viewport: { width: vp.w, height: vp.h }, deviceScaleFactor: 2, timezoneId: "America/New_York" });
     const page = await ctx.newPage();

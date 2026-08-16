@@ -117,6 +117,37 @@ const CASES = [
     o: { baseTemp: 64, nowTemp: 64, feels: 63, rh: 91, isDay: 1, code: 61, cloud: 90, nowWind: 8, nowDir: 245, nowGust: 14, nowUv: 1.4, uvMax: 5,
       windAmp: 7, gustAmp: 12, sunrise: "06:14", sunset: "20:26",
       popCurve: () => 72, dailyPop: (p) => p.fill(70) } },
+  // ── Denver / Front Range ──────────────────────────────────────────────
+  { name: "17-denver-clear-afternoon", loc: "den", when: "2026-08-15T16:00:00",
+    note: "high-plains clarity: layered Front Range, magpie on the ground and a red-tailed hawk above",
+    o: { baseTemp: 74, nowTemp: 82, feels: 81, rh: 28, isDay: 1, code: 1, cloud: 16, nowWind: 9, nowDir: 145, nowGust: 17, nowUv: 7.2, uvMax: 9,
+      windAmp: 8, gustAmp: 14, sunrise: "06:12", sunset: "19:52",
+      popCurve: () => 5, dailyPop: (p) => p.fill(10) } },
+  { name: "18-denver-golden-evening", loc: "den", when: "2026-08-15T21:20:00",
+    note: "alpenglow without spectacle: warm paper, long-tailed magpie and mule deer in an open lane",
+    o: { baseTemp: 68, nowTemp: 72, feels: 71, rh: 34, isDay: 1, code: 1, cloud: 12, nowWind: 6, nowDir: 110, nowGust: 11, nowUv: 0.5, uvMax: 8,
+      windAmp: 6, gustAmp: 10, sunrise: "06:12", sunset: "19:52",
+      popCurve: () => 4, dailyPop: (p) => p.fill(8) } },
+  { name: "19-denver-summer-storm", loc: "den", when: "2026-08-15T18:10:00",
+    note: "a Front Range thunderstorm: mountains recede, grass leans, resident magpie stays readable",
+    o: { baseTemp: 72, nowTemp: 68, feels: 66, rh: 60, isDay: 1, code: 95, cloud: 93, nowWind: 19, nowDir: 280, nowGust: 36, nowUv: 1.2, uvMax: 8,
+      windAmp: 15, gustAmp: 27, sunrise: "06:12", sunset: "19:52", nowcast: true,
+      popCurve: (i, hr) => (hr >= 15 && hr <= 20 ? 82 : 12), dailyPop: (p) => { p[0] = 85; p[1] = 18; } } },
+  { name: "20-denver-snow-morning", loc: "den", when: "2026-01-14T13:15:00",
+    note: "snow on the peaks and high plain, with a black-and-white magpie holding the foreground",
+    o: { baseTemp: 27, nowTemp: 28, feels: 19, rh: 78, isDay: 1, code: 73, cloud: 88, nowWind: 8, nowDir: 35, nowGust: 16, nowUv: 1.0, uvMax: 2,
+      windAmp: 7, gustAmp: 13, sunrise: "07:18", sunset: "16:58",
+      popCurve: () => 80, dailyPop: (p) => p.fill(82) } },
+  { name: "21-denver-clear-night", loc: "den", when: "2026-08-15T23:45:00",
+    note: "quiet city edge, moon over the Front Range and a cottontail listening in the grass",
+    o: { baseTemp: 65, nowTemp: 63, feels: 62, rh: 38, isDay: 0, code: 0, cloud: 7, nowWind: 4, nowDir: 190, nowGust: 7, nowUv: 0, uvMax: 8,
+      windAmp: 5, gustAmp: 8, sunrise: "06:12", sunset: "19:52",
+      popCurve: () => 2, dailyPop: (p) => p.fill(5) } },
+  { name: "22-denver-windy-day", loc: "den", when: "2026-10-10T16:10:00",
+    note: "dry 24 mph wind: cottonwood and prairie move together while the magpie stays planted",
+    o: { baseTemp: 59, nowTemp: 67, feels: 61, rh: 24, isDay: 1, code: 1, cloud: 24, nowWind: 24, nowDir: 255, nowGust: 39, nowUv: 4.5, uvMax: 6,
+      windAmp: 17, gustAmp: 29, sunrise: "07:06", sunset: "18:29",
+      popCurve: () => 4, dailyPop: (p) => p.fill(8) } },
 ];
 
 const cases = ONLY.length ? CASES.filter((c) => ONLY.some((q) => c.name.includes(q))) : CASES;
@@ -257,6 +288,28 @@ for (const cs of cases) {
       const vaneError = vane ? Math.abs(((vane.visual - cs.o.nowDir + 540) % 360) - 180) : 999;
       console.log(`    vane: ${vane?.source ?? "missing"}° source, ${vane ? vane.visual.toFixed(1) : "missing"}° rendered axis`);
       if (vaneError > 1.5) problems.push(`${cs.name}: vane is ${vaneError.toFixed(1)}° off the ${cs.o.nowDir}° wind source`);
+    }
+
+    if (cs.loc === "den") {
+      const denver = await page.evaluate(() => {
+        const svg = document.getElementById("sceneSvg"), city = svg.querySelector(".denver-buildings");
+        if (!city) return { missing: true, smudges: [], clipped: [] };
+        const a = city.getBoundingClientRect(), frame = svg.getBoundingClientRect(), smudges = [], clipped = [];
+        for (const el of svg.querySelectorAll('[data-species="black-billed-magpie"],[data-species="mule-deer"],[data-species="cottontail"]')) {
+          const b = el.getBoundingClientRect(), species = el.dataset.species;
+          const overlap = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left))
+            * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+          if (overlap > 2) smudges.push(`${species} overlaps skyline by ${Math.round(overlap)} px²`);
+          if (b.left < frame.left - 1 || b.right > frame.right + 1) clipped.push(`${species} is clipped by the scene edge`);
+        }
+        return { missing: false, width: a.width, height: a.height, smudges, clipped };
+      });
+      if (denver.missing) problems.push(`${cs.name}: Denver skyline missing`);
+      else {
+        if (denver.width < 195 || denver.height < 42) problems.push(`${cs.name}: skyline is only ${denver.width.toFixed(0)}×${denver.height.toFixed(0)} px at phone width`);
+        for (const s of [...denver.smudges, ...denver.clipped]) problems.push(`${cs.name}: ${s}`);
+      }
+      console.log(`    skyline: ${denver.missing ? "missing" : `${denver.width.toFixed(0)}×${denver.height.toFixed(0)} px, ${denver.smudges.length ? "!! " + denver.smudges.join("; ") : "wildlife clear"}`}`);
     }
 
     // ── what the motion costs: layout must stay flat while things move ──

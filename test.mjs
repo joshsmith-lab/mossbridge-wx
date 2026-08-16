@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v35/);
+  assert.match(worker, /mbwx-shell-v36/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -92,12 +92,21 @@ test("loading, cached data and the hourly explorer tell the truth", async () => 
   assert.match(html, /\.cached \.live-dot\{animation:none/);
   const cacheCode = html.match(/const cacheKey=id=>"mbwx-"\+id;[\s\S]*?\n}\n(?=function writeCache)/)?.[0];
   assert.ok(cacheCode, "cache reader should be extractable for its rollover check");
-  const cacheContext = {
-    localStorage: { getItem: () => JSON.stringify({ savedAt: Date.now(), data: { current: { time: "2000-01-01T23:55" } } }) },
-    result: "not run",
+  // The rollover check now asks the *location's* clock what day it is, so the sandbox has to
+  // supply one. Denver crossing midnight while Porters Neck has not is exactly the case a
+  // travel location introduces, and it is the reason this is worth pinning.
+  const runCache = (stored, today) => {
+    const ctx = { localStorage: { getItem: () => JSON.stringify(stored) }, locToday: () => today, result: "not run" };
+    vm.runInNewContext(`${cacheCode}\nresult=readCache("mb");`, ctx);
+    return ctx.result;
   };
-  vm.runInNewContext(`${cacheCode}\nresult=readCache("mb");`, cacheContext);
-  assert.equal(cacheContext.result, null, "a fresh timestamp must not make yesterday's forecast current");
+  const fresh = (time) => ({ savedAt: Date.now(), data: { current: { time } } });
+  assert.equal(runCache(fresh("2000-01-01T23:55"), "2000-01-02"), null,
+    "a fresh timestamp must not make yesterday's forecast current");
+  assert.ok(runCache(fresh("2000-01-02T00:05"), "2000-01-02"),
+    "a forecast from today's date on the location's clock is still good");
+  assert.equal(runCache(fresh("2000-01-02T23:55"), "2000-01-03"), null,
+    "and it goes stale the moment that clock rolls over, not the phone's");
 
   // Feels-like is real hourly data, revealed only when it differs enough to matter.
   assert.match(html, /hourly=temperature_2m,apparent_temperature,precipitation_probability/);
@@ -127,6 +136,43 @@ test("overnight copy follows the night the family is actually in", async () => {
   assert.match(html, /beforeSunrise\?goldenWindow\(sunrise\)/);
   // Missing storm direction does not turn a moving system into a stationary one.
   assert.match(html, /const motion=s\.spd>0\?\(s\.dirDeg!=null\?"moving "/);
+});
+
+test("each location keeps its own clock", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  // Every place carries its zone and the label it is quoted in.
+  assert.match(html, /tz:"America\/New_York",tzLabel:"ET"/);
+  assert.match(html, /tz:"America\/Denver",tzLabel:"MT"/);
+  assert.doesNotMatch(html, /timezone=America%2FNew_York/);
+  assert.match(html, /&timezone=\$\{encodeURIComponent\(L\.tz\)\}&forecast_days=7/);
+  assert.match(html, /clock12\(new Date\(c\.time\)\)\+" "\+LOC\.tzLabel/);
+  assert.match(html, /const bd=yest\.toLocaleDateString\("en-CA",\{timeZone:L\.tz\}\)/);
+
+  // The app reasons in the location's wall clock; the astronomy converts back to a real
+  // instant so the sun is where it actually is rather than where the phone thinks it is.
+  assert.match(html, /const wallNow=\(\)=>new Date\(Date\.now\(\)\+TZSHIFT\)/);
+  assert.match(html, /function sunPos\(date\)\{const t=trueTime\(date\);/);
+  assert.match(html, /function moonPos\(date\)\{const t=trueTime\(date\);/);
+  assert.match(html, /function moonPhase\(date\)\{const d=toDays\(trueTime\(date\)\)/);
+  assert.match(html, /const now=wallNow\(\), sunrise=/);
+  assert.match(html, /const now=wallNow\(\),t0=/);
+  assert.match(html, /const now=wallNow\(\)\.getTime\(\);/);
+
+  // And the shift itself is real arithmetic, not a hardcoded offset: run it.
+  const shiftCode = html.match(/const tzOffset=[\s\S]*?function syncClock\(\)\{[^}]*\}/)?.[0];
+  assert.ok(shiftCode, "the clock shift should be extractable");
+  const at = (tz, iso) => {
+    const ctx = { Date, LOC: { tz }, TZSHIFT: 0, out: 0 };
+    vm.runInNewContext(`${shiftCode}\nconst d=new Date("${iso}");out=tzOffset(LOC.tz,d)/3600000;`, ctx);
+    return ctx.out;
+  };
+  // Denver is two hours behind New York on both sides of a daylight-saving change.
+  assert.equal(at("America/New_York", "2026-08-15T18:00:00Z") - at("America/Denver", "2026-08-15T18:00:00Z"), 2);
+  assert.equal(at("America/New_York", "2026-01-15T18:00:00Z") - at("America/Denver", "2026-01-15T18:00:00Z"), 2);
+  // and the offsets are the real ones, not a fixed guess
+  assert.equal(at("America/Denver", "2026-08-15T18:00:00Z"), -6);
+  assert.equal(at("America/Denver", "2026-01-15T18:00:00Z"), -7);
 });
 
 test("every motion is driven by a reading, not by decoration", async () => {
@@ -237,9 +283,12 @@ test("it snows in Shady Spring", async () => {
   assert.match(html, /rf\.className="rainfx"\+\(snowing\?" snow":""\)/);
   // and the week's one-line brief no longer calls a heavy snow day "periods of rain"
   assert.match(html, /isSnow\(code\)\?\(code===75\|\|code===86\?"heavy snow"/);
+  assert.match(html, /code:wj\.hourly\.weather_code\.slice\(i0,i0\+24\)/);
+  assert.match(html, /nightPop>=35&&nightSnow\?`Snow is likely at times/);
+  assert.match(html, /isSnow\(dy\.weather_code\[wi\]\)\?"snow"/);
 });
 
-test("the almanac fishes the farm pond, and the coast keeps the sunscreen", async () => {
+test("the almanac fishes the farm pond, the coast keeps sunscreen, and Denver dresses for comfort", async () => {
   const html = await readFile(new URL("index.html", root), "utf8");
 
   // solunar is folklore built on honest astronomy, and the code says so out loud
@@ -248,12 +297,18 @@ test("the almanac fishes the farm pond, and the coast keeps the sunscreen", asyn
   // majors are two hours around transit and underfoot, minors one hour around rise and set
   assert.match(html, /const half=\(major\?60:30\)\*6e4/);
   // the farm card gets the windows; a warned storm takes them away
-  assert.match(html, /const fishOn=!coastal&&!storm/);
+  assert.match(html, /const fishOn=!!LOC\.fish&&!storm/);
   assert.match(html, /id="wFishWrap"/);
   // the ridge sun line states when, never what to wear; the kids' language stays coastal
   assert.match(html, /function ridgeSunLine\(c,dy,h,now\)/);
-  assert.match(html, /LOC\.scene==="ridge"\?ridgeSunLine\(c,dy,h,now\):sunProtectionAdvice\(c,dy,h,now\)/);
+  assert.match(html, /comfort\?comfortAdvice\(c,h\):LOC\.scene==="ridge"\?ridgeSunLine\(c,dy,h,now\):sunProtectionAdvice\(c,dy,h,now\)/);
   assert.match(html, /Strongest sun /);
+  // the travel slot replaces the UV meter with one concise, weather-aware clothing answer
+  assert.match(html, /function comfortAdvice\(c,h\)/);
+  assert.match(html, /comfort\?"What to wear":"Sun & heat"/);
+  assert.match(html, /Warm coat, gloves, and waterproof shoes/);
+  assert.match(html, /T-shirt weather\. Bring a light layer for tonight/);
+  assert.match(html, /id="uvDetails"/);
   // the pond dimples during a bite window, off the same moon the card reads
   assert.match(html, /solunarWindows\(now\)\.some\(w=>now>=w\.start&&now<=w\.end\)/);
   // and the footer says where the bite times come from
@@ -318,8 +373,10 @@ test("plain-language and living-scene refinements stay in place", async () => {
   // paragraph as well, which said it twice and ran the headline to four lines on a phone.
   assert.doesNotMatch(html, /Best outside stretch:/);
   assert.match(html, /<span id="wWindowLbl">best window<\/span><b id="wWindow">/);
-  // the farm calls it what the farm calls it; the boat keeps the boat's language
-  assert.match(html, /coastal\?"best window":"best time to piddle"/);
+  // each place keeps its own plain-language answer to "when should I go out?"
+  assert.match(html, /windowLabel:"best window"/);
+  assert.match(html, /windowLabel:"best time to piddle"/);
+  assert.match(html, /windowLabel:"best time to head out"/);
   assert.match(html, /id="goldenband"/);
   assert.match(html, /one local wildlife cue at a time/);
   assert.match(html, /seasonalFlies/);
@@ -343,9 +400,31 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /deer-ear/);
   // "soupy" is earned, not decorative: real humidity sitting on real heat
   assert.match(html, /soupy\?", soupy":humid\?", humid":""/);
-  assert.match(html, />Sun &amp; heat</);
+  assert.match(html, /id="sunTitle">Sun &amp; heat</);
   assert.doesNotMatch(html, />UV · sun exposure</);
   assert.doesNotMatch(html, />Evening outlook</);
+});
+
+test("Denver is an isolated third travel scene, not a rewrite of either family place", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  assert.match(html, /den:\{id:"den",addrFull:"Next up · Denver"/);
+  assert.match(html, /lat:39\.7392,lon:-104\.9903,scene:"front-range",kind:"trip"/);
+  assert.match(html, /const LOC_ORDER=\["mb","sp","den"\]/);
+  assert.match(html, /const nextLoc=\(\)=>LOC_ORDER\[\(LOC_ORDER\.indexOf\(LOC\.id\)\+1\)%LOC_ORDER\.length\]/);
+  assert.match(html, /if\(LOC\.scene==="front-range"\)/);
+  assert.match(html, /data-species="black-billed-magpie"/);
+  assert.match(html, /data-species="mule-deer"/);
+  assert.match(html, /data-species="cottontail"/);
+  assert.match(html, /high plains foreground, the Front Range, cottonwood and city edge/);
+  assert.match(html, /if\(Math\.abs\(x-residentX\)<30\)ht\*=\.22/);
+  assert.match(html, /Wells Fargo's rounded shoulder/);
+  assert.match(html, /class="denver-buildings" data-scene-anchor="denver-skyline"/);
+  assert.match(html, /class="city-window\$\{spark\?" spark":""\}"/);
+  assert.match(html, /@keyframes citySparkle/);
+  assert.match(html, /class="city-beacon"/);
+  assert.match(html, /sceneLabel:"Sun and moon over Denver and the Front Range"/);
+  assert.match(html, /cacheKey=id=>"mbwx-"\+id/);
 });
 
 test("tide chart reads as depth over the bottom", async () => {

@@ -9,9 +9,12 @@ A single-file, build-free PWA. `index.html` is the whole application,
 `sw.js` caches the shell, `manifest.json` makes it installable.
 
 Production is <https://joshsmith-lab.github.io/mossbridge-wx/>, served from
-`main`, and it is shared with family. Two locations live in the `LOCS` table:
+`main`, and it is shared with family. Three locations live in the `LOCS` table:
 `mb` (Moss Bridge Ct, Porters Neck NC, coastal, gets marine + tides + tropics)
-and `sp` (Bob Plumley Rd, Shady Spring WV, inland).
+and `sp` (Bob Plumley Rd, Shady Spring WV, inland) are permanent family places.
+`den` is the rotating travel entry, currently Denver. Give the next destination a
+new unique id and update `LOC_ORDER`; reusing `den` would briefly show cached Denver
+weather under the new place name.
 
 ## Ground rules
 
@@ -103,16 +106,18 @@ TZ=America/New_York node tools/scene.mjs          # the picture and its motion
 TZ=America/New_York node tools/scene.mjs fog storm  # just the scenes you are working on
 ```
 
-`tools/shots.mjs` renders nine scenarios (day, night, after midnight, storm, dusk, both
-locations, an afternoon that should recommend today, and a washout), writes
+`tools/shots.mjs` renders twelve scenarios (day, night, after midnight, storm, dusk,
+the three locations, an afternoon that should recommend today, a washout, and three
+Denver clothing conditions), writes
 screenshots to `tools/shots/` and prints the generated copy, so wording changes
 are reviewable as text.
 
-`tools/scene.mjs` is for anything that moves. Sixteen scenes force the light and
+`tools/scene.mjs` is for anything that moves. Twenty-two scenes force the light and
 weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
 clear night, a storm, a fog morning, drizzle against a downpour, freezing rain
 on the coast, and the ridge by day, by evening with the buck out, on a snow day,
-and on a cold January night. Per scene it writes the sky and the scene on their
+and on a cold January night, plus Denver in clear, golden, storm, snow, night, and
+windy conditions. Per scene it writes the sky and the scene on their
 own, counts the animations *still running* grouped by keyframe, reads
 `LayoutCount` off CDP while the scene idles, and proves the page holds perfectly
 still under `prefers-reduced-motion` by comparing two screenshots taken 1.4s
@@ -122,6 +127,30 @@ survives reduced motion.
 Two numbers worth knowing before you change motion: every scene idles at **0-1
 layouts per 6 seconds**, and the busiest scene runs **110 animations**. If either
 jumps, you have added something that is not a `transform` or an `opacity`.
+
+## Time and place
+
+Every forecast this app reads arrives as naive local times for the place it describes, and
+nearly every comparison in the file is a Date built from one of those strings. That worked
+only while the phone and the place shared a clock. It stopped being true when Denver joined.
+
+So each entry in `LOCS` carries `tz` and `tzLabel`, and the app reasons entirely in the
+**location's wall clock**: `wallNow()` is this instant shifted so its local fields read as
+the clock on the wall there, and the forecast is requested in that same zone, so both sides
+of every comparison agree. `trueTime()` converts back, and `sunPos`, `moonPos` and
+`moonPhase` call it at their own door, because astronomy needs a real instant rather than a
+wall clock.
+
+Two consequences worth knowing:
+
+- For the two family locations with the phone at home the shift is exactly zero, so their
+  behaviour is unchanged. Away from home it quietly starts being right instead of showing
+  the phone's clock against home data.
+- `tools/fixtures.mjs` writes each fixture on the location's own clock too. Without that the
+  Denver scenes were fed Eastern sunrise and sunset, which is how a mid-August Denver
+  morning came out reading 8:12am.
+
+If you add a location, give it a `tz` and a `tzLabel`. Nothing else needs to know.
 
 ## On file size
 
