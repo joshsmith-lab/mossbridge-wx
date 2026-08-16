@@ -92,12 +92,21 @@ test("loading, cached data and the hourly explorer tell the truth", async () => 
   assert.match(html, /\.cached \.live-dot\{animation:none/);
   const cacheCode = html.match(/const cacheKey=id=>"mbwx-"\+id;[\s\S]*?\n}\n(?=function writeCache)/)?.[0];
   assert.ok(cacheCode, "cache reader should be extractable for its rollover check");
-  const cacheContext = {
-    localStorage: { getItem: () => JSON.stringify({ savedAt: Date.now(), data: { current: { time: "2000-01-01T23:55" } } }) },
-    result: "not run",
+  // The rollover check now asks the *location's* clock what day it is, so the sandbox has to
+  // supply one. Denver crossing midnight while Porters Neck has not is exactly the case a
+  // travel location introduces, and it is the reason this is worth pinning.
+  const runCache = (stored, today) => {
+    const ctx = { localStorage: { getItem: () => JSON.stringify(stored) }, locToday: () => today, result: "not run" };
+    vm.runInNewContext(`${cacheCode}\nresult=readCache("mb");`, ctx);
+    return ctx.result;
   };
-  vm.runInNewContext(`${cacheCode}\nresult=readCache("mb");`, cacheContext);
-  assert.equal(cacheContext.result, null, "a fresh timestamp must not make yesterday's forecast current");
+  const fresh = (time) => ({ savedAt: Date.now(), data: { current: { time } } });
+  assert.equal(runCache(fresh("2000-01-01T23:55"), "2000-01-02"), null,
+    "a fresh timestamp must not make yesterday's forecast current");
+  assert.ok(runCache(fresh("2000-01-02T00:05"), "2000-01-02"),
+    "a forecast from today's date on the location's clock is still good");
+  assert.equal(runCache(fresh("2000-01-02T23:55"), "2000-01-03"), null,
+    "and it goes stale the moment that clock rolls over, not the phone's");
 
   // Feels-like is real hourly data, revealed only when it differs enough to matter.
   assert.match(html, /hourly=temperature_2m,apparent_temperature,precipitation_probability/);
@@ -127,6 +136,43 @@ test("overnight copy follows the night the family is actually in", async () => {
   assert.match(html, /beforeSunrise\?goldenWindow\(sunrise\)/);
   // Missing storm direction does not turn a moving system into a stationary one.
   assert.match(html, /const motion=s\.spd>0\?\(s\.dirDeg!=null\?"moving "/);
+});
+
+test("each location keeps its own clock", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  // Every place carries its zone and the label it is quoted in.
+  assert.match(html, /tz:"America\/New_York",tzLabel:"ET"/);
+  assert.match(html, /tz:"America\/Denver",tzLabel:"MT"/);
+  assert.doesNotMatch(html, /timezone=America%2FNew_York/);
+  assert.match(html, /&timezone=\$\{encodeURIComponent\(L\.tz\)\}&forecast_days=7/);
+  assert.match(html, /clock12\(new Date\(c\.time\)\)\+" "\+LOC\.tzLabel/);
+  assert.match(html, /const bd=yest\.toLocaleDateString\("en-CA",\{timeZone:L\.tz\}\)/);
+
+  // The app reasons in the location's wall clock; the astronomy converts back to a real
+  // instant so the sun is where it actually is rather than where the phone thinks it is.
+  assert.match(html, /const wallNow=\(\)=>new Date\(Date\.now\(\)\+TZSHIFT\)/);
+  assert.match(html, /function sunPos\(date\)\{const t=trueTime\(date\);/);
+  assert.match(html, /function moonPos\(date\)\{const t=trueTime\(date\);/);
+  assert.match(html, /function moonPhase\(date\)\{const d=toDays\(trueTime\(date\)\)/);
+  assert.match(html, /const now=wallNow\(\), sunrise=/);
+  assert.match(html, /const now=wallNow\(\),t0=/);
+  assert.match(html, /const now=wallNow\(\)\.getTime\(\);/);
+
+  // And the shift itself is real arithmetic, not a hardcoded offset: run it.
+  const shiftCode = html.match(/const tzOffset=[\s\S]*?function syncClock\(\)\{[^}]*\}/)?.[0];
+  assert.ok(shiftCode, "the clock shift should be extractable");
+  const at = (tz, iso) => {
+    const ctx = { Date, LOC: { tz }, TZSHIFT: 0, out: 0 };
+    vm.runInNewContext(`${shiftCode}\nconst d=new Date("${iso}");out=tzOffset(LOC.tz,d)/3600000;`, ctx);
+    return ctx.out;
+  };
+  // Denver is two hours behind New York on both sides of a daylight-saving change.
+  assert.equal(at("America/New_York", "2026-08-15T18:00:00Z") - at("America/Denver", "2026-08-15T18:00:00Z"), 2);
+  assert.equal(at("America/New_York", "2026-01-15T18:00:00Z") - at("America/Denver", "2026-01-15T18:00:00Z"), 2);
+  // and the offsets are the real ones, not a fixed guess
+  assert.equal(at("America/Denver", "2026-08-15T18:00:00Z"), -6);
+  assert.equal(at("America/Denver", "2026-01-15T18:00:00Z"), -7);
 });
 
 test("every motion is driven by a reading, not by decoration", async () => {

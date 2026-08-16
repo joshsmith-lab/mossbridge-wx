@@ -40,18 +40,43 @@ export const FONT_CSS = (port) =>
   `@font-face{font-family:"Spline Sans Mono";src:url(http://localhost:${port}/f/spline.woff2) format("woff2-variations");font-weight:300 700;font-display:block}`;
 
 const pad = (n) => String(n).padStart(2, "0");
-export const iso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-export const day = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+/**
+ * Open-Meteo returns naive local times for the place being asked about, so a fixture for
+ * Denver has to be written on Denver's clock even when the harness itself runs in Eastern.
+ * Without this the Denver scenes were fed Eastern sunrise and sunset, which is how a
+ * mid-August Denver morning came out reading 8:12am.
+ */
+const partsIn = (d, tz) => {
+  const f = new Intl.DateTimeFormat("en-CA", { timeZone: tz, hour12: false,
+    year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+  return Object.fromEntries(f.formatToParts(d).filter((x) => x.type !== "literal").map((x) => [x.type, x.value]));
+};
+export const iso = (d, tz) => {
+  if (!tz) return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const p = partsIn(d, tz);
+  return `${p.year}-${p.month}-${p.day}T${p.hour === "24" ? "00" : p.hour}:${p.minute}`;
+};
+export const day = (d, tz) => {
+  if (!tz) return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const p = partsIn(d, tz);
+  return `${p.year}-${p.month}-${p.day}`;
+};
 
 /** A week of plausible hourly and daily data shaped like the Open-Meteo response. */
-export function forecast(now, o) {
-  const start = new Date(now); start.setHours(0, 0, 0, 0);
+/** Which clock each location's forecast is written on, mirroring LOCS in index.html. */
+export const LOC_TZ = { mb: "America/New_York", sp: "America/New_York", den: "America/Denver" };
+
+export function forecast(now, o, tz) {
+  // midnight on the location's clock, not the harness's
+  const start = new Date(now);
+  if (tz) { const p = partsIn(now, tz); start.setTime(now.getTime() - (+p.hour % 24) * 3600e3 - (+p.minute) * 60e3); }
+  else start.setHours(0, 0, 0, 0);
   const time = [], temp = [], apparent = [], pop = [], code = [], wind = [], gust = [], uv = [];
   const feelDelta = Number(o.feels) - Number(o.nowTemp);
   for (let i = 0; i < 24 * 7; i++) {
     const t = new Date(start.getTime() + i * 3600e3), hr = t.getHours();
     const diurnal = Math.sin(((hr - 5) / 24) * 2 * Math.PI);
-    time.push(iso(t));
+    time.push(iso(t, tz));
     temp.push(Math.round(o.baseTemp + diurnal * 9));
     /* Heat index and wind chill fade toward the gentler end of the daily cycle. The exact
        curve is less important than giving the touch explorer a plausible changing signal. */
@@ -67,22 +92,22 @@ export function forecast(now, o) {
   for (let d0 = 0; d0 < 7; d0++) {
     const d = new Date(start.getTime() + d0 * 864e5);
     const sl = temp.slice(d0 * 24, (d0 + 1) * 24), pl = pop.slice(d0 * 24, (d0 + 1) * 24), cl = code.slice(d0 * 24, (d0 + 1) * 24);
-    dtime.push(day(d)); dmax.push(Math.max(...sl)); dmin.push(Math.min(...sl));
+    dtime.push(day(d, tz)); dmax.push(Math.max(...sl)); dmin.push(Math.min(...sl));
     dcode.push(Math.max(...cl)); dpop.push(Math.max(...pl));
-    dsun.push(`${day(d)}T${o.sunrise || "06:32"}`); dset.push(`${day(d)}T${o.sunset || "20:14"}`);
+    dsun.push(`${day(d, tz)}T${o.sunrise || "06:32"}`); dset.push(`${day(d, tz)}T${o.sunset || "20:14"}`);
     duv.push(o.uvMax); dwmax.push(18);
   }
   if (o.dailyPop) o.dailyPop(dpop, dcode);
   return {
     current: {
-      time: iso(now), interval: 900, temperature_2m: o.nowTemp, relative_humidity_2m: o.rh,
+      time: iso(now, tz), interval: 900, temperature_2m: o.nowTemp, relative_humidity_2m: o.rh,
       apparent_temperature: o.feels, is_day: o.isDay, weather_code: o.code, cloud_cover: o.cloud,
       wind_speed_10m: o.nowWind, wind_direction_10m: o.nowDir, wind_gusts_10m: o.nowGust, uv_index: o.nowUv,
     },
     hourly: { time, temperature_2m: temp, apparent_temperature: apparent, precipitation_probability: pop, weather_code: code, wind_speed_10m: wind, wind_gusts_10m: gust, uv_index: uv },
     daily: { time: dtime, weather_code: dcode, temperature_2m_max: dmax, temperature_2m_min: dmin, sunrise: dsun, sunset: dset, precipitation_probability_max: dpop, wind_speed_10m_max: dwmax, uv_index_max: duv },
     minutely_15: o.nowcast
-      ? { time: Array.from({ length: 12 }, (_, i) => iso(new Date(now.getTime() + i * 9e5))), precipitation: [0, 0, 0, 0.2, 0.6, 0.9, 0.4, 0.1, 0, 0, 0, 0] }
+      ? { time: Array.from({ length: 12 }, (_, i) => iso(new Date(now.getTime() + i * 9e5), tz)), precipitation: [0, 0, 0, 0.2, 0.6, 0.9, 0.4, 0.1, 0, 0, 0, 0] }
       : null,
   };
 }
@@ -131,7 +156,7 @@ export async function stage(page, { now, loc, o, tidePhase = 0, fontDir = "", po
     await page.route("**fonts.googleapis.com**", (r) => r.fulfill({ contentType: "text/css", body: FONT_CSS(port) }));
     await page.route("**fonts.gstatic.com**", (r) => r.abort());
   }
-  await page.route("**api.open-meteo.com**", (r) => r.fulfill({ json: forecast(now, o) }));
+  await page.route("**api.open-meteo.com**", (r) => r.fulfill({ json: forecast(now, o, LOC_TZ[loc]) }));
   await page.route("**marine-api.open-meteo.com**", (r) => r.fulfill({ json: { daily: { wave_height_max: [o.wave ?? 2.4], wave_period_max: [6] } } }));
   await page.route("**tidesandcurrents.noaa.gov**", (r) => r.fulfill({ json: tides(now, tidePhase) }));
   await page.route("**api.weather.gov/alerts**", (r) => r.fulfill({ json: { features: o.code >= 95 ? SEVERE(now) : [] } }));

@@ -128,6 +128,30 @@ Two numbers worth knowing before you change motion: every scene idles at **0-1
 layouts per 6 seconds**, and the busiest scene runs **110 animations**. If either
 jumps, you have added something that is not a `transform` or an `opacity`.
 
+## Time and place
+
+Every forecast this app reads arrives as naive local times for the place it describes, and
+nearly every comparison in the file is a Date built from one of those strings. That worked
+only while the phone and the place shared a clock. It stopped being true when Denver joined.
+
+So each entry in `LOCS` carries `tz` and `tzLabel`, and the app reasons entirely in the
+**location's wall clock**: `wallNow()` is this instant shifted so its local fields read as
+the clock on the wall there, and the forecast is requested in that same zone, so both sides
+of every comparison agree. `trueTime()` converts back, and `sunPos`, `moonPos` and
+`moonPhase` call it at their own door, because astronomy needs a real instant rather than a
+wall clock.
+
+Two consequences worth knowing:
+
+- For the two family locations with the phone at home the shift is exactly zero, so their
+  behaviour is unchanged. Away from home it quietly starts being right instead of showing
+  the phone's clock against home data.
+- `tools/fixtures.mjs` writes each fixture on the location's own clock too. Without that the
+  Denver scenes were fed Eastern sunrise and sunset, which is how a mid-August Denver
+  morning came out reading 8:12am.
+
+If you add a location, give it a `tz` and a `tzLabel`. Nothing else needs to know.
+
 ## On file size
 
 `index.html` is around 160 KB of source, and an early plan set 160 KB as a

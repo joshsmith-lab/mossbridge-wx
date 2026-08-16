@@ -538,17 +538,20 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
 const LOCS={
   mb:{id:"mb",addrFull:"Moss Bridge Ct · Porters Neck",addrShort:"Porters Neck",
       lat:34.2982,lon:-77.7896,scene:"marsh",kind:"coast",windowLabel:"best window",
+      tz:"America/New_York",tzLabel:"ET",
       sceneLabel:"Sun and moon over the marsh horizon",
       marine:{lat:34.26,lon:-77.68},tide:8658163,tropics:true,
       outTitle:"On the water · Figure 8",
       foot:"Forecast: Open-Meteo (NWS-blended), grid cell over Porters Neck · Marine: buoy grid off Mason Inlet · Tides: NOAA, Wrightsville Beach station 8658163 · Alerts: National Weather Service · Tropics: National Hurricane Center."},
   sp:{id:"sp",addrFull:"Bob Plumley Rd · Shady Spring",addrShort:"Shady Spring",
       lat:37.8215,lon:-80.9942,scene:"ridge",kind:"farm",fish:true,windowLabel:"best time to piddle",
+      tz:"America/New_York",tzLabel:"ET",
       sceneLabel:"Sun and moon over Appalachian ridgelines and the farm pond",
       outTitle:"Outside · Around the farm",
       foot:"Forecast: Open-Meteo (NWS-blended), grid cell over Shady Spring, WV · Alerts: National Weather Service · Bite windows: solunar tables, computed from the moon."},
   den:{id:"den",addrFull:"Next up · Denver",addrShort:"Denver",
       lat:39.7392,lon:-104.9903,scene:"front-range",kind:"trip",windowLabel:"best time to head out",
+      tz:"America/Denver",tzLabel:"MT",
       sceneLabel:"Sun and moon over Denver and the Front Range",
       outTitle:"Outside · Around Denver",
       foot:"Forecast: Open-Meteo (NWS-blended), grid cell over Denver, CO · Alerts: National Weather Service."}
@@ -556,6 +559,28 @@ const LOCS={
 const LOC_ORDER=["mb","sp","den"];
 let LOC;try{LOC=LOCS[localStorage.getItem("mbwx-loc")]||LOCS.mb}catch(e){LOC=LOCS.mb}
 let LAT=LOC.lat, LON=LOC.lon;
+
+/* ── the location's clock ─────────────────────────────
+   Every forecast this app reads arrives as naive local times for the place it describes,
+   and nearly every comparison in here is a Date built from one of those strings. That only
+   works while the phone and the place share a clock, which stopped being true the moment a
+   location two time zones away joined the list. So the app reasons entirely in the
+   location's wall clock: wallNow() is this instant shifted so its local fields read as the
+   clock on the wall in Denver, or in Porters Neck, and the forecast is requested in that
+   same zone so both sides of every comparison agree.
+
+   The astronomy is the one thing that needs a real instant rather than a wall clock, and it
+   converts back at its own door, so the sun is where it actually is over that latitude.
+
+   For the two family locations with the phone at home this shift is exactly zero and
+   nothing about their behaviour changes. Away from home it quietly starts being right. */
+let TZSHIFT=0;
+const tzOffset=(tz,d)=>new Date(d.toLocaleString("en-US",{timeZone:tz}))-new Date(d.toLocaleString("en-US",{timeZone:"UTC"}));
+function syncClock(){const d=new Date();TZSHIFT=tzOffset(LOC.tz,d)+d.getTimezoneOffset()*6e4}
+const wallNow=()=>new Date(Date.now()+TZSHIFT);
+const trueTime=d=>new Date(d.getTime()-TZSHIFT);
+const locToday=()=>new Date().toLocaleDateString("en-CA",{timeZone:LOC.tz});
+syncClock();
 
 const WMO={0:"Clear",1:"Mostly clear",2:"Partly cloudy",3:"Cloudy",45:"Fog",48:"Fog",51:"Drizzle",53:"Drizzle",55:"Drizzle",56:"Freezing drizzle",57:"Freezing drizzle",61:"Light rain",63:"Rain",65:"Heavy rain",66:"Freezing rain",67:"Freezing rain",71:"Light snow",73:"Snow",75:"Heavy snow",77:"Snow grains",80:"Showers",81:"Showers",82:"Downpours",85:"Snow showers",86:"Snow showers",95:"Thunderstorms",96:"Storms w/ hail",99:"Severe storms"};
 /* Shady Spring is at 2,500 feet in the Alleghenies and it snows there. Every one of these
@@ -621,9 +646,9 @@ function moonCoords(d){const L=RD*(218.316+13.176396*d),M=RD*(134.963+13.064993*
 function pos(coords,date,lat,lng){const lw=RD*-lng,phi=RD*lat,d=toDays(date),H=sidereal(d,lw)-coords.ra;
   return{az:Math.atan2(Math.sin(H),Math.cos(H)*Math.sin(phi)-Math.tan(coords.dec)*Math.cos(phi)),
          alt:Math.asin(Math.sin(phi)*Math.sin(coords.dec)+Math.cos(phi)*Math.cos(coords.dec)*Math.cos(H))}}
-function sunPos(date){return pos(sunCoords(toDays(date)),date,LAT,LON)}
-function moonPos(date){return pos(moonCoords(toDays(date)),date,LAT,LON)}
-function moonPhase(date){const d=toDays(date),s=sunCoords(d),m=moonCoords(d),sd=149598000;
+function sunPos(date){const t=trueTime(date);return pos(sunCoords(toDays(t)),t,LAT,LON)}
+function moonPos(date){const t=trueTime(date);return pos(moonCoords(toDays(t)),t,LAT,LON)}
+function moonPhase(date){const d=toDays(trueTime(date)),s=sunCoords(d),m=moonCoords(d),sd=149598000;
   const ph=Math.acos(Math.sin(s.dec)*Math.sin(m.dec)+Math.cos(s.dec)*Math.cos(m.dec)*Math.cos(s.ra-m.ra));
   const inc=Math.atan2(sd*Math.sin(ph),m.dist-sd*Math.cos(ph));
   const ang=Math.atan2(Math.cos(s.dec)*Math.sin(s.ra-m.ra),
@@ -810,7 +835,8 @@ const appW=()=>clamp(document.querySelector(".app").clientWidth||760,320,760);
    1 rising, -1 falling, 0 when we have no predictions */
 function tideTrend(preds){
   if(!preds||preds.length<2)return 0;
-  const now=Date.now();
+  /* NOAA returns lst_ldt, the station's own local time, so compare it on the station's clock */
+  const now=wallNow().getTime();
   for(const p of preds){
     const t=new Date(String(p.t).replace(" ","T")).getTime();
     if(t>now)return p.type==="H"?1:-1;
@@ -866,9 +892,14 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   }
   /* Sunrise and sunset sit just outside their arc points. Centering the words on those
      points let the real sun pass directly behind its own clock near either horizon. */
-  const lab=(f,t)=>`<text x="${(px(f)+(f<.5?-16:16)).toFixed(1)}" y="${(py(f)-9).toFixed(1)}" text-anchor="${f<.5?"end":"start"}">${t}</text>`;
+  /* These sat at the very ends of the arc, which is exactly where the arc is closest to the
+     horizon and therefore closest to whatever is standing on it: on all three scenes the
+     sunrise time landed on a tree. Moving them a little further up their own arc lifts them
+     into open sky in every scene without moving a single tree, and the same paint-order halo
+     the charts already use keeps them legible over a ridgeline or a rooftop. */
+  const lab=(f,t)=>`<text x="${(px(f)+(f<.5?-16:16)).toFixed(1)}" y="${(py(f)-9).toFixed(1)}" text-anchor="${f<.5?"end":"start"}" paint-order="stroke" stroke="${dark?"#0A1A22":"#F4F3EC"}" stroke-width="2.6" stroke-linejoin="round">${t}</text>`;
   const sunTimes=`<g font-family="Spline Sans Mono,ui-monospace,monospace" font-size="10" font-weight="600" fill="currentColor" opacity=".7">
-    ${lab(.11,clock(sunrise))}${lab(.89,clock(sunset))}</g>`;
+    ${lab(.17,clock(sunrise))}${lab(.83,clock(sunset))}</g>`;
 
   const dayFrac=(now-sunrise)/(sunset-sunrise);
   const up=dayFrac>0&&dayFrac<1;
@@ -1884,7 +1915,7 @@ async function fetchStorms(){
 function renderTides(preds,css,gust){
   if(!preds||preds.length<2){document.getElementById("tideNote").textContent="tide data unavailable";return null}
   const P=preds.map(p=>({time:new Date(p.t.replace(" ","T")),v:+p.v,type:p.type})).sort((a,b)=>a.time-b.time);
-  const now=new Date(),t0=now.getTime()-2.5*3.6e6,t1=now.getTime()+26*3.6e6;
+  const now=wallNow(),t0=now.getTime()-2.5*3.6e6,t1=now.getTime()+26*3.6e6;
   const interp=t=>{
     let i=0;while(i+1<P.length&&P[i+1].time.getTime()<=t)i++;
     const a=P[i],b=P[Math.min(i+1,P.length-1)];
@@ -2281,7 +2312,8 @@ function cacheAgeText(savedAt){
 }
 function render(d,live,savedAt=0){
   const c=d.current,dy=d.daily,h=d.hourly,m=d.marine;
-  const now=new Date(), sunrise=new Date(dy.sunrise[0]), sunset=new Date(dy.sunset[0]);
+  syncClock();
+  const now=wallNow(), sunrise=new Date(dy.sunrise[0]), sunset=new Date(dy.sunset[0]);
   const sp=sunPos(now), altDeg=sp.alt*180/Math.PI;
   const wet=isWet(c.weather_code);
   const storm=[95,96,99].includes(c.weather_code);
@@ -2319,7 +2351,7 @@ function render(d,live,savedAt=0){
     water:cs.getPropertyValue("--water").trim(),paper:cs.getPropertyValue("--paper").trim(),
     wash:cs.getPropertyValue("--wash").trim(),marker:cs.getPropertyValue("--marker").trim()};
 
-  document.getElementById("stamp").textContent=live?"live · "+clock12(new Date(c.time))+" ET":cacheAgeText(savedAt||new Date(c.time).getTime());
+  document.getElementById("stamp").textContent=live?"live · "+clock12(new Date(c.time))+" "+LOC.tzLabel:cacheAgeText(savedAt||new Date(c.time).getTime());
   document.getElementById("refreshBtn").classList.toggle("cached",!live);
   countTo(document.getElementById("bigTemp"),c.temperature_2m);
   document.getElementById("condLabel").textContent=WMO[c.weather_code]||"—";
@@ -2625,7 +2657,7 @@ addEventListener("resize",()=>{clearTimeout(rzT);rzT=setTimeout(()=>{
 /* ── fetch ──────────────────────────────────────────── */
 const cacheKey=id=>"mbwx-"+id;
 const CACHE_MAX_AGE=6*3.6e6;
-const todayET=()=>new Date().toLocaleDateString("en-CA",{timeZone:"America/New_York"});
+const todayET=locToday;   /* the forecast day, in the clock of the place it describes */
 const forecastDay=data=>String(data?.current?.time||"").slice(0,10);
 function readCache(id){
   try{
@@ -2655,11 +2687,11 @@ async function refresh(){
   btn.classList.add("spin");
   try{
     const yest=new Date(Date.now()-864e5);
-    const bd=yest.toLocaleDateString("en-CA",{timeZone:"America/New_York"}).replace(/-/g,"");
+    const bd=yest.toLocaleDateString("en-CA",{timeZone:L.tz}).replace(/-/g,"");
     const stormsP=L.tropics?fetchStorms():Promise.resolve(null);
     const [wj,marine,tides,alerts,storms]=await Promise.all([
-      fetchJSON(`https://api.open-meteo.com/v1/forecast?latitude=${L.lat}&longitude=${L.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,wind_speed_10m_max,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York&forecast_days=7&minutely_15=precipitation&forecast_minutely_15=12`,10000),
-      L.marine?fetchJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${L.marine.lat}&longitude=${L.marine.lon}&daily=wave_height_max,wave_period_max&timezone=America%2FNew_York&forecast_days=1&length_unit=imperial`,6000).then(mj=>{
+      fetchJSON(`https://api.open-meteo.com/v1/forecast?latitude=${L.lat}&longitude=${L.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,wind_speed_10m_max,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=${encodeURIComponent(L.tz)}&forecast_days=7&minutely_15=precipitation&forecast_minutely_15=12`,10000),
+      L.marine?fetchJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${L.marine.lat}&longitude=${L.marine.lon}&daily=wave_height_max,wave_period_max&timezone=${encodeURIComponent(L.tz)}&forecast_days=1&length_unit=imperial`,6000).then(mj=>{
         const waveRaw=mj&&mj.daily&&mj.daily.wave_height_max&&mj.daily.wave_height_max[0];
         const periodRaw=mj&&mj.daily&&mj.daily.wave_period_max&&mj.daily.wave_period_max[0];
         const wave=waveRaw==null?NaN:Number(waveRaw),period=periodRaw==null?NaN:Number(periodRaw);
