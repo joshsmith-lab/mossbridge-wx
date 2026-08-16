@@ -23,7 +23,7 @@
   --marker:#C7431F; --marker-soft:#F5E1DA;
   --water:#3E7CA6; --water-soft:#BFD7E4;
   --sun:#E8B02F; --heat:#B4560F; --go:#1E6B44;
-  --sky1:#5C9FC6; --sky2:#9ECBDC; --sky3:#EAE6D2; --on-sky:#0F2B36;
+  --sky1:#5C9FC6; --sky2:#9ECBDC; --sky3:#EAE6D2; --on-sky:#0F2B36; --off-sky:#F7F4EA;
   --sky-scrim:rgba(250,250,246,0);
   --disp:"Bricolage Grotesque",-apple-system,system-ui,sans-serif;
   --mono:"Spline Sans Mono",ui-monospace,monospace;
@@ -58,6 +58,14 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .app>*:nth-child(6){animation-delay:.31s}.app>*:nth-child(7){animation-delay:.37s}
 
 /* ── sky ─────────────────────────────────────────────── */
+/* The sunrise and sunset times sit on open sky, whose colour changes all day, so their
+   halo has to be the opposite of whatever ink the sky just chose rather than the opposite
+   of the theme. At golden hour the sky is dark enough to want light text while the theme
+   is still light, and a light halo under light text erases the word. It also has to stay
+   thin: at 10px a 2.6px stroke is wider than the stem of the digit it is meant to protect,
+   so it closes every counter and the time becomes a blob. */
+.suntime{paint-order:stroke;stroke:var(--off-sky,#F7F4EA);stroke-width:1.3px;
+  stroke-linejoin:round;stroke-opacity:.9}
 .sky{position:relative;overflow:hidden;color:var(--on-sky);isolation:isolate;
   padding:calc(18px + env(safe-area-inset-top)) 20px 0;
   background:linear-gradient(180deg,var(--sky1) 0%,var(--sky2) 46%,var(--sky3) 100%);
@@ -897,8 +905,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
      sunrise time landed on a tree. Moving them a little further up their own arc lifts them
      into open sky in every scene without moving a single tree, and the same paint-order halo
      the charts already use keeps them legible over a ridgeline or a rooftop. */
-  const lab=(f,t)=>`<text x="${(px(f)+(f<.5?-16:16)).toFixed(1)}" y="${(py(f)-9).toFixed(1)}" text-anchor="${f<.5?"end":"start"}" paint-order="stroke" stroke="${dark?"#0A1A22":"#F4F3EC"}" stroke-width="2.6" stroke-linejoin="round">${t}</text>`;
-  const sunTimes=`<g font-family="Spline Sans Mono,ui-monospace,monospace" font-size="10" font-weight="600" fill="currentColor" opacity=".7">
+  const lab=(f,t)=>`<text class="suntime" x="${(px(f)+(f<.5?-16:16)).toFixed(1)}" y="${(py(f)-9).toFixed(1)}" text-anchor="${f<.5?"end":"start"}">${t}</text>`;
+  /* .7 was fine when these sat quietly at the ends of the arc. They are the only two
+     numbers written on the sky, so they get to be read. */
+  const sunTimes=`<g font-family="Spline Sans Mono,ui-monospace,monospace" font-size="10" font-weight="600" fill="currentColor" opacity=".92">
     ${lab(.17,clock(sunrise))}${lab(.83,clock(sunset))}</g>`;
 
   const dayFrac=(now-sunrise)/(sunset-sunrise);
@@ -2330,6 +2340,7 @@ function render(d,live,savedAt=0){
   const cInk=contrast(INK_ON,field),cLit=contrast(LIT_ON,field);
   const bright=cInk>=cLit;
   root.setProperty("--on-sky",bright?INK_ON:LIT_ON);
+  root.setProperty("--off-sky",bright?LIT_ON:INK_ON);
   const need=clamp((4.6-Math.max(cInk,cLit))/3.4,0,1);
   root.setProperty("--scrim",bright?`rgba(255,255,255,${(need*.42).toFixed(3)})`
                                    :`rgba(4,16,22,${(.10+need*.34).toFixed(3)})`);
@@ -2743,7 +2754,7 @@ function paintLoadingState(){
   paintLocationShell();
   const root=document.documentElement;
   root.removeAttribute("data-theme");
-  for(const v of ["--sky1","--sky2","--sky3","--on-sky","--scrim","--rain","--chip-bg","--hl","--paper","--wash","--line"])
+  for(const v of ["--sky1","--sky2","--sky3","--on-sky","--off-sky","--scrim","--rain","--chip-bg","--hl","--paper","--wash","--line"])
     root.style.removeProperty(v);
   document.getElementById("goldWash").style.opacity="0";
   document.getElementById("stamp").textContent="loading";

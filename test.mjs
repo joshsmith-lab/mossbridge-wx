@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v36/);
+  assert.match(worker, /mbwx-shell-v37/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -136,6 +136,25 @@ test("overnight copy follows the night the family is actually in", async () => {
   assert.match(html, /beforeSunrise\?goldenWindow\(sunrise\)/);
   // Missing storm direction does not turn a moving system into a stationary one.
   assert.match(html, /const motion=s\.spd>0\?\(s\.dirDeg!=null\?"moving "/);
+});
+
+test("the sunrise and sunset times stay readable on any sky", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  // The sky picks one of two inks by contrast; the halo has to be the other one. Keying it
+  // off the theme instead put a light halo under light text at golden hour and erased the
+  // word, and a 2.6px stroke on a 10px face closed every counter besides.
+  assert.match(html, /--on-sky:#0F2B36; --off-sky:#F7F4EA;/);
+  assert.match(html, /root\.setProperty\("--off-sky",bright\?LIT_ON:INK_ON\);/);
+  assert.match(html, /\.suntime\{paint-order:stroke;stroke:var\(--off-sky,#F7F4EA\);stroke-width:1\.3px;/);
+  assert.match(html, /const lab=\(f,t\)=>`<text class="suntime"/);
+  // the halo is CSS now, so no <text> carries a hand-set stroke on the sky at all
+  assert.doesNotMatch(html, /<text[^>]*paint-order="stroke"[^>]*>\$\{t\}/);
+  assert.doesNotMatch(html, /stroke="\$\{dark\?"#0A1A22":"#F4F3EC"\}"/);
+  // and the two numbers written on the sky are no longer at 70% of it
+  assert.match(html, /font-weight="600" fill="currentColor" opacity="\.92"/);
+  // the override is cleared with the rest when a render bails out
+  assert.match(html, /"--sky3","--on-sky","--off-sky","--scrim"/);
 });
 
 test("each location keeps its own clock", async () => {
