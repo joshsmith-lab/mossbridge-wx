@@ -1200,17 +1200,45 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     <g class="perch-head"><circle cx="-8.2" cy="-.4" r=".55" fill="${critterMark}" stroke="none"/></g>
     <path d="M -1.4 6.0 L -1.7 10.2 L -4.0 11.2 M 2.3 6.0 L 2.1 10.1 L 4.2 11.0" fill="none" stroke-width=".9"/>
   </g>`;
-  const muleDeerAt=(x,y,s,flip=-1,opacity=1)=>`<g class="wildlife mule-deer" data-species="mule-deer" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(flip*s).toFixed(2)},${s.toFixed(2)})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
-    <path d="M 0 5 C 4 1.8 12.5 1.6 17.3 4.1 C 20.0 5.6 20.3 10.2 17.0 12.0 C 12.5 14.4 4.5 13.1 1.1 9.9 Z"/>
-    <g class="deer-head"><path d="M 2.4 5.4 C -.4 3.0 -3.0 -.2 -3.8 -3.0 C -4.5 -5.5 -3.1 -7.0 -.8 -6.3 C 1.1 -5.7 2.0 -3.7 1.4 -1.7 L 4.7 4.7 Z"/>
-      <path d="M -3.2 -5.1 C -6.1 -8.5 -8.0 -8.4 -7.9 -5.4 C -7.8 -3.0 -5.4 -2.8 -3.2 -4.3 Z"/>
-      <path class="deer-ear" d="M -.8 -6.1 C .7 -10.1 3.3 -10.7 3.7 -7.4 C 4.0 -4.9 1.7 -3.8 -.5 -4.8 Z"/>
-      <path class="deer-ear" d="M -3.4 -5.8 C -5.3 -9.6 -7.9 -9.8 -8.0 -6.5 C -8.1 -4.3 -5.8 -3.2 -3.7 -4.4 Z"/>
-      <circle cx="-3.0" cy="-4.1" r=".42" fill="${critterMark}" stroke="none"/>
+  /* The mule deer stands rather than grazes. At this size the ears and the line of the
+     back are the entire identification, and a lowered head hides both: the first version
+     of this drawing put the head down and read as a rodent. It is drawn on a real frame
+     rather than an oval with sticks, because the shapes that make it a deer and not a dog
+     are all silhouette: deep brisket, tucked flank, a hock that bends backwards, a short
+     thick neck carried forward, and ears two thirds the length of the head. Local origin
+     is the ground under the front feet and the shoulder is 20 units up, so `s` reads as
+     "the shoulder stands 20s tall". It faces into the frame, which is why nothing here
+     is mirrored. */
+  const muleDeerAt=(x,groundY,s,opacity=1)=>`<g class="wildlife mule-deer" data-species="mule-deer" transform="translate(${x.toFixed(1)} ${groundY.toFixed(1)}) scale(${s})" opacity="${opacity}">
+    ${/* the far pair goes down first and thinner, in the same ink: offset alone reads as
+         depth, where a lighter ink reads as a second colour on a one-colour animal. */""}
+    <g fill="none" stroke="${critterInk}" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M 9 -14.2 L 8.6 -7.9 L 9.2 -2.6 L 9 0"/>
+      <path d="M 18.4 -13.8 L 17.4 -9.1 L 19.6 -5.5 L 18.8 -2.2 L 19 0"/>
     </g>
-    <path class="deer-leg" d="M 3.4 10 L 2.8 17.2 L 1.2 20 M 7.2 11.5 L 7.1 18.3 L 8.5 20 M 14.1 11.4 L 13.7 18.4 L 12.2 20 M 17.0 10.0 L 18.0 17.3 L 19.2 19.8" fill="none" stroke-width="1.25"/>
-    <path class="deer-tail" d="M 17.2 4.4 C 20.7 2.9 22.8 3.7 22.6 5.5 C 22.3 7.0 20.1 7.7 17.9 7.1 Z"/>
-    <path d="M 20.3 3.8 C 21.7 3.5 22.6 4.1 22.5 5.1 C 21.6 5.0 20.8 4.7 20.3 3.8 Z" fill="${critterMark}" stroke="none" opacity=".55"/>
+    <g fill="${critterInk}" stroke="none">
+      <path d="M 5 -19.5 C 9.6 -20.1,15.4 -19.9,19.2 -19.8 C 22.4 -19.7,24.9 -18.2,25.2 -15.6
+        C 25.5 -13,24.2 -11.2,22.6 -10.6 C 21.2 -10.1,20 -10.9,19.3 -12.2 C 18.7 -13,17.6 -13.2,16.2 -13.1
+        C 13 -12.9,10.2 -12.4,8.2 -11.7 C 6.3 -11,4.8 -10.4,3.7 -10.5 C 2.6 -10.6,1.9 -11.9,1.9 -13.6
+        C 1.9 -15.9,2.9 -18.5,5 -19.5 Z"/>
+      ${/* the tail hangs clear of the rump line, so it reads against the sky instead of
+           disappearing into the body the way a pale patch on the edge would. */""}
+      <path class="deer-tail" d="M 24.4 -17.4 C 25.8 -16,26.4 -13.8,25.8 -12.6 C 25 -13.6,24.4 -15.4,24.1 -17.1 Z"/>
+      ${/* neck and head are one outline: a two-piece head opens a seam at the throat as
+           soon as it nods, which is what made the old drawing look broken. */""}
+      <g class="deer-head" style="transform-origin:68% 90%">
+        <path d="M 2.2 -14.6 C 1.2 -18,-1.2 -21.2,-3 -23.4 L .4 -26.4 C 2.4 -23,4.4 -20.6,6 -19.2 Z"/>
+        <path d="M -2.8 -23 C -4.4 -22.9,-5.8 -23,-6.6 -23.4 C -7.2 -23.7,-7.2 -24.4,-6.5 -24.7
+          C -5.2 -25.3,-3.4 -26.1,-1.9 -26.6 C -.6 -27,.8 -26.9,1.2 -26 C 1.6 -25,0 -23.4,-2.8 -23 Z"/>
+        <path class="deer-ear" d="M -.8 -26.6 C -2.6 -27.8,-4 -30.2,-3.4 -31.6 C -2.7 -33,-.2 -29.6,.6 -26.9 Z"/>
+        <path class="deer-ear" style="animation-delay:-5.5s" d="M .9 -26.2 C 1.6 -28.8,2.6 -30.8,3.8 -31.2 C 5.1 -31.7,4.2 -28.6,2.4 -26.3 Z"/>
+        <circle cx="-1.7" cy="-25.5" r=".5" fill="${critterMark}"/>
+      </g>
+    </g>
+    <g fill="none" stroke="${critterInk}" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+      <path class="deer-leg" d="M 5.6 -14.6 L 5.2 -8.2 L 5.8 -2.8 L 5.6 0"/>
+      <path d="M 21.6 -14.2 L 20.6 -9.4 L 22.8 -5.8 L 22 -2.2 L 22.2 0"/>
+    </g>
   </g>`;
   const cottontailAt=(x,y,s,opacity=1)=>`<g class="wildlife cottontail" data-species="cottontail" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
     <g class="rabbit-body"><ellipse cx="1.5" cy="3.8" rx="7.2" ry="5.7"/><circle cx="-4.4" cy=".1" r="4.3"/>
@@ -1328,9 +1356,13 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       tufts[bandOf(x0)]+=d;x+=16+g()*30;
     }
     const ground=`<path d="M -12 ${base+1} Q ${W*.17} ${base-5} ${W*.34} ${base+1} T ${W*.68} ${base} T ${W+12} ${base-1} L ${W+12} ${H+4} L -12 ${H+4} Z" fill="${ink}" opacity=".46"/>`;
-    const lowSun=sunAltDeg<9,eveningCue=!dark&&!wet&&!storm&&(localHour<10||localHour>=17||lowSun);
-    const magpie=!dark?magpieAt(residentX,base-15,1.2,1):"";
-    const deer=eveningCue?muleDeerAt(W*.86,base-18,1.08,-1,1):"";
+    /* Mule deer move at first and last light, so the deer takes the lane at dawn and dusk
+       and the magpie has the rest of the day. They no longer share it: the open ground
+       right of the skyline is about 115px wide on a phone, and a deer drawn small enough
+       to stand beside a magpie stops being recognisable as a deer at all. */
+    const lowSun=sunAltDeg<9,deerOut=!dark&&!wet&&!storm&&lowSun;
+    const magpie=!dark&&!deerOut?magpieAt(residentX,base-15,1.2,1):"";
+    const deer=deerOut?muleDeerAt(W*.845,base+2,1.55):"";
     const rabbit=dark?cottontailAt(residentX,base-11,1.12,1):"";
     const hawk=!dark&&!wet&&!storm&&!deer?`<g class="hawk-circle" style="--cx:${(W*.08).toFixed(0)}px;--cy:-8px;--cy2:-15px;${phase(158)}">${flightBird("hawk",W*.40,base-92,.84,.4,-5.5,19)}</g>`:"";
 

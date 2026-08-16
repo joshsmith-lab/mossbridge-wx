@@ -124,7 +124,7 @@ const CASES = [
       windAmp: 8, gustAmp: 14, sunrise: "06:12", sunset: "19:52",
       popCurve: () => 5, dailyPop: (p) => p.fill(10) } },
   { name: "18-denver-golden-evening", loc: "den", when: "2026-08-15T21:20:00",
-    note: "alpenglow without spectacle: warm paper, long-tailed magpie and mule deer in an open lane",
+    note: "alpenglow without spectacle: warm paper, and the mule deer has the open lane to itself at last light",
     o: { baseTemp: 68, nowTemp: 72, feels: 71, rh: 34, isDay: 1, code: 1, cloud: 12, nowWind: 6, nowDir: 110, nowGust: 11, nowUv: 0.5, uvMax: 8,
       windAmp: 6, gustAmp: 10, sunrise: "06:12", sunset: "19:52",
       popCurve: () => 4, dailyPop: (p) => p.fill(8) } },
