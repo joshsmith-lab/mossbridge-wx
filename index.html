@@ -157,10 +157,8 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .wmove{transform-box:fill-box;transform-origin:center;animation:wmove var(--wd,9s) ease-in-out infinite}
 @keyframes wmove{0%,100%{transform:translateX(calc(var(--wx,2px) * -1));opacity:var(--o0,.1)}
   50%{transform:translateX(var(--wx,2px));opacity:var(--o1,.24)}}
-/* a heron stands still for a minute and a half, then takes something out of the water.
-   Between stands it wades: three slow steps out, a turn, three steps home, a turn back,
-   all on the strike's own 92s clock so it is always home, planted and facing the water
-   before the strike begins. The visible leg joint is the ankle and it bends backward;
+/* a heron stands still, takes something out of the water, then wades: three
+   slow steps out, a turn, three steps home, a turn back, all on one 92s clock.
    when a foot lifts, the tarsus folds the other way from a knee and the toes trail.
    A step is not a slide, so the rig transfers weight: the foot reaches and PLANTS while
    the body holds, then the body moves over the planted foot while that leg rotates back
@@ -178,21 +176,21 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
   49.6%,54.2%{transform:translateX(-6.4px)}
   55.6%,60.2%{transform:translateX(-3.2px)}
   61.6%,100%{transform:none}}
-/* A turn is not a card flip. The bird thins to an edge over a couple of seconds,
-   swaps facing while it is a line, then opens the other way. The old 110ms
-   scaleX(-1) snap is what made it look like it was flickering. */
-.heron-face{transform-box:fill-box;transform-origin:64% 50%;animation:heronFace 92s ease-in-out infinite}
+/* The body turns over planted legs — the legs are outside this group, so the
+   bird never becomes a card. It goes to a three-quarter with mass still on
+   the page, slips through the edge in a blink, and opens the other way. */
+.heron-face{transform-box:fill-box;transform-origin:63% 94%;animation:heronFace 92s ease-in-out infinite}
 @keyframes heronFace{0%,41%{transform:none}
-  43.1%{transform:scaleX(.12) translateY(1px)}
-  43.18%{transform:scaleX(-.12) translateY(1px)}
-  45.5%,61.6%{transform:scaleX(-1)}
-  63.7%{transform:scaleX(-.12) translateY(1px)}
-  63.78%{transform:scaleX(.12) translateY(1px)}
+  43.2%{transform:scaleX(.48) rotate(-6deg) translate(1.2px,.5px)}
+  43.55%{transform:scaleX(-.48) rotate(-6deg) translate(1.2px,.5px)}
+  45.8%,61.6%{transform:scaleX(-1)}
+  63.6%{transform:scaleX(-.48) rotate(-6deg) translate(1.2px,.5px)}
+  63.95%{transform:scaleX(.48) rotate(-6deg) translate(1.2px,.5px)}
   66.2%,100%{transform:none}}
 .heron-lunge{transform-box:fill-box;transform-origin:66% 100%;animation:heronLunge 92s ease-in-out infinite}
-@keyframes heronLunge{0%,70%,100%{transform:none}
-  71.4%{transform:rotate(-8deg)}71.8%,74.4%{transform:rotate(-10deg)}
-  76.8%{transform:rotate(-3.5deg)}79.2%{transform:none}}
+@keyframes heronLunge{0%,8%,16%,100%{transform:none}
+  9.2%{transform:rotate(-12deg)}9.6%,12.4%{transform:rotate(-16deg)}
+  14.6%{transform:rotate(-5deg)}}
 .heron-leg{transform-box:fill-box}
 .heron-leg.near{transform-origin:58% 0;animation:heronStepA 92s ease-in-out infinite}
 .heron-leg.far{transform-origin:55% 0;animation:heronStepB 92s ease-in-out infinite}
@@ -232,10 +230,15 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes heronTuckB{0%,22%,24.2%,52%,54.2%,100%{transform:none}
   22.8%,52.8%{transform:rotate(-32deg)}}
 .heron-strike{transform-box:fill-box;transform-origin:95% 100%;animation:heronStrike 92s ease-in-out infinite}
-@keyframes heronStrike{0%,70%,100%{transform:none}
-  71.4%{transform:translate(-1.2px,3.2px) rotate(-11deg)}
-  71.8%,74.4%{transform:translate(-1.4px,3.6px) rotate(-12deg)}
-  76.8%{transform:translate(-.5px,1.2px) rotate(-4deg)}79.2%{transform:none}}
+@keyframes heronStrike{0%,8%,16%,100%{transform:none}
+  9.2%{transform:translate(-2px,4px) rotate(-72deg)}
+  9.6%,12.4%{transform:translate(-2.4px,5.2px) rotate(-80deg)}
+  14.6%{transform:translate(-.6px,1.4px) rotate(-18deg)}}
+.heron-splash{transform-box:fill-box;transform-origin:center;animation:heronSplash 92s ease-out infinite;opacity:0}
+@keyframes heronSplash{0%,9.3%,15%,100%{opacity:0;transform:scale(.4)}
+  9.55%{opacity:.5;transform:scale(.7)}
+  11.4%{opacity:.22;transform:scale(1.5)}
+  13.6%{opacity:0;transform:scale(1.9)}}
 .heron-scan{transform-box:fill-box;transform-origin:95% 100%;animation:heronScan 31s ease-in-out infinite}
 @keyframes heronScan{0%,52%,100%{transform:rotate(0)}
   58%,66%{transform:rotate(-2.8deg)}72%{transform:rotate(0)}
@@ -1836,9 +1839,11 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       <path d="M 10.6 8.8 C 10.2 10.8 9.0 13.2 8.4 16.0" fill="none" stroke="${critterMark}" stroke-width=".55" opacity=".5"/>
     </g></g>
     </g>
+    </g>
     ${/* tibia drops from the body to a knobbed ankle that points backward, and the
          tarsus comes down and forward from it to the foot. The old legs bent the way
-         a person's do, which is the one thing a heron's never do. */""}
+         a person's do, which is the one thing a heron's never do. Legs sit outside
+         the turning body, so a turn never flattens the whole bird into a card. */""}
     <g class="heron-leg far" style="${phase(92)}">
       <path d="M 23.4 34.4 L 25.0 40.4" fill="none" stroke-width="1.15"/>
       <circle cx="25.0" cy="40.4" r=".6" stroke="none"/>
@@ -1856,8 +1861,8 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       </g>
     </g>
     </g>
-    </g>
   </g>
+  <ellipse class="heron-splash" cx="${(hx-8).toFixed(1)}" cy="${(base+8.4).toFixed(1)}" rx="8" ry="2.4" fill="none" stroke="${dark?'#B7D6E1':'#183C4B'}" stroke-width=".75" style="${phase(92)}"/>
   <ellipse cx="${(hx+22).toFixed(1)}" cy="${(base+8.6).toFixed(1)}" rx="13" ry="1.3" fill="${dark?'#EAF2FF':'#FFFFFF'}" opacity=".16"/>`:"";
 
   /* light on the water. A falling tide leaves the track sitting further off the bank */
