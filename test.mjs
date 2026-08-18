@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v41/);
+  assert.match(worker, /mbwx-shell-v42/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -252,7 +252,7 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /deerAt\(animalRight\+10/);
   assert.match(html, /deer\?"":dark\?fox\(animalRight-14/);
   // the small shorebird's bill sits against open water, not the dark bank
-  assert.match(html, /oysterCatcher\(residentX,base\+6,1\.1,1\)/);
+  assert.match(html, /oysterCatcher\(residentX,base\+9,1\.1,1\)/);
   // Shady Spring gets asymmetric Appalachian folds, a real gambrel barn, and bare winter trees
   assert.match(html, /const ridgeProfiles=\[/);
   assert.match(html, /const winter=month===11\|\|month<=1\|\|snowing/);
