@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v46/);
+  assert.match(worker, /mbwx-shell-v47/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -223,24 +223,21 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /class="gull-cross"/);
   assert.match(html, /@keyframes gullCross/);
   assert.match(html, /class="heron-strike"/);
-  // the heron wades three slow steps and back on the strike's own 92s clock, so it is
-  // always home and planted before the strike; the visible leg joint is the ankle and
-  // it bends backward, tarsus folding the other way from a knee when a foot lifts
+  // mostly still: two steps, a strike, a step home, one rare turn on a 150s clock
   assert.match(html, /class="heron-wade"/);
   assert.match(html, /@keyframes heronWade/);
+  assert.match(html, /heronWade 150s/);
   assert.match(html, /M 18\.6 34\.2 L 20\.2 40\.2/);
   assert.match(html, /class="heron-tarsus"/);
-  // the return trip is a turn and a walk home, never a moonwalk; the strike tips the
-  // body at the hips with the legs planted, so the neck base stays on the chest
   assert.match(html, /@keyframes heronFace/);
   assert.match(html, /class="heron-lunge"/);
-  // turn keeps mass (three-quarter), legs flip with the body so the walk home is a walk
-  assert.match(html, /43\.2%\{transform:scaleX\(\.55\) rotate\(-5deg\)\}/);
+  // turn is late and brief; legs flip with the body; spear is a hip tip not a torn-off neck
+  assert.match(html, /88\.2%\{transform:scaleX\(\.55\) rotate\(-5deg\)\}/);
   assert.doesNotMatch(html, /scaleX\(\.12\)/);
   assert.doesNotMatch(html, /rotate\(-80deg\)/);
   assert.match(html, /class="heron-splash"/);
-  assert.match(html, /9\.6%,12\.4%\{transform:translate\(-1px,2\.8px\) rotate\(-20deg\)\}/);
-  assert.match(html, /9\.6%,12\.4%\{transform:rotate\(-26deg\) translate\(0,3\.2px\)\}/);
+  assert.match(html, /40\.8%,43\.6%\{transform:translate\(-1px,2\.8px\) rotate\(-20deg\)\}/);
+  assert.match(html, /40\.8%,43\.6%\{transform:rotate\(-26deg\) translate\(0,3\.2px\)\}/);
   assert.doesNotMatch(html, /M 18\.4 34\.2 L 17\.7 38\.0/);
   assert.match(html, /class="flight-wing wing-l"/);
   assert.match(html, /rapid mirrored triangles read as a bat/);
