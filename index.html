@@ -128,11 +128,20 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
   77%{transform:rotate(var(--lift))}84%{transform:rotate(var(--rest))}}
 .deer-ear{transform-box:fill-box;transform-origin:55% 85%;animation:earFlick 12.5s ease-in-out infinite}
 @keyframes earFlick{0%,78%,100%{transform:rotate(0)}82%{transform:rotate(-11deg)}86%{transform:rotate(3deg)}90%{transform:rotate(0)}}
-/* head and neck pivot at the shoulder: a long stretch of stillness, then a graze and a look up */
-.deer-head{transform-box:fill-box;transform-origin:17% 95%;animation:deerGraze 17s ease-in-out infinite}
-@keyframes deerGraze{0%,52%,100%{transform:rotate(0)}60%,74%{transform:rotate(4.8deg)}82%{transform:rotate(-2.2deg)}90%{transform:rotate(0)}}
+/* head and neck pivot at the shoulder: a long stretch of stillness, then the nose
+   goes all the way into the grass and comes back up. */
+.deer-head{transform-box:fill-box;transform-origin:18% 92%;animation:deerGraze 28s ease-in-out infinite}
+@keyframes deerGraze{0%,30%,100%{transform:none}38%,52%{transform:rotate(66deg)}60%{transform:none}}
 .deer-leg{transform-box:fill-box;transform-origin:50% 0;animation:deerStep 29s ease-in-out infinite}
 @keyframes deerStep{0%,76%,100%{transform:rotate(0)}81%{transform:rotate(7deg)}87%{transform:translateX(1px) rotate(-3deg)}93%{transform:rotate(0)}}
+.wildlife.deer .buck-profile{animation:buckProfile 28s ease-in-out infinite}
+@keyframes buckProfile{0%,70%,88%,100%{opacity:1}73%,85%{opacity:0}}
+.wildlife.deer .buck-regard{animation:buckRegard 28s ease-in-out infinite;opacity:0}
+@keyframes buckRegard{0%,72%,86%,100%{opacity:0}75%,83%{opacity:1}}
+.wildlife.deer .deer-tail{animation:flagFlick 8s ease-in-out infinite}
+@keyframes flagFlick{0%,16%,46%,100%{transform:none}
+  19%{transform:rotate(28deg)}22%{transform:rotate(-12deg)}25%{transform:rotate(8deg)}29%{transform:none}
+  68%{transform:rotate(24deg)}71%{transform:rotate(-10deg)}75%{transform:none}}
 /* the water answers the wind: near-still under 6 mph, working chop above 15. One keyframe
    drives both the specular track and the chop dashes; the caller sets throw and opacity */
 /* a cloud shadow crossing the ground, at the speed the clouds themselves are moving */
@@ -169,11 +178,21 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
   49.6%,54.2%{transform:translateX(-6.4px)}
   55.6%,60.2%{transform:translateX(-3.2px)}
   61.6%,100%{transform:none}}
+/* A turn is not a card flip. The bird thins to an edge over a couple of seconds,
+   swaps facing while it is a line, then opens the other way. The old 110ms
+   scaleX(-1) snap is what made it look like it was flickering. */
 .heron-face{transform-box:fill-box;transform-origin:64% 50%;animation:heronFace 92s ease-in-out infinite}
-@keyframes heronFace{0%,44%{transform:none}44.12%,64.5%{transform:scaleX(-1)}64.62%,100%{transform:none}}
+@keyframes heronFace{0%,41%{transform:none}
+  43.1%{transform:scaleX(.12) translateY(1px)}
+  43.18%{transform:scaleX(-.12) translateY(1px)}
+  45.5%,61.6%{transform:scaleX(-1)}
+  63.7%{transform:scaleX(-.12) translateY(1px)}
+  63.78%{transform:scaleX(.12) translateY(1px)}
+  66.2%,100%{transform:none}}
 .heron-lunge{transform-box:fill-box;transform-origin:66% 100%;animation:heronLunge 92s ease-in-out infinite}
 @keyframes heronLunge{0%,70%,100%{transform:none}
-  72.5%{transform:rotate(-8deg)}73.6%{transform:rotate(-10deg)}75%{transform:rotate(-4.5deg)}78%{transform:none}}
+  71.4%{transform:rotate(-8deg)}71.8%,74.4%{transform:rotate(-10deg)}
+  76.8%{transform:rotate(-3.5deg)}79.2%{transform:none}}
 .heron-leg{transform-box:fill-box}
 .heron-leg.near{transform-origin:58% 0;animation:heronStepA 92s ease-in-out infinite}
 .heron-leg.far{transform-origin:55% 0;animation:heronStepB 92s ease-in-out infinite}
@@ -214,11 +233,13 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
   22.8%,52.8%{transform:rotate(-32deg)}}
 .heron-strike{transform-box:fill-box;transform-origin:95% 100%;animation:heronStrike 92s ease-in-out infinite}
 @keyframes heronStrike{0%,70%,100%{transform:none}
-  72.5%{transform:translate(-1px,2.8px) rotate(-10deg)}
-  73.6%{transform:translate(-1.4px,3.6px) rotate(-12deg)}
-  75%{transform:translate(-.6px,1.6px) rotate(-5deg)}78%{transform:none}}
+  71.4%{transform:translate(-1.2px,3.2px) rotate(-11deg)}
+  71.8%,74.4%{transform:translate(-1.4px,3.6px) rotate(-12deg)}
+  76.8%{transform:translate(-.5px,1.2px) rotate(-4deg)}79.2%{transform:none}}
 .heron-scan{transform-box:fill-box;transform-origin:95% 100%;animation:heronScan 31s ease-in-out infinite}
-@keyframes heronScan{0%,68%,100%{transform:rotate(0)}74%,86%{transform:rotate(-2.4deg)}92%{transform:rotate(1deg)}}
+@keyframes heronScan{0%,52%,100%{transform:rotate(0)}
+  58%,66%{transform:rotate(-2.8deg)}72%{transform:rotate(0)}
+  78%,86%{transform:rotate(2deg)}92%{transform:rotate(0)}}
 /* one gull actually crosses, instead of two pinned to the sky */
 .gull-cross{animation:gullCross var(--gd,70s) linear infinite}
 @keyframes gullCross{0%{transform:translate(0,0);opacity:0}6%,94%{opacity:1}
@@ -1101,24 +1122,39 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const ringAt=(x,y,rx,dur,delay)=>`<ellipse class="water-ring slow" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${rx}" ry="${(rx*.3).toFixed(1)}" fill="none" stroke="${dark?'#B7D6E1':'#183C4B'}" stroke-width=".7" style="--rd:${dur}s;animation-delay:-${delay}s"/>`;
 
   const critterInk=dark?"#07161B":"#173029",critterMark=dark?"#A6BCC0":"#E3E8D8";
-  /* White-tail on a real frame: deep brisket, tucked flank, a hock that bends backwards.
-     The mule deer taught this lesson; the old oval-and-sticks body read as a sausage.
-     Smaller ears and a pale flag are what make it this deer and not that one. Graze is
-     the farm cue, so the neck and head stay one outline and do not open a seam. */
+  /* White-tail buck on a real frame: deep brisket, tucked flank, a hock that
+     bends backwards, two small ears, a pale flag, and a rack that reads at
+     phone size. The mule deer taught the body; this one is the farm deer, so
+     it grazes (nose in the grass) and now and then turns its head to look at
+     the porch. Neck and head stay one outline so the graze cannot open a seam. */
   const deerAt=(x,y,s,flip=-1,opacity=1)=>`<g class="wildlife deer" data-species="deer" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(flip*s).toFixed(2)},${s.toFixed(2)})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
     <g fill="none" stroke="${critterInk}" stroke-width=".95">
-      <path d="M 5.0 10.2 L 4.4 15.0 L 5.2 18.2 L 4.8 20.8"/>
-      <path d="M 12.2 10.4 L 13.0 15.0 L 12.0 18.2 L 12.4 20.8"/>
+      <path d="M 5.0 10.4 L 4.2 14.8 L 5.4 17.6 L 4.8 20.8"/>
+      <path d="M 13.0 10.4 L 13.6 15.0 L 12.8 18.2 L 13.2 20.8"/>
     </g>
-    <path d="M 2.0 7.6 C 3.8 4.8 10.4 4.2 14.6 5.6 C 16.8 6.4 17.6 8.2 16.6 10.0 C 15.0 12.2 10.8 12.8 7.4 12.2 C 4.8 11.6 2.8 11.2 2.2 10.2 C 1.6 9.2 1.5 8.2 2.0 7.6 Z"/>
-    <path d="M 4.4 10.2 C 7.8 11.3 12.2 11.0 14.8 9.4" fill="none" stroke="${critterMark}" stroke-width=".7" opacity=".34"/>
-    <path class="deer-tail" d="M 1.8 6.2 C .0 5.6 -1.0 7.2 -.4 9.6 C 1.0 8.8 2.0 7.4 2.3 6.4 Z" fill="${critterMark}" stroke="none" opacity=".88"/>
-    <g class="deer-head"><path d="M 13.8 6.2 C 15.4 4.2 16.2 1.6 16.4 -.4 C 16.6 -2.0 17.6 -2.8 19.0 -2.6 L 22.2 1.2 C 22.6 1.8 22.0 2.4 21.2 2.2 L 19.8 2.0 C 18.8 3.0 17.6 3.4 16.6 3.4 L 15.6 7.2 Z"/>
-      <path class="deer-ear" d="M 17.2 -2.2 C 16.2 -2.6 15.6 -3.4 15.6 -4.4 C 16.8 -4.2 17.6 -3.4 18.0 -2.5 Z"/>
-      <path d="M 18.0 -2.6 C 17.6 -4.8 18.0 -6.8 19.2 -8.4 M 18.2 -5.6 L 16.8 -6.8 M 18.6 -7.2 L 20.0 -8.4 M 19.8 -2.2 C 20.2 -4.2 20.8 -5.6 21.8 -6.6" fill="none" stroke-width=".9"/>
-      <circle cx="20.2" cy="-.4" r=".36" fill="${critterMark}" stroke="none"/></g>
-    <path d="M 6.4 10.8 L 6.2 15.6 L 6.8 18.4 L 6.4 20.8" fill="none" stroke-width="1.2"/>
-    <g class="deer-leg"><path d="M 14.6 10.4 L 15.2 15.2 L 14.4 18.2 L 14.8 20.8" fill="none" stroke-width="1.2"/></g></g>`;
+    <path d="M 3.0 8.6 C 4.6 5.2 11.4 4.4 15.6 5.8 C 17.8 6.6 18.4 8.6 17.2 10.4 C 15.4 12.8 10.8 13.2 7.2 12.4 C 4.6 11.8 2.8 11.2 2.2 10.0 C 1.6 8.8 2.0 7.8 3.0 8.6 Z"/>
+    <path d="M 4.6 10.4 C 8.0 11.4 12.4 11.0 15.0 9.4" fill="none" stroke="${critterMark}" stroke-width=".7" opacity=".34"/>
+    <path class="deer-tail" d="M 2.4 6.4 C .2 5.4 -1.4 7.4 -.6 10.4 C 1.2 9.2 2.4 7.6 2.8 6.6 Z" fill="${critterMark}" stroke="none" opacity=".88"/>
+    <g class="buck-profile">
+    <g class="deer-head">
+      <path d="M 13.8 6.6 C 15.6 4.0 16.4 1.2 16.8 -.8 C 17.0 -2.4 18.2 -3.4 19.6 -3.2 L 23.0 .8 C 23.4 1.4 22.8 2.0 22.0 1.8 L 20.4 1.6 C 19.2 2.8 17.8 3.4 16.6 3.6 L 15.4 7.2 Z"/>
+      <path class="deer-ear" d="M 17.4 -2.4 C 16.2 -2.8 15.6 -3.8 15.8 -5.0 C 17.0 -4.6 17.8 -3.6 18.2 -2.6 Z"/>
+      <path class="deer-ear" style="animation-delay:-4.2s" d="M 18.8 -2.6 C 19.0 -4.0 19.6 -5.0 20.6 -5.4 C 20.8 -4.0 20.2 -3.0 19.4 -2.4 Z"/>
+      <path d="M 18.4 -3.0 C 17.6 -5.4 17.2 -7.6 17.6 -9.6 M 17.4 -5.8 L 16.0 -7.0 M 17.4 -7.6 L 18.8 -8.8 M 17.8 -9.2 L 16.8 -10.4 M 20.0 -2.8 C 20.6 -5.0 21.4 -6.8 22.4 -8.2 M 20.8 -5.4 L 22.0 -6.4 M 21.6 -7.2 L 21.0 -8.6" fill="none" stroke-width=".9"/>
+      <circle cx="20.4" cy="-.6" r=".36" fill="${critterMark}" stroke="none"/>
+    </g>
+    </g>
+    <g class="buck-regard">
+      <path d="M 13.8 7.0 C 14.6 4.0 15.2 1.8 15.6 .2 L 17.8 .2 C 18.2 1.8 18.8 4.0 19.6 7.0 Z"/>
+      <path d="M 15.0 .4 C 14.6 -1.2 14.8 -3.0 15.6 -4.2 C 16.0 -5.0 16.8 -5.4 17.2 -5.2 C 17.6 -5.4 18.4 -5.0 18.8 -4.2 C 19.6 -3.0 19.8 -1.2 19.4 .4 C 18.8 1.4 17.2 1.6 16.4 1.2 Z"/>
+      <path class="deer-ear" d="M 15.2 -4.0 C 13.6 -5.2 13.0 -6.8 13.6 -7.4 C 14.6 -6.6 15.4 -5.4 15.8 -4.2 Z"/>
+      <path class="deer-ear" style="animation-delay:-5.1s" d="M 19.2 -4.0 C 20.8 -5.2 21.4 -6.8 20.8 -7.4 C 19.8 -6.6 19.0 -5.4 18.6 -4.2 Z"/>
+      <path d="M 16.4 -5.0 C 15.4 -7.2 14.2 -9.4 13.6 -11.6 M 15.6 -7.4 L 14.4 -8.8 M 15.0 -9.2 L 15.8 -10.6 M 14.2 -10.6 L 13.2 -12.2 M 18.0 -5.0 C 19.0 -7.2 20.2 -9.4 20.8 -11.6 M 18.8 -7.4 L 20.0 -8.8 M 19.4 -9.2 L 18.6 -10.6 M 20.2 -10.6 L 21.2 -12.2" fill="none" stroke-width=".95"/>
+      <circle cx="16.4" cy="-2.4" r=".32" fill="${critterMark}" stroke="none"/>
+      <circle cx="18.0" cy="-2.4" r=".32" fill="${critterMark}" stroke="none"/>
+    </g>
+    <path d="M 6.6 10.8 L 6.0 15.2 L 6.8 18.0 L 6.4 20.8" fill="none" stroke-width="1.2"/>
+    <g class="deer-leg"><path d="M 15.2 10.4 L 15.8 15.2 L 15.0 18.2 L 15.4 20.8" fill="none" stroke-width="1.2"/></g></g>`;
   const owlAt=(x,y,s,opacity=.96)=>`<g class="wildlife owl" data-species="owl" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
     <path d="M -6.2 6.8 C -7.0 3.2 -6.0 -.2 -3.4 -2.0 C -1.2 -3.2 1.2 -3.2 3.4 -2.0 C 6.0 -.2 7.0 3.2 6.2 6.8 C 3.4 9.4 -3.4 9.4 -6.2 6.8 Z"/>
     <g class="owl-head">

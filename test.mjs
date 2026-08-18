@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v43/);
+  assert.match(worker, /mbwx-shell-v44/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -234,6 +234,9 @@ test("every motion is driven by a reading, not by decoration", async () => {
   // body at the hips with the legs planted, so the neck base stays on the chest
   assert.match(html, /@keyframes heronFace/);
   assert.match(html, /class="heron-lunge"/);
+  // turn thins to an edge, then opens — not a 110ms scaleX snap
+  assert.match(html, /43\.1%\{transform:scaleX\(\.12\) translateY\(1px\)\}/);
+  assert.doesNotMatch(html, /44\.12%,64\.5%\{transform:scaleX\(-1\)\}/);
   assert.doesNotMatch(html, /M 18\.4 34\.2 L 17\.7 38\.0/);
   assert.match(html, /class="flight-wing wing-l"/);
   assert.match(html, /rapid mirrored triangles read as a bat/);
@@ -502,6 +505,9 @@ test("light, motion and alerts stay tuned", async () => {
   assert.match(html, /@keyframes swayTree/);
   assert.match(html, /class="deer-head"/);
   assert.match(html, /@keyframes deerGraze/);
+  assert.match(html, /38%,52%\{transform:rotate\(66deg\)\}/);
+  assert.match(html, /@keyframes flagFlick/);
+  assert.match(html, /class="buck-regard"/);
   // mule deer stands: ear and tail only. The graze clock hid the ears and read as a rodent.
   assert.match(html, /class="mule-head"/);
   assert.match(html, /!dark&&!deerOut&&!storm\?magpieAt/);
