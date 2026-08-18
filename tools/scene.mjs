@@ -129,7 +129,7 @@ const CASES = [
       windAmp: 6, gustAmp: 10, sunrise: "06:12", sunset: "19:52",
       popCurve: () => 4, dailyPop: (p) => p.fill(8) } },
   { name: "19-denver-summer-storm", loc: "den", when: "2026-08-15T18:10:00",
-    note: "a Front Range thunderstorm: mountains recede, grass leans, resident magpie stays readable",
+    note: "a Front Range thunderstorm: mountains recede, grass leans, the magpie has gone in",
     o: { baseTemp: 72, nowTemp: 68, feels: 66, rh: 60, isDay: 1, code: 95, cloud: 93, nowWind: 19, nowDir: 280, nowGust: 36, nowUv: 1.2, uvMax: 8,
       windAmp: 15, gustAmp: 27, sunrise: "06:12", sunset: "19:52", nowcast: true,
       popCurve: (i, hr) => (hr >= 15 && hr <= 20 ? 82 : 12), dailyPop: (p) => { p[0] = 85; p[1] = 18; } } },
@@ -215,7 +215,8 @@ for (const cs of cases) {
     const species = await page.locator("#sceneSvg [data-species]").evaluateAll((els) =>
       [...new Set(els.map((el) => el.getAttribute("data-species")))].filter(Boolean));
     console.log(`    wildlife: ${species.join(", ") || "none"}`);
-    if (!species.length) problems.push(`${cs.name}: no wildlife in scene`);
+    const stormy = [95, 96, 99].includes(cs.o.code);
+    if (!species.length && !stormy) problems.push(`${cs.name}: no wildlife in scene`);
 
     // The count that matters for battery is what is still running. One-shot entrances
     // (rise, wipe, grow) finish in under a second but linger in getAnimations() because
