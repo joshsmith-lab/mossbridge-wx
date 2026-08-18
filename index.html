@@ -203,11 +203,17 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes foxSniff{0%,66%,100%{transform:rotate(0)}72%{transform:rotate(5deg)}78%{transform:translateY(.5px) rotate(7deg)}85%{transform:rotate(-2deg)}92%{transform:rotate(0)}}
 .fox-tail{transform-box:fill-box;transform-origin:8% 50%;animation:foxBrush 18s ease-in-out infinite alternate}
 @keyframes foxBrush{0%,58%{transform:rotate(-1deg)}76%{transform:rotate(5deg)}100%{transform:rotate(1deg)}}
-/* hens spend most of their time looking still. One pecks twice, one checks the yard,
-   and one scratches once; separate clocks keep the little flock from moving as a unit. */
-.hen-peck{transform-box:fill-box;transform-origin:84% 88%;animation:henPeck 17s ease-in-out infinite}
-@keyframes henPeck{0%,66%,100%{transform:rotate(0)}70%{transform:rotate(31deg)}
-  73%{transform:rotate(24deg)}76%{transform:rotate(34deg)}80%{transform:rotate(0)}}
+/* hens spend most of their time looking still. Two work the dirt on separate
+   clocks — a short run of pecks, then a long stand — and the third scratches,
+   then pecks what she turned up. They do not move as a unit. */
+.hen-peck{transform-box:fill-box;transform-origin:78% 100%;animation:henPeck 15s ease-in-out infinite}
+@keyframes henPeck{0%,56%,100%{transform:none}
+  59%{transform:translate(-.2px,2.6px) rotate(46deg)}61%{transform:translate(0,1.0px) rotate(14deg)}
+  63%{transform:translate(-.25px,2.9px) rotate(52deg)}65%{transform:translate(0,1.0px) rotate(12deg)}
+  67%{transform:translate(-.2px,2.7px) rotate(48deg)}69%{transform:translate(0,1.1px) rotate(16deg)}
+  71%{transform:translate(-.22px,2.8px) rotate(50deg)}74%{transform:none}}
+.hen-tip{transform-box:fill-box;transform-origin:50% 92%;animation:henTip 15s ease-in-out infinite}
+@keyframes henTip{0%,54%,76%,100%{transform:none}58%,72%{transform:rotate(16deg)}}
 .hen-look{transform-box:fill-box;transform-origin:84% 88%;animation:henLook 23s ease-in-out infinite}
 @keyframes henLook{0%,74%,100%{transform:rotate(0)}78%,88%{transform:rotate(-7deg)}92%{transform:rotate(3deg)}}
 .hen-scratch{transform-box:fill-box;transform-origin:50% 0;animation:henScratch 19s ease-in-out infinite}
@@ -1122,34 +1128,42 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
      <path d="M 5.4 4.4 L 5.8 6.4 l 1.2 .2" stroke-width="1" fill="none"/>
      <path d="M 8.8 .4 C 12.4 1.0 15.4 -.6 16.8 -3.6 C 15.2 -3.2 12.6 -1.6 8.6 -.4 Z"/>
      <path d="M 10.4 .6 l .5 -1.8 M 12.6 .2 l .8 -1.7 M 14.6 -1.2 l 1.2 -1.2" stroke="${critterMark}" stroke-width="1.05" fill="none" opacity=".85"/>`);
-  /* Three hens beside the barn. The previous pair of attempts both drew a body wider than
-     it was tall, which is a duck: a duck is a horizontal body with a low tail, and a hen is
-     an upright one with the mass low and forward and the tail carried high behind it. So the
-     body here is as deep as it is long, the head sits well above the back on a real neck
-     rather than poking off the front, and the tail is two clean sickles instead of a zigzag,
-     for the same reason the gulls' wingtips are: notches at this size fill in and go to mush. */
-  const chickens=(x,y,s,o=.96)=>{
-    const hen=(dx,dy,hs,motion,period)=>{
-      const headClass=motion==="peck"?"hen-peck":motion==="look"?"hen-look":"";
-      const legClass=motion==="scratch"?"hen-scratch":"";
-      const timed=headClass||legClass?` style="${phase(period)}"`:"";
+  /* Three hens in the yard, not a pile. Each is about a body-length of dirt from
+     the next so the three outlines stay separate on a phone. The near one faces
+     the others, the way a flock does when they have found something; she scratches
+     and then pecks what she turned up. The middle one works the dirt. The far one
+     keeps her head up. */
+  const chickens=(barnX,rightTreeX,base)=>{
+    const hen=(dx,dy,hs,motion,period,flip=1)=>{
+      const pecks=motion==="peck"||motion==="scratch";
+      const looks=motion==="look";
+      const scratches=motion==="scratch";
+      const headClass=pecks?"hen-peck":looks?"hen-look":"";
+      const headP=motion==="scratch"?period+5:period;
+      const tips=motion==="peck";
+      const timed=p=>` style="${phase(p)}"`;
       const foot=(fx,fy)=>`M ${fx} ${fy-2} L ${fx} ${fy} M ${fx} ${fy} l -1.05 .5 M ${fx} ${fy} l .95 .55 M ${fx} ${fy} l -.05 .8`;
-      return `<g transform="translate(${dx} ${dy}) scale(${hs})">
+      return critter("hens",dx,dy,1,1,`<g transform="scale(${flip*hs},${hs})">
+        <g${tips?` class="hen-tip"${timed(period)}`:""}>
         <path d="M 2.4 -1.6 C 4.6 -3.4 6.4 -5.1 7.6 -6.4 C 7.2 -4.2 5.8 -2 4 -.4 Z"/>
         <path d="M 2.8 -.6 C 5 -1.8 6.6 -3.1 7.5 -4 C 6.8 -2.1 5.2 -.4 3.6 .9 Z"/>
         <path d="M -2.3 -1.5 C -3.2 -.3 -3 1.7 -1.8 2.6 C -.5 3.4 1.4 3.3 2.4 2.2 C 3.3 1.2 3.4 -.7 2.8 -1.7 C 1.7 -3.1 -.9 -3.2 -2.3 -1.5 Z"/>
         <path d="M -1.2 .3 C .3 -.3 1.9 .3 2.4 1.6 C 1 2.2 -.6 1.7 -1.4 .9 Z" fill="${critterMark}" stroke="none" opacity=".24"/>
-        <g${headClass?` class="${headClass}"`:""}${headClass?timed:""}>
+        <g${headClass?` class="${headClass}"`:""}${headClass?timed(headP):""}>
           <path d="M -2.2 -2 C -3.4 -3 -4 -4.4 -3.9 -5.6 C -3.8 -6.7 -2.3 -6.9 -1.85 -5.9 C -1.5 -5.1 -1.9 -4.2 -1.7 -3.4 C -1.6 -2.9 -1.9 -2.3 -2.2 -2 Z"/>
           <path d="M -3.85 -6.6 l -.1 -1.15 l .8 .55 l .3 -1.05 l .6 1 Z"/>
           <path d="M -3.95 -5.5 L -5.45 -5.05 L -3.9 -4.55 Z"/>
           <path d="M -3.5 -4.5 C -4.05 -4.25 -4.1 -3.5 -3.55 -3.3 Z"/>
         </g>
         <path d="${foot(-1.1,5.1)}" stroke-width=".72" fill="none"/>
-        <g${legClass?` class="${legClass}"`:""}${legClass?timed:""}><path d="${foot(1.4,5)}" stroke-width=".72" fill="none"/></g>
-      </g>`;
+        <g${scratches?` class="hen-scratch"`:""}${scratches?timed(period):""}><path d="${foot(1.4,5)}" stroke-width=".72" fill="none"/></g>
+        </g>
+      </g>`);
     };
-    return critter("hens",x,y,s,o,hen(0,0,1,"peck",17)+hen(8.4,1,.87,"look",23)+hen(-7.4,1.6,.79,"scratch",19));
+    const yard=rightTreeX-barnX;
+    return hen(barnX+yard*.30,base+13.2,.74,"scratch",19,-1)
+      +hen(barnX+yard*.56,base+12,.88,"peck",15)
+      +hen(barnX+yard*.82,base+13,.76,"look",23);
   };
   /* The one thing in either scene that gets a colour. A cardinal is the West Virginia
      state bird and the only red thing in a snowbound field, so when everything else has
@@ -1557,7 +1571,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
        rabbit in it. Anything standing on the ground here has to sit right of pondR. */
     const ridgeResident=deer?"":dark?fox(animalRight-14,base+12,1.16,1)
       :temp<48?cardinal(rightTreeX-4,base-18,.78)
-      :(!wet&&!storm)?chickens(animalRight+3,base+12,.9,1):"";
+      :(!wet&&!storm)?chickens(barnX,rightTreeX,base):"";
     let flies="";
     if(showFlies){const fr2=mulberry(51926);
       for(let i=0;i<flyCount;i++)
