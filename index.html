@@ -1680,7 +1680,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     const cnt=6+Math.floor(g()*5), x0=x; let t="";
     for(let k=0;k<cnt;k++){
       let ht=11+g()*19;const lean=(4+g()*8)*(g()<.5?-1:1);
-      if(Math.abs(x-residentX)<20)ht*=.28;       /* a small natural pocket, not a cutout */
+      if(Math.abs(x-residentX)<26)ht*=.28;       /* a small natural pocket, not a cutout */
       if(x<dkX-36||x>dkX+26)t+=blade(x,ht,lean);
       x+=2.2+g()*2.6;
     }
@@ -1783,7 +1783,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
      fireflies on warm summer nights, a quiet crab when the marsh turns wet. That rule is
      about the performing cue, the thing that moves and draws the eye, and it still holds.
      Underneath it sits a resident, which is always there and almost never moves. */
-  const marshResident=dark?raccoon(residentX,base+3,1.28,1)
+  const marshResident=dark?raccoon(residentX,base+7,1.36,1)
     :temp<48?cormorant(residentX,base-12,1.08,1)
     /* The bill used to sit exactly on the dark bank. Four pixels lower puts the whole
        little bird against open water without changing its drawing or feeding motion.

@@ -245,7 +245,7 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /const crabAt=\(x,y,s,opacity=\.96\)/);
   assert.match(html, /const raccoon=\(x,y,s,o=\.96\)/);
   // residents stay intact; the landscape gives each silhouette a quiet natural pocket
-  assert.match(html, /Math\.abs\(x-residentX\)<20\)ht\*=\.28/);
+  assert.match(html, /Math\.abs\(x-residentX\)<26\)ht\*=\.28/);
   assert.match(html, /const animalLeft=barnX-48,animalRight=barnX\+48,rightTreeX=W\*\.955/);
   assert.match(html, /const yard=x>animalLeft-18&&x<animalRight\+22/);
   assert.match(html, /class="barn" data-scene-anchor="barn"/);
@@ -487,7 +487,7 @@ test("light, motion and alerts stay tuned", async () => {
   assert.match(html, /!dark&&!deerOut&&!storm\?magpieAt/);
   assert.match(html, /:\(!wet&&!storm\)\?chickens/);
   assert.match(html, /:storm\?"":oysterCatcher/);
-  assert.match(html, /raccoon\(residentX,base\+3,1\.28,1\)/);
+  assert.match(html, /raccoon\(residentX,base\+7,1\.36,1\)/);
   assert.match(html, /@keyframes perchHop/);
   assert.match(html, /@keyframes groundHop/);
   assert.match(html, /@keyframes cormSettle/);
