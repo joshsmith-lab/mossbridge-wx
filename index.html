@@ -1096,15 +1096,15 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
      the porch. Neck and head stay one outline so the graze cannot open a seam. */
   const deerAt=(x,y,s,flip=-1,opacity=1)=>`<g class="wildlife deer" data-species="deer" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(flip*s).toFixed(2)},${s.toFixed(2)})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
     <g fill="none" stroke="${critterInk}" stroke-width=".95">
-      <path d="M 4.8 10.2 L 3.6 14.4 L 5.4 17.2 L 4.8 20.8"/>
-      <path d="M 13.2 10.2 L 13.8 15.0 L 13.0 18.2 L 13.4 20.8"/>
+      <path d="M 4.6 11.4 L 3.4 14.8 L 5.2 17.4 L 4.6 20.8"/>
+      <path d="M 14.0 10.4 L 14.4 15.2 L 13.6 18.2 L 14.0 20.8"/>
     </g>
-    <path d="M 2.6 8.0 C 4.2 4.4 12.0 3.6 16.4 5.2 C 18.8 6.0 19.4 8.0 18.0 10.2 C 16.2 12.6 11.4 12.4 7.4 11.6 C 4.6 11.0 2.2 10.6 1.6 9.2 C 1.2 8.0 1.6 7.2 2.6 8.0 Z"/>
-    <path d="M 4.8 10.2 C 8.2 11.2 12.6 10.8 15.4 9.2" fill="none" stroke="${critterMark}" stroke-width=".7" opacity=".34"/>
-    <path class="deer-tail" d="M 2.2 6.0 C .0 4.8 -1.8 6.8 -.8 10.2 C 1.0 9.0 2.2 7.4 2.6 6.2 Z" fill="${critterMark}" stroke="none" opacity=".9"/>
+    <path d="M 15.8 4.4 C 12.0 3.8 8.0 3.6 4.6 4.2 C 2.6 4.6 1.2 6.2 1.2 8.6 C 1.2 10.8 2.6 12.6 4.6 12.8 C 6.0 12.6 6.8 10.2 8.4 8.8 C 10.2 7.4 12.4 8.0 14.6 10.2 C 16.4 11.8 18.2 11.6 18.8 9.6 C 19.2 7.6 18.4 5.4 15.8 4.4 Z"/>
+    <path d="M 5.0 11.4 C 7.2 9.0 10.6 8.4 14.2 10.0" fill="none" stroke="${critterMark}" stroke-width=".7" opacity=".34"/>
+    <path class="deer-tail" d="M 2.0 5.0 C -.2 4.0 -2.0 6.2 -1.0 9.6 C .8 8.4 2.0 6.6 2.4 5.4 Z" fill="${critterMark}" stroke="none" opacity=".9"/>
     <g class="buck-profile">
     <g class="deer-head">
-      <path d="M 14.0 6.4 C 15.8 3.6 16.6 .8 17.0 -1.2 C 17.2 -2.8 18.4 -3.8 19.8 -3.6 L 23.4 .6 C 23.8 1.2 23.2 1.8 22.4 1.6 L 20.6 1.4 C 19.4 2.6 18.0 3.2 16.8 3.4 L 15.6 7.0 Z"/>
+      <path d="M 15.0 5.6 C 16.4 3.2 17.0 .6 17.2 -1.4 C 17.4 -3.0 18.6 -4.0 20.0 -3.8 L 23.6 .4 C 24.0 1.0 23.4 1.6 22.6 1.4 L 20.8 1.2 C 19.6 2.4 18.2 3.0 17.0 3.2 L 15.8 6.2 Z"/>
       <path class="deer-ear" d="M 17.6 -2.6 C 16.4 -3.0 15.8 -4.0 16.0 -5.2 C 17.2 -4.8 18.0 -3.8 18.4 -2.8 Z"/>
       <path class="deer-ear" style="animation-delay:-4.2s" d="M 19.0 -2.8 C 19.2 -4.2 19.8 -5.2 20.8 -5.6 C 21.0 -4.2 20.4 -3.2 19.6 -2.6 Z"/>
       <path d="M 18.6 -3.2 C 17.6 -5.8 17.2 -8.2 17.8 -10.6 M 17.6 -6.2 L 15.8 -7.6 M 17.6 -8.2 L 19.2 -9.6 M 18.0 -10.0 L 16.8 -11.4 M 20.2 -3.0 C 21.0 -5.4 22.0 -7.4 23.2 -9.0 M 21.2 -5.8 L 22.6 -7.0 M 22.0 -7.6 L 21.2 -9.0" fill="none" stroke-width="1.15"/>
@@ -1112,7 +1112,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     </g>
     </g>
     <g class="buck-regard">
-      <path d="M 13.6 6.8 C 14.6 3.6 15.2 1.4 15.6 -.2 L 18.0 -.2 C 18.4 1.4 19.0 3.6 20.0 6.8 Z"/>
+      <path d="M 14.4 6.0 C 15.2 3.2 15.6 1.2 16.0 -.2 L 18.4 -.2 C 18.8 1.2 19.4 3.2 20.4 6.0 Z"/>
       <path d="M 14.8 .2 C 14.4 -1.6 14.6 -3.4 15.6 -4.6 C 16.2 -5.4 17.0 -5.8 17.4 -5.6 C 17.8 -5.8 18.6 -5.4 19.2 -4.6 C 20.2 -3.4 20.4 -1.6 20.0 .2 C 19.4 1.4 17.6 1.6 16.6 1.2 Z"/>
       <path class="deer-ear" d="M 15.0 -4.4 C 13.2 -5.6 12.4 -7.4 13.2 -8.0 C 14.4 -7.2 15.2 -5.8 15.6 -4.6 Z"/>
       <path class="deer-ear" style="animation-delay:-5.1s" d="M 19.6 -4.4 C 21.4 -5.6 22.2 -7.4 21.4 -8.0 C 20.2 -7.2 19.4 -5.8 19.0 -4.6 Z"/>
@@ -1120,8 +1120,8 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       <circle cx="16.4" cy="-2.6" r=".32" fill="${critterMark}" stroke="none"/>
       <circle cx="18.2" cy="-2.6" r=".32" fill="${critterMark}" stroke="none"/>
     </g>
-    <path d="M 6.6 10.6 L 5.4 15.0 L 6.8 17.8 L 6.4 20.8" fill="none" stroke-width="1.2"/>
-    <g class="deer-leg"><path d="M 15.4 10.2 L 16.0 15.2 L 15.2 18.2 L 15.6 20.8" fill="none" stroke-width="1.2"/></g></g>`;
+    <path d="M 6.4 11.2 L 5.0 15.2 L 6.6 17.8 L 6.2 20.8" fill="none" stroke-width="1.2"/>
+    <g class="deer-leg"><path d="M 16.2 10.6 L 16.8 15.4 L 16.0 18.2 L 16.4 20.8" fill="none" stroke-width="1.2"/></g></g>`;
   const owlAt=(x,y,s,opacity=.96)=>`<g class="wildlife owl" data-species="owl" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${critterInk}" stroke="${critterInk}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}">
     <path d="M -6.2 6.8 C -7.0 3.2 -6.0 -.2 -3.4 -2.0 C -1.2 -3.2 1.2 -3.2 3.4 -2.0 C 6.0 -.2 7.0 3.2 6.2 6.8 C 3.4 9.4 -3.4 9.4 -6.2 6.8 Z"/>
     <g class="owl-head">
@@ -1621,7 +1621,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     /* a frog is out in warm rain, not in snow: below about 45 it is underground */
     const rainyFrog=(wet||storm)&&temp>=45?frogAt(pondR-30,base+3,1.1,1):"";
     const deer=!wet&&!storm&&!dark&&(fog||localHour<11||localHour>=16||sunAltDeg<7)
-      ?deerAt(animalRight+10,base-13,1.08,-1,1):"";
+      ?deerAt(animalRight+14,base-17,1.28,-1,1):"";
 
     /* the hawk works a thermal over two and a half minutes rather than hanging on a pin */
     /* the hawk rides above the tallest fold and is drawn in front of it, so raising the
