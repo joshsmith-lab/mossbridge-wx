@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v40/);
+  assert.match(worker, /mbwx-shell-v41/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -266,6 +266,9 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /\.hen-scratch\{/);
   assert.match(html, /@keyframes henPeck/);
   assert.match(html, /@keyframes henTip/);
+  // peck is beak-down (negative rotate). Positive rotate folded the head over the back.
+  assert.match(html, /59%\{transform:rotate\(-42deg\)\}/);
+  assert.match(html, /58%,72%\{transform:rotate\(-12deg\)\}/);
   assert.match(html, /barnX\+yard\*\.30,base\+13\.2,\.74,"scratch",19,-1/);
   assert.match(html, /barnX\+yard\*\.56,base\+12,\.88,"peck",15/);
   assert.match(html, /barnX\+yard\*\.82,base\+13,\.76,"look",23/);
