@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v42/);
+  assert.match(worker, /mbwx-shell-v43/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -223,6 +223,18 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /class="gull-cross"/);
   assert.match(html, /@keyframes gullCross/);
   assert.match(html, /class="heron-strike"/);
+  // the heron wades three slow steps and back on the strike's own 92s clock, so it is
+  // always home and planted before the strike; the visible leg joint is the ankle and
+  // it bends backward, tarsus folding the other way from a knee when a foot lifts
+  assert.match(html, /class="heron-wade"/);
+  assert.match(html, /@keyframes heronWade/);
+  assert.match(html, /M 18\.6 34\.2 L 20\.2 40\.2/);
+  assert.match(html, /class="heron-tarsus"/);
+  // the return trip is a turn and a walk home, never a moonwalk; the strike tips the
+  // body at the hips with the legs planted, so the neck base stays on the chest
+  assert.match(html, /@keyframes heronFace/);
+  assert.match(html, /class="heron-lunge"/);
+  assert.doesNotMatch(html, /M 18\.4 34\.2 L 17\.7 38\.0/);
   assert.match(html, /class="flight-wing wing-l"/);
   assert.match(html, /rapid mirrored triangles read as a bat/);
   // A bird at fourteen pixels is a silhouette. Wings are filled tapers that come to a point;
