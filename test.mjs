@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v39/);
+  assert.match(worker, /mbwx-shell-v40/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -265,6 +265,11 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /\.hen-look\{/);
   assert.match(html, /\.hen-scratch\{/);
   assert.match(html, /@keyframes henPeck/);
+  assert.match(html, /@keyframes henTip/);
+  assert.match(html, /barnX\+yard\*\.30,base\+13\.2,\.74,"scratch",19,-1/);
+  assert.match(html, /barnX\+yard\*\.56,base\+12,\.88,"peck",15/);
+  assert.match(html, /barnX\+yard\*\.82,base\+13,\.76,"look",23/);
+  assert.match(html, /:\(!wet&&!storm\)\?chickens\(barnX,rightTreeX,base\)/);
 
   // light: the sun flattens near the horizon, the meteor waits for a clear night
   assert.match(html, /const squash=clamp\(\.9\+Math\.max\(0,sunAltDeg\)\/8\*\.1,\.9,1\)/);
