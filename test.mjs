@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v44/);
+  assert.match(worker, /mbwx-shell-v45/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -234,9 +234,11 @@ test("every motion is driven by a reading, not by decoration", async () => {
   // body at the hips with the legs planted, so the neck base stays on the chest
   assert.match(html, /@keyframes heronFace/);
   assert.match(html, /class="heron-lunge"/);
-  // turn thins to an edge, then opens — not a 110ms scaleX snap
-  assert.match(html, /43\.1%\{transform:scaleX\(\.12\) translateY\(1px\)\}/);
-  assert.doesNotMatch(html, /44\.12%,64\.5%\{transform:scaleX\(-1\)\}/);
+  // turn keeps mass on the page (three-quarter, not a pancake) and the legs stay planted
+  assert.match(html, /43\.2%\{transform:scaleX\(\.48\) rotate\(-6deg\) translate\(1\.2px,\.5px\)\}/);
+  assert.doesNotMatch(html, /scaleX\(\.12\)/);
+  assert.match(html, /class="heron-splash"/);
+  assert.match(html, /9\.6%,12\.4%\{transform:translate\(-2\.4px,5\.2px\) rotate\(-80deg\)\}/);
   assert.doesNotMatch(html, /M 18\.4 34\.2 L 17\.7 38\.0/);
   assert.match(html, /class="flight-wing wing-l"/);
   assert.match(html, /rapid mirrored triangles read as a bat/);
