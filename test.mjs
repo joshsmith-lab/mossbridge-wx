@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v48/);
+  assert.match(worker, /mbwx-shell-v49/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -508,9 +508,11 @@ test("light, motion and alerts stay tuned", async () => {
   assert.match(html, /@keyframes swayTree/);
   assert.match(html, /class="deer-head"/);
   assert.match(html, /@keyframes deerGraze/);
-  assert.match(html, /38%,52%\{transform:rotate\(66deg\)\}/);
+  assert.match(html, /32%,40%\{transform:rotate\(66deg\)\}/);
+  assert.match(html, /deerGraze 48s/);
   assert.match(html, /@keyframes flagFlick/);
   assert.match(html, /class="buck-regard"/);
+  assert.match(html, /21\.6 -13\.2/);
   // mule deer stands: ear and tail only. The graze clock hid the ears and read as a rodent.
   assert.match(html, /class="mule-head"/);
   assert.match(html, /!dark&&!deerOut&&!storm\?magpieAt/);
