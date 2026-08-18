@@ -176,21 +176,23 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
   49.6%,54.2%{transform:translateX(-6.4px)}
   55.6%,60.2%{transform:translateX(-3.2px)}
   61.6%,100%{transform:none}}
-/* The body turns over planted legs — the legs are outside this group, so the
-   bird never becomes a card. It goes to a three-quarter with mass still on
-   the page, slips through the edge in a blink, and opens the other way. */
-.heron-face{transform-box:fill-box;transform-origin:63% 94%;animation:heronFace 92s ease-in-out infinite}
+/* The body turns over planted legs — the legs flip with the bird so the
+   walk home is a walk, not a slide, but they sit outside the lunge so a
+   strike does not lift the feet. The turn goes to a three-quarter with
+   mass still on the page, slips through the edge, and opens the other way. */
+.heron-face{transform-box:fill-box;transform-origin:64% 50%;animation:heronFace 92s ease-in-out infinite}
 @keyframes heronFace{0%,41%{transform:none}
-  43.2%{transform:scaleX(.48) rotate(-6deg) translate(1.2px,.5px)}
-  43.55%{transform:scaleX(-.48) rotate(-6deg) translate(1.2px,.5px)}
+  43.2%{transform:scaleX(.55) rotate(-5deg)}
+  43.55%{transform:scaleX(-.55) rotate(-5deg)}
   45.8%,61.6%{transform:scaleX(-1)}
-  63.6%{transform:scaleX(-.48) rotate(-6deg) translate(1.2px,.5px)}
-  63.95%{transform:scaleX(.48) rotate(-6deg) translate(1.2px,.5px)}
+  63.6%{transform:scaleX(-.55) rotate(-5deg)}
+  63.95%{transform:scaleX(.55) rotate(-5deg)}
   66.2%,100%{transform:none}}
 .heron-lunge{transform-box:fill-box;transform-origin:66% 100%;animation:heronLunge 92s ease-in-out infinite}
 @keyframes heronLunge{0%,8%,16%,100%{transform:none}
-  9.2%{transform:rotate(-12deg)}9.6%,12.4%{transform:rotate(-16deg)}
-  14.6%{transform:rotate(-5deg)}}
+  9.2%{transform:rotate(-20deg) translate(0,2.4px)}
+  9.6%,12.4%{transform:rotate(-26deg) translate(0,3.2px)}
+  14.6%{transform:rotate(-8deg) translate(0,.6px)}}
 .heron-leg{transform-box:fill-box}
 .heron-leg.near{transform-origin:58% 0;animation:heronStepA 92s ease-in-out infinite}
 .heron-leg.far{transform-origin:55% 0;animation:heronStepB 92s ease-in-out infinite}
@@ -231,9 +233,9 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
   22.8%,52.8%{transform:rotate(-32deg)}}
 .heron-strike{transform-box:fill-box;transform-origin:95% 100%;animation:heronStrike 92s ease-in-out infinite}
 @keyframes heronStrike{0%,8%,16%,100%{transform:none}
-  9.2%{transform:translate(-2px,4px) rotate(-72deg)}
-  9.6%,12.4%{transform:translate(-2.4px,5.2px) rotate(-80deg)}
-  14.6%{transform:translate(-.6px,1.4px) rotate(-18deg)}}
+  9.2%{transform:translate(-.8px,2.2px) rotate(-16deg)}
+  9.6%,12.4%{transform:translate(-1px,2.8px) rotate(-20deg)}
+  14.6%{transform:translate(-.3px,.8px) rotate(-6deg)}}
 .heron-splash{transform-box:fill-box;transform-origin:center;animation:heronSplash 92s ease-out infinite;opacity:0}
 @keyframes heronSplash{0%,9.3%,15%,100%{opacity:0;transform:scale(.4)}
   9.55%{opacity:.5;transform:scale(.7)}
@@ -1839,11 +1841,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       <path d="M 10.6 8.8 C 10.2 10.8 9.0 13.2 8.4 16.0" fill="none" stroke="${critterMark}" stroke-width=".55" opacity=".5"/>
     </g></g>
     </g>
-    </g>
     ${/* tibia drops from the body to a knobbed ankle that points backward, and the
-         tarsus comes down and forward from it to the foot. The old legs bent the way
-         a person's do, which is the one thing a heron's never do. Legs sit outside
-         the turning body, so a turn never flattens the whole bird into a card. */""}
+         tarsus comes down and forward from it to the foot. Legs live inside the
+         turn so a walk home is a walk, and outside the lunge so a strike leaves
+         the feet planted. */""}
     <g class="heron-leg far" style="${phase(92)}">
       <path d="M 23.4 34.4 L 25.0 40.4" fill="none" stroke-width="1.15"/>
       <circle cx="25.0" cy="40.4" r=".6" stroke="none"/>
@@ -1859,6 +1860,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
         <path d="M 20.2 40.2 L 18.1 46.2" fill="none" stroke-width="1"/>
         <path d="M 18.1 46.2 l -2.5 .7 M 18.1 46.2 l 2.1 .7 M 18.1 46.2 l -.3 1.0" fill="none" stroke-width=".7"/>
       </g>
+    </g>
     </g>
     </g>
   </g>
