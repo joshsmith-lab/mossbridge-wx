@@ -1652,32 +1652,28 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     <ellipse cx="${(x-8.6*s).toFixed(1)}" cy="${(cy+1.2*s).toFixed(1)}" rx="${(3.6*s).toFixed(1)}" ry="${(1.7*s).toFixed(1)}"/></g>`};
   const pines=lob(W*.07,.95)+lob(W*.135,.6)+lob(W*.885,.8);
 
-  /* A live oak is the opposite shape to a loblolly and has to read as one: a short thick
-     trunk, limbs that reach out nearly level before they lift, and a crown two and a half
-     times wider than it is tall. It sits across the marsh, so it stays faint. */
+  /* A live oak is the opposite of a loblolly: a fist of a trunk, two or three
+     arms that go out nearly level, and a crown much wider than it is tall. One
+     broken outline is a tree; stacked ellipses were a raincloud. It sits across
+     the marsh, so it stays faint. A couple of sky holes keep it from reading
+     as a potato. */
   const liveOak=(x,s,op)=>{
-    const gy=base+2, th=23*s, cy=gy-th-7.5*s, mr=mulberry(4417);
+    const gy=base+2, mr=mulberry(4417);
     const P=(...a)=>a.map(v=>v.toFixed(1)).join(" ");
-    /* Moss hangs off the underside of the crown, and on a tree this far off it reads as a
-       ragged fringe rather than streamers. It is the lightest thing out there, so it swings
-       further than the canopy holding it. */
+    const L=(dx,dy)=>P(x+dx*s, gy+dy*s);
+    /* Moss hangs as a few drips of different lengths, not a fringe of sausages.
+       Lightest thing on the tree, so it swings further than the crown. */
     let moss="";
-    for(const[mx,my,len]of[[-21,3.2,6],[-16,4.8,8.5],[-10.5,6.2,5.5],[-4,6.6,8],[2,6.4,5.5],[8,6,8],[14,5,6],[19.5,3.6,7],[23,1.8,5.5]]){
-      const x0=x+mx*s, y0=cy+my*s, L=len*s*(.82+mr()*.4), w=1.15*s;
+    for(const[mx,my,len]of[[-22,-13,11],[-10,-11.5,7],[2,-11,14],[13,-12,8],[24,-14.5,11]]){
+      const x0=x+mx*s, y0=gy+my*s, hang=len*s*(.88+mr()*.28), w=1.05*s;
       const amt=swayAmt*(1.7+mr()*1.1);
       const st=PRM?"":` style="--sway:${amt.toFixed(2)}deg;--sway-neg:${(-amt).toFixed(2)}deg;--md:${(swayDur*(.72+mr()*.5)).toFixed(1)}s;animation-delay:-${(mr()*9).toFixed(1)}s"`;
-      moss+=`<path class="moss" d="M ${P(x0,y0)} Q ${P(x0-w*1.2,y0+L*.45)} ${P(x0-w*.3,y0+L)} Q ${P(x0+w,y0+L*.5)} ${P(x0+w*1.2,y0)} Z" opacity=".72"${st}/>`;
+      moss+=`<path class="moss" d="M ${P(x0,y0)} Q ${P(x0-w*1.4,y0+hang*.48)} ${P(x0-w*.15,y0+hang)} Q ${P(x0+w*1.1,y0+hang*.52)} ${P(x0+w*1.15,y0)} Z" opacity=".72"${st}/>`;
     }
     return `<g fill="${ink}" opacity="${op}"${treeAt(x)}>
-      <path d="M ${P(x-3.1*s,gy)} Q ${P(x-1.7*s,gy-th*.55)} ${P(x-2.2*s,gy-th)} L ${P(x+2.2*s,gy-th)} Q ${P(x+1.8*s,gy-th*.5)} ${P(x+3.3*s,gy)} Z"/>
-      <path d="M ${P(x-1.4*s,gy-th+2*s)} C ${P(x-9*s,gy-th-1*s)} ${P(x-16*s,gy-th)} ${P(x-24*s,gy-th-3*s)} M ${P(x+1.4*s,gy-th+2*s)} C ${P(x+9*s,gy-th-1.6*s)} ${P(x+16.5*s,gy-th-.4*s)} ${P(x+24.5*s,gy-th-3.4*s)} M ${P(x,gy-th+1*s)} C ${P(x-3*s,gy-th-4*s)} ${P(x-5*s,gy-th-6*s)} ${P(x-7*s,gy-th-8.5*s)}" stroke="${ink}" stroke-width="${(1.4*s).toFixed(1)}" fill="none" stroke-linecap="round"/>
-      <ellipse cx="${P(x)}" cy="${P(cy)}" rx="${(19*s).toFixed(1)}" ry="${(6.2*s).toFixed(1)}"/>
-      <ellipse cx="${P(x-12*s)}" cy="${P(cy+2.8*s)}" rx="${(10*s).toFixed(1)}" ry="${(4.6*s).toFixed(1)}"/>
-      <ellipse cx="${P(x+12.5*s)}" cy="${P(cy+2.2*s)}" rx="${(10.5*s).toFixed(1)}" ry="${(4.9*s).toFixed(1)}"/>
-      <ellipse cx="${P(x-3.5*s)}" cy="${P(cy-3.4*s)}" rx="${(11*s).toFixed(1)}" ry="${(4*s).toFixed(1)}"/>
-      <ellipse cx="${P(x+7.5*s)}" cy="${P(cy-2.6*s)}" rx="${(8*s).toFixed(1)}" ry="${(3.4*s).toFixed(1)}"/>
-      <ellipse cx="${P(x-20*s)}" cy="${P(cy+4.4*s)}" rx="${(6.6*s).toFixed(1)}" ry="${(2.9*s).toFixed(1)}"/>
-      <ellipse cx="${P(x+20.5*s)}" cy="${P(cy+3.8*s)}" rx="${(6.4*s).toFixed(1)}" ry="${(3*s).toFixed(1)}"/>
+      <path d="M ${L(-3.8,0)} C ${L(-3.2,-7)} ${L(-3.4,-12)} ${L(-2.6,-16)} L ${L(2.4,-16)} C ${L(3.2,-12)} ${L(3.6,-6)} ${L(4.2,0)} Z"/>
+      <path d="M ${L(-2,-15.5)} C ${L(-14,-16.5)} ${L(-22,-16)} ${L(-32,-19)} M ${L(2,-15.5)} C ${L(16,-16)} ${L(24,-16.5)} ${L(34,-20)} M ${L(0,-16)} C ${L(-4,-23)} ${L(-6,-27)} ${L(-10,-30)}" stroke="${ink}" stroke-width="${(1.7*s).toFixed(1)}" fill="none" stroke-linecap="round"/>
+      <path fill-rule="evenodd" d="M ${L(-30,-18)} C ${L(-28,-14)} ${L(-22,-12)} ${L(-16,-13)} C ${L(-10,-11)} ${L(-4,-12)} ${L(4,-11)} C ${L(12,-12)} ${L(20,-13)} ${L(26,-15)} C ${L(31,-17)} ${L(33,-19)} ${L(32,-22)} C ${L(30,-26)} ${L(24,-28)} ${L(18,-27)} C ${L(14,-26)} ${L(11,-23)} ${L(8,-24)} C ${L(4,-31)} ${L(-4,-32)} ${L(-10,-29)} C ${L(-16,-28)} ${L(-24,-26)} ${L(-28,-22)} C ${L(-30,-20)} ${L(-31,-19)} ${L(-30,-18)} Z M ${L(-13,-24)} C ${L(-15.4,-24)} ${L(-16.6,-22.4)} ${L(-15.2,-21)} C ${L(-13.8,-19.8)} ${L(-11.2,-20.2)} ${L(-10.6,-22)} C ${L(-10.2,-23.6)} ${L(-11.4,-24.2)} ${L(-13,-24)} Z M ${L(15,-22.2)} C ${L(17.2,-22.4)} ${L(18.2,-21)} ${L(17,-19.6)} C ${L(15.6,-18.6)} ${L(13.4,-19)} ${L(13,-20.6)} C ${L(12.6,-21.8)} ${L(13.6,-22.2)} ${L(15,-22.2)} Z"/>
       ${moss}</g>`;
   };
   const oak=liveOak(W*.47,1.24,.44*fogFade);

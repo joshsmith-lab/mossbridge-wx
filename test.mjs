@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v42/);
+  assert.match(worker, /mbwx-shell-v43/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -258,6 +258,13 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /const winter=month===11\|\|month<=1\|\|snowing/);
   assert.match(html, /a broken gambrel/);
   assert.match(html, /M 13\.4 16 L 22\.6 26\.5 M 22\.6 16 L 13\.4 26\.5/);
+
+  // the live oak is a broken crown with sky holes, not a pile of ellipses
+  const oakFn=html.slice(html.indexOf("const liveOak="), html.indexOf("const oak="));
+  assert.match(oakFn, /fill-rule="evenodd"/);
+  assert.doesNotMatch(oakFn, /<ellipse/);
+  assert.match(oakFn, /\[-22,-13,11\],\[-10,-11\.5,7\],\[2,-11,14\]/);
+  assert.match(html, /const oak=liveOak\(W\*\.47,1\.24,\.44\*fogFade\)/);
 
   assert.match(html, /class="hawk-circle"/);
   // the warm-weather farm residents now read as hens and move on separate, quiet clocks
