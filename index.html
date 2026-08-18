@@ -1802,10 +1802,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
      Underneath it sits a resident, which is always there and almost never moves. */
   const marshResident=dark?raccoon(residentX,base+7,1.36,1)
     :temp<48?cormorant(residentX,base-12,1.08,1)
-    /* The bill used to sit exactly on the dark bank. Four pixels lower puts the whole
-       little bird against open water without changing its drawing or feeding motion.
-       They feed in rain; a thunderstorm they sit out. */
-    :storm?"":oysterCatcher(residentX,base+6,1.1,1);
+    /* The bill used to sit on the dark bank. A few pixels into the water puts
+       the whole bird against open water instead of the reeds. They feed in rain;
+       a thunderstorm they sit out. */
+    :storm?"":oysterCatcher(residentX,base+9,1.1,1);
   /* Three gulls, on three different errands. One crosses the frame low over about seventy
      seconds, one holds its place higher up, and a third works back the other way much
      higher, smaller and fainter, on a slower clock. Gulls do not fly in formation and the
