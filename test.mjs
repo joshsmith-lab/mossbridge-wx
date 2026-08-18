@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v47/);
+  assert.match(worker, /mbwx-shell-v48/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -223,7 +223,9 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /class="gull-cross"/);
   assert.match(html, /@keyframes gullCross/);
   assert.match(html, /class="heron-strike"/);
-  // mostly still: two steps, a strike, a step home, one rare turn on a 150s clock
+  // mostly still: two steps, a strike, no walk home (that was the moonwalk)
+  assert.match(html, /29\.5%,80%\{transform:translateX\(-5\.6px\)\}/);
+  assert.doesNotMatch(html, /61\.5%,64%\{transform:translateX\(-2\.8px\)\}/);
   assert.match(html, /class="heron-wade"/);
   assert.match(html, /@keyframes heronWade/);
   assert.match(html, /heronWade 150s/);

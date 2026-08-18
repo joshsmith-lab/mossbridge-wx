@@ -157,17 +157,15 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .wmove{transform-box:fill-box;transform-origin:center;animation:wmove var(--wd,9s) ease-in-out infinite}
 @keyframes wmove{0%,100%{transform:translateX(calc(var(--wx,2px) * -1));opacity:var(--o0,.1)}
   50%{transform:translateX(var(--wx,2px));opacity:var(--o1,.24)}}
-/* A heron is mostly still. On a two-and-a-half-minute clock it takes two
-   steps, waits, spears once, waits, steps home, and much later turns to
-   look the other way — then turns back so the loop can start again. If you
-   miss the turn, that is the point. Steps still plant before the body
-   moves. The strike tips the whole bird at the hips so the neck stays on
-   the chest. */
+/* A heron is mostly still. Two steps, a long stand, one spear, and much
+   later a turn you will probably miss. It does not walk home — that was
+   the moonwalk. After the two steps it stays put; the body eases back
+   over a long planted stand so the loop can start again. The strike tips
+   the whole bird at the hips so the neck stays on the chest. */
 .heron-wade{animation:heronWade 150s ease-in-out infinite}
-@keyframes heronWade{0%,23.8%,66%,100%{transform:none}
+@keyframes heronWade{0%,23.8%,100%{transform:none}
   25%,28%{transform:translateX(-2.8px)}
-  29.5%,59.8%{transform:translateX(-5.6px)}
-  61.5%,64%{transform:translateX(-2.8px)}}
+  29.5%,80%{transform:translateX(-5.6px)}}
 .heron-face{transform-box:fill-box;transform-origin:64% 50%;animation:heronFace 150s ease-in-out infinite}
 @keyframes heronFace{0%,86%,100%{transform:none}
   88.2%{transform:scaleX(.55) rotate(-5deg)}
@@ -186,16 +184,14 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .heron-tarsus{transform-box:fill-box}
 .heron-leg.near .heron-tarsus{transform-origin:100% 0;animation:heronTuckA 150s ease-in-out infinite}
 .heron-leg.far .heron-tarsus{transform-origin:93% 0;animation:heronTuckB 150s ease-in-out infinite}
-@keyframes heronStepA{0%,21.5%,25%,57%,61.5%,100%{transform:none}
-  22.8%{transform:rotate(22deg)}23.8%{transform:rotate(14deg)}
-  58.6%{transform:rotate(-18deg)}59.8%{transform:rotate(-10deg)}}
-@keyframes heronTuckA{0%,22%,23.8%,58%,59.8%,100%{transform:none}
-  22.5%,58.6%{transform:rotate(-28deg)}}
-@keyframes heronStepB{0%,25.5%,30%,61%,65.5%,100%{transform:none}
-  26.8%{transform:rotate(-14deg)}27.8%{transform:rotate(22deg)}28.8%{transform:rotate(14deg)}
-  62.6%{transform:rotate(-18deg)}63.8%{transform:rotate(-10deg)}}
-@keyframes heronTuckB{0%,27%,28.8%,62%,63.8%,100%{transform:none}
-  27.4%,62.8%{transform:rotate(-28deg)}}
+@keyframes heronStepA{0%,21.5%,25%,100%{transform:none}
+  22.8%{transform:rotate(22deg)}23.8%{transform:rotate(14deg)}}
+@keyframes heronTuckA{0%,22%,23.8%,100%{transform:none}
+  22.5%{transform:rotate(-28deg)}}
+@keyframes heronStepB{0%,25.5%,30%,100%{transform:none}
+  26.8%{transform:rotate(-14deg)}27.8%{transform:rotate(22deg)}28.8%{transform:rotate(14deg)}}
+@keyframes heronTuckB{0%,27%,28.8%,100%{transform:none}
+  27.4%{transform:rotate(-28deg)}}
 .heron-strike{transform-box:fill-box;transform-origin:95% 100%;animation:heronStrike 150s ease-in-out infinite}
 @keyframes heronStrike{0%,39%,48%,100%{transform:none}
   40.4%{transform:translate(-.8px,2.2px) rotate(-16deg)}
