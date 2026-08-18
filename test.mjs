@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v51/);
+  assert.match(worker, /mbwx-shell-v52/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -514,11 +514,11 @@ test("light, motion and alerts stay tuned", async () => {
   assert.match(html, /deerGraze 48s/);
   assert.match(html, /@keyframes flagFlick/);
   assert.match(html, /class="buck-regard"/);
-  assert.match(html, /class="buck-turn"/);
-  assert.match(html, /76\.5%,77\.2%\{transform:scaleX\(\.42\)\}/);
-  // hind leg: stifle forward, hock back — not the other way around
-  assert.match(html, /M 5\.0 11\.6 L 6\.2 14\.8 L 4\.0 17\.6 L 4\.6 20\.8/);
-  assert.doesNotMatch(html, /M 4\.6 11\.4 L 3\.4 14\.8/);
+  assert.match(html, /class="buck-threeq"/);
+  assert.doesNotMatch(html, /@keyframes buckTurn/);
+  // hind leg: a gentle S, stifle then hock — not a lightning bolt
+  assert.match(html, /M 5\.0 11\.4 L 5\.6 14\.8 L 4\.6 17\.4 L 4\.8 20\.8/);
+  assert.doesNotMatch(html, /M 5\.0 11\.6 L 6\.2 14\.8 L 4\.0 17\.6/);
   assert.match(html, /21\.6 -13\.2/);
   // mule deer stands: ear and tail only. The graze clock hid the ears and read as a rodent.
   assert.match(html, /class="mule-head"/);
