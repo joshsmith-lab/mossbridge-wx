@@ -2608,8 +2608,18 @@ function render(d,live,savedAt=0){
   const hiI=h.temp.indexOf(Math.max(...h.temp)),loI=h.temp.indexOf(Math.min(...h.temp));
   for(let i=0;i<n;i++){
     if(h.pop[i]>=5){
-      const bh=h.pop[i]*.42;
-      bars+=`<rect x="${(X(i)-5.5).toFixed(1)}" y="${(base-bh).toFixed(1)}" width="11" height="${bh.toFixed(1)}" rx="3" fill="${css.water}" opacity="${h.pop[i]>=40?.55:.3}"/>`;
+      /* The scale is untouched: the height of a bar is still the odds. What changed is
+         that a ten percent hour used to draw four pixels of pale blue at .3 opacity, which
+         is not a bar anyone can find, and `rx:3` on a four pixel bar rounded the shape
+         away into a lozenge with no top edge left to read. So: the radius follows the
+         height, and a short bar keeps a flat top. They are wide enough to be bars rather
+         than ticks. And the ink now climbs with the odds instead of stepping once at 40,
+         which is the same thing the height says, said twice, so a likely hour reads as
+         likely from across the room and a trace still reads as a trace. The floor is the
+         one liberty taken with the scale: under about eleven percent the true height is
+         less than five units, and a trace is a trace at any of them. */
+      const bh=Math.max(5,h.pop[i]*.42);
+      bars+=`<rect x="${(X(i)-7.5).toFixed(1)}" y="${(base-bh).toFixed(1)}" width="15" height="${bh.toFixed(1)}" rx="${Math.min(3,bh*.3).toFixed(1)}" fill="${css.water}" opacity="${(.48+Math.min(h.pop[i],60)/60*.36).toFixed(2)}"/>`;
       /* i%4 is a subset of i%2, so every fourth hour the temperature label landed on the
          same x and its paper halo punched a hole straight through this number */
       if(h.pop[i]>=40&&i%4===2&&i!==hiI&&i!==loI)

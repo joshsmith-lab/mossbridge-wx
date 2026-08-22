@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v43/);
+  assert.match(worker, /mbwx-shell-v44/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -155,6 +155,24 @@ test("the sunrise and sunset times stay readable on any sky", async () => {
   assert.match(html, /font-weight="600" fill="currentColor" opacity="\.92"/);
   // the override is cleared with the rest when a render bails out
   assert.match(html, /"--sky3","--on-sky","--off-sky","--scrim"/);
+});
+
+test("the rain chance bars can be read from across the room", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  // A ten percent hour drew four pixels of pale blue at .3 opacity, and a 3px corner
+  // radius on a four pixel bar rounded the shape away into a lozenge with no top edge.
+  assert.doesNotMatch(html, /width="11" height="\$\{bh\.toFixed\(1\)\}" rx="3"/);
+  assert.doesNotMatch(html, /opacity="\$\{h\.pop\[i\]>=40\?\.55:\.3\}"/);
+  // the radius follows the height, so a short bar keeps a flat top to read
+  assert.match(html, /rx="\$\{Math\.min\(3,bh\*\.3\)\.toFixed\(1\)\}"/);
+  // and the ink climbs with the odds rather than stepping once at forty
+  assert.match(html, /opacity="\$\{\(\.48\+Math\.min\(h\.pop\[i\],60\)\/60\*\.36\)\.toFixed\(2\)\}"/);
+  // the scale itself is untouched: height is still .42 of the odds, floored only where
+  // the true bar is under five units and a trace is a trace at any of them
+  assert.match(html, /const bh=Math\.max\(5,h\.pop\[i\]\*\.42\)/);
+  // the printed number still belongs to the hours that are actually likely
+  assert.match(html, /if\(h\.pop\[i\]>=40&&i%4===2&&i!==hiI&&i!==loI\)/);
 });
 
 test("each location keeps its own clock", async () => {
