@@ -97,6 +97,12 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
   50%{transform:translate3d(calc(var(--rx,20px) * .3),440px,0)}
   75%{transform:translate3d(calc(var(--rx,20px) * .85),660px,0)}
   100%{transform:translate3d(var(--rx,20px),880px,0)}}
+/* the near rain, drawn inside a scene rather than behind it. The layer above is inked
+   against the sky and falls behind the picture, so where a landform fills half the frame
+   its drops cross a dark fold as dark lines and there is nothing left to see. These fall
+   in front of the fold and are lit the other way round. */
+.nearrain{animation:nearFall linear infinite}
+@keyframes nearFall{from{transform:translate3d(0,0,0)}to{transform:translate3d(var(--nx,0px),var(--ny,160px),0)}}
 /* rain hitting the flat: a tick that exists for two frames and is gone */
 .splash{transform-box:fill-box;transform-origin:bottom center;opacity:0;animation:splash var(--sd,1.7s) linear infinite}
 @keyframes splash{0%,90%,100%{opacity:0;transform:scaleY(.3)}92%{opacity:.55;transform:scaleY(1)}96%{opacity:.18;transform:scaleY(.6)}}
@@ -858,7 +864,13 @@ function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd,code){
      down to about 30, which is the whole animation budget of every other scene. */
   const stars=night>.02?st.map(s=>{
     const o=(s.o*night*(1-clamp(cloud/100,0,1)*.85)).toFixed(2);
-    const tw=s.y>52;
+    /* and only the ones you can still find. The twinkle takes a star to 28% of itself, so
+       the whole performance is a swing of .72 of its opacity: below about .18 that is less
+       than a tenth of an alpha on a two-pixel dot, which is nothing to look at and an
+       animation each to run. Under a raining overcast the cloud fade left thirty stars
+       down there. They still get drawn; they just stop performing. A clear night is
+       untouched, which is the night this was ever about. */
+    const tw=s.y>52&&Number(o)>=.18;
     return `<circle${tw?` class="star"`:""} cx="${s.x}%" cy="${s.y}%" r="${s.s.toFixed(2)}" fill="#FFF6E2" style="--o:${o};opacity:${o}${tw?`;animation-delay:-${s.d.toFixed(1)}s`:""}"/>`;
   }).join(""):"";
   /* a shooting star on a clear night, seeded so it always takes the same line */
@@ -911,6 +923,10 @@ function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd,code){
     const lean=clamp((Number(windSpd)||0)*.62,0,18)*(windDir>180?-1:1);
     rf.style.setProperty("--rlean",snowing?"0deg":lean.toFixed(1)+"deg");
     rf.style.setProperty("--rx",(lean*(snowing?11:4)).toFixed(0)+"px");
+    /* This layer draws the same rain at every location. Making Shady Spring's drops
+       heavier so they survived the mountain was tried and thrown away: it read as the app
+       changing rather than the weather, and it was a rule invented to rescue a fix that
+       belongs further down, in front of the fold, where the problem actually is. */
     rf.style.setProperty("--rw",(snowing?weight:1.2*weight).toFixed(2)+"px");
     rf.style.setProperty("--rh",(5.5+weight*3).toFixed(1)+"%");
     const r2=mulberry(4242);
@@ -1606,6 +1622,49 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
        The card's bite window and this water agree, because they read the same moon. */
     if(!PRM&&!wet&&!storm&&solunarWindows(now).some(w=>now>=w.start&&now<=w.end))
       pondFx+=ringAt(pcx-prx*.08,base+13,4.5,13,4)+ringAt(pcx+prx*.16,base+10,3.5,17,11);
+    /* and rain, which every one of those rules used to switch the water off for. The pond
+       going glass-still in a downpour is backwards: rain dimples small water harder than a
+       rising fish or a breeze does, and it is the one surface here that shows it. The
+       marsh's rings and ticks, thinned out, because this is a farm pond and not a mile of
+       open flat. Snow does not ring water, so it still gets nothing. */
+    if(wet&&!snowing&&!PRM){
+      const pw2=mulberry(6197),rings=2+Math.round(rainK*3);
+      for(let i=0;i<rings;i++)
+        pondFx+=`<ellipse class="water-ring" cx="${(pondL+16+pw2()*(prx*2-32)).toFixed(1)}" cy="${(base+9+pw2()*9).toFixed(1)}" rx="${(3.4+pw2()*4.4).toFixed(1)}" ry="${(1+pw2()*.9).toFixed(1)}" fill="none" stroke="${dark?'#B7D6E1':'#183C4B'}" stroke-width=".7" style="animation-delay:-${(pw2()*3.8).toFixed(1)}s"/>`;
+      const ps=mulberry(2884),ticks=3+Math.round(rainK*5);
+      for(let i=0;i<ticks;i++)
+        pondFx+=`<path class="splash" d="M ${(pondL+10+ps()*(prx*2-20)).toFixed(1)} ${(base+8+ps()*11).toFixed(1)} v ${(-1.4-rainK*1.8).toFixed(1)}" stroke="${dark?'#CFE6EE':'#EAF4F8'}" stroke-width=".9" stroke-linecap="round" style="--sd:${(1.15+ps()*1.1).toFixed(2)}s;animation-delay:-${(ps()*4).toFixed(2)}s"/>`;
+    }
+
+    /* Rain in front of the mountain. Everything above falls behind this picture and is
+       inked against the sky, so from the ridgeline down it is a dark line on a dark fold
+       and it reads as nothing at all. These are the near drops: fewer, longer, quicker and
+       pale, on the same lean and the same rate as the rain above them. They fade in across
+       the crest instead of starting on a cut line, and they stop behind the yard so the
+       grass, the cattails and whatever is standing out in it stay clean. */
+    const nrTop=base-rTop*.94;
+    let nearRain="";
+    if(wet&&!snowing&&!PRM){
+      /* how hard, how fast: off the same row of RAIN the sky layer reads, rather than off
+         rainK, so freezing rain gets the near drops too. It falls as liquid, it is the one
+         condition here a driver needs to see coming, and rainK has no entry for it. */
+      const [,nrFall,nrWeight]=RAIN[code]||RAIN[63];
+      const nrK=clamp((nrWeight-.55)/.7,0,1),span=H+10-nrTop;
+      const nrTan=Math.tan(clamp(wind*.62,0,18)*downwind*Math.PI/180);
+      const nr=mulberry(5347),drops=10+Math.round(nrK*9);
+      nearRain=`<g mask="url(#ridgerain)" stroke="${dark?'#DCE9F0':'#F4FAFC'}" stroke-width="${(1.25+nrK*1.05).toFixed(2)}" stroke-linecap="round" fill="none">`
+        +Array.from({length:drops},()=>{
+          /* Speed is not a taste: the layer above crosses 880px in nrFall seconds, and a
+             scene unit is a screen pixel here, so the near drops are timed off that same
+             rate and land a little quicker, being nearer. Timed by feel instead they came
+             out four times slower than the rain over the ridgeline, which is what made a
+             long one read as a slash drawn across the picture rather than as a drop. Long
+             and quick is a raindrop. Long and slow is a scratch. */
+          const len=(20+nrK*20)*(.75+nr()*.5),travel=span+len;
+          const d=travel*nrFall/968*(.9+nr()*.2);
+          return `<path class="nearrain" d="M ${(-34+nr()*(W+68)).toFixed(1)} ${(nrTop-len).toFixed(1)} l ${(len*nrTan).toFixed(1)} ${len.toFixed(1)}" opacity="${(.38+nrK*.24+nr()*.13).toFixed(2)}" style="--nx:${(travel*nrTan).toFixed(0)}px;--ny:${travel.toFixed(0)}px;animation-duration:${d.toFixed(2)}s;animation-delay:-${(nr()*d).toFixed(2)}s"/>`;
+        }).join("")+`</g>`;
+    }
 
     const cattail=(x,ht,lean)=>`<path d="M ${x.toFixed(1)} ${base+9} L ${(x+lean).toFixed(1)} ${(base+9-ht+5).toFixed(1)}" stroke="${ink}" stroke-width="1.15" stroke-linecap="round" fill="none"/>
       <rect x="${(x+lean-1.25).toFixed(1)}" y="${(base+9-ht-2).toFixed(1)}" width="2.6" height="7" rx="1.25" fill="${ink}"/>
@@ -1657,6 +1716,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
           <stop offset="0" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity="0"/>
           <stop offset=".55" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity=".34"/>
           <stop offset="1" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity=".06"/></linearGradient>
+        ${nearRain?`<linearGradient id="ridgerainfade" gradientUnits="userSpaceOnUse" x1="0" y1="${nrTop.toFixed(1)}" x2="0" y2="${(nrTop+26).toFixed(1)}">
+          <stop offset="0" stop-color="#000000"/><stop offset="1" stop-color="#FFFFFF"/></linearGradient>
+        <mask id="ridgerain" maskUnits="userSpaceOnUse" x="0" y="${nrTop.toFixed(1)}" width="${W}" height="${(H-nrTop+10).toFixed(1)}">
+          <rect x="0" y="${nrTop.toFixed(1)}" width="${W}" height="${(H-nrTop+10).toFixed(1)}" fill="url(#ridgerainfade)"/></mask>`:""}
       </defs>
       <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
       ${goldArc}
@@ -1670,6 +1733,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       ${fence}
       ${cloudShadows(base-rTop*.85,rTop*.85+8)}
       ${sparkle}${glint}${pondFx}
+      ${nearRain}
       ${tufts.map((d,i)=>d?`<g opacity=".9"${bandAt(i)}><path d="${d}" fill="${ink}"/></g>`:"").join("")}
       ${catsL}${catsR}
       ${tree(W*.055,1.3,.62)}${tree(W*.105,.72,.48)}${(owl||temp<48)?tree(rightTreeX,1.05,.58):""}

@@ -112,12 +112,15 @@ Denver clothing conditions), writes
 screenshots to `tools/shots/` and prints the generated copy, so wording changes
 are reviewable as text.
 
-`tools/scene.mjs` is for anything that moves. Twenty-two scenes force the light and
-weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
-clear night, a storm, a fog morning, drizzle against a downpour, freezing rain
-on the coast, and the ridge by day, by evening with the buck out, on a snow day,
-and on a cold January night, plus Denver in clear, golden, storm, snow, night, and
-windy conditions. Per scene it writes the sky and the scene on their
+`tools/scene.mjs` is for anything that moves. Twenty-three scenes force the light
+and weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
+clear night, a storm, a fog morning, drizzle against a downpour, freezing rain on
+the coast, and the ridge by day, by evening with the buck out, in warm rain, on a
+snow day, on a cold January night and in a night downpour, plus Denver in clear,
+golden, storm, snow, night, and windy conditions. The ridge night downpour is
+there on purpose: dark theme, code 82, two rain layers and a frog, which is
+where the animation count goes looking for trouble. It found some, which is the
+point of having it. Per scene it writes the sky and the scene on their
 own, counts the animations *still running* grouped by keyframe, reads
 `LayoutCount` off CDP while the scene idles, and proves the page holds perfectly
 still under `prefers-reduced-motion` by comparing two screenshots taken 1.4s
@@ -186,6 +189,29 @@ Established with Josh and enforced by `test.mjs`:
 - Long ambient cycles take their phase from the wall clock (`phase(seconds)`),
   so a re-render drops them back where they were instead of restarting the wait.
   A 92-second heron strike that restarts on every foreground is never seen.
+- **Rain is two layers, lit against two different things.** The sky layer falls behind
+  the scene and takes its ink from the sky's luminance. That is enough on the marsh,
+  where the horizon is low and almost every drop crosses open sky. On the ridge a
+  mountain sits under two thirds of the frame, so those same drops run dark on a dark
+  fold and the picture reads as dry. The label said light rain and there was nothing
+  under it to find. The fix that did **not** work was inking Shady Spring's sky drops
+  heavier: the same weather drawn differently at two places reads as the app changing
+  rather than the weather, and it was a rule invented to rescue a fix that belonged
+  somewhere else. The sky layer is identical at all three locations and should stay
+  that way. What works is a second layer *inside* the scene SVG, in front of the fold
+  and pale rather than dark, fewer and longer, masked so it fades in across the crest
+  instead of starting on a cut line. Count, speed and lean still come off the WMO code
+  and the wind in both layers. If you add a scene with a tall silhouette in it, it
+  needs the near layer too.
+- **Two things falling in one picture have to fall at the same rate.** The near rain
+  was first timed by feel and came out four times slower than the layer above it,
+  which is what made a long drop read as a slash drawn across the scene rather than as
+  rain: long and quick is a raindrop, long and slow is a scratch. A scene unit is a
+  screen pixel (the viewBox width is the rendered width), so the two are directly
+  comparable and the near drops are timed off the sky layer's 880px / `fallSec`,
+  landing 10% quicker because they are nearer. This is worth measuring rather than
+  eyeballing; four times off was invisible in a still and obvious in a strip of frames
+  60ms apart.
 - **Draw silhouettes, not anatomy.** A bird in this sky is fourteen pixels across.
   Literal feather detail at that size does not read as detail, it reads as the
   wrong animal: constant-width wings with two short strokes at each tip for
