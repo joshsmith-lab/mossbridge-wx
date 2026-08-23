@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v53/);
+  assert.match(worker, /mbwx-shell-v54/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -351,6 +351,32 @@ test("it snows in Shady Spring", async () => {
   assert.match(html, /code:wj\.hourly\.weather_code\.slice\(i0,i0\+24\)/);
   assert.match(html, /nightPop>=35&&nightSnow\?`Snow is likely at times/);
   assert.match(html, /isSnow\(dy\.weather_code\[wi\]\)\?"snow"/);
+});
+
+test("and the rain is visible when it rains there", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  // the sky layer draws the same rain at all three places, and stays that way. Inking
+  // Shady Spring's drops heavier to survive the mountain read as the app changing rather
+  // than the weather, and the problem is not up here anyway.
+  assert.doesNotMatch(html, /LOC\.scene==="ridge"&&!snowing/);
+  assert.match(html, /\(snowing\?weight:1\.2\*weight\)\.toFixed\(2\)\+"px"/);
+  assert.match(html, /const \[count,fallSec,weight\]=snowing\?\(SNOWFALL\[code\]\|\|SNOWFALL\[73\]\):\(RAIN\[code\]\|\|RAIN\[63\]\)/);
+  // and a nearer layer falls in front of the fold, pale where the layer behind it is dark
+  assert.match(html, /@keyframes nearFall\{/);
+  assert.match(html, /const nrK=clamp\(\(nrWeight-\.55\)\/\.7,0,1\)/);
+  assert.match(html, /class="nearrain"/);
+  assert.match(html, /mask="url\(#ridgerain\)"/);
+  // it fades in across the crest instead of starting on a cut line
+  assert.match(html, /id="ridgerainfade" gradientUnits="userSpaceOnUse"/);
+  // the pond answers the rain rather than going glass-still under it, which it used to do
+  assert.match(html, /if\(wet&&!snowing&&!PRM\)\{\s*const pw2=mulberry\(6197\),rings=2\+Math\.round\(rainK\*3\)/);
+  assert.match(html, /const ps=mulberry\(2884\),ticks=3\+Math\.round\(rainK\*5\)/);
+  // snow neither rings the water nor gets a second layer of falling lines
+  assert.doesNotMatch(html, /if\(wet&&!PRM\)\{\s*const \[,nrFall/);
+  // and a star the cloud has already taken below what an eye can find stops performing,
+  // which is what pays for the drops in a night downpour
+  assert.match(html, /const tw=s\.y>52&&Number\(o\)>=\.18/);
 });
 
 test("the almanac fishes the farm pond, the coast keeps sunscreen, and Denver dresses for comfort", async () => {

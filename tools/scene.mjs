@@ -148,6 +148,11 @@ const CASES = [
     o: { baseTemp: 59, nowTemp: 67, feels: 61, rh: 24, isDay: 1, code: 1, cloud: 24, nowWind: 24, nowDir: 255, nowGust: 39, nowUv: 4.5, uvMax: 6,
       windAmp: 17, gustAmp: 29, sunrise: "07:06", sunset: "18:29",
       popCurve: () => 4, dailyPop: (p) => p.fill(8) } },
+  { name: "23-ridge-night-downpour", loc: "sp", when: "2026-05-12T22:40:00",
+    note: "the hardest test of the ridge rain: dark theme, code 82, drops over a black fold",
+    o: { baseTemp: 62, nowTemp: 61, feels: 61, rh: 96, isDay: 0, code: 82, cloud: 97, nowWind: 15, nowDir: 210, nowGust: 26, nowUv: 0, uvMax: 5,
+      windAmp: 12, gustAmp: 22, sunrise: "06:14", sunset: "20:26",
+      popCurve: () => 92, dailyPop: (p) => p.fill(90) } },
 ];
 
 const cases = ONLY.length ? CASES.filter((c) => ONLY.some((q) => c.name.includes(q))) : CASES;
