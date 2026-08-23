@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v44/);
+  assert.match(worker, /mbwx-shell-v53/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -241,17 +241,23 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /class="gull-cross"/);
   assert.match(html, /@keyframes gullCross/);
   assert.match(html, /class="heron-strike"/);
-  // the heron wades three slow steps and back on the strike's own 92s clock, so it is
-  // always home and planted before the strike; the visible leg joint is the ankle and
-  // it bends backward, tarsus folding the other way from a knee when a foot lifts
+  // mostly still: two steps, a strike, no walk home (that was the moonwalk)
+  assert.match(html, /29\.5%,80%\{transform:translateX\(-5\.6px\)\}/);
+  assert.doesNotMatch(html, /61\.5%,64%\{transform:translateX\(-2\.8px\)\}/);
   assert.match(html, /class="heron-wade"/);
   assert.match(html, /@keyframes heronWade/);
+  assert.match(html, /heronWade 150s/);
   assert.match(html, /M 18\.6 34\.2 L 20\.2 40\.2/);
   assert.match(html, /class="heron-tarsus"/);
-  // the return trip is a turn and a walk home, never a moonwalk; the strike tips the
-  // body at the hips with the legs planted, so the neck base stays on the chest
   assert.match(html, /@keyframes heronFace/);
   assert.match(html, /class="heron-lunge"/);
+  // turn is late and brief; legs flip with the body; spear is a hip tip not a torn-off neck
+  assert.match(html, /88\.2%\{transform:scaleX\(\.55\) rotate\(-5deg\)\}/);
+  assert.doesNotMatch(html, /scaleX\(\.12\)/);
+  assert.doesNotMatch(html, /rotate\(-80deg\)/);
+  assert.match(html, /class="heron-splash"/);
+  assert.match(html, /40\.8%,43\.6%\{transform:translate\(-1px,2\.8px\) rotate\(-20deg\)\}/);
+  assert.match(html, /40\.8%,43\.6%\{transform:rotate\(-26deg\) translate\(0,3\.2px\)\}/);
   assert.doesNotMatch(html, /M 18\.4 34\.2 L 17\.7 38\.0/);
   assert.match(html, /class="flight-wing wing-l"/);
   assert.match(html, /rapid mirrored triangles read as a bat/);
@@ -279,7 +285,9 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /const animalLeft=barnX-48,animalRight=barnX\+48,rightTreeX=W\*\.955/);
   assert.match(html, /const yard=x>animalLeft-18&&x<animalRight\+22/);
   assert.match(html, /class="barn" data-scene-anchor="barn"/);
-  assert.match(html, /deerAt\(animalRight\+10/);
+  assert.match(html, /deerAt\(animalRight\+14/);
+  // the body has a waist: haunch, tuck, brisket — not a bean
+  assert.match(html, /4\.6 12\.8 C 6\.0 12\.6 6\.8 10\.2 8\.4 8\.8/);
   assert.match(html, /deer\?"":dark\?fox\(animalRight-14/);
   // the small shorebird's bill sits against open water, not the dark bank
   assert.match(html, /oysterCatcher\(residentX,base\+9,1\.1,1\)/);
@@ -520,6 +528,16 @@ test("light, motion and alerts stay tuned", async () => {
   assert.match(html, /@keyframes swayTree/);
   assert.match(html, /class="deer-head"/);
   assert.match(html, /@keyframes deerGraze/);
+  assert.match(html, /32%,40%\{transform:rotate\(66deg\)\}/);
+  assert.match(html, /deerGraze 48s/);
+  assert.match(html, /@keyframes flagFlick/);
+  assert.match(html, /class="buck-regard"/);
+  assert.match(html, /class="buck-threeq"/);
+  assert.doesNotMatch(html, /@keyframes buckTurn/);
+  // hind leg: a gentle S, stifle then hock — not a lightning bolt
+  assert.match(html, /M 5\.0 11\.4 L 5\.6 14\.8 L 4\.6 17\.4 L 4\.8 20\.8/);
+  assert.doesNotMatch(html, /M 5\.0 11\.6 L 6\.2 14\.8 L 4\.0 17\.6/);
+  assert.match(html, /21\.6 -13\.2/);
   // mule deer stands: ear and tail only. The graze clock hid the ears and read as a rodent.
   assert.match(html, /class="mule-head"/);
   assert.match(html, /!dark&&!deerOut&&!storm\?magpieAt/);
