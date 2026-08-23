@@ -1796,35 +1796,52 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     <ellipse cx="${(x-8.6*s).toFixed(1)}" cy="${(cy+1.2*s).toFixed(1)}" rx="${(3.6*s).toFixed(1)}" ry="${(1.7*s).toFixed(1)}"/></g>`};
   const pines=lob(W*.07,.95)+lob(W*.135,.6)+lob(W*.885,.8);
 
-  /* A live oak is the opposite shape to a loblolly and has to read as one: a short thick
-     trunk, limbs that reach out nearly level before they lift, and a crown two and a half
-     times wider than it is tall. It sits across the marsh, so it stays faint. */
+  /* The live oak is the horizontal counterweight in this scene. It stays across the marsh
+     and atmospheric, but its identity comes from a low forked trunk, long gnarled arms and
+     separate leaf masses with real air between them. The visible branchwork borrows the
+     clarity of a good tree mark without copying its geometry or turning the oak into a logo. */
   const liveOak=(x,s,op)=>{
-    const gy=base+2, th=23*s, cy=gy-th-7.5*s, mr=mulberry(4417);
+    const gy=base+2, mr=mulberry(4417);
     const P=(...a)=>a.map(v=>v.toFixed(1)).join(" ");
-    /* Moss hangs off the underside of the crown, and on a tree this far off it reads as a
-       ragged fringe rather than streamers. It is the lightest thing out there, so it swings
-       further than the canopy holding it. */
+    const L=(dx,dy)=>P(x+dx*s,gy+dy*s);
+    /* Spanish moss is an identifying feature here, not a texture. Four-wisp clusters form
+       a soft taper: broad and dense where they gather, irregular at the tip, with only the
+       narrow ends entering the grass. Open gaps remain, and the moss carries more wind. */
     let moss="";
-    for(const[mx,my,len]of[[-21,3.2,6],[-16,4.8,8.5],[-10.5,6.2,5.5],[-4,6.6,8],[2,6.4,5.5],[8,6,8],[14,5,6],[19.5,3.6,7],[23,1.8,5.5]]){
-      const x0=x+mx*s, y0=cy+my*s, L=len*s*(.82+mr()*.4), w=1.15*s;
+    for(const[mx,my,len,spread]of[
+      [-39,-29,12,2.7],[-29,-31,18,3.1],[-18,-32,13,2.6],[-7,-35,21,3.4],
+      [8,-34,15,2.7],[20,-32,22,3.5],[33,-29,17,3.0],[44,-27,11,2.4]
+    ]){
+      const x0=x+mx*s,y0=gy+my*s;
+      const clear=14+mr()*5;
+      const hang=Math.min(len*s*(.88+mr()*.28),Math.max(8*s,(-my-clear)*s));
       const amt=swayAmt*(1.7+mr()*1.1);
       const st=PRM?"":` style="--sway:${amt.toFixed(2)}deg;--sway-neg:${(-amt).toFixed(2)}deg;--md:${(swayDur*(.72+mr()*.5)).toFixed(1)}s;animation-delay:-${(mr()*9).toFixed(1)}s"`;
-      moss+=`<path class="moss" d="M ${P(x0,y0)} Q ${P(x0-w*1.2,y0+L*.45)} ${P(x0-w*.3,y0+L)} Q ${P(x0+w,y0+L*.5)} ${P(x0+w*1.2,y0)} Z" opacity=".72"${st}/>`;
+      const dx=spread*s,tip=x0+(.4-mr()*.8)*s;
+      moss+=`<g class="moss"${st}><path d="M ${P(x0-dx,y0+.6*s)} C ${P(x0-dx*.92,y0+hang*.22)} ${P(tip-dx*.42,y0+hang*.62)} ${P(tip-dx*.12,y0+hang*.9)} Q ${P(tip,y0+hang)} ${P(tip+dx*.15,y0+hang*.86)} C ${P(tip+dx*.42,y0+hang*.58)} ${P(x0+dx*.88,y0+hang*.2)} ${P(x0+dx,y0)} C ${P(x0+dx*.38,y0+1.4*s)} ${P(x0-dx*.42,y0+1.6*s)} ${P(x0-dx,y0+.6*s)} Z" fill="${ink}" opacity=".3"/><path d="M ${P(x0-dx*.72,y0+.3*s)} C ${P(x0-dx*.78,y0+hang*.2)} ${P(tip-dx*.34,y0+hang*.48)} ${P(tip-dx*.22,y0+hang*.68)} M ${P(x0-dx*.16,y0+.8*s)} C ${P(x0-dx*.3,y0+hang*.24)} ${P(tip-dx*.18,y0+hang*.66)} ${P(tip,y0+hang)} M ${P(x0+dx*.7,y0+.5*s)} C ${P(x0+dx*.72,y0+hang*.2)} ${P(tip+dx*.38,y0+hang*.52)} ${P(tip+dx*.16,y0+hang*.76)}" fill="none" stroke="${ink}" stroke-width="${(.76*s).toFixed(2)}" stroke-linecap="round" opacity=".9"/></g>`;
     }
-    return `<g fill="${ink}" opacity="${op}"${treeAt(x)}>
-      <path d="M ${P(x-3.1*s,gy)} Q ${P(x-1.7*s,gy-th*.55)} ${P(x-2.2*s,gy-th)} L ${P(x+2.2*s,gy-th)} Q ${P(x+1.8*s,gy-th*.5)} ${P(x+3.3*s,gy)} Z"/>
-      <path d="M ${P(x-1.4*s,gy-th+2*s)} C ${P(x-9*s,gy-th-1*s)} ${P(x-16*s,gy-th)} ${P(x-24*s,gy-th-3*s)} M ${P(x+1.4*s,gy-th+2*s)} C ${P(x+9*s,gy-th-1.6*s)} ${P(x+16.5*s,gy-th-.4*s)} ${P(x+24.5*s,gy-th-3.4*s)} M ${P(x,gy-th+1*s)} C ${P(x-3*s,gy-th-4*s)} ${P(x-5*s,gy-th-6*s)} ${P(x-7*s,gy-th-8.5*s)}" stroke="${ink}" stroke-width="${(1.4*s).toFixed(1)}" fill="none" stroke-linecap="round"/>
-      <ellipse cx="${P(x)}" cy="${P(cy)}" rx="${(19*s).toFixed(1)}" ry="${(6.2*s).toFixed(1)}"/>
-      <ellipse cx="${P(x-12*s)}" cy="${P(cy+2.8*s)}" rx="${(10*s).toFixed(1)}" ry="${(4.6*s).toFixed(1)}"/>
-      <ellipse cx="${P(x+12.5*s)}" cy="${P(cy+2.2*s)}" rx="${(10.5*s).toFixed(1)}" ry="${(4.9*s).toFixed(1)}"/>
-      <ellipse cx="${P(x-3.5*s)}" cy="${P(cy-3.4*s)}" rx="${(11*s).toFixed(1)}" ry="${(4*s).toFixed(1)}"/>
-      <ellipse cx="${P(x+7.5*s)}" cy="${P(cy-2.6*s)}" rx="${(8*s).toFixed(1)}" ry="${(3.4*s).toFixed(1)}"/>
-      <ellipse cx="${P(x-20*s)}" cy="${P(cy+4.4*s)}" rx="${(6.6*s).toFixed(1)}" ry="${(2.9*s).toFixed(1)}"/>
-      <ellipse cx="${P(x+20.5*s)}" cy="${P(cy+3.8*s)}" rx="${(6.4*s).toFixed(1)}" ry="${(3*s).toFixed(1)}"/>
-      ${moss}</g>`;
+    return `<g${treeAt(x)}><g fill="${ink}" opacity="${op}">
+      ${/* broad filled limbs first, with different reaches and a visible central fork */""}
+      <path d="M ${L(-3,-20)} C ${L(-13,-23)} ${L(-22,-22)} ${L(-35,-29)} L ${L(-33,-32)} C ${L(-21,-27)} ${L(-11,-28)} ${L(-1,-24)} Z
+        M ${L(0,-21)} C ${L(13,-22)} ${L(25,-26)} ${L(42,-33)} L ${L(43,-30)} C ${L(28,-22)} ${L(15,-19)} ${L(2,-17)} Z
+        M ${L(-1,-22)} C ${L(-4,-31)} ${L(-9,-37)} ${L(-15,-41)} L ${L(-12,-43)} C ${L(-4,-36)} ${L(2,-29)} ${L(3,-22)} Z"/>
+      <path d="M ${L(-5.5,0)} C ${L(-5.1,-7)} ${L(-6,-14)} ${L(-3.2,-21)} C ${L(-1.2,-26)} ${L(2.4,-25)} ${L(4,-20)} C ${L(4.8,-13)} ${L(5.5,-7)} ${L(6.1,0)} Z"/>
+      ${/* finer forks remain visible through the air between the leaf masses */""}
+      <path d="M ${L(-5,-27)} C ${L(-14,-32)} ${L(-21,-36)} ${L(-35,-35)} M ${L(-9,-32)} C ${L(-15,-38)} ${L(-20,-43)} ${L(-22,-48)} M ${L(0,-27)} C ${L(0,-35)} ${L(3,-42)} ${L(5,-49)} M ${L(2,-27)} C ${L(11,-32)} ${L(18,-38)} ${L(27,-43)} M ${L(17,-31)} C ${L(27,-32)} ${L(35,-35)} ${L(45,-35)}" fill="none" stroke="${ink}" stroke-width="${(2.5*s).toFixed(2)}" stroke-linecap="round"/>
+      ${/* Low, irregular overlaps keep the upper crowns related without sealing every
+           branch-filled window. The result should feel grown, not assembled from buttons. */""}
+      <path d="M ${L(-43,-35)} C ${L(-43,-39)} ${L(-38,-42)} ${L(-33,-40)} C ${L(-29,-45)} ${L(-22,-46)} ${L(-17,-42)} C ${L(-12,-44)} ${L(-6,-41)} ${L(-7,-36)} C ${L(-10,-33)} ${L(-15,-34)} ${L(-20,-32)} C ${L(-26,-30)} ${L(-31,-34)} ${L(-36,-32)} C ${L(-40,-31)} ${L(-43,-32)} ${L(-43,-35)} Z
+        M ${L(5,-37)} C ${L(5,-42)} ${L(10,-45)} ${L(15,-43)} C ${L(19,-47)} ${L(26,-47)} ${L(29,-43)} C ${L(34,-45)} ${L(40,-42)} ${L(39,-38)} C ${L(45,-37)} ${L(48,-33)} ${L(45,-30)} C ${L(40,-28)} ${L(35,-31)} ${L(30,-29)} C ${L(24,-28)} ${L(20,-32)} ${L(15,-30)} C ${L(10,-31)} ${L(6,-33)} ${L(5,-37)} Z"/>
+      ${/* The centre rises and the wings disagree in height and reach; small gaps survive
+           between some masses so the carrying limbs still explain the silhouette. */""}
+      <path d="M ${L(-49,-31)} C ${L(-50,-35)} ${L(-46,-39)} ${L(-41,-38)} C ${L(-39,-43)} ${L(-33,-44)} ${L(-29,-40)} C ${L(-25,-42)} ${L(-21,-39)} ${L(-22,-35)} C ${L(-25,-32)} ${L(-29,-31)} ${L(-34,-29)} C ${L(-40,-27)} ${L(-46,-28)} ${L(-49,-31)} Z"/>
+      <path d="M ${L(-33,-42)} C ${L(-34,-47)} ${L(-30,-50)} ${L(-25,-50)} C ${L(-23,-55)} ${L(-17,-56)} ${L(-13,-52)} C ${L(-9,-54)} ${L(-6,-50)} ${L(-8,-46)} C ${L(-12,-42)} ${L(-16,-42)} ${L(-21,-40)} C ${L(-26,-39)} ${L(-30,-40)} ${L(-33,-42)} Z"/>
+      <path d="M ${L(-6,-46)} C ${L(-7,-51)} ${L(-3,-55)} ${L(2,-54)} C ${L(5,-57)} ${L(11,-54)} ${L(11,-50)} C ${L(16,-48)} ${L(16,-43)} ${L(12,-40)} C ${L(7,-38)} ${L(3,-41)} ${L(-1,-39)} C ${L(-5,-40)} ${L(-8,-43)} ${L(-6,-46)} Z"/>
+      <path d="M ${L(18,-42)} C ${L(17,-47)} ${L(21,-50)} ${L(26,-49)} C ${L(29,-52)} ${L(35,-49)} ${L(36,-45)} C ${L(41,-43)} ${L(41,-38)} ${L(37,-36)} C ${L(33,-34)} ${L(29,-37)} ${L(25,-35)} C ${L(21,-36)} ${L(17,-38)} ${L(18,-42)} Z"/>
+      <path d="M ${L(40,-34)} C ${L(39,-39)} ${L(43,-42)} ${L(48,-40)} C ${L(52,-42)} ${L(57,-39)} ${L(56,-35)} C ${L(60,-32)} ${L(58,-28)} ${L(54,-27)} C ${L(50,-25)} ${L(46,-27)} ${L(43,-26)} C ${L(40,-27)} ${L(39,-30)} ${L(40,-34)} Z"/>
+      </g><g opacity="${Math.min(.66,op*1.48).toFixed(2)}">${moss}</g></g>`;
   };
-  const oak=liveOak(W*.47,1.24,.44*fogFade);
+  const oak=liveOak(W*.455,1.18,.44*fogFade);
 
   /* spartina: tapered filled blades, clustered tufts with real gaps */
   const blade=(bx,ht,lean)=>`M ${(bx-.8).toFixed(1)} ${base} Q ${(bx+lean*.3-.4).toFixed(1)} ${(base-ht*.62).toFixed(1)} ${(bx+lean).toFixed(1)} ${(base-ht).toFixed(1)} Q ${(bx+lean*.38+.6).toFixed(1)} ${(base-ht*.46).toFixed(1)} ${(bx+.8).toFixed(1)} ${base} Z `;
