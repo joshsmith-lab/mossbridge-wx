@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v56/);
+  assert.match(worker, /mbwx-shell-v57/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -249,10 +249,12 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /heronWade 150s/);
   assert.match(html, /M 18\.6 34\.2 L 20\.2 40\.2/);
   assert.match(html, /class="heron-tarsus"/);
-  assert.match(html, /@keyframes heronFace/);
   assert.match(html, /class="heron-lunge"/);
-  // turn is late and brief; legs flip with the body; spear is a hip tip not a torn-off neck
-  assert.match(html, /88\.2%\{transform:scaleX\(\.55\) rotate\(-5deg\)\}/);
+  // the heron never turns. The end-of-loop flip was there to mask the drift back to its
+  // mark, and a fold-and-flip on a fourteen-second beat read as a twirl; 5.6px over
+  // thirty seconds needs no mask
+  assert.doesNotMatch(html, /heronFace/);
+  assert.doesNotMatch(html, /heron-face/);
   assert.doesNotMatch(html, /scaleX\(\.12\)/);
   assert.doesNotMatch(html, /rotate\(-80deg\)/);
   assert.match(html, /class="heron-splash"/);
@@ -293,6 +295,13 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /const frogAt=\(x,y,s,opacity=\.96\)/);
   assert.match(html, /const crabAt=\(x,y,s,opacity=\.96\)/);
   assert.match(html, /const raccoon=\(x,y,s,o=\.96\)/);
+  // The spartina carries its own seasonal green so the green-black wildlife finally
+  // separates from the bank; night collapses to scene ink, fog pulls most of the way back
+  assert.match(html, /const grassInk=dark\?ink:fog\?mixInk\(GRASS\[month\],ink,\.6\):GRASS\[month\]/);
+  assert.match(html, /path d="\$\{mid\}" fill="\$\{grassInk\}"/);
+  assert.match(html, /path d="\$\{d\}" fill="\$\{grassInk\}"/);
+  // but the far canopy, pines and oak stay atmospheric blue — that contrast is the depth cue
+  assert.match(html, /path d="\$\{tl\}" fill="\$\{ink\}"/);
   // residents stay intact; the landscape gives each silhouette a quiet natural pocket
   assert.match(html, /Math\.abs\(x-residentX\)<26\)ht\*=\.28/);
   assert.match(html, /const animalLeft=barnX-48,animalRight=barnX\+48,rightTreeX=W\*\.955/);
