@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v58/);
+  assert.match(worker, /mbwx-shell-v59/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -496,10 +496,11 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /function sunProtectionAdvice\(c,dy,h,now\)/);
   assert.match(html, /Sunscreen weather from /);
   assert.match(html, /Sunscreen weather until /);
-  // the clock-and-warning sentence is reserved for a peak of 6+, WHO's "high";
-  // a moderate day gets a mild sentence with no schedule, because a UV-4 window
-  // is not worth one
-  assert.match(html, /if\(peak<6\)return\{text:"Mild sun today\. Sunscreen if you're out a while\.",cls:"go"\}/);
+  // the clock-and-warning sentence is reserved for 6+, WHO's "high" — measured on
+  // the sun still to come, not the day's peak: an August day that peaked at 8 over
+  // lunch is genuinely mild by late afternoon
+  assert.match(html, /const ahead=Math\.max\(Number\(c\.uv_index\)\|\|0,\.\.\.slots\.filter\(slot=>slot\.time>=now\)/);
+  assert.match(html, /if\(ahead<6\)return\{text:"Mild sun today\. Sunscreen if you're out a while\.",cls:"go"\}/);
   assert.match(html, /if\(peak>=6\)return\{text:"Sunscreen weather from 10 a\.m\. to 5 p\.m\."/);
   assert.doesNotMatch(html, /Wear SPF 30\+/);
   assert.doesNotMatch(html, /Reapply after two hours/);
