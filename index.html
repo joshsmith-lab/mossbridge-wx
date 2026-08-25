@@ -166,22 +166,17 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .wmove{transform-box:fill-box;transform-origin:center;animation:wmove var(--wd,9s) ease-in-out infinite}
 @keyframes wmove{0%,100%{transform:translateX(calc(var(--wx,2px) * -1));opacity:var(--o0,.1)}
   50%{transform:translateX(var(--wx,2px));opacity:var(--o1,.24)}}
-/* A heron is mostly still. Two steps, a long stand, one spear, and much
-   later a turn you will probably miss. It does not walk home — that was
-   the moonwalk. After the two steps it stays put; the body eases back
-   over a long planted stand so the loop can start again. The strike tips
-   the whole bird at the hips so the neck stays on the chest. */
+/* A heron is mostly still. Two steps, a long stand, one spear, and a slow
+   unnoticed drift back over the last thirty seconds so the loop can start
+   again. It does not walk home — that was the moonwalk — and it does not
+   turn: the turn was there to mask the drift, and a fold-and-flip on a
+   fourteen-second beat read as a twirl, which is the opposite of masking.
+   5.6px over thirty seconds needs no mask. The strike tips the whole bird
+   at the hips so the neck stays on the chest. */
 .heron-wade{animation:heronWade 150s ease-in-out infinite}
 @keyframes heronWade{0%,23.8%,100%{transform:none}
   25%,28%{transform:translateX(-2.8px)}
   29.5%,80%{transform:translateX(-5.6px)}}
-.heron-face{transform-box:fill-box;transform-origin:64% 50%;animation:heronFace 150s ease-in-out infinite}
-@keyframes heronFace{0%,86%,100%{transform:none}
-  88.2%{transform:scaleX(.55) rotate(-5deg)}
-  88.55%{transform:scaleX(-.55) rotate(-5deg)}
-  90.5%,94.5%{transform:scaleX(-1)}
-  96.2%{transform:scaleX(-.55) rotate(-5deg)}
-  96.55%{transform:scaleX(.55) rotate(-5deg)}}
 .heron-lunge{transform-box:fill-box;transform-origin:66% 100%;animation:heronLunge 150s ease-in-out infinite}
 @keyframes heronLunge{0%,39%,48%,100%{transform:none}
   40.4%{transform:rotate(-20deg) translate(0,2.4px)}
@@ -1769,6 +1764,22 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
 
   /* marsh: hazy maritime treeline, loblollies, spartina bank, dock, heron */
   const ink=dark?"#04141C":"#0B222C";
+  /* The spartina gets its own ink. The wildlife has drawn in a green-black since the
+     residents arrived, precisely so it would separate from the blue-black scene — but at
+     phone size the two inks are indistinguishable and the separation existed only in the
+     hex codes. Greening the grass finishes that move from the other side, and puts the
+     color where a real marsh keeps it: the near bank is the green thing, the far treeline
+     stays atmospheric blue. That is also the depth cue.
+     The hue follows the calendar, because spartina does: green through the summer, golding
+     out in October, straw from December, greening again in April. It is a mood, not a
+     forecast claim, so twelve flat stops are enough. Night collapses to the scene ink —
+     color drains before shape does — and fog pulls it most of the way back to ink too. */
+  const GRASS=["#403B28","#403B28","#3A3F2B","#2E432E","#234530","#234530",
+               "#234530","#234530","#234530","#3E402A","#403C29","#403B28"];
+  const mixInk=(a,b,t)=>{const h=x=>[1,3,5].map(i=>parseInt(x.slice(i,i+2),16));
+    const[a1,b1]=[h(a),h(b)];
+    return"#"+a1.map((v,i)=>Math.round(v+(b1[i]-v)*t).toString(16).padStart(2,"0")).join("")};
+  const grassInk=dark?ink:fog?mixInk(GRASS[month],ink,.6):GRASS[month];
   const base=GY+10;
   const g=mulberry(991);
 
@@ -1884,7 +1895,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const hx=W*.20;
   const showHeron=!wet&&!storm&&!showFlies&&(dark||fog||localHour<12||localHour>=16);
   const heron=showHeron?`<g class="wildlife heron" data-species="great-blue-heron" transform="translate(${hx.toFixed(1)} ${(base-48.8).toFixed(1)}) scale(1.34)" fill="${ink}" stroke="${ink}" stroke-linecap="round" stroke-linejoin="round">
-    <g class="heron-wade" style="${phase(150)}"><g class="heron-face" style="${phase(150)}"><g class="heron-lunge" style="${phase(150)}">
+    <g class="heron-wade" style="${phase(150)}"><g class="heron-lunge" style="${phase(150)}">
     <path d="M 11.6 24.4 C 13.2 22.3 16.8 21.0 20.4 21.4 C 25.2 21.9 29.4 24.4 30.9 27.6 C 32.0 30.1 31.2 32.5 28.6 33.8 C 24.4 35.8 17.6 35.0 14.2 32.0 C 12.0 30.0 11.0 27.0 11.6 24.4 Z"/>
     <path d="M 26.6 29.6 C 29.8 30.2 32.8 31.6 34.8 33.8 C 32.2 34.4 29.0 33.9 26.4 32.6 Z"/>
     <path d="M 15.8 24.2 C 20.2 22.6 25.8 24.2 27.8 27.4 C 29.0 29.6 28.2 31.8 25.8 33.0 C 21.4 34.8 15.9 32.8 14.4 29.4 C 13.5 27.2 14.2 25.3 15.8 24.2 Z" fill="${critterMark}" stroke="none" opacity=".38"/>
@@ -1922,7 +1933,6 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
         <path d="M 20.2 40.2 L 18.1 46.2" fill="none" stroke-width="1"/>
         <path d="M 18.1 46.2 l -2.5 .7 M 18.1 46.2 l 2.1 .7 M 18.1 46.2 l -.3 1.0" fill="none" stroke-width=".7"/>
       </g>
-    </g>
     </g>
     </g>
   </g>
@@ -2055,10 +2065,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     <rect x="0" y="${GY+8}" width="${W}" height="${H-GY-8}" fill="url(#waterband)"/>
     ${treeRefl}
     ${sparkle}${glint}${waterWeather}
-    <g opacity=".5"${swayAt(-swayDur*.35,swayAmt*.7)}><path d="${mid}" fill="${ink}"/><path d="${midBlades}" fill="${ink}"/></g>
+    <g opacity=".5"${swayAt(-swayDur*.35,swayAmt*.7)}><path d="${mid}" fill="${grassInk}"/><path d="${midBlades}" fill="${grassInk}"/></g>
     <path d="M -5 ${base} L ${W+5} ${base}" stroke="${ink}" stroke-width="1.8" stroke-linecap="round" opacity=".7"/>
     ${snowing?`<path d="M -5 ${(base-1.5).toFixed(1)} L ${W+5} ${(base-1.5).toFixed(1)}" stroke="#F2F8FA" stroke-width="2.4" stroke-linecap="round" opacity=".45"/>`:""}
-    ${tufts.map((d,i)=>d?`<g opacity=".95"${bandAt(i)}><path d="${d}" fill="${ink}"/></g>`:"").join("")}
+    ${tufts.map((d,i)=>d?`<g opacity=".95"${bandAt(i)}><path d="${d}" fill="${grassInk}"/></g>`:"").join("")}
     ${cloudShadows(base-26,34)}
     ${heat}
     ${dock}
