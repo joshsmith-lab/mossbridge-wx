@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v54/);
+  assert.match(worker, /mbwx-shell-v55/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -256,6 +256,12 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.doesNotMatch(html, /scaleX\(\.12\)/);
   assert.doesNotMatch(html, /rotate\(-80deg\)/);
   assert.match(html, /class="heron-splash"/);
+  // one look per 97s, phased off the wall clock. Two sweeps every 31s had a bird whose
+  // whole character is stillness moving forty per cent of the time
+  assert.match(html, /animation:heronScan 97s/);
+  assert.doesNotMatch(html, /heronScan 31s/);
+  assert.match(html, /@keyframes heronScan\{0%,80%,100%\{transform:rotate\(0\)\}/);
+  assert.match(html, /class="heron-scan" style="\$\{phase\(97\)\}"/);
   assert.match(html, /40\.8%,43\.6%\{transform:translate\(-1px,2\.8px\) rotate\(-20deg\)\}/);
   assert.match(html, /40\.8%,43\.6%\{transform:rotate\(-26deg\) translate\(0,3\.2px\)\}/);
   assert.doesNotMatch(html, /M 18\.4 34\.2 L 17\.7 38\.0/);
@@ -275,6 +281,13 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /const flyCount=Math\.round\(clamp\(3\+\(temp-60\)\*\.6,3,12\)\)/);
   assert.match(html, /class="deer-tail"/);
   assert.match(html, /class="crab-run"/);
+  // the crab sits on the flat with open water behind it, not up on the grass line where a
+  // dark crab on dark spartina is a smudge and the ten-pixel dash travels behind the reeds
+  assert.match(html, /crabAt\(crabX,base\+7,1\.1,1\)/);
+  assert.doesNotMatch(html, /crabAt\(W\*\.57,base-2/);
+  // and its x comes off the resident, because a fixed fraction of a frame that is a
+  // fraction of the screen ran the crab through the oystercatcher on a 320px phone
+  assert.match(html, /const crabX=residentX>W\*\.5\?residentX-64:residentX\+64/);
   // the residents are solid ink now: no more grass reading through a bird
   assert.match(html, /const owlAt=\(x,y,s,opacity=\.96\)/);
   assert.match(html, /const frogAt=\(x,y,s,opacity=\.96\)/);
@@ -569,7 +582,10 @@ test("light, motion and alerts stay tuned", async () => {
   assert.match(html, /!dark&&!deerOut&&!storm\?magpieAt/);
   assert.match(html, /:\(!wet&&!storm\)\?chickens/);
   assert.match(html, /:storm\?"":oysterCatcher/);
-  assert.match(html, /raccoon\(residentX,base\+7,1\.36,1\)/);
+  // the raccoon forages at the waterline, not out in the channel: at base+7 its feet
+  // hung sixteen units below the bank with nothing under them and it read as floating
+  assert.match(html, /raccoon\(residentX,base-6,1\.36,1\)/);
+  assert.doesNotMatch(html, /raccoon\(residentX,base\+7/);
   assert.match(html, /@keyframes perchHop/);
   assert.match(html, /@keyframes groundHop/);
   assert.match(html, /@keyframes cormSettle/);
