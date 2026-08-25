@@ -2424,12 +2424,19 @@ function ridgeSunLine(c,dy,h,now){
    sentence now matches the size of the number. Under 6 — WHO's "moderate" — there
    is no schedule, because a mild window is not worth one; from 6 up the clock
    earns its precision. As the season slides, the coast drifts from the windowed
-   sentence to the mild one to the low one without anyone touching it. */
+   sentence to the mild one to the low one without anyone touching it.
+   The register keys off the sun still to come, not the day's peak. An August
+   day that peaked at 8 over lunch is genuinely mild by late afternoon, and a
+   card that keeps quoting the lunchtime number past it is answering a question
+   nobody is asking any more. Morning of a high day warns with the window;
+   once every remaining hour is under 6 it softens to the mild sentence; past
+   the window it is over. Today means today, applied to the hour. */
 function sunProtectionAdvice(c,dy,h,now){
   const today=dy.time[0];
   const slots=h.time.map((t,i)=>({time:new Date(t),uv:Number(h.uv[i])||0,day:t.slice(0,10)}))
     .filter(slot=>slot.day===today&&slot.uv>=3);
   const peak=Math.max(Number(dy.uv_index_max[0])||0,...slots.map(slot=>slot.uv));
+  const ahead=Math.max(Number(c.uv_index)||0,...slots.filter(slot=>slot.time>=now).map(slot=>slot.uv));
   if(!slots.length){
     if(now.getHours()>=17&&peak>=3)return{text:"Sunscreen weather is over for today.",cls:"go"};
     if(peak>=6)return{text:"Sunscreen weather from 10 a.m. to 5 p.m.",cls:"caution"};
@@ -2439,7 +2446,7 @@ function sunProtectionAdvice(c,dy,h,now){
   const start=slots[0].time;
   const end=new Date(slots[slots.length-1].time.getTime()+3.6e6);
   if(now>=end)return{text:"Sunscreen weather is over for today.",cls:"go"};
-  if(peak<6)return{text:"Mild sun today. Sunscreen if you're out a while.",cls:"go"};
+  if(ahead<6)return{text:"Mild sun today. Sunscreen if you're out a while.",cls:"go"};
   const timing=now>=start
     ?`Sunscreen weather until ${spokenClock(end)}`
     :`Sunscreen weather from ${spokenClock(start)} to ${spokenClock(end)}`;
