@@ -112,16 +112,19 @@ Denver clothing conditions), writes
 screenshots to `tools/shots/` and prints the generated copy, so wording changes
 are reviewable as text.
 
-`tools/scene.mjs` is for anything that moves. Twenty-three scenes force the light
+`tools/scene.mjs` is for anything that moves. Twenty-four scenes force the light
 and weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
 clear night, a storm, a fog morning, drizzle against a downpour, freezing rain on
-the coast, and the ridge by day, by evening with the buck out, in warm rain, on a
-snow day, on a cold January night and in a night downpour, plus Denver in clear,
-golden, storm, snow, night, and windy conditions. The ridge night downpour is
-there on purpose: dark theme, code 82, two rain layers and a frog, which is
-where the animation count goes looking for trouble. It found some, which is the
-point of having it. Per scene it writes the sky and the scene on their
-own, counts the animations *still running* grouped by keyframe, reads
+the coast, a night of rain over the marsh, and the ridge by day, by evening with
+the buck out, in warm rain, on a snow day, on a cold January night and in a night
+downpour, plus Denver in clear, golden, storm, snow, night, and windy conditions.
+The ridge night downpour is there on purpose: dark theme, code 82, two rain layers
+and a frog, which is where the animation count goes looking for trouble. It found
+some, which is the point of having it. The marsh night rain is there for the same
+reason from the other direction: it is the only frame that puts the raccoon and
+the fiddler crab out at the same time, so it is where two grounded animals can
+collide and where either of them can end up floating. Per scene it writes the sky
+and the scene on their own, counts the animations *still running* grouped by keyframe, reads
 `LayoutCount` off CDP while the scene idles, and proves the page holds perfectly
 still under `prefers-reduced-motion` by comparing two screenshots taken 1.4s
 apart. It exits non-zero on a page error, on layout thrash, or on anything that
@@ -166,6 +169,14 @@ that. Crossing the old line costs a phone roughly one extra kilobyte.
 So: do not delete working code to stay under a self-imposed source limit. Write
 what the app needs. If the transferred size ever approaches a few hundred KB,
 revisit it then, and measure the transferred size rather than the source size.
+
+A cycle longer than about a minute cannot be reviewed by watching it. Pause
+everything (`document.getAnimations().forEach(a => a.pause())`), then walk
+`currentTime` on the one animation under test and screenshot each step.
+`currentTime` is measured from the start of the delay, so the negative `phase()`
+delay offsets where in the loop a given value lands — read the delay off
+`a.effect.getTiming()` before you trust the numbers. The heron's 97-second scan
+was confirmed that way: nine tenths of the loop is a bird that does not move.
 
 Notes: both shim `Date` rather than freezing the clock, because `page.clock`
 would also stop the CSS animations that `scene.mjs` exists to look at; run them
@@ -227,6 +238,27 @@ Established with Josh and enforced by `test.mjs`:
   posture, negative space and a species landmark to survive a phone screen.
   Residents move only at real joints, with long rests between gestures. The
   scene should feel alive, never busy.
+- **The marsh's water band is the whole lower frame, so "in the scene" is not the
+  same as "on the ground."** The ridge has a pond you can test a position against;
+  the marsh does not, and the pond check in `tools/scene.mjs` exempts it for exactly
+  that reason. That exemption is how the raccoon came to be drawn sixteen units out
+  in the channel with its belly on the water and nothing under its feet. A heron
+  standing there reads as wading; a four-footed animal standing there reads as
+  floating. Waders and the fiddler crab work the flat. Anything else keeps its body
+  above the bank line and wets no more than its feet, and the harness now fails a
+  marsh scene where more than 45% of a land animal sits below the waterline.
+- **A dark animal on the dark bank is a smudge, and a dash behind the reeds is not
+  a dash.** The fiddler crab sat on the grass line, where its outline merged into
+  the spartina and its ten-pixel scuttle had nothing to travel against, so the one
+  cue the wet marsh has did not read as motion at all. Down on the flat with open
+  water behind it the whole animal reads and the run reads as a run. It is the same
+  lesson the oystercatcher's bill taught: a few units into the water buys the entire
+  silhouette.
+- **Positions are fractions of the frame; animals are not.** Residents are drawn at
+  a fixed scale while the frame is a fraction of the screen, so a fixed fraction that
+  separates two animals at 430px can run them through each other at 320. Where two
+  grounded animals can be out at once, measure one off the other rather than giving
+  each its own fraction.
 - **Two grounded residents cannot share a lane.** The open ground beside the
   Denver skyline is about 115px wide on a phone. Standing a mule deer next to a
   magpie there forced the deer down to magpie height, and a deer the size of a

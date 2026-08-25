@@ -148,6 +148,11 @@ const CASES = [
     o: { baseTemp: 59, nowTemp: 67, feels: 61, rh: 24, isDay: 1, code: 1, cloud: 24, nowWind: 24, nowDir: 255, nowGust: 39, nowUv: 4.5, uvMax: 6,
       windAmp: 17, gustAmp: 29, sunrise: "07:06", sunset: "18:29",
       popCurve: () => 4, dailyPop: (p) => p.fill(8) } },
+  { name: "24-marsh-night-rain", loc: "mb", when: "2026-05-12T22:20:00",
+    note: "the only frame that puts the raccoon and the fiddler crab out together: neither may float, and the crab needs open water behind it",
+    o: { baseTemp: 64, nowTemp: 63, feels: 63, rh: 95, isDay: 0, code: 63, cloud: 96, nowWind: 11, nowDir: 220, nowGust: 20, nowUv: 0, uvMax: 5,
+      windAmp: 9, gustAmp: 17, sunrise: "06:11", sunset: "20:04",
+      popCurve: () => 88, dailyPop: (p) => p.fill(88) } },
   { name: "23-ridge-night-downpour", loc: "sp", when: "2026-05-12T22:40:00",
     note: "the hardest test of the ridge rain: dark theme, code 82, drops over a black fold",
     o: { baseTemp: 62, nowTemp: 61, feels: 61, rh: 96, isDay: 0, code: 82, cloud: 97, nowWind: 15, nowDir: 210, nowGust: 26, nowUv: 0, uvMax: 5,
@@ -294,6 +299,32 @@ for (const cs of cases) {
       const vaneError = vane ? Math.abs(((vane.visual - cs.o.nowDir + 540) % 360) - 180) : 999;
       console.log(`    vane: ${vane?.source ?? "missing"}° source, ${vane ? vane.visual.toFixed(1) : "missing"}° rendered axis`);
       if (vaneError > 1.5) problems.push(`${cs.name}: vane is ${vaneError.toFixed(1)}° off the ${cs.o.nowDir}° wind source`);
+    }
+
+    // ── and nothing four-footed may float on the marsh ────────────────
+    // The pond check above exempts the marsh because its water band covers the whole
+    // lower frame and a heron is supposed to be ankle deep in it. That exemption is
+    // what let the raccoon sit sixteen units out in the channel with its belly on the
+    // water. Waders and the crab work the flat; a raccoon wets its feet at the edge.
+    if (cs.loc === "mb") {
+      const WADERS = ["great-blue-heron", "oystercatcher", "cormorant", "fiddler-crab"];
+      const floating = await page.evaluate((waders) => {
+        const svg = document.getElementById("sceneSvg");
+        const water = svg.querySelector('rect[fill="url(#waterband)"]');
+        if (!water) return [];
+        const w = water.getBoundingClientRect(), out = [];
+        for (const el of svg.querySelectorAll("[data-species]")) {
+          const species = el.dataset.species;
+          if (waders.includes(species)) continue;
+          const b = el.getBoundingClientRect();
+          if (b.bottom < w.top) continue;                 // entirely on the bank
+          const under = (b.bottom - w.top) / b.height;
+          if (under > 0.45) out.push(`${species} is ${Math.round(under * 100)}% below the waterline`);
+        }
+        return out;
+      }, WADERS);
+      for (const f of floating) problems.push(`${cs.name}: ${f}`);
+      console.log(`    waterline: ${floating.length ? "!! " + floating.join("; ") : "nothing four-footed is floating"}`);
     }
 
     if (cs.loc === "den") {
