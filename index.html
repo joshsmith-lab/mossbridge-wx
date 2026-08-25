@@ -2417,6 +2417,14 @@ function ridgeSunLine(c,dy,h,now){
   if(now>=end)return{text:"The strong sun is done for today.",cls:"go"};
   return{text:sentence(now>=start?`Strongest sun until ${spokenClock(end)}`:`Strongest sun ${spokenClock(start)} to ${spokenClock(end)}`),cls};
 }
+/* The window comes off the hourly curve crossing 3, the WHO line, and that part is
+   honest. What the copy used to miss is scale: a UV-4 shoulder-season afternoon got
+   the same clock-and-warning sentence as a UV-11 July one, so the card read urgent
+   in weather that only asks for sunscreen if you are out on the water a while. The
+   sentence now matches the size of the number. Under 6 — WHO's "moderate" — there
+   is no schedule, because a mild window is not worth one; from 6 up the clock
+   earns its precision. As the season slides, the coast drifts from the windowed
+   sentence to the mild one to the low one without anyone touching it. */
 function sunProtectionAdvice(c,dy,h,now){
   const today=dy.time[0];
   const slots=h.time.map((t,i)=>({time:new Date(t),uv:Number(h.uv[i])||0,day:t.slice(0,10)}))
@@ -2424,12 +2432,14 @@ function sunProtectionAdvice(c,dy,h,now){
   const peak=Math.max(Number(dy.uv_index_max[0])||0,...slots.map(slot=>slot.uv));
   if(!slots.length){
     if(now.getHours()>=17&&peak>=3)return{text:"Sunscreen weather is over for today.",cls:"go"};
-    if(peak>=3)return{text:"Sunscreen weather from 10 a.m. to 5 p.m.",cls:"caution"};
+    if(peak>=6)return{text:"Sunscreen weather from 10 a.m. to 5 p.m.",cls:"caution"};
+    if(peak>=3)return{text:"Mild sun today. Sunscreen if you're out a while.",cls:"go"};
     return{text:"UV stays low today.",cls:"go"};
   }
   const start=slots[0].time;
   const end=new Date(slots[slots.length-1].time.getTime()+3.6e6);
   if(now>=end)return{text:"Sunscreen weather is over for today.",cls:"go"};
+  if(peak<6)return{text:"Mild sun today. Sunscreen if you're out a while.",cls:"go"};
   const timing=now>=start
     ?`Sunscreen weather until ${spokenClock(end)}`
     :`Sunscreen weather from ${spokenClock(start)} to ${spokenClock(end)}`;

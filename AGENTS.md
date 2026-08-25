@@ -106,9 +106,9 @@ TZ=America/New_York node tools/scene.mjs          # the picture and its motion
 TZ=America/New_York node tools/scene.mjs fog storm  # just the scenes you are working on
 ```
 
-`tools/shots.mjs` renders twelve scenarios (day, night, after midnight, storm, dusk,
-the three locations, an afternoon that should recommend today, a washout, and three
-Denver clothing conditions), writes
+`tools/shots.mjs` renders thirteen scenarios (day, night, after midnight, storm, dusk,
+the three locations, an afternoon that should recommend today, a washout, a
+shoulder-season moderate-UV day, and three Denver clothing conditions), writes
 screenshots to `tools/shots/` and prints the generated copy, so wording changes
 are reviewable as text.
 
