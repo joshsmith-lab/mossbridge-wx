@@ -83,7 +83,15 @@ export function forecast(now, o, tz) {
     apparent.push(Math.round(temp[i] + feelDelta * (.3 + .7 * Math.max(0, diurnal))));
     pop.push(Math.max(0, Math.round(o.popCurve(i, hr))));
     const frozen = [56, 57, 66, 67, 71, 73, 75, 77, 85, 86].includes(o.code);
-    code.push(frozen ? o.code : pop[i] >= 55 ? 80 : pop[i] >= 35 ? 3 : o.code);
+    /* A wet hour used to be flattened to plain rain showers even in a thunderstorm
+       scenario, so the hourly run said 80 while the current conditions said 95. Open-Meteo
+       does not do that, and the app reads the hourly run to decide whether there is thunder
+       in the picture, so the fixture has to stop lying about it. `hourlyCode` lets a
+       scenario say something different is coming in the hours ahead, which is the ordinary
+       coastal case: rain in the cell now, thunderstorms two hours out. */
+    const thunder = [95, 96, 99].includes(o.code);
+    const wetCode = thunder ? o.code : 80;
+    code.push(frozen ? o.code : o.hourlyCode?.(i, hr) ?? (pop[i] >= 55 ? wetCode : pop[i] >= 35 ? 3 : o.code));
     wind.push(Math.round(6 + Math.abs(diurnal) * o.windAmp));
     gust.push(Math.round(10 + Math.abs(diurnal) * o.gustAmp));
     uv.push(Math.max(0, +(Math.max(0, diurnal) * o.uvMax).toFixed(1)));

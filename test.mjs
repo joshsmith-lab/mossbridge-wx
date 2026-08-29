@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v59/);
+  assert.match(worker, /mbwx-shell-v60/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -461,7 +461,9 @@ test("nothing new moves under prefers-reduced-motion", async () => {
   assert.match(html, /const phase=p=>PRM\?"":`animation-delay/);
   assert.match(html, /const showFlies=seasonalFlies&&!PRM/);
   assert.match(html, /if\(wet&&!snowing&&!PRM\)\{const wr=mulberry\(7138\)/);
-  assert.match(html, /if\(!storm\|\|PRM\)return""/);
+  // lightning no longer needs the grid cell's own code to be a thunderstorm; see the
+  // THUNDER assertions below. It still draws nothing under reduced motion.
+  assert.match(html, /if\(!THUNDER\|\|PRM\)\{layer\.innerHTML="";return\}/);
   assert.match(html, /if\(!PRM&&!wet&&!storm\)/);
 });
 
@@ -606,6 +608,23 @@ test("light, motion and alerts stay tuned", async () => {
   assert.match(html, /@keyframes cormSettle/);
   assert.match(html, /class="corm-neck"/);
   assert.match(html, /if\(wind<8\)waterWeather\+=ringAt/);
+  // Lightning. One clock for the bolts and the sky wash, or they drift apart the way a
+  // 37s bolt and a 7s wash did: the sky lit with nothing under it and the bolt struck
+  // into a dark sky, and neither half was ever seen with the other.
+  assert.match(html, /const STORM_P=19/);
+  assert.match(html, /animation:stormWash 19s linear infinite/);
+  assert.match(html, /animation:bolt 19s linear infinite/);
+  assert.doesNotMatch(html, /stormWash 7s/);
+  assert.doesNotMatch(html, /var\(--bd,37s\)/);
+  // and it is a sky effect, not a scene one: inside the scene SVG it could only start a
+  // third of the way down the page, which is a bolt coming out of clear air
+  assert.match(html, /function paintBolts\(\)/);
+  assert.match(html, /<g id="boltLayer"><\/g>/);
+  assert.doesNotMatch(html, /boltAt\(/);
+  // it takes three readings, not just the grid cell's own code at the moment you look
+  assert.match(html, /THUNDER=storm\?2/);
+  assert.match(html, /\(h\?\.code\|\|\[\]\)\.slice\(0,3\)\.some\(isTS\)/);
+  assert.match(html, /thunderstorm\\s\+warning/i);
   // an alert opens to the gist instead of only shouting its title
   assert.match(html, /function alertGist\(a\)/);
   assert.match(html, /function toggleAlert\(\)/);
