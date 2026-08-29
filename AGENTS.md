@@ -112,7 +112,7 @@ shoulder-season moderate-UV day, and three Denver clothing conditions), writes
 screenshots to `tools/shots/` and prints the generated copy, so wording changes
 are reviewable as text.
 
-`tools/scene.mjs` is for anything that moves. Twenty-four scenes force the light
+`tools/scene.mjs` is for anything that moves. Twenty-five scenes force the light
 and weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
 clear night, a storm, a fog morning, drizzle against a downpour, freezing rain on
 the coast, a night of rain over the marsh, and the ridge by day, by evening with
@@ -259,6 +259,25 @@ Established with Josh and enforced by `test.mjs`:
   separates two animals at 430px can run them through each other at 320. Where two
   grounded animals can be out at once, measure one off the other rather than giving
   each its own fraction.
+- **Lightning is one event on one clock.** The bolt used to run on a 37-second loop and
+  the sky wash on a 7-second one, so the sky lit with nothing under it and the bolt struck
+  into a sky that stayed dark. They now share `STORM_P`: beats at 0, 34 and 61 per cent
+  carry a strike, 17 per cent is wash only, which is a discharge inside the cloud. If you
+  change one, change both, and `tools/scene.mjs` walks the cycle on a single clock to check
+  that no two bolts fire together and none fires into an unlit sky.
+- **Lightning is a sky effect, not a scene one.** Drawn inside the scene SVG it can only
+  start a third of the way down the page, which is a bolt appearing out of clear air under
+  the forecast card. It lives in the sky layer now, at z-index 0, so it runs from under the
+  masthead to the horizon behind the type and the scene's treeline covers its foot. Its
+  path needs the sky in real pixels, because SVG path data has no percentage units, and it
+  is painted at the very end of `render()`: the alert strip, headline, chips, card and
+  scene all add height to the header, and a bolt measured before them stops in mid-air.
+- **A storm is more than the grid cell's own code.** Requiring `weather_code` to be 95, 96
+  or 99 at the moment you look drew no lightning at all on the ordinary Wilmington August
+  afternoon, where the cell reports showers and the cell next door is throwing bolts. Three
+  readings say there is thunder about: the current code puts it overhead, the next three
+  hours of the hourly run or an NWS thunderstorm warning put it in the area. A watch does
+  not count. It says conditions are favourable, not that anything is happening.
 - **Two grounded residents cannot share a lane.** The open ground beside the
   Denver skyline is about 115px wide on a phone. Standing a mule deer next to a
   magpie there forced the deer down to magpie height, and a deer the size of a

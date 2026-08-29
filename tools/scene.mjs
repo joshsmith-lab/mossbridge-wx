@@ -153,6 +153,12 @@ const CASES = [
     o: { baseTemp: 64, nowTemp: 63, feels: 63, rh: 95, isDay: 0, code: 63, cloud: 96, nowWind: 11, nowDir: 220, nowGust: 20, nowUv: 0, uvMax: 5,
       windAmp: 9, gustAmp: 17, sunrise: "06:11", sunset: "20:04",
       popCurve: () => 88, dailyPop: (p) => p.fill(88) } },
+  { name: "25-marsh-thunder-nearby", loc: "mb", when: "2026-08-25T16:30:00",
+    note: "the ordinary Wilmington August afternoon: rain in the grid cell, thunderstorms two hours out. The old rule drew no lightning at all here",
+    o: { baseTemp: 84, nowTemp: 82, feels: 92, rh: 86, isDay: 1, code: 80, cloud: 92, nowWind: 13, nowDir: 235, nowGust: 24, nowUv: 1.6, uvMax: 8,
+      windAmp: 11, gustAmp: 20,
+      hourlyCode: (i, hr) => (hr >= 17 && hr <= 21 ? 95 : hr >= 14 ? 80 : 3),
+      popCurve: (i, hr) => (hr >= 14 && hr <= 21 ? 72 : 20), dailyPop: (p) => { p[0] = 80; p[1] = 55; } } },
   { name: "23-ridge-night-downpour", loc: "sp", when: "2026-05-12T22:40:00",
     note: "the hardest test of the ridge rain: dark theme, code 82, drops over a black fold",
     o: { baseTemp: 62, nowTemp: 61, feels: 61, rh: 96, isDay: 0, code: 82, cloud: 97, nowWind: 15, nowDir: 210, nowGust: 26, nowUv: 0, uvMax: 5,
@@ -325,6 +331,44 @@ for (const cs of cases) {
       }, WADERS);
       for (const f of floating) problems.push(`${cs.name}: ${f}`);
       console.log(`    waterline: ${floating.length ? "!! " + floating.join("; ") : "nothing four-footed is floating"}`);
+    }
+
+    // ── a bolt and the sky wash are one event ─────────────────────────
+    // They used to be two: the wash cycled every 7s and the bolt every 37s, so the sky lit
+    // with nothing under it and the bolt struck into a sky that stayed dark, for as long as
+    // nobody sat and watched a storm scene. Walk the storm cycle on one clock and check that
+    // no two bolts fire together and that no bolt fires into an unlit sky.
+    if (await page.locator(".bolt").count()) {
+      const sync = await page.evaluate(() => {
+        const bolts = [...document.querySelectorAll(".bolt")].map((e) => e.getAnimations()[0]).filter(Boolean);
+        const flashEl = document.getElementById("flash");
+        const flash = flashEl.getAnimations()[0];
+        if (!bolts.length || !flash) return null;
+        const all = [...bolts, flash];
+        all.forEach((a) => a.pause());
+        // One shared clock. Each effect's own delay is what spreads the beats apart, so
+        // setting a common iteration progress would cancel exactly what is under test.
+        const P = flash.effect.getTiming().duration, N = 1200;
+        let overlaps = 0, dark = 0, lit = 0;
+        for (let i = 0; i < N; i++) {
+          all.forEach((a) => { a.currentTime = P * 5 + P * (i / N); });
+          const on = bolts.filter((b) => Number(getComputedStyle(b.effect.target).opacity) > 0.1).length;
+          const wash = Number(getComputedStyle(flashEl).opacity);
+          if (on > 1) overlaps++;
+          if (on >= 1) { lit++; if (wash < 0.05) dark++; }
+        }
+        all.forEach((a) => a.play());
+        return { bolts: bolts.length, period: P / 1000, overlaps, dark, litPct: +(lit / N * 100).toFixed(1) };
+      });
+      if (!sync) problems.push(`${cs.name}: bolts drawn with no storm clock behind them`);
+      else {
+        if (sync.overlaps) problems.push(`${cs.name}: ${sync.overlaps} samples with two bolts at once`);
+        // a few samples land in the dip between return strokes, when the sky dims too
+        if (sync.dark > sync.litPct * 6) problems.push(`${cs.name}: bolts strike into an unlit sky`);
+        console.log(`    lightning: ${sync.bolts} bolts on a ${sync.period}s clock, lit ${sync.litPct}% of it, `
+          + `${sync.overlaps ? "!! " + sync.overlaps + " overlapping" : "never two at once"}, `
+          + `${sync.dark > sync.litPct * 6 ? "!! striking into a dark sky" : "always with the wash"}`);
+      }
     }
 
     if (cs.loc === "den") {

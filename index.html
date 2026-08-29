@@ -76,9 +76,24 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .sky-fx{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
 .sky-fx svg{position:absolute;inset:0;width:100%;height:100%}
 .sky>*:not(.sky-fx):not(.flash):not(.rainfx){position:relative;z-index:2}
+/* Lightning runs on one clock for the whole sky, so a bolt and the wash that goes with
+   it are the same event rather than two animations that happen to be on at once. The old
+   pair could not have been: the wash cycled every 7s and the bolt every 37s, so the sky
+   lit with nothing under it and the bolt struck into a sky that stayed dark. Beats at 0,
+   34 and 61 per cent of the cycle carry a strike; 17 per cent is wash only, which is what
+   a discharge inside the cloud looks like from a porch. Distant thunder gets sheetWash:
+   the same clock, no close beat, and much less of it. */
 .flash{position:absolute;inset:0;z-index:1;background:#FFF8E7;opacity:0;pointer-events:none}
-.flash.on{animation:stormWash 7s infinite}
-@keyframes stormWash{0%,100%{opacity:0}1.2%{opacity:.5}2%{opacity:.05}2.8%{opacity:.34}4.4%{opacity:0}}
+.flash.on{animation:stormWash 19s linear infinite}
+.flash.far{animation:sheetWash 19s linear infinite}
+@keyframes stormWash{0%,100%{opacity:0}
+  .5%{opacity:.52}1.1%{opacity:.06}1.8%{opacity:.36}3.1%{opacity:0}
+  17%{opacity:0}17.9%{opacity:.19}19.6%{opacity:0}
+  34%{opacity:0}34.5%{opacity:.47}35.1%{opacity:.05}35.9%{opacity:.33}37.2%{opacity:0}
+  61%{opacity:0}61.5%{opacity:.55}62.1%{opacity:.07}62.9%{opacity:.39}64.3%{opacity:0}}
+@keyframes sheetWash{0%,100%{opacity:0}
+  .6%{opacity:.22}2.4%{opacity:0}
+  61%{opacity:0}61.7%{opacity:.13}63.2%{opacity:0}}
 .drift{will-change:transform}
 @keyframes drift{from{transform:translate3d(-14%,0,0)}to{transform:translate3d(14%,0,0)}}
 /* rain leans and travels with the wind that is actually blowing */
@@ -107,8 +122,15 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .splash{transform-box:fill-box;transform-origin:bottom center;opacity:0;animation:splash var(--sd,1.7s) linear infinite}
 @keyframes splash{0%,90%,100%{opacity:0;transform:scaleY(.3)}92%{opacity:.55;transform:scaleY(1)}96%{opacity:.18;transform:scaleY(.6)}}
 /* one bolt, rarely, two blinks and gone */
-.bolt{opacity:0;animation:bolt var(--bd,37s) linear infinite}
-@keyframes bolt{0%,96.2%,100%{opacity:0}96.4%,96.7%{opacity:.8}96.9%{opacity:.08}97.1%,97.3%{opacity:.55}97.6%{opacity:0}}
+/* A strike is a leader, a bright return stroke, a gap, and a second weaker return.
+   The old one faded up to .8 and back and read as a light being turned on. This is
+   66ms to full, dark at 220ms, back at 285ms, gone by 550ms. */
+.bolt{opacity:0;animation:bolt 19s linear infinite}
+@keyframes bolt{0%{opacity:0}
+  .35%{opacity:1}.75%{opacity:.92}
+  1.15%{opacity:.08}
+  1.5%{opacity:.88}2.1%{opacity:.66}
+  2.9%{opacity:0}100%{opacity:0}}
 @keyframes twinkle{0%,100%{opacity:var(--o)}50%{opacity:calc(var(--o) * .28)}}
 .star{animation:twinkle 4s ease-in-out infinite}
 /* while you are inside golden hour, the gold on the arc breathes */
@@ -902,7 +924,7 @@ function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd,code){
         <filter id="soft" x="-30%" y="-60%" width="160%" height="260%"><feGaussianBlur stdDeviation="9"/></filter>
         <radialGradient id="hglow"><stop offset="0" stop-color="#FFD79A" stop-opacity="${golden?.64:.5}"/><stop offset="1" stop-color="#FFD79A" stop-opacity="0"/></radialGradient>
         <linearGradient id="streak" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF6E2" stop-opacity="0"/><stop offset="1" stop-color="#FFF6E2" stop-opacity=".95"/></linearGradient>
-      </defs>${glow}${stars}${meteor}${clouds}</svg>`;
+      </defs>${glow}${stars}${meteor}${clouds}<g id="boltLayer"></g></svg>`;
 
   const rf=document.getElementById("rainFx"),snowing=isSnow(code);
   rf.className="rainfx"+(snowing?" snow":"");
@@ -925,8 +947,61 @@ function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd,code){
       return `<i style="left:${l.toFixed(1)}%;animation-duration:${d}s;animation-delay:-${dl}s;opacity:${(snowing?.5+r2()*.5:.28+r2()*.42*weight).toFixed(2)}"></i>`;
     }).join("");
   } else rf.innerHTML="";
-  document.getElementById("flash").className="flash"+(storm&&!PRM?" on":"");
+  const fl=document.getElementById("flash");
+  fl.className="flash"+(PRM||!THUNDER?"":THUNDER>1?" on":" far");
+  fl.style.animationDelay=`-${(Date.now()/1000%STORM_P).toFixed(2)}s`;
 }
+
+/* One period for every part of a storm, so the bolts and the sky wash share a clock. */
+const STORM_P=19;
+const boltPath=(x0,yTop,yBot,seed,lean=0)=>{
+  const b=mulberry(seed),steps=9,dy=(yBot-yTop)/steps,pts=[[x0,yTop]],dx=lean/steps;
+  let x=x0,y=yTop,d=`M ${x0.toFixed(1)} ${yTop.toFixed(1)}`;
+  for(let i=0;i<steps;i++){x+=dx+(b()-.45)*30;y+=dy;d+=` L ${x.toFixed(1)} ${y.toFixed(1)}`;pts.push([x,y])}
+  /* Two forks, off different joints, the lower one shorter. A single Y reads as a twig;
+     a channel that splits high and again low reads as lightning. */
+  for(const[j,n,spread]of[[3,3,30],[6,2,22]]){
+    let[fx,fy]=pts[j];
+    d+=` M ${fx.toFixed(1)} ${fy.toFixed(1)}`;
+    for(let i=0;i<n;i++){fx+=(b()-.72)*spread;fy+=dy*.62;d+=` L ${fx.toFixed(1)} ${fy.toFixed(1)}`}
+  }
+  return d;
+};
+/* Lightning is a sky effect, not a scene one. Drawn inside the scene SVG it could only
+   ever start a third of the way down the page, which is a bolt coming out of clear air
+   below the forecast card. In the sky layer it runs from up under the masthead down to
+   the horizon, behind the type at z-index 0, and the scene's treeline covers the foot of
+   it. That is what a strike across the marsh looks like from the porch.
+   Overhead gets three strike points, three paths, three beats of the storm clock, each
+   landing on a beat that also washes the sky. Thunder in the area gets one, thinner and
+   dimmer, off to one side. Four stacked strokes stand in for a glow: a real SVG blur
+   filter would cost a full-frame repaint, and the scene harness strips filters anyway. */
+/* Painted after the scene, not with the rest of the sky: renderSkyFx runs first, when
+   the header has not been given its scene yet and reads about 320px instead of 580, and
+   a bolt sized off that stops dead in mid-air well above the horizon. */
+function paintBolts(){
+  const layer=document.getElementById("boltLayer");
+  if(!layer)return;
+  if(!THUNDER||PRM){layer.innerHTML="";return}
+  const sky=document.getElementById("sky");
+  const w=sky.clientWidth||430,h=sky.clientHeight||560;
+  const beat=p=>(p*STORM_P-(Date.now()/1000%STORM_P)).toFixed(2);
+  /* lean is how far the whole channel walks sideways on the way down, as a share of the
+     width: three bolts that all fall straight read as a fence, not as a storm */
+  const spots=THUNDER>1
+    ?[[.60,20260811,1,0,-.11],[.24,20260812,.82,.34,.14],[.87,20260813,.92,.61,-.16]]
+    :[[.29,20260814,.5,0,.09]];
+  layer.innerHTML=spots.map(([fx,sd,k,p,lean])=>{
+    const d=boltPath(w*fx,h*.13,h*1.03,sd,w*lean);
+    return `<g class="bolt" style="animation-delay:${beat(p)}s">`
+      +[[7*k,.08,"#FFEFC2"],[3.4*k,.22,"#FFF6DE"],[1.5*k,.8,"#FFFDF4"],[.6*k,1,"#FFFFFF"]]
+        .map(([sw,o,c])=>`<path d="${d}" fill="none" stroke="${c}" stroke-width="${sw.toFixed(2)}" stroke-linecap="round" stroke-linejoin="round" opacity="${o}"/>`).join("")
+      +`</g>`;
+  }).join("");
+}
+/* 0 no thunder, 1 thunder in the area, 2 thunder overhead. Set in render() from three
+   readings and read by both the sky effects and the scene. */
+let THUNDER=0;
 
 /* ── the scene: arc, sun / moon, marsh horizon ──────── */
 const appW=()=>clamp(document.querySelector(".app").clientWidth||760,320,760);
@@ -1075,22 +1150,6 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   /* how hard it is raining, 0 to 1, off the same code the drops are drawn from */
   const rainK={51:.15,53:.2,55:.3,61:.45,63:.65,65:1,80:.45,81:.65,82:1,95:.85,96:.95,99:1}[code]||0;
   /* a seeded bolt: a jagged run to the horizon with one fork off a joint near the bottom */
-  const boltPath=(x0,yTop,yBot,seed)=>{
-    const b=mulberry(seed),steps=7,dy=(yBot-yTop)/steps,pts=[[x0,yTop]];
-    let x=x0,y=yTop,d=`M ${x0.toFixed(1)} ${yTop.toFixed(1)}`;
-    for(let i=0;i<steps;i++){x+=(b()-.45)*13;y+=dy;d+=` L ${x.toFixed(1)} ${y.toFixed(1)}`;pts.push([x,y])}
-    let [fx,fy]=pts[4];
-    d+=` M ${fx.toFixed(1)} ${fy.toFixed(1)}`;
-    for(let i=0;i<3;i++){fx+=(b()-.72)*11;fy+=dy*.66;d+=` L ${fx.toFixed(1)} ${fy.toFixed(1)}`}
-    return d;
-  };
-  const boltAt=(x0,yBot,seed)=>{
-    if(!storm||PRM)return"";
-    const d=boltPath(x0,arcTop-12,yBot,seed);
-    return `<g class="bolt" style="animation-delay:-${(Date.now()/1000%37).toFixed(1)}s">
-      <path d="${d}" fill="none" stroke="#FFF6DE" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".3"/>
-      <path d="${d}" fill="none" stroke="#FFFDF4" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></g>`;
-  };
   /* A cloud shadow crossing the ground. Only drawn when there are discrete clouds to cast
      one: a clear sky has nothing to throw a shadow and an overcast sky is all shadow
      already. Speed comes off the wind and the side it crosses from matches the cloud
@@ -1514,7 +1573,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
         <radialGradient id="cityglow"><stop offset="0" stop-color="#E8B964" stop-opacity=".34"/><stop offset=".55" stop-color="#D99B55" stop-opacity=".12"/><stop offset="1" stop-color="#D99B55" stop-opacity="0"/></radialGradient>
       </defs>
       <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
-      ${goldArc}${body}${boltAt(W*.69,base-42,80631)}
+      ${goldArc}${body}
       <path d="${far}" fill="${ink}" opacity="${fog?.08:.17}"/>${snowCaps}
       <path d="${near}" fill="${ink}" opacity="${fog?.12:.27}"/>
       ${cloudShadows(base-35,34)}${hawk}${skyline}${cottonwood}${ground}
@@ -1741,7 +1800,6 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
       ${goldArc}
       ${body}
-      ${boltAt(W*.68,base-38,44170)}
       ${ridges}
       ${fog?`<rect x="0" y="${(base-rTop*.72).toFixed(1)}" width="${W}" height="${(rTop*.72+8).toFixed(1)}" fill="url(#fogveil)"/>`:""}
       ${hawk}${soarer}
@@ -2056,7 +2114,6 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       ${goldArc}
     ${gulls}
     ${body}
-    ${boltAt(W*.62,base-14,90210)}
     <path d="${tl}" fill="${ink}" opacity="${(.26*fogFade).toFixed(2)}"/>
     ${oak}
     ${pines}
@@ -2635,6 +2692,18 @@ function render(d,live,savedAt=0){
   const wet=isWet(c.weather_code);
   const storm=[95,96,99].includes(c.weather_code);
   const dark=altDeg< -3;
+  /* Lightning used to need the grid cell's own code to be a thunderstorm at the moment
+     you looked, which on this coast is a small share of the afternoons that actually have
+     thunder in them: the cell reports rain while the cell next door is throwing bolts up
+     the Intracoastal. Three readings say there is thunder in the picture. The current code
+     puts it overhead. The next three hours of the hourly run, or an NWS thunderstorm
+     warning, put it in the area. A watch is deliberately not enough — it says conditions
+     are favourable, not that anything is happening yet, and the scene only draws weather
+     that exists. */
+  const isTS=v=>[95,96,99].includes(Number(v));
+  THUNDER=storm?2
+    :((h?.code||[]).slice(0,3).some(isTS)
+      ||(d.alerts||[]).some(a=>/thunderstorm\s+warning/i.test(a.event||"")))?1:0;
 
   /* theme */
   document.documentElement.setAttribute("data-theme",dark?"dark":"light");
@@ -2975,6 +3044,10 @@ function render(d,live,savedAt=0){
   const weekWet=wi>=0?(isSnow(dy.weather_code[wi])?"snow":isIce(dy.weather_code[wi])?"ice":"rain"):"";
   document.getElementById("weekNote").textContent=wi<0?"mostly dry through the week"
     :`${weekWet} looks most likely ${wi===0?"today":dayName(dy.time[wi])}`;
+  /* Last, because everything above adds height to the header: the alert strip, the
+     headline, the chips, the rain card and the scene are all inside .sky, and a bolt
+     measured before them stops in mid-air where the sky used to end. */
+  paintBolts();
   LAST={d,live,savedAt};LASTW=appW();
 }
 let LAST=null,LASTW=0,rzT;
