@@ -667,8 +667,11 @@ const LOCS={
       outTitle:"Outside · Around Denver",
       foot:"Forecast: Open-Meteo (NWS-blended), grid cell over Denver, CO · Alerts: National Weather Service."}
 };
-const LOC_ORDER=["mb","sp","den"];
-let LOC;try{LOC=LOCS[localStorage.getItem("mbwx-loc")]||LOCS.mb}catch(e){LOC=LOCS.mb}
+/* The trip is over, so Denver is parked: still in LOCS as the template for the next travel
+   scene, but out of the rotation. A phone last left on Denver has to open at home rather
+   than on a place nobody can tap back to, so a saved id only counts while it is in the order. */
+const LOC_ORDER=["mb","sp"];
+let LOC;try{const saved=localStorage.getItem("mbwx-loc");LOC=LOC_ORDER.includes(saved)?LOCS[saved]:LOCS.mb}catch(e){LOC=LOCS.mb}
 let LAT=LOC.lat, LON=LOC.lon;
 
 /* ── the location's clock ─────────────────────────────

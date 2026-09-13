@@ -76,15 +76,6 @@ const CASES = [
     o: { baseTemp: 72, nowTemp: 76, feels: 78, rh: 60, isDay: 1, code: 1, cloud: 24, nowWind: 8, nowDir: 40, nowGust: 13, nowUv: 3.8, uvMax: 4.2,
       windAmp: 7, gustAmp: 11, sunrise: "07:04", sunset: "18:59",
       popCurve: () => 8, dailyPop: (p) => p.fill(12) } },
-  { name: "10-denver-mild-afternoon", loc: "den", when: "2026-08-15T16:00:00",
-    o: { baseTemp: 61, nowTemp: 72, feels: 70, rh: 30, isDay: 1, code: 1, cloud: 14, nowWind: 8, nowDir: 145, nowGust: 15, nowUv: 7.1, uvMax: 9, windAmp: 7, gustAmp: 12, sunrise: "08:12", sunset: "21:52",
-      popCurve: () => 4, dailyPop: (p) => p.fill(8) } },
-  { name: "11-denver-windy-cool", loc: "den", when: "2026-10-10T16:10:00",
-    o: { baseTemp: 49, nowTemp: 54, feels: 48, rh: 25, isDay: 1, code: 1, cloud: 24, nowWind: 23, nowDir: 255, nowGust: 36, nowUv: 4.3, uvMax: 6, windAmp: 16, gustAmp: 27, sunrise: "09:06", sunset: "20:29",
-      popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
-  { name: "12-denver-snow-morning", loc: "den", when: "2026-01-14T13:15:00",
-    o: { baseTemp: 27, nowTemp: 28, feels: 19, rh: 78, isDay: 1, code: 73, cloud: 88, nowWind: 8, nowDir: 35, nowGust: 16, nowUv: 1, uvMax: 2, windAmp: 7, gustAmp: 13, sunrise: "09:18", sunset: "18:58",
-      popCurve: () => 80, dailyPop: (p) => p.fill(82) } },
 ];
 
 const cases = ONLY.length ? CASES.filter((c) => ONLY.some((q) => c.name.includes(q))) : CASES;
