@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v61/);
+  assert.match(worker, /mbwx-shell-v62/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -391,6 +391,17 @@ test("and the rain is visible when it rains there", async () => {
   assert.match(html, /mask="url\(#ridgerain\)"/);
   // it fades in across the crest instead of starting on a cut line
   assert.match(html, /id="ridgerainfade" gradientUnits="userSpaceOnUse"/);
+  // and it lands in the field: gone by the grass line, never run off the foot of the frame
+  // into the page, which is where a downpour turned into a mess of white bars over the pond
+  assert.match(html, /const nrTop=base-rTop\*\.94,nrLand=base\+4;/);
+  assert.match(html, /span=nrLand-nrTop;/);
+  assert.doesNotMatch(html, /span=H\+10-nrTop/);
+  // a drop is several frames long at its own speed, so it reads as a streak, not a dash
+  // jumping its own length every frame
+  assert.match(html, /const step=968\/nrFall\/60/);
+  assert.match(html, /const len=clamp\(step\*2\.6,22,Math\.min\(64,span\*\.72\)\)/);
+  // dealt one to a slot across the frame, not thrown in clumps
+  assert.match(html, /const tx=-34\+\(i\+\.15\+nr\(\)\*\.7\)\*slot/);
   // the pond answers the rain rather than going glass-still under it, which it used to do
   assert.match(html, /if\(wet&&!snowing&&!PRM\)\{\s*const pw2=mulberry\(6197\),rings=2\+Math\.round\(rainK\*3\)/);
   assert.match(html, /const ps=mulberry\(2884\),ticks=3\+Math\.round\(rainK\*5\)/);

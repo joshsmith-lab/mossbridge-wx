@@ -228,6 +228,15 @@ Established with Josh and enforced by `test.mjs`:
   landing 10% quicker because they are nearer. This is worth measuring rather than
   eyeballing; four times off was invisible in a still and obvious in a strip of frames
   60ms apart.
+- **A falling drop has to be longer than one frame's fall, and it has to land.** At the
+  downpour rate the near drops move about 26px a frame, and at 32px long each one barely
+  overlapped the frame before it, so heavy rain at Shady Spring came out as white dashes
+  jumping about rather than rain. Their length now comes off that per-frame step (about
+  2.6 frames, capped to the frame), tapered from tail to head the way the sky layer's
+  drops fade in. They also used to run all the way to the foot of the scene, across the
+  pond and straight into the page below; the mask now fades them out at the grass line,
+  so the pond's rings and ticks carry the rain on the water. Check both in a strip of
+  frames, not a still.
 - **Draw silhouettes, not anatomy.** A bird in this sky is fourteen pixels across.
   Literal feather detail at that size does not read as detail, it reads as the
   wrong animal: constant-width wings with two short strokes at each tip for

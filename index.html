@@ -1719,29 +1719,41 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
        inked against the sky, so from the ridgeline down it is a dark line on a dark fold
        and it reads as nothing at all. These are the near drops: fewer, longer, quicker and
        pale, on the same lean and the same rate as the rain above them. They fade in across
-       the crest instead of starting on a cut line, and they stop behind the yard so the
-       grass, the cattails and whatever is standing out in it stay clean. */
-    const nrTop=base-rTop*.94;
+       the crest instead of starting on a cut line, and they land in the field: they fade
+       out again at the grass line, so the pond's own rings and ticks carry the rain down
+       on the water and nothing white runs off the foot of the picture into the page. */
+    const nrTop=base-rTop*.94,nrLand=base+4;
     let nearRain="";
     if(wet&&!snowing&&!PRM){
       /* how hard, how fast: off the same row of RAIN the sky layer reads, rather than off
          rainK, so freezing rain gets the near drops too. It falls as liquid, it is the one
          condition here a driver needs to see coming, and rainK has no entry for it. */
       const [,nrFall,nrWeight]=RAIN[code]||RAIN[63];
-      const nrK=clamp((nrWeight-.55)/.7,0,1),span=H+10-nrTop;
+      const nrK=clamp((nrWeight-.55)/.7,0,1),span=nrLand-nrTop;
       const nrTan=Math.tan(clamp(wind*.62,0,18)*downwind*Math.PI/180);
       const nr=mulberry(5347),drops=10+Math.round(nrK*9);
-      nearRain=`<g mask="url(#ridgerain)" stroke="${dark?'#DCE9F0':'#F4FAFC'}" stroke-width="${(1.25+nrK*1.05).toFixed(2)}" stroke-linecap="round" fill="none">`
-        +Array.from({length:drops},()=>{
+      /* A drop's length comes off how far it moves in one frame. In a downpour the near
+         drops cover 26px a frame, and at 32px long a drop barely overlapped the frame
+         before it, so the eye got a field of white dashes jumping about rather than rain:
+         quick enough, but not long enough to be a streak. The sky layer never had this
+         because its drops are several frames long and fade in from the tail. These do the
+         same now, as a taper rather than a gradient, so a calm day's dead-vertical drop has
+         nothing to lose to a zero-width bounding box. Across the frame they are dealt one
+         to a slot rather than thrown at random, which is what stacked three over the barn. */
+      const step=968/nrFall/60,hw=(1.25+nrK*1.05)/2,cs=1/Math.hypot(1,nrTan),slot=(W+68)/drops;
+      nearRain=`<g mask="url(#ridgerain)" fill="${dark?'#DCE9F0':'#F4FAFC'}">`
+        +Array.from({length:drops},(_,i)=>{
           /* Speed is not a taste: the layer above crosses 880px in nrFall seconds, and a
              scene unit is a screen pixel here, so the near drops are timed off that same
              rate and land a little quicker, being nearer. Timed by feel instead they came
              out four times slower than the rain over the ridgeline, which is what made a
              long one read as a slash drawn across the picture rather than as a drop. Long
              and quick is a raindrop. Long and slow is a scratch. */
-          const len=(20+nrK*20)*(.75+nr()*.5),travel=span+len;
+          const len=clamp(step*2.6,22,Math.min(64,span*.72))*(.85+nr()*.3),travel=span+len;
           const d=travel*nrFall/968*(.9+nr()*.2);
-          return `<path class="nearrain" d="M ${(-34+nr()*(W+68)).toFixed(1)} ${(nrTop-len).toFixed(1)} l ${(len*nrTan).toFixed(1)} ${len.toFixed(1)}" opacity="${(.38+nrK*.24+nr()*.13).toFixed(2)}" style="--nx:${(travel*nrTan).toFixed(0)}px;--ny:${travel.toFixed(0)}px;animation-duration:${d.toFixed(2)}s;animation-delay:-${(nr()*d).toFixed(2)}s"/>`;
+          const tx=-34+(i+.15+nr()*.7)*slot,ty=nrTop-len,hx=tx+len*nrTan,nx=cs,ny=-nrTan*cs,tw=.15;
+          const P=(x,y)=>`${x.toFixed(1)} ${y.toFixed(1)}`;
+          return `<path class="nearrain" d="M ${P(tx+nx*tw,ty+ny*tw)} L ${P(hx+nx*hw,nrTop+ny*hw)} A ${hw.toFixed(2)} ${hw.toFixed(2)} 0 0 1 ${P(hx-nx*hw,nrTop-ny*hw)} L ${P(tx-nx*tw,ty-ny*tw)} Z" opacity="${(.38+nrK*.24+nr()*.13).toFixed(2)}" style="--nx:${(travel*nrTan).toFixed(0)}px;--ny:${travel.toFixed(0)}px;animation-duration:${d.toFixed(2)}s;animation-delay:-${(nr()*d).toFixed(2)}s"/>`;
         }).join("")+`</g>`;
     }
 
@@ -1795,10 +1807,11 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
           <stop offset="0" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity="0"/>
           <stop offset=".55" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity=".34"/>
           <stop offset="1" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity=".06"/></linearGradient>
-        ${nearRain?`<linearGradient id="ridgerainfade" gradientUnits="userSpaceOnUse" x1="0" y1="${nrTop.toFixed(1)}" x2="0" y2="${(nrTop+26).toFixed(1)}">
-          <stop offset="0" stop-color="#000000"/><stop offset="1" stop-color="#FFFFFF"/></linearGradient>
-        <mask id="ridgerain" maskUnits="userSpaceOnUse" x="0" y="${nrTop.toFixed(1)}" width="${W}" height="${(H-nrTop+10).toFixed(1)}">
-          <rect x="0" y="${nrTop.toFixed(1)}" width="${W}" height="${(H-nrTop+10).toFixed(1)}" fill="url(#ridgerainfade)"/></mask>`:""}
+        ${nearRain?`<linearGradient id="ridgerainfade" gradientUnits="userSpaceOnUse" x1="0" y1="${nrTop.toFixed(1)}" x2="0" y2="${nrLand.toFixed(1)}">
+          <stop offset="0" stop-color="#000000"/><stop offset="${(26/(nrLand-nrTop)).toFixed(3)}" stop-color="#FFFFFF"/>
+          <stop offset="${((nrLand-16-nrTop)/(nrLand-nrTop)).toFixed(3)}" stop-color="#FFFFFF"/><stop offset="1" stop-color="#000000"/></linearGradient>
+        <mask id="ridgerain" maskUnits="userSpaceOnUse" x="0" y="${nrTop.toFixed(1)}" width="${W}" height="${(nrLand-nrTop).toFixed(1)}">
+          <rect x="0" y="${nrTop.toFixed(1)}" width="${W}" height="${(nrLand-nrTop).toFixed(1)}" fill="url(#ridgerainfade)"/></mask>`:""}
       </defs>
       <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
       ${goldArc}
