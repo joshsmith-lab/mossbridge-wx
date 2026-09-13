@@ -9,12 +9,16 @@ A single-file, build-free PWA. `index.html` is the whole application,
 `sw.js` caches the shell, `manifest.json` makes it installable.
 
 Production is <https://joshsmith-lab.github.io/mossbridge-wx/>, served from
-`main`, and it is shared with family. Three locations live in the `LOCS` table:
+`main`, and it is shared with family. The `LOCS` table holds
 `mb` (Moss Bridge Ct, Porters Neck NC, coastal, gets marine + tides + tropics)
-and `sp` (Bob Plumley Rd, Shady Spring WV, inland) are permanent family places.
-`den` is the rotating travel entry, currently Denver. Give the next destination a
-new unique id and update `LOC_ORDER`; reusing `den` would briefly show cached Denver
-weather under the new place name.
+and `sp` (Bob Plumley Rd, Shady Spring WV, inland), the permanent family places.
+`den` was the travel entry for the Denver trip. The trip is over, so it is
+**parked**: still in `LOCS`, with its Front Range scene and the "What to wear" card,
+as the template for the next trip, but out of `LOC_ORDER`, so nobody can tap to it.
+A saved `mbwx-loc` only counts while its id is in `LOC_ORDER`; anything else opens
+at Porters Neck. Give the next destination a new unique id and add it to
+`LOC_ORDER`; reusing `den` would briefly show cached Denver weather under the new
+place name.
 
 ## Ground rules
 
@@ -106,18 +110,19 @@ TZ=America/New_York node tools/scene.mjs          # the picture and its motion
 TZ=America/New_York node tools/scene.mjs fog storm  # just the scenes you are working on
 ```
 
-`tools/shots.mjs` renders thirteen scenarios (day, night, after midnight, storm, dusk,
-the three locations, an afternoon that should recommend today, a washout, a
-shoulder-season moderate-UV day, and three Denver clothing conditions), writes
+`tools/shots.mjs` renders ten scenarios (day, night, after midnight, storm, dusk,
+both family locations, an afternoon that should recommend today, a washout, and a
+shoulder-season moderate-UV day), writes
 screenshots to `tools/shots/` and prints the generated copy, so wording changes
 are reviewable as text.
 
-`tools/scene.mjs` is for anything that moves. Twenty-five scenes force the light
+`tools/scene.mjs` is for anything that moves. Nineteen scenes force the light
 and weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
 clear night, a storm, a fog morning, drizzle against a downpour, freezing rain on
 the coast, a night of rain over the marsh, and the ridge by day, by evening with
 the buck out, in warm rain, on a snow day, on a cold January night and in a night
-downpour, plus Denver in clear, golden, storm, snow, night, and windy conditions.
+downpour. The Denver scenes (and the skyline check) went out with the trip; they are
+in git history before the commit that parked `den`, if the next trip wants a model.
 The ridge night downpour is there on purpose: dark theme, code 82, two rain layers
 and a frog, which is where the animation count goes looking for trouble. It found
 some, which is the point of having it. The marsh night rain is there for the same

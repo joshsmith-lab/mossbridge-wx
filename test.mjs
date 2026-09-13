@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v60/);
+  assert.match(worker, /mbwx-shell-v61/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -526,12 +526,15 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.doesNotMatch(html, />Evening outlook</);
 });
 
-test("Denver is an isolated third travel scene, not a rewrite of either family place", async () => {
+test("Denver is a parked travel scene: kept as the template, out of the rotation", async () => {
   const html = await readFile(new URL("index.html", root), "utf8");
 
   assert.match(html, /den:\{id:"den",addrFull:"Next up · Denver"/);
   assert.match(html, /lat:39\.7392,lon:-104\.9903,scene:"front-range",kind:"trip"/);
-  assert.match(html, /const LOC_ORDER=\["mb","sp","den"\]/);
+  // the trip is over: only the two family places are in the rotation
+  assert.match(html, /const LOC_ORDER=\["mb","sp"\]/);
+  // a phone last left on a parked place opens at home, not on a place it cannot tap back to
+  assert.match(html, /LOC=LOC_ORDER\.includes\(saved\)\?LOCS\[saved\]:LOCS\.mb/);
   assert.match(html, /const nextLoc=\(\)=>LOC_ORDER\[\(LOC_ORDER\.indexOf\(LOC\.id\)\+1\)%LOC_ORDER\.length\]/);
   assert.match(html, /if\(LOC\.scene==="front-range"\)/);
   assert.match(html, /data-species="black-billed-magpie"/);
