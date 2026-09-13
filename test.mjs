@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v62/);
+  assert.match(worker, /mbwx-shell-v63/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -115,7 +115,7 @@ test("loading, cached data and the hourly explorer tell the truth", async () => 
   assert.match(html, /function setupHourlyPeek\(\)/);
   assert.match(html, /e\.key==="ArrowRight"/);
   assert.match(html, /if\(!HOURLY_PEEK\)return/);
-  assert.match(html, /pop>=5\?`\$\{pop\} percent chance of rain`/);
+  assert.match(html, /pop>=5\?`\$\{pop\} percent chance of \$\{kind\}`/);
   assert.match(html, /pointercancel",\(\)=>\{PEEK_TOUCH_X=null/);
   assert.match(html, /id="hourlyPeekLive" aria-live="polite"/);
 
@@ -653,6 +653,78 @@ test("light, motion and alerts stay tuned", async () => {
   // the water card is named for the water Josh actually runs
   assert.match(html, /On the water · Figure 8/);
   assert.doesNotMatch(html, /On the water · Mason Inlet/);
+});
+
+
+test("expired alerts disappear and the strongest active warning owns the outdoor card", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const code = html.slice(html.indexOf("function activeAlerts("), html.indexOf("function renderAlerts("));
+  const ctx = vm.createContext({});
+  vm.runInContext(code, ctx);
+  const now = Date.parse("2026-09-13T15:00:00Z");
+  const warning = (event, severity, expires) => ({event,severity,expires});
+  const expired = warning("Severe Thunderstorm Warning","Severe","2026-09-13T14:59:00Z");
+  const watch = warning("Tornado Watch","Extreme","2026-09-13T16:00:00Z");
+  const thunder = warning("Severe Thunderstorm Warning","Severe","2026-09-13T16:00:00Z");
+  const tornado = warning("Tornado Warning","Extreme","2026-09-13T16:00:00Z");
+  const active = ctx.activeAlerts([expired,watch,thunder,tornado],now);
+  assert.equal(active.length,3);
+  assert.equal(ctx.outdoorWarning(active),tornado);
+  assert.equal(ctx.outdoorWarning([watch]),null);
+  assert.equal(ctx.activeAlerts([{...thunder,ends:"2026-09-13T15:00:00Z"}],now).length,0,
+    "an alert that has ended stays ended even if its message expires later");
+  assert.equal(ctx.activeAlerts([{event:"Alert without a stated end"}],now).length,1);
+});
+
+test("out-of-order refreshes cannot repaint or stop a newer request", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const code = html.slice(html.indexOf("let REFRESH_ID=0;"), html.indexOf("\nconst SWAP="));
+  const pending=[],paints=[],writes=[],nodes=new Map();
+  const node = id => {
+    if(!nodes.has(id)){
+      const classes=new Set(),attrs=new Map();
+      nodes.set(id,{textContent:"",attrs,classList:{add:v=>classes.add(v),remove:v=>classes.delete(v),contains:v=>classes.has(v)},setAttribute:(k,v)=>attrs.set(k,v)});
+    }
+    return nodes.get(id);
+  };
+  const home={id:"mb",lat:34,lon:-77,tz:"America/New_York"};
+  const farm={id:"sp",lat:37,lon:-80,tz:"America/New_York"};
+  const ctx=vm.createContext({
+    LOC:home,document:{getElementById:node},navigator:{onLine:true},
+    fetchJSON:url=>url.includes("open-meteo.com")
+      ?new Promise((resolve,reject)=>pending.push({resolve,reject}))
+      :Promise.resolve({features:[]}),
+    render:(data,live)=>paints.push({temp:data.current.temperature_2m,live}),
+    writeCache:(id,data)=>writes.push({id,temp:data.current.temperature_2m}),
+    readCache:()=>null,paintLoadingState:()=>{node("stamp").textContent="loading";},
+  });
+  vm.runInContext(code,ctx);
+  const forecast = temp => ({
+    current:{time:"2026-09-13T11:00",temperature_2m:temp},daily:{},
+    hourly:Object.fromEntries(["time","temperature_2m","apparent_temperature","precipitation_probability","weather_code","wind_speed_10m","wind_gusts_10m","uv_index"]
+      .map(k=>[k,[k==="time"?"2026-09-13T11:00":temp]])),
+  });
+  const first=ctx.refresh(),second=ctx.refresh();
+  pending[0].resolve(forecast(61));await first;
+  assert.equal(paints.length,0);
+  assert.equal(node("refreshBtn").classList.contains("spin"),true);
+  pending[1].resolve(forecast(72));await second;
+  assert.equal(paints.at(-1).temp,72);
+  assert.equal(node("refreshBtn").attrs.get("aria-busy"),"false");
+
+  const oldHome=ctx.refresh();
+  ctx.LOC=farm;const farmRequest=ctx.refresh();
+  ctx.LOC=home;const newHome=ctx.refresh();
+  pending[4].resolve(forecast(84));await newHome;
+  pending[2].resolve(forecast(63));pending[3].reject(new Error("offline"));
+  await Promise.all([oldHome,farmRequest]);
+  assert.deepEqual(paints.map(p=>p.temp),[72,84],"home-farm-home must not revive the old home request");
+  assert.deepEqual(writes.map(w=>w.temp),[72,84],"only accepted responses enter the cache");
+
+  const failure=ctx.refresh();pending[5].reject(new Error("offline"));await failure;
+  assert.equal(node("stamp").textContent,"unavailable");
+  assert.match(node("verdict").textContent,/Tap the timestamp to try again/);
+  assert.equal(node("refreshBtn").classList.contains("spin"),false);
 });
 
 test("installable assets exist", async () => {

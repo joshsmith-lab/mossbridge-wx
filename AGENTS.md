@@ -67,37 +67,16 @@ place name.
 
 ## Deploying
 
-**`git push` works from an agent session on Josh's Mac now.** `credential.helper`
-is set to `osxkeychain` and the keychain holds a working credential; a
-`git push --dry-run` to a throwaway branch confirms it in a couple of seconds
-and creates nothing. Push the feature branch normally.
+GitHub CLI (`gh`) is installed on WorkMacPro and signed in as `joshsmith-lab`.
+Push the feature branch, create the PR with `gh pr create`, and check its CI with
+`gh pr checks`. Use a body file for the PR description. For an authorized live
+update, merge the PR after checks pass, then verify both the served HTML and
+`sw.js` on the Pages URL before calling it live. Never push straight to `main`.
 
-`gh` is still absent, so the pull request itself has to be opened in the
-browser. Push the branch, then hand Josh the compare URL:
-`https://github.com/joshsmith-lab/mossbridge-wx/compare/main...<branch>?expand=1`.
-
-A cloud session's own GitHub token still has no access to this repo, and the
-browser route below is still the fallback if the keychain credential is ever
-revoked:
-
-1. Open `https://github.com/joshsmith-lab/mossbridge-wx/edit/main/<file>`.
-2. Do **not** rely on synthetic `cmd+a` / `cmd+v` from the browser extension.
-   It works sometimes and silently stops working after the extension
-   reconnects, leaving the Commit button greyed out with no error.
-3. Instead, run this in the page:
-   - `fetch` the current file from `raw.githubusercontent.com` (reachable from
-     the edit page; `localhost` is not, CSP blocks it),
-   - apply your change as a string replace in JS,
-   - dispatch a synthetic `keydown` for `cmd+a` on `.cm-content` (CodeMirror
-     honours untrusted events), then a synthetic `paste` `ClipboardEvent`
-     carrying a `DataTransfer` with the new text.
-4. In the commit dialog choose **Create a new branch and start a pull request**.
-5. Verify before declaring victory: fetch `origin` and diff the pushed file
-   against your local copy byte for byte. A UTF-8 round trip once mangled every
-   `°`, `·` and `—` in the file and it was invisible in the diff view.
-
-If you do use the clipboard, `pbcopy` needs `LANG=en_US.UTF-8` or it encodes as
-MacRoman and corrupts every multi-byte character.
+If authentication fails, check `gh auth status`; do not assume a different Mac's
+keychain is available here. `gh auth login` followed by `gh auth setup-git` restores
+the CLI route. The browser remains a fallback, but preserve UTF-8 and verify that
+the resulting files match the reviewed local copies.
 
 ## Verifying visually
 
@@ -309,6 +288,34 @@ Established with Josh and enforced by `test.mjs`:
   pond's extra rise rings during a window read the same moon as the card, and
   the windows disappear under a warned storm so they never read as an
   invitation to stand in a thunderstorm with a rod.
+
+## Interaction and reading refinements
+
+- The hourly tooltip is measured against the visible scroll area, not the full
+  820-unit chart. Keep its intrinsic width independent of its current position
+  (`width:max-content`), or moving from a short reading to a long one at an edge
+  measures the old constrained width and clips the next reading. Its background
+  is opaque so the chart's text cannot show through.
+- Hour labels, night shading, golden-hour shading, and forecast samples share one
+  horizontal scale. The right edge is the final sample's time, not an extra hour
+  beyond it. Snow and freezing rain keep their names in the hourly readout.
+- Display the actual temperature immediately. Counting through other readings
+  added motion to the numbers and let an old animation overwrite a new location.
+- Only the latest refresh can paint, cache, or end the busy state. Checking the
+  location alone misses home → farm → home while the first request is still in
+  flight. A failed first load ends its loading state and offers the timestamp as
+  retry; a failed refresh with a valid cache keeps the reading and shows its age.
+- Filter expired alerts before rendering them or using them for lightning and
+  outdoor advice. Active severe/extreme warnings take precedence over an otherwise
+  pleasant outdoor reading and suppress fishing/best-window invitations. Include
+  the NWS instruction text in the expanded alert; do not invent an instruction.
+- Small labels need enough ink on both the plain paper and the tinted evening
+  paper. Keep long condition names wrappable beside three-digit temperatures.
+
+`tools/interactions.mjs` checks narrow and wide chart edges, keyboard navigation,
+location switching, snow/ice labels, warning expiry, source instructions, retry,
+and cached/online recovery. Run it with the same font and browser settings as
+`tools/shots.mjs`. Request ordering and alert expiry also run in `node --test test.mjs`.
 
 ## Known issues
 

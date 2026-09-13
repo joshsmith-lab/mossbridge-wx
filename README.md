@@ -20,6 +20,7 @@ mocked upstream data and a fixed clock:
 ```sh
 npm i playwright && npx playwright install chromium
 TZ=America/New_York node tools/shots.mjs
+TZ=America/New_York node tools/interactions.mjs
 ```
 
 See [AGENTS.md](AGENTS.md) for the deploy route, the design principles behind

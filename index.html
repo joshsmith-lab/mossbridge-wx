@@ -18,7 +18,7 @@
 <style>
 :root{
   --paper:#FAFAF6; --raised:#FFFFFF;
-  --ink:#16303B; --ink-soft:#41596A; --ink-faint:#7E939E;
+  --ink:#16303B; --ink-soft:#41596A; --ink-faint:#506A77;
   --line:#E3E7E1; --wash:#EFF2ED;
   --marker:#C7431F; --marker-soft:#F5E1DA;
   --water:#3E7CA6; --water-soft:#BFD7E4;
@@ -31,7 +31,7 @@
 }
 html[data-theme=dark]{
   --paper:#0C1F28; --raised:#122B36;
-  --ink:#E9F0EE; --ink-soft:#A6BCC6; --ink-faint:#6C8794;
+  --ink:#E9F0EE; --ink-soft:#A6BCC6; --ink-faint:#829CA9;
   --line:#1C3844; --wash:#132C36;
   --marker:#F0774E; --marker-soft:#33231F;
   --water:#7FB0C9; --water-soft:#1B3B4A;
@@ -353,6 +353,7 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .spin .live-dot::after{animation:none;opacity:0}
 .cached .live-dot{animation:none;opacity:.55}
 .cached .live-dot::after{animation:none;opacity:0}
+.unavailable .live-dot{display:none}
 
 /* last baseline: the bottom meta line sits on the same line as the numerals, at any size */
 .now{display:flex;align-items:last baseline;gap:14px;margin-top:24px}
@@ -363,8 +364,10 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
    to the degree sign instead of to the digits, wedging it 35-55px low. */
 .deg{font-size:.28em;font-weight:400;line-height:1;letter-spacing:normal;opacity:.5;
   display:inline-block;vertical-align:baseline;position:relative;top:-2.02em;margin-left:.1em}
-.now-meta{font-family:var(--mono);font-size:12.5px;opacity:.9}
+.now-meta{font-family:var(--mono);font-size:12.5px;opacity:.9;min-width:0;flex:1}
+.big-temp{flex:0 0 auto}
 .now-meta div{margin-bottom:5px;white-space:nowrap}
+#condLabel{white-space:normal;text-wrap:pretty}
 .now-meta div:last-child{margin-bottom:0}
 .now-meta b{font-weight:600}
 .verdict{margin:20px 0 2px;font-size:clamp(19px,5.1vw,27px);font-weight:550;letter-spacing:-.018em;
@@ -422,9 +425,9 @@ section{padding:28px 20px 0}
 .hourly-inner:focus-visible{outline:2px solid var(--water);outline-offset:-2px;border-radius:8px}
 .hourly-inner svg{display:block;width:100%;height:auto}
 .hourly-peek{position:absolute;z-index:3;top:2px;left:var(--peek-label-x,50%);transform:translateX(-50%);
-  display:flex;align-items:baseline;gap:6px;white-space:nowrap;pointer-events:none;
+  width:max-content;
+  display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:6px;white-space:nowrap;pointer-events:none;
   padding:5px 9px;border:1px solid var(--line);border-radius:999px;background:var(--paper);
-  background:color-mix(in srgb,var(--paper) 92%,transparent);
   box-shadow:0 5px 18px rgba(9,34,43,.09);font-family:var(--mono);font-size:10.5px;color:var(--ink-soft)}
 .hourly-peek b{font-size:12px;color:var(--ink);font-weight:650}
 .hourly-peek .feels.warm{color:var(--heat)}.hourly-peek .feels.cold{color:var(--water)}
@@ -433,9 +436,9 @@ section{padding:28px 20px 0}
 .hourly-cursor::after{content:"";position:absolute;left:-4px;top:calc(var(--peek-y,60px) - 22px);
   width:7px;height:7px;border-radius:50%;background:var(--paper);border:1.8px solid var(--ink)}
 .hourly-peek[hidden],.hourly-cursor[hidden]{display:none}
-.hr-labels{display:grid;grid-template-columns:repeat(24,1fr);min-width:820px;font-family:var(--mono);
+.hr-labels{position:relative;min-width:820px;height:15px;font-family:var(--mono);
   font-size:10px;color:var(--ink-faint);margin-top:7px}
-.hr-labels span{text-align:center}
+.hr-labels span{position:absolute;transform:translateX(-50%);text-align:center}
 .hr-labels .mark{color:var(--marker);font-weight:600}
 .tide-svg{display:block;width:100%;height:auto}
 @keyframes bob{from{transform:rotate(calc(var(--rock,2.6deg) * -1)) translateY(.6px)}to{transform:rotate(var(--rock,2.6deg)) translateY(-.6px)}}
@@ -587,7 +590,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   <div class="eyebrow"><b>Next 24 hours</b><span id="hourlyNote"></span></div>
   <div class="hourly-scroll">
     <div class="hourly-inner" id="hourlyExplore" role="group" tabindex="0" aria-label="Hourly forecast. Use left and right arrow keys to explore.">
-      <svg id="hourlySvg" viewBox="0 0 820 144" xmlns="http://www.w3.org/2000/svg" aria-label="Hourly temperature and rain chance"></svg>
+      <svg id="hourlySvg" viewBox="0 0 820 144" xmlns="http://www.w3.org/2000/svg" aria-label="Hourly temperature and precipitation chance"></svg>
       <div class="hourly-cursor" id="hourlyCursor" hidden></div>
       <div class="hourly-peek" id="hourlyPeek" hidden><span id="peekTime"></span><b id="peekTemp"></b><span class="feels" id="peekFeels"></span><span id="peekRain"></span></div>
     </div>
@@ -2185,9 +2188,19 @@ function alertGist(a){
   const stop=cut.lastIndexOf(". ");
   return[{k:"",v:(stop>90?cut.slice(0,stop+1):cut)+(plain.length>260&&stop<=90?"…":"")}];
 }
+function activeAlerts(alerts,now=Date.now()){
+  return (alerts||[]).filter(a=>{
+    const end=Date.parse(a.ends||a.expires||"");
+    return !Number.isFinite(end)||end>now;
+  });
+}
+function outdoorWarning(alerts){
+  const warnings=alerts.filter(a=>/warning/i.test(a.event||""));
+  return warnings.find(a=>a.severity==="Extreme")||warnings.find(a=>a.severity==="Severe")||null;
+}
 function renderAlerts(alerts){
   const el=document.getElementById("alertStrip");
-  if(!alerts||!alerts.length){el.className="alert-strip";el.innerHTML="";el.removeAttribute("role");el.removeAttribute("tabindex");return}
+  if(!alerts||!alerts.length){el.className="alert-strip";el.innerHTML="";el.removeAttribute("role");el.removeAttribute("tabindex");el.removeAttribute("aria-expanded");el.dataset.open="0";return}
   const sev={Extreme:0,Severe:1,Moderate:2,Minor:3};
   const sorted=[...alerts].sort((x,y)=>(sev[x.severity]??4)-(sev[y.severity]??4));
   const a=sorted[0];
@@ -2197,8 +2210,9 @@ function renderAlerts(alerts){
   if(alerts.length>1)t+=" · +"+(alerts.length-1)+" more";
   const gist=alertGist(a);
   const others=sorted.slice(1).map(o=>o.event);
-  const body=gist.length||others.length
+  const body=gist.length||others.length||a.inst
     ?`<div class="alert-body">${gist.map(g=>`<p>${g.k?`<b>${g.k}</b> `:""}${esc(g.v)}</p>`).join("")}
+       ${a.inst?`<p><b>What to do</b> ${esc(a.inst)}</p>`:""}
        ${others.length?`<p class="alert-more">also active: ${esc(others.join(", "))}</p>`:""}</div>`
     :"";
   el.innerHTML=`<span class="alert-head">${esc(t)}${body?'<span class="alert-caret" aria-hidden="true"></span>':""}</span>${body}`;
@@ -2207,7 +2221,7 @@ function renderAlerts(alerts){
     el.setAttribute("role","button");el.setAttribute("tabindex","0");
     el.setAttribute("aria-expanded",el.dataset.open==="1"?"true":"false");
     if(el.dataset.open==="1")el.classList.add("open");
-  }else{el.removeAttribute("role");el.removeAttribute("tabindex")}
+  }else{el.removeAttribute("role");el.removeAttribute("tabindex");el.removeAttribute("aria-expanded")}
 }
 const esc=s=>String(s).replace(/[&<>"]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
 function toggleAlert(){
@@ -2368,19 +2382,9 @@ function renderTides(preds,css,gust){
 /* points into the wind, the way a rooftop vane does, so it agrees with the "from SW" beside it */
 const vane=deg=>`<svg class="vane" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><g transform="rotate(${Math.round(((Number(deg)||0)%360+360)%360)} 6 6)"><path d="M6 1.5 L6 10.5 M3.6 4.3 L6 1.5 L8.4 4.3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g></svg>`;
 
-/* ── count-up ───────────────────────────────────────── */
-let animRun=0;
-function countTo(el,val){
-  const target=Math.round(val);
-  if(PRM||el.dataset.v===String(target)){el.dataset.v=target;el.innerHTML=target+'<span class="deg">°</span>';return}
-  el.dataset.v=target;
-  const id=++animRun,from=Math.max(0,target-9),t0=performance.now();
-  (function step(t){
-    if(id!==animRun)return;
-    const k=clamp((t-t0)/620,0,1),e=1-Math.pow(1-k,3);
-    el.innerHTML=Math.round(from+(target-from)*e)+'<span class="deg">°</span>';
-    if(k<1)requestAnimationFrame(step);
-  })(t0);
+/* Keep the reading steady, including when switching places during a refresh. */
+function paintTemperature(el,val){
+  el.innerHTML=Math.round(val)+'<span class="deg">°</span>';
 }
 
 /* ── the headline: what the day will actually feel like ─ */
@@ -2629,14 +2633,14 @@ function hourlyPeekIndex(clientX){
 function showHourlyPeek(i,announce=false){
   if(!HOURLY_PEEK)return;
   clearTimeout(PEEK_HIDE);
-  const {h,x,y}=HOURLY_PEEK,n=h.time.length;
+  const {h}=HOURLY_PEEK,n=h.time.length;
   PEEK_I=clamp(i,0,n-1);
   const temp=Math.round(Number(h.temp[PEEK_I]));
   const rawFeel=h.feels?.[PEEK_I];
   const apparent=rawFeel==null?NaN:Number(rawFeel);
   const feels=Number.isFinite(apparent)?Math.round(apparent):temp;
   const showFeels=Math.abs(feels-temp)>=3;
-  const pop=Math.round(Number(h.pop[PEEK_I])||0);
+  const pop=Math.round(Number(h.pop[PEEK_I])||0),kind=precipKind(h.code?.[PEEK_I]);
   const time=PEEK_I===0?"now":hh(h.time[PEEK_I]);
   const peek=document.getElementById("hourlyPeek"),cursor=document.getElementById("hourlyCursor");
   document.getElementById("peekTime").textContent=time;
@@ -2644,19 +2648,28 @@ function showHourlyPeek(i,announce=false){
   const feelEl=document.getElementById("peekFeels");
   feelEl.hidden=!showFeels;feelEl.textContent=showFeels?"feels "+feels+"°":"";
   feelEl.className="feels "+(feels>=temp?"warm":"cold");
-  document.getElementById("peekRain").textContent=pop>=5?"rain "+pop+"%":"dry";
-  const px=x[PEEK_I],labelX=clamp(px,112,708);
-  for(const el of [peek,cursor]){
-    el.style.setProperty("--peek-x",px.toFixed(1)+"px");
-    el.style.setProperty("--peek-y",y[PEEK_I].toFixed(1)+"px");
-    el.style.setProperty("--peek-label-x",labelX.toFixed(1)+"px");
-    el.hidden=false;
-  }
+  document.getElementById("peekRain").textContent=pop>=5?kind+" "+pop+"%":"dry";
+  peek.hidden=false;cursor.hidden=false;
+  positionHourlyPeek();
   if(announce){
     const spokenTime=PEEK_I===0?"Now":clock12(new Date(h.time[PEEK_I]));
     document.getElementById("hourlyPeekLive").textContent=
-      `${spokenTime}, ${temp} degrees${showFeels?`, feels like ${feels}`:""}, ${pop>=5?`${pop} percent chance of rain`:"dry"}`;
+      `${spokenTime}, ${temp} degrees${showFeels?`, feels like ${feels}`:""}, ${pop>=5?`${pop} percent chance of ${kind}`:"dry"}`;
   }
+}
+const precipKind=code=>isIce(code)?"freezing rain":isSnow(code)?"snow":"rain";
+function positionHourlyPeek(){
+  if(!HOURLY_PEEK||document.getElementById("hourlyPeek").hidden)return;
+  const peek=document.getElementById("hourlyPeek"),cursor=document.getElementById("hourlyCursor");
+  const chart=document.getElementById("hourlyExplore").getBoundingClientRect();
+  const view=document.querySelector(".hourly-scroll").getBoundingClientRect();
+  const left=Math.max(0,view.left-chart.left)+8,right=Math.min(chart.width,view.right-chart.left)-8;
+  const scale=chart.width/820,px=HOURLY_PEEK.x[PEEK_I]*scale;
+  peek.style.maxWidth=Math.max(0,right-left)+"px";
+  const half=peek.offsetWidth/2;
+  peek.style.setProperty("--peek-label-x",clamp(px,left+half,right-half).toFixed(1)+"px");
+  cursor.style.setProperty("--peek-x",px.toFixed(1)+"px");
+  cursor.style.setProperty("--peek-y",(HOURLY_PEEK.y[PEEK_I]*scale).toFixed(1)+"px");
 }
 function setupHourlyPeek(){
   const svg=document.getElementById("hourlySvg"),explore=document.getElementById("hourlyExplore");
@@ -2678,18 +2691,22 @@ function setupHourlyPeek(){
   svg.addEventListener("pointercancel",()=>{PEEK_TOUCH_X=null;hideHourlyPeek(1000)});
   scroller.addEventListener("scroll",()=>{
     if(PEEK_TOUCH_X!==null){showHourlyPeek(hourlyPeekIndex(PEEK_TOUCH_X));hideHourlyPeek(1000)}
+    else positionHourlyPeek();
   },{passive:true});
   scroller.addEventListener("touchend",()=>{PEEK_TOUCH_X=null;hideHourlyPeek(1400)},{passive:true});
   explore.addEventListener("keydown",e=>{
     if(!HOURLY_PEEK)return;
+    if(e.key==="Escape"){e.preventDefault();hideHourlyPeek();return}
     let next=PEEK_I;
     if(e.key==="ArrowRight")next++;
     else if(e.key==="ArrowLeft")next--;
     else if(e.key==="Home")next=0;
     else if(e.key==="End")next=(HOURLY_PEEK?.h.time.length||1)-1;
     else return;
-    e.preventDefault();showHourlyPeek(next,true);
-    scroller.scrollLeft=clamp(HOURLY_PEEK.x[PEEK_I]-scroller.clientWidth/2,0,scroller.scrollWidth-scroller.clientWidth);
+    e.preventDefault();
+    next=clamp(next,0,HOURLY_PEEK.h.time.length-1);
+    scroller.scrollLeft=clamp(HOURLY_PEEK.x[next]-scroller.clientWidth/2,0,scroller.scrollWidth-scroller.clientWidth);
+    showHourlyPeek(next,true);
   });
   explore.addEventListener("blur",()=>hideHourlyPeek());
 }
@@ -2702,6 +2719,7 @@ function cacheAgeText(savedAt){
 }
 function render(d,live,savedAt=0){
   const c=d.current,dy=d.daily,h=d.hourly,m=d.marine;
+  const alerts=activeAlerts(d.alerts),warning=outdoorWarning(alerts);
   syncClock();
   const now=wallNow(), sunrise=new Date(dy.sunrise[0]), sunset=new Date(dy.sunset[0]);
   const sp=sunPos(now), altDeg=sp.alt*180/Math.PI;
@@ -2719,7 +2737,7 @@ function render(d,live,savedAt=0){
   const isTS=v=>[95,96,99].includes(Number(v));
   THUNDER=storm?2
     :((h?.code||[]).slice(0,3).some(isTS)
-      ||(d.alerts||[]).some(a=>/thunderstorm\s+warning/i.test(a.event||"")))?1:0;
+      ||alerts.some(a=>/thunderstorm\s+warning/i.test(a.event||"")))?1:0;
 
   /* theme */
   document.documentElement.setAttribute("data-theme",dark?"dark":"light");
@@ -2756,7 +2774,8 @@ function render(d,live,savedAt=0){
 
   document.getElementById("stamp").textContent=live?"live · "+clock12(new Date(c.time))+" "+LOC.tzLabel:cacheAgeText(savedAt||new Date(c.time).getTime());
   document.getElementById("refreshBtn").classList.toggle("cached",!live);
-  countTo(document.getElementById("bigTemp"),c.temperature_2m);
+  document.getElementById("refreshBtn").classList.remove("unavailable");
+  paintTemperature(document.getElementById("bigTemp"),c.temperature_2m);
   document.getElementById("condLabel").textContent=WMO[c.weather_code]||"—";
   document.getElementById("feels").textContent=Math.round(c.apparent_temperature)+"°";
   document.getElementById("hiNow").textContent=Math.round(dy.temperature_2m_max[0])+"°";
@@ -2788,7 +2807,7 @@ function render(d,live,savedAt=0){
 
   /* real golden-light windows, softly washed onto the same timeline */
   const timelineStart=new Date(h.time[0]).getTime();
-  const timelineEnd=new Date(h.time[n-1]).getTime()+3.6e6;
+  const timelineEnd=new Date(h.time[n-1]).getTime();
   const xTime=ms=>pad+(ms-timelineStart)/(timelineEnd-timelineStart)*(W-2*pad);
   const goldWindows=[];
   for(let i=0;i<Math.min(2,dy.time.length);i++){
@@ -2861,7 +2880,7 @@ function render(d,live,savedAt=0){
       dots+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(h.temp[i]).toFixed(1)}" r="2" fill="${tempColor(h.temp[i])}" opacity=".8"/>
       <text x="${X(i).toFixed(1)}" y="${(Y(h.temp[i])-9).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="10" fill="${css.soft}" ${halo}>${Math.round(h.temp[i])}°</text>`;
     }
-    labels+=`<span class="${i===0?"mark":""}">${i===0?"NOW":i%3===0?hh(h.time[i]):""}</span>`;
+    labels+=`<span class="${i===0?"mark":""}" style="left:${(X(i)/W*100).toFixed(3)}%">${i===0?"NOW":i%3===0?hh(h.time[i]):""}</span>`;
   }
   const gstops=h.temp.map((t,i)=>`<stop offset="${(i/(n-1)*100).toFixed(1)}%" stop-color="${tempColor(t)}"/>`).join("");
   document.getElementById("hourlySvg").innerHTML=`
@@ -2901,7 +2920,7 @@ function render(d,live,savedAt=0){
   document.getElementById("hrLabels").innerHTML=labels;
   document.getElementById("tideSection").style.display=LOC.tide?"":"none";
   const tide=LOC.tide?renderTides(d.tides,css,c.wind_gusts_10m):null;
-  renderAlerts(d.alerts);
+  renderAlerts(alerts);
   renderNowcast(d.nowcast);
   renderStorms(d.storms);
 
@@ -2919,7 +2938,7 @@ function render(d,live,savedAt=0){
   document.getElementById("wTideWrap").style.display=coastal?"":"none";
   /* the almanac's bite windows, farm only, and never during a warned storm: a bite time
      printed under a thunderstorm warning reads as an invitation */
-  const fishOn=!!LOC.fish&&!storm;
+  const fishOn=!!LOC.fish&&!storm&&!warning;
   document.getElementById("wFishWrap").style.display=fishOn?"":"none";
   if(fishOn){
     const wins=solunarWindows(now).filter(w=>w.end>now).slice(0,2);
@@ -2935,7 +2954,7 @@ function render(d,live,savedAt=0){
     else if(wv===null){wMsg="I don't have a reliable marine reading right now. Check conditions before heading out.";wCls="caution"}
     else if(g>=30||wv>=5){wMsg="Too rough for an easy small-boat day. Wait it out or stay well inside.";wCls="no"}
     else if(g>=22||wv>=3){wMsg="Breezy and choppy. The ICW should be kinder than the inlet.";wCls="caution"}
-    else{wMsg="An easy day on the water: light wind, manageable seas.";wCls="go"}
+    else{wMsg=now<sunrise||now>=sunset?"Light wind and manageable seas tonight.":"An easy day on the water: light wind, manageable seas.";wCls="go"}
     if(wv!==null&&tide&&wCls!=="no"){
       const mins=(tide.next.time-now)/6e4;
       if(mins<75)wMsg+=tide.rising?" High tide is near "+clock(tide.next.time)+", making the inlet easier.":" Low tide is near "+clock(tide.next.time)+", so mind the shoals.";
@@ -2946,13 +2965,13 @@ function render(d,live,savedAt=0){
   }else if(LOC.kind==="farm"){
     let dayPop=0;
     for(let i=0;i<n;i++){const hr=+h.time[i].slice(11,13);if(hr>=7&&hr<=19)dayPop=Math.max(dayPop,h.pop[i])}
-    if(g>=30){wMsg="Wind-whipped up here. Save the outside chores for tomorrow.";wCls="no"}
-    else if(g>=22){wMsg="Blustery afternoon coming. Get outdoor work done early.";wCls="caution"}
+    if(g>=30){wMsg="Wind-whipped up here. Outside chores can wait.";wCls="no"}
+    else if(g>=22){wMsg="Blustery up here. Plan around the gusts.";wCls="caution"}
     else if(isIce(c.weather_code)){wMsg="Ice, not snow. Stay off the hill until it turns over.";wCls="no"}
     else if(isSnow(c.weather_code)){wMsg="Snow coming down. Feed early and keep a path open.";wCls="caution"}
     else if(dayPop>=50){wMsg="Showers moving through. Slip outside between them.";wCls="caution"}
     else if(c.temperature_2m<=36){wMsg="Cold one. Bundle up for the morning rounds.";wCls="caution"}
-    else{wMsg="Good day to be outside. Light wind, easy air.";wCls="go"}
+    else{wMsg=now<sunrise||now>=sunset?"A quiet night around the farm. Light wind, easy air.":"Good day to be outside. Light wind, easy air.";wCls="go"}
   }else{
     let dayPop=0;
     for(let i=0;i<n;i++){const hr=+h.time[i].slice(11,13);if(hr>=7&&hr<=20)dayPop=Math.max(dayPop,h.pop[i])}
@@ -2964,6 +2983,9 @@ function render(d,live,savedAt=0){
     else if(c.apparent_temperature<=40){wMsg="Cold, but manageable in the right layers.";wCls="caution"}
     else{wMsg="Good walking weather. Light wind, easy air.";wCls="go"}
   }
+  // Current warnings take precedence over the otherwise pleasant wind and rain reading.
+  if(warning){wMsg=warning.event+". See the alert above.";wCls="no"}
+  else if(storm){wMsg="Thunderstorms now.";wCls="no"}
   wl.textContent=wMsg;wl.className="lead "+wCls;
   document.getElementById("wWind").innerHTML=vane(c.wind_direction_10m)+dirTxt(c.wind_direction_10m)+" "+Math.round(c.wind_speed_10m)+" mph";
   document.getElementById("wGust").textContent=g+" mph";
@@ -2973,7 +2995,7 @@ function render(d,live,savedAt=0){
      already says it, and the house rule is that if something has been said, do not say it
      again. On the water it stays "best window", which is the language for a boat. */
   document.getElementById("wWindowLbl").textContent=LOC.windowLabel;
-  document.getElementById("wWindow").textContent=dayRead.best?dayRead.best.text
+  document.getElementById("wWindow").textContent=warning?"Warning in effect":storm?"Thunderstorms now":dayRead.best?dayRead.best.text
     :coastal?"No clear window":LOC.kind==="farm"?"Not really today":"No easy stretch today";
 
   /* uv */
@@ -3099,9 +3121,12 @@ async function fetchJSON(url,timeoutMs=7000){
     return await response.json();
   }finally{clearTimeout(timer)}
 }
+let REFRESH_ID=0;
 async function refresh(){
-  const L=LOC, btn=document.getElementById("refreshBtn");
+  const request=++REFRESH_ID,L=LOC,btn=document.getElementById("refreshBtn");
   btn.classList.add("spin");
+  btn.setAttribute("aria-busy","true");
+  btn.setAttribute("aria-label","Refreshing weather");
   try{
     const yest=new Date(Date.now()-864e5);
     const bd=yest.toLocaleDateString("en-CA",{timeZone:L.tz}).replace(/-/g,"");
@@ -3126,15 +3151,28 @@ async function refresh(){
       pop:wj.hourly.precipitation_probability.slice(i0,i0+24),code:wj.hourly.weather_code.slice(i0,i0+24),wind:wj.hourly.wind_speed_10m.slice(i0,i0+24),
       gust:wj.hourly.wind_gusts_10m.slice(i0,i0+24),uv:wj.hourly.uv_index.slice(i0,i0+24)};
     const data={current:wj.current,daily:wj.daily,hourly:s,marine,tides,alerts,storms,nowcast};
-    if(L!==LOC)return;                      /* user switched mid-fetch */
+    if(L!==LOC||request!==REFRESH_ID)return; /* a newer refresh or location change won */
     render(data,true);
     writeCache(L.id,data);
   }catch(e){
-    if(L!==LOC)return;
+    if(L!==LOC||request!==REFRESH_ID)return;
     const cached=readCache(L.id);
     if(cached)render(cached.data,false,cached.savedAt);
-    else document.getElementById("verdict").textContent="No connection and no cached forecast yet. Reopen when you're back online.";
-  }finally{btn.classList.remove("spin")}
+    else{
+      paintLoadingState();
+      btn.classList.add("unavailable");
+      document.getElementById("stamp").textContent=navigator.onLine?"unavailable":"offline";
+      document.getElementById("bigTemp").textContent="—";
+      document.getElementById("condLabel").textContent="No reading";
+      document.getElementById("verdict").textContent="Weather couldn't refresh. Tap the timestamp to try again.";
+    }
+  }finally{
+    if(request===REFRESH_ID){
+      btn.classList.remove("spin");
+      btn.setAttribute("aria-busy","false");
+      btn.setAttribute("aria-label","Refresh weather");
+    }
+  }
 }
 
 const SWAP='<svg width="10" height="10" viewBox="0 0 12 12"><path d="M2.5 4.2h6.2L6.8 2.3M9.5 7.8H3.3l1.9 1.9" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -3187,10 +3225,11 @@ function paintLoadingState(){
   HOURLY_PEEK=null;hideHourlyPeek();LAST=null;
 }
 function setLoc(id){
-  if(LOC.id===id)return;
+  if(!LOC_ORDER.includes(id)||LOC.id===id)return;
   LOC=LOCS[id];LAT=LOC.lat;LON=LOC.lon;
   try{localStorage.setItem("mbwx-loc",id)}catch(e){}
   paintAddr();
+  document.querySelector(".hourly-scroll").scrollLeft=0;
   const cached=readCache(id);
   if(cached)render(cached.data,false,cached.savedAt);
   else paintLoadingState();
@@ -3215,6 +3254,7 @@ document.getElementById("alertStrip").addEventListener("click",toggleAlert);
 document.getElementById("alertStrip").addEventListener("keydown",e=>{
   if(e.key==="Enter"||e.key===" "){e.preventDefault();toggleAlert()}});
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh()});
+addEventListener("online",()=>{if(!document.hidden)refresh()});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
