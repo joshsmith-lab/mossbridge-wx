@@ -107,7 +107,8 @@ for (const cs of cases) {
 
     if (vp.tag === "phone") {
       for (const [sel, suffix] of [[".sky", "hero"], ["#tideSection", "tide"]]) {
-        try { await page.locator(sel).screenshot({ path: path.join(OUT, `${cs.name}-${suffix}.png`) }); } catch {}
+        if (await page.locator(sel).isVisible())
+          await page.locator(sel).screenshot({ path: path.join(OUT, `${cs.name}-${suffix}.png`) });
       }
       try {
         if (await page.locator("#alertStrip.on").count()) {
