@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v64/);
+  assert.match(worker, /mbwx-shell-v65/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -120,7 +120,8 @@ test("loading, cached data and the hourly explorer tell the truth", async () => 
   assert.match(html, /id="hourlyPeekLive" aria-live="polite"/);
   assert.match(html, /\.hourly-scroll\{margin:0;padding:0;overflow:hidden\}/);
   assert.match(html, /\.hourly-inner\{min-width:0;width:100%/);
-  assert.match(html, /viewBox="0 0 820 128"/);
+  assert.match(html, /viewBox="0 0 700 160"/);
+  assert.match(html, /const trendTemp=h\.temp\.map/);
 
   // The two tiny-looking masthead controls remain full touch targets and keyboard operable.
   assert.match(html, /id="locBtn" role="button" tabindex="0"/);
