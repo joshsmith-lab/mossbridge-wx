@@ -2901,7 +2901,7 @@ function render(d,live,savedAt=0){
     ${goldenBands}
     <path d="${area}" fill="url(#tfill)"/>
     ${bars}
-    <path class="tline" d="${line}" fill="none" stroke="url(#tline)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="tline" d="${line}" fill="none" stroke="url(#tline)" stroke-width="2.4" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/>
     ${dots}
     <line x1="${pad}" y1="${base}" x2="${W-pad}" y2="${base}" stroke="${css.line}" stroke-width="1"/>`;
   /* the line draws itself in once, on the first render carrying live data. Not on the
