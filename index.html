@@ -305,9 +305,8 @@ section{padding:28px 20px 0}
 .eyebrow b{color:var(--ink);font-weight:600}
 .eyebrow span{text-align:right;text-transform:none;letter-spacing:.04em}
 
-.hourly-scroll{overflow-x:auto;margin:0 -20px;padding:0 20px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.hourly-scroll::-webkit-scrollbar{display:none}
-.hourly-inner{min-width:820px;position:relative;outline:none}
+.hourly-scroll{margin:0;padding:0;overflow:hidden}
+.hourly-inner{min-width:0;width:100%;position:relative;outline:none}
 .hourly-inner:focus-visible{outline:2px solid var(--water);outline-offset:-2px;border-radius:8px}
 .hourly-inner svg{display:block;width:100%;height:auto}
 .hourly-peek{position:absolute;z-index:3;top:2px;left:var(--peek-label-x,50%);transform:translateX(-50%);
@@ -322,7 +321,7 @@ section{padding:28px 20px 0}
 .hourly-cursor::after{content:"";position:absolute;left:-4px;top:calc(var(--peek-y,60px) - 22px);
   width:7px;height:7px;border-radius:50%;background:var(--paper);border:1.8px solid var(--ink)}
 .hourly-peek[hidden],.hourly-cursor[hidden]{display:none}
-.hr-labels{display:grid;grid-template-columns:repeat(24,1fr);min-width:820px;font-family:var(--mono);
+.hr-labels{display:grid;grid-template-columns:repeat(24,1fr);min-width:0;font-family:var(--mono);
   font-size:10px;color:var(--ink-faint);margin-top:7px}
 .hr-labels span{text-align:center}
 .hr-labels .mark{color:var(--marker);font-weight:600}
@@ -475,8 +474,8 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
 <section>
   <div class="eyebrow"><b>Next 24 hours</b><span id="hourlyNote"></span></div>
   <div class="hourly-scroll">
-    <div class="hourly-inner" id="hourlyExplore" role="group" tabindex="0" aria-label="Hourly forecast. Use left and right arrow keys to explore.">
-      <svg id="hourlySvg" viewBox="0 0 820 144" xmlns="http://www.w3.org/2000/svg" aria-label="Hourly temperature and rain chance"></svg>
+    <div class="hourly-inner" id="hourlyExplore" role="group" tabindex="0" aria-label="24-hour forecast. Use left and right arrow keys to explore each hour.">
+      <svg id="hourlySvg" viewBox="0 0 820 128" xmlns="http://www.w3.org/2000/svg" aria-label="Hourly temperature and rain chance"></svg>
       <div class="hourly-cursor" id="hourlyCursor" hidden></div>
       <div class="hourly-peek" id="hourlyPeek" hidden><span id="peekTime"></span><b id="peekTemp"></b><span class="feels" id="peekFeels"></span><span id="peekRain"></span></div>
     </div>
@@ -2239,7 +2238,6 @@ function showHourlyPeek(i,announce=false){
 }
 function setupHourlyPeek(){
   const svg=document.getElementById("hourlySvg"),explore=document.getElementById("hourlyExplore");
-  const scroller=document.querySelector(".hourly-scroll");
   svg.addEventListener("pointerdown",e=>{
     if(e.pointerType!=="mouse")PEEK_TOUCH_X=e.clientX;
     showHourlyPeek(hourlyPeekIndex(e.clientX));
@@ -2255,10 +2253,6 @@ function setupHourlyPeek(){
     if(e.pointerType!=="mouse"){PEEK_TOUCH_X=null;hideHourlyPeek(1400)}
   });
   svg.addEventListener("pointercancel",()=>{PEEK_TOUCH_X=null;hideHourlyPeek(1000)});
-  scroller.addEventListener("scroll",()=>{
-    if(PEEK_TOUCH_X!==null){showHourlyPeek(hourlyPeekIndex(PEEK_TOUCH_X));hideHourlyPeek(1000)}
-  },{passive:true});
-  scroller.addEventListener("touchend",()=>{PEEK_TOUCH_X=null;hideHourlyPeek(1400)},{passive:true});
   explore.addEventListener("keydown",e=>{
     if(!HOURLY_PEEK)return;
     let next=PEEK_I;
@@ -2268,7 +2262,6 @@ function setupHourlyPeek(){
     else if(e.key==="End")next=(HOURLY_PEEK?.h.time.length||1)-1;
     else return;
     e.preventDefault();showHourlyPeek(next,true);
-    scroller.scrollLeft=clamp(HOURLY_PEEK.x[PEEK_I]-scroller.clientWidth/2,0,scroller.scrollWidth-scroller.clientWidth);
   });
   explore.addEventListener("blur",()=>hideHourlyPeek());
 }
@@ -2340,7 +2333,7 @@ function render(d,live,savedAt=0){
   document.getElementById("chips").innerHTML=chipData.map(([ic,t])=>`<span class="chip">${ic}${t}</span>`).join("");
 
   /* hourly */
-  const W=820,Ht=144,pad=16,n=h.temp.length,base=Ht-6;
+  const W=820,Ht=128,pad=16,n=h.temp.length,base=Ht-6;
   const tMin=Math.min(...h.temp)-4,tMax=Math.max(...h.temp)+4;
   const X=i=>pad+i*(W-2*pad)/(n-1);
   const Y=t=>26+(base-40)*(1-(t-tMin)/(tMax-tMin));
