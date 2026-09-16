@@ -9,12 +9,16 @@ A single-file, build-free PWA. `index.html` is the whole application,
 `sw.js` caches the shell, `manifest.json` makes it installable.
 
 Production is <https://joshsmith-lab.github.io/mossbridge-wx/>, served from
-`main`, and it is shared with family. Three locations live in the `LOCS` table:
+`main`, and it is shared with family. The `LOCS` table holds
 `mb` (Moss Bridge Ct, Porters Neck NC, coastal, gets marine + tides + tropics)
-and `sp` (Bob Plumley Rd, Shady Spring WV, inland) are permanent family places.
-`den` is the rotating travel entry, currently Denver. Give the next destination a
-new unique id and update `LOC_ORDER`; reusing `den` would briefly show cached Denver
-weather under the new place name.
+and `sp` (Bob Plumley Rd, Shady Spring WV, inland), the permanent family places.
+`den` was the travel entry for the Denver trip. The trip is over, so it is
+**parked**: still in `LOCS`, with its Front Range scene and the "What to wear" card,
+as the template for the next trip, but out of `LOC_ORDER`, so nobody can tap to it.
+A saved `mbwx-loc` only counts while its id is in `LOC_ORDER`; anything else opens
+at Porters Neck. Give the next destination a new unique id and add it to
+`LOC_ORDER`; reusing `den` would briefly show cached Denver weather under the new
+place name.
 
 ## Ground rules
 
@@ -63,37 +67,16 @@ weather under the new place name.
 
 ## Deploying
 
-**`git push` works from an agent session on Josh's Mac now.** `credential.helper`
-is set to `osxkeychain` and the keychain holds a working credential; a
-`git push --dry-run` to a throwaway branch confirms it in a couple of seconds
-and creates nothing. Push the feature branch normally.
+GitHub CLI (`gh`) is installed on WorkMacPro and signed in as `joshsmith-lab`.
+Push the feature branch, create the PR with `gh pr create`, and check its CI with
+`gh pr checks`. Use a body file for the PR description. For an authorized live
+update, merge the PR after checks pass, then verify both the served HTML and
+`sw.js` on the Pages URL before calling it live. Never push straight to `main`.
 
-`gh` is still absent, so the pull request itself has to be opened in the
-browser. Push the branch, then hand Josh the compare URL:
-`https://github.com/joshsmith-lab/mossbridge-wx/compare/main...<branch>?expand=1`.
-
-A cloud session's own GitHub token still has no access to this repo, and the
-browser route below is still the fallback if the keychain credential is ever
-revoked:
-
-1. Open `https://github.com/joshsmith-lab/mossbridge-wx/edit/main/<file>`.
-2. Do **not** rely on synthetic `cmd+a` / `cmd+v` from the browser extension.
-   It works sometimes and silently stops working after the extension
-   reconnects, leaving the Commit button greyed out with no error.
-3. Instead, run this in the page:
-   - `fetch` the current file from `raw.githubusercontent.com` (reachable from
-     the edit page; `localhost` is not, CSP blocks it),
-   - apply your change as a string replace in JS,
-   - dispatch a synthetic `keydown` for `cmd+a` on `.cm-content` (CodeMirror
-     honours untrusted events), then a synthetic `paste` `ClipboardEvent`
-     carrying a `DataTransfer` with the new text.
-4. In the commit dialog choose **Create a new branch and start a pull request**.
-5. Verify before declaring victory: fetch `origin` and diff the pushed file
-   against your local copy byte for byte. A UTF-8 round trip once mangled every
-   `°`, `·` and `—` in the file and it was invisible in the diff view.
-
-If you do use the clipboard, `pbcopy` needs `LANG=en_US.UTF-8` or it encodes as
-MacRoman and corrupts every multi-byte character.
+If authentication fails, check `gh auth status`; do not assume a different Mac's
+keychain is available here. `gh auth login` followed by `gh auth setup-git` restores
+the CLI route. The browser remains a fallback, but preserve UTF-8 and verify that
+the resulting files match the reviewed local copies.
 
 ## Verifying visually
 
@@ -106,19 +89,26 @@ TZ=America/New_York node tools/scene.mjs          # the picture and its motion
 TZ=America/New_York node tools/scene.mjs fog storm  # just the scenes you are working on
 ```
 
-`tools/shots.mjs` renders twelve scenarios (day, night, after midnight, storm, dusk,
-the three locations, an afternoon that should recommend today, a washout, and three
-Denver clothing conditions), writes
+`tools/shots.mjs` renders ten scenarios (day, night, after midnight, storm, dusk,
+both family locations, an afternoon that should recommend today, a washout, and a
+shoulder-season moderate-UV day), writes
 screenshots to `tools/shots/` and prints the generated copy, so wording changes
 are reviewable as text.
 
-`tools/scene.mjs` is for anything that moves. Twenty-two scenes force the light and
-weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
-clear night, a storm, a fog morning, drizzle against a downpour, freezing rain
-on the coast, and the ridge by day, by evening with the buck out, on a snow day,
-and on a cold January night, plus Denver in clear, golden, storm, snow, night, and
-windy conditions. Per scene it writes the sky and the scene on their
-own, counts the animations *still running* grouped by keyframe, reads
+`tools/scene.mjs` is for anything that moves. Nineteen scenes force the light
+and weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
+clear night, a storm, a fog morning, drizzle against a downpour, freezing rain on
+the coast, a night of rain over the marsh, and the ridge by day, by evening with
+the buck out, in warm rain, on a snow day, on a cold January night and in a night
+downpour. The Denver scenes (and the skyline check) went out with the trip; they are
+in git history before the commit that parked `den`, if the next trip wants a model.
+The ridge night downpour is there on purpose: dark theme, code 82, two rain layers
+and a frog, which is where the animation count goes looking for trouble. It found
+some, which is the point of having it. The marsh night rain is there for the same
+reason from the other direction: it is the only frame that puts the raccoon and
+the fiddler crab out at the same time, so it is where two grounded animals can
+collide and where either of them can end up floating. Per scene it writes the sky
+and the scene on their own, counts the animations *still running* grouped by keyframe, reads
 `LayoutCount` off CDP while the scene idles, and proves the page holds perfectly
 still under `prefers-reduced-motion` by comparing two screenshots taken 1.4s
 apart. It exits non-zero on a page error, on layout thrash, or on anything that
@@ -127,6 +117,30 @@ survives reduced motion.
 Two numbers worth knowing before you change motion: every scene idles at **0-1
 layouts per 6 seconds**, and the busiest scene runs **110 animations**. If either
 jumps, you have added something that is not a `transform` or an `opacity`.
+
+## Time and place
+
+Every forecast this app reads arrives as naive local times for the place it describes, and
+nearly every comparison in the file is a Date built from one of those strings. That worked
+only while the phone and the place shared a clock. It stopped being true when Denver joined.
+
+So each entry in `LOCS` carries `tz` and `tzLabel`, and the app reasons entirely in the
+**location's wall clock**: `wallNow()` is this instant shifted so its local fields read as
+the clock on the wall there, and the forecast is requested in that same zone, so both sides
+of every comparison agree. `trueTime()` converts back, and `sunPos`, `moonPos` and
+`moonPhase` call it at their own door, because astronomy needs a real instant rather than a
+wall clock.
+
+Two consequences worth knowing:
+
+- For the two family locations with the phone at home the shift is exactly zero, so their
+  behaviour is unchanged. Away from home it quietly starts being right instead of showing
+  the phone's clock against home data.
+- `tools/fixtures.mjs` writes each fixture on the location's own clock too. Without that the
+  Denver scenes were fed Eastern sunrise and sunset, which is how a mid-August Denver
+  morning came out reading 8:12am.
+
+If you add a location, give it a `tz` and a `tzLabel`. Nothing else needs to know.
 
 ## On file size
 
@@ -139,6 +153,14 @@ that. Crossing the old line costs a phone roughly one extra kilobyte.
 So: do not delete working code to stay under a self-imposed source limit. Write
 what the app needs. If the transferred size ever approaches a few hundred KB,
 revisit it then, and measure the transferred size rather than the source size.
+
+A cycle longer than about a minute cannot be reviewed by watching it. Pause
+everything (`document.getAnimations().forEach(a => a.pause())`), then walk
+`currentTime` on the one animation under test and screenshot each step.
+`currentTime` is measured from the start of the delay, so the negative `phase()`
+delay offsets where in the loop a given value lands — read the delay off
+`a.effect.getTiming()` before you trust the numbers. The heron's 97-second scan
+was confirmed that way: nine tenths of the loop is a bird that does not move.
 
 Notes: both shim `Date` rather than freezing the clock, because `page.clock`
 would also stop the CSS animations that `scene.mjs` exists to look at; run them
@@ -162,6 +184,38 @@ Established with Josh and enforced by `test.mjs`:
 - Long ambient cycles take their phase from the wall clock (`phase(seconds)`),
   so a re-render drops them back where they were instead of restarting the wait.
   A 92-second heron strike that restarts on every foreground is never seen.
+- **Rain is two layers, lit against two different things.** The sky layer falls behind
+  the scene and takes its ink from the sky's luminance. That is enough on the marsh,
+  where the horizon is low and almost every drop crosses open sky. On the ridge a
+  mountain sits under two thirds of the frame, so those same drops run dark on a dark
+  fold and the picture reads as dry. The label said light rain and there was nothing
+  under it to find. The fix that did **not** work was inking Shady Spring's sky drops
+  heavier: the same weather drawn differently at two places reads as the app changing
+  rather than the weather, and it was a rule invented to rescue a fix that belonged
+  somewhere else. The sky layer is identical at all three locations and should stay
+  that way. What works is a second layer *inside* the scene SVG, in front of the fold
+  and pale rather than dark, fewer and longer, masked so it fades in across the crest
+  instead of starting on a cut line. Count, speed and lean still come off the WMO code
+  and the wind in both layers. If you add a scene with a tall silhouette in it, it
+  needs the near layer too.
+- **Two things falling in one picture have to fall at the same rate.** The near rain
+  was first timed by feel and came out four times slower than the layer above it,
+  which is what made a long drop read as a slash drawn across the scene rather than as
+  rain: long and quick is a raindrop, long and slow is a scratch. A scene unit is a
+  screen pixel (the viewBox width is the rendered width), so the two are directly
+  comparable and the near drops are timed off the sky layer's 880px / `fallSec`,
+  landing 10% quicker because they are nearer. This is worth measuring rather than
+  eyeballing; four times off was invisible in a still and obvious in a strip of frames
+  60ms apart.
+- **A falling drop has to be longer than one frame's fall, and it has to land.** At the
+  downpour rate the near drops move about 26px a frame, and at 32px long each one barely
+  overlapped the frame before it, so heavy rain at Shady Spring came out as white dashes
+  jumping about rather than rain. Their length now comes off that per-frame step (about
+  2.6 frames, capped to the frame), tapered from tail to head the way the sky layer's
+  drops fade in. They also used to run all the way to the foot of the scene, across the
+  pond and straight into the page below; the mask now fades them out at the grass line,
+  so the pond's rings and ticks carry the rain on the water. Check both in a strip of
+  frames, not a still.
 - **Draw silhouettes, not anatomy.** A bird in this sky is fourteen pixels across.
   Literal feather detail at that size does not read as detail, it reads as the
   wrong animal: constant-width wings with two short strokes at each tip for
@@ -177,6 +231,53 @@ Established with Josh and enforced by `test.mjs`:
   posture, negative space and a species landmark to survive a phone screen.
   Residents move only at real joints, with long rests between gestures. The
   scene should feel alive, never busy.
+- **The marsh's water band is the whole lower frame, so "in the scene" is not the
+  same as "on the ground."** The ridge has a pond you can test a position against;
+  the marsh does not, and the pond check in `tools/scene.mjs` exempts it for exactly
+  that reason. That exemption is how the raccoon came to be drawn sixteen units out
+  in the channel with its belly on the water and nothing under its feet. A heron
+  standing there reads as wading; a four-footed animal standing there reads as
+  floating. Waders and the fiddler crab work the flat. Anything else keeps its body
+  above the bank line and wets no more than its feet, and the harness now fails a
+  marsh scene where more than 45% of a land animal sits below the waterline.
+- **A dark animal on the dark bank is a smudge, and a dash behind the reeds is not
+  a dash.** The fiddler crab sat on the grass line, where its outline merged into
+  the spartina and its ten-pixel scuttle had nothing to travel against, so the one
+  cue the wet marsh has did not read as motion at all. Down on the flat with open
+  water behind it the whole animal reads and the run reads as a run. It is the same
+  lesson the oystercatcher's bill taught: a few units into the water buys the entire
+  silhouette.
+- **Positions are fractions of the frame; animals are not.** Residents are drawn at
+  a fixed scale while the frame is a fraction of the screen, so a fixed fraction that
+  separates two animals at 430px can run them through each other at 320. Where two
+  grounded animals can be out at once, measure one off the other rather than giving
+  each its own fraction.
+- **Lightning is one event on one clock.** The bolt used to run on a 37-second loop and
+  the sky wash on a 7-second one, so the sky lit with nothing under it and the bolt struck
+  into a sky that stayed dark. They now share `STORM_P`: beats at 0, 34 and 61 per cent
+  carry a strike, 17 per cent is wash only, which is a discharge inside the cloud. If you
+  change one, change both, and `tools/scene.mjs` walks the cycle on a single clock to check
+  that no two bolts fire together and none fires into an unlit sky.
+- **Lightning is a sky effect, not a scene one.** Drawn inside the scene SVG it can only
+  start a third of the way down the page, which is a bolt appearing out of clear air under
+  the forecast card. It lives in the sky layer now, at z-index 0, so it runs from under the
+  masthead to the horizon behind the type and the scene's treeline covers its foot. Its
+  path needs the sky in real pixels, because SVG path data has no percentage units, and it
+  is painted at the very end of `render()`: the alert strip, headline, chips, card and
+  scene all add height to the header, and a bolt measured before them stops in mid-air.
+- **A storm is more than the grid cell's own code.** Requiring `weather_code` to be 95, 96
+  or 99 at the moment you look drew no lightning at all on the ordinary Wilmington August
+  afternoon, where the cell reports showers and the cell next door is throwing bolts. Three
+  readings say there is thunder about: the current code puts it overhead, the next three
+  hours of the hourly run or an NWS thunderstorm warning put it in the area. A watch does
+  not count. It says conditions are favourable, not that anything is happening.
+- **Two grounded residents cannot share a lane.** The open ground beside the
+  Denver skyline is about 115px wide on a phone. Standing a mule deer next to a
+  magpie there forced the deer down to magpie height, and a deer the size of a
+  magpie is not a deer, it is a rodent. Give the lane to one animal at a time and
+  gate them on something true: mule deer take it at first and last light, the
+  magpie has the rest of the day. Where a resident's size is fighting the frame,
+  the answer is a schedule, not a smaller animal.
 - Animals only appear in weather they would actually be out in. Frogs go under
   below 45F, fiddler crabs below 48F, and the cormorant and the cardinal exist
   because something still has to be out there when they do.
@@ -187,6 +288,34 @@ Established with Josh and enforced by `test.mjs`:
   pond's extra rise rings during a window read the same moon as the card, and
   the windows disappear under a warned storm so they never read as an
   invitation to stand in a thunderstorm with a rod.
+
+## Interaction and reading refinements
+
+- The hourly tooltip is measured against the visible scroll area, not the full
+  820-unit chart. Keep its intrinsic width independent of its current position
+  (`width:max-content`), or moving from a short reading to a long one at an edge
+  measures the old constrained width and clips the next reading. Its background
+  is opaque so the chart's text cannot show through.
+- Hour labels, night shading, golden-hour shading, and forecast samples share one
+  horizontal scale. The right edge is the final sample's time, not an extra hour
+  beyond it. Snow and freezing rain keep their names in the hourly readout.
+- Display the actual temperature immediately. Counting through other readings
+  added motion to the numbers and let an old animation overwrite a new location.
+- Only the latest refresh can paint, cache, or end the busy state. Checking the
+  location alone misses home → farm → home while the first request is still in
+  flight. A failed first load ends its loading state and offers the timestamp as
+  retry; a failed refresh with a valid cache keeps the reading and shows its age.
+- Filter expired alerts before rendering them or using them for lightning and
+  outdoor advice. Active severe/extreme warnings take precedence over an otherwise
+  pleasant outdoor reading and suppress fishing/best-window invitations. Include
+  the NWS instruction text in the expanded alert; do not invent an instruction.
+- Small labels need enough ink on both the plain paper and the tinted evening
+  paper. Keep long condition names wrappable beside three-digit temperatures.
+
+`tools/interactions.mjs` checks narrow and wide chart edges, keyboard navigation,
+location switching, snow/ice labels, warning expiry, source instructions, retry,
+and cached/online recovery. Run it with the same font and browser settings as
+`tools/shots.mjs`. Request ordering and alert expiry also run in `node --test test.mjs`.
 
 ## Known issues
 

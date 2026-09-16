@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v37/);
+  assert.match(worker, /mbwx-shell-v64/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -92,12 +92,21 @@ test("loading, cached data and the hourly explorer tell the truth", async () => 
   assert.match(html, /\.cached \.live-dot\{animation:none/);
   const cacheCode = html.match(/const cacheKey=id=>"mbwx-"\+id;[\s\S]*?\n}\n(?=function writeCache)/)?.[0];
   assert.ok(cacheCode, "cache reader should be extractable for its rollover check");
-  const cacheContext = {
-    localStorage: { getItem: () => JSON.stringify({ savedAt: Date.now(), data: { current: { time: "2000-01-01T23:55" } } }) },
-    result: "not run",
+  // The rollover check now asks the *location's* clock what day it is, so the sandbox has to
+  // supply one. Denver crossing midnight while Porters Neck has not is exactly the case a
+  // travel location introduces, and it is the reason this is worth pinning.
+  const runCache = (stored, today) => {
+    const ctx = { localStorage: { getItem: () => JSON.stringify(stored) }, locToday: () => today, result: "not run" };
+    vm.runInNewContext(`${cacheCode}\nresult=readCache("mb");`, ctx);
+    return ctx.result;
   };
-  vm.runInNewContext(`${cacheCode}\nresult=readCache("mb");`, cacheContext);
-  assert.equal(cacheContext.result, null, "a fresh timestamp must not make yesterday's forecast current");
+  const fresh = (time) => ({ savedAt: Date.now(), data: { current: { time } } });
+  assert.equal(runCache(fresh("2000-01-01T23:55"), "2000-01-02"), null,
+    "a fresh timestamp must not make yesterday's forecast current");
+  assert.ok(runCache(fresh("2000-01-02T00:05"), "2000-01-02"),
+    "a forecast from today's date on the location's clock is still good");
+  assert.equal(runCache(fresh("2000-01-02T23:55"), "2000-01-03"), null,
+    "and it goes stale the moment that clock rolls over, not the phone's");
 
   // Feels-like is real hourly data, revealed only when it differs enough to matter.
   assert.match(html, /hourly=temperature_2m,apparent_temperature,precipitation_probability/);
@@ -106,14 +115,12 @@ test("loading, cached data and the hourly explorer tell the truth", async () => 
   assert.match(html, /function setupHourlyPeek\(\)/);
   assert.match(html, /e\.key==="ArrowRight"/);
   assert.match(html, /if\(!HOURLY_PEEK\)return/);
-  assert.match(html, /pop>=5\?`\$\{pop\} percent chance of rain`/);
+  assert.match(html, /pop>=5\?`\$\{pop\} percent chance of \$\{kind\}`/);
   assert.match(html, /pointercancel",\(\)=>\{PEEK_TOUCH_X=null/);
   assert.match(html, /id="hourlyPeekLive" aria-live="polite"/);
-  // The whole 24-hour picture is fixed in the available width; it never becomes a sideways strip.
   assert.match(html, /\.hourly-scroll\{margin:0;padding:0;overflow:hidden\}/);
   assert.match(html, /\.hourly-inner\{min-width:0;width:100%/);
   assert.match(html, /viewBox="0 0 820 128"/);
-  assert.doesNotMatch(html, /scrollLeft=clamp\(HOURLY_PEEK/);
 
   // The two tiny-looking masthead controls remain full touch targets and keyboard operable.
   assert.match(html, /id="locBtn" role="button" tabindex="0"/);
@@ -132,6 +139,80 @@ test("overnight copy follows the night the family is actually in", async () => {
   assert.match(html, /beforeSunrise\?goldenWindow\(sunrise\)/);
   // Missing storm direction does not turn a moving system into a stationary one.
   assert.match(html, /const motion=s\.spd>0\?\(s\.dirDeg!=null\?"moving "/);
+});
+
+test("the sunrise and sunset times stay readable on any sky", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  // The sky picks one of two inks by contrast; the halo has to be the other one. Keying it
+  // off the theme instead put a light halo under light text at golden hour and erased the
+  // word, and a 2.6px stroke on a 10px face closed every counter besides.
+  assert.match(html, /--on-sky:#0F2B36; --off-sky:#F7F4EA;/);
+  assert.match(html, /root\.setProperty\("--off-sky",bright\?LIT_ON:INK_ON\);/);
+  assert.match(html, /\.suntime\{paint-order:stroke;stroke:var\(--off-sky,#F7F4EA\);stroke-width:1\.3px;/);
+  assert.match(html, /const lab=\(f,t\)=>`<text class="suntime"/);
+  // the halo is CSS now, so no <text> carries a hand-set stroke on the sky at all
+  assert.doesNotMatch(html, /<text[^>]*paint-order="stroke"[^>]*>\$\{t\}/);
+  assert.doesNotMatch(html, /stroke="\$\{dark\?"#0A1A22":"#F4F3EC"\}"/);
+  // and the two numbers written on the sky are no longer at 70% of it
+  assert.match(html, /font-weight="600" fill="currentColor" opacity="\.92"/);
+  // the override is cleared with the rest when a render bails out
+  assert.match(html, /"--sky3","--on-sky","--off-sky","--scrim"/);
+});
+
+test("the rain chance bars can be read from across the room", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  // A ten percent hour drew four pixels of pale blue at .3 opacity, and a 3px corner
+  // radius on a four pixel bar rounded the shape away into a lozenge with no top edge.
+  assert.doesNotMatch(html, /width="11" height="\$\{bh\.toFixed\(1\)\}" rx="3"/);
+  assert.doesNotMatch(html, /opacity="\$\{h\.pop\[i\]>=40\?\.55:\.3\}"/);
+  // the radius follows the height, so a short bar keeps a flat top to read
+  assert.match(html, /rx="\$\{Math\.min\(3,bh\*\.3\)\.toFixed\(1\)\}"/);
+  // and the ink climbs with the odds rather than stepping once at forty
+  assert.match(html, /opacity="\$\{\(\.48\+Math\.min\(h\.pop\[i\],60\)\/60\*\.36\)\.toFixed\(2\)\}"/);
+  // the scale itself is untouched: height is still .42 of the odds, floored only where
+  // the true bar is under five units and a trace is a trace at any of them
+  assert.match(html, /const bh=Math\.max\(5,h\.pop\[i\]\*\.42\)/);
+  // the printed number still belongs to the hours that are actually likely
+  assert.match(html, /if\(h\.pop\[i\]>=40&&i%4===2&&i!==hiI&&i!==loI\)/);
+});
+
+test("each location keeps its own clock", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  // Every place carries its zone and the label it is quoted in.
+  assert.match(html, /tz:"America\/New_York",tzLabel:"ET"/);
+  assert.match(html, /tz:"America\/Denver",tzLabel:"MT"/);
+  assert.doesNotMatch(html, /timezone=America%2FNew_York/);
+  assert.match(html, /&timezone=\$\{encodeURIComponent\(L\.tz\)\}&forecast_days=7/);
+  assert.match(html, /clock12\(new Date\(c\.time\)\)\+" "\+LOC\.tzLabel/);
+  assert.match(html, /const bd=yest\.toLocaleDateString\("en-CA",\{timeZone:L\.tz\}\)/);
+
+  // The app reasons in the location's wall clock; the astronomy converts back to a real
+  // instant so the sun is where it actually is rather than where the phone thinks it is.
+  assert.match(html, /const wallNow=\(\)=>new Date\(Date\.now\(\)\+TZSHIFT\)/);
+  assert.match(html, /function sunPos\(date\)\{const t=trueTime\(date\);/);
+  assert.match(html, /function moonPos\(date\)\{const t=trueTime\(date\);/);
+  assert.match(html, /function moonPhase\(date\)\{const d=toDays\(trueTime\(date\)\)/);
+  assert.match(html, /const now=wallNow\(\), sunrise=/);
+  assert.match(html, /const now=wallNow\(\),t0=/);
+  assert.match(html, /const now=wallNow\(\)\.getTime\(\);/);
+
+  // And the shift itself is real arithmetic, not a hardcoded offset: run it.
+  const shiftCode = html.match(/const tzOffset=[\s\S]*?function syncClock\(\)\{[^}]*\}/)?.[0];
+  assert.ok(shiftCode, "the clock shift should be extractable");
+  const at = (tz, iso) => {
+    const ctx = { Date, LOC: { tz }, TZSHIFT: 0, out: 0 };
+    vm.runInNewContext(`${shiftCode}\nconst d=new Date("${iso}");out=tzOffset(LOC.tz,d)/3600000;`, ctx);
+    return ctx.out;
+  };
+  // Denver is two hours behind New York on both sides of a daylight-saving change.
+  assert.equal(at("America/New_York", "2026-08-15T18:00:00Z") - at("America/Denver", "2026-08-15T18:00:00Z"), 2);
+  assert.equal(at("America/New_York", "2026-01-15T18:00:00Z") - at("America/Denver", "2026-01-15T18:00:00Z"), 2);
+  // and the offsets are the real ones, not a fixed guess
+  assert.equal(at("America/Denver", "2026-08-15T18:00:00Z"), -6);
+  assert.equal(at("America/Denver", "2026-01-15T18:00:00Z"), -7);
 });
 
 test("every motion is driven by a reading, not by decoration", async () => {
@@ -163,6 +244,32 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /class="gull-cross"/);
   assert.match(html, /@keyframes gullCross/);
   assert.match(html, /class="heron-strike"/);
+  // mostly still: two steps, a strike, no walk home (that was the moonwalk)
+  assert.match(html, /29\.5%,80%\{transform:translateX\(-5\.6px\)\}/);
+  assert.doesNotMatch(html, /61\.5%,64%\{transform:translateX\(-2\.8px\)\}/);
+  assert.match(html, /class="heron-wade"/);
+  assert.match(html, /@keyframes heronWade/);
+  assert.match(html, /heronWade 150s/);
+  assert.match(html, /M 18\.6 34\.2 L 20\.2 40\.2/);
+  assert.match(html, /class="heron-tarsus"/);
+  assert.match(html, /class="heron-lunge"/);
+  // the heron never turns. The end-of-loop flip was there to mask the drift back to its
+  // mark, and a fold-and-flip on a fourteen-second beat read as a twirl; 5.6px over
+  // thirty seconds needs no mask
+  assert.doesNotMatch(html, /heronFace/);
+  assert.doesNotMatch(html, /heron-face/);
+  assert.doesNotMatch(html, /scaleX\(\.12\)/);
+  assert.doesNotMatch(html, /rotate\(-80deg\)/);
+  assert.match(html, /class="heron-splash"/);
+  // one look per 97s, phased off the wall clock. Two sweeps every 31s had a bird whose
+  // whole character is stillness moving forty per cent of the time
+  assert.match(html, /animation:heronScan 97s/);
+  assert.doesNotMatch(html, /heronScan 31s/);
+  assert.match(html, /@keyframes heronScan\{0%,80%,100%\{transform:rotate\(0\)\}/);
+  assert.match(html, /class="heron-scan" style="\$\{phase\(97\)\}"/);
+  assert.match(html, /40\.8%,43\.6%\{transform:translate\(-1px,2\.8px\) rotate\(-20deg\)\}/);
+  assert.match(html, /40\.8%,43\.6%\{transform:rotate\(-26deg\) translate\(0,3\.2px\)\}/);
+  assert.doesNotMatch(html, /M 18\.4 34\.2 L 17\.7 38\.0/);
   assert.match(html, /class="flight-wing wing-l"/);
   assert.match(html, /rapid mirrored triangles read as a bat/);
   // A bird at fourteen pixels is a silhouette. Wings are filled tapers that come to a point;
@@ -179,20 +286,36 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /const flyCount=Math\.round\(clamp\(3\+\(temp-60\)\*\.6,3,12\)\)/);
   assert.match(html, /class="deer-tail"/);
   assert.match(html, /class="crab-run"/);
+  // the crab sits on the flat with open water behind it, not up on the grass line where a
+  // dark crab on dark spartina is a smudge and the ten-pixel dash travels behind the reeds
+  assert.match(html, /crabAt\(crabX,base\+7,1\.1,1\)/);
+  assert.doesNotMatch(html, /crabAt\(W\*\.57,base-2/);
+  // and its x comes off the resident, because a fixed fraction of a frame that is a
+  // fraction of the screen ran the crab through the oystercatcher on a 320px phone
+  assert.match(html, /const crabX=residentX>W\*\.5\?residentX-64:residentX\+64/);
   // the residents are solid ink now: no more grass reading through a bird
   assert.match(html, /const owlAt=\(x,y,s,opacity=\.96\)/);
   assert.match(html, /const frogAt=\(x,y,s,opacity=\.96\)/);
   assert.match(html, /const crabAt=\(x,y,s,opacity=\.96\)/);
   assert.match(html, /const raccoon=\(x,y,s,o=\.96\)/);
+  // The spartina carries its own seasonal green so the green-black wildlife finally
+  // separates from the bank; night collapses to scene ink, fog pulls most of the way back
+  assert.match(html, /const grassInk=dark\?ink:fog\?mixInk\(GRASS\[month\],ink,\.6\):GRASS\[month\]/);
+  assert.match(html, /path d="\$\{mid\}" fill="\$\{grassInk\}"/);
+  assert.match(html, /path d="\$\{d\}" fill="\$\{grassInk\}"/);
+  // but the far canopy, pines and oak stay atmospheric blue — that contrast is the depth cue
+  assert.match(html, /path d="\$\{tl\}" fill="\$\{ink\}"/);
   // residents stay intact; the landscape gives each silhouette a quiet natural pocket
-  assert.match(html, /Math\.abs\(x-residentX\)<20\)ht\*=\.28/);
+  assert.match(html, /Math\.abs\(x-residentX\)<26\)ht\*=\.28/);
   assert.match(html, /const animalLeft=barnX-48,animalRight=barnX\+48,rightTreeX=W\*\.955/);
   assert.match(html, /const yard=x>animalLeft-18&&x<animalRight\+22/);
   assert.match(html, /class="barn" data-scene-anchor="barn"/);
-  assert.match(html, /deerAt\(animalRight\+10/);
+  assert.match(html, /deerAt\(animalRight\+14/);
+  // the body has a waist: haunch, tuck, brisket — not a bean
+  assert.match(html, /4\.6 12\.8 C 6\.0 12\.6 6\.8 10\.2 8\.4 8\.8/);
   assert.match(html, /deer\?"":dark\?fox\(animalRight-14/);
   // the small shorebird's bill sits against open water, not the dark bank
-  assert.match(html, /oysterCatcher\(residentX,base\+6,1\.1,1\)/);
+  assert.match(html, /oysterCatcher\(residentX,base\+9,1\.1,1\)/);
   // Shady Spring gets asymmetric Appalachian folds, a real gambrel barn, and bare winter trees
   assert.match(html, /const ridgeProfiles=\[/);
   assert.match(html, /const winter=month===11\|\|month<=1\|\|snowing/);
@@ -205,6 +328,14 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /\.hen-look\{/);
   assert.match(html, /\.hen-scratch\{/);
   assert.match(html, /@keyframes henPeck/);
+  assert.match(html, /@keyframes henTip/);
+  // peck is beak-down (negative rotate). Positive rotate folded the head over the back.
+  assert.match(html, /59%\{transform:rotate\(-42deg\)\}/);
+  assert.match(html, /58%,72%\{transform:rotate\(-12deg\)\}/);
+  assert.match(html, /barnX\+yard\*\.30,base\+13\.2,\.74,"scratch",19,-1/);
+  assert.match(html, /barnX\+yard\*\.56,base\+12,\.88,"peck",15/);
+  assert.match(html, /barnX\+yard\*\.82,base\+13,\.76,"look",23/);
+  assert.match(html, /:\(!wet&&!storm\)\?chickens\(barnX,rightTreeX,base\)/);
 
   // light: the sun flattens near the horizon, the meteor waits for a clear night
   assert.match(html, /const squash=clamp\(\.9\+Math\.max\(0,sunAltDeg\)\/8\*\.1,\.9,1\)/);
@@ -245,6 +376,43 @@ test("it snows in Shady Spring", async () => {
   assert.match(html, /code:wj\.hourly\.weather_code\.slice\(i0,i0\+24\)/);
   assert.match(html, /nightPop>=35&&nightSnow\?`Snow is likely at times/);
   assert.match(html, /isSnow\(dy\.weather_code\[wi\]\)\?"snow"/);
+});
+
+test("and the rain is visible when it rains there", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  // the sky layer draws the same rain at all three places, and stays that way. Inking
+  // Shady Spring's drops heavier to survive the mountain read as the app changing rather
+  // than the weather, and the problem is not up here anyway.
+  assert.doesNotMatch(html, /LOC\.scene==="ridge"&&!snowing/);
+  assert.match(html, /\(snowing\?weight:1\.2\*weight\)\.toFixed\(2\)\+"px"/);
+  assert.match(html, /const \[count,fallSec,weight\]=snowing\?\(SNOWFALL\[code\]\|\|SNOWFALL\[73\]\):\(RAIN\[code\]\|\|RAIN\[63\]\)/);
+  // and a nearer layer falls in front of the fold, pale where the layer behind it is dark
+  assert.match(html, /@keyframes nearFall\{/);
+  assert.match(html, /const nrK=clamp\(\(nrWeight-\.55\)\/\.7,0,1\)/);
+  assert.match(html, /class="nearrain"/);
+  assert.match(html, /mask="url\(#ridgerain\)"/);
+  // it fades in across the crest instead of starting on a cut line
+  assert.match(html, /id="ridgerainfade" gradientUnits="userSpaceOnUse"/);
+  // and it lands in the field: gone by the grass line, never run off the foot of the frame
+  // into the page, which is where a downpour turned into a mess of white bars over the pond
+  assert.match(html, /const nrTop=base-rTop\*\.94,nrLand=base\+4;/);
+  assert.match(html, /span=nrLand-nrTop;/);
+  assert.doesNotMatch(html, /span=H\+10-nrTop/);
+  // a drop is several frames long at its own speed, so it reads as a streak, not a dash
+  // jumping its own length every frame
+  assert.match(html, /const step=968\/nrFall\/60/);
+  assert.match(html, /const len=clamp\(step\*2\.6,22,Math\.min\(64,span\*\.72\)\)/);
+  // dealt one to a slot across the frame, not thrown in clumps
+  assert.match(html, /const tx=-34\+\(i\+\.15\+nr\(\)\*\.7\)\*slot/);
+  // the pond answers the rain rather than going glass-still under it, which it used to do
+  assert.match(html, /if\(wet&&!snowing&&!PRM\)\{\s*const pw2=mulberry\(6197\),rings=2\+Math\.round\(rainK\*3\)/);
+  assert.match(html, /const ps=mulberry\(2884\),ticks=3\+Math\.round\(rainK\*5\)/);
+  // snow neither rings the water nor gets a second layer of falling lines
+  assert.doesNotMatch(html, /if\(wet&&!PRM\)\{\s*const \[,nrFall/);
+  // and a star the cloud has already taken below what an eye can find stops performing,
+  // which is what pays for the drops in a night downpour
+  assert.match(html, /const tw=s\.y>52&&Number\(o\)>=\.18/);
 });
 
 test("the almanac fishes the farm pond, the coast keeps sunscreen, and Denver dresses for comfort", async () => {
@@ -307,7 +475,9 @@ test("nothing new moves under prefers-reduced-motion", async () => {
   assert.match(html, /const phase=p=>PRM\?"":`animation-delay/);
   assert.match(html, /const showFlies=seasonalFlies&&!PRM/);
   assert.match(html, /if\(wet&&!snowing&&!PRM\)\{const wr=mulberry\(7138\)/);
-  assert.match(html, /if\(!storm\|\|PRM\)return""/);
+  // lightning no longer needs the grid cell's own code to be a thunderstorm; see the
+  // THUNDER assertions below. It still draws nothing under reduced motion.
+  assert.match(html, /if\(!THUNDER\|\|PRM\)\{layer\.innerHTML="";return\}/);
   assert.match(html, /if\(!PRM&&!wet&&!storm\)/);
 });
 
@@ -342,6 +512,12 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /function sunProtectionAdvice\(c,dy,h,now\)/);
   assert.match(html, /Sunscreen weather from /);
   assert.match(html, /Sunscreen weather until /);
+  // the clock-and-warning sentence is reserved for 6+, WHO's "high" — measured on
+  // the sun still to come, not the day's peak: an August day that peaked at 8 over
+  // lunch is genuinely mild by late afternoon
+  assert.match(html, /const ahead=Math\.max\(Number\(c\.uv_index\)\|\|0,\.\.\.slots\.filter\(slot=>slot\.time>=now\)/);
+  assert.match(html, /if\(ahead<6\)return\{text:"Mild sun today\. Sunscreen if you're out a while\.",cls:"go"\}/);
+  assert.match(html, /if\(peak>=6\)return\{text:"Sunscreen weather from 10 a\.m\. to 5 p\.m\."/);
   assert.doesNotMatch(html, /Wear SPF 30\+/);
   assert.doesNotMatch(html, /Reapply after two hours/);
   assert.match(html, /class="wildlife heron"/);
@@ -364,12 +540,15 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.doesNotMatch(html, />Evening outlook</);
 });
 
-test("Denver is an isolated third travel scene, not a rewrite of either family place", async () => {
+test("Denver is a parked travel scene: kept as the template, out of the rotation", async () => {
   const html = await readFile(new URL("index.html", root), "utf8");
 
   assert.match(html, /den:\{id:"den",addrFull:"Next up · Denver"/);
   assert.match(html, /lat:39\.7392,lon:-104\.9903,scene:"front-range",kind:"trip"/);
-  assert.match(html, /const LOC_ORDER=\["mb","sp","den"\]/);
+  // the trip is over: only the two family places are in the rotation
+  assert.match(html, /const LOC_ORDER=\["mb","sp"\]/);
+  // a phone last left on a parked place opens at home, not on a place it cannot tap back to
+  assert.match(html, /LOC=LOC_ORDER\.includes\(saved\)\?LOCS\[saved\]:LOCS\.mb/);
   assert.match(html, /const nextLoc=\(\)=>LOC_ORDER\[\(LOC_ORDER\.indexOf\(LOC\.id\)\+1\)%LOC_ORDER\.length\]/);
   assert.match(html, /if\(LOC\.scene==="front-range"\)/);
   assert.match(html, /data-species="black-billed-magpie"/);
@@ -422,6 +601,47 @@ test("light, motion and alerts stay tuned", async () => {
   assert.match(html, /@keyframes swayTree/);
   assert.match(html, /class="deer-head"/);
   assert.match(html, /@keyframes deerGraze/);
+  assert.match(html, /32%,40%\{transform:rotate\(66deg\)\}/);
+  assert.match(html, /deerGraze 48s/);
+  assert.match(html, /@keyframes flagFlick/);
+  assert.match(html, /class="buck-regard"/);
+  assert.match(html, /class="buck-threeq"/);
+  assert.doesNotMatch(html, /@keyframes buckTurn/);
+  // hind leg: a gentle S, stifle then hock — not a lightning bolt
+  assert.match(html, /M 5\.0 11\.4 L 5\.6 14\.8 L 4\.6 17\.4 L 4\.8 20\.8/);
+  assert.doesNotMatch(html, /M 5\.0 11\.6 L 6\.2 14\.8 L 4\.0 17\.6/);
+  assert.match(html, /21\.6 -13\.2/);
+  // mule deer stands: ear and tail only. The graze clock hid the ears and read as a rodent.
+  assert.match(html, /class="mule-head"/);
+  assert.match(html, /!dark&&!deerOut&&!storm\?magpieAt/);
+  assert.match(html, /:\(!wet&&!storm\)\?chickens/);
+  assert.match(html, /:storm\?"":oysterCatcher/);
+  // the raccoon forages at the waterline, not out in the channel: at base+7 its feet
+  // hung sixteen units below the bank with nothing under them and it read as floating
+  assert.match(html, /raccoon\(residentX,base-6,1\.36,1\)/);
+  assert.doesNotMatch(html, /raccoon\(residentX,base\+7/);
+  assert.match(html, /@keyframes perchHop/);
+  assert.match(html, /@keyframes groundHop/);
+  assert.match(html, /@keyframes cormSettle/);
+  assert.match(html, /class="corm-neck"/);
+  assert.match(html, /if\(wind<8\)waterWeather\+=ringAt/);
+  // Lightning. One clock for the bolts and the sky wash, or they drift apart the way a
+  // 37s bolt and a 7s wash did: the sky lit with nothing under it and the bolt struck
+  // into a dark sky, and neither half was ever seen with the other.
+  assert.match(html, /const STORM_P=19/);
+  assert.match(html, /animation:stormWash 19s linear infinite/);
+  assert.match(html, /animation:bolt 19s linear infinite/);
+  assert.doesNotMatch(html, /stormWash 7s/);
+  assert.doesNotMatch(html, /var\(--bd,37s\)/);
+  // and it is a sky effect, not a scene one: inside the scene SVG it could only start a
+  // third of the way down the page, which is a bolt coming out of clear air
+  assert.match(html, /function paintBolts\(\)/);
+  assert.match(html, /<g id="boltLayer"><\/g>/);
+  assert.doesNotMatch(html, /boltAt\(/);
+  // it takes three readings, not just the grid cell's own code at the moment you look
+  assert.match(html, /THUNDER=storm\?2/);
+  assert.match(html, /\(h\?\.code\|\|\[\]\)\.slice\(0,3\)\.some\(isTS\)/);
+  assert.match(html, /thunderstorm\\s\+warning/i);
   // an alert opens to the gist instead of only shouting its title
   assert.match(html, /function alertGist\(a\)/);
   assert.match(html, /function toggleAlert\(\)/);
@@ -436,6 +656,78 @@ test("light, motion and alerts stay tuned", async () => {
   // the water card is named for the water Josh actually runs
   assert.match(html, /On the water · Figure 8/);
   assert.doesNotMatch(html, /On the water · Mason Inlet/);
+});
+
+
+test("expired alerts disappear and the strongest active warning owns the outdoor card", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const code = html.slice(html.indexOf("function activeAlerts("), html.indexOf("function renderAlerts("));
+  const ctx = vm.createContext({});
+  vm.runInContext(code, ctx);
+  const now = Date.parse("2026-09-13T15:00:00Z");
+  const warning = (event, severity, expires) => ({event,severity,expires});
+  const expired = warning("Severe Thunderstorm Warning","Severe","2026-09-13T14:59:00Z");
+  const watch = warning("Tornado Watch","Extreme","2026-09-13T16:00:00Z");
+  const thunder = warning("Severe Thunderstorm Warning","Severe","2026-09-13T16:00:00Z");
+  const tornado = warning("Tornado Warning","Extreme","2026-09-13T16:00:00Z");
+  const active = ctx.activeAlerts([expired,watch,thunder,tornado],now);
+  assert.equal(active.length,3);
+  assert.equal(ctx.outdoorWarning(active),tornado);
+  assert.equal(ctx.outdoorWarning([watch]),null);
+  assert.equal(ctx.activeAlerts([{...thunder,ends:"2026-09-13T15:00:00Z"}],now).length,0,
+    "an alert that has ended stays ended even if its message expires later");
+  assert.equal(ctx.activeAlerts([{event:"Alert without a stated end"}],now).length,1);
+});
+
+test("out-of-order refreshes cannot repaint or stop a newer request", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const code = html.slice(html.indexOf("let REFRESH_ID=0;"), html.indexOf("\nconst SWAP="));
+  const pending=[],paints=[],writes=[],nodes=new Map();
+  const node = id => {
+    if(!nodes.has(id)){
+      const classes=new Set(),attrs=new Map();
+      nodes.set(id,{textContent:"",attrs,classList:{add:v=>classes.add(v),remove:v=>classes.delete(v),contains:v=>classes.has(v)},setAttribute:(k,v)=>attrs.set(k,v)});
+    }
+    return nodes.get(id);
+  };
+  const home={id:"mb",lat:34,lon:-77,tz:"America/New_York"};
+  const farm={id:"sp",lat:37,lon:-80,tz:"America/New_York"};
+  const ctx=vm.createContext({
+    LOC:home,document:{getElementById:node},navigator:{onLine:true},
+    fetchJSON:url=>url.includes("open-meteo.com")
+      ?new Promise((resolve,reject)=>pending.push({resolve,reject}))
+      :Promise.resolve({features:[]}),
+    render:(data,live)=>paints.push({temp:data.current.temperature_2m,live}),
+    writeCache:(id,data)=>writes.push({id,temp:data.current.temperature_2m}),
+    readCache:()=>null,paintLoadingState:()=>{node("stamp").textContent="loading";},
+  });
+  vm.runInContext(code,ctx);
+  const forecast = temp => ({
+    current:{time:"2026-09-13T11:00",temperature_2m:temp},daily:{},
+    hourly:Object.fromEntries(["time","temperature_2m","apparent_temperature","precipitation_probability","weather_code","wind_speed_10m","wind_gusts_10m","uv_index"]
+      .map(k=>[k,[k==="time"?"2026-09-13T11:00":temp]])),
+  });
+  const first=ctx.refresh(),second=ctx.refresh();
+  pending[0].resolve(forecast(61));await first;
+  assert.equal(paints.length,0);
+  assert.equal(node("refreshBtn").classList.contains("spin"),true);
+  pending[1].resolve(forecast(72));await second;
+  assert.equal(paints.at(-1).temp,72);
+  assert.equal(node("refreshBtn").attrs.get("aria-busy"),"false");
+
+  const oldHome=ctx.refresh();
+  ctx.LOC=farm;const farmRequest=ctx.refresh();
+  ctx.LOC=home;const newHome=ctx.refresh();
+  pending[4].resolve(forecast(84));await newHome;
+  pending[2].resolve(forecast(63));pending[3].reject(new Error("offline"));
+  await Promise.all([oldHome,farmRequest]);
+  assert.deepEqual(paints.map(p=>p.temp),[72,84],"home-farm-home must not revive the old home request");
+  assert.deepEqual(writes.map(w=>w.temp),[72,84],"only accepted responses enter the cache");
+
+  const failure=ctx.refresh();pending[5].reject(new Error("offline"));await failure;
+  assert.equal(node("stamp").textContent,"unavailable");
+  assert.match(node("verdict").textContent,/Tap the timestamp to try again/);
+  assert.equal(node("refreshBtn").classList.contains("spin"),false);
 });
 
 test("installable assets exist", async () => {

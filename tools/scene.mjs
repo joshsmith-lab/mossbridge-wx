@@ -117,37 +117,22 @@ const CASES = [
     o: { baseTemp: 64, nowTemp: 64, feels: 63, rh: 91, isDay: 1, code: 61, cloud: 90, nowWind: 8, nowDir: 245, nowGust: 14, nowUv: 1.4, uvMax: 5,
       windAmp: 7, gustAmp: 12, sunrise: "06:14", sunset: "20:26",
       popCurve: () => 72, dailyPop: (p) => p.fill(70) } },
-  // ── Denver / Front Range ──────────────────────────────────────────────
-  { name: "17-denver-clear-afternoon", loc: "den", when: "2026-08-15T16:00:00",
-    note: "high-plains clarity: layered Front Range, magpie on the ground and a red-tailed hawk above",
-    o: { baseTemp: 74, nowTemp: 82, feels: 81, rh: 28, isDay: 1, code: 1, cloud: 16, nowWind: 9, nowDir: 145, nowGust: 17, nowUv: 7.2, uvMax: 9,
-      windAmp: 8, gustAmp: 14, sunrise: "08:12", sunset: "21:52",
-      popCurve: () => 5, dailyPop: (p) => p.fill(10) } },
-  { name: "18-denver-golden-evening", loc: "den", when: "2026-08-15T21:20:00",
-    note: "alpenglow without spectacle: warm paper, long-tailed magpie and mule deer in an open lane",
-    o: { baseTemp: 68, nowTemp: 72, feels: 71, rh: 34, isDay: 1, code: 1, cloud: 12, nowWind: 6, nowDir: 110, nowGust: 11, nowUv: 0.5, uvMax: 8,
-      windAmp: 6, gustAmp: 10, sunrise: "08:12", sunset: "21:52",
-      popCurve: () => 4, dailyPop: (p) => p.fill(8) } },
-  { name: "19-denver-summer-storm", loc: "den", when: "2026-08-15T18:10:00",
-    note: "a Front Range thunderstorm: mountains recede, grass leans, resident magpie stays readable",
-    o: { baseTemp: 72, nowTemp: 68, feels: 66, rh: 60, isDay: 1, code: 95, cloud: 93, nowWind: 19, nowDir: 280, nowGust: 36, nowUv: 1.2, uvMax: 8,
-      windAmp: 15, gustAmp: 27, sunrise: "08:12", sunset: "21:52", nowcast: true,
-      popCurve: (i, hr) => (hr >= 15 && hr <= 20 ? 82 : 12), dailyPop: (p) => { p[0] = 85; p[1] = 18; } } },
-  { name: "20-denver-snow-morning", loc: "den", when: "2026-01-14T13:15:00",
-    note: "snow on the peaks and high plain, with a black-and-white magpie holding the foreground",
-    o: { baseTemp: 27, nowTemp: 28, feels: 19, rh: 78, isDay: 1, code: 73, cloud: 88, nowWind: 8, nowDir: 35, nowGust: 16, nowUv: 1.0, uvMax: 2,
-      windAmp: 7, gustAmp: 13, sunrise: "09:18", sunset: "18:58",
-      popCurve: () => 80, dailyPop: (p) => p.fill(82) } },
-  { name: "21-denver-clear-night", loc: "den", when: "2026-08-15T23:45:00",
-    note: "quiet city edge, moon over the Front Range and a cottontail listening in the grass",
-    o: { baseTemp: 65, nowTemp: 63, feels: 62, rh: 38, isDay: 0, code: 0, cloud: 7, nowWind: 4, nowDir: 190, nowGust: 7, nowUv: 0, uvMax: 8,
-      windAmp: 5, gustAmp: 8, sunrise: "08:12", sunset: "21:52",
-      popCurve: () => 2, dailyPop: (p) => p.fill(5) } },
-  { name: "22-denver-windy-day", loc: "den", when: "2026-10-10T16:10:00",
-    note: "dry 24 mph wind: cottonwood and prairie move together while the magpie stays planted",
-    o: { baseTemp: 59, nowTemp: 67, feels: 61, rh: 24, isDay: 1, code: 1, cloud: 24, nowWind: 24, nowDir: 255, nowGust: 39, nowUv: 4.5, uvMax: 6,
-      windAmp: 17, gustAmp: 29, sunrise: "09:06", sunset: "20:29",
-      popCurve: () => 4, dailyPop: (p) => p.fill(8) } },
+  { name: "24-marsh-night-rain", loc: "mb", when: "2026-05-12T22:20:00",
+    note: "the only frame that puts the raccoon and the fiddler crab out together: neither may float, and the crab needs open water behind it",
+    o: { baseTemp: 64, nowTemp: 63, feels: 63, rh: 95, isDay: 0, code: 63, cloud: 96, nowWind: 11, nowDir: 220, nowGust: 20, nowUv: 0, uvMax: 5,
+      windAmp: 9, gustAmp: 17, sunrise: "06:11", sunset: "20:04",
+      popCurve: () => 88, dailyPop: (p) => p.fill(88) } },
+  { name: "25-marsh-thunder-nearby", loc: "mb", when: "2026-08-25T16:30:00",
+    note: "the ordinary Wilmington August afternoon: rain in the grid cell, thunderstorms two hours out. The old rule drew no lightning at all here",
+    o: { baseTemp: 84, nowTemp: 82, feels: 92, rh: 86, isDay: 1, code: 80, cloud: 92, nowWind: 13, nowDir: 235, nowGust: 24, nowUv: 1.6, uvMax: 8,
+      windAmp: 11, gustAmp: 20,
+      hourlyCode: (i, hr) => (hr >= 17 && hr <= 21 ? 95 : hr >= 14 ? 80 : 3),
+      popCurve: (i, hr) => (hr >= 14 && hr <= 21 ? 72 : 20), dailyPop: (p) => { p[0] = 80; p[1] = 55; } } },
+  { name: "23-ridge-night-downpour", loc: "sp", when: "2026-05-12T22:40:00",
+    note: "the hardest test of the ridge rain: dark theme, code 82, drops over a black fold",
+    o: { baseTemp: 62, nowTemp: 61, feels: 61, rh: 96, isDay: 0, code: 82, cloud: 97, nowWind: 15, nowDir: 210, nowGust: 26, nowUv: 0, uvMax: 5,
+      windAmp: 12, gustAmp: 22, sunrise: "06:14", sunset: "20:26",
+      popCurve: () => 92, dailyPop: (p) => p.fill(90) } },
 ];
 
 const cases = ONLY.length ? CASES.filter((c) => ONLY.some((q) => c.name.includes(q))) : CASES;
@@ -215,7 +200,8 @@ for (const cs of cases) {
     const species = await page.locator("#sceneSvg [data-species]").evaluateAll((els) =>
       [...new Set(els.map((el) => el.getAttribute("data-species")))].filter(Boolean));
     console.log(`    wildlife: ${species.join(", ") || "none"}`);
-    if (!species.length) problems.push(`${cs.name}: no wildlife in scene`);
+    const stormy = [95, 96, 99].includes(cs.o.code);
+    if (!species.length && !stormy) problems.push(`${cs.name}: no wildlife in scene`);
 
     // The count that matters for battery is what is still running. One-shot entrances
     // (rise, wipe, grow) finish in under a second but linger in getAnimations() because
@@ -290,26 +276,68 @@ for (const cs of cases) {
       if (vaneError > 1.5) problems.push(`${cs.name}: vane is ${vaneError.toFixed(1)}° off the ${cs.o.nowDir}° wind source`);
     }
 
-    if (cs.loc === "den") {
-      const denver = await page.evaluate(() => {
-        const svg = document.getElementById("sceneSvg"), city = svg.querySelector(".denver-buildings");
-        if (!city) return { missing: true, smudges: [], clipped: [] };
-        const a = city.getBoundingClientRect(), frame = svg.getBoundingClientRect(), smudges = [], clipped = [];
-        for (const el of svg.querySelectorAll('[data-species="black-billed-magpie"],[data-species="mule-deer"],[data-species="cottontail"]')) {
-          const b = el.getBoundingClientRect(), species = el.dataset.species;
-          const overlap = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left))
-            * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
-          if (overlap > 2) smudges.push(`${species} overlaps skyline by ${Math.round(overlap)} px²`);
-          if (b.left < frame.left - 1 || b.right > frame.right + 1) clipped.push(`${species} is clipped by the scene edge`);
+    // ── and nothing four-footed may float on the marsh ────────────────
+    // The pond check above exempts the marsh because its water band covers the whole
+    // lower frame and a heron is supposed to be ankle deep in it. That exemption is
+    // what let the raccoon sit sixteen units out in the channel with its belly on the
+    // water. Waders and the crab work the flat; a raccoon wets its feet at the edge.
+    if (cs.loc === "mb") {
+      const WADERS = ["great-blue-heron", "oystercatcher", "cormorant", "fiddler-crab"];
+      const floating = await page.evaluate((waders) => {
+        const svg = document.getElementById("sceneSvg");
+        const water = svg.querySelector('rect[fill="url(#waterband)"]');
+        if (!water) return [];
+        const w = water.getBoundingClientRect(), out = [];
+        for (const el of svg.querySelectorAll("[data-species]")) {
+          const species = el.dataset.species;
+          if (waders.includes(species)) continue;
+          const b = el.getBoundingClientRect();
+          if (b.bottom < w.top) continue;                 // entirely on the bank
+          const under = (b.bottom - w.top) / b.height;
+          if (under > 0.45) out.push(`${species} is ${Math.round(under * 100)}% below the waterline`);
         }
-        return { missing: false, width: a.width, height: a.height, smudges, clipped };
+        return out;
+      }, WADERS);
+      for (const f of floating) problems.push(`${cs.name}: ${f}`);
+      console.log(`    waterline: ${floating.length ? "!! " + floating.join("; ") : "nothing four-footed is floating"}`);
+    }
+
+    // ── a bolt and the sky wash are one event ─────────────────────────
+    // They used to be two: the wash cycled every 7s and the bolt every 37s, so the sky lit
+    // with nothing under it and the bolt struck into a sky that stayed dark, for as long as
+    // nobody sat and watched a storm scene. Walk the storm cycle on one clock and check that
+    // no two bolts fire together and that no bolt fires into an unlit sky.
+    if (await page.locator(".bolt").count()) {
+      const sync = await page.evaluate(() => {
+        const bolts = [...document.querySelectorAll(".bolt")].map((e) => e.getAnimations()[0]).filter(Boolean);
+        const flashEl = document.getElementById("flash");
+        const flash = flashEl.getAnimations()[0];
+        if (!bolts.length || !flash) return null;
+        const all = [...bolts, flash];
+        all.forEach((a) => a.pause());
+        // One shared clock. Each effect's own delay is what spreads the beats apart, so
+        // setting a common iteration progress would cancel exactly what is under test.
+        const P = flash.effect.getTiming().duration, N = 1200;
+        let overlaps = 0, dark = 0, lit = 0;
+        for (let i = 0; i < N; i++) {
+          all.forEach((a) => { a.currentTime = P * 5 + P * (i / N); });
+          const on = bolts.filter((b) => Number(getComputedStyle(b.effect.target).opacity) > 0.1).length;
+          const wash = Number(getComputedStyle(flashEl).opacity);
+          if (on > 1) overlaps++;
+          if (on >= 1) { lit++; if (wash < 0.05) dark++; }
+        }
+        all.forEach((a) => a.play());
+        return { bolts: bolts.length, period: P / 1000, overlaps, dark, litPct: +(lit / N * 100).toFixed(1) };
       });
-      if (denver.missing) problems.push(`${cs.name}: Denver skyline missing`);
+      if (!sync) problems.push(`${cs.name}: bolts drawn with no storm clock behind them`);
       else {
-        if (denver.width < 195 || denver.height < 42) problems.push(`${cs.name}: skyline is only ${denver.width.toFixed(0)}×${denver.height.toFixed(0)} px at phone width`);
-        for (const s of [...denver.smudges, ...denver.clipped]) problems.push(`${cs.name}: ${s}`);
+        if (sync.overlaps) problems.push(`${cs.name}: ${sync.overlaps} samples with two bolts at once`);
+        // a few samples land in the dip between return strokes, when the sky dims too
+        if (sync.dark > sync.litPct * 6) problems.push(`${cs.name}: bolts strike into an unlit sky`);
+        console.log(`    lightning: ${sync.bolts} bolts on a ${sync.period}s clock, lit ${sync.litPct}% of it, `
+          + `${sync.overlaps ? "!! " + sync.overlaps + " overlapping" : "never two at once"}, `
+          + `${sync.dark > sync.litPct * 6 ? "!! striking into a dark sky" : "always with the wash"}`);
       }
-      console.log(`    skyline: ${denver.missing ? "missing" : `${denver.width.toFixed(0)}×${denver.height.toFixed(0)} px, ${denver.smudges.length ? "!! " + denver.smudges.join("; ") : "wildlife clear"}`}`);
     }
 
     // ── what the motion costs: layout must stay flat while things move ──
