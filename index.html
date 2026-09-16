@@ -589,7 +589,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   <div class="eyebrow"><b>Next 24 hours</b><span id="hourlyNote"></span></div>
   <div class="hourly-scroll">
     <div class="hourly-inner" id="hourlyExplore" role="group" tabindex="0" aria-label="24-hour forecast. Use left and right arrow keys to explore each hour.">
-      <svg id="hourlySvg" viewBox="0 0 820 128" xmlns="http://www.w3.org/2000/svg" aria-label="Hourly temperature and precipitation chance"></svg>
+      <svg id="hourlySvg" viewBox="0 0 700 160" xmlns="http://www.w3.org/2000/svg" aria-label="Hourly temperature and precipitation chance"></svg>
       <div class="hourly-cursor" id="hourlyCursor" hidden></div>
       <div class="hourly-peek" id="hourlyPeek" hidden><span id="peekTime"></span><b id="peekTemp"></b><span class="feels" id="peekFeels"></span><span id="peekRain"></span></div>
     </div>
@@ -2624,7 +2624,7 @@ function hideHourlyPeek(delay=0){
 function hourlyPeekIndex(clientX){
   if(!HOURLY_PEEK)return 0;
   const svg=document.getElementById("hourlySvg"),r=svg.getBoundingClientRect();
-  const vx=(clientX-r.left)/Math.max(1,r.width)*820;
+  const vx=(clientX-r.left)/Math.max(1,r.width)*700;
   let best=0,dist=Infinity;
   HOURLY_PEEK.x.forEach((x,i)=>{const d=Math.abs(x-vx);if(d<dist){dist=d;best=i}});
   return best;
@@ -2663,7 +2663,7 @@ function positionHourlyPeek(){
   const chart=document.getElementById("hourlyExplore").getBoundingClientRect();
   const view=document.querySelector(".hourly-scroll").getBoundingClientRect();
   const left=Math.max(0,view.left-chart.left)+8,right=Math.min(chart.width,view.right-chart.left)-8;
-  const scale=chart.width/820,px=HOURLY_PEEK.x[PEEK_I]*scale;
+  const scale=chart.width/700,px=HOURLY_PEEK.x[PEEK_I]*scale;
   peek.style.maxWidth=Math.max(0,right-left)+"px";
   const half=peek.offsetWidth/2;
   peek.style.setProperty("--peek-label-x",clamp(px,left+half,right-half).toFixed(1)+"px");
@@ -2786,12 +2786,16 @@ function render(d,live,savedAt=0){
   document.getElementById("chips").innerHTML=chipData.map(([ic,t])=>`<span class="chip">${ic}${t}</span>`).join("");
 
   /* hourly */
-  const W=820,Ht=128,pad=16,n=h.temp.length,base=Ht-6;
-  const tMin=Math.min(...h.temp)-4,tMax=Math.max(...h.temp)+4;
+  const W=700,Ht=160,pad=16,n=h.temp.length,base=Ht-6;
+  /* The hourly run can step up or down a degree between adjacent model hours. Blend only
+     neighboring values for the drawn trend: the actual hourly reading remains available
+     to the touch explorer, while the overview reads as the calm weather arc it is. */
+  const trendTemp=h.temp.map((t,i)=>i===0||i===h.temp.length-1?t:(h.temp[i-1]+2*t+h.temp[i+1])/4);
+  const tMin=Math.min(...trendTemp)-4,tMax=Math.max(...trendTemp)+4;
   const X=i=>pad+i*(W-2*pad)/(n-1);
   const Y=t=>26+(base-40)*(1-(t-tMin)/(tMax-tMin));
-  const pts=h.temp.map((t,i)=>[X(i),Y(t)]);
-  HOURLY_PEEK={h,x:h.temp.map((_,i)=>X(i)),y:h.temp.map(t=>Y(t))};
+  const pts=trendTemp.map((t,i)=>[X(i),Y(t)]);
+  HOURLY_PEEK={h,x:h.temp.map((_,i)=>X(i)),y:trendTemp.map(t=>Y(t))};
   PEEK_I=0;
   hideHourlyPeek();
   const line=spline(pts);
@@ -2866,11 +2870,11 @@ function render(d,live,savedAt=0){
         bars+=`<text x="${X(i).toFixed(1)}" y="${(base-bh-4).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="8.5" fill="${css.water}" ${halo}>${h.pop[i]}</text>`;
     }
     if(i===hiI||i===loI||i===0){
-      dots+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(h.temp[i]).toFixed(1)}" r="3.6" fill="${css.paper}" stroke="${tempColor(h.temp[i])}" stroke-width="2.4"/>
-      <text x="${X(i).toFixed(1)}" y="${(Y(h.temp[i])-11).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="11.5" font-weight="600" fill="${css.ink}" ${halo}>${Math.round(h.temp[i])}°</text>`;
+      dots+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(trendTemp[i]).toFixed(1)}" r="3.6" fill="${css.paper}" stroke="${tempColor(h.temp[i])}" stroke-width="2.4"/>
+      <text x="${X(i).toFixed(1)}" y="${(Y(trendTemp[i])-12).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="13" font-weight="600" fill="${css.ink}" ${halo}>${Math.round(h.temp[i])}°</text>`;
     }else if(i%4===0){
-      dots+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(h.temp[i]).toFixed(1)}" r="2" fill="${tempColor(h.temp[i])}" opacity=".8"/>
-      <text x="${X(i).toFixed(1)}" y="${(Y(h.temp[i])-9).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="10" fill="${css.soft}" ${halo}>${Math.round(h.temp[i])}°</text>`;
+      dots+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(trendTemp[i]).toFixed(1)}" r="2" fill="${tempColor(h.temp[i])}" opacity=".8"/>
+      <text x="${X(i).toFixed(1)}" y="${(Y(trendTemp[i])-10).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="11.5" fill="${css.soft}" ${halo}>${Math.round(h.temp[i])}°</text>`;
     }
     labels+=`<span class="${i===0?"mark":""}" style="left:${(X(i)/W*100).toFixed(3)}%">${i===0?"NOW":i%3===0?hh(h.time[i]):""}</span>`;
   }
