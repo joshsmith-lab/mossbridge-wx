@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v66/);
+  assert.match(worker, /mbwx-shell-v67/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -580,6 +580,11 @@ test("tide chart reads as depth over the bottom", async () => {
   assert.match(html, /lowY=H-9/);
   assert.match(html, /rockDeg=clamp\(2\.2\+g0\*\.13/);
   assert.match(html, /renderTides\(d\.tides,css,c\.wind_gusts_10m\)/);
+  assert.match(html, /const chartH=w=>Math\.round\(152\+\(760-w\)\*\.09\)/);
+  assert.match(html, /Ht=chartH\(W\)-22/);
+  assert.match(html, /H=chartH\(W\)/);
+  assert.match(html, /id="tideExplore" role="group" tabindex="0"/);
+  assert.match(html, /function setupTidePeek\(\)/);
 });
 
 test("light, motion and alerts stay tuned", async () => {

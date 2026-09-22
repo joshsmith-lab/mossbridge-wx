@@ -52,13 +52,45 @@ try{
       const svg=document.getElementById("hourlySvg").getBoundingClientRect();
       return [...document.querySelectorAll("#hrLabels span")].every((el,i)=>{
         const b=el.getBoundingClientRect();
-        return Math.abs(b.left+b.width/2-(svg.left+(16+i*(820-32)/23)/820*svg.width))<1;
+        return Math.abs(b.left+b.width/2-(svg.left+HOURLY_PEEK.x[i]/HOURLY_PEEK.W*svg.width))<1;
       });
     });
     assert.equal(alignment,true,"hour labels align with their temperature and precipitation columns");
     await page.locator(".hourly-scroll").evaluate(el=>el.scrollLeft=200);
     await page.locator("#locBtn").click();
     assert.equal(await page.locator(".hourly-scroll").evaluate(el=>el.scrollLeft),0);
+    assert.deepEqual(errors,[]);await context.close();checks++;
+  }
+  for(const width of [320,390,900]){
+    const {context,page,errors}=await open(width,base,"mb");
+    await load(page);
+    const sizes=await page.evaluate(()=>({
+      hourly:document.querySelector(".hourly-scroll").getBoundingClientRect().height,
+      tide:document.getElementById("tideExplore").getBoundingClientRect().height,
+    }));
+    assert.ok(Math.abs(sizes.hourly-sizes.tide)<1.5,"hourly and tide areas match height: "+JSON.stringify(sizes));
+    const box=await page.locator("#tideSvg").boundingBox();
+    for(const x of [box.x+12,box.x+box.width-12]){
+      await page.locator("#tideSvg").dispatchEvent("pointermove",{pointerType:"mouse",clientX:x});
+      const peek=await page.locator("#tidePeek").boundingBox();
+      assert.ok(peek&&peek.x>=box.x+7&&peek.x+peek.width<=box.x+box.width-7,"tide readout fits the chart");
+      const reading=await page.evaluate(()=>TIDE_PEEK.samples[TIDE_I]);
+      assert.equal(await page.locator("#tidePeekDepth").innerText(),"~"+reading.depth.toFixed(1)+" ft");
+      assert.equal(await page.locator("#tidePeekDirection").innerText(),reading.direction);
+    }
+    await page.locator("#tideExplore").focus();
+    await page.keyboard.press("Home");
+    const first=await page.evaluate(()=>TIDE_PEEK.samples[TIDE_I].time);
+    await page.keyboard.press("ArrowRight");
+    assert.equal(await page.evaluate(first=>TIDE_PEEK.samples[TIDE_I].time-first,first),15*60*1000);
+    assert.match(await page.locator("#tidePeekLive").textContent(),/about .* feet, (rising|falling)/);
+    await page.keyboard.press("End");
+    assert.equal(await page.evaluate(()=>TIDE_I),await page.evaluate(()=>TIDE_PEEK.samples.length-1));
+    await page.keyboard.press("Escape");
+    assert.equal(await page.locator("#tidePeek").isVisible(),false);
+    await page.locator("#tideSvg").dispatchEvent("pointerdown",{pointerType:"touch",clientX:box.x+box.width/2});
+    assert.equal(await page.locator("#tidePeek").isVisible(),true);
+    await page.locator("#tideSvg").dispatchEvent("pointerup",{pointerType:"touch"});
     assert.deepEqual(errors,[]);await context.close();checks++;
   }
   for(const [code,kind] of [[75,"snow"],[67,"freezing rain"]]){
@@ -109,7 +141,7 @@ try{
     await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
     assert.deepEqual(errors,[]);await context.close();checks++;
   }
-  console.log(`${checks} interaction scenarios passed: chart edges, keyboard, snow/ice, warnings, and offline recovery.`);
+  console.log(`${checks} interaction scenarios passed: matched chart heights, hourly and tide exploration, warnings, and offline recovery.`);
 }finally{
   await browser.close();server.close();
 }
