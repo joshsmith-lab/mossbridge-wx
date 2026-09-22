@@ -30,6 +30,8 @@ import { serve, stage } from "./fixtures.mjs";
 const OUT = path.join(path.dirname(fileURLToPath(import.meta.url)), "shots", "scene");
 const FONT_DIR = process.env.PORCH_FONT_DIR || "";
 const PORT = Number(process.env.PORCH_PORT || 8801);
+const PHONE_WIDTH = Number(process.env.PORCH_SCENE_WIDTH || 430);
+const WILDLIFE_FRAMES = process.env.PORCH_WILDLIFE_FRAMES === "1";
 const ONLY = process.argv.slice(2);
 
 let chromium;
@@ -192,16 +194,26 @@ for (const cs of cases) {
 
   // ── the look, at phone width ──────────────────────────────────────────
   {
-    const { ctx, page, errs } = await open(cs, { width: 430 });
+    const { ctx, page, errs } = await open(cs, { width: PHONE_WIDTH });
     for (const [sel, suffix] of [[".sky", "sky"], [".scene", "scene"], ["#tideSection", "tide"]]) {
       try { await page.locator(sel).screenshot({ path: path.join(OUT, `${cs.name}-${suffix}.png`) }); } catch {}
     }
-
     const species = await page.locator("#sceneSvg [data-species]").evaluateAll((els) =>
       [...new Set(els.map((el) => el.getAttribute("data-species")))].filter(Boolean));
     console.log(`    wildlife: ${species.join(", ") || "none"}`);
     const stormy = [95, 96, 99].includes(cs.o.code);
     if (!species.length && !stormy) problems.push(`${cs.name}: no wildlife in scene`);
+    const clipped=await page.evaluate(()=>{
+      const frame=document.getElementById("sceneSvg").getBoundingClientRect(),out=[];
+      for(const el of document.querySelectorAll("#sceneSvg [data-species]")){
+        if(["gull","hawk"].includes(el.dataset.species)||el.classList.contains("ff"))continue;
+        const b=el.getBoundingClientRect();
+        if(b.left<frame.left-2||b.right>frame.right+2||b.top<frame.top-2||b.bottom>frame.bottom+2)
+          out.push(el.dataset.species);
+      }
+      return out;
+    });
+    if(clipped.length)problems.push(`${cs.name}: wildlife clipped at ${PHONE_WIDTH}px: ${clipped.join(", ")}`);
 
     // The count that matters for battery is what is still running. One-shot entrances
     // (rise, wipe, grow) finish in under a second but linger in getAnimations() because
@@ -351,7 +363,27 @@ for (const cs of cases) {
     console.log(`    over 6s: ${layouts} layouts, ${styles} style recalcs, ${((b.LayoutDuration - a.LayoutDuration) * 1000).toFixed(1)}ms in layout`);
     if (layouts > 12) problems.push(`${cs.name}: ${layouts} layouts in 6s of idle motion (layout thrash)`);
 
-    if (errs.length) problems.push(`${cs.name} 430: ${errs.join(" | ")}`);
+    if (WILDLIFE_FRAMES) {
+      const subject=cs.name.includes("deer")?"deer":cs.name.includes("night-rain")?"fiddler-crab":
+        cs.name.includes("cold-night")?"owl":cs.name.includes("warm-clear-night")?"raccoon":
+        cs.name.includes("fog-morning")?"great-blue-heron":"";
+      if(subject){
+        await page.evaluate(()=>document.getAnimations().forEach(a=>a.pause()));
+        for(const [label,fraction] of [["rest",0],["first",.4],["gesture",.8],["return",.9]]){
+          await page.evaluate(({subject,fraction})=>{
+            const animal=document.querySelector(`#sceneSvg [data-species="${subject}"]`);
+            const root=animal?.closest(".crab-run")||animal;
+            for(const a of root?.getAnimations({subtree:true})||[]){
+              const duration=a.effect?.getComputedTiming().duration;
+              if(Number.isFinite(duration))a.currentTime=fraction*duration;
+            }
+          },{subject,fraction});
+          await page.locator(".scene").screenshot({path:path.join(OUT,`${cs.name}-${subject}-${label}.png`)});
+        }
+      }
+    }
+
+    if (errs.length) problems.push(`${cs.name} ${PHONE_WIDTH}: ${errs.join(" | ")}`);
     await ctx.close();
   }
 
@@ -365,7 +397,7 @@ for (const cs of cases) {
 
   // ── reduced motion: nothing may move, at all ──────────────────────────
   {
-    const { ctx, page, errs } = await open(cs, { width: 430, reducedMotion: "reduce" });
+    const { ctx, page, errs } = await open(cs, { width: PHONE_WIDTH, reducedMotion: "reduce" });
     // SVG turbulence and blur filters are intentionally nondeterministic in system Chrome.
     // They are static texture/softness, not scene motion, so omit them from a byte-for-byte
     // stillness check; all transforms and opacity remain under test.
