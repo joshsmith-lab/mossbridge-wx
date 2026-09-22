@@ -134,7 +134,13 @@ for (const cs of cases) {
         const box = await page.locator("#hourlySvg").boundingBox();
         if (!box) { failures++; console.log("!! hourly explorer: chart has no box"); }
         else {
-          await page.mouse.move(box.x + 96, box.y + 74);
+          const target = await page.evaluate(() => {
+            const {h,x,W}=HOURLY_PEEK;
+            const i=h.temp.findIndex((t,i)=>Math.abs(Math.round(h.feels?.[i])-Math.round(t))>=3);
+            return {i,share:i<0?0:x[i]/W};
+          });
+          if(target.i<0){failures++;console.log("!! hourly explorer: fixture has no meaningful feels-like difference");}
+          await page.mouse.move(box.x + target.share*box.width, box.y + box.height/2);
           const peek = page.locator("#hourlyPeek:not([hidden])");
           const peekText = await peek.count() ? await peek.innerText() : "";
           if (!/feels \d+°/.test(peekText)) { failures++; console.log(`!! hourly explorer: missing meaningful feels-like readout (${peekText || "hidden"})`); }
@@ -149,6 +155,13 @@ for (const cs of cases) {
             failures++; console.log(`!! hourly explorer: 3% mismatch (${visibleRain} / ${spoken})`);
           }
         }
+        const tideBox=await page.locator("#tideSvg").boundingBox();
+        await page.mouse.move(tideBox.x+tideBox.width*.58,tideBox.y+tideBox.height/2);
+        const tidePeek=page.locator("#tidePeek:not([hidden])");
+        if(!await tidePeek.count()||!/ft/.test(await tidePeek.innerText())){
+          failures++;console.log("!! tide explorer: missing depth readout");
+        }
+        await page.locator("#tideExplore").screenshot({path:path.join(OUT,`${cs.name}-tide-peek.png`)});
       }
       if (cs.name === "09-after-midnight-porters-neck" && !/before morning/.test(copy.tonight || "")) {
         failures++; console.log(`!! after-midnight Tonight card describes the wrong night (${copy.tonight})`);
