@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v67/);
+  assert.match(worker, /mbwx-shell-v68/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -312,7 +312,7 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /const animalLeft=barnX-48,animalRight=barnX\+48,rightTreeX=W\*\.955/);
   assert.match(html, /const yard=x>animalLeft-18&&x<animalRight\+22/);
   assert.match(html, /class="barn" data-scene-anchor="barn"/);
-  assert.match(html, /deerAt\(animalRight\+14/);
+  assert.match(html, /deerAt\(Math\.min\(animalRight\+14,W-9\)/);
   // the body has a waist: haunch, tuck, brisket — not a bean
   assert.match(html, /4\.6 12\.8 C 6\.0 12\.6 6\.8 10\.2 8\.4 8\.8/);
   assert.match(html, /deer\?"":dark\?fox\(animalRight-14/);
@@ -611,13 +611,12 @@ test("light, motion and alerts stay tuned", async () => {
   assert.match(html, /32%,40%\{transform:rotate\(66deg\)\}/);
   assert.match(html, /deerGraze 48s/);
   assert.match(html, /@keyframes flagFlick/);
-  assert.match(html, /class="buck-regard"/);
-  assert.match(html, /class="buck-threeq"/);
+  assert.doesNotMatch(html, /class="buck-regard"|class="buck-threeq"/);
   assert.doesNotMatch(html, /@keyframes buckTurn/);
   // hind leg: a gentle S, stifle then hock — not a lightning bolt
   assert.match(html, /M 5\.0 11\.4 L 5\.6 14\.8 L 4\.6 17\.4 L 4\.8 20\.8/);
   assert.doesNotMatch(html, /M 5\.0 11\.6 L 6\.2 14\.8 L 4\.0 17\.6/);
-  assert.match(html, /21\.6 -13\.2/);
+  assert.match(html, /M 18\.6 -3\.2 C 17\.6 -5\.8/);
   // mule deer stands: ear and tail only. The graze clock hid the ears and read as a rodent.
   assert.match(html, /class="mule-head"/);
   assert.match(html, /!dark&&!deerOut&&!storm\?magpieAt/);
