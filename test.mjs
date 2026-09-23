@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v68/);
+  assert.match(worker, /mbwx-shell-v69/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -252,7 +252,9 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /class="heron-wade"/);
   assert.match(html, /@keyframes heronWade/);
   assert.match(html, /heronWade 150s/);
-  assert.match(html, /M 18\.6 34\.2 L 20\.2 40\.2/);
+  // the heron's ankle sits behind its hip (+x, he faces -x): the leg bends backward, the way
+  // a heron's does, as a thigh and a tarsus hanging from the ankle joint
+  assert.match(html, /pTaper\(\[\[1\.8,-31,2\.2\],\[2\.8,-23\.9,1\.4\],\[3\.4,-16\.8,1\.5\]\],"leg"\)/);
   assert.match(html, /class="heron-tarsus"/);
   assert.match(html, /class="heron-lunge"/);
   // the heron never turns. The end-of-loop flip was there to mask the drift back to its
@@ -269,8 +271,10 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.doesNotMatch(html, /heronScan 31s/);
   assert.match(html, /@keyframes heronScan\{0%,80%,100%\{transform:rotate\(0\)\}/);
   assert.match(html, /class="heron-scan" style="\$\{phase\(97\)\}"/);
-  assert.match(html, /40\.8%,43\.6%\{transform:translate\(-1px,2\.8px\) rotate\(-20deg\)\}/);
-  assert.match(html, /40\.8%,43\.6%\{transform:rotate\(-26deg\) translate\(0,3\.2px\)\}/);
+  // the storybook heron stands tall, so the strike pitches the body well forward and swings
+  // the neck down far enough that the bill actually meets the water
+  assert.match(html, /40\.8%,43\.6%\{transform:translate\(-1px,2\.8px\) rotate\(-46deg\)\}/);
+  assert.match(html, /40\.8%,43\.6%\{transform:rotate\(-48deg\) translate\(0,7px\)\}/);
   assert.doesNotMatch(html, /M 18\.4 34\.2 L 17\.7 38\.0/);
   assert.match(html, /class="flight-wing wing-l"/);
   assert.match(html, /rapid mirrored triangles read as a bat/);
@@ -290,7 +294,8 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /class="crab-run"/);
   // the crab sits on the flat with open water behind it, not up on the grass line where a
   // dark crab on dark spartina is a smudge and the ten-pixel dash travels behind the reeds
-  assert.match(html, /crabAt\(crabX,base\+7,1\.1,1\)/);
+  // (its y is now the mud under its legs, where it has always stood)
+  assert.match(html, /crabAt\(crabX,base\+14,\.5,1\)/);
   assert.doesNotMatch(html, /crabAt\(W\*\.57,base-2/);
   // and its x comes off the resident, because a fixed fraction of a frame that is a
   // fraction of the screen ran the crab through the oystercatcher on a 320px phone
@@ -300,29 +305,49 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /const frogAt=\(x,y,s,opacity=\.96\)/);
   assert.match(html, /const crabAt=\(x,y,s,opacity=\.96\)/);
   assert.match(html, /const raccoon=\(x,y,s,o=\.96\)/);
-  // The spartina carries its own seasonal green so the green-black wildlife finally
-  // separates from the bank; night collapses to scene ink, fog pulls most of the way back
-  assert.match(html, /const grassInk=dark\?ink:fog\?mixInk\(GRASS\[month\],ink,\.6\):GRASS\[month\]/);
-  assert.match(html, /path d="\$\{mid\}" fill="\$\{grassInk\}"/);
-  assert.match(html, /path d="\$\{d\}" fill="\$\{grassInk\}"/);
-  // but the far canopy, pines and oak stay atmospheric blue — that contrast is the depth cue
-  assert.match(html, /path d="\$\{tl\}" fill="\$\{ink\}"/);
+  // The spartina keeps its calendar (green, golding, straw) as tip, middle and root, lit by
+  // the scene's own sky, so night drains it and fog pulls it into the veil like everything
+  assert.match(html, /const bladeC=SEASON_BLADE\[month\]\.map\(c=>air\(c,\.06\)\)/);
+  assert.match(html, /const grassInk="url\(#blade\)",bankC=air\(SEASON_BLADE\[month\]\[2\],\.1\)/);
+  assert.match(html, /path d="\$\{mid\}" fill="\$\{bankC\}"/);
+  assert.match(html, /<path d="\$\{d\}" fill="\$\{grassInk\}"\/>/);
+  // but the far canopy stays in the air, mostly the sky's own colour — the depth cue
+  assert.match(html, /const farC=air\("#6E8C82",\.62\)/);
+  assert.match(html, /path d="\$\{tl\}" fill="\$\{farC\}"/);
   // residents stay intact; the landscape gives each silhouette a quiet natural pocket
   assert.match(html, /Math\.abs\(x-residentX\)<26\)ht\*=\.28/);
   assert.match(html, /const animalLeft=barnX-48,animalRight=barnX\+48,rightTreeX=W\*\.955/);
   assert.match(html, /const yard=x>animalLeft-18&&x<animalRight\+22/);
   assert.match(html, /class="barn" data-scene-anchor="barn"/);
-  assert.match(html, /deerAt\(Math\.min\(animalRight\+14,W-9\)/);
-  // the body has a waist: haunch, tuck, brisket — not a bean
-  assert.match(html, /4\.6 12\.8 C 6\.0 12\.6 6\.8 10\.2 8\.4 8\.8/);
-  assert.match(html, /deer\?"":dark\?fox\(animalRight-14/);
+  // the buck is placed off the barn, far enough into the field to be deer-sized
+  assert.match(html, /const deerX=Math\.min\(animalRight\+40,W-30\),deerS=\.62/);
+  assert.match(html, /deerAt\(deerX,base\+13,deerS,-1,1\)/);
+  // Storybook Ink: every moving joint pivots on its real joint. joint() wraps the group so its
+  // own origin is the joint, and the scene CSS gives those classes view-box and 0 0. Lose either
+  // and every rig falls back to pivoting on a bounding-box corner
+  assert.match(html, /const joint=\(jx,jy,open,inner\)=>`<g transform="translate\(\$\{f1\(jx\)\} \$\{f1\(jy\)\}\)">\$\{open\}<g transform="translate\(\$\{f1\(-jx\)\} \$\{f1\(-jy\)\}\)">/);
+  assert.match(html, /#sceneSvg \.fox-head,#sceneSvg \.fox-tail\{transform-box:view-box;transform-origin:0 0\}/);
+  // the scene never runs an SVG filter: the picture repaints every frame something moves, so the
+  // paper grain is a baked tile and nothing in renderScene carries filter=
+  const scene = html.slice(html.indexOf("function renderScene("), html.indexOf("/* ── smooth path through points"));
+  assert.doesNotMatch(scene, /filter="url/);
+  // clouds are drawn in the scene only when there are clouds to draw, and they really drift:
+  // two direction keywords in one animation shorthand made Chrome drop it and nothing moved
+  assert.equal(html.split("cloud>=10&&cloud<=85&&!wet&&!storm&&!fog").length - 1, 2);
+  assert.doesNotMatch(html, /(reverse|normal) infinite alternate/);
+  // the barn lamps come on once the sun is down, not before the sunset time on the arc
+  assert.match(html, /const lamps=sunAltDeg< -\.83/);
+  // the body has a waist: haunch, stifle, the flank tucking up, then the belly — not a bean
+  assert.match(html, /\[-18\.6,-24\.2\],\[-15\.8,-23\.6\],\[-12\.6,-25\.4\],\[-8,-24\.8\]/);
+  // the fox crosses the yard clear of the barn, measured off it
+  assert.match(html, /deer\?"":dark\?fox\(animalRight\+6,base\+17\.5,\.95,1\)/);
   // the small shorebird's bill sits against open water, not the dark bank
-  assert.match(html, /oysterCatcher\(residentX,base\+9,1\.1,1\)/);
+  assert.match(html, /oysterCatcher\(residentX,base\+14\.6,\.92,1\)/);
   // Shady Spring gets asymmetric Appalachian folds, a real gambrel barn, and bare winter trees
   assert.match(html, /const ridgeProfiles=\[/);
   assert.match(html, /const winter=month===11\|\|month<=1\|\|snowing/);
   assert.match(html, /a broken gambrel/);
-  assert.match(html, /M 13\.4 16 L 22\.6 26\.5 M 22\.6 16 L 13\.4 26\.5/);
+  assert.match(html, /M 12\.4 -11\.6 L 23\.6 0 M 23\.6 -11\.6 L 12\.4 0/);
 
   assert.match(html, /class="hawk-circle"/);
   // the warm-weather farm residents now read as hens and move on separate, quiet clocks
@@ -334,9 +359,10 @@ test("every motion is driven by a reading, not by decoration", async () => {
   // peck is beak-down (negative rotate). Positive rotate folded the head over the back.
   assert.match(html, /59%\{transform:rotate\(-42deg\)\}/);
   assert.match(html, /58%,72%\{transform:rotate\(-12deg\)\}/);
-  assert.match(html, /barnX\+yard\*\.30,base\+13\.2,\.74,"scratch",19,-1/);
-  assert.match(html, /barnX\+yard\*\.56,base\+12,\.88,"peck",15/);
-  assert.match(html, /barnX\+yard\*\.82,base\+13,\.76,"look",23/);
+  // three breeds a body-length apart, feet on the dirt (y is the ground under them now)
+  assert.match(html, /barnX\+yard\*\.30,base\+18,\.42,"scratch",19,-1/);
+  assert.match(html, /barnX\+yard\*\.56,base\+17,\.46,"peck",15/);
+  assert.match(html, /barnX\+yard\*\.82,base\+17\.6,\.43,"look",23/);
   assert.match(html, /:\(!wet&&!storm\)\?chickens\(barnX,rightTreeX,base\)/);
 
   // light: the sun flattens near the horizon, the meteor waits for a clear night
@@ -608,23 +634,29 @@ test("light, motion and alerts stay tuned", async () => {
   assert.match(html, /@keyframes swayTree/);
   assert.match(html, /class="deer-head"/);
   assert.match(html, /@keyframes deerGraze/);
-  assert.match(html, /32%,40%\{transform:rotate\(66deg\)\}/);
+  // the graze is two joints on one clock: the neck swings down from the withers and the
+  // head tips back at the poll, so the muzzle reaches the grass instead of hanging mid-air
+  assert.match(html, /@keyframes deerGraze\{0%,26%,48%,100%\{transform:none\}32%,40%\{transform:rotate\(116deg\)\}/);
+  assert.match(html, /@keyframes deerNod\{0%,26%,48%,100%\{transform:none\}32%,40%\{transform:rotate\(-56deg\)\}/);
+  assert.match(html, /\.deer-nod\{animation:deerNod 48s/);
   assert.match(html, /deerGraze 48s/);
   assert.match(html, /@keyframes flagFlick/);
   assert.doesNotMatch(html, /class="buck-regard"|class="buck-threeq"/);
   assert.doesNotMatch(html, /@keyframes buckTurn/);
   // hind leg: a gentle S, stifle then hock — not a lightning bolt
-  assert.match(html, /M 5\.0 11\.4 L 5\.6 14\.8 L 4\.6 17\.4 L 4\.8 20\.8/);
+  assert.match(html, /pTaper\(\[\[-16\.8,-30,7\.6\],\[-16\.4,-23\.4,4\.6\],\[-18\.4,-17\.4,3\],\[-19\.4,-13\.4,2\.4\]/);
   assert.doesNotMatch(html, /M 5\.0 11\.6 L 6\.2 14\.8 L 4\.0 17\.6/);
-  assert.match(html, /M 18\.6 -3\.2 C 17\.6 -5\.8/);
+  // the rack: a main beam sweeping forward with tines rising off it
+  assert.match(html, /pTaper\(\[\[24,-57\.6,2\],\[22\.8,-61\.6,1\.8\],\[23\.6,-65\.6,1\.6\]/);
   // mule deer stands: ear and tail only. The graze clock hid the ears and read as a rodent.
   assert.match(html, /class="mule-head"/);
   assert.match(html, /!dark&&!deerOut&&!storm\?magpieAt/);
   assert.match(html, /:\(!wet&&!storm\)\?chickens/);
   assert.match(html, /:storm\?"":oysterCatcher/);
   // the raccoon forages at the waterline, not out in the channel: at base+7 its feet
-  // hung sixteen units below the bank with nothing under them and it read as floating
-  assert.match(html, /raccoon\(residentX,base-6,1\.36,1\)/);
+  // hung sixteen units below the bank with nothing under them and it read as floating.
+  // Its y is now the ground under its feet
+  assert.match(html, /raccoon\(residentX,base\+2\.5,\.95,1\)/);
   assert.doesNotMatch(html, /raccoon\(residentX,base\+7/);
   assert.match(html, /@keyframes perchHop/);
   assert.match(html, /@keyframes groundHop/);
