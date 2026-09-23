@@ -65,6 +65,48 @@ place name.
   forecast API; sun and moon positions and the golden-hour boundaries are
   computed locally from `sunPos`.
 
+## Storybook Ink: how the scene is drawn
+
+In September 2026 Josh chose the scene's art direction: the storybook look of Prince of
+Persia (2008). Hand-inked outlines that run heavier on the shadow side, flat colour per part,
+a hard form-shadow crescent and a warm lit edge, paper grain, curled clouds. Fun, but crafted:
+never clip-art, and never a deer that reads as a bean. The approved mockup put the heron,
+buck, raccoon and oystercatcher at close range next to the phone-size scene; hold every new
+drawing to both views.
+
+- **Everything is drawn from parts.** The kit (`Storybook ink: the drawing kit` in
+  index.html) makes smooth bodies (`pBlob`), brush strokes that change width along a
+  centreline (`pTaper`: legs, bills, antlers, limbs, blades), scalloped masses (`scallop`:
+  canopies, cumulus) and curls. `inkUnit()` paints a list of parts: outline, flat colour per
+  role, shadow crescent, lit edge. Roles decide colour; `mark`, `band`, `eye`, `eyeRing`,
+  `nose` and `detail` sit inside the silhouette and take no outline.
+- **Animals are rigs.** `rigDeer`, `rigHeron` and the rest (`Storybook cast`) are layers
+  back to front. Every moving joint is written out as its own group, and `joint()` wraps it
+  so the group's origin is the real joint; the `#sceneSvg` CSS gives those classes
+  `transform-box:view-box;transform-origin:0 0`. Never go back to pivoting a redrawn part on
+  a fill-box percentage: redraw the part and the percentage walks off the shoulder. The
+  keyframes themselves did not change unless a comment says so (the heron's strike and the
+  buck's graze had to reach further, because the new birds and deer stand taller).
+- **Colour comes from the sky.** Palettes are day colours. `renderScene` lights them with
+  the sky it actually sits under: `skyStops()` gives the air that distance fades into
+  (`air(c,d)`), the grey of overcast and the slate of a storm; golden hour warms toward rose
+  on the way up and amber on the way down, over the same window `goldenHour()` uses; night
+  drains colour before shape (`tone()`); fog takes the far things first. The light comes
+  from where the sun or moon really is (`lightAt`), so the lit edge and the cast shadows are
+  on the true side, fade under cloud, and are not drawn when the sun is down or veiled.
+- **Outlines and shading add nothing to an animal's footprint.** The harness measures fill
+  geometry, so the heavier edge is a stroke and the shadow and lit edge are the silhouette
+  itself, masked. A padded rectangle there once made the oystercatcher read as clipped.
+- **Grain is baked once** (`paperTex()`, a seeded tile) and laid over the big still shapes as
+  a pattern. Never an SVG filter on anything inside an animated subtree: the scene repaints
+  every frame something moves.
+- **The picture still does not make claims.** Clouds are drawn in the scene only when there
+  are clouds (10 to 85 per cent, dry, no fog) and drift with the wind. The barn lamps come on
+  after sunset. The oyster rake is part of the creek and is drawn in every weather, whether or
+  not the oystercatcher is on it; it is not a statement about the tide.
+- **To change an animal, look at it.** `node tools/rig.mjs deer ".deer-head=rotate(100deg)"`
+  renders any rig straight out of index.html, close up, in any pose and at phone size.
+
 ## Deploying
 
 GitHub CLI (`gh`) is installed on WorkMacPro and signed in as `joshsmith-lab`.
@@ -87,6 +129,7 @@ npm i playwright && npx playwright install chromium
 TZ=America/New_York node tools/shots.mjs          # the copy
 TZ=America/New_York node tools/scene.mjs          # the picture and its motion
 TZ=America/New_York node tools/scene.mjs fog storm  # just the scenes you are working on
+node tools/rig.mjs heron                          # one animal, close up and at phone size
 ```
 
 `tools/shots.mjs` renders ten scenarios (day, night, after midnight, storm, dusk,
@@ -115,7 +158,7 @@ apart. It exits non-zero on a page error, on layout thrash, or on anything that
 survives reduced motion.
 
 Two numbers worth knowing before you change motion: every scene idles at **0-1
-layouts per 6 seconds**, and the busiest scene runs **110 animations**. If either
+layouts per 6 seconds**, and the busiest scene runs **114 animations**. If either
 jumps, you have added something that is not a `transform` or an `opacity`.
 
 ## Time and place
@@ -216,7 +259,8 @@ Established with Josh and enforced by `test.mjs`:
   pond and straight into the page below; the mask now fades them out at the grass line,
   so the pond's rings and ticks carry the rain on the water. Check both in a strip of
   frames, not a still.
-- **Draw silhouettes, not anatomy.** A bird in this sky is fourteen pixels across.
+- **Draw silhouettes, not anatomy, for anything that small.** The residents now carry real
+  anatomy (see Storybook Ink), but a bird in this sky is still fourteen pixels across.
   Literal feather detail at that size does not read as detail, it reads as the
   wrong animal: constant-width wings with two short strokes at each tip for
   spread primaries is exactly a bat's hand, and a zigzag trailing edge on a
