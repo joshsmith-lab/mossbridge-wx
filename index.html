@@ -3863,7 +3863,7 @@ function render(d,live,savedAt=0){
      forecast for 2:00 while the header shows the 2:20 reading, and the chart's NOW dot sat a
      degree or three away from the big number above it. The first hour is now: it carries the
      live reading (a copy, so the cache keeps the run as it came). */
-  const now0=(v,k)=>Number.isFinite(+c[k])?+c[k]:v;
+  const now0=(v,k)=>c[k]!=null&&Number.isFinite(+c[k])?+c[k]:v;
   const h={...d.hourly,temp:d.hourly.temp.map((t,i)=>i?t:now0(t,"temperature_2m")),
     feels:d.hourly.feels&&d.hourly.feels.map((t,i)=>i?t:now0(t,"apparent_temperature"))};
   const alerts=activeAlerts(d.alerts),warning=outdoorWarning(alerts);
@@ -4028,7 +4028,7 @@ function render(d,live,savedAt=0){
     bands+=`<rect x="${x0.toFixed(1)}" y="12" width="${(x1-x0).toFixed(1)}" height="${base-12}" fill="url(#nightband)" rx="4"/>`;
     /* the unit is centred on its own ink, and kept clear of both chart edges, so the label
        names the band it sits in instead of running off the right side of the night */
-    if(x1-x0>90)nightTags.push(clamp((x0+x1)/2,pad+52,W-pad-52));
+    if(x1-x0>90)nightTags.push([x0,x1]);
   }
   let bars="",dots="",labels="";
   const hiI=h.temp.indexOf(Math.max(...h.temp)),loI=h.temp.indexOf(Math.min(...h.temp));
@@ -4060,22 +4060,28 @@ function render(d,live,savedAt=0){
   for(const i of keys){const x=X(i),y=Y(trendTemp[i]);taken.push([x-6,y-6,x+6,y+6])}
   for(const i of keys){
     const x=X(i),y=Y(trendTemp[i]),t=Math.round(h.temp[i])+"°",c=tempColor(h.temp[i]);
-    let ly=above(x,y,13,t,12),b=box(x,ly,13,t);
-    if(hit(b)&&i!==hiI){const uy=below(x,y,13,t,22),under=box(x,uy,13,t);if(!hit(under)&&uy<base-4){ly=uy;b=under}}
+    let lx=x,ly=above(x,y,13,t,12),b=box(x,ly,13,t);
+    if(hit(b)&&i!==hiI){const uy=below(x,y,13,t,22),under=box(x,uy,13,t);if(!hit(under)&&uy<base-4){ly=uy;b=under}
+      else{ /* no room over or under the dot (rain bars under a low beside now): step along the row, away from what it hit */
+        const o=taken.find(q=>b[0]<q[2]&&b[2]>q[0]&&b[1]<q[3]&&b[3]>q[1]),dir=o&&(o[0]+o[2])/2>x?-1:1;
+        for(let st=4;st<=40;st+=2){const sx=x+dir*st,sy=above(sx,y,13,t,12),sb=box(sx,sy,13,t);
+          if(sb[0]>=0&&sb[2]<=W&&!hit(sb)){lx=sx;ly=sy;b=sb;break}}
+      }}
     taken.push(b);
     if(i===hiI&&rv)dots+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="15" fill="none" stroke="${c}" stroke-width="1.6" opacity="0"${rvAt(x,"ring")}/>`;
     dots+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.6" fill="${css.paper}" stroke="${c}" stroke-width="2.4"${rvAt(x,"dot")}/>
-      <text x="${x.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="13" font-weight="600" fill="${css.ink}" ${halo}${rvAt(x,"label")}>${t}</text>`;
+      <text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="13" font-weight="600" fill="${css.ink}" ${halo}${rvAt(x,"label")}>${t}</text>`;
   }
+  let prev=null;                  /* the last regular hour printed, for the same repeat rule */
   for(let i=4;i<n;i+=4){
     /* the hour right beside the high, now or the low crowds it at any width (and often repeats
        it: "93° 93°"), so it is left out even where there is room,
-       and so does a same-valued hour close enough to read as a repeat ("78°  78°" four hours
-       on, on a phone), which is a distance in pixels, not hours */
-    if(keys.some(k=>Math.abs(k-i)<2||Math.abs(X(k)-X(i))<64&&Math.round(h.temp[k])===Math.round(h.temp[i])))continue;
+       and so does a same-valued hour close enough to read as a repeat: within three hours
+       ("75°  75°"), or within a couple of label widths on a phone ("78°  78°" four hours on) */
+    if(keys.some(k=>Math.abs(k-i)<2||(Math.abs(k-i)<=3||Math.abs(X(k)-X(i))<64)&&Math.round(h.temp[k])===Math.round(h.temp[i])))continue;
     const x=X(i),y=Y(trendTemp[i]),t=Math.round(h.temp[i])+"°",ly=above(x,y,11.5,t,10),b=box(x,ly,11.5,t),d=[x-3,y-3,x+3,y+3];
-    if(hit(b)||hit(d))continue;
-    taken.push(b,d);
+    if(hit(b)||hit(d)||prev&&prev.t===t&&x-prev.x<64)continue;
+    taken.push(b,d);prev={t,x};
     dots+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2" fill="${tempColor(h.temp[i])}" opacity=".8"${rvAt(x,"dot")}/>
       <text x="${x.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="11.5" fill="${css.soft}" ${halo}${rvAt(x,"label")}>${t}</text>`;
   }
@@ -4086,8 +4092,14 @@ function render(d,live,savedAt=0){
     taken.push(b);
     bars+=`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="8.5" fill="${css.water}" ${halo}${rvAt(x,"label",240)}>${h.pop[i]}</text>`;
   }
-  for(const cx of nightTags){
-    if(hit([cx-47,12,cx+38,27]))continue;
+  for(const [x0,x1] of nightTags){
+    /* centred on its band if it can be; otherwise it slides along the band, and only a band
+       with no clear spot goes without its tag */
+    const lo=Math.max(x0+47,pad+52),hi=Math.min(x1-38,W-pad-52),mid=clamp((x0+x1)/2,lo,hi);
+    let cx=null;
+    for(let st=0;st<=Math.max(0,hi-lo)&&cx==null;st+=6)
+      for(const c0 of st?[mid-st,mid+st]:[mid])if(c0>=lo-.1&&c0<=hi+.1&&!hit([c0-47,12,c0+38,27])){cx=c0;break}
+    if(cx==null)continue;
     bands+=`<g transform="translate(${cx.toFixed(1)},22)" fill="${css.faint}" opacity=".85">
       <path d="M -37 0 a 4.6 4.6 0 1 1-4.6-4.6 A 3.6 3.6 0 0 0 -37 0 Z"/>
       <text x="-31" y="3" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="9.5" letter-spacing="1.1" fill="${css.faint}" ${halo}>AFTER DARK</text></g>`;

@@ -194,13 +194,15 @@ test("the hourly labels step aside instead of printing through each other", asyn
   // and every label clears the line under both of its ends, not only its own dot
   assert.match(html, /const above=\(x,y,size,txt,gap\)=>\{const hw=txt\.length\*size\*\.3\+2;return Math\.min\(y-gap,yAt\(x-hw\)-5,yAt\(x\+hw\)-5\)\};/);
   // the hour right beside a key label would only repeat it
-  assert.match(html, /if\(keys\.some\(k=>Math\.abs\(k-i\)<2\|\|Math\.abs\(X\(k\)-X\(i\)\)<64&&Math\.round\(h\.temp\[k\]\)===Math\.round\(h\.temp\[i\]\)\)\)continue;/);
+  assert.match(html, /if\(keys\.some\(k=>Math\.abs\(k-i\)<2\|\|\(Math\.abs\(k-i\)<=3\|\|Math\.abs\(X\(k\)-X\(i\)\)<64\)&&Math\.round\(h\.temp\[k\]\)===Math\.round\(h\.temp\[i\]\)\)\)continue;/);
+  // with no room over or under its dot, a key label steps along the row away from what it hit
+  assert.match(html, /for\(let st=4;st<=40;st\+=2\)\{const sx=x\+dir\*st/);
   // the rain odds give way to the line too; the bar already says it
   assert.match(html, /if\(hit\(b\)\|\|Math\.min\(\.\.\.ys\)<b\[3\]\+3&&Math\.max\(\.\.\.ys\)>b\[1\]-3\)continue;/);
   // a regular hour that has no room is left out, dot and all
-  assert.match(html, /if\(hit\(b\)\|\|hit\(d\)\)continue;/);
+  assert.match(html, /if\(hit\(b\)\|\|hit\(d\)\|\|prev&&prev\.t===t&&x-prev\.x<64\)continue;/);
   // the night tag is decoration: it gives way to the numbers
-  assert.match(html, /if\(hit\(\[cx-47,12,cx\+38,27\]\)\)continue;/);
+  assert.match(html, /!hit\(\[c0-47,12,c0\+38,27\]\)\)\{cx=c0;break\}/);
 });
 
 test("the page agrees with itself", async () => {
