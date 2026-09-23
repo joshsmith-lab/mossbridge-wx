@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v69/);
+  assert.match(worker, /mbwx-shell-v70/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -178,6 +178,54 @@ test("the rain chance bars can be read from across the room", async () => {
   assert.match(html, /const bh=Math\.max\(5,h\.pop\[i\]\*\.42\)/);
   // the printed number still belongs to the hours that are actually likely
   assert.match(html, /if\(h\.pop\[i\]>=40&&i%4===2&&i!==hiI&&i!==loI\)/);
+});
+
+test("the hourly labels step aside instead of printing through each other", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  // On a phone an hour is about twelve pixels wide. The 78° beside a 79° high printed
+  // straight through it, and a 62° sat under the 61° low. Labels are placed against boxes:
+  // obstacles first (bars, key dots), then the high, now and the low, then every fourth hour
+  // where it has room, then the rain odds, then the AFTER DARK tag.
+  assert.match(html, /const taken=\[\],hit=b=>taken\.some\(/);
+  assert.match(html, /const keys=\[\.\.\.new Set\(\[hiI,0,loI\]\)\];/);
+  // the high always keeps the space above its dot; now and the low may take the space under theirs
+  assert.match(html, /if\(hit\(b\)&&i!==hiI\)\{const uy=below\(x,y,13,t,22\),under=box\(x,uy,13,t\)/);
+  // and every label clears the line under both of its ends, not only its own dot
+  assert.match(html, /const above=\(x,y,size,txt,gap\)=>\{const hw=txt\.length\*size\*\.3\+2;return Math\.min\(y-gap,yAt\(x-hw\)-5,yAt\(x\+hw\)-5\)\};/);
+  // the hour right beside a key label would only repeat it
+  assert.match(html, /if\(keys\.some\(k=>Math\.abs\(k-i\)<2\|\|Math\.abs\(X\(k\)-X\(i\)\)<64&&Math\.round\(h\.temp\[k\]\)===Math\.round\(h\.temp\[i\]\)\)\)continue;/);
+  // the rain odds give way to the line too; the bar already says it
+  assert.match(html, /if\(hit\(b\)\|\|Math\.min\(\.\.\.ys\)<b\[3\]\+3&&Math\.max\(\.\.\.ys\)>b\[1\]-3\)continue;/);
+  // a regular hour that has no room is left out, dot and all
+  assert.match(html, /if\(hit\(b\)\|\|hit\(d\)\)continue;/);
+  // the night tag is decoration: it gives way to the numbers
+  assert.match(html, /if\(hit\(\[cx-47,12,cx\+38,27\]\)\)continue;/);
+});
+
+test("the page agrees with itself", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  // the chart's NOW is the reading in the header, not the top-of-hour forecast
+  assert.match(html, /temp:d\.hourly\.temp\.map\(\(t,i\)=>i\?t:now0\(t,"temperature_2m"\)\)/);
+  // ink is judged against the cloud the text sits on as well as the bare gradient
+  assert.match(html, /const cInk=Math\.min\(contrast\(INK_ON,field\),contrast\(INK_ON,lit\)\)/);
+  // the headline never names an hour that has already started
+  assert.match(html, /second=wetI===0\?\(maxPop>=70\?"Rain is likely any time now\."/);
+  // no sunscreen schedule when the rest of today's hourly UV stays under 3
+  assert.match(html, /return\{text:"UV stays low the rest of today\.",cls:"go"\}/);
+  // a golden-hour range is never cut at its dash, and the low stays with its words
+  assert.match(html, /\.gold-bit\{white-space:nowrap\}/);
+  assert.match(html, /cooling to around\\u00A0\$\{nightLow\}°\./);
+  // the lit side of the moon is the light side on both themes
+  assert.match(html, /\.moon-phase \.moon-lit\{fill:#FFF6E2\}/);
+  // a star on a line of type is left out
+  assert.match(html, /function starsClearOfType\(\)/);
+  // text boxes only, and each star placed from its own percentages so a second call agrees
+  assert.match(html, /createTreeWalker\(el,NodeFilter\.SHOW_TEXT\)/);
+  assert.match(html, /parseFloat\(st\.getAttribute\("cx"\)\)/);
+  // the UV words start where their bands start on the pin's 0-12 scale
+  assert.match(html, /\.uv-scale span:nth-child\(3\)\{left:50%\}/);
 });
 
 test("each location keeps its own clock", async () => {
@@ -374,8 +422,22 @@ test("every motion is driven by a reading, not by decoration", async () => {
   // heat haze is a marsh-at-high-UV thing, never a decoration
   assert.match(html, /\(Number\(weather\.uv_index\)\|\|0\)>=8&&sunAltDeg>40&&!wet&&!storm&&!PRM/);
 
-  // charts: the line draws in once, on live data, and the skiff sets with the tide
-  assert.match(html, /if\(live&&!LINE_DRAWN&&!PRM\)/);
+  // charts: the entrance is drawn once per opening (and per place), never under reduced
+  // motion, and only when the chart is on screen and the data is real
+  assert.match(html, /const REVEAL=\{hourly:\{state:PRM\?"done":"armed"/);
+  assert.match(html, /if\(R\.state!=="armed"\|\|!R\.g\|\|!REVEAL_READY\|\|!R\.seen\|\|!R\.g\.svg\.isConnected\)return;/);
+  assert.match(html, /if\(live\)\{REVEAL_READY=true;clearTimeout\(REVEAL_WAIT\);REVEAL_WAIT=0\}/);
+  assert.match(html, /else if\(!REVEAL_READY&&!REVEAL_WAIT\)REVEAL_WAIT=setTimeout\(revealReady,900\);/);
+  // a re-render mid-sweep continues it rather than restarting or snapping it to full
+  assert.match(html, /if\(R\.state==="running"\)\{revealApply\(k\);return\}/);
+  assert.match(html, /const base=R\.t0-performance\.now\(\)/);
+  // the wipe animates the content of a static clip, never the clip itself
+  assert.match(html, /<clipPath id="hourlyArea"><path d="\$\{area\}"\/><\/clipPath>/);
+  assert.match(html, /<clipPath id="tideArea"><path d="\$\{area\}"\/><\/clipPath>/);
+  assert.doesNotMatch(html, /LINE_DRAWN/);
+  // a new place gets its own entrance
+  assert.match(html, /revealArm\(\);\n  paintAddr\(\);/);
+  // and the skiff sets with the tide
   assert.match(html, /const setDx=next\?\(next\.type==="H"\?3:-3\):0/);
 });
 

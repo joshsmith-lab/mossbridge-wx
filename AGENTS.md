@@ -220,8 +220,8 @@ Established with Josh and enforced by `test.mjs`:
 
 - Every motion is driven by a real reading (wind, gusts, tide, UV, temperature,
   the WMO code). Nothing moves because movement is nice.
-- `transform` and `opacity` only. The one exception is the hourly line draw-in,
-  which is one-shot and PRM-gated.
+- `transform` and `opacity` only. The one exception is the charts' entrance (below), which
+  also moves a stroke's dash offset and the pen light's colour, and is one-shot and PRM-gated.
 - Randomness goes through `mulberry(seed)`. `render()` re-runs on every refresh,
   visibility change and resize, so `Math.random()` reshuffles the scene under you.
 - Long ambient cycles take their phase from the wall clock (`phase(seconds)`),
@@ -355,6 +355,50 @@ Established with Josh and enforced by `test.mjs`:
   the NWS instruction text in the expanded alert; do not invent an instruction.
 - Small labels need enough ink on both the plain paper and the tinted evening
   paper. Keep long condition names wrappable beside three-digit temperatures.
+- **Chart labels are placed, not stamped.** On a phone an hour of the hourly chart is about
+  twelve pixels wide, so a label every fourth hour printed straight through the high beside
+  it (78° under 79°, 62° under the 61° low), and only at some widths, which is why it came
+  and went between the phone and the desktop. Each label gets a box in chart units (screen
+  pixels, off the mono face's .6em advance) and goes down in priority order against what is
+  already drawn: the bars and key dots, then the high, now and the low, then the regular
+  hours where they have room, then the rain odds, then the AFTER DARK tag. The high always
+  keeps the space above its dot; now or the low take the space under their own dot when the
+  space above is taken. Check it at 320, 375, 393 and 430, not only at one width.
+
+## The charts' entrance
+
+Josh asked for the temperature and tide lines to draw themselves in, left to right, "not
+crazy, but appropriately cool". When the app opens, and again when you switch places, each
+chart is drawn along its own time axis: a pen runs the line with a small light at its tip
+(coloured by the hour it is passing on the hourly, a glint on the water on the tide) and a
+comet of glow trailing it that gathers as the pen speeds up and folds away as it lands, the fill comes in behind it, the rain bars rise as it passes, each label
+and dot arrives as the pen reaches it, the high rings once, and the skiff settles onto the
+water at now with a ripple. The hourly takes about 2.3s on a phone and the tide follows
+0.4s behind it when both are on screen. All of it is in `REVEAL` in index.html.
+
+- **It plays to someone.** It waits until the chart is at least 30% on screen, so on a
+  phone the tide plays when you scroll to it. It waits for the live forecast, or 0.9s when
+  there is only the cache, so the pen does not draw one line and then swap it for another.
+- **A re-render continues it.** The live data landing or a resize while it runs re-applies
+  the same clock with the elapsed time, instead of restarting it or snapping it to full. The
+  old draw-in restarted on the live paint, so a cached line vanished and redrew.
+- **One clock.** The pen's x follows `REVEAL_EASE`; the line's dash, the glow, the light and
+  the fill are keyframed from that x, and each mark's delay is when the pen reaches its own
+  x. The line is revealed by x, not by length, or the tide's steep flanks race the fill.
+- **The wipe is WebKit-safe.** The fill is a static clip (the area under the curve) over a
+  rect that slides in. Animating the *content* of a static clip is the form Safari and Chrome
+  agree on; do not animate a clip path, a mask or `clip-path: inset()` instead.
+- **It leaves nothing behind.** When it ends, its animations are cancelled and the chart is
+  exactly what a plain render draws; the pen, glow and ring are invisible leftovers until the
+  next render drops them. Reduced motion never arms it. The harnesses call `finishReveal()`
+  before they count animations, time layout or take screenshots. To review the motion itself,
+  clear the one-shot cleanup first (`for(const k in REVEAL)clearTimeout(REVEAL[k].end)`), or it
+  cancels the animations under you mid-walk, then pause the `reveal-*` animations and step
+  `currentTime` (see "A cycle longer than about a minute" above).
+- **Cheap on the first frame.** The line is sampled by walking the cubics `spline()` wrote,
+  not with `getPointAtLength`, which walks the whole path per call and cost 25ms. What grows
+  or pops takes its transform origin from its own geometry in user space, not a fill-box
+  percentage.
 
 `tools/interactions.mjs` checks narrow and wide chart edges, keyboard navigation,
 location switching, snow/ice labels, warning expiry, source instructions, retry,
