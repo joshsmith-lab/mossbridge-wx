@@ -186,6 +186,9 @@ async function open(cs, { width, height = 932, reducedMotion }) {
     && document.getElementById("stamp")?.textContent !== "—", { timeout: 15000 });
   await page.evaluate(() => document.fonts.ready).catch(() => {});
   await page.waitForTimeout(1500);
+  // The charts' entrance is a one-shot sweep that waits for the chart to be on screen. It is
+  // not idle motion, so settle it before counting animations, timing layout or taking shots.
+  await page.evaluate(() => typeof finishReveal === "function" && finishReveal());
   return { ctx, page, errs };
 }
 

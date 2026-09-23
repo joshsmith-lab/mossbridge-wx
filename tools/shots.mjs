@@ -103,6 +103,8 @@ for (const cs of cases) {
     await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: "domcontentloaded" });
     await page.evaluate(() => document.fonts.ready).catch(() => {});
     await page.waitForTimeout(1400);
+    // settle the charts' entrance (a one-shot sweep that waits to be on screen) before looking
+    await page.evaluate(() => typeof finishReveal === "function" && finishReveal());
     await page.screenshot({ path: path.join(OUT, `${cs.name}-${vp.tag}.png`), fullPage: vp.tag === "wide" });
 
     if (vp.tag === "phone") {

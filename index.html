@@ -417,9 +417,9 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 /* ── sections ───────────────────────────────────────── */
 section{padding:28px 20px 0}
 .eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
-  color:var(--ink-faint);display:flex;justify-content:space-between;align-items:baseline;margin-bottom:13px;gap:10px}
+  color:var(--ink-faint);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;margin-bottom:13px;gap:3px 10px}
 .eyebrow b{color:var(--ink);font-weight:600}
-.eyebrow span{text-align:right;text-transform:none;letter-spacing:.04em}
+.eyebrow span{text-align:right;text-transform:none;letter-spacing:.04em;margin-left:auto}
 
 .hourly-scroll{margin:0;padding:0;overflow:hidden}
 .hourly-inner{min-width:0;width:100%;position:relative;outline:none}
@@ -448,8 +448,14 @@ section{padding:28px 20px 0}
 @keyframes bob{from{transform:rotate(calc(var(--rock,2.6deg) * -1)) translateY(.6px)}to{transform:rotate(var(--rock,2.6deg)) translateY(-.6px)}}
 /* the skiff leans the way the water is going: inland on a rising tide, seaward on a falling one */
 @keyframes setDrift{from{transform:translateX(0)}to{transform:translateX(var(--dx,0px))}}
-/* the temperature line draws itself in once, the first time you open the app */
-@keyframes drawLine{to{stroke-dashoffset:0}}
+/* the skiff's burgee turns on its hoist: the sustained wind sets how high it flies, the gusts
+   how hard it flutters about that angle */
+.boat-flag{transform-box:view-box;transform-origin:0 0}
+@keyframes burgee{from{transform:rotate(calc(var(--fa,0deg) - var(--ff,2deg)))}to{transform:rotate(calc(var(--fa,0deg) + var(--ff,2deg)))}}
+/* the charts' entrance (see REVEAL): hidden until the pen gets there, and what grows,
+   grows from where it stands */
+.rv-pre .tline,.rv-pre .wline,.rv-pre .rv-fill,.rv-pre [data-rk]{opacity:0}
+html:not([data-theme=dark]) .rv-core{display:none}
 /* canopies are heavier than grass: same wind, half the throw, slower */
 @keyframes swayTree{from{transform:skewX(var(--tsway-neg,-.3deg))}to{transform:skewX(var(--tsway,.3deg))}}
 
@@ -489,8 +495,16 @@ section{padding:28px 20px 0}
   position:relative;margin-top:13px;opacity:.9}
 .uv-pin{position:absolute;top:-5px;width:3px;height:16px;background:var(--ink);border-radius:2px;
   box-shadow:0 0 0 2.5px var(--paper);transition:left 1s var(--ease)}
-.uv-scale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;
+.uv-scale{position:relative;height:1.3em;font-family:var(--mono);font-size:10.5px;
   color:var(--ink-faint);margin-top:6px;letter-spacing:.11em}
+/* on the same 0-12 scale as the pin: moderate from 3, high from 6, extreme at the end, so a
+   6.2 sits under HIGH instead of short of it */
+.uv-scale span{position:absolute;top:0;white-space:nowrap}
+.uv-scale span:nth-child(2){left:25%}
+.uv-scale span:nth-child(3){left:50%}
+.uv-scale span:last-child{right:0}
+@media (max-width:359px){.uv-scale{letter-spacing:.03em}}
+@media (max-width:339px){.uv-scale{font-size:9.5px;letter-spacing:.04em}}
 
 /* ── week ───────────────────────────────────────────── */
 .week{padding:12px 20px 0}
@@ -526,6 +540,12 @@ section{padding:28px 20px 0}
 .pop{font-family:var(--mono);font-size:11.5px;text-align:right;color:var(--ink-faint);display:flex;align-items:center;justify-content:flex-end;gap:5px}
 .pop.wet{color:var(--water);font-weight:600}
 .moon-phase{display:block;width:21px;height:21px;color:var(--ink);opacity:.9}
+.moon-phase .moon-shade{fill:currentColor;opacity:.7}
+.moon-phase .moon-lit{fill:#FFF6E2}
+.moon-phase .moon-rim{opacity:.55}
+html[data-theme=dark] .moon-phase .moon-shade{opacity:.14}
+html[data-theme=dark] .moon-phase .moon-lit{fill:currentColor}
+html[data-theme=dark] .moon-phase .moon-rim{display:none}
 /* the moon trails the sentence and wraps with it, instead of parking at the far right */
 .tonight-line{display:block;margin-bottom:0!important}
 .tonight-line .moon-phase{display:inline-block;vertical-align:-4px;margin-left:9px}
@@ -533,6 +553,10 @@ section{padding:28px 20px 0}
 .gold-times{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:10px;
   font-family:var(--mono);font-size:12.5px;color:var(--ink-soft);text-wrap:pretty}
 .gold-times b{color:var(--ink);font-weight:600}
+/* a range cut at its dash ("6:06–" / "6:58a tomorrow") reads as two fragments: each entry
+   is kept whole, the " · " is the only break, and the times always sit under the key */
+.gold-val.pair{flex-basis:100%}
+.gold-bit{white-space:nowrap}
 .gold-dot{width:5px;height:5px;border-radius:50%;flex:0 0 auto;align-self:center;background:#C58A2A;opacity:.78}
 .gold-key{font-family:var(--mono);font-weight:600;font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
   color:#9A6B20;white-space:nowrap}
@@ -646,7 +670,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
     <h3 id="sunTitle">Sun &amp; heat</h3>
     <div class="lead" id="uvLead">—</div>
     <div id="uvDetails">
-      <div class="stat-row"><span>right now <b id="uvNow">—</b></span><span class="wide-stat">strongest <b id="uvPeak">—</b></span></div>
+      <div class="stat-row"><span>right now <b id="uvNow">—</b></span><span class="wide-stat">peak <b id="uvPeak">—</b></span></div>
       <div class="uv-bar"><div class="uv-pin" id="uvPin"></div></div>
       <div class="uv-scale"><span>LOW</span><span>MODERATE</span><span>HIGH</span><span>EXTREME</span></div>
     </div>
@@ -663,7 +687,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   <div id="weekRows"></div>
 </div>
 
-<p class="foot"><span id="footSrc"></span><span class="foot-note">Refreshes on open and when you return to the app. Tap the timestamp to force it. Tap the address to switch places.</span></p>
+<p class="foot"><span id="footSrc"></span><span class="foot-note">Refreshes on open and when you return to the app. Tap the timestamp to force it. Tap the place name to switch.</span></p>
 </div>
 
 <script>
@@ -834,9 +858,12 @@ function moonPhaseIcon(m,size=21){
   const x=10.5,y=10.5,r=7.1,ill=clamp(m.fraction,0,1),waxing=m.phase<.5;
   const k=(1-2*ill)*r,sweep=waxing?(ill>.5?0:1):(ill>.5?1:0);
   const term=`M ${x} ${y-r} A ${Math.max(.01,Math.abs(k)).toFixed(2)} ${r} 0 0 ${sweep} ${x} ${y+r} A ${r} ${r} 0 0 ${waxing?0:1} ${x} ${y-r} Z`;
+  /* the lit part is the light part on both themes: in ink on paper a 95% moon drew as a
+     solid dark disc, which is how everyone draws a new moon */
   return `<svg class="moon-phase" width="${size}" height="${size}" viewBox="0 0 21 21" role="img" aria-label="Moon phase">
-    <circle cx="${x}" cy="${y}" r="${r}" fill="currentColor" opacity=".14"/>
-    <path d="${term}" fill="currentColor"/></svg>`;
+    <circle class="moon-shade" cx="${x}" cy="${y}" r="${r}"/>
+    <path class="moon-lit" d="${term}"/>
+    <circle class="moon-rim" cx="${x}" cy="${y}" r="${r}" fill="none" stroke="currentColor" stroke-width=".9"/></svg>`;
 }
 
 /* ── sky palette by solar altitude ──────────────────── */
@@ -3160,7 +3187,7 @@ async function fetchStorms(){
 }
 
 /* ── tide ───────────────────────────────────────────── */
-function renderTides(preds,css,gust){
+function renderTides(preds,css,gust,wind){
   if(!preds||preds.length<2){
     TIDE_PEEK=null;hideTidePeek();
     document.getElementById("tideSvg").innerHTML="";
@@ -3198,6 +3225,7 @@ function renderTides(preds,css,gust){
   const sand=mix(css.faint,"#C2A268",.55);
   const nx=X(now.getTime()),ny=Y(interp(now.getTime()));
   const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3.5" stroke-linejoin="round"`;
+  const rv=REVEAL.tide.state!=="done",rvAt=(x,k,d)=>rvTag(rv,x,k,d);
 
   /* one depth scale instead of a height printed beside every peak */
   let grid="";
@@ -3209,14 +3237,21 @@ function renderTides(preds,css,gust){
   }
 
   /* highs ride above their own peak, lows share one aligned row under the waterline */
-  let labels="";
+  let labels="",nowTop=topY-10;
   for(const p of P){
     const tm=p.time.getTime();if(tm<t0||tm>t1)continue;
     const x=X(tm),y=Y(p.v),high=p.type==="H";
     const anchor=x<x0+26*fs?"start":x>W-26*fs?"end":"middle";
-    const lift=high&&Math.abs(x-nx)<30?24:9;      /* step over the boat when now sits on the peak */
-    labels+=`<text x="${x.toFixed(1)}" y="${(high?y-lift:lowY).toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(11*fs).toFixed(1)}" font-weight="600" fill="${high?css.ink:css.soft}" ${halo}>${clock(p.time)}</text>`;
-    if(!high)labels+=`<line x1="${x.toFixed(1)}" y1="${(y+1).toFixed(1)}" x2="${x.toFixed(1)}" y2="${(bedY+2).toFixed(1)}" stroke="${css.line}" stroke-width="1"/>`;
+    const lw=clock(p.time).length*11*fs*.6+4,lx=anchor==="start"?x:anchor==="end"?x-lw:x-lw/2;
+    /* step over the skiff, burgee and all, whenever the label's box would touch the boat's, and
+       only as far as it needs: the skiff reaches about 23px behind now (the outboard and its
+       wash), 19px ahead and 22px up at the top of a roll */
+    const onBoat=high&&lx<nx+19&&lx+lw>nx-23&&y-6>ny-22;
+    const lift=onBoat?Math.max(9,26-(ny-y)):9;
+    /* and the now-line stops under any high label it would cross, lifted or not */
+    if(high&&nx>lx-2&&nx<lx+lw+2)nowTop=Math.max(nowTop,y-lift+5);
+    labels+=`<text x="${x.toFixed(1)}" y="${(high?y-lift:lowY).toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(11*fs).toFixed(1)}" font-weight="600" fill="${high?css.ink:css.soft}" ${halo}${rvAt(anchor==="start"?x+20*fs:anchor==="end"?x-20*fs:x,"label")}>${clock(p.time)}</text>`;
+    if(!high)labels+=`<line x1="${x.toFixed(1)}" y1="${(y+1).toFixed(1)}" x2="${x.toFixed(1)}" y2="${(bedY+2).toFixed(1)}" stroke="${css.line}" stroke-width="1"${rvAt(x,"fade")}/>`;
   }
 
   /* the skiff rides the curve, so where it sits is how much water is under you right now,
@@ -3225,27 +3260,53 @@ function renderTides(preds,css,gust){
   const next=P.find(p=>p.time>now);
   const setDx=next?(next.type==="H"?3:-3):0;
   const rockDeg=clamp(2.2+g0*.13,2.2,6.4),rockDur=clamp(2.9-g0*.055,1.15,2.9);
+  /* The skiff is the boat that actually goes out of Wrightsville: a Carolina center console,
+     bow toward later in the day, drawn the Storybook Ink way at the chart's restraint. A flat
+     cream hull (the one fixed colour, a white boat by day and lamp-warm by night) in an ink
+     outline that runs heavier along the keel as a tapered crescent, a thin rust boot stripe,
+     the bottom seen through the water, a water-blue T-top on two posts, a cowl-and-leg
+     outboard and prop wash. Its burgee is the one part with a motion of its own, and it is
+     the wind's: it hangs off the whip in calm air, flies level by 15 mph, and flutters faster
+     and wider the further the gusts run above the wind. */
+  const w0=Number(wind)||0,flagDeg=-35*(1-clamp(w0/15,0,1));
+  const flutter=clamp(1.2+(g0-w0)*.35,1.2,6),flutterDur=clamp(1.3-g0*.025,.45,1.3);
+  const flag=`<g transform="translate(-6.5 -16.6)"><g class="boat-flag" style="--fa:${flagDeg.toFixed(1)}deg;${PRM?`transform:rotate(${flagDeg.toFixed(1)}deg)`:`--ff:${flutter.toFixed(1)}deg;animation:burgee ${flutterDur.toFixed(2)}s ease-in-out infinite alternate`}">
+      <path d="M .2 -.2 C -1.6 -.6 -3.2 -.1 -5.2 -.5 L -3.7 .8 L -5 2 C -3.1 1.6 -1.5 2 .2 1.7 Z" fill="${css.water}"/></g></g>`;
   const boat=`<g transform="translate(${nx.toFixed(1)} ${ny.toFixed(1)}) scale(1.15)"><g${PRM||!setDx?"":` style="--dx:${setDx}px;animation:setDrift 9.5s ease-in-out infinite alternate"`}><g${PRM?"":` style="--rock:${rockDeg.toFixed(1)}deg;animation:bob ${rockDur.toFixed(2)}s ease-in-out infinite alternate"`}>
-    <path d="M -12.4 -3.4 L 12.8 -4.4 L 9 3.2 Q .5 5.2 -7.6 3.2 Z" fill="${css.ink}"/>
-    <path d="M -2.6 -9.8 h 5.6 v 5.5 h -5.6 z" fill="${css.ink}"/>
-    <path d="M 3.4 -7.6 h 3.6" stroke="${css.ink}" stroke-width="1.4" stroke-linecap="round"/>
-    <path d="M -17 1.4 h 3.4 M 14.6 .6 h 3.2" stroke="${css.water}" stroke-width="1.3" stroke-linecap="round" opacity=".8"/></g></g></g>`;
+    <path d="M -1.6 -5.1 L -1.6 -10.9 M 3.4 -5.5 L 3.4 -10.9" fill="none" stroke="${css.ink}" stroke-width=".9" stroke-linecap="round"/>
+    <path d="M -4.6 -12.7 L -6.5 -16.6" fill="none" stroke="${css.ink}" stroke-width=".85" stroke-linecap="round"/>
+    ${flag}
+    <path d="M -12.9 -7.6 Q -13 -8.8 -14.2 -8.8 L -16 -8.6 Q -17.3 -8.4 -17.1 -7.1 L -16.8 -5.2 Q -16.6 -4.3 -15.7 -4.3 L -15.4 -4.3 L -14.9 1.9 Q -14.8 2.5 -14.2 2.3 L -13.8 -4.4 L -13.3 -4.4 Q -12.6 -4.5 -12.7 -5.2 Z" fill="${css.ink}"/>
+    <path d="M -12.7 -4.9 C -6 -4.3 2 -4.5 7 -5.5 C 9.7 -6.1 11.5 -7 12.9 -8.3 C 12.3 -5.3 11.3 -1.9 9.1 1.1 C 3.4 2.9 -5.8 2.9 -11.5 2.1 Z" fill="#F1E4C6"/>
+    <path d="M -11.8 .2 L 9.7 .2 C 9.5 .5 9.3 .8 9.1 1.1 C 3.4 2.9 -5.8 2.9 -11.5 2.1 Z" fill="${css.water}" opacity=".45"/>
+    <path d="M -12 -.7 L 10.25 -.7 L 9.72 .2 L -11.83 .2 Z" fill="${css.marker}"/>
+    <path d="M -12.7 -4.9 C -6 -4.3 2 -4.5 7 -5.5 C 9.7 -6.1 11.5 -7 12.9 -8.3 C 12.3 -5.3 11.3 -1.9 9.1 1.1 C 3.4 2.9 -5.8 2.9 -11.5 2.1 Z" fill="none" stroke="${css.ink}" stroke-width=".85" stroke-linejoin="round"/>
+    <path d="M 10.5 -2.2 C 10 -.6 9.6 .3 9.1 1.1 C 3.4 2.9 -5.8 2.9 -11.5 2.1 L -11.7 .9 C -8 1.7 -3 1.85 1.5 1.6 C 5.5 1.35 8.3 .5 10.5 -2.2 Z" fill="${css.ink}"/>
+    <path d="M -6.6 -10.9 C -6.3 -14 7.8 -14.2 8 -11.1 Z" fill="${css.water}" stroke="${css.ink}" stroke-width=".75" stroke-linejoin="round"/>
+    <path d="M -6.5 -10.85 L 7.9 -11.05" fill="none" stroke="${css.ink}" stroke-width="1.25" stroke-linecap="round"/>
+    <path d="M -15.5 1.1 Q -17.4 .1 -19.3 .9 M 10.9 .8 Q 13.3 -.5 15.7 .5" fill="none" stroke="${css.water}" stroke-width="1" stroke-linecap="round"/></g></g></g>`;
 
-  document.getElementById("tideSvg").setAttribute("viewBox",`0 0 ${W} ${H}`);
-  document.getElementById("tideSvg").innerHTML=`
-    <defs><linearGradient id="tideFill" x1="0" y1="0" x2="0" y2="1">
+  const tideSvg=document.getElementById("tideSvg"),waterTop=Math.min(...pts.map(p=>p[1]));
+  tideSvg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  tideSvg.innerHTML=`
+    <defs><linearGradient id="tideFill" gradientUnits="userSpaceOnUse" x1="0" y1="${waterTop.toFixed(1)}" x2="0" y2="${seaY}">
       <stop offset="0" stop-color="${css.water}" stop-opacity=".34"/>
-      <stop offset="1" stop-color="${css.water}" stop-opacity=".06"/></linearGradient></defs>
+      <stop offset="1" stop-color="${css.water}" stop-opacity=".06"/></linearGradient>
+      <clipPath id="tideArea"><path d="${area}"/></clipPath></defs>
     ${grid}
-    <path d="${area}" fill="url(#tideFill)"/>
-    <path d="${path}" fill="none" stroke="${css.water}" stroke-width="2.4" stroke-linecap="round"/>
+    <g clip-path="url(#tideArea)"><rect class="rv-fill" x="${X(t0).toFixed(1)}" y="0" width="${(X(t1)-X(t0)).toFixed(1)}" height="${seaY}" fill="url(#tideFill)"/></g>
+    ${rv?[[10,.3,.24],[6.5,.6,.2],[4.4,1,.16]].map(([w,f,o])=>`<path class="rv-tail" data-f="${f}" data-o="${o}" d="${path}" fill="none" stroke="${css.water}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>`).join(""):""}
+    <path class="wline" d="${path}" fill="none" stroke="${css.water}" stroke-width="2.4" stroke-linecap="round"/>
     <path d="M ${x0} ${seaY-.5} L ${W-padX} ${seaY-.5} L ${W-padX} ${bedY} Q ${(W*.72).toFixed(1)} ${bedY+2.5} ${((x0+W)/2).toFixed(1)} ${bedY-1} Q ${(W*.28).toFixed(1)} ${bedY-3.5} ${x0} ${bedY} Z" fill="${sand}" opacity=".55"/>
-    <line x1="${nx.toFixed(1)}" y1="${topY-10}" x2="${nx.toFixed(1)}" y2="${(ny-6).toFixed(1)}" stroke="${css.ink}" stroke-width="1" stroke-dasharray="2 4" opacity=".22"/>
-    ${boat}
-    ${labels}`;
+    <line x1="${nx.toFixed(1)}" y1="${nowTop.toFixed(1)}" x2="${nx.toFixed(1)}" y2="${(ny-6).toFixed(1)}" stroke="${css.ink}" stroke-width="1" stroke-dasharray="2 4" opacity=".22"${rvAt(nx,"fade")}/>
+    ${rv?`<ellipse cx="${nx.toFixed(1)}" cy="${(ny+3).toFixed(1)}" rx="17" ry="3.6" fill="none" stroke="${css.water}" stroke-width="1.3" opacity="0"${rvAt(nx,"ring",160)}/>`:""}
+    <g${rvAt(nx,"boat")}>${boat}</g>
+    ${labels}
+    ${rv?`<g class="rv-tip" opacity="0" fill="${css.water}"><circle r="12" opacity=".14"/><circle r="6.5" opacity=".28"/><circle r="3"/><circle class="rv-core" r="1.4" fill="#FFFFFF" opacity=".95"/></g>`:""}`;
+  revealChart("tide",tideSvg,{xa:X(t0),xb:X(t1),dur:clamp(2100+W*1.1,2400,2950),tail:72,color:()=>css.water});
   if(next){
     const rising=next.type==="H";
-    document.getElementById("tideNote").textContent=(rising?"rising · high ":"falling · low ")+clock(next.time);
+    document.getElementById("tideNote").textContent=(rising?"rising · high\u00A0":"falling · low\u00A0")+clock(next.time);
     return{rising,next,note:(rising?"high ":"low ")+clock(next.time)};
   }
   return null;
@@ -3336,11 +3397,14 @@ function dayStory(c,dy,h){
     const frozen=isSnow(c.weather_code)||isIce(c.weather_code);
     second=dryI==null
       ?(frozen?"Give yourself extra time if you have to go anywhere.":"Keep rain gear close for the next several hours.")
-      :`It should ease around ${when(dryI)}`;
+      :dryI===0?"It should ease soon.":`It should ease around ${when(dryI)}`;
+  /* index 0 is the hour already under way: at 1:40 "rain is likely around 1 p.m." names a
+     time that has gone, so the first hour is spoken as now */
   }else if(wetI!=null)
-    second=maxPop>=70?`Rain is likely around ${when(wetI)}`:`A few showers may arrive around ${when(wetI)}`;
+    second=wetI===0?(maxPop>=70?"Rain is likely any time now.":"A few showers could pop up any time now.")
+      :maxPop>=70?`Rain is likely around ${when(wetI)}`:`A few showers may arrive around ${when(wetI)}`;
   else if(maxPop>=25)second="A stray shower is possible, but most of the day should stay dry.";
-  else if(maxGust>=28)second=`It stays dry, though it turns blustery around ${when(gustI)}`;
+  else if(maxGust>=28)second=gustI===0?"It stays dry, but it is blustery now.":`It stays dry, though it turns blustery around ${when(gustI)}`;
   else second=overnight?"It should stay dry through the night.":"It should stay dry.";
 
   if(feels>=98&&!evening&&!overnight)second+=" Keep the middle of the day short.";
@@ -3361,6 +3425,7 @@ function ridgeSunLine(c,dy,h,now){
   const cls=peak>=6?"caution":"go";
   if(!slots.length){
     if(now.getHours()>=17&&peak>=3)return{text:"The strong sun is done for today.",cls:"go"};
+    if(h.time.some((t,i)=>t.slice(0,10)===today&&h.uv?.[i]!=null))return{text:"Easy sun the rest of today.",cls:"go"};
     return peak>=3?{text:"Strongest sun 10 a.m. to 5 p.m.",cls}:{text:"Easy sun today.",cls:"go"};
   }
   const start=slots[0].time,end=new Date(slots[slots.length-1].time.getTime()+3.6e6);
@@ -3389,6 +3454,10 @@ function sunProtectionAdvice(c,dy,h,now){
   const ahead=Math.max(Number(c.uv_index)||0,...slots.filter(slot=>slot.time>=now).map(slot=>slot.uv));
   if(!slots.length){
     if(now.getHours()>=17&&peak>=3)return{text:"Sunscreen weather is over for today.",cls:"go"};
+    /* the hourly run covers the rest of today and none of it reaches 3: a storm or an
+       overcast has taken the sun, whatever the clear-sky daily peak said. The 10-to-5 rule of
+       thumb is only for when there is no hourly UV to read. */
+    if(h.time.some((t,i)=>t.slice(0,10)===today&&h.uv?.[i]!=null))return{text:"UV stays low the rest of today.",cls:"go"};
     if(peak>=6)return{text:"Sunscreen weather from 10 a.m. to 5 p.m.",cls:"caution"};
     if(peak>=3)return{text:"Mild sun today. Sunscreen if you're out a while.",cls:"go"};
     return{text:"UV stays low today.",cls:"go"};
@@ -3485,7 +3554,166 @@ function goldenHour(altDeg,now,dark,root){
 }
 
 /* ── main render ────────────────────────────────────── */
-let LINE_DRAWN=false,SCENE_IN=false;
+let SCENE_IN=false;
+
+/* ── the charts' entrance ───────────────────────────── */
+/* When the app opens, and again when you switch places, each chart is drawn in along its
+   own time axis, left to right: a pen runs the line with a small light at its tip and a
+   glow trailing it, the warmth or the water fills in behind it, the rain bars rise as it
+   passes, and every mark arrives the moment the pen reaches it. The light takes the colour
+   of the hour it is passing, the high rings once, and the skiff settles onto the water at
+   now. Three rules keep it an entrance rather than a show:
+   - It waits until the chart is on screen. On a phone the tide sits below the fold, so it
+     plays when you scroll to it rather than to nobody.
+   - It waits for the live forecast, or for a moment when there is only the cache, so the
+     pen does not draw one line and then swap it for another.
+   - A re-render while it runs (the live data landing, a resize) picks the sweep up where
+     it is, instead of restarting it or snapping it to full.
+   It is one-shot: the parts that settle are left exactly as a plain render draws them, and
+   the pen, its glow and the ring are gone. Reduced motion never sees any of it, and the
+   harnesses call finishReveal() before they look at the page.
+
+   Everything is timed off one eased clock. The pen's x follows REVEAL_EASE; the line's dash,
+   the glow, the light and the fill are all keyframed from that same x, so they cannot drift
+   apart, and each mark's delay is the moment the pen's x reaches its own. The line is
+   revealed by x rather than by length, or the tide's steep flanks would race ahead of the
+   fill. The fill is a static clip (the area under the curve) over a rect that slides in:
+   animating the content of a static clip is the one form of wipe WebKit and Chrome agree on. */
+const REVEAL_EASE=[.5,.04,.2,1];               /* a gentle start and a long, soft landing */
+const REVEAL={hourly:{state:PRM?"done":"armed",seen:false,anims:[]},tide:{state:PRM?"done":"armed",seen:false,anims:[]}};
+let REVEAL_READY=false,REVEAL_WAIT=0;
+const bezier=(a,b,c,d)=>t=>{                  /* CSS cubic-bezier(a,b,c,d) as a function of time */
+  let u=t;
+  for(let i=0;i<8;i++){
+    const x=3*a*u*(1-u)**2+3*c*u*u*(1-u)+u**3-t,dx=3*a*(1-u)**2+6*(c-a)*u*(1-u)+3*(1-c)*u*u;
+    if(Math.abs(x)<1e-5||Math.abs(dx)<1e-6)break;u=clamp(u-x/dx,0,1);
+  }
+  return 3*b*u*(1-u)**2+3*d*u*u*(1-u)+u**3;
+};
+function revealChart(k,svg,g){
+  const R=REVEAL[k];
+  if(R.state==="done")return;
+  R.g={...g,svg};
+  if(R.state==="running"){revealApply(k);return}
+  svg.classList.add("rv-pre");
+  revealTry(k);
+}
+function revealTry(k){
+  const R=REVEAL[k];
+  if(R.state!=="armed"||!R.g||!REVEAL_READY||!R.seen||!R.g.svg.isConnected)return;
+  let t0=performance.now();
+  const up=REVEAL.hourly;                     /* both on screen at once: the tide follows the hours down the page */
+  if(k==="tide"&&up.state==="running")t0=Math.max(t0,up.t0+420);
+  R.state="running";R.t0=t0;
+  revealApply(k);
+}
+function revealApply(k){
+  const R=REVEAL[k],g=R.g,svg=g.svg,line=svg.querySelector(".tline,.wline");
+  for(const a of R.anims)a.cancel();
+  R.anims=[];
+  svg.classList.remove("rv-pre");
+  if(!line){revealFinish(k);return}
+  const base=R.t0-performance.now(),D=g.dur,span=Math.max(1,g.xb-g.xa),N=clamp(Math.ceil(span/1.5),128,320);
+  const ease=bezier(...REVEAL_EASE),P=[];
+  for(let i=0;i<=N;i++)P.push(ease(i/N));
+  /* when the pen's x reaches a given x, by inverting the eased clock */
+  const tAt=x=>{
+    const p=clamp((x-g.xa)/span,0,1);let i=0;
+    while(i<N-1&&P[i+1]<p)i++;
+    const f=P[i+1]>P[i]?clamp((p-P[i])/(P[i+1]-P[i]),0,1):0;
+    return(i+f)/N*D;
+  };
+  /* the line's height and drawn length at a given x, walked off the path's own cubics (both
+     charts are built by spline(): M, then C triples). getPointAtLength walks the whole path
+     on every call, which cost 25ms on the sweep's first frame; the script walk is scaled to
+     the browser's own length so the dash still lands exactly */
+  const v=(line.getAttribute("d").match(/-?\d+(?:\.\d+)?/g)||[]).map(Number);
+  if(v.length<8){revealFinish(k);return}
+  const S=[[v[0],v[1],0]];let px=v[0],py=v[1],acc=0;
+  for(let i=2;i+5<v.length;i+=6){
+    const x0=px,y0=py,[x1,y1,x2,y2,x3,y3]=v.slice(i,i+6);
+    for(let s=1;s<=8;s++){const t=s/8,u=1-t,
+      x=u*u*u*x0+3*u*u*t*x1+3*u*t*t*x2+t*t*t*x3,y=u*u*u*y0+3*u*u*t*y1+3*u*t*t*y2+t*t*t*y3;
+      acc+=Math.hypot(x-px,y-py);px=x;py=y;S.push([x,y,acc])}
+  }
+  const len=line.getTotalLength(),sc=len/(acc||1);for(const s of S)s[2]*=sc;
+  let j=0;
+  const along=x=>{
+    while(j>0&&S[j][0]>x)j--;
+    while(j<S.length-2&&S[j+1][0]<x)j++;
+    const a=S[j],b=S[j+1]||a,f=b[0]>a[0]?clamp((x-a[0])/(b[0]-a[0]),0,1):0;
+    return[a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f];
+  };
+  const opt=(delay,duration,easing="linear")=>({delay:base+delay,duration,easing,fill:"both",id:"reveal-"+k});
+  const run=(el,frames,o)=>{if(el)R.anims.push(el.animate(frames,o))};
+  const T=g.tail,lineF=[],tailK=[],tipF=[],fillF=[];
+  for(let i=0;i<=N;i++){
+    const off=i/N,x=g.xa+P[i]*span,[y,L]=along(x),glow=clamp(Math.min(off/.05,(1-off)/.12),0,1);
+    const a=Math.max(0,i-1),b=Math.min(N,i+1),speed=(P[b]-P[a])*N/(b-a);
+    lineF.push({offset:off,strokeDashoffset:(len-L).toFixed(1)+"px"});
+    tailK.push([off,L,clamp(speed/1.4,0,1)*glow]);
+    tipF.push({offset:off,transform:`translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`,fill:g.color(x),opacity:glow.toFixed(3)});
+    fillF.push({offset:off,transform:`translateX(${((P[i]-1)*span).toFixed(1)}px)`});
+  }
+  line.style.strokeDasharray=`${len.toFixed(1)} ${len.toFixed(1)}`;
+  run(line,lineF,opt(0,D));
+  for(const el of svg.querySelectorAll(".rv-tail")){
+    const t=T*+el.dataset.f,o=+el.dataset.o;
+    el.style.strokeDasharray=`${t.toFixed(1)}px ${(len+t).toFixed(1)}px`;
+    run(el,tailK.map(([offset,L,s])=>({offset,strokeDashoffset:(t-L).toFixed(1)+"px",opacity:(s*o).toFixed(3)})),opt(0,D));
+  }
+  run(svg.querySelector(".rv-tip"),tipF,opt(0,D));
+  run(svg.querySelector(".rv-fill"),fillF,opt(0,D));
+  for(const el of svg.querySelectorAll("[data-rk]")){
+    const t=tAt(+el.dataset.rx)+(+el.dataset.rd||0),op=+(el.getAttribute("opacity")||1),a=n=>+el.getAttribute(n);
+    if(el.dataset.rk!=="label"&&el.dataset.rk!=="fade"&&el.dataset.rk!=="boat")
+      el.style.transformOrigin=el.tagName==="rect"?`${a("x")+a("width")/2}px ${a("y")+a("height")}px`:`${a("cx")}px ${a("cy")}px`;
+    switch(el.dataset.rk){
+      case "rise":run(el,[{transform:"scaleY(0)",opacity:0},{transform:"scaleY(1)",opacity:op}],opt(t,560,"cubic-bezier(.3,1.4,.6,1)"));break;
+      case "dot":run(el,[{transform:"scale(0)"},{transform:"scale(1)"}],opt(t-20,480,"cubic-bezier(.3,1.7,.55,1)"));break;
+      case "label":run(el,[{transform:"translateY(5px)",opacity:0},{transform:"none",opacity:op}],opt(t+70,460,"cubic-bezier(.22,.68,.28,1)"));break;
+      case "fade":run(el,[{opacity:0},{opacity:op}],opt(t,800,"ease-out"));break;
+      case "ring":run(el,[{transform:"scale(.3)",opacity:0},{offset:.14,opacity:.8},{transform:"scale(1)",opacity:0}],opt(t+40,1300,"cubic-bezier(.2,.7,.3,1)"));break;
+      case "boat":run(el,[{transform:"translateY(-9px)",opacity:0},{offset:.45,opacity:1},{transform:"none",opacity:1}],opt(t,780,"cubic-bezier(.3,1.3,.5,1)"));break;
+    }
+  }
+  /* clean up after the last thing this apply actually scheduled, so a resize that lengthens
+     the sweep cannot cut off the ring or a label still fading in */
+  clearTimeout(R.end);
+  let last=0;
+  for(const a of R.anims){const t=a.effect.getTiming();last=Math.max(last,t.delay+t.duration)}
+  R.end=setTimeout(()=>revealFinish(k),last+120);
+}
+function revealFinish(k){
+  const R=REVEAL[k];
+  clearTimeout(R.end);
+  if(R.state==="done")return;
+  R.state="done";
+  const svg=R.g&&R.g.svg;
+  if(svg){
+    svg.classList.remove("rv-pre");
+    const line=svg.querySelector(".tline,.wline");if(line)line.style.strokeDasharray="";
+  }
+  for(const a of R.anims)a.cancel();
+  R.anims=[];
+}
+const rvTag=(on,x,k,d)=>on?` data-rx="${x.toFixed(1)}" data-rk="${k}"${d?` data-rd="${d}"`:""}`:"";
+function finishReveal(){for(const k in REVEAL)revealFinish(k)}
+/* a new place gets its own entrance */
+function revealArm(){
+  if(PRM)return;
+  for(const k in REVEAL){const R=REVEAL[k];clearTimeout(R.end);for(const a of R.anims)a.cancel();R.anims=[];R.state="armed"}
+  REVEAL_READY=false;clearTimeout(REVEAL_WAIT);REVEAL_WAIT=0;
+}
+function revealReady(){REVEAL_READY=true;clearTimeout(REVEAL_WAIT);REVEAL_WAIT=0;for(const k in REVEAL)revealTry(k)}
+if(!PRM){
+  const seen=(k,on)=>{REVEAL[k].seen=on;if(on)revealTry(k)};
+  if("IntersectionObserver" in window){
+    const io=new IntersectionObserver(es=>{for(const e of es)
+      seen(e.target.id==="tideSvg"?"tide":"hourly",e.isIntersecting&&e.intersectionRatio>=.3)},{threshold:[0,.3,.6,1]});
+    io.observe(document.getElementById("hourlySvg"));io.observe(document.getElementById("tideSvg"));
+  }else{REVEAL.hourly.seen=REVEAL.tide.seen=true}
+}
 let HOURLY_PEEK=null,PEEK_I=0,PEEK_TOUCH_X=null,PEEK_HIDE=0;
 let TIDE_PEEK=null,TIDE_I=0,TIDE_TOUCH_X=null,TIDE_HIDE=0;
 function hideTidePeek(delay=0){
@@ -3658,7 +3886,14 @@ function cacheAgeText(savedAt){
   return`updated ${hours}h ago`;
 }
 function render(d,live,savedAt=0){
-  const c=d.current,dy=d.daily,h=d.hourly,m=d.marine;
+  const c=d.current,dy=d.daily,m=d.marine;
+  /* The hourly run starts at the top of the current hour, so its first temperature is a
+     forecast for 2:00 while the header shows the 2:20 reading, and the chart's NOW dot sat a
+     degree or three away from the big number above it. The first hour is now: it carries the
+     live reading (a copy, so the cache keeps the run as it came). */
+  const now0=(v,k)=>c[k]!=null&&Number.isFinite(+c[k])?+c[k]:v;
+  const h={...d.hourly,temp:d.hourly.temp.map((t,i)=>i?t:now0(t,"temperature_2m")),
+    feels:d.hourly.feels&&d.hourly.feels.map((t,i)=>i?t:now0(t,"apparent_temperature"))};
   const alerts=activeAlerts(d.alerts),warning=outdoorWarning(alerts);
   syncClock();
   const now=wallNow(), sunrise=new Date(dy.sunrise[0]), sunset=new Date(dy.sunset[0]);
@@ -3687,7 +3922,12 @@ function render(d,live,savedAt=0){
   /* pick the text colour that actually wins on this sky, then scrim until it's comfortable */
   const field=mix(stops[0],stops[1],.55);
   const INK_ON="#0B2530",LIT_ON="#F7F4EA";
-  const cInk=contrast(INK_ON,field),cLit=contrast(LIT_ON,field);
+  /* the text sits on the cloud layer as much as on the gradient: under a storm's pale grey
+     deck the cream type measured under 2:1. Judge both inks against the bare sky and the
+     cloud-lit sky, and keep the worse of the two, the way renderSkyFx paints the puffs */
+  const veil=clamp((Number(c.cloud_cover)||0)/100,0,1),nightSky=clamp((-altDeg-2)/8,0,1)>.5;
+  const lit=mix(field,nightSky?"#8FA6B4":"#FFFFFF",(nightSky?.21:.42)*veil);
+  const cInk=Math.min(contrast(INK_ON,field),contrast(INK_ON,lit)),cLit=Math.min(contrast(LIT_ON,field),contrast(LIT_ON,lit));
   const bright=cInk>=cLit;
   root.setProperty("--on-sky",bright?INK_ON:LIT_ON);
   root.setProperty("--off-sky",bright?LIT_ON:INK_ON);
@@ -3696,7 +3936,7 @@ function render(d,live,savedAt=0){
                                    :`rgba(4,16,22,${(.10+need*.34).toFixed(3)})`);
   root.setProperty("--rain",lum(stops[1])>.13?"rgba(22,48,64,.55)":"rgba(198,225,238,.66)");
   root.setProperty("--chip-bg",bright?"rgba(11,37,48,.13)":"rgba(238,246,249,.17)");
-  root.setProperty("--hl",bright?"#A93A16":"#FFC09B");
+  root.setProperty("--hl",bright?(veil>.6?"#8A2A0C":"#A93A16"):"#FFC09B");
   goldenHour(altDeg,now,dark,root);
   document.getElementById("themeColor").setAttribute("content",stops[0]);
 
@@ -3733,6 +3973,10 @@ function render(d,live,savedAt=0){
   if(c.uv_index>=.5)chipData.push([CI.uv,`uv ${c.uv_index.toFixed(1)}`]);
   document.getElementById("chips").innerHTML=chipData.map(([ic,t])=>`<span class="chip">${ic}${t}</span>`).join("");
 
+  /* the charts' entrance waits for the live forecast, or for a moment when there is only the cache */
+  if(live){REVEAL_READY=true;clearTimeout(REVEAL_WAIT);REVEAL_WAIT=0}
+  else if(!REVEAL_READY&&!REVEAL_WAIT)REVEAL_WAIT=setTimeout(revealReady,900);
+
   /* hourly */
   const W=appW()-40,Ht=chartH(W)-22,pad=16,n=h.temp.length,base=Ht-6;
   document.getElementById("hourlySvg").setAttribute("viewBox",`0 0 ${W} ${Ht}`);
@@ -3749,6 +3993,8 @@ function render(d,live,savedAt=0){
   hideHourlyPeek();
   const line=spline(pts);
   const area=line+` L ${X(n-1).toFixed(1)} ${base} L ${X(0).toFixed(1)} ${base} Z`;
+  /* the entrance tags what it animates; once it has played, a render carries no tags */
+  const rv=REVEAL.hourly.state!=="done",rvAt=(x,k,d)=>rvTag(rv,x,k,d);
 
   /* real golden-light windows, softly washed onto the same timeline */
   const timelineStart=new Date(h.time[0]).getTime();
@@ -3766,7 +4012,7 @@ function render(d,live,savedAt=0){
   for(const gw of goldWindows){
     const x0=clamp(xTime(gw.a.getTime()),pad,W-pad),x1=clamp(xTime(gw.b.getTime()),pad,W-pad);
     const past=gw.b<now;
-    if(x1>x0)goldenBands+=`<rect x="${x0.toFixed(1)}" y="12" width="${(x1-x0).toFixed(1)}" height="${base-12}" rx="6" fill="url(#goldenband)" opacity="${past?.28:.9}"/>`;
+    if(x1>x0)goldenBands+=`<rect x="${x0.toFixed(1)}" y="12" width="${(x1-x0).toFixed(1)}" height="${base-12}" rx="6" fill="url(#goldenband)" opacity="${past?.28:.9}"${rvAt(x0,"fade")}/>`;
   }
   const nextLight=goldWindows.find(gw=>gw.b>now)||null;
 
@@ -3786,19 +4032,35 @@ function render(d,live,savedAt=0){
     }
   }
   const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3" stroke-linejoin="round"`;
-  let bands="";
+  /* Labels are placed, not stamped. Everything already drawn is an obstacle (the rain bars
+     and the dots), then the high, now and the low go down, then every fourth hour only where
+     it has room, then the rain odds, then the AFTER DARK tag. On a phone an hour is about
+     twelve pixels wide, so the 78° beside a 79° high used to print straight through it and a
+     62° sat under the 61° low; now the lesser label steps aside. When now or the low has no
+     room above its own dot it takes the space under it instead. Boxes are in chart units,
+     which are screen pixels (the viewBox is the rendered width), measured off the mono
+     face's .6em advance. */
+  const taken=[],hit=b=>taken.some(t=>b[0]<t[2]&&b[2]>t[0]&&b[1]<t[3]&&b[3]>t[1]);
+  const box=(x,y,size,txt)=>{const w=txt.length*size*.6+5;return[x-w/2,y-size*.78-2,x+w/2,y+3]};
+  /* and of the line: a fixed lift over the dot put a steep stretch straight through the
+     label's leading edge on a phone, where a fixed-height chart gets narrower and its slopes
+     steeper. The line is measured under both ends of the label. */
+  const yAt=px=>{const f=clamp((px-pad)/((W-2*pad)/(n-1)),0,n-1),i=Math.min(n-2,Math.floor(f));
+    return Y(trendTemp[i]+(trendTemp[i+1]-trendTemp[i])*(f-i))};
+  const above=(x,y,size,txt,gap)=>{const hw=txt.length*size*.3+2;return Math.min(y-gap,yAt(x-hw)-5,yAt(x+hw)-5)};
+  const below=(x,y,size,txt,gap)=>{const hw=txt.length*size*.3+2;return Math.max(y+gap,yAt(x-hw)+size*.78+6,yAt(x+hw)+size*.78+6)};
+  let bands="",nightTags=[];
   for(const [from,to] of darkSpans){
     const x0=xTime(from),x1=xTime(to);
     if(x1-x0<2)continue;
     bands+=`<rect x="${x0.toFixed(1)}" y="12" width="${(x1-x0).toFixed(1)}" height="${base-12}" fill="url(#nightband)" rx="4"/>`;
     /* the unit is centred on its own ink, and kept clear of both chart edges, so the label
        names the band it sits in instead of running off the right side of the night */
-    if(x1-x0>90)bands+=`<g transform="translate(${clamp((x0+x1)/2,pad+52,W-pad-52).toFixed(1)},22)" fill="${css.faint}" opacity=".85">
-      <path d="M -37 0 a 4.6 4.6 0 1 1-4.6-4.6 A 3.6 3.6 0 0 0 -37 0 Z"/>
-      <text x="-31" y="3" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="9.5" letter-spacing="1.1" fill="${css.faint}" ${halo}>AFTER DARK</text></g>`;
+    if(x1-x0>90)nightTags.push([x0,x1]);
   }
   let bars="",dots="",labels="";
   const hiI=h.temp.indexOf(Math.max(...h.temp)),loI=h.temp.indexOf(Math.min(...h.temp));
+  const oddsAt=[];
   for(let i=0;i<n;i++){
     if(h.pop[i]>=5){
       /* The scale is untouched: the height of a bar is still the odds. What changed is
@@ -3813,28 +4075,73 @@ function render(d,live,savedAt=0){
          less than five units, and a trace is a trace at any of them. */
       const bh=Math.max(5,h.pop[i]*.42);
       const barW=Math.min(15,(W-2*pad)/(n-1)*.72);
-      bars+=`<rect x="${(X(i)-barW/2).toFixed(1)}" y="${(base-bh).toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="${Math.min(3,bh*.3).toFixed(1)}" fill="${css.water}" opacity="${(.48+Math.min(h.pop[i],60)/60*.36).toFixed(2)}"/>`;
+      bars+=`<rect x="${(X(i)-barW/2).toFixed(1)}" y="${(base-bh).toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="${Math.min(3,bh*.3).toFixed(1)}" fill="${css.water}" opacity="${(.48+Math.min(h.pop[i],60)/60*.36).toFixed(2)}"${rvAt(X(i),"rise")}/>`;
+      taken.push([X(i)-barW/2,base-bh,X(i)+barW/2,base]);
       /* i%4 is a subset of i%2, so every fourth hour the temperature label landed on the
          same x and its paper halo punched a hole straight through this number */
       if(h.pop[i]>=40&&i%4===2&&i!==hiI&&i!==loI)
-        bars+=`<text x="${X(i).toFixed(1)}" y="${(base-bh-4).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="8.5" fill="${css.water}" ${halo}>${h.pop[i]}</text>`;
-    }
-    if(i===hiI||i===loI||i===0){
-      dots+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(trendTemp[i]).toFixed(1)}" r="3.6" fill="${css.paper}" stroke="${tempColor(h.temp[i])}" stroke-width="2.4"/>
-      <text x="${X(i).toFixed(1)}" y="${(Y(trendTemp[i])-12).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="13" font-weight="600" fill="${css.ink}" ${halo}>${Math.round(h.temp[i])}°</text>`;
-    }else if(i%4===0){
-      dots+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(trendTemp[i]).toFixed(1)}" r="2" fill="${tempColor(h.temp[i])}" opacity=".8"/>
-      <text x="${X(i).toFixed(1)}" y="${(Y(trendTemp[i])-10).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="11.5" fill="${css.soft}" ${halo}>${Math.round(h.temp[i])}°</text>`;
+        oddsAt.push([i,base-bh-4]);
     }
     labels+=`<span class="${i===0?"mark":""}" style="left:${(X(i)/W*100).toFixed(3)}%">${i===0?"NOW":i%3===0?hh(h.time[i]):""}</span>`;
   }
+  const keys=[...new Set([hiI,0,loI])];
+  for(const i of keys){const x=X(i),y=Y(trendTemp[i]);taken.push([x-6,y-6,x+6,y+6])}
+  for(const i of keys){
+    const x=X(i),y=Y(trendTemp[i]),t=Math.round(h.temp[i])+"°",c=tempColor(h.temp[i]);
+    let lx=x,ly=above(x,y,13,t,12),b=box(x,ly,13,t);
+    if(hit(b)&&i!==hiI){const uy=below(x,y,13,t,22),under=box(x,uy,13,t);if(!hit(under)&&uy<base-4){ly=uy;b=under}
+      else{ /* no room over or under the dot (rain bars under a low beside now): step along the row, away from what it hit */
+        const o=taken.find(q=>b[0]<q[2]&&b[2]>q[0]&&b[1]<q[3]&&b[3]>q[1]),dir=o&&(o[0]+o[2])/2>x?-1:1;
+        for(let st=4;st<=40;st+=2){const sx=x+dir*st,sy=above(sx,y,13,t,12),sb=box(sx,sy,13,t);
+          if(sb[0]>=0&&sb[2]<=W&&!hit(sb)){lx=sx;ly=sy;b=sb;break}}
+      }}
+    taken.push(b);
+    if(i===hiI&&rv)dots+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="15" fill="none" stroke="${c}" stroke-width="1.6" opacity="0"${rvAt(x,"ring")}/>`;
+    dots+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.6" fill="${css.paper}" stroke="${c}" stroke-width="2.4"${rvAt(x,"dot")}/>
+      <text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="13" font-weight="600" fill="${css.ink}" ${halo}${rvAt(x,"label")}>${t}</text>`;
+  }
+  let prev=null;                  /* the last regular hour printed, for the same repeat rule */
+  for(let i=4;i<n;i+=4){
+    /* the hour right beside the high, now or the low crowds it at any width (and often repeats
+       it: "93° 93°"), so it is left out even where there is room,
+       and so does a same-valued hour close enough to read as a repeat: within three hours
+       ("75°  75°"), or within a couple of label widths on a phone ("78°  78°" four hours on) */
+    if(keys.some(k=>Math.abs(k-i)<2||(Math.abs(k-i)<=3||Math.abs(X(k)-X(i))<64)&&Math.round(h.temp[k])===Math.round(h.temp[i])))continue;
+    const x=X(i),y=Y(trendTemp[i]),t=Math.round(h.temp[i])+"°",ly=above(x,y,11.5,t,10),b=box(x,ly,11.5,t),d=[x-3,y-3,x+3,y+3];
+    if(hit(b)||hit(d)||prev&&prev.t===t&&x-prev.x<64)continue;
+    taken.push(b,d);prev={t,x};
+    dots+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2" fill="${tempColor(h.temp[i])}" opacity=".8"${rvAt(x,"dot")}/>
+      <text x="${x.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="11.5" fill="${css.soft}" ${halo}${rvAt(x,"label")}>${t}</text>`;
+  }
+  for(const [i,y] of oddsAt){
+    const x=X(i),b=box(x,y,8.5,String(h.pop[i])),ys=[yAt(b[0]),yAt(x),yAt(b[2])];
+    /* the bar already says the odds, so a number the line would strike through is dropped */
+    if(hit(b)||Math.min(...ys)<b[3]+3&&Math.max(...ys)>b[1]-3)continue;
+    taken.push(b);
+    bars+=`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="8.5" fill="${css.water}" ${halo}${rvAt(x,"label",240)}>${h.pop[i]}</text>`;
+  }
+  for(const [x0,x1] of nightTags){
+    /* centred on its band if it can be; otherwise it slides along the band, and only a band
+       with no clear spot goes without its tag */
+    const lo=Math.max(x0+47,pad+52),hi=Math.min(x1-38,W-pad-52),mid=clamp((x0+x1)/2,lo,hi);
+    let cx=null;
+    for(let st=0;st<=Math.max(0,hi-lo)&&cx==null;st+=6)
+      for(const c0 of st?[mid-st,mid+st]:[mid])if(c0>=lo-.1&&c0<=hi+.1&&!hit([c0-47,12,c0+38,27])){cx=c0;break}
+    if(cx==null)continue;
+    bands+=`<g transform="translate(${cx.toFixed(1)},22)" fill="${css.faint}" opacity=".85">
+      <path d="M -37 0 a 4.6 4.6 0 1 1-4.6-4.6 A 3.6 3.6 0 0 0 -37 0 Z"/>
+      <text x="-31" y="3" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="9.5" letter-spacing="1.1" fill="${css.faint}" ${halo}>AFTER DARK</text></g>`;
+  }
+  const areaTop=Math.min(...pts.map(p=>p[1]));
   const gstops=h.temp.map((t,i)=>`<stop offset="${(i/(n-1)*100).toFixed(1)}%" stop-color="${tempColor(t)}"/>`).join("");
-  document.getElementById("hourlySvg").innerHTML=`
+  const hourlySvg=document.getElementById("hourlySvg");
+  hourlySvg.innerHTML=`
     <defs>
       <linearGradient id="tline" x1="0" y1="0" x2="1" y2="0">${gstops}</linearGradient>
-      <linearGradient id="tfill" x1="0" y1="0" x2="0" y2="1">
+      <linearGradient id="tfill" gradientUnits="userSpaceOnUse" x1="0" y1="${areaTop.toFixed(1)}" x2="0" y2="${base}">
         <stop offset="0" stop-color="${tempColor(Math.max(...h.temp))}" stop-opacity=".22"/>
         <stop offset="1" stop-color="${tempColor(Math.min(...h.temp))}" stop-opacity="0"/></linearGradient>
+      <clipPath id="hourlyArea"><path d="${area}"/></clipPath>
       <linearGradient id="nightband" x1="0" y1="0" x2="1" y2="0">
         <stop offset="0" stop-color="${dark?"#000":css.ink}" stop-opacity="0"/>
         <stop offset=".025" stop-color="${dark?"#000":css.ink}" stop-opacity="${dark?.26:.055}"/>
@@ -3849,23 +4156,21 @@ function render(d,live,savedAt=0){
     </defs>
     ${bands}
     ${goldenBands}
-    <path d="${area}" fill="url(#tfill)"/>
+    <g clip-path="url(#hourlyArea)"><rect class="rv-fill" x="${X(0).toFixed(1)}" y="0" width="${(X(n-1)-X(0)).toFixed(1)}" height="${base}" fill="url(#tfill)"/></g>
     ${bars}
+    ${rv?[[10,.3,.24],[6.5,.6,.2],[4.4,1,.16]].map(([w,f,o])=>`<path class="rv-tail" data-f="${f}" data-o="${o}" d="${line}" fill="none" stroke="url(#tline)" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>`).join(""):""}
     <path class="tline" d="${line}" fill="none" stroke="url(#tline)" stroke-width="2.4" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/>
     ${dots}
+    ${rv?`<g class="rv-tip" opacity="0" fill="${tempColor(h.temp[0])}"><circle r="12" opacity=".12"/><circle r="6.5" opacity=".24"/><circle r="3.3"/><circle class="rv-core" r="1.5" fill="#FFF8EC" opacity=".95"/></g>`:""}
     <line x1="${pad}" y1="${base}" x2="${W-pad}" y2="${base}" stroke="${css.line}" stroke-width="1"/>`;
-  /* the line draws itself in once, on the first render carrying live data. Not on the
-     cached paint that precedes it, or the fetch landing mid-draw would replace the path
-     and snap it to full; and not on the refresh, resize and foreground re-renders after
-     that, because an entrance you see twenty times a day is not an entrance */
-  if(live&&!LINE_DRAWN&&!PRM){
-    LINE_DRAWN=true;
-    const el=document.querySelector("#hourlySvg .tline"),len=Math.ceil(el.getTotalLength());
-    el.style.cssText=`stroke-dasharray:${len};stroke-dashoffset:${len};animation:drawLine .75s var(--ease) forwards`;
-  }
+  /* the pen's light takes the colour of the hour it is passing */
+  const hourAt=x=>{const f=clamp((x-pad)/((W-2*pad)/(n-1)),0,n-1),i=Math.min(n-2,Math.floor(f));
+    return h.temp[i]+(h.temp[i+1]-h.temp[i])*(f-i)};
+  revealChart("hourly",hourlySvg,{xa:X(0),xb:X(n-1),dur:clamp(1900+W*1.1,2200,2700),tail:60,
+    color:x=>tempColor(hourAt(x))});
   document.getElementById("hrLabels").innerHTML=labels;
   document.getElementById("tideSection").style.display=LOC.tide?"":"none";
-  const tide=LOC.tide?renderTides(d.tides,css,c.wind_gusts_10m):null;
+  const tide=LOC.tide?renderTides(d.tides,css,c.wind_gusts_10m,c.wind_speed_10m):null;
   renderAlerts(alerts);
   renderNowcast(d.nowcast);
   renderStorms(d.storms);
@@ -3973,12 +4278,12 @@ function render(d,live,savedAt=0){
   const nightPop=nightHours.length?Math.max(...nightHours.map(hour=>hour.pop)):Number(dy.precipitation_probability_max[fallbackDay])||0;
   const nightSnow=nightHours.some(hour=>isSnow(hour.code)),nightIce=nightHours.some(hour=>isIce(hour.code));
   const nightWhen=beforeSunrise?"before morning":"tonight";
-  let tonightText=nightPop>=35&&nightIce?`Freezing rain is possible ${nightWhen}, with a low around ${nightLow}°.`:
-    nightPop>=35&&nightSnow?`Snow is likely at times ${nightWhen}, with a low around ${nightLow}°.`:
-    nightPop>=60?`Rain is likely at times ${nightWhen}, with a low around ${nightLow}°.`:
-    nightPop>=35?`A shower is possible ${nightWhen}, with a low around ${nightLow}°.`:
-    nightLow>=74?`Warm and mostly dry ${nightWhen}, with a low around ${nightLow}°.`:
-    `Mostly dry ${nightWhen}, cooling to around ${nightLow}°.`;
+  let tonightText=nightPop>=35&&nightIce?`Freezing rain is possible ${nightWhen}, with a low around\u00A0${nightLow}°.`:
+    nightPop>=35&&nightSnow?`Snow is likely at times ${nightWhen}, with a low around\u00A0${nightLow}°.`:
+    nightPop>=60?`Rain is likely at times ${nightWhen}, with a low around\u00A0${nightLow}°.`:
+    nightPop>=35?`A shower is possible ${nightWhen}, with a low around\u00A0${nightLow}°.`:
+    nightLow>=74?`Warm and mostly dry ${nightWhen}, with a low around\u00A0${nightLow}°.`:
+    `Mostly dry ${nightWhen}, cooling to around\u00A0${nightLow}°.`;
   el.textContent=tonightText;
   /* both ends of the light on one gold line, out of the sentence's way */
   const gw=goldenWindow(sunset);
@@ -3988,7 +4293,7 @@ function render(d,live,savedAt=0){
   if(gw&&now<gw.b)goldBits.push(now>=gw.a?`<b>now, until ${clock(gw.b)}</b>`:`<b>${spanTxt(gw.a,gw.b)}</b> tonight`);
   if(!beforeSunrise&&gwAm)goldBits.push(`<b>${spanTxt(gwAm.a,gwAm.b)}</b> tomorrow`);
   document.getElementById("goldTimes").innerHTML=goldBits.length
-    ?`<span class="gold-dot" aria-hidden="true"></span><span class="gold-key">golden hour</span><span>${goldBits.join(" · ")}</span>`
+    ?`<span class="gold-dot" aria-hidden="true"></span><span class="gold-key">golden hour</span><span class="gold-val${goldBits.length>1?" pair":""}">${goldBits.map(b=>`<span class="gold-bit">${b}</span>`).join(" · ")}</span>`
     :"";
   document.getElementById("eveLine").className="lead tonight-line "+(nightPop>=35?"caution":"go");
   document.getElementById("moonTxt").innerHTML=moonPhaseIcon(scene.moon);
@@ -4026,14 +4331,39 @@ function render(d,live,savedAt=0){
     if(p>=60&&(wi<0||p>dy.precipitation_probability_max[wi]))wi=i;
   }
   const weekWet=wi>=0?(isSnow(dy.weather_code[wi])?"snow":isIce(dy.weather_code[wi])?"ice":"rain"):"";
-  document.getElementById("weekNote").textContent=wi<0?"mostly dry through the week"
+  document.getElementById("weekNote").textContent=wi<0?"mostly dry"
     :`${weekWet} looks most likely ${wi===0?"today":dayName(dy.time[wi])}`;
   /* Last, because everything above adds height to the header: the alert strip, the
      headline, the chips, the rain card and the scene are all inside .sky, and a bolt
      measured before them stops in mid-air where the sky used to end. */
   paintBolts();
+  starsClearOfType();
   LAST={d,live,savedAt};LASTW=appW();
 }
+/* A star that lands on a line of type reads as punctuation: one in the colon of the
+   timestamp, one doubling the dot in "H 80° · L 71°". Those few are left out. Line boxes,
+   not element boxes, so the sky between and beside the lines keeps its stars. Run after
+   everything above has added its height to the header, and again when the fonts land. */
+function starsClearOfType(){
+  const svg=document.querySelector("#skyFx svg"),dots=svg?svg.querySelectorAll("circle"):[];
+  if(!dots.length)return;
+  /* text nodes, not elements: a Range over an element also returns every child's border
+     box, which is the 44px tap targets and the whole meta column */
+  const rg=document.createRange(),lines=[];
+  for(const el of document.querySelectorAll(".masthead,.now,#verdict,#chips")){
+    const tw=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);
+    for(let t;(t=tw.nextNode());)if(t.data.trim()){rg.selectNodeContents(t);lines.push(...rg.getClientRects())}
+    for(const g of el.querySelectorAll("svg,.live-dot"))lines.push(g.getBoundingClientRect());
+  }
+  /* a star this has hidden has no box, so each is placed from its own percentages; otherwise
+     the next call (the fonts landing a moment after the data) brought every one of them back */
+  const f=svg.getBoundingClientRect();
+  for(const st of dots){
+    const x=f.left+parseFloat(st.getAttribute("cx"))/100*f.width,y=f.top+parseFloat(st.getAttribute("cy"))/100*f.height;
+    st.style.display=lines.some(r=>x>r.left-8&&x<r.right+8&&y>r.top-4&&y<r.bottom+4)?"none":"";
+  }
+}
+document.fonts&&document.fonts.ready.then(starsClearOfType);
 let LAST=null,LASTW=0,rzT;
 addEventListener("resize",()=>{clearTimeout(rzT);rzT=setTimeout(()=>{
   if(LAST&&Math.abs(appW()-LASTW)>16)render(LAST.d,LAST.live,LAST.savedAt);
@@ -4174,6 +4504,7 @@ function setLoc(id){
   if(!LOC_ORDER.includes(id)||LOC.id===id)return;
   LOC=LOCS[id];LAT=LOC.lat;LON=LOC.lon;
   try{localStorage.setItem("mbwx-loc",id)}catch(e){}
+  revealArm();
   paintAddr();
   const cached=readCache(id);
   if(cached)render(cached.data,false,cached.savedAt);

@@ -66,18 +66,28 @@ export const day = (d, tz) => {
 /** Which clock each location's forecast is written on, mirroring LOCS in index.html. */
 export const LOC_TZ = { mb: "America/New_York", sp: "America/New_York", den: "America/Denver" };
 
-export function forecast(now, o, tz) {
+/* Early-August sun for each place, so a Shady Spring scenario does not print Porters Neck's
+   sunrise over a ridge whose sun is drawn from its own sky. A scenario can still set its own. */
+const SUN = { mb: ["06:32", "20:14"], sp: ["06:28", "20:32"], den: ["06:02", "20:05"] };
+
+export function forecast(now, o, tz, loc = "mb") {
   // midnight on the location's clock, not the harness's
   const start = new Date(now);
   if (tz) { const p = partsIn(now, tz); start.setTime(now.getTime() - (+p.hour % 24) * 3600e3 - (+p.minute) * 60e3); }
   else start.setHours(0, 0, 0, 0);
   const time = [], temp = [], apparent = [], pop = [], code = [], wind = [], gust = [], uv = [];
   const feelDelta = Number(o.feels) - Number(o.nowTemp);
+  /* The day is a sine around baseTemp, but the scenario's current reading is what the header
+     shows, and a curve that ignores it put a 7° cliff into the first hour of the chart. Lean
+     the hours around now toward the reading, fading out over six hours either side. */
+  const nowI = Math.floor((now.getTime() - start.getTime()) / 3600e3);
+  const sine = (i) => o.baseTemp + Math.sin((((i % 24) - 5) / 24) * 2 * Math.PI) * 9;
+  const lean = Number.isFinite(Number(o.nowTemp)) ? Number(o.nowTemp) - sine(nowI) : 0;
   for (let i = 0; i < 24 * 7; i++) {
     const t = new Date(start.getTime() + i * 3600e3), hr = t.getHours();
     const diurnal = Math.sin(((hr - 5) / 24) * 2 * Math.PI);
     time.push(iso(t, tz));
-    temp.push(Math.round(o.baseTemp + diurnal * 9));
+    temp.push(Math.round(o.baseTemp + diurnal * 9 + lean * Math.max(0, 1 - Math.abs(i - nowI) / 6)));
     /* Heat index and wind chill fade toward the gentler end of the daily cycle. The exact
        curve is less important than giving the touch explorer a plausible changing signal. */
     apparent.push(Math.round(temp[i] + feelDelta * (.3 + .7 * Math.max(0, diurnal))));
@@ -102,7 +112,7 @@ export function forecast(now, o, tz) {
     const sl = temp.slice(d0 * 24, (d0 + 1) * 24), pl = pop.slice(d0 * 24, (d0 + 1) * 24), cl = code.slice(d0 * 24, (d0 + 1) * 24);
     dtime.push(day(d, tz)); dmax.push(Math.max(...sl)); dmin.push(Math.min(...sl));
     dcode.push(Math.max(...cl)); dpop.push(Math.max(...pl));
-    dsun.push(`${day(d, tz)}T${o.sunrise || "06:32"}`); dset.push(`${day(d, tz)}T${o.sunset || "20:14"}`);
+    dsun.push(`${day(d, tz)}T${o.sunrise || (SUN[loc] || SUN.mb)[0]}`); dset.push(`${day(d, tz)}T${o.sunset || (SUN[loc] || SUN.mb)[1]}`);
     duv.push(o.uvMax); dwmax.push(18);
   }
   if (o.dailyPop) o.dailyPop(dpop, dcode);
@@ -164,7 +174,7 @@ export async function stage(page, { now, loc, o, tidePhase = 0, fontDir = "", po
     await page.route("**fonts.googleapis.com**", (r) => r.fulfill({ contentType: "text/css", body: FONT_CSS(port) }));
     await page.route("**fonts.gstatic.com**", (r) => r.abort());
   }
-  await page.route("**api.open-meteo.com**", (r) => r.fulfill({ json: forecast(now, o, LOC_TZ[loc]) }));
+  await page.route("**api.open-meteo.com**", (r) => r.fulfill({ json: forecast(now, o, LOC_TZ[loc], loc) }));
   await page.route("**marine-api.open-meteo.com**", (r) => r.fulfill({ json: { daily: { wave_height_max: [o.wave ?? 2.4], wave_period_max: [6] } } }));
   await page.route("**tidesandcurrents.noaa.gov**", (r) => r.fulfill({ json: tides(now, tidePhase) }));
   await page.route("**api.weather.gov/alerts**", (r) => r.fulfill({ json: { features: o.code >= 95 ? SEVERE(now) : [] } }));
