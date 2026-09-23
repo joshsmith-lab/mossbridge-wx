@@ -49,7 +49,8 @@ place name.
   (0 ft MLLW), never autoscaled to the window, so the height of the water on
   screen is the water that is there.
 - **Motion tracks the weather.** Cloud drift, grass and tree sway, and the
-  skiff's rocking all scale with the actual wind and gusts. Everything respects
+  skiff's rocking all scale with the actual wind and gusts, and the skiff's burgee hangs
+  in calm air, flies level by 15 mph and flutters harder the further the gusts run above it. Everything respects
   `prefers-reduced-motion` through the `PRM` flag.
 - **A picture and its label must agree.** The old wind dial pointed downwind
   while the text beside it read upwind. The vane now points into the wind, the
@@ -158,7 +159,7 @@ apart. It exits non-zero on a page error, on layout thrash, or on anything that
 survives reduced motion.
 
 Two numbers worth knowing before you change motion: every scene idles at **0-1
-layouts per 6 seconds**, and the busiest scene runs **114 animations**. If either
+layouts per 6 seconds**, and the busiest scene runs **115 animations**. If either
 jumps, you have added something that is not a `transform` or an `opacity`.
 
 ## Time and place
@@ -364,6 +365,14 @@ Established with Josh and enforced by `test.mjs`:
   hours where they have room, then the rain odds, then the AFTER DARK tag. The high always
   keeps the space above its dot; now or the low take the space under their own dot when the
   space above is taken. Check it at 320, 375, 393 and 430, not only at one width.
+
+- **The skiff is a Carolina center console.** Josh picked it (September 2026) from four
+  drawn directions, because it is the boat that actually goes out of Wrightsville: a cream
+  hull in an ink outline that runs heavier along the keel, a rust boot stripe, a water-blue
+  T-top, a small outboard and a burgee, at the chart's restraint rather than the header's.
+  It stands about 21px over the curve at the top of a roll, so a high label steps over it by
+  the boat's actual box (23px behind now, 19px ahead), only as far as it needs to. A sweep of
+  "now" across a day and a half of tides at 320, 393 and 760 found no label it touches.
 
 ## The charts' entrance
 

@@ -448,6 +448,10 @@ section{padding:28px 20px 0}
 @keyframes bob{from{transform:rotate(calc(var(--rock,2.6deg) * -1)) translateY(.6px)}to{transform:rotate(var(--rock,2.6deg)) translateY(-.6px)}}
 /* the skiff leans the way the water is going: inland on a rising tide, seaward on a falling one */
 @keyframes setDrift{from{transform:translateX(0)}to{transform:translateX(var(--dx,0px))}}
+/* the skiff's burgee turns on its hoist: the sustained wind sets how high it flies, the gusts
+   how hard it flutters about that angle */
+.boat-flag{transform-box:view-box;transform-origin:0 0}
+@keyframes burgee{from{transform:rotate(calc(var(--fa,0deg) - var(--ff,2deg)))}to{transform:rotate(calc(var(--fa,0deg) + var(--ff,2deg)))}}
 /* the charts' entrance (see REVEAL): hidden until the pen gets there, and what grows,
    grows from where it stands */
 .rv-pre .tline,.rv-pre .wline,.rv-pre .rv-fill,.rv-pre [data-rk]{opacity:0}
@@ -3183,7 +3187,7 @@ async function fetchStorms(){
 }
 
 /* ── tide ───────────────────────────────────────────── */
-function renderTides(preds,css,gust){
+function renderTides(preds,css,gust,wind){
   if(!preds||preds.length<2){
     TIDE_PEEK=null;hideTidePeek();
     document.getElementById("tideSvg").innerHTML="";
@@ -3238,9 +3242,13 @@ function renderTides(preds,css,gust){
     const tm=p.time.getTime();if(tm<t0||tm>t1)continue;
     const x=X(tm),y=Y(p.v),high=p.type==="H";
     const anchor=x<x0+26*fs?"start":x>W-26*fs?"end":"middle";
-    const lift=high&&Math.abs(x-nx)<30&&ny-y<14?24:9;   /* step over the boat when now sits on the peak */
-    /* and the now-line stops under any high label it would cross, lifted or not */
     const lw=clock(p.time).length*11*fs*.6+4,lx=anchor==="start"?x:anchor==="end"?x-lw:x-lw/2;
+    /* step over the skiff, burgee and all, whenever the label's box would touch the boat's, and
+       only as far as it needs: the skiff reaches about 23px behind now (the outboard and its
+       wash), 19px ahead and 22px up at the top of a roll */
+    const onBoat=high&&lx<nx+19&&lx+lw>nx-23&&y-6>ny-22;
+    const lift=onBoat?Math.max(9,26-(ny-y)):9;
+    /* and the now-line stops under any high label it would cross, lifted or not */
     if(high&&nx>lx-2&&nx<lx+lw+2)nowTop=Math.max(nowTop,y-lift+5);
     labels+=`<text x="${x.toFixed(1)}" y="${(high?y-lift:lowY).toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(11*fs).toFixed(1)}" font-weight="600" fill="${high?css.ink:css.soft}" ${halo}${rvAt(anchor==="start"?x+20*fs:anchor==="end"?x-20*fs:x,"label")}>${clock(p.time)}</text>`;
     if(!high)labels+=`<line x1="${x.toFixed(1)}" y1="${(y+1).toFixed(1)}" x2="${x.toFixed(1)}" y2="${(bedY+2).toFixed(1)}" stroke="${css.line}" stroke-width="1"${rvAt(x,"fade")}/>`;
@@ -3252,11 +3260,31 @@ function renderTides(preds,css,gust){
   const next=P.find(p=>p.time>now);
   const setDx=next?(next.type==="H"?3:-3):0;
   const rockDeg=clamp(2.2+g0*.13,2.2,6.4),rockDur=clamp(2.9-g0*.055,1.15,2.9);
+  /* The skiff is the boat that actually goes out of Wrightsville: a Carolina center console,
+     bow toward later in the day, drawn the Storybook Ink way at the chart's restraint. A flat
+     cream hull (the one fixed colour, a white boat by day and lamp-warm by night) in an ink
+     outline that runs heavier along the keel as a tapered crescent, a thin rust boot stripe,
+     the bottom seen through the water, a water-blue T-top on two posts, a cowl-and-leg
+     outboard and prop wash. Its burgee is the one part with a motion of its own, and it is
+     the wind's: it hangs off the whip in calm air, flies level by 15 mph, and flutters faster
+     and wider the further the gusts run above the wind. */
+  const w0=Number(wind)||0,flagDeg=-35*(1-clamp(w0/15,0,1));
+  const flutter=clamp(1.2+(g0-w0)*.35,1.2,6),flutterDur=clamp(1.3-g0*.025,.45,1.3);
+  const flag=`<g transform="translate(-6.5 -16.6)"><g class="boat-flag" style="--fa:${flagDeg.toFixed(1)}deg;${PRM?`transform:rotate(${flagDeg.toFixed(1)}deg)`:`--ff:${flutter.toFixed(1)}deg;animation:burgee ${flutterDur.toFixed(2)}s ease-in-out infinite alternate`}">
+      <path d="M .2 -.2 C -1.6 -.6 -3.2 -.1 -5.2 -.5 L -3.7 .8 L -5 2 C -3.1 1.6 -1.5 2 .2 1.7 Z" fill="${css.water}"/></g></g>`;
   const boat=`<g transform="translate(${nx.toFixed(1)} ${ny.toFixed(1)}) scale(1.15)"><g${PRM||!setDx?"":` style="--dx:${setDx}px;animation:setDrift 9.5s ease-in-out infinite alternate"`}><g${PRM?"":` style="--rock:${rockDeg.toFixed(1)}deg;animation:bob ${rockDur.toFixed(2)}s ease-in-out infinite alternate"`}>
-    <path d="M -12.4 -3.4 L 12.8 -4.4 L 9 3.2 Q .5 5.2 -7.6 3.2 Z" fill="${css.ink}"/>
-    <path d="M -2.6 -9.8 h 5.6 v 5.5 h -5.6 z" fill="${css.ink}"/>
-    <path d="M 3.4 -7.6 h 3.6" stroke="${css.ink}" stroke-width="1.4" stroke-linecap="round"/>
-    <path d="M -17 1.4 h 3.4 M 14.6 .6 h 3.2" stroke="${css.water}" stroke-width="1.3" stroke-linecap="round" opacity=".8"/></g></g></g>`;
+    <path d="M -1.6 -5.1 L -1.6 -10.9 M 3.4 -5.5 L 3.4 -10.9" fill="none" stroke="${css.ink}" stroke-width=".9" stroke-linecap="round"/>
+    <path d="M -4.6 -12.7 L -6.5 -16.6" fill="none" stroke="${css.ink}" stroke-width=".85" stroke-linecap="round"/>
+    ${flag}
+    <path d="M -12.9 -7.6 Q -13 -8.8 -14.2 -8.8 L -16 -8.6 Q -17.3 -8.4 -17.1 -7.1 L -16.8 -5.2 Q -16.6 -4.3 -15.7 -4.3 L -15.4 -4.3 L -14.9 1.9 Q -14.8 2.5 -14.2 2.3 L -13.8 -4.4 L -13.3 -4.4 Q -12.6 -4.5 -12.7 -5.2 Z" fill="${css.ink}"/>
+    <path d="M -12.7 -4.9 C -6 -4.3 2 -4.5 7 -5.5 C 9.7 -6.1 11.5 -7 12.9 -8.3 C 12.3 -5.3 11.3 -1.9 9.1 1.1 C 3.4 2.9 -5.8 2.9 -11.5 2.1 Z" fill="#F1E4C6"/>
+    <path d="M -11.8 .2 L 9.7 .2 C 9.5 .5 9.3 .8 9.1 1.1 C 3.4 2.9 -5.8 2.9 -11.5 2.1 Z" fill="${css.water}" opacity=".45"/>
+    <path d="M -12 -.7 L 10.25 -.7 L 9.72 .2 L -11.83 .2 Z" fill="${css.marker}"/>
+    <path d="M -12.7 -4.9 C -6 -4.3 2 -4.5 7 -5.5 C 9.7 -6.1 11.5 -7 12.9 -8.3 C 12.3 -5.3 11.3 -1.9 9.1 1.1 C 3.4 2.9 -5.8 2.9 -11.5 2.1 Z" fill="none" stroke="${css.ink}" stroke-width=".85" stroke-linejoin="round"/>
+    <path d="M 10.5 -2.2 C 10 -.6 9.6 .3 9.1 1.1 C 3.4 2.9 -5.8 2.9 -11.5 2.1 L -11.7 .9 C -8 1.7 -3 1.85 1.5 1.6 C 5.5 1.35 8.3 .5 10.5 -2.2 Z" fill="${css.ink}"/>
+    <path d="M -6.6 -10.9 C -6.3 -14 7.8 -14.2 8 -11.1 Z" fill="${css.water}" stroke="${css.ink}" stroke-width=".75" stroke-linejoin="round"/>
+    <path d="M -6.5 -10.85 L 7.9 -11.05" fill="none" stroke="${css.ink}" stroke-width="1.25" stroke-linecap="round"/>
+    <path d="M -15.5 1.1 Q -17.4 .1 -19.3 .9 M 10.9 .8 Q 13.3 -.5 15.7 .5" fill="none" stroke="${css.water}" stroke-width="1" stroke-linecap="round"/></g></g></g>`;
 
   const tideSvg=document.getElementById("tideSvg"),waterTop=Math.min(...pts.map(p=>p[1]));
   tideSvg.setAttribute("viewBox",`0 0 ${W} ${H}`);
@@ -4142,7 +4170,7 @@ function render(d,live,savedAt=0){
     color:x=>tempColor(hourAt(x))});
   document.getElementById("hrLabels").innerHTML=labels;
   document.getElementById("tideSection").style.display=LOC.tide?"":"none";
-  const tide=LOC.tide?renderTides(d.tides,css,c.wind_gusts_10m):null;
+  const tide=LOC.tide?renderTides(d.tides,css,c.wind_gusts_10m,c.wind_speed_10m):null;
   renderAlerts(alerts);
   renderNowcast(d.nowcast);
   renderStorms(d.storms);

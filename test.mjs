@@ -669,7 +669,15 @@ test("tide chart reads as depth over the bottom", async () => {
   // lows share one aligned row, and the skiff rocks with the chop
   assert.match(html, /lowY=H-9/);
   assert.match(html, /rockDeg=clamp\(2\.2\+g0\*\.13/);
-  assert.match(html, /renderTides\(d\.tides,css,c\.wind_gusts_10m\)/);
+  assert.match(html, /renderTides\(d\.tides,css,c\.wind_gusts_10m,c\.wind_speed_10m\)/);
+  // the skiff's burgee flies on the real wind: limp in calm air, level by 15 mph, and the
+  // gusts above the wind set its flutter; reduced motion holds the wind's angle, still
+  assert.match(html, /const w0=Number\(wind\)\|\|0,flagDeg=-35\*\(1-clamp\(w0\/15,0,1\)\);/);
+  assert.match(html, /const flutter=clamp\(1\.2\+\(g0-w0\)\*\.35,1\.2,6\)/);
+  assert.match(html, /\$\{PRM\?`transform:rotate\(\$\{flagDeg\.toFixed\(1\)\}deg\)`/);
+  // the taller skiff: a high label steps over it sooner and higher
+  assert.match(html, /const onBoat=high&&lx<nx\+19&&lx\+lw>nx-23&&y-6>ny-22;/);
+  assert.match(html, /const lift=onBoat\?Math\.max\(9,26-\(ny-y\)\):9;/);
   assert.match(html, /const chartH=w=>Math\.round\(152\+\(760-w\)\*\.09\)/);
   assert.match(html, /Ht=chartH\(W\)-22/);
   assert.match(html, /H=chartH\(W\)/);
