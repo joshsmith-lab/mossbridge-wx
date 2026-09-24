@@ -641,6 +641,9 @@ test("plain-language and living-scene refinements stay in place", async () => {
   // a missing sky is no glyph, never a sun; a week with no odds at all is not "mostly dry"
   assert.match(html, /\$\{sky\?icon\(code,16\):""\}/);
   assert.match(html, /!weekOdds\?"rain odds unavailable":wi<0\?"mostly dry"/);
+  // the tapped brief says nothing it was not told: no invented sky, no easy day on missing odds
+  assert.match(html, /return `\$\{feel\}\$\{hasSky\?`, with \$\{sky\}`:""\}\. \$\{note\}`;/);
+  assert.match(html, /else if\(!hasPop\)note="The rain odds are unavailable\.";/);
   assert.match(html, /moonPhaseIcon/);
   assert.doesNotMatch(html, /phaseName/);
   assert.match(html, /flight-wing/);

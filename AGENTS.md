@@ -372,7 +372,7 @@ Established with Josh and enforced by `test.mjs`:
   What stayed: the highs as one line with the day's number over it, the lows as a fainter line
   with smaller, fainter numbers under it, the range washed between them, drawn in by the same pen
   as the hourly chart (`week` in `REVEAL`; the lows ride along as `.rv-line2`). The warmest day is
-  the one key point (every tie keyed). Under a hairline sits the hourly chart's own quiet axis: the
+  the one key point (ties keyed, up to three). Under a hairline sits the hourly chart's own quiet axis: the
   day in faint mono caps (TODAY in marker red, like NOW), then its sky, then the odds only where
   there is rain to talk about: from `WEEK_WET` (35%, shared with `dailyBrief`) in water, or faint
   under a wet sky on poorer odds so a rain cloud is never unqualified. A missing chance is a dash,

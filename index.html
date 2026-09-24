@@ -523,9 +523,9 @@ html:not([data-theme=dark]) .rv-core{display:none}
 .wk-day>*{position:relative}
 button.wk-day{cursor:pointer}
 button.wk-day:focus-visible{outline:none}
-button.wk-day:focus-visible::before{opacity:1;box-shadow:inset 0 0 0 2px var(--water)}
+button.wk-day:focus-visible::before{opacity:1;box-shadow:inset 0 0 0 2px var(--water);outline:2px solid transparent;outline-offset:-2px}
 button.wk-day[aria-expanded=true]::before,button.wk-day:active::before{opacity:1}
-@media(hover:hover){button.wk-day:hover:not([aria-expanded=true])::before{opacity:.55}}
+@media(hover:hover){button.wk-day:hover:not([aria-expanded=true]):not(:focus-visible):not(:active)::before{opacity:.55}}
 .wk-plot{display:block;flex:0 0 auto}
 .wk-name{margin-top:8px;font-family:var(--mono);font-size:10px;line-height:13px;letter-spacing:.06em;
   text-transform:uppercase;white-space:nowrap;color:var(--ink-faint)}
@@ -536,8 +536,7 @@ button.wk-day[aria-expanded=true]::before,button.wk-day:active::before{opacity:1
 .wk-icon.rough{color:var(--marker)}
 .wk-icon svg{display:block}
 .wk-rain{height:13px;margin-top:1px;font-family:var(--mono);font-size:10px;line-height:13px;color:var(--ink-faint);white-space:nowrap}
-.wk-rain.wet{color:var(--water);font-weight:500}
-.wk-rain.soaked{font-weight:600}
+.wk-rain.wet{color:var(--water);font-weight:600}
 .wk-svg{position:absolute;left:0;top:0;width:100%;display:block;overflow:visible;pointer-events:none}
 .day-brief{margin:8px 0 2px;color:var(--ink-soft);font-size:14.5px;line-height:1.5;text-wrap:pretty;
   animation:briefIn .28s var(--ease) both}
@@ -3503,8 +3502,12 @@ function comfortAdvice(c,h){
 }
 function dailyBrief(dy,i){
   const high=Math.round(dy.temperature_2m_max[i]);
-  const code=Number(dy.weather_code[i])||0;
-  const pop=Number(dy.precipitation_probability_max[i])||0;
+  /* a missing sky or chance is left unsaid: it used to fall through to "clear skies" and an
+     easy day, which is a forecast nobody made */
+  const known=v=>v!=null&&Number.isFinite(+v);
+  const hasSky=known(dy.weather_code[i]),hasPop=known(dy.precipitation_probability_max[i]);
+  const code=hasSky?+dy.weather_code[i]:0;
+  const pop=hasPop?+dy.precipitation_probability_max[i]:0;
   const wind=Number(dy.wind_speed_10m_max?.[i])||0;
   const feel=high>=92?"Hot":high>=82?"Warm":high>=68?"Mild":high>=52?"Cool":"Chilly";
   /* snow and ice are checked first: their codes sit above 61, so the old ladder called a
@@ -3519,11 +3522,12 @@ function dailyBrief(dy,i){
   else if(isIce(code))note="Ice is the problem, not the cold. Give the roads time.";
   else if(isSnow(code))note="Plan on slow going.";
   else if(code>=51||pop>=60)note="Plan around at least one wet stretch.";
+  else if(!hasPop)note="The rain odds are unavailable.";
   else if(pop>=WEEK_WET)note="A passing shower is possible.";
   else if(wind>=20)note="It may turn breezy.";
   else if(high>=92)note="Keep the middle of the day short.";
   else note="Most of the day should feel easy outside.";
-  return `${feel}, with ${sky}. ${note}`;
+  return `${feel}${hasSky?`, with ${sky}`:""}. ${note}`;
 }
 
 /* ── the week ───────────────────────────────────────── */
@@ -3531,7 +3535,7 @@ function dailyBrief(dy,i){
    already says. The highs are one line with the day's number over it and the lows a fainter
    line under it, on one scale with the range washed between them, drawn by the same pen as
    the hourly chart, so a warm run reads as the line climbing. The warmest day is the one key
-   point, as the high is on the hourly chart, and every day that ties it is keyed too. Under a
+   point, as the high is on the hourly chart, and up to three days that tie it are keyed. Under a
    hairline sits the same quiet axis: the day, then its sky. The sky does the rain talking. From
    WEEK_WET (35%, where the day's own brief starts talking about showers, so the column and the
    tap can never disagree) the odds are printed in water and a wet sky turns water too; a wet
@@ -3556,7 +3560,7 @@ function renderWeek(dy,css){
   });
   /* a week with no odds to print carries no empty row for them; a day whose chance is missing
      in a week that has some says so with a dash, so a gap never passes for dry */
-  const anyOdds=days.some(d=>d.odds),someOdds=days.some(d=>d.has);
+  const someOdds=days.some(d=>d.has),anyOdds=days.some(d=>d.odds||someOdds&&!d.has);
   wrap.style.setProperty("--wk-h",H+"px");
   wrap.innerHTML=days.map(({t,has,pop,sky,code,likely,odds},i)=>{
     const hi=Math.round(his[i]),lo=Math.round(los[i]);
@@ -3567,7 +3571,7 @@ function renderWeek(dy,css){
     const face=`<span class="wk-plot" style="height:${H}px" aria-hidden="true"></span>
       <span class="wk-name" aria-hidden="true">${i===0?"Today":dayName(t)}</span>
       <span class="wk-icon${sky&&code>=95?" rough":likely&&sky&&isWet(code)?" wet":""}" aria-hidden="true">${sky?icon(code,16):""}</span>
-      ${anyOdds?`<span class="wk-rain${likely?" wet":""}${has&&pop>=60?" soaked":""}" aria-hidden="true">${odds?pop+"%":!has&&someOdds?"–":""}</span>`:""}`;
+      ${anyOdds?`<span class="wk-rain${likely?" wet":""}" aria-hidden="true">${odds?pop+"%":!has&&someOdds?"–":""}</span>`:""}`;
     if(i===0)return `<div class="wk-day today"><span class="sr-only">${esc(said)}</span>${face}</div>`;
     return `<button class="wk-day" type="button" data-day="${t}" aria-expanded="${openDay===t}" aria-controls="weekBrief"
       aria-label="${esc(said)}" data-brief="${esc(dailyBrief(dy,i))}" data-name="${long} ${mmdd(t)}">${face}</button>`;
@@ -3591,12 +3595,14 @@ function renderWeek(dy,css){
   /* the warmest day is the key point; a tie is every day that reaches it, or one 93° reads
      as warmer than the next, and the ring plays once, on the first */
   const peak=Math.max(...his.map(Math.round)),hiI=his.findIndex(t=>Math.round(t)===peak);
+  /* a warm plateau has no warmest day: past three ties nothing is keyed, rather than a row of rings */
+  const keyed=his.filter(t=>Math.round(t)===peak).length<=3;
   const rv=REVEAL.week.state!=="done",rvAt=(x,k,d)=>rvTag(rv,x,k,d);
   const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3" stroke-linejoin="round"`;
   const mono=`text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace"`;
   let marks="";
   for(let i=0;i<n;i++){
-    const x=X(i),yh=Y(his[i]),yl=Y(los[i]),th=Math.round(his[i])+"°",tl=Math.round(los[i])+"°",key=Math.round(his[i])===peak;
+    const x=X(i),yh=Y(his[i]),yl=Y(los[i]),th=Math.round(his[i])+"°",tl=Math.round(los[i])+"°",key=keyed&&Math.round(his[i])===peak;
     const fh=key?13:12,wh=th.length*fh*.3+2,wl=tl.length*10.5*.3+2;
     const ly=Math.min(yh-(key?11:9),yHi(x-wh)-5,yHi(x+wh)-5);
     const lyl=Math.min(H-6,Math.max(yl+14,yLo(x-wl)+12,yLo(x+wl)+12));
