@@ -367,13 +367,21 @@ Established with Josh and enforced by `test.mjs`:
   keeps the space above its dot; now or the low take the space under their own dot when the
   space above is taken. Check it at 320, 375, 393 and 430, not only at one width.
 
-- **The week is lines, not bars.** Josh asked for it in September 2026: one column per day
-  (day, sky, highs and lows, rain odds), with the highs and lows as two lines on one scale and
-  the day's range washed between them, drawn in by the same pen as the hourly chart (`week`
-  in `REVEAL`; the lows ride along as `.rv-line2`). The rain odds stay a number with a drop
-  filled to the same odds, not a third line: a daily chance is one reading per day, and a line
-  through seven of them invents odds for the nights between. Every day but today is a button
-  that opens its `dailyBrief`. Check it at 320 with a three-digit high and 100% odds.
+- **The week is lines, not bars, and says only what the picture does not.** Josh asked for lines
+  in September 2026, then sent the first version back as "too overwhelming with text and info".
+  What stayed: the highs as one line with the day's number over it, the lows as a fainter line
+  with smaller, fainter numbers under it, the range washed between them, drawn in by the same pen
+  as the hourly chart (`week` in `REVEAL`; the lows ride along as `.rv-line2`). The warmest day is
+  the one key point (every tie keyed). Under a hairline sits the hourly chart's own quiet axis: the
+  day in faint mono caps (TODAY in marker red, like NOW), then its sky, then the odds only where
+  there is rain to talk about: from `WEEK_WET` (35%, shared with `dailyBrief`) in water, or faint
+  under a wet sky on poorer odds so a rain cloud is never unqualified. A missing chance is a dash,
+  never a number. What went: dates (the tapped brief carries them), chevrons, a drop and a percent
+  on every dry day, and ringed dots on every point. Rain is not a third line: a daily chance is one
+  reading per day, and a line through seven of them invents odds for the nights between. Every day
+  but today is a button that opens its `dailyBrief`; the open day is washed under the hairline only,
+  because a wash behind the chart boxed every label it crossed. Check it at 320 with a three-digit
+  high and 100% odds.
 
 - **The skiff is a Carolina center console.** Josh picked it (September 2026) from four
   drawn directions, because it is the boat that actually goes out of Wrightsville: a cream

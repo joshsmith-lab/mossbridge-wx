@@ -507,36 +507,39 @@ html:not([data-theme=dark]) .rv-core{display:none}
 @media (max-width:339px){.uv-scale{font-size:9.5px;letter-spacing:.04em}}
 
 /* ── week ───────────────────────────────────────────── */
-/* one column per day, read top to bottom: the day, the sky, the highs and lows as two lines
-   on one scale, then the rain odds. The heights below are fixed so the chart, which sits over
-   the columns, lands on the gap left for it without measuring anything. */
+/* The chart on top, then the same quiet axis as the hourly chart under a hairline: the day,
+   its sky, and the odds only where there is rain to talk about. The chart is drawn over the
+   gap each column leaves at its top, so it lands without measuring anything. */
 .week{padding:12px 20px 0}
 .wk-wrap{position:relative}
 .wk{display:grid;grid-template-columns:repeat(7,1fr)}
-.wk-day{display:flex;flex-direction:column;align-items:center;min-width:0;padding:6px 0 8px;margin:0;
-  border:0;border-radius:10px;background:transparent;color:inherit;font:inherit;text-align:center;
-  -webkit-tap-highlight-color:transparent;transition:background-color .2s var(--ease)}
+.wk-day{position:relative;display:flex;flex-direction:column;align-items:center;min-width:0;padding:0 0 6px;margin:0;
+  border:0;border-radius:0;background:transparent;color:inherit;font:inherit;text-align:center;
+  -webkit-tap-highlight-color:transparent}
+/* the open day is marked where its name is, under the hairline: a wash behind the chart put a
+   paper-coloured box around every label it crossed, and read as a selected card */
+.wk-day::before{content:"";position:absolute;left:3px;right:3px;top:calc(var(--wk-h) + 3px);bottom:0;border-radius:8px;
+  background:var(--wash);opacity:0;transition:opacity .2s var(--ease)}
+.wk-day>*{position:relative}
 button.wk-day{cursor:pointer}
-button.wk-day:focus-visible{outline:2px solid var(--water);outline-offset:-2px}
-button.wk-day[aria-expanded=true]{background:var(--wash)}
-@media(hover:hover){button.wk-day:hover:not([aria-expanded=true]){background:color-mix(in srgb,var(--wash) 55%,transparent)}}
-.wk-name{font-family:var(--mono);font-size:12.5px;line-height:16px;font-weight:600;white-space:nowrap;color:var(--ink)}
-.wk-day.today .wk-name{color:var(--marker)}
-.wk-date{font-family:var(--mono);font-size:10.5px;line-height:14px;color:var(--ink-faint);white-space:nowrap}
-.wk-icon{height:24px;margin-top:4px;display:flex;align-items:center;color:var(--ink-soft)}
+button.wk-day:focus-visible{outline:none}
+button.wk-day:focus-visible::before{opacity:1;box-shadow:inset 0 0 0 2px var(--water)}
+button.wk-day[aria-expanded=true]::before,button.wk-day:active::before{opacity:1}
+@media(hover:hover){button.wk-day:hover:not([aria-expanded=true])::before{opacity:.55}}
+.wk-plot{display:block;flex:0 0 auto}
+.wk-name{margin-top:8px;font-family:var(--mono);font-size:10px;line-height:13px;letter-spacing:.06em;
+  text-transform:uppercase;white-space:nowrap;color:var(--ink-faint)}
+.wk-day.today .wk-name{color:var(--marker);font-weight:600}
+.wk-day[aria-expanded=true] .wk-name{color:var(--ink);font-weight:600}
+.wk-icon{height:20px;margin-top:5px;display:flex;align-items:center;color:var(--ink-faint)}
+.wk-icon.wet{color:var(--water)}
 .wk-icon.rough{color:var(--marker)}
 .wk-icon svg{display:block}
-.wk-plot{display:block;flex:0 0 auto}
-.wk-rain{display:flex;align-items:center;justify-content:center;gap:3px;height:16px;font-family:var(--mono);
-  font-size:11.5px;color:var(--ink-faint);white-space:nowrap;letter-spacing:0}
-.wk-rain.wet{color:var(--water);font-weight:600}
-.wk-rain svg{display:block;flex:0 0 auto;color:var(--water)}
-.wk-chev{display:block;width:10px;height:10px;margin-top:5px;opacity:.45;color:var(--ink-soft);transition:transform .25s var(--ease)}
-.wk-day[aria-expanded=true] .wk-chev{transform:rotate(180deg);opacity:.7}
-/* padding 6 + name 16 + date 14 + icon 4 + 24: the top of .wk-plot */
-.wk-svg{position:absolute;left:0;top:64px;width:100%;display:block;overflow:visible;pointer-events:none}
-@media (max-width:359px){.wk-name{font-size:11.5px}.wk-rain{font-size:10.5px;gap:2px}}
-.day-brief{margin:4px 0 2px;color:var(--ink-soft);font-size:14.5px;line-height:1.5;text-wrap:pretty;
+.wk-rain{height:13px;margin-top:1px;font-family:var(--mono);font-size:10px;line-height:13px;color:var(--ink-faint);white-space:nowrap}
+.wk-rain.wet{color:var(--water);font-weight:500}
+.wk-rain.soaked{font-weight:600}
+.wk-svg{position:absolute;left:0;top:0;width:100%;display:block;overflow:visible;pointer-events:none}
+.day-brief{margin:8px 0 2px;color:var(--ink-soft);font-size:14.5px;line-height:1.5;text-wrap:pretty;
   animation:briefIn .28s var(--ease) both}
 .day-brief b{color:var(--ink);font-weight:600}
 @keyframes briefIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
@@ -3516,7 +3519,7 @@ function dailyBrief(dy,i){
   else if(isIce(code))note="Ice is the problem, not the cold. Give the roads time.";
   else if(isSnow(code))note="Plan on slow going.";
   else if(code>=51||pop>=60)note="Plan around at least one wet stretch.";
-  else if(pop>=35)note="A passing shower is possible.";
+  else if(pop>=WEEK_WET)note="A passing shower is possible.";
   else if(wind>=20)note="It may turn breezy.";
   else if(high>=92)note="Keep the middle of the day short.";
   else note="Most of the day should feel easy outside.";
@@ -3524,40 +3527,50 @@ function dailyBrief(dy,i){
 }
 
 /* ── the week ───────────────────────────────────────── */
-/* Seven columns, read top to bottom the way the question gets asked: which day, what sky, how
-   warm, will it rain. The highs and lows are two lines on one scale with the day's range
-   washed between them, drawn by the same pen as the hourly chart, so a warm run reads as the
-   line climbing rather than as bars getting longer. The rain odds are a number under each day
-   with a drop that fills to the same odds. They are deliberately not a third line: a daily
-   chance is one reading per day, and a line through seven of them would invent odds for the
-   nights in between. Tap a day for its one-line brief; today has the rest of the page. */
-const WEEK_H=152;
-const weekDrop=(pop,id)=>{
-  const f=(clamp(pop,0,100)/100).toFixed(2),o=(.5+Math.min(pop,60)/60*.4).toFixed(2);
-  return `<svg width="8" height="11" viewBox="0 0 8 11" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="1" x2="0" y2="0">
-    <stop offset="${f}" stop-color="currentColor" stop-opacity="${o}"/><stop offset="${f}" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs>
-    <path d="M4 .9C2.7 3 1 5 1 7a3 3 0 0 0 6 0C7 5 5.3 3 4 .9Z" fill="url(#${id})" stroke="currentColor" stroke-width="1" stroke-linejoin="round" opacity=".9"/></svg>`;
-};
-const WEEK_CHEV='<svg class="wk-chev" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+/* How warm, and will it rain: the two things anyone asks of a week, and nothing the picture
+   already says. The highs are one line with the day's number over it and the lows a fainter
+   line under it, on one scale with the range washed between them, drawn by the same pen as
+   the hourly chart, so a warm run reads as the line climbing. The warmest day is the one key
+   point, as the high is on the hourly chart, and every day that ties it is keyed too. Under a
+   hairline sits the same quiet axis: the day, then its sky. The sky does the rain talking. From
+   WEEK_WET (35%, where the day's own brief starts talking about showers, so the column and the
+   tap can never disagree) the odds are printed in water and a wet sky turns water too; a wet
+   sky on poorer odds keeps its number, faint, so a rain cloud never claims more than the
+   forecast does; a dry sky on poor odds is dry and says nothing. A missing chance is a dash,
+   never a number, and a missing sky is no glyph, never a sun. The odds stay numbers.
+   They are deliberately not a third line: a daily chance is one reading per day, and a line
+   through seven of them would invent odds for the nights in between. No dates and no
+   chevrons: the day name is enough, the tapped brief carries the date, and every day but
+   today is a button that opens its one-line brief under the chart; today has the rest of the
+   page. */
+const WEEK_H=132,WEEK_WET=35;
 function renderWeek(dy,css){
-  const wrap=document.getElementById("weekRows"),svg=document.getElementById("weekSvg"),brief=document.getElementById("weekBrief");
+  const wrap=document.getElementById("weekRows"),svg=document.getElementById("weekSvg");
   const n=dy.time.length,his=dy.temperature_2m_max,los=dy.temperature_2m_min;
   const openDay=wrap.querySelector('.wk-day[aria-expanded="true"]')?.dataset.day||null;
   const H=WEEK_H;
-  wrap.innerHTML=dy.time.map((t,i)=>{
+  const days=dy.time.map((t,i)=>{
     const raw=dy.precipitation_probability_max[i],has=raw!=null&&Number.isFinite(+raw),pop=has?Math.round(+raw):0;
-    const code=Number(dy.weather_code[i])||0,hi=Math.round(his[i]),lo=Math.round(los[i]);
-    const wet=isSnow(code)?"snow":isIce(code)?"freezing rain":"rain";
+    const rc=dy.weather_code[i],sky=rc!=null&&Number.isFinite(+rc),code=sky?+rc:null,likely=has&&pop>=WEEK_WET;
+    return{t,has,pop,sky,code,likely,odds:has&&(likely||sky&&isWet(code))};
+  });
+  /* a week with no odds to print carries no empty row for them; a day whose chance is missing
+     in a week that has some says so with a dash, so a gap never passes for dry */
+  const anyOdds=days.some(d=>d.odds),someOdds=days.some(d=>d.has);
+  wrap.style.setProperty("--wk-h",H+"px");
+  wrap.innerHTML=days.map(({t,has,pop,sky,code,likely,odds},i)=>{
+    const hi=Math.round(his[i]),lo=Math.round(los[i]);
+    const wet=sky&&isSnow(code)?"snow":sky&&isIce(code)?"freezing rain":"rain";
+    const long=new Date(t+"T12:00").toLocaleDateString("en-US",{weekday:"long"});
     const full=new Date(t+"T12:00").toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
-    const said=`${i===0?"Today, ":""}${full}. ${WMO[code]||""}. High ${hi}, low ${lo}. ${has?`${pop} percent chance of ${wet}`:"Rain chance unavailable"}.`;
-    const face=`<span class="wk-name" aria-hidden="true">${i===0?"Today":dayName(t)}</span>
-      <span class="wk-date" aria-hidden="true">${mmdd(t)}</span>
-      <span class="wk-icon${code>=95?" rough":""}" aria-hidden="true">${icon(code,17)}</span>
-      <span class="wk-plot" style="height:${H}px" aria-hidden="true"></span>
-      <span class="wk-rain${pop>=40?" wet":""}" aria-hidden="true">${has?weekDrop(pop,"wkDrop"+i)+pop+"%":"—"}</span>`;
-    if(i===0)return `<div class="wk-day today"><span class="sr-only">${esc(said)}</span>${face}<span class="wk-chev"></span></div>`;
+    const said=`${i===0?"Today, ":""}${full}. ${sky&&WMO[code]?WMO[code]+". ":""}High ${hi}, low ${lo}. ${has?`${pop} percent chance of ${wet}`:"Rain chance unavailable"}.`;
+    const face=`<span class="wk-plot" style="height:${H}px" aria-hidden="true"></span>
+      <span class="wk-name" aria-hidden="true">${i===0?"Today":dayName(t)}</span>
+      <span class="wk-icon${sky&&code>=95?" rough":likely&&sky&&isWet(code)?" wet":""}" aria-hidden="true">${sky?icon(code,16):""}</span>
+      ${anyOdds?`<span class="wk-rain${likely?" wet":""}${has&&pop>=60?" soaked":""}" aria-hidden="true">${odds?pop+"%":!has&&someOdds?"–":""}</span>`:""}`;
+    if(i===0)return `<div class="wk-day today"><span class="sr-only">${esc(said)}</span>${face}</div>`;
     return `<button class="wk-day" type="button" data-day="${t}" aria-expanded="${openDay===t}" aria-controls="weekBrief"
-      aria-label="${esc(said)}" data-brief="${esc(dailyBrief(dy,i))}" data-name="${new Date(t+"T12:00").toLocaleDateString("en-US",{weekday:"long"})}">${face}${WEEK_CHEV}</button>`;
+      aria-label="${esc(said)}" data-brief="${esc(dailyBrief(dy,i))}" data-name="${long} ${mmdd(t)}">${face}</button>`;
   }).join("");
   weekBrief(wrap.querySelector('.wk-day[aria-expanded="true"]'));
 
@@ -3567,7 +3580,7 @@ function renderWeek(dy,css){
   if(n<2){svg.innerHTML="";return}
   let tMin=Math.min(...los),tMax=Math.max(...his);
   if(tMax-tMin<10){const m=(tMax+tMin)/2;tMin=m-5;tMax=m+5}
-  const top=30,bot=H-26,Y=t=>top+(bot-top)*(1-(t-tMin)/(tMax-tMin));
+  const top=24,bot=H-21,Y=t=>top+(bot-top)*(1-(t-tMin)/(tMax-tMin));
   const hiP=his.map((t,i)=>[X(i),Y(t)]),loP=los.map((t,i)=>[X(i),Y(t)]);
   const hiLine=spline(hiP),loLine=spline(loP);
   const band=hiLine+" "+spline([...loP].reverse()).replace(/^M/,"L")+" Z";
@@ -3575,19 +3588,25 @@ function renderWeek(dy,css){
      through the number (the hourly chart learned this one on a phone) */
   const yOn=a=>px=>{const f=clamp(px/col-.5,0,n-1),i=Math.min(n-2,Math.floor(f));return Y(a[i]+(a[i+1]-a[i])*(f-i))};
   const yHi=yOn(his),yLo=yOn(los);
+  /* the warmest day is the key point; a tie is every day that reaches it, or one 93° reads
+     as warmer than the next, and the ring plays once, on the first */
+  const peak=Math.max(...his.map(Math.round)),hiI=his.findIndex(t=>Math.round(t)===peak);
   const rv=REVEAL.week.state!=="done",rvAt=(x,k,d)=>rvTag(rv,x,k,d);
   const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3" stroke-linejoin="round"`;
   const mono=`text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace"`;
   let marks="";
   for(let i=0;i<n;i++){
-    const x=X(i),yh=Y(his[i]),yl=Y(los[i]),th=Math.round(his[i])+"°",tl=Math.round(los[i])+"°";
-    const wh=th.length*13*.3+2,wl=tl.length*11.5*.3+2;
-    const ly=Math.min(yh-10,yHi(x-wh)-5,yHi(x+wh)-5);
-    const lyl=Math.max(yl+16,yLo(x-wl)+15,yLo(x+wl)+15);
-    marks+=`<circle cx="${x.toFixed(1)}" cy="${yl.toFixed(1)}" r="2.8" fill="${css.paper}" stroke="${tempColor(los[i])}" stroke-width="1.8"${rvAt(x,"dot")}/>
-      <text x="${x.toFixed(1)}" y="${lyl.toFixed(1)}" ${mono} font-size="11.5" fill="${css.soft}" ${halo}${rvAt(x,"label")}>${tl}</text>
-      <circle cx="${x.toFixed(1)}" cy="${yh.toFixed(1)}" r="3.6" fill="${css.paper}" stroke="${tempColor(his[i])}" stroke-width="2.4"${rvAt(x,"dot")}/>
-      <text x="${x.toFixed(1)}" y="${ly.toFixed(1)}" ${mono} font-size="13" font-weight="600" fill="${css.ink}" ${halo}${rvAt(x,"label")}>${th}</text>`;
+    const x=X(i),yh=Y(his[i]),yl=Y(los[i]),th=Math.round(his[i])+"°",tl=Math.round(los[i])+"°",key=Math.round(his[i])===peak;
+    const fh=key?13:12,wh=th.length*fh*.3+2,wl=tl.length*10.5*.3+2;
+    const ly=Math.min(yh-(key?11:9),yHi(x-wh)-5,yHi(x+wh)-5);
+    const lyl=Math.min(H-6,Math.max(yl+14,yLo(x-wl)+12,yLo(x+wl)+12));
+    marks+=`<circle cx="${x.toFixed(1)}" cy="${yl.toFixed(1)}" r="1.6" fill="${tempColor(los[i])}" opacity=".75"${rvAt(x,"dot")}/>
+      <text x="${x.toFixed(1)}" y="${lyl.toFixed(1)}" ${mono} font-size="10.5" fill="${css.faint}" ${halo}${rvAt(x,"label")}>${tl}</text>`;
+    if(key){
+      if(rv&&i===hiI)marks+=`<circle cx="${x.toFixed(1)}" cy="${yh.toFixed(1)}" r="15" fill="none" stroke="${tempColor(his[i])}" stroke-width="1.6" opacity="0"${rvAt(x,"ring")}/>`;
+      marks+=`<circle cx="${x.toFixed(1)}" cy="${yh.toFixed(1)}" r="3.6" fill="${css.paper}" stroke="${tempColor(his[i])}" stroke-width="2.4"${rvAt(x,"dot")}/>`;
+    }else marks+=`<circle cx="${x.toFixed(1)}" cy="${yh.toFixed(1)}" r="2" fill="${tempColor(his[i])}" opacity=".8"${rvAt(x,"dot")}/>`;
+    marks+=`<text x="${x.toFixed(1)}" y="${ly.toFixed(1)}" ${mono} font-size="${fh}" font-weight="${key?600:500}" fill="${css.ink}" ${halo}${rvAt(x,"label")}>${th}</text>`;
   }
   const stops=a=>a.map((t,i)=>`<stop offset="${(i/(n-1)*100).toFixed(1)}%" stop-color="${tempColor(t)}"/>`).join("");
   const xa=X(0),xb=X(n-1);
@@ -3596,16 +3615,17 @@ function renderWeek(dy,css){
       <linearGradient id="wkHi" gradientUnits="userSpaceOnUse" x1="${xa.toFixed(1)}" y1="0" x2="${xb.toFixed(1)}" y2="0">${stops(his)}</linearGradient>
       <linearGradient id="wkLo" gradientUnits="userSpaceOnUse" x1="${xa.toFixed(1)}" y1="0" x2="${xb.toFixed(1)}" y2="0">${stops(los)}</linearGradient>
       <linearGradient id="wkBand" gradientUnits="userSpaceOnUse" x1="0" y1="${Y(tMax).toFixed(1)}" x2="0" y2="${Y(tMin).toFixed(1)}">
-        <stop offset="0" stop-color="${tempColor(Math.max(...his))}" stop-opacity=".24"/>
-        <stop offset="1" stop-color="${tempColor(Math.min(...los))}" stop-opacity=".12"/></linearGradient>
+        <stop offset="0" stop-color="${tempColor(Math.max(...his))}" stop-opacity=".2"/>
+        <stop offset="1" stop-color="${tempColor(Math.min(...los))}" stop-opacity=".04"/></linearGradient>
       <clipPath id="wkArea"><path d="${band}"/></clipPath>
     </defs>
     <g clip-path="url(#wkArea)"><rect class="rv-fill" x="${xa.toFixed(1)}" y="0" width="${(xb-xa).toFixed(1)}" height="${H}" fill="url(#wkBand)"/></g>
-    <path class="rv-line2" d="${loLine}" fill="none" stroke="url(#wkLo)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/>
+    <path class="rv-line2" d="${loLine}" fill="none" stroke="url(#wkLo)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity=".72"/>
     ${rv?[[10,.3,.24],[6.5,.6,.2],[4.4,1,.16]].map(([w,f,o])=>`<path class="rv-tail" data-f="${f}" data-o="${o}" d="${hiLine}" fill="none" stroke="url(#wkHi)" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>`).join(""):""}
     <path class="tline" d="${hiLine}" fill="none" stroke="url(#wkHi)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
     ${marks}
-    ${rv?`<g class="rv-tip" opacity="0" fill="${tempColor(his[0])}"><circle r="12" opacity=".12"/><circle r="6.5" opacity=".24"/><circle r="3.3"/><circle class="rv-core" r="1.5" fill="#FFF8EC" opacity=".95"/></g>`:""}`;
+    ${rv?`<g class="rv-tip" opacity="0" fill="${tempColor(his[0])}"><circle r="12" opacity=".12"/><circle r="6.5" opacity=".24"/><circle r="3.3"/><circle class="rv-core" r="1.5" fill="#FFF8EC" opacity=".95"/></g>`:""}
+    <line x1="${xa.toFixed(1)}" y1="${H-.5}" x2="${xb.toFixed(1)}" y2="${H-.5}" stroke="${css.line}" stroke-width="1"/>`;
   const hiAt=x=>{const f=clamp(x/col-.5,0,n-1),i=Math.min(n-2,Math.floor(f));return his[i]+(his[i+1]-his[i])*(f-i)};
   revealChart("week",svg,{xa,xb,dur:clamp(1300+W*.9,1600,2100),tail:50,color:x=>tempColor(hiAt(x))});
 }
@@ -4428,7 +4448,8 @@ function render(d,live,savedAt=0){
     if(p>=60&&(wi<0||p>dy.precipitation_probability_max[wi]))wi=i;
   }
   const weekWet=wi>=0?(isSnow(dy.weather_code[wi])?"snow":isIce(dy.weather_code[wi])?"ice":"rain"):"";
-  document.getElementById("weekNote").textContent=wi<0?"mostly dry"
+  const weekOdds=dy.precipitation_probability_max.some(p=>p!=null&&Number.isFinite(+p));
+  document.getElementById("weekNote").textContent=!weekOdds?"rain odds unavailable":wi<0?"mostly dry"
     :`${weekWet} looks most likely ${wi===0?"today":dayName(dy.time[wi])}`;
   /* Last, because everything above adds height to the header: the alert strip, the
      headline, the chips, the rain card and the scene are all inside .sky, and a bolt

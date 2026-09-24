@@ -629,6 +629,18 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /class="wk-day" type="button" data-day="\$\{t\}" aria-expanded=/);
   // the rain odds stay a number per day: a line through seven daily chances invents the nights between
   assert.match(html, /They are deliberately not a third line/);
+  // and the week says only what the picture does not: no dates and no chevrons; the odds are
+  // printed where the sky is wet or the odds are real, and a missing chance is never a number
+  assert.doesNotMatch(html, /class="wk-date"/);
+  assert.doesNotMatch(html, /WEEK_CHEV/);
+  assert.match(html, /has=raw!=null&&Number\.isFinite\(\+raw\)/);
+  assert.match(html, /return\{t,has,pop,sky,code,likely,odds:has&&\(likely\|\|sky&&isWet\(code\)\)\}/);
+  // one threshold for the printed odds and the tapped brief, so the column and the sentence agree
+  assert.match(html, /const WEEK_H=132,WEEK_WET=35;/);
+  assert.match(html, /else if\(pop>=WEEK_WET\)note="A passing shower is possible\."/);
+  // a missing sky is no glyph, never a sun; a week with no odds at all is not "mostly dry"
+  assert.match(html, /\$\{sky\?icon\(code,16\):""\}/);
+  assert.match(html, /!weekOdds\?"rain odds unavailable":wi<0\?"mostly dry"/);
   assert.match(html, /moonPhaseIcon/);
   assert.doesNotMatch(html, /phaseName/);
   assert.match(html, /flight-wing/);
