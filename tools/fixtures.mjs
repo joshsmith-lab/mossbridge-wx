@@ -116,6 +116,8 @@ export function forecast(now, o, tz, loc = "mb") {
     duv.push(o.uvMax); dwmax.push(18);
   }
   if (o.dailyPop) o.dailyPop(dpop, dcode);
+  /* the hourly sine repeats one day seven times, which draws a flat week; a scenario can shape it */
+  if (o.dailyTemps) o.dailyTemps(dmax, dmin, dcode);
   return {
     current: {
       time: iso(now, tz), interval: 900, temperature_2m: o.nowTemp, relative_humidity_2m: o.rh,

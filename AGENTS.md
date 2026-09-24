@@ -133,9 +133,10 @@ TZ=America/New_York node tools/scene.mjs fog storm  # just the scenes you are wo
 node tools/rig.mjs heron                          # one animal, close up and at phone size
 ```
 
-`tools/shots.mjs` renders ten scenarios (day, night, after midnight, storm, dusk,
-both family locations, an afternoon that should recommend today, a washout, and a
-shoulder-season moderate-UV day), writes
+`tools/shots.mjs` renders twelve scenarios (day, night, after midnight, storm, dusk,
+both family locations, an afternoon that should recommend today, a washout, a
+shoulder-season moderate-UV day, and two shaped weeks: a cool snap into a warm run, and a
+stormy week with 100% odds and a 101° high), writes
 screenshots to `tools/shots/` and prints the generated copy, so wording changes
 are reviewable as text.
 
@@ -365,6 +366,22 @@ Established with Josh and enforced by `test.mjs`:
   hours where they have room, then the rain odds, then the AFTER DARK tag. The high always
   keeps the space above its dot; now or the low take the space under their own dot when the
   space above is taken. Check it at 320, 375, 393 and 430, not only at one width.
+
+- **The week is lines, not bars, and says only what the picture does not.** Josh asked for lines
+  in September 2026, then sent the first version back as "too overwhelming with text and info".
+  What stayed: the highs as one line with the day's number over it, the lows as a fainter line
+  with smaller, fainter numbers under it, the range washed between them, drawn in by the same pen
+  as the hourly chart (`week` in `REVEAL`; the lows ride along as `.rv-line2`). The warmest day is
+  the one key point (ties keyed, up to three). Under a hairline sits the hourly chart's own quiet axis: the
+  day in faint mono caps (TODAY in marker red, like NOW), then its sky, then the odds only where
+  there is rain to talk about: from `WEEK_WET` (35%, shared with `dailyBrief`) in water, or faint
+  under a wet sky on poorer odds so a rain cloud is never unqualified. A missing chance is a dash,
+  never a number. What went: dates (the tapped brief carries them), chevrons, a drop and a percent
+  on every dry day, and ringed dots on every point. Rain is not a third line: a daily chance is one
+  reading per day, and a line through seven of them invents odds for the nights between. Every day
+  but today is a button that opens its `dailyBrief`; the open day is washed under the hairline only,
+  because a wash behind the chart boxed every label it crossed. Check it at 320 with a three-digit
+  high and 100% odds.
 
 - **The skiff is a Carolina center console.** Josh picked it (September 2026) from four
   drawn directions, because it is the boat that actually goes out of Wrightsville: a cream
