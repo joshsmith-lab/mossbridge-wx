@@ -133,9 +133,10 @@ TZ=America/New_York node tools/scene.mjs fog storm  # just the scenes you are wo
 node tools/rig.mjs heron                          # one animal, close up and at phone size
 ```
 
-`tools/shots.mjs` renders ten scenarios (day, night, after midnight, storm, dusk,
-both family locations, an afternoon that should recommend today, a washout, and a
-shoulder-season moderate-UV day), writes
+`tools/shots.mjs` renders twelve scenarios (day, night, after midnight, storm, dusk,
+both family locations, an afternoon that should recommend today, a washout, a
+shoulder-season moderate-UV day, and two shaped weeks: a cool snap into a warm run, and a
+stormy week with 100% odds and a 101° high), writes
 screenshots to `tools/shots/` and prints the generated copy, so wording changes
 are reviewable as text.
 
@@ -365,6 +366,14 @@ Established with Josh and enforced by `test.mjs`:
   hours where they have room, then the rain odds, then the AFTER DARK tag. The high always
   keeps the space above its dot; now or the low take the space under their own dot when the
   space above is taken. Check it at 320, 375, 393 and 430, not only at one width.
+
+- **The week is lines, not bars.** Josh asked for it in September 2026: one column per day
+  (day, sky, highs and lows, rain odds), with the highs and lows as two lines on one scale and
+  the day's range washed between them, drawn in by the same pen as the hourly chart (`week`
+  in `REVEAL`; the lows ride along as `.rv-line2`). The rain odds stay a number with a drop
+  filled to the same odds, not a third line: a daily chance is one reading per day, and a line
+  through seven of them invents odds for the nights between. Every day but today is a button
+  that opens its `dailyBrief`. Check it at 320 with a three-digit high and 100% odds.
 
 - **The skiff is a Carolina center console.** Josh picked it (September 2026) from four
   drawn directions, because it is the boat that actually goes out of Wrightsville: a cream

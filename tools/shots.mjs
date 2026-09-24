@@ -76,6 +76,17 @@ const CASES = [
     o: { baseTemp: 72, nowTemp: 76, feels: 78, rh: 60, isDay: 1, code: 1, cloud: 24, nowWind: 8, nowDir: 40, nowGust: 13, nowUv: 3.8, uvMax: 4.2,
       windAmp: 7, gustAmp: 11, sunrise: "07:04", sunset: "18:59",
       popCurve: () => 8, dailyPop: (p) => p.fill(12) } },
+  // the week as lines: a late-September swing from a cool snap to a warm run
+  { name: "14-week-porters-neck", loc: "mb", when: "2026-09-24T17:10:00",
+    o: { baseTemp: 66, nowTemp: 68, feels: 68, rh: 70, isDay: 1, code: 3, cloud: 70, nowWind: 15, nowDir: 5, nowGust: 30, nowUv: .6, uvMax: 6,
+      windAmp: 8, gustAmp: 14, sunrise: "07:02", sunset: "19:06",
+      popCurve: () => 4, dailyPop: (p) => p.splice(0, 7, 20, 4, 1, 0, 1, 6, 5),
+      dailyTemps: (hi, lo, c) => { hi.splice(0, 7, 70, 67, 80, 82, 82, 84, 85); lo.splice(0, 7, 63, 57, 53, 59, 61, 68, 72); c.splice(0, 7, 61, 3, 2, 1, 2, 3, 3); } } },
+  // a wet, stormy week: three-digit heat, 100% odds, a storm and a washout next to dry days
+  { name: "15-wet-week-shady-spring", loc: "sp", when: "2026-08-02T12:20:00",
+    o: { baseTemp: 84, nowTemp: 90, feels: 97, rh: 70, isDay: 1, code: 2, cloud: 40, nowWind: 6, nowDir: 250, nowGust: 12, nowUv: 8, uvMax: 9,
+      windAmp: 6, gustAmp: 10, popCurve: () => 10, dailyPop: (p) => p.splice(0, 7, 35, 85, 100, 45, 10, 0, 65),
+      dailyTemps: (hi, lo, c) => { hi.splice(0, 7, 96, 101, 88, 84, 83, 86, 90); lo.splice(0, 7, 74, 76, 71, 66, 64, 66, 70); c.splice(0, 7, 2, 95, 63, 80, 1, 0, 81); } } },
 ];
 
 const cases = ONLY.length ? CASES.filter((c) => ONLY.some((q) => c.name.includes(q))) : CASES;

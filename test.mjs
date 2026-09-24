@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v70/);
+  assert.match(worker, /mbwx-shell-v71/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -620,7 +620,15 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /one useful read, rather than another row of weather instruments/);
   assert.doesNotMatch(html, /id="eveWind"/);
   assert.match(html, /function dailyBrief\(dy,i\)/);
-  assert.match(html, /class="day-detail"/);
+  // the week is two lines, not a stack of bars: highs and lows on one scale, the range washed
+  // between them, drawn in by the same pen as the hourly chart; a tapped day opens its brief
+  assert.doesNotMatch(html, /class="range-fill"/);
+  assert.match(html, /<path class="rv-line2" d="\$\{loLine\}"/);
+  assert.match(html, /<path class="tline" d="\$\{hiLine\}"/);
+  assert.match(html, /week:\{state:PRM\?"done":"armed",seen:false,anims:\[\]\}/);
+  assert.match(html, /class="wk-day" type="button" data-day="\$\{t\}" aria-expanded=/);
+  // the rain odds stay a number per day: a line through seven daily chances invents the nights between
+  assert.match(html, /They are deliberately not a third line/);
   assert.match(html, /moonPhaseIcon/);
   assert.doesNotMatch(html, /phaseName/);
   assert.match(html, /flight-wing/);

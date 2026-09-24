@@ -454,7 +454,7 @@ section{padding:28px 20px 0}
 @keyframes burgee{from{transform:rotate(calc(var(--fa,0deg) - var(--ff,2deg)))}to{transform:rotate(calc(var(--fa,0deg) + var(--ff,2deg)))}}
 /* the charts' entrance (see REVEAL): hidden until the pen gets there, and what grows,
    grows from where it stands */
-.rv-pre .tline,.rv-pre .wline,.rv-pre .rv-fill,.rv-pre [data-rk]{opacity:0}
+.rv-pre .tline,.rv-pre .wline,.rv-pre .rv-line2,.rv-pre .rv-fill,.rv-pre [data-rk]{opacity:0}
 html:not([data-theme=dark]) .rv-core{display:none}
 /* canopies are heavier than grass: same wind, half the throw, slower */
 @keyframes swayTree{from{transform:skewX(var(--tsway-neg,-.3deg))}to{transform:skewX(var(--tsway,.3deg))}}
@@ -507,38 +507,39 @@ html:not([data-theme=dark]) .rv-core{display:none}
 @media (max-width:339px){.uv-scale{font-size:9.5px;letter-spacing:.04em}}
 
 /* ── week ───────────────────────────────────────────── */
+/* one column per day, read top to bottom: the day, the sky, the highs and lows as two lines
+   on one scale, then the rain odds. The heights below are fixed so the chart, which sits over
+   the columns, lands on the gap left for it without measuring anything. */
 .week{padding:12px 20px 0}
-.day-row{display:grid;grid-template-columns:44px 20px 28px 1fr 32px 48px;gap:8px;align-items:baseline;
-  padding:11px 0;border-bottom:1px solid var(--line)}
-.day-row .icon,.day-row .range-track{align-self:center}
-.day-row:last-child{border-bottom:none}
-.day-detail{border-bottom:1px solid var(--line)}
-.day-detail:last-child{border-bottom:none}
-.day-detail summary{border-bottom:0;cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent}
-.day-detail summary::-webkit-details-marker{display:none}
-.day-detail summary::marker{content:""}
-.day-detail summary:focus-visible{outline:2px solid var(--water);outline-offset:4px;border-radius:4px}
-.day-detail[open] summary{padding-bottom:7px}
-.day-brief{margin:0 48px 11px 80px;color:var(--ink-soft);font-size:14.5px;line-height:1.5;text-wrap:pretty;
+.wk-wrap{position:relative}
+.wk{display:grid;grid-template-columns:repeat(7,1fr)}
+.wk-day{display:flex;flex-direction:column;align-items:center;min-width:0;padding:6px 0 8px;margin:0;
+  border:0;border-radius:10px;background:transparent;color:inherit;font:inherit;text-align:center;
+  -webkit-tap-highlight-color:transparent;transition:background-color .2s var(--ease)}
+button.wk-day{cursor:pointer}
+button.wk-day:focus-visible{outline:2px solid var(--water);outline-offset:-2px}
+button.wk-day[aria-expanded=true]{background:var(--wash)}
+@media(hover:hover){button.wk-day:hover:not([aria-expanded=true]){background:color-mix(in srgb,var(--wash) 55%,transparent)}}
+.wk-name{font-family:var(--mono);font-size:12.5px;line-height:16px;font-weight:600;white-space:nowrap;color:var(--ink)}
+.wk-day.today .wk-name{color:var(--marker)}
+.wk-date{font-family:var(--mono);font-size:10.5px;line-height:14px;color:var(--ink-faint);white-space:nowrap}
+.wk-icon{height:24px;margin-top:4px;display:flex;align-items:center;color:var(--ink-soft)}
+.wk-icon.rough{color:var(--marker)}
+.wk-icon svg{display:block}
+.wk-plot{display:block;flex:0 0 auto}
+.wk-rain{display:flex;align-items:center;justify-content:center;gap:3px;height:16px;font-family:var(--mono);
+  font-size:11.5px;color:var(--ink-faint);white-space:nowrap;letter-spacing:0}
+.wk-rain.wet{color:var(--water);font-weight:600}
+.wk-rain svg{display:block;flex:0 0 auto;color:var(--water)}
+.wk-chev{display:block;width:10px;height:10px;margin-top:5px;opacity:.45;color:var(--ink-soft);transition:transform .25s var(--ease)}
+.wk-day[aria-expanded=true] .wk-chev{transform:rotate(180deg);opacity:.7}
+/* padding 6 + name 16 + date 14 + icon 4 + 24: the top of .wk-plot */
+.wk-svg{position:absolute;left:0;top:64px;width:100%;display:block;overflow:visible;pointer-events:none}
+@media (max-width:359px){.wk-name{font-size:11.5px}.wk-rain{font-size:10.5px;gap:2px}}
+.day-brief{margin:4px 0 2px;color:var(--ink-soft);font-size:14.5px;line-height:1.5;text-wrap:pretty;
   animation:briefIn .28s var(--ease) both}
+.day-brief b{color:var(--ink);font-weight:600}
 @keyframes briefIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
-.day-chevron{width:10px;height:10px;display:inline-block;transition:transform .25s var(--ease);opacity:.55;flex:0 0 auto}
-.day-detail[open] .day-chevron{transform:rotate(180deg)}
-.day-row.today .dname{color:var(--marker)}
-.day-row .dname{font-family:var(--mono);font-size:12.5px;font-weight:600}
-.day-row .dname small{display:block;font-weight:400;color:var(--ink-faint);font-size:10.5px}
-.day-row .icon{color:var(--ink-soft);display:flex;align-items:center;justify-content:center}
-.day-row .icon.rough{color:var(--marker)}
-.day-row .icon svg{display:block}
-.t-lo{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);text-align:right;letter-spacing:0}
-.t-hi{font-family:var(--mono);font-size:12.5px;color:var(--ink);font-weight:600;letter-spacing:0}
-.range-track{position:relative;height:20px}
-.range-scale{position:absolute;inset:8px 0;height:4px;border-radius:3px;background:var(--wash)}
-.range-fill{position:absolute;top:6px;height:8px;border-radius:5px;transform-origin:left;
-  animation:wipe .75s var(--ease) both}
-@keyframes wipe{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-.pop{font-family:var(--mono);font-size:11.5px;text-align:right;color:var(--ink-faint);display:flex;align-items:center;justify-content:flex-end;gap:5px}
-.pop.wet{color:var(--water);font-weight:600}
 .moon-phase{display:block;width:21px;height:21px;color:var(--ink);opacity:.9}
 .moon-phase .moon-shade{fill:currentColor;opacity:.7}
 .moon-phase .moon-lit{fill:#FFF6E2}
@@ -684,7 +685,11 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
 
 <div class="week">
   <div class="eyebrow"><b>The week</b><span id="weekNote"></span></div>
-  <div id="weekRows"></div>
+  <div class="wk-wrap">
+    <div class="wk" id="weekRows"></div>
+    <svg id="weekSvg" class="wk-svg" viewBox="0 0 350 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
+  </div>
+  <p class="day-brief" id="weekBrief" hidden></p>
 </div>
 
 <p class="foot"><span id="footSrc"></span><span class="foot-note">Refreshes on open and when you return to the app. Tap the timestamp to force it. Tap the place name to switch.</span></p>
@@ -3518,6 +3523,108 @@ function dailyBrief(dy,i){
   return `${feel}, with ${sky}. ${note}`;
 }
 
+/* ── the week ───────────────────────────────────────── */
+/* Seven columns, read top to bottom the way the question gets asked: which day, what sky, how
+   warm, will it rain. The highs and lows are two lines on one scale with the day's range
+   washed between them, drawn by the same pen as the hourly chart, so a warm run reads as the
+   line climbing rather than as bars getting longer. The rain odds are a number under each day
+   with a drop that fills to the same odds. They are deliberately not a third line: a daily
+   chance is one reading per day, and a line through seven of them would invent odds for the
+   nights in between. Tap a day for its one-line brief; today has the rest of the page. */
+const WEEK_H=152;
+const weekDrop=(pop,id)=>{
+  const f=(clamp(pop,0,100)/100).toFixed(2),o=(.5+Math.min(pop,60)/60*.4).toFixed(2);
+  return `<svg width="8" height="11" viewBox="0 0 8 11" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="1" x2="0" y2="0">
+    <stop offset="${f}" stop-color="currentColor" stop-opacity="${o}"/><stop offset="${f}" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs>
+    <path d="M4 .9C2.7 3 1 5 1 7a3 3 0 0 0 6 0C7 5 5.3 3 4 .9Z" fill="url(#${id})" stroke="currentColor" stroke-width="1" stroke-linejoin="round" opacity=".9"/></svg>`;
+};
+const WEEK_CHEV='<svg class="wk-chev" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function renderWeek(dy,css){
+  const wrap=document.getElementById("weekRows"),svg=document.getElementById("weekSvg"),brief=document.getElementById("weekBrief");
+  const n=dy.time.length,his=dy.temperature_2m_max,los=dy.temperature_2m_min;
+  const openDay=wrap.querySelector('.wk-day[aria-expanded="true"]')?.dataset.day||null;
+  const H=WEEK_H;
+  wrap.innerHTML=dy.time.map((t,i)=>{
+    const raw=dy.precipitation_probability_max[i],has=raw!=null&&Number.isFinite(+raw),pop=has?Math.round(+raw):0;
+    const code=Number(dy.weather_code[i])||0,hi=Math.round(his[i]),lo=Math.round(los[i]);
+    const wet=isSnow(code)?"snow":isIce(code)?"freezing rain":"rain";
+    const full=new Date(t+"T12:00").toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
+    const said=`${i===0?"Today, ":""}${full}. ${WMO[code]||""}. High ${hi}, low ${lo}. ${has?`${pop} percent chance of ${wet}`:"Rain chance unavailable"}.`;
+    const face=`<span class="wk-name" aria-hidden="true">${i===0?"Today":dayName(t)}</span>
+      <span class="wk-date" aria-hidden="true">${mmdd(t)}</span>
+      <span class="wk-icon${code>=95?" rough":""}" aria-hidden="true">${icon(code,17)}</span>
+      <span class="wk-plot" style="height:${H}px" aria-hidden="true"></span>
+      <span class="wk-rain${pop>=40?" wet":""}" aria-hidden="true">${has?weekDrop(pop,"wkDrop"+i)+pop+"%":"—"}</span>`;
+    if(i===0)return `<div class="wk-day today"><span class="sr-only">${esc(said)}</span>${face}<span class="wk-chev"></span></div>`;
+    return `<button class="wk-day" type="button" data-day="${t}" aria-expanded="${openDay===t}" aria-controls="weekBrief"
+      aria-label="${esc(said)}" data-brief="${esc(dailyBrief(dy,i))}" data-name="${new Date(t+"T12:00").toLocaleDateString("en-US",{weekday:"long"})}">${face}${WEEK_CHEV}</button>`;
+  }).join("");
+  weekBrief(wrap.querySelector('.wk-day[aria-expanded="true"]'));
+
+  /* the chart: a column is a screen pixel wide per unit, the same as the other two charts */
+  const W=appW()-40,col=W/Math.max(1,n),X=i=>(i+.5)*col;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  if(n<2){svg.innerHTML="";return}
+  let tMin=Math.min(...los),tMax=Math.max(...his);
+  if(tMax-tMin<10){const m=(tMax+tMin)/2;tMin=m-5;tMax=m+5}
+  const top=30,bot=H-26,Y=t=>top+(bot-top)*(1-(t-tMin)/(tMax-tMin));
+  const hiP=his.map((t,i)=>[X(i),Y(t)]),loP=los.map((t,i)=>[X(i),Y(t)]);
+  const hiLine=spline(hiP),loLine=spline(loP);
+  const band=hiLine+" "+spline([...loP].reverse()).replace(/^M/,"L")+" Z";
+  /* where each line runs under a label's two ends, so a steep day beside it cannot strike
+     through the number (the hourly chart learned this one on a phone) */
+  const yOn=a=>px=>{const f=clamp(px/col-.5,0,n-1),i=Math.min(n-2,Math.floor(f));return Y(a[i]+(a[i+1]-a[i])*(f-i))};
+  const yHi=yOn(his),yLo=yOn(los);
+  const rv=REVEAL.week.state!=="done",rvAt=(x,k,d)=>rvTag(rv,x,k,d);
+  const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3" stroke-linejoin="round"`;
+  const mono=`text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace"`;
+  let marks="";
+  for(let i=0;i<n;i++){
+    const x=X(i),yh=Y(his[i]),yl=Y(los[i]),th=Math.round(his[i])+"°",tl=Math.round(los[i])+"°";
+    const wh=th.length*13*.3+2,wl=tl.length*11.5*.3+2;
+    const ly=Math.min(yh-10,yHi(x-wh)-5,yHi(x+wh)-5);
+    const lyl=Math.max(yl+16,yLo(x-wl)+15,yLo(x+wl)+15);
+    marks+=`<circle cx="${x.toFixed(1)}" cy="${yl.toFixed(1)}" r="2.8" fill="${css.paper}" stroke="${tempColor(los[i])}" stroke-width="1.8"${rvAt(x,"dot")}/>
+      <text x="${x.toFixed(1)}" y="${lyl.toFixed(1)}" ${mono} font-size="11.5" fill="${css.soft}" ${halo}${rvAt(x,"label")}>${tl}</text>
+      <circle cx="${x.toFixed(1)}" cy="${yh.toFixed(1)}" r="3.6" fill="${css.paper}" stroke="${tempColor(his[i])}" stroke-width="2.4"${rvAt(x,"dot")}/>
+      <text x="${x.toFixed(1)}" y="${ly.toFixed(1)}" ${mono} font-size="13" font-weight="600" fill="${css.ink}" ${halo}${rvAt(x,"label")}>${th}</text>`;
+  }
+  const stops=a=>a.map((t,i)=>`<stop offset="${(i/(n-1)*100).toFixed(1)}%" stop-color="${tempColor(t)}"/>`).join("");
+  const xa=X(0),xb=X(n-1);
+  svg.innerHTML=`
+    <defs>
+      <linearGradient id="wkHi" gradientUnits="userSpaceOnUse" x1="${xa.toFixed(1)}" y1="0" x2="${xb.toFixed(1)}" y2="0">${stops(his)}</linearGradient>
+      <linearGradient id="wkLo" gradientUnits="userSpaceOnUse" x1="${xa.toFixed(1)}" y1="0" x2="${xb.toFixed(1)}" y2="0">${stops(los)}</linearGradient>
+      <linearGradient id="wkBand" gradientUnits="userSpaceOnUse" x1="0" y1="${Y(tMax).toFixed(1)}" x2="0" y2="${Y(tMin).toFixed(1)}">
+        <stop offset="0" stop-color="${tempColor(Math.max(...his))}" stop-opacity=".24"/>
+        <stop offset="1" stop-color="${tempColor(Math.min(...los))}" stop-opacity=".12"/></linearGradient>
+      <clipPath id="wkArea"><path d="${band}"/></clipPath>
+    </defs>
+    <g clip-path="url(#wkArea)"><rect class="rv-fill" x="${xa.toFixed(1)}" y="0" width="${(xb-xa).toFixed(1)}" height="${H}" fill="url(#wkBand)"/></g>
+    <path class="rv-line2" d="${loLine}" fill="none" stroke="url(#wkLo)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/>
+    ${rv?[[10,.3,.24],[6.5,.6,.2],[4.4,1,.16]].map(([w,f,o])=>`<path class="rv-tail" data-f="${f}" data-o="${o}" d="${hiLine}" fill="none" stroke="url(#wkHi)" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>`).join(""):""}
+    <path class="tline" d="${hiLine}" fill="none" stroke="url(#wkHi)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    ${marks}
+    ${rv?`<g class="rv-tip" opacity="0" fill="${tempColor(his[0])}"><circle r="12" opacity=".12"/><circle r="6.5" opacity=".24"/><circle r="3.3"/><circle class="rv-core" r="1.5" fill="#FFF8EC" opacity=".95"/></g>`:""}`;
+  const hiAt=x=>{const f=clamp(x/col-.5,0,n-1),i=Math.min(n-2,Math.floor(f));return his[i]+(his[i+1]-his[i])*(f-i)};
+  revealChart("week",svg,{xa,xb,dur:clamp(1300+W*.9,1600,2100),tail:50,color:x=>tempColor(hiAt(x))});
+}
+/* one day open at a time; tapping the open day closes it */
+function weekBrief(b){
+  const el=document.getElementById("weekBrief");
+  if(!b){el.hidden=true;el.innerHTML="";return}
+  el.innerHTML=`<b>${esc(b.dataset.name)}</b> ${esc(b.dataset.brief)}`;
+  el.hidden=false;
+}
+document.getElementById("weekRows").addEventListener("click",e=>{
+  const b=e.target.closest("button.wk-day");
+  if(!b)return;
+  const open=b.getAttribute("aria-expanded")!=="true";
+  for(const o of document.querySelectorAll("#weekRows button.wk-day"))o.setAttribute("aria-expanded","false");
+  b.setAttribute("aria-expanded",String(open));
+  weekBrief(open?b:null);
+});
+
 /* ── golden hour, everywhere ────────────────────────── */
 /* The two ends of the day are not the same light and should not look it. Morning comes up
    through air that has been still all night, so it runs clean and rose and it lifts. Evening
@@ -3580,7 +3687,8 @@ let SCENE_IN=false;
    fill. The fill is a static clip (the area under the curve) over a rect that slides in:
    animating the content of a static clip is the one form of wipe WebKit and Chrome agree on. */
 const REVEAL_EASE=[.5,.04,.2,1];               /* a gentle start and a long, soft landing */
-const REVEAL={hourly:{state:PRM?"done":"armed",seen:false,anims:[]},tide:{state:PRM?"done":"armed",seen:false,anims:[]}};
+const REVEAL={hourly:{state:PRM?"done":"armed",seen:false,anims:[]},tide:{state:PRM?"done":"armed",seen:false,anims:[]},
+  week:{state:PRM?"done":"armed",seen:false,anims:[]}};
 let REVEAL_READY=false,REVEAL_WAIT=0;
 const bezier=(a,b,c,d)=>t=>{                  /* CSS cubic-bezier(a,b,c,d) as a function of time */
   let u=t;
@@ -3604,6 +3712,8 @@ function revealTry(k){
   let t0=performance.now();
   const up=REVEAL.hourly;                     /* both on screen at once: the tide follows the hours down the page */
   if(k==="tide"&&up.state==="running")t0=Math.max(t0,up.t0+420);
+  /* and the week follows whichever of them is still drawing above it */
+  if(k==="week")for(const u of [up,REVEAL.tide])if(u.state==="running")t0=Math.max(t0,u.t0+420);
   R.state="running";R.t0=t0;
   revealApply(k);
 }
@@ -3627,23 +3737,29 @@ function revealApply(k){
      charts are built by spline(): M, then C triples). getPointAtLength walks the whole path
      on every call, which cost 25ms on the sweep's first frame; the script walk is scaled to
      the browser's own length so the dash still lands exactly */
-  const v=(line.getAttribute("d").match(/-?\d+(?:\.\d+)?/g)||[]).map(Number);
-  if(v.length<8){revealFinish(k);return}
-  const S=[[v[0],v[1],0]];let px=v[0],py=v[1],acc=0;
-  for(let i=2;i+5<v.length;i+=6){
-    const x0=px,y0=py,[x1,y1,x2,y2,x3,y3]=v.slice(i,i+6);
-    for(let s=1;s<=8;s++){const t=s/8,u=1-t,
-      x=u*u*u*x0+3*u*u*t*x1+3*u*t*t*x2+t*t*t*x3,y=u*u*u*y0+3*u*u*t*y1+3*u*t*t*y2+t*t*t*y3;
-      acc+=Math.hypot(x-px,y-py);px=x;py=y;S.push([x,y,acc])}
-  }
-  const len=line.getTotalLength(),sc=len/(acc||1);for(const s of S)s[2]*=sc;
-  let j=0;
-  const along=x=>{
-    while(j>0&&S[j][0]>x)j--;
-    while(j<S.length-2&&S[j+1][0]<x)j++;
-    const a=S[j],b=S[j+1]||a,f=b[0]>a[0]?clamp((x-a[0])/(b[0]-a[0]),0,1):0;
-    return[a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f];
+  const walk=el=>{
+    const v=(el.getAttribute("d").match(/-?\d+(?:\.\d+)?/g)||[]).map(Number);
+    if(v.length<8)return null;
+    const S=[[v[0],v[1],0]];let px=v[0],py=v[1],acc=0;
+    for(let i=2;i+5<v.length;i+=6){
+      const x0=px,y0=py,[x1,y1,x2,y2,x3,y3]=v.slice(i,i+6);
+      for(let s=1;s<=8;s++){const t=s/8,u=1-t,
+        x=u*u*u*x0+3*u*u*t*x1+3*u*t*t*x2+t*t*t*x3,y=u*u*u*y0+3*u*u*t*y1+3*u*t*t*y2+t*t*t*y3;
+        acc+=Math.hypot(x-px,y-py);px=x;py=y;S.push([x,y,acc])}
+    }
+    const len=el.getTotalLength(),sc=len/(acc||1);for(const s of S)s[2]*=sc;
+    let j=0;
+    const along=x=>{
+      while(j>0&&S[j][0]>x)j--;
+      while(j<S.length-2&&S[j+1][0]<x)j++;
+      const a=S[j],b=S[j+1]||a,f=b[0]>a[0]?clamp((x-a[0])/(b[0]-a[0]),0,1):0;
+      return[a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f];
+    };
+    return{len,along};
   };
+  const main=walk(line);
+  if(!main){revealFinish(k);return}
+  const{len,along}=main;
   const opt=(delay,duration,easing="linear")=>({delay:base+delay,duration,easing,fill:"both",id:"reveal-"+k});
   const run=(el,frames,o)=>{if(el)R.anims.push(el.animate(frames,o))};
   const T=g.tail,lineF=[],tailK=[],tipF=[],fillF=[];
@@ -3657,6 +3773,12 @@ function revealApply(k){
   }
   line.style.strokeDasharray=`${len.toFixed(1)} ${len.toFixed(1)}`;
   run(line,lineF,opt(0,D));
+  /* a second line (the week's lows) is drawn by the same pen, at the same x */
+  for(const el of svg.querySelectorAll(".rv-line2")){
+    const w=walk(el);if(!w)continue;
+    el.style.strokeDasharray=`${w.len.toFixed(1)} ${w.len.toFixed(1)}`;
+    run(el,P.map((p,i)=>({offset:i/N,strokeDashoffset:(w.len-w.along(g.xa+p*span)[1]).toFixed(1)+"px"})),opt(0,D));
+  }
   for(const el of svg.querySelectorAll(".rv-tail")){
     const t=T*+el.dataset.f,o=+el.dataset.o;
     el.style.strokeDasharray=`${t.toFixed(1)}px ${(len+t).toFixed(1)}px`;
@@ -3692,7 +3814,7 @@ function revealFinish(k){
   const svg=R.g&&R.g.svg;
   if(svg){
     svg.classList.remove("rv-pre");
-    const line=svg.querySelector(".tline,.wline");if(line)line.style.strokeDasharray="";
+    for(const line of svg.querySelectorAll(".tline,.wline,.rv-line2"))line.style.strokeDasharray="";
   }
   for(const a of R.anims)a.cancel();
   R.anims=[];
@@ -3710,9 +3832,9 @@ if(!PRM){
   const seen=(k,on)=>{REVEAL[k].seen=on;if(on)revealTry(k)};
   if("IntersectionObserver" in window){
     const io=new IntersectionObserver(es=>{for(const e of es)
-      seen(e.target.id==="tideSvg"?"tide":"hourly",e.isIntersecting&&e.intersectionRatio>=.3)},{threshold:[0,.3,.6,1]});
-    io.observe(document.getElementById("hourlySvg"));io.observe(document.getElementById("tideSvg"));
-  }else{REVEAL.hourly.seen=REVEAL.tide.seen=true}
+      seen(e.target.id==="tideSvg"?"tide":e.target.id==="weekSvg"?"week":"hourly",e.isIntersecting&&e.intersectionRatio>=.3)},{threshold:[0,.3,.6,1]});
+    for(const id of ["hourlySvg","tideSvg","weekSvg"])io.observe(document.getElementById(id));
+  }else{REVEAL.hourly.seen=REVEAL.tide.seen=REVEAL.week.seen=true}
 }
 let HOURLY_PEEK=null,PEEK_I=0,PEEK_TOUCH_X=null,PEEK_HIDE=0;
 let TIDE_PEEK=null,TIDE_I=0,TIDE_TOUCH_X=null,TIDE_HIDE=0;
@@ -4299,32 +4421,7 @@ function render(d,live,savedAt=0){
   document.getElementById("moonTxt").innerHTML=moonPhaseIcon(scene.moon);
 
   /* week */
-  const lo=Math.min(...dy.temperature_2m_min),hi=Math.max(...dy.temperature_2m_max),span=hi-lo||1;
-  const openDay=document.querySelector(".day-detail[open]")?.dataset.day||null;
-  document.getElementById("weekRows").innerHTML=dy.time.map((t,i)=>{
-    const l=dy.temperature_2m_min[i],hx=dy.temperature_2m_max[i];
-    const left=((l-lo)/span*100).toFixed(1),width=Math.min(Math.max(4,(hx-l)/span*100),100-((l-lo)/span*100)).toFixed(1);
-    const isStorm=dy.weather_code[i]>=95,pop=dy.precipitation_probability_max[i];
-    const row=`<span class="dname">${i===0?"Today":dayName(t)}<small>${mmdd(t)}</small></span>
-      <span class="icon${isStorm?" rough":""}">${icon(dy.weather_code[i],17)}</span>
-      <span class="t-lo">${Math.round(l)}°</span>
-      <span class="range-track">
-        <span class="range-scale"></span>
-        <span class="range-fill" style="left:${left}%;width:${width}%;animation-delay:${i*55}ms;
-          background:linear-gradient(90deg,${tempColor(l)},${tempColor(hx)})"></span>
-      </span>
-      <span class="t-hi">${Math.round(hx)}°</span>
-      <span class="pop ${pop>=40?"wet":""}">${pop}%${i?'<svg class="day-chevron" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>':'<span class="day-chevron" aria-hidden="true"></span>'}</span>`;
-    if(i===0)return `<div class="day-row today">${row}</div>`;
-    return `<details class="day-detail" data-day="${t}"${openDay===t?" open":""}>
-      <summary class="day-row">${row}</summary>
-      <p class="day-brief">${dailyBrief(dy,i)}</p>
-    </details>`;
-  }).join("");
-  const dayDetails=[...document.querySelectorAll(".day-detail")];
-  dayDetails.forEach(detail=>detail.addEventListener("toggle",()=>{
-    if(detail.open)dayDetails.forEach(other=>{if(other!==detail)other.open=false});
-  }));
+  renderWeek(dy,css);
   let wi=-1;
   for(let i=0;i<dy.time.length;i++){
     const p=dy.precipitation_probability_max[i];
@@ -4483,12 +4580,13 @@ function paintLoadingState(){
   document.getElementById("condLabel").innerHTML='<span class="skel">loading</span>';
   for(const id of ["feels","hiNow","loNow"])document.getElementById(id).textContent="—";
   document.getElementById("verdict").textContent="Reading the sky…";
-  for(const id of ["chips","skyFx","rainFx","sceneSvg","hourlySvg","hrLabels","weekRows","goldTimes","moonTxt"])
+  for(const id of ["chips","skyFx","rainFx","sceneSvg","hourlySvg","hrLabels","weekRows","weekSvg","goldTimes","moonTxt"])
     document.getElementById(id).innerHTML="";
   document.getElementById("flash").className="flash";
   document.getElementById("rainFx").className="rainfx";
   document.getElementById("hourlyNote").textContent="";
   document.getElementById("weekNote").textContent="";
+  weekBrief(null);
   document.getElementById("tideSvg").innerHTML="";
   document.getElementById("tideNote").textContent="loading…";
   document.getElementById("nowcast").className="nowcast";
