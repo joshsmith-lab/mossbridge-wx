@@ -159,26 +159,36 @@ place name.
 
 ## The icon
 
-The home-screen icon is the original flat mark: a yellow sun on its arc over a pale-blue
-horizon, on navy. In September 2026 Josh looked at four illustrated directions (an inked
-refresh over the marsh, the view from a porch, the live oak, a sunset emblem) and kept the
-original. The point of the icon is minimal and elegant, and it has to belong to any place the
-app ever shows, so it carries nothing place-specific and nothing skeuomorphic, even though the
-scene inside the app is illustrated. Do not redraw it in the Storybook style. Android is out of
-scope and always will be: no maskable variants, no adaptive-icon work.
+The home-screen icon is the header's own sun going down: a big inked sun half-set on the
+horizon, fanned by the header's cream rays (long and short, tapered, the same drawing the scene
+puts round its sun at every clear hour), in the plum dusk of the Mark (#4A3F6B at the top through
+#A45C74 to apricot at the horizon), over the header's dusk water with gold reflection bars and
+two pairs of little wavelets, the upper pair ending in the kit's curl. It is drawn in the
+Storybook manner, ink heavier on the shadow side, a warm lit rim, a shadow crescent, the scene's
+paper grain, and it is symmetric: every form is mirrored, and only the light (from the upper
+left) is not. The point is that seeing the icon and opening the app feel like the same picture:
+the rays and the ink are the ones the header draws. The dusk is the Mark's deeper plum, which Josh
+asked for over the header's own.
 
-What the refinement pass that followed did change is precision, and `icon.svg` is the master:
-- It is drawn on the 180px grid the iPhone home screen uses, so the horizon (y 146 to 150) and
-  the single 4px stroke weight land on whole pixels. The arc and the horizon share that weight.
-- The arc keeps the original's ellipse centre (90,154.7) and horizontal radius 64. Its vertical
-  radius drops from about 99 to 89.7, which puts its top on the sun's centre (90,65, r 20). The
-  old top ran across the upper half of the sun, which is what made it read as a bell. It stops
-  3px clear of the sun (each inner end is 25 from the sun's centre, less the round cap), and
-  every end is round.
-- The colours are the original's: #12313F, #F5C445, #7FB3C9.
-- `icon-180.png` and `icon-512.png` are exported from `icon.svg` in Chrome, anti-aliased, by
-  `node tools/icon.mjs`. The originals had exactly three colours and stair-stepped every curve.
-  A new export is a new shell: bump `CACHE` in `sw.js`.
+How it got here, all in September 2026: Josh looked at four illustrated directions, kept the
+original flat mark and had it refined (PR #57), then chose the sunset emblem ("the Mark"), then
+asked for versions of it that carry into the header. Of those he picked the one with the
+header's rays, with the Mark's deeper purple and its wavelets put back. Android is out of scope
+and always will be: no maskable variants, no adaptive-icon work.
+
+- `icon.svg` is the master, and it is built, not drawn by hand: `node tools/icon/build.mjs`
+  writes it from `C2_SHIP` in `tools/icon/gen.mjs`, an options object (sky stops, sun, rays,
+  reflection rows, wavelets, grain) painted with the Storybook kit read out of index.html. Change
+  a key there and rebuild; `null` switches a part off. The grain is one baked image kept inside
+  icon.svg, and a rebuild reuses it.
+- Every mask is drawn out in full rather than made of `<use>`: macOS CoreSVG (Preview, sips,
+  Xcode assets) draws a `<use>` mask as empty and loses the lit rim and the crescent.
+- `node tools/icon.mjs` exports `icon-180.png` and `icon-512.png`: Chrome renders the master once
+  at 1024 and each size is an area average of it. Rendering straight at 180 leaves a pixel of
+  khaki between the sun's ink and its lit rim. Never hand-edit the PNGs. A new export is a new
+  shell: bump `CACHE` in `sw.js`.
+- The grain makes the PNGs heavier than a flat icon (about 32 KB and 158 KB). The service worker
+  caches both once, with the shell.
 - An iPhone keeps the icon it was given when Porch was added to the Home Screen. A new icon
   reaches a phone only when the app is removed and added again from Safari.
 
