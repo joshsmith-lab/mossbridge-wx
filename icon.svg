@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
+  <!-- Porch Weather. Drawn on the 180px grid the iPhone home screen uses, so the horizon and the
+       one 4px stroke weight land on whole pixels. The arc keeps the original's ellipse centre and
+       width, its top moved onto the sun's centre, and it stops 3px clear of the sun. -->
+  <rect width="180" height="180" fill="#12313F"/>
+  <g fill="none" stroke-width="4" stroke-linecap="round">
+    <path d="M31.927 117.000 A64 89.7 0 0 1 65.889 71.609 M114.111 71.609 A64 89.7 0 0 1 148.073 117.000" stroke="#F5C445"/>
+    <line x1="24" y1="148" x2="156" y2="148" stroke="#7FB3C9"/>
+  </g>
+  <circle cx="90" cy="65" r="20" fill="#F5C445"/>
+</svg>
