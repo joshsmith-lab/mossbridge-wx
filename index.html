@@ -3479,7 +3479,9 @@ function dayStory(c,dy,h){
   /* "soupy" is earned, not decorative: real humidity sitting on real heat */
   const soupy=(c.relative_humidity_2m||0)>=74&&ref>=88;
   const damp=soupy?" and soupy":humid?" and humid":"";
-  const tempWord=ref>=94?"Hot":ref>=82?"Warm":ref>=68?"Mild":ref>=52?"Cool":"Chilly";
+  /* a night is warm from 74, the line the Tonight card uses for a warm night, so the headline
+     and the card under it cannot call one night two things; and under 40 it is cold, not chilly */
+  const tempWord=ref>=94?"Hot":ref>=(evening||overnight?74:82)?"Warm":ref>=68?"Mild":ref>=52?"Cool":ref>=40?"Chilly":"Cold";
   /* The sky is left out: the condition beside the number and the scene under it already say
      it, and saying it again is how "breaks of sun" came to sit next to "Cloudy". */
   let first;
@@ -3617,7 +3619,7 @@ function dailyBrief(dy,i){
   const code=hasSky?+dy.weather_code[i]:0;
   const pop=hasPop?+dy.precipitation_probability_max[i]:0;
   const wind=Number(dy.wind_speed_10m_max?.[i])||0;
-  const feel=high>=92?"Hot":high>=82?"Warm":high>=68?"Mild":high>=52?"Cool":"Chilly";
+  const feel=high>=92?"Hot":high>=82?"Warm":high>=68?"Mild":high>=52?"Cool":high>=40?"Chilly":"Cold";
   /* snow and ice are checked first: their codes sit above 61, so the old ladder called a
      heavy snow day "periods of rain" */
   const sky=code>=95?"storms possible":isIce(code)?"freezing rain":
@@ -3782,7 +3784,7 @@ function renderWeek(dy,css,we=[]){
     ${marks}
     ${weBand}
     ${rv?`<g class="rv-tip" opacity="0" fill="${tempColor(his[0])}"><circle r="12" opacity=".12"/><circle r="6.5" opacity=".24"/><circle r="3.3"/><circle class="rv-core" r="1.5" fill="#FFF8EC" opacity=".95"/></g>`:""}
-    <line x1="${xa.toFixed(1)}" y1="${H-.5}" x2="${xb.toFixed(1)}" y2="${H-.5}" stroke="${css.line}" stroke-width="1"/>`;
+    <line x1="3" y1="${H-.5}" x2="${(W-3).toFixed(1)}" y2="${H-.5}" stroke="${css.line}" stroke-width="1"/>`;
   const hiAt=x=>{const f=clamp(x/col-.5,0,n-1),i=Math.min(n-2,Math.floor(f));return his[i]+(his[i+1]-his[i])*(f-i)};
   revealChart("week",svg,{xa,xb,dur:clamp(1300+W*.9,1600,2100),tail:50,color:x=>tempColor(hiAt(x))});
 }

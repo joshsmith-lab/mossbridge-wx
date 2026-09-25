@@ -770,10 +770,10 @@ test("a tapped day says its feel and its sky, and a note only when there is some
   assert.equal(brief(60, 45, 10), "Cool, foggy.");
   assert.equal(brief(95, 1, 10), "Hot, mostly sunny. Keep the middle of the day short.");
   assert.equal(brief(84, 95, 70), "Warm, storms possible. Watch for alerts.");
-  assert.equal(brief(30, 66, 70), "Chilly, freezing rain. Give the roads time.");
-  assert.equal(brief(30, 75, 70), "Chilly, heavy snow. Plan on slow going.");
-  assert.equal(brief(30, 77, 40), "Chilly, snow grains. Plan on slow going.");
-  assert.equal(brief(30, 73, 40), "Chilly, snow. Plan on slow going.");
+  assert.equal(brief(30, 66, 70), "Cold, freezing rain. Give the roads time.");
+  assert.equal(brief(30, 75, 70), "Cold, heavy snow. Plan on slow going.");
+  assert.equal(brief(30, 77, 40), "Cold, snow grains. Plan on slow going.");
+  assert.equal(brief(30, 73, 40), "Cold, snow. Plan on slow going.");
   assert.equal(brief(70, 63, 80), "Mild, rain at times. Expect a wet stretch.");
   assert.equal(brief(70, 81, 50), "Mild, showers. Expect a wet stretch.");
   assert.equal(brief(70, 53, 30), "Mild, drizzle. Expect a wet stretch.");
@@ -1252,6 +1252,9 @@ test("the page reads top down: now, today, the week, and nothing it has already 
   // after midnight the night is graded by the air it is in, not by the new day's forecast high
   assert.equal(tell({ time: "2026-08-02T01:15", temperature_2m: 70, weather_code: 1 }), "Mild tonight. Should stay dry.");
   assert.equal(tell({ time: "2026-08-02T19:15", temperature_2m: 84, weather_code: 1 }), "Warm this evening. Should stay dry.");
+  // a night is warm from 74, where the Tonight card calls it warm, and under 40 it is cold
+  assert.equal(tell({ time: "2026-08-02T23:10", temperature_2m: 78, weather_code: 2 }), "Warm tonight. Should stay dry.");
+  assert.equal(tell({ time: "2026-08-02T19:15", temperature_2m: 35, weather_code: 1 }), "Cold this evening. Should stay dry.");
   assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 88, weather_code: 1, relative_humidity_2m: 80 }), "Warm and soupy today. Should stay dry.");
   // a live gust in hour 0 is a windy headline; one later in the day is named by its hour
   assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 3 }, { gust: (i) => (i ? 12 : 30) }), "Warm today. Dry, but windy now.");
