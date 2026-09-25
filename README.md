@@ -14,16 +14,17 @@ Run the checks with:
 node --test test.mjs
 ```
 
-To eyeball the app across day, night, storm and dusk at both locations, with
-mocked upstream data and a fixed clock:
+To eyeball the app across day, night, storm, dusk, the weekend and the seasons at
+both locations, with mocked upstream data and a shifted clock:
 
 ```sh
 npm i playwright && npx playwright install chromium
 TZ=America/New_York node tools/shots.mjs
 TZ=America/New_York node tools/interactions.mjs
+TZ=America/New_York node tools/scene.mjs
 ```
 
 See [AGENTS.md](AGENTS.md) for the deploy route, the design principles behind
 the current copy and charts, and the known issues.
 
-Weather data comes from Open-Meteo, marine forecasts from Open-Meteo Marine, tides from NOAA, and alerts and tropical products from the National Weather Service.
+Weather data comes from Open-Meteo, marine forecasts from Open-Meteo Marine (in boat season), tides from NOAA, and alerts and tropical products from the National Weather Service.

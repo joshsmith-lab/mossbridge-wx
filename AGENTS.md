@@ -40,11 +40,32 @@ place name.
 ## Design principles, established with Josh
 
 - **Less text.** If the graphic already says it, delete the words. High and low
-  are obvious from a tide curve. "Reapply after two hours" is nagging.
+  are obvious from a tide curve. "Reapply after two hours" is nagging. Josh asked for
+  addition by subtraction in September 2026, and most of what went was the page saying a
+  thing twice. The headline no longer names the sky, because the condition beside the
+  number and the scene under it already do. Feels-like gets its line only when it is 3° or
+  more off the air, the rule the hourly readout already used, because inside that it is the
+  same number twice. The hourly note is the golden-hour span or nothing.
+- **The page reads top down, and the first screen is the answer.** What the family opens it
+  for is now, today and the weekend, so that is the first screen on a phone: the sky (the
+  reading, the headline, the chips, the scene), the next 24 hours, then the week. The week
+  used to sit at the foot of the page, which put the weekend a scroll away. Under it come the
+  outside call, the tide on the coast, the tropics when a system is out, Sun and Tonight side
+  by side, and one credit. The charts draw in in that same order (see The charts' entrance),
+  and test.mjs checks both.
+- **Josh's words.** Plain, short, direct. Windy, never blustery, breezy or wind-whipped, and
+  test.mjs checks the whole file for those three. No semicolons and no em dashes in the
+  app's sentences (an en dash in a range like 4–7p is fine), and no "not X, it's Y". The
+  family's own words stay, because they are the character: piddle, soupy (earned: real
+  humidity on real heat), "Not really today", "Feed early and keep a path open", "Cold one.
+  Bundle up for the morning rounds.", "Stay off the hill until it turns over", golden hour,
+  "Keep the middle of the day short", "Plan on slow going", "Reading the sky…".
 - **Never promise what the forecast cannot keep.** The headline is built from
   the hourly run, not from 7-day weather codes, because those flip between model
-  runs and made the app name a storm date that moved every few hours. Any
-  look-ahead is capped at three days and always prints the odds.
+  runs and made the app name a storm date that moved every few hours. The headline's
+  look-ahead is capped at three days and always prints the odds. The week reaches further
+  because it is a chart of the run's own numbers, and the weekend note beside it stays
+  numbers: a high, and the odds wherever there is rain to talk about.
 - **Scales are honest.** The tide chart is measured up from the chart datum
   (0 ft MLLW), never autoscaled to the window, so the height of the water on
   screen is the water that is there.
@@ -54,7 +75,10 @@ place name.
   `prefers-reduced-motion` through the `PRM` flag.
 - **A picture and its label must agree.** The old wind dial pointed downwind
   while the text beside it read upwind. The vane now points into the wind, the
-  way a rooftop vane does.
+  way a rooftop vane does. The wind chip carries the same vane: the speed and an arrow
+  into the wind. Josh does not care about "NNW", the arrow already says it, so the compass
+  point is spoken only (`dirLong`, sr-only) and `dirTxt` is left to the tropics rows. Under
+  1 mph the chip says `calm` with no arrow, because calm air has no direction to point.
 - **Alignment comes from a rule, not a magic number.** The now block uses
   `align-items: last baseline`; the degree mark is its own flex column so
   numeral tracking can never crowd it.
@@ -83,7 +107,7 @@ place name.
   the card: the chip is now and the card is the window, which is why the two gusts can
   differ. The marine run is two days, because after dark the call is tomorrow's, and a day
   it does not reach is unavailable. `boatCall` and `outsideCall` are pure and test.mjs runs
-  them. The family says windy, never blustery or breezy, and test.mjs checks the whole file.
+  them.
 - **The sun card is the rest of today, and it steps aside.** In September 2026 the card became
   `Sun` over one bar on the 0-12 scale: the pin is now and carries the reading, the bar is lit
   as high as the rest of today goes and dims past it, and a peak still to come today is a ring
@@ -96,6 +120,12 @@ place name.
   hour carries the live UV, so the sentence and the pin read the same number. The UV chip
   shows from 3 and only while the card does (`sunAdvice&&`), because a cache opened after the
   strong sun still holds a 3 from an hour that has passed.
+- **The foot of the page is one credit.** `Weather data by Open-Meteo.com`, linked, in faint
+  mono, because Open-Meteo's data is CC BY 4.0 and asks for it. The paragraph of sources, the
+  per-place footnotes (`LOCS.*.foot`) and the refresh instructions went in September 2026:
+  nobody reads them on a phone, the sources are in the README, and the stamp is already the
+  retry. The one thing they said that the page needed, that the bite windows are the almanac's,
+  now rides on the bite line itself (see Motion rules). Do not grow the footer back.
 - Golden hour is sun elevation +6° to -4°, the convention the photo apps use.
   Blue hour is -4° to -6°. The displayed sunrise and sunset times come from the
   forecast API; sun and moon positions and the golden-hour boundaries are
@@ -158,23 +188,32 @@ the resulting files match the reviewed local copies.
 
 ## Verifying visually
 
-Two harnesses, sharing their mocked upstreams through `tools/fixtures.mjs`.
+Three harnesses, sharing their mocked upstreams through `tools/fixtures.mjs`.
 
 ```sh
 npm i playwright && npx playwright install chromium
 TZ=America/New_York node tools/shots.mjs          # the copy
+TZ=America/New_York node tools/interactions.mjs   # the charts, keys, warnings and retry
 TZ=America/New_York node tools/scene.mjs          # the picture and its motion
 TZ=America/New_York node tools/scene.mjs fog storm  # just the scenes you are working on
 node tools/rig.mjs heron                          # one animal, close up and at phone size
 ```
 
-`tools/shots.mjs` renders twelve scenarios (day, night, after midnight, storm, dusk,
+`tools/shots.mjs` renders sixteen scenarios (day, night, after midnight, storm, dusk,
 both family locations, an afternoon that should recommend today, a washout, a
 shoulder-season moderate-UV day, and two shaped weeks: a cool snap into a warm run on a
 Thursday, and a stormy Sunday week with 100% odds and a 101° high, which is also the
-eight-column week), writes
-screenshots to `tools/shots/` and prints the generated copy, so wording changes
-are reviewable as text.
+eight-column week), then four for the outside call and the weekend: a Saturday at the
+coast in boat season, where the weekend is today and tomorrow; a mid-November Saturday at
+the coast, off season, so the call is `Outside · Porters Neck` and no seas are asked for; a
+cold January morning on the coast, Iffy on the cold with the sun card stepped aside; and a
+boat-season day whose marine run carries no seas, which is Iffy with `seas unavailable` and
+never Go. It writes screenshots to `tools/shots/` and prints the generated copy (the
+headline, the chips as they are seen, the call's title, word, when, why and lines, the sun
+sentence, tonight and the week's note, with the banded weekend in brackets), so wording
+changes are reviewable as text. A scenario can carry an `expect`: the week's columns and
+banded days, the call's title, word, why and lines, the sun card, and how many times the seas
+were asked for. It exits non-zero when one does not show what it is there for.
 
 `tools/scene.mjs` is for anything that moves. Nineteen scenes force the light
 and weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
@@ -195,7 +234,7 @@ still under `prefers-reduced-motion` by comparing two screenshots taken 1.4s
 apart. It exits non-zero on a page error, on layout thrash, or on anything that
 survives reduced motion.
 
-Two numbers worth knowing before you change motion: every scene idles at **0-1
+Two numbers worth knowing before you change motion: every scene idles at **0-2
 layouts per 6 seconds**, and the busiest scene runs **115 animations**. If either
 jumps, you have added something that is not a `transform` or an `opacity`.
 
@@ -487,9 +526,10 @@ and so is `RV_OF`, the observer's map). All of it is in `REVEAL` in index.html.
   or pops takes its transform origin from its own geometry in user space, not a fill-box
   percentage.
 
-`tools/interactions.mjs` checks narrow and wide chart edges, keyboard navigation,
-location switching, snow/ice labels, warning expiry, source instructions, retry,
-and cached/online recovery. Run it with the same font and browser settings as
+`tools/interactions.mjs` runs ten scenarios: narrow and wide chart edges, keyboard
+navigation, location switching, snow/ice labels, a warning that makes the call No go with
+the event's name and takes the window and bite lines until it expires, source instructions,
+retry, and cached/online recovery. Run it with the same font and browser settings as
 `tools/shots.mjs`. Request ordering and alert expiry also run in `node --test test.mjs`.
 
 ## Known issues

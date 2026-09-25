@@ -1279,6 +1279,37 @@ test("the page reads top down: now, today, the week, and nothing it has already 
   assert.equal(inSeason("2026-06-20T12:00", undefined), false);
 });
 
+test("the copy harness keeps looking at the days the call and the weekend are about", async () => {
+  const shots = await readFile(new URL("tools/shots.mjs", root), "utf8");
+  const fixtures = await readFile(new URL("tools/fixtures.mjs", root), "utf8");
+  // each scenario is there for one day of the week or one season, so its date has to stay that day
+  const when = (name) => { const m = shots.match(new RegExp(`name: "${name}", loc: "(\\w+)", when: "([^"]+)"`)); assert.ok(m, `${name} should be in tools/shots.mjs`); return { loc: m[1], d: new Date(m[2]) }; };
+  const md = (d) => `${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const inSeason = (d) => md(d) >= "03-15" && md(d) <= "10-31";
+  const sun = when("15-wet-week-shady-spring"), sat = when("16-saturday-porters-neck"), nov = when("17-off-season-saturday-porters-neck");
+  const jan = when("18-january-porters-neck"), seas = when("19-no-seas-porters-neck");
+  assert.equal(sun.d.getDay(), 0, "the eight-column week is a Sunday");
+  assert.equal(sat.d.getDay(), 6, "the weekend-is-today scenario is a Saturday");
+  assert.ok(sat.loc === "mb" && inSeason(sat.d));
+  assert.ok(nov.d.getDay() === 6 && nov.loc === "mb" && !inSeason(nov.d), "a coast Saturday off season");
+  assert.ok(jan.d.getMonth() === 0 && jan.loc === "mb" && !inSeason(jan.d), "a January coast day");
+  assert.ok(seas.loc === "mb" && inSeason(seas.d) && /wave: null/.test(shots), "a boat-season day with no seas");
+  // and each says what it is there to show, so the harness fails when it stops showing it
+  assert.match(shots, /expect: \{ cols: 8, weekend: \["Sat", "Sun"\] \}/);
+  assert.match(shots, /expect: \{ cols: 7, weekend: \["Today", "Sun"\], note: /);
+  assert.match(shots, /out: "Outside · Porters Neck", marine: 0, detail: 0/);
+  assert.match(shots, /call: "Iffy", why: \/\^Cold, feels \\d\+°\$\/, sun: "\(steps aside\)", marine: 0/);
+  assert.match(shots, /out: "On the water · Figure 8", call: "Iffy", detail: \/seas unavailable\//);
+  assert.match(shots, /if \(r\.url\(\)\.includes\("marine-api\.open-meteo\.com"\)\) marineAsks\+\+;/);
+  // the readout prints what is seen: the compass point and the bite framing are spoken only
+  assert.match(shots, /k\.querySelectorAll\("\.sr-only"\)\.forEach\(\(x\) => x\.remove\(\)\)/);
+  for (const sel of ['"#waterLead .call-word"', '"#waterLead .call-when"', 'shown("callWhy")', '"#outSection .out-line:not([hidden])"', '"sunCard"', 'T("eveLead")', 'T("weekNote")'])
+    assert.ok(shots.includes(sel), `the copy readout reads ${sel}`);
+  // the fixtures serve the eight days the week needs and the two days of seas the call reads
+  assert.match(fixtures, /export const DAYS = 8;/);
+  assert.match(fixtures, /wave_height_max: \[w0, "waveNext" in o \? o\.waveNext : w0\]/);
+});
+
 test("installable assets exist", async () => {
   await Promise.all([
     access(new URL("icon-180.png", root)),
