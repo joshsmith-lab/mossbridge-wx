@@ -3369,7 +3369,9 @@ function bestOutsideWindow(h,coastal,dy,now){
   const run=3,n=h.temp.length,day0=h.time[0].slice(0,10),cands=[];
   /* The wall clock, not the run's first hour: a cache painted at 1:40 still starts at the 9a it
      was written in, and offered "now–12p" for a window that ended an hour and forty minutes ago.
-     A window that has ended is gone, and one is "now–" only while now is inside it. Without a
+     A window has to start in the hour now is in or later, the way the live run does: one that
+     began at 9a is scored on hours that are gone, and a cache opened at 2:55 offered "now–3p",
+     five minutes graded on the 2p hour. One is "now–" only while now is inside it. Without a
      clock the run's first hour is now. */
   const t=(now||new Date(h.time[0])).getTime();
   /* a window is in daylight, give or take civil twilight: in December "4–7p" is two hours of
@@ -3380,7 +3382,7 @@ function bestOutsideWindow(h,coastal,dy,now){
   for(let i=0;i<=n-run;i++){
     const start=new Date(h.time[i]),last=new Date(h.time[i+run-1]);
     const end=new Date(last.getTime()+3.6e6);
-    if(end.getTime()<=t)continue;
+    if(start.getTime()<new Date(t).setMinutes(0,0,0))continue;
     if(start.getHours()<7||start.getHours()>17||start.toDateString()!==end.toDateString())continue;
     const L=light(h.time[i].slice(0,10));
     if(L&&(start.getTime()<L[0]||end.getTime()>L[1]))continue;
@@ -3558,6 +3560,9 @@ function dayStory(c,dy,h,now){
   /* the first windy hour, not the windiest: with gusts of 30 now and 34 at four, "windy by 4
      p.m." sat under a chip that already said 30 */
   const gustI=win.find(i=>(Number(h.gust?.[i])||0)>=28);
+  /* no odds in the run is not a dry run: the headline says what it knows (the wind) or that the
+     odds are missing, the way the call under it does, and never "Should stay dry." */
+  const popKnown=win.some(i=>h.pop[i]!=null&&Number.isFinite(+h.pop[i]));
   /* What is coming is named by its own hours' codes, ice first because it is the one where the
      wrong word matters. The look-ahead only knew rain, and called three o'clock's snow "Rain
      likely around 3 p.m." over a Tonight card that said snow. */
@@ -3576,8 +3581,13 @@ function dayStory(c,dy,h,now){
       :dryI===0?"Should let up soon.":`Should let up around ${when(dryI)}`;
   /* index 0 is the hour already under way: at 1:40 "rain likely around 1 p.m." names a
      time that has gone, so the first hour is spoken as now */
-  }else if(wetI!=null){
-    const kind=wetKind(win.filter(i=>i>=wetI&&(Number(h.pop[i])||0)>=40)),likely=maxPop>=70;
+  }else if(!popKnown)second=gustI!=null?(gustI===0?"Windy now.":`Windy by ${when(gustI)}`):"Rain odds unavailable.";
+  else if(wetI!=null){
+    /* the wet stretch is the run of wet hours that starts at wetI, not every wet hour after it: a
+       rain shower at one and snow at eight are two events, and the shower's hour cannot carry the
+       snow's name. Likely comes off the stretch's own odds */
+    const stretch=[];for(const i of win){if(i<wetI)continue;if((Number(h.pop[i])||0)<40)break;stretch.push(i)}
+    const kind=wetKind(stretch),likely=Math.max(...stretch.map(i=>Number(h.pop[i])||0))>=70;
     second=wetI===0
       ?(kind?`${kind} ${likely?"likely any time now.":"could start any time."}`:likely?"Rain likely any time now.":"Showers could pop up any time.")
       :kind?`${kind} ${likely?"likely":"possible"} around ${when(wetI)}`:likely?`Rain likely around ${when(wetI)}`:`Showers possible around ${when(wetI)}`;
@@ -3883,6 +3893,8 @@ document.getElementById("weekRows").addEventListener("click",e=>{
    its light climbs the scale in the colour of the level it passes, the pin drops onto the
    bar as the pen reaches it, and a peak still to come rings once. */
 const UV_BANDS=["low","moderate","high","extreme"];
+/* one band rule for the label and the ring, on the one-decimal number the pin prints */
+const uvBand=u=>{u=+(+u).toFixed(1);return u<3?0:u<6?1:u<11?2:3};
 function renderUV(uvNow,uvPk,uvI,h,css){
   const svg=document.getElementById("uvSvg");
   /* the card's own width: one column on a phone, half the row (less the gap) from 560 */
@@ -3896,7 +3908,7 @@ function renderUV(uvNow,uvPk,uvI,h,css){
      EXTREME, set flush right, covers about 10.2 to 12: an inked HIGH sat 100px left of a 10.6 pin
      that was standing under EXTREME. The number on the pin and the lit bar carry the reading, and
      the label says the band of the number printed, so a 2.96 that reads 3.0 is moderate. */
-  const shown=pin?+uvNow.toFixed(1):null,band=!pin?-1:shown<3?0:shown<6?1:shown<11?2:3;
+  const shown=pin?+uvNow.toFixed(1):null,band=pin?uvBand(uvNow):-1;
   let marks="",pinR=-Infinity,pinX=-Infinity;
   if(pin){
     const px=clamp(X(uvNow),2,W-2),t=shown.toFixed(1),tw=adv(t,14),tx=clamp(px,tw/2,W-tw/2);
@@ -4023,9 +4035,10 @@ function revealTry(k,settled){
   if(R.state!=="armed"||!R.g||!REVEAL_READY||!R.seen||!R.g.svg.isConnected)return;
   /* the observer's word can be a render old: in the loading shell the week is only its eyebrow,
      so the tide sits on a phone's first screen, and the live paint pushes it below the fold in
-     the same task that arms it. Measured once more, it waits for the scroll like it should. The
-     measurement waits a frame for the layout to settle, because the alerts, the nowcast strip and
-     the call are painted after the charts and move them again. It never clears the observer's
+     the same task that arms it. Measured once more, it waits for the scroll like it should. A chart
+     this look finds off screen is looked at again a frame later, once the alerts, the nowcast
+     strip and the call (painted after the charts) have moved it; that look only ever holds a
+     chart back, and one that passes mid-render plays. It never clears the observer's
      word: cleared mid-render, a week that grew back on screen sat blank until a scroll crossed a
      threshold, and the observer says when a chart has really left. */
   if("IntersectionObserver" in window){const b=R.g.svg.getBoundingClientRect();
@@ -4685,7 +4698,6 @@ function render(d,live,savedAt=0){
   /* A peak within half a point of the pin, in the pin's own band, is the pin: a ring there would
      sit on it. One that crosses into a higher band stays, nudged clear of the pin, or a card that
      says "Sunscreen if you're out a while." showed nothing past LOW to say why. */
-  const uvBand=u=>{u=+(+u).toFixed(1);return u<3?0:u<6?1:u<11?2:3};
   if(uvI>=0&&uvPk-(uvNow??0)<.5&&uvBand(uvPk)===uvBand(uvNow??0))uvI=-1;
   /* a bar with neither a pin nor a peak on it has nothing to say */
   const uvBar=!!sunAdvice&&!comfort&&(uvNow>=.5||uvI>=0);

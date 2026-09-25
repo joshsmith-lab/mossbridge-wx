@@ -814,7 +814,12 @@ test("the sun card says it with the bar, and steps aside when today has nothing 
   // The band is spoken, not inked: EXTREME is set flush right and covers about 10.2 to 12, so an
   // inked HIGH sat far left of a 10.6 pin standing under EXTREME. The scale is a quiet ruler, and
   // the label says the band of the number printed on the pin, and the peak in spoken time.
-  assert.match(html, /band=!pin\?-1:shown<3\?0:shown<6\?1:shown<11\?2:3;/);
+  // one band rule, on the number the pin prints, for the spoken band and the ring; the ring's
+  // nudge needs the pin's own x
+  assert.match(html, /const uvBand=u=>\{u=\+\(\+u\)\.toFixed\(1\);return u<3\?0:u<6\?1:u<11\?2:3\};/);
+  assert.match(html, /band=pin\?uvBand\(uvNow\):-1;/);
+  assert.match(html, /pinR=tx\+tw\/2;pinX=px;/);
+  assert.equal((html.match(/u<3\?0:u<6\?1:u<11\?2:3/g) || []).length, 1, "the band rule is written once");
   assert.doesNotMatch(html, /\.uv-scale span\.on|\.uv-scale span"\)\.forEach/);
   assert.match(html, /svg\.setAttribute\("aria-label",sentence\(\[pin\?`UV \$\{shown\.toFixed\(1\)\} now, \$\{UV_BANDS\[band\]\}`:"UV today",\n\s*uvI>=0\?`peaking at \$\{\(\+h\.uv\[uvI\]\)\.toFixed\(1\)\} around \$\{spokenAt\(h\.time\[uvI\]\)\}`:null\]/);
   // the loading and error shell draw no bar, so the scale words go with it
@@ -1112,6 +1117,13 @@ test("the outside call is go, iffy or no go, for the window you would be out in"
   assert.equal(out({ code: [1, 73, 1, 1] }, "coast").why, "Snow");
   // no ladder speaks for a warning or a storm overhead: the caller says those first
   assert.match(html, /const call=warning\?\{call:"no",why:warning\.event\}\n\s*:storm\?\{call:"no",why:"Thunderstorms"\}/);
+  // render() paints what the card says and nothing of its own
+  assert.match(html, /outSec\.classList\.add\("call-"\+call\.call\)/);
+  assert.match(html, /\$\{card\.when\?` <span class="call-when">\$\{card\.when\}<\/span>`:""\}/);
+  assert.match(html, /whyEl\.textContent=call\.why\|\|"";whyEl\.hidden=!call\.why;/);
+  assert.match(html, /if\(card\.detail!=null\)detail\.innerHTML=card\.detail;/);
+  assert.match(html, /if\(card\.piddle!=null\)document\.getElementById\("wWindow"\)\.textContent=card\.piddle;/);
+  assert.match(html, /if\(card\.fish!=null\)document\.getElementById\("wFish"\)\.textContent=card\.fish;/);
   assert.match(html, /const BOAT=\{noGust:30,noSeas:5,iffyGust:22,iffySeas:3,wet:60,cold:50\};/);
   assert.match(html, /const CALL_WORD=\{go:"Go",iffy:"Iffy",no:"No go"\};/);
 
@@ -1127,10 +1139,13 @@ test("the outside call is go, iffy or no go, for the window you would be out in"
   assert.equal(noon.today, noon);
   assert.equal(ctx.bestOutsideWindow(run24("2026-12-12T13:00"), true, december).text, "now–4p", "without a clock the run's first hour is now");
   // A cache opened hours after it was written still starts at its own first hour. The window is
-  // picked against the wall clock: nothing that has ended, and "now–" only while now is inside it.
+  // picked against the wall clock, the way the live run starts: nothing that began before the hour
+  // now is in (a 9a window at 2:55 was "now–3p", graded on a spent hour), and "now–" only while
+  // now is inside it.
   const opened = new Date("2026-08-02T13:40"), stale = ctx.bestOutsideWindow(run24("2026-08-02T09:00"), true, undefined, opened);
   assert.ok(new Date(stale.end) > opened, `no window that has ended: ${stale.text}`);
-  assert.deepEqual([stale.text, stale.i, stale.cur], ["now–2p", 2, 4]);
+  assert.deepEqual([stale.text, stale.i, stale.cur], ["now–4p", 4, 4]);
+  assert.equal(ctx.bestOutsideWindow(run24("2026-08-02T09:00"), true, undefined, new Date("2026-08-02T14:55")).text, "now–5p", "never five minutes of a window");
   const later = run24("2026-08-02T09:00"); for (let i = 2; i < 6; i++) later.gust[i] = 34;
   assert.equal(ctx.bestOutsideWindow(later, true, undefined, opened).text, "3–6p", "a window still to come is said by its hours");
   const late = ctx.bestOutsideWindow(run24("2026-12-12T15:00"), true, december);
@@ -1411,6 +1426,12 @@ test("the page reads top down: now, today, the week, and nothing it has already 
   assert.equal(tell(cold, at3(55, 66), undefined, winter), "Cold today. Freezing rain possible around 3 p.m.");
   assert.equal(tell(cold, { pop: (i) => (i >= 5 ? 80 : 5), code: (i) => (i === 5 ? 73 : i > 5 ? 66 : 3) }, undefined, winter), "Cold today. Freezing rain likely around 3 p.m.", "ice outranks snow in the same stretch");
   assert.equal(tell(cold, at3(55, 61), undefined, winter), "Cold today. Showers possible around 3 p.m.", "rain keeps its own words");
+  // the stretch is the run of wet hours from the first one: a shower at one and snow at eight are
+  // two events, and the shower's hour does not carry the snow's name or the snow's odds
+  assert.equal(tell(cold, { pop: (i) => (i === 3 || i === 4 ? 45 : i >= 10 && i <= 12 ? 90 : 5), code: (i) => (i >= 10 ? 71 : i >= 3 ? 61 : 3) }, undefined, winter), "Cold today. Showers possible around 1 p.m.");
+  // missing odds are not dry: the headline says what it knows, or that the odds are missing
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 1 }, { pop: () => NaN }), "Warm today. Rain odds unavailable.");
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 1 }, { pop: () => NaN, gust: (i) => (i === 3 ? 31 : 12) }), "Warm today. Windy by 4 p.m.");
   assert.equal(tell(cold, { pop: () => 80, code: () => 73 }, undefined, winter), "Cold today. Snow likely any time now.");
   assert.equal(tell(cold, { pop: () => 45, code: () => 73 }, undefined, winter), "Cold today. Snow could start any time.");
   assert.equal(tell(cold, { pop: () => 45, code: () => 67 }, undefined, winter), "Cold today. Freezing rain could start any time.");

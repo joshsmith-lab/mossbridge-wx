@@ -533,9 +533,10 @@ and so is `RV_OF`, the observer's map). All of it is in `REVEAL` in index.html.
 - **It plays to someone.** It waits until the chart is at least 30% on screen, so on a
   phone the tide plays when you scroll to it. It waits for the live forecast, or 0.9s when
   there is only the cache, so the pen does not draw one line and then swap it for another.
-  The observer's word can be a render old, so a chart is measured once more before it plays,
-  a frame after the paint, because the alerts, the nowcast strip and the call are painted
-  after the charts and move them again. That look only ever holds a chart back. It never
+  The observer's word can be a render old, so a chart is measured once more before it plays.
+  One that measures off screen is looked at again a frame later, because the alerts, the
+  nowcast strip and the call are painted after the charts and move them again; one that
+  passes mid-render plays. That look only ever holds a chart back. It never
   clears the observer's word: cleared mid-render, a week that grew back on screen stayed blank
   until the next scroll crossed a threshold.
 - **A re-render continues it.** The live data landing or a resize while it runs re-applies
