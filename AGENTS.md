@@ -157,6 +157,31 @@ place name.
   forecast API; sun and moon positions and the golden-hour boundaries are
   computed locally from `sunPos`.
 
+## The icon
+
+The home-screen icon is the original flat mark: a yellow sun on its arc over a pale-blue
+horizon, on navy. In September 2026 Josh looked at four illustrated directions (an inked
+refresh over the marsh, the view from a porch, the live oak, a sunset emblem) and kept the
+original. The point of the icon is minimal and elegant, and it has to belong to any place the
+app ever shows, so it carries nothing place-specific and nothing skeuomorphic, even though the
+scene inside the app is illustrated. Do not redraw it in the Storybook style. Android is out of
+scope and always will be: no maskable variants, no adaptive-icon work.
+
+What the refinement pass that followed did change is precision, and `icon.svg` is the master:
+- It is drawn on the 180px grid the iPhone home screen uses, so the horizon (y 146 to 150) and
+  the single 4px stroke weight land on whole pixels. The arc and the horizon share that weight.
+- The arc keeps the original's ellipse centre (90,154.7) and horizontal radius 64. Its vertical
+  radius drops from about 99 to 89.7, which puts its top on the sun's centre (90,65, r 20). The
+  old top ran across the upper half of the sun, which is what made it read as a bell. It stops
+  3px clear of the sun (each inner end is 25 from the sun's centre, less the round cap), and
+  every end is round.
+- The colours are the original's: #12313F, #F5C445, #7FB3C9.
+- `icon-180.png` and `icon-512.png` are exported from `icon.svg` in Chrome, anti-aliased, by
+  `node tools/icon.mjs`. The originals had exactly three colours and stair-stepped every curve.
+  A new export is a new shell: bump `CACHE` in `sw.js`.
+- An iPhone keeps the icon it was given when Porch was added to the Home Screen. A new icon
+  reaches a phone only when the app is removed and added again from Safari.
+
 ## Storybook Ink: how the scene is drawn
 
 In September 2026 Josh chose the scene's art direction: the storybook look of Prince of

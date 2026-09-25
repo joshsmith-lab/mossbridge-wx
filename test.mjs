@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 import vm from "node:vm";
+import { inflateSync } from "node:zlib";
 
 const root = new URL("./", import.meta.url);
 
@@ -33,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v72/);
+  assert.match(worker, /mbwx-shell-v73/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -1500,4 +1501,47 @@ test("installable assets exist", async () => {
     access(new URL("icon-180.png", root)),
     access(new URL("icon-512.png", root)),
   ]);
+  // each PNG is the size its name and the manifest say (IHDR width and height), exported from
+  // the one master drawn on the home screen's 180px grid
+  for (const s of [180, 512]) {
+    const png = await readFile(new URL(`icon-${s}.png`, root));
+    assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [s, s], `icon-${s}.png is ${s}x${s}`);
+  }
+  const svg = await readFile(new URL("icon.svg", root), "utf8");
+  assert.match(svg, /viewBox="0 0 180 180"/);
+  // the original's flat mark and colours, one 4px weight, round ends, the sun on its path
+  assert.match(svg, /<rect width="180" height="180" fill="#12313F"\/>/);
+  assert.match(svg, /stroke-width="4" stroke-linecap="round"/);
+  // the arc's four ends sit on the one ellipse whose top is the sun's centre (90,65), and the two
+  // inner ends stop 25 from it: the sun's r 20, the round cap's 2, and 3 clear
+  const n = svg.match(/<path d="M([\d.]+) ([\d.]+) A64 89\.7 0 0 1 ([\d.]+) ([\d.]+) M([\d.]+) ([\d.]+) A64 89\.7 0 0 1 ([\d.]+) ([\d.]+)" stroke="#F5C445"\/>/).slice(1).map(Number);
+  for (let i = 0; i < 8; i += 2) assert.ok(Math.abs(((n[i] - 90) / 64) ** 2 + ((n[i + 1] - 154.7) / 89.7) ** 2 - 1) < 1e-3, "the arc's top is on the sun's centre");
+  for (const i of [2, 4]) assert.ok(Math.abs(Math.hypot(n[i] - 90, n[i + 1] - 65) - 25) < 0.05, "the arc stops 3px clear of the sun");
+  assert.match(svg, /<line x1="24" y1="148" x2="156" y2="148" stroke="#7FB3C9"\/>/);
+  assert.match(svg, /<circle cx="90" cy="65" r="20" fill="#F5C445"\/>/);
+  assert.doesNotMatch(svg, /<filter|<image|<text|gradient/i, "the icon stays flat");
+});
+
+// the phone never loads icon.svg: it loads the PNGs, so the export is checked too. 8-bit RGB,
+// non-interlaced, which is what the Chrome export writes
+const rgbPng = (b) => {
+  assert.deepEqual([b[24], b[25], b[28]], [8, 2, 0], "8-bit RGB, not interlaced");
+  const w = b.readUInt32BE(16), h = b.readUInt32BE(20), idat = [];
+  for (let o = 8; o < b.length; o += 12 + b.readUInt32BE(o)) if (b.toString("latin1", o + 4, o + 8) === "IDAT") idat.push(b.subarray(o + 8, o + 8 + b.readUInt32BE(o)));
+  const raw = inflateSync(Buffer.concat(idat)), s = w * 3, px = Buffer.alloc(h * s);
+  for (let y = 0; y < h; y++) for (let x = 0, f = raw[y * (s + 1)]; x < s; x++) {
+    const a = x > 2 ? px[y * s + x - 3] : 0, u = y ? px[(y - 1) * s + x] : 0, c = x > 2 && y ? px[(y - 1) * s + x - 3] : 0, p = a + u - c;
+    const paeth = Math.abs(p - a) <= Math.abs(p - u) && Math.abs(p - a) <= Math.abs(p - c) ? a : Math.abs(p - u) <= Math.abs(p - c) ? u : c;
+    px[y * s + x] = raw[y * (s + 1) + 1 + x] + [0, a, u, (a + u) >> 1, paeth][f];
+  }
+  return { at: (x, y) => px.subarray((y * w + x) * 3, (y * w + x) * 3 + 3).toString("hex"),
+    colours: new Set(Array.from({ length: w * h }, (_, i) => px.subarray(i * 3, i * 3 + 3).toString("hex"))).size };
+};
+test("the shipped icon is the refined export, not the stair-stepped original", async () => {
+  const icon = rgbPng(await readFile(new URL("icon-180.png", root)));
+  assert.ok(icon.colours > 3, "anti-aliased: the original had exactly three colours");
+  assert.equal(icon.at(90, 65), "f5c445");
+  assert.equal(icon.at(90, 148), "7fb3c9");
+  for (const [x, y] of [[68, 70], [111, 70]]) assert.equal(icon.at(x, y), "12313f", "the arc stops short of the sun");
+  for (const [x, y] of [[67, 62], [112, 62]]) assert.equal(icon.at(x, y), "12313f", "the arc's top is not back across the sun");
 });
