@@ -513,7 +513,9 @@ html:not([data-theme=dark]) .rv-core{display:none}
    gap each column leaves at its top, so it lands without measuring anything. */
 .week{padding:28px 20px 0}
 .wk-wrap{position:relative}
-.wk{display:grid;grid-template-columns:repeat(7,1fr)}
+.wk{display:grid;grid-template-columns:repeat(var(--wk-n,7),1fr)}
+/* a Sunday's eight columns are 35px each on a 320 phone, and TODAY at the week's tracking is 33 */
+@media (max-width:359px){.wk.wk8 .wk-name{letter-spacing:.02em}}
 .wk-day{position:relative;display:flex;flex-direction:column;align-items:center;min-width:0;padding:0 0 6px;margin:0;
   border:0;border-radius:0;background:transparent;color:inherit;font:inherit;text-align:center;
   -webkit-tap-highlight-color:transparent}
@@ -3528,22 +3530,23 @@ function dailyBrief(dy,i){
   const feel=high>=92?"Hot":high>=82?"Warm":high>=68?"Mild":high>=52?"Cool":"Chilly";
   /* snow and ice are checked first: their codes sit above 61, so the old ladder called a
      heavy snow day "periods of rain" */
-  const sky=code>=95?"a chance of storms":isIce(code)?"freezing rain":
+  const sky=code>=95?"storms possible":isIce(code)?"freezing rain":
     isSnow(code)?(code===75||code===86?"heavy snow":code===77?"snow grains":"snow"):
-    code>=80?"a few showers":code>=61?"periods of rain":
-    code>=51?"a little drizzle":code>=45?"some fog":code===3?"mostly cloudy skies":
-    code===2?"a mix of sun and clouds":code===1?"mostly sunny skies":"clear skies";
-  let note;
-  if(code>=95)note="Keep an eye on weather alerts.";
-  else if(isIce(code))note="Ice is the problem, not the cold. Give the roads time.";
+    code>=80?"showers":code>=61?"rain at times":
+    code>=51?"drizzle":code>=45?"foggy":code===3?"mostly cloudy":
+    code===2?"partly sunny":code===1?"mostly sunny":"sunny";
+  /* a note only when the day has something to plan around: an easy day is the sky and the
+     numbers, and says nothing more */
+  let note="";
+  if(code>=95)note="Watch for alerts.";
+  else if(isIce(code))note="Give the roads time.";
   else if(isSnow(code))note="Plan on slow going.";
-  else if(code>=51||pop>=60)note="Plan around at least one wet stretch.";
-  else if(!hasPop)note="The rain odds are unavailable.";
-  else if(pop>=WEEK_WET)note="A passing shower is possible.";
-  else if(wind>=20)note="It may turn breezy.";
+  else if(code>=51||pop>=60)note="Expect a wet stretch.";
+  else if(!hasPop)note="Rain odds unavailable.";
+  else if(pop>=WEEK_WET)note="Maybe a passing shower.";
+  else if(wind>=20)note="Could get windy.";
   else if(high>=92)note="Keep the middle of the day short.";
-  else note="Most of the day should feel easy outside.";
-  return `${feel}${hasSky?`, with ${sky}`:""}. ${note}`;
+  return `${feel}${hasSky?`, ${sky}`:""}.${note?" "+note:""}`;
 }
 
 /* ── the week ───────────────────────────────────────── */
@@ -3564,7 +3567,37 @@ function dailyBrief(dy,i){
    today is a button that opens its one-line brief under the chart; today has the rest of the
    page. */
 const WEEK_H=132,WEEK_WET=35;
-function renderWeek(dy,css){
+/* The weekend is the stretch of the week everybody asks about by name, so it is marked, not
+   described: the Saturday and Sunday of the first weekend that still has a day after today.
+   On Saturday that is today and tomorrow. On Sunday today is the whole page above, so it is
+   next weekend, six and seven days out, which is why the forecast is asked for eight days.
+   The week shows seven of them, and the eighth only when it is that Sunday: the least skilful
+   day stays off the chart the other six days. Every daily series is cut here, in one place,
+   so the chart, the tapped briefs and the note can never name a day the others do not. A
+   seven-day cache on a Sunday marks the Saturday it has and leaves the Sunday out, never
+   invents it. */
+function weekSpan(dy){
+  const T=dy.time,dow=t=>new Date(t+"T12:00").getDay();
+  const sun=T.findIndex((t,i)=>i>0&&dow(t)===0),sat=T.findIndex((t,i)=>i>0&&dow(t)===6);
+  const we=sun>0?[sun-1,sun]:sat>0?[sat]:[];
+  const n=Math.min(T.length,Math.max(7,we.length?we[we.length-1]+1:0));
+  const wk={};for(const k in dy)wk[k]=Array.isArray(dy[k])?dy[k].slice(0,n):dy[k];
+  return{wk,we};
+}
+/* The note beside the eyebrow is the weekend in numbers: each weekend day still to come, its
+   high, and its odds from WEEK_WET, the line the columns print them from. "Sat 81° · Sun 79°".
+   No adjective and no "dry weekend": five to seven days out that is a claim without its odds.
+   A day whose chance is missing prints none, a week with no odds at all says so rather than
+   passing for dry, and a Saturday says only Sunday, because today is the page above. */
+function weekendNote(wk,we){
+  const known=v=>v!=null&&Number.isFinite(+v),P=wk.precipitation_probability_max;
+  if(!P.some(known))return "rain odds unavailable";
+  return we.filter(i=>i>0&&known(wk.temperature_2m_max[i])).map(i=>{
+    const w=wk.weather_code[i],odds=known(P[i])&&+P[i]>=WEEK_WET?` ${Math.round(+P[i])}% ${isSnow(w)?"snow":isIce(w)?"ice":"rain"}`:"";
+    return `${dayName(wk.time[i])} ${Math.round(wk.temperature_2m_max[i])}°${odds}`;
+  }).join(" · ");
+}
+function renderWeek(dy,css,we=[]){
   const wrap=document.getElementById("weekRows"),svg=document.getElementById("weekSvg");
   const n=dy.time.length,his=dy.temperature_2m_max,los=dy.temperature_2m_min;
   const openDay=wrap.querySelector('.wk-day[aria-expanded="true"]')?.dataset.day||null;
@@ -3578,6 +3611,8 @@ function renderWeek(dy,css){
      in a week that has some says so with a dash, so a gap never passes for dry */
   const someOdds=days.some(d=>d.has),anyOdds=days.some(d=>d.odds||someOdds&&!d.has);
   wrap.style.setProperty("--wk-h",H+"px");
+  wrap.style.setProperty("--wk-n",n);
+  wrap.classList.toggle("wk8",n>7);
   wrap.innerHTML=days.map(({t,has,pop,sky,code,likely,odds},i)=>{
     const hi=Math.round(his[i]),lo=Math.round(los[i]);
     const wet=sky&&isSnow(code)?"snow":sky&&isIce(code)?"freezing rain":"rain";
@@ -3588,8 +3623,9 @@ function renderWeek(dy,css){
       <span class="wk-name" aria-hidden="true">${i===0?"Today":dayName(t)}</span>
       <span class="wk-icon${sky&&code>=95?" rough":likely&&sky&&isWet(code)?" wet":""}" aria-hidden="true">${sky?icon(code,16):""}</span>
       ${anyOdds?`<span class="wk-rain${likely?" wet":""}" aria-hidden="true">${odds?pop+"%":!has&&someOdds?"–":""}</span>`:""}`;
-    if(i===0)return `<div class="wk-day today"><span class="sr-only">${esc(said)}</span>${face}</div>`;
-    return `<button class="wk-day" type="button" data-day="${t}" aria-expanded="${openDay===t}" aria-controls="weekBrief"
+    const cls=we.includes(i)?" we":"";
+    if(i===0)return `<div class="wk-day today${cls}"><span class="sr-only">${esc(said)}</span>${face}</div>`;
+    return `<button class="wk-day${cls}" type="button" data-day="${t}" aria-expanded="${openDay===t}" aria-controls="weekBrief"
       aria-label="${esc(said)}" data-brief="${esc(dailyBrief(dy,i))}" data-name="${long} ${mmdd(t)}">${face}</button>`;
   }).join("");
   weekBrief(wrap.querySelector('.wk-day[aria-expanded="true"]'));
@@ -3632,6 +3668,14 @@ function renderWeek(dy,css){
   }
   const stops=a=>a.map((t,i)=>`<stop offset="${(i/(n-1)*100).toFixed(1)}%" stop-color="${tempColor(t)}"/>`).join("");
   const xa=X(0),xb=X(n-1);
+  /* the weekend's columns get one quiet band, a tab from the top of the chart down to the
+     hairline, inset to line up with a tapped day's wash under it. It is laid over the chart
+     rather than under it, so the labels' paper halos are tinted with everything else and never
+     box (the open day's lesson), and ink at 5% darkens light paper and lightens dark paper the
+     same amount, over the golden-hour tint too. SAT and SUN are printed under it, so it says
+     no WEEKEND of its own. It fades in as the pen reaches Saturday. */
+  const wx0=we.length?we[0]*col+3:0,wx1=we.length?(we[we.length-1]+1)*col-3:0,wr=8;
+  const weBand=we.length?`<path class="wk-we" d="M${wx0.toFixed(1)} ${H} V${2+wr} Q${wx0.toFixed(1)} 2 ${(wx0+wr).toFixed(1)} 2 H${(wx1-wr).toFixed(1)} Q${wx1.toFixed(1)} 2 ${wx1.toFixed(1)} ${2+wr} V${H} Z" fill="${css.ink}" opacity=".05"${rvAt(wx0,"fade")}/>`:"";
   svg.innerHTML=`
     <defs>
       <linearGradient id="wkHi" gradientUnits="userSpaceOnUse" x1="${xa.toFixed(1)}" y1="0" x2="${xb.toFixed(1)}" y2="0">${stops(his)}</linearGradient>
@@ -3646,6 +3690,7 @@ function renderWeek(dy,css){
     ${rv?[[10,.3,.24],[6.5,.6,.2],[4.4,1,.16]].map(([w,f,o])=>`<path class="rv-tail" data-f="${f}" data-o="${o}" d="${hiLine}" fill="none" stroke="url(#wkHi)" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>`).join(""):""}
     <path class="tline" d="${hiLine}" fill="none" stroke="url(#wkHi)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
     ${marks}
+    ${weBand}
     ${rv?`<g class="rv-tip" opacity="0" fill="${tempColor(his[0])}"><circle r="12" opacity=".12"/><circle r="6.5" opacity=".24"/><circle r="3.3"/><circle class="rv-core" r="1.5" fill="#FFF8EC" opacity=".95"/></g>`:""}
     <line x1="${xa.toFixed(1)}" y1="${H-.5}" x2="${xb.toFixed(1)}" y2="${H-.5}" stroke="${css.line}" stroke-width="1"/>`;
   const hiAt=x=>{const f=clamp(x/col-.5,0,n-1),i=Math.min(n-2,Math.floor(f));return his[i]+(his[i+1]-his[i])*(f-i)};
@@ -4350,16 +4395,9 @@ function render(d,live,savedAt=0){
   document.getElementById("hrLabels").innerHTML=labels;
 
   /* week: drawn before the tide because it sits above it, so its entrance is armed first */
-  renderWeek(dy,css);
-  let wi=-1;
-  for(let i=0;i<dy.time.length;i++){
-    const p=dy.precipitation_probability_max[i];
-    if(p>=60&&(wi<0||p>dy.precipitation_probability_max[wi]))wi=i;
-  }
-  const weekWet=wi>=0?(isSnow(dy.weather_code[wi])?"snow":isIce(dy.weather_code[wi])?"ice":"rain"):"";
-  const weekOdds=dy.precipitation_probability_max.some(p=>p!=null&&Number.isFinite(+p));
-  document.getElementById("weekNote").textContent=!weekOdds?"rain odds unavailable":wi<0?"mostly dry"
-    :`${weekWet} looks most likely ${wi===0?"today":dayName(dy.time[wi])}`;
+  const {wk,we}=weekSpan(dy);
+  renderWeek(wk,css,we);
+  document.getElementById("weekNote").textContent=weekendNote(wk,we);
 
   document.getElementById("tideSection").style.display=LOC.tide?"":"none";
   const tide=LOC.tide?renderTides(d.tides,css,c.wind_gusts_10m,c.wind_speed_10m):null;
@@ -4566,7 +4604,7 @@ async function refresh(){
     const bd=yest.toLocaleDateString("en-CA",{timeZone:L.tz}).replace(/-/g,"");
     const stormsP=L.tropics?fetchStorms():Promise.resolve(null);
     const [wj,marine,tides,alerts,storms]=await Promise.all([
-      fetchJSON(`https://api.open-meteo.com/v1/forecast?latitude=${L.lat}&longitude=${L.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,wind_speed_10m_max,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=${encodeURIComponent(L.tz)}&forecast_days=7&minutely_15=precipitation&forecast_minutely_15=12`,10000),
+      fetchJSON(`https://api.open-meteo.com/v1/forecast?latitude=${L.lat}&longitude=${L.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,wind_speed_10m_max,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=${encodeURIComponent(L.tz)}&forecast_days=8&minutely_15=precipitation&forecast_minutely_15=12`,10000),
       L.marine?fetchJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${L.marine.lat}&longitude=${L.marine.lon}&daily=wave_height_max,wave_period_max&timezone=${encodeURIComponent(L.tz)}&forecast_days=1&length_unit=imperial`,6000).then(mj=>{
         const waveRaw=mj&&mj.daily&&mj.daily.wave_height_max&&mj.daily.wave_height_max[0];
         const periodRaw=mj&&mj.daily&&mj.daily.wave_period_max&&mj.daily.wave_period_max[0];

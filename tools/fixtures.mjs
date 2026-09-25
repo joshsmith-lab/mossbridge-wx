@@ -62,7 +62,13 @@ export const day = (d, tz) => {
   return `${p.year}-${p.month}-${p.day}`;
 };
 
-/** A week of plausible hourly and daily data shaped like the Open-Meteo response. */
+/**
+ * Eight days of plausible hourly and daily data shaped like the Open-Meteo response. The app
+ * asks for eight so next Sunday is there on a Sunday (weekSpan in index.html). Hourly runs the
+ * full eight too: day 8's high and low are read off its own 24 hours, and an empty slice turns
+ * them into -Infinity and Infinity.
+ */
+export const DAYS = 8;
 /** Which clock each location's forecast is written on, mirroring LOCS in index.html. */
 export const LOC_TZ = { mb: "America/New_York", sp: "America/New_York", den: "America/Denver" };
 
@@ -83,7 +89,7 @@ export function forecast(now, o, tz, loc = "mb") {
   const nowI = Math.floor((now.getTime() - start.getTime()) / 3600e3);
   const sine = (i) => o.baseTemp + Math.sin((((i % 24) - 5) / 24) * 2 * Math.PI) * 9;
   const lean = Number.isFinite(Number(o.nowTemp)) ? Number(o.nowTemp) - sine(nowI) : 0;
-  for (let i = 0; i < 24 * 7; i++) {
+  for (let i = 0; i < 24 * DAYS; i++) {
     const t = new Date(start.getTime() + i * 3600e3), hr = t.getHours();
     const diurnal = Math.sin(((hr - 5) / 24) * 2 * Math.PI);
     time.push(iso(t, tz));
@@ -107,7 +113,7 @@ export function forecast(now, o, tz, loc = "mb") {
     uv.push(Math.max(0, +(Math.max(0, diurnal) * o.uvMax).toFixed(1)));
   }
   const dtime = [], dmax = [], dmin = [], dcode = [], dpop = [], dsun = [], dset = [], duv = [], dwmax = [];
-  for (let d0 = 0; d0 < 7; d0++) {
+  for (let d0 = 0; d0 < DAYS; d0++) {
     const d = new Date(start.getTime() + d0 * 864e5);
     const sl = temp.slice(d0 * 24, (d0 + 1) * 24), pl = pop.slice(d0 * 24, (d0 + 1) * 24), cl = code.slice(d0 * 24, (d0 + 1) * 24);
     dtime.push(day(d, tz)); dmax.push(Math.max(...sl)); dmin.push(Math.min(...sl));
@@ -116,7 +122,7 @@ export function forecast(now, o, tz, loc = "mb") {
     duv.push(o.uvMax); dwmax.push(18);
   }
   if (o.dailyPop) o.dailyPop(dpop, dcode);
-  /* the hourly sine repeats one day seven times, which draws a flat week; a scenario can shape it */
+  /* the hourly sine repeats one day eight times, which draws a flat week; a scenario can shape it */
   if (o.dailyTemps) o.dailyTemps(dmax, dmin, dcode);
   return {
     current: {

@@ -135,8 +135,9 @@ node tools/rig.mjs heron                          # one animal, close up and at 
 
 `tools/shots.mjs` renders twelve scenarios (day, night, after midnight, storm, dusk,
 both family locations, an afternoon that should recommend today, a washout, a
-shoulder-season moderate-UV day, and two shaped weeks: a cool snap into a warm run, and a
-stormy week with 100% odds and a 101° high), writes
+shoulder-season moderate-UV day, and two shaped weeks: a cool snap into a warm run on a
+Thursday, and a stormy Sunday week with 100% odds and a 101° high, which is also the
+eight-column week), writes
 screenshots to `tools/shots/` and prints the generated copy, so wording changes
 are reviewable as text.
 
@@ -383,6 +384,23 @@ Established with Josh and enforced by `test.mjs`:
   but today is a button that opens its `dailyBrief`; the open day is washed under the hairline only,
   because a wash behind the chart boxed every label it crossed. Check it at 320 with a three-digit
   high and 100% odds.
+
+- **The weekend is marked, not described.** Josh is always after the weekend (September 2026).
+  With seven days the coming Sunday was missing on exactly one day of the week, Sunday itself,
+  when next Saturday is the last column. So the forecast asks for eight days, and `weekSpan()`
+  takes the Saturday and Sunday of the first weekend that still has a day after today: on
+  Saturday, today and tomorrow; on Sunday, next weekend, because today is the rest of the page.
+  The week shows seven columns, and an eighth only when that Sunday needs it, so the least
+  skilful day is off the chart the other six days. Every daily series is cut to the columns shown
+  in that one place, so the note and the tapped briefs never name a day the chart does not draw.
+  The weekend's columns get one quiet ink band above the hairline (`.wk-we`, and `.we` on the
+  columns as a hook), laid over the chart rather than under it so the labels' paper halos are
+  tinted with everything else and never box. It fades in as the pen reaches Saturday. No WEEKEND
+  tag: SAT and SUN are printed under it. The note beside the eyebrow is the weekend in numbers,
+  `Sat 84° · Sun 82° 60% rain`, odds from `WEEK_WET`, no adjectives and never "dry weekend",
+  which five to seven days out is a claim without its odds. An old seven-day cache on a Sunday
+  bands the Saturday it has and invents no Sunday. Eight columns on a 320 phone are 35px, so the
+  day names tighten their tracking there. Check a Sunday at 320 with three-digit highs.
 
 - **The skiff is a Carolina center console.** Josh picked it (September 2026) from four
   drawn directions, because it is the boat that actually goes out of Wrightsville: a cream

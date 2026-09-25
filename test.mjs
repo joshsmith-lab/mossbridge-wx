@@ -244,7 +244,8 @@ test("each location keeps its own clock", async () => {
   assert.match(html, /tz:"America\/New_York",tzLabel:"ET"/);
   assert.match(html, /tz:"America\/Denver",tzLabel:"MT"/);
   assert.doesNotMatch(html, /timezone=America%2FNew_York/);
-  assert.match(html, /&timezone=\$\{encodeURIComponent\(L\.tz\)\}&forecast_days=7/);
+  // eight days, so next weekend's Sunday is there on a Sunday (see weekSpan)
+  assert.match(html, /&timezone=\$\{encodeURIComponent\(L\.tz\)\}&forecast_days=8/);
   assert.match(html, /clock12\(new Date\(c\.time\)\)\+" "\+LOC\.tzLabel/);
   assert.match(html, /const bd=yest\.toLocaleDateString\("en-CA",\{timeZone:L\.tz\}\)/);
 
@@ -475,7 +476,8 @@ test("it snows in Shady Spring", async () => {
   assert.match(html, /code:wj\.hourly\.weather_code\.slice\(i0,i0\+24\)/);
   // and the odds word follows the odds: 35% snow is possible, not likely
   assert.match(html, /nightPop>=35&&nightSnow\?`Snow \$\{nightPop>=60\?"likely":"possible"\} \$\{nightWhen\}/);
-  assert.match(html, /isSnow\(dy\.weather_code\[wi\]\)\?"snow"/);
+  // and the weekend note calls a snowy Saturday's odds snow
+  assert.match(html, /\$\{Math\.round\(\+P\[i\]\)\}% \$\{isSnow\(w\)\?"snow":isIce\(w\)\?"ice":"rain"\}/);
 });
 
 test("and the rain is visible when it rains there", async () => {
@@ -635,7 +637,21 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /<path class="rv-line2" d="\$\{loLine\}"/);
   assert.match(html, /<path class="tline" d="\$\{hiLine\}"/);
   assert.match(html, /week:\{state:PRM\?"done":"armed",seen:false,anims:\[\]\}/);
-  assert.match(html, /class="wk-day" type="button" data-day="\$\{t\}" aria-expanded=/);
+  assert.match(html, /class="wk-day\$\{cls\}" type="button" data-day="\$\{t\}" aria-expanded=/);
+  // the weekend is marked, not described: a quiet ink band over its columns, laid over the
+  // chart (so the labels' paper halos never draw boxes on it), fading in as the pen reaches it
+  assert.match(html, /\.wk\{display:grid;grid-template-columns:repeat\(var\(--wk-n,7\),1fr\)\}/);
+  assert.match(html, /wrap\.style\.setProperty\("--wk-n",n\);/);
+  assert.match(html, /const cls=we\.includes\(i\)\?" we":"";/);
+  assert.match(html, /<path class="wk-we" d="M/);
+  assert.match(html, /fill="\$\{css\.ink\}" opacity="\.05"\$\{rvAt\(wx0,"fade"\)\}/);
+  assert.match(html, /\$\{marks\}\n\s*\$\{weBand\}/);
+  assert.doesNotMatch(html, />WEEKEND</);
+  // eight columns on a 320 phone are 35px, so the day names tighten their tracking to fit
+  assert.match(html, /@media \(max-width:359px\)\{\.wk\.wk8 \.wk-name\{letter-spacing:\.02em\}\}/);
+  assert.match(html, /wrap\.classList\.toggle\("wk8",n>7\);/);
+  // and the chart, the briefs and the note all read the same days, cut once
+  assert.match(html, /const \{wk,we\}=weekSpan\(dy\);\n\s*renderWeek\(wk,css,we\);\n\s*document\.getElementById\("weekNote"\)\.textContent=weekendNote\(wk,we\);/);
   // the rain odds stay a number per day: a line through seven daily chances invents the nights between
   assert.match(html, /They are deliberately not a third line/);
   // and the week says only what the picture does not: no dates and no chevrons; the odds are
@@ -646,13 +662,17 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /return\{t,has,pop,sky,code,likely,odds:has&&\(likely\|\|sky&&isWet\(code\)\)\}/);
   // one threshold for the printed odds and the tapped brief, so the column and the sentence agree
   assert.match(html, /const WEEK_H=132,WEEK_WET=35;/);
-  assert.match(html, /else if\(pop>=WEEK_WET\)note="A passing shower is possible\."/);
-  // a missing sky is no glyph, never a sun; a week with no odds at all is not "mostly dry"
+  assert.match(html, /else if\(pop>=WEEK_WET\)note="Maybe a passing shower\."/);
+  // a missing sky is no glyph, never a sun; a week with no odds at all is not "mostly dry",
+  // and the note never calls a weekend dry (see the weekend test)
   assert.match(html, /\$\{sky\?icon\(code,16\):""\}/);
-  assert.match(html, /!weekOdds\?"rain odds unavailable":wi<0\?"mostly dry"/);
-  // the tapped brief says nothing it was not told: no invented sky, no easy day on missing odds
-  assert.match(html, /return `\$\{feel\}\$\{hasSky\?`, with \$\{sky\}`:""\}\. \$\{note\}`;/);
-  assert.match(html, /else if\(!hasPop\)note="The rain odds are unavailable\.";/);
+  assert.match(html, /if\(!P\.some\(known\)\)return "rain odds unavailable";/);
+  assert.doesNotMatch(html, /"mostly dry"|looks most likely/);
+  // the tapped brief says nothing it was not told: no invented sky, no easy day on missing odds,
+  // and an easy day is its sky and nothing more
+  assert.match(html, /return `\$\{feel\}\$\{hasSky\?`, \$\{sky\}`:""\}\.\$\{note\?" "\+note:""\}`;/);
+  assert.match(html, /else if\(!hasPop\)note="Rain odds unavailable\.";/);
+  assert.doesNotMatch(html, /Most of the day should feel easy outside|It may turn breezy/);
   assert.match(html, /moonPhaseIcon/);
   assert.doesNotMatch(html, /phaseName/);
   assert.match(html, /flight-wing/);
@@ -662,6 +682,92 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /id="sunTitle">Sun &amp; heat</);
   assert.doesNotMatch(html, />UV · sun exposure</);
   assert.doesNotMatch(html, />Evening outlook</);
+});
+
+test("the weekend is always in the week, and it is the one coming", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const lift = (re) => { const m = html.match(re); assert.ok(m, `${re} should be extractable`); return m[0]; };
+  const ctx = vm.createContext({});
+  vm.runInContext([
+    lift(/const SNOW=\[[\s\S]*?const isWet=w=>WETC\.includes\(w\);/),
+    lift(/const dayName=s=>[^\n]*;/),
+    lift(/const WEEK_H=132,WEEK_WET=35;/),
+    html.slice(html.indexOf("function weekSpan("), html.indexOf("function renderWeek(")),
+    "globalThis.weekSpan=weekSpan;globalThis.weekendNote=weekendNote;",
+  ].join("\n"), ctx);
+  const daily = (start, n = 8, o = {}) => {
+    const time = [], d = new Date(start + "T12:00");
+    for (let i = 0; i < n; i++) { time.push(d.toLocaleDateString("en-CA")); d.setDate(d.getDate() + 1); }
+    return { time, temperature_2m_max: time.map((_, i) => 70 + i), temperature_2m_min: time.map((_, i) => 55 + i),
+      weather_code: time.map((_, i) => o.code?.[i] ?? 1), precipitation_probability_max: time.map((_, i) => (o.pop ? o.pop[i] : 10)) };
+  };
+  // 2026-09-21 is a Monday: [first day, the weekend's columns, how many days the week shows]
+  for (const [start, we, n] of [
+    ["2026-09-21", [5, 6], 7], ["2026-09-22", [4, 5], 7], ["2026-09-23", [3, 4], 7], ["2026-09-24", [2, 3], 7],
+    ["2026-09-25", [1, 2], 7], ["2026-09-26", [0, 1], 7], ["2026-09-27", [6, 7], 8],
+  ]) {
+    const r = ctx.weekSpan(daily(start));
+    assert.deepEqual([...r.we], we, start + ": the weekend's columns");
+    assert.equal(r.wk.time.length, n, start + ": days shown");
+    for (const k of ["temperature_2m_max", "temperature_2m_min", "weather_code", "precipitation_probability_max"])
+      assert.equal(r.wk[k].length, n, `${start}: ${k} is cut to the same days`);
+  }
+  // an old seven-day cache on a Sunday marks the Saturday it has and invents no Sunday
+  const old = ctx.weekSpan(daily("2026-09-27", 7));
+  assert.deepEqual([...old.we], [6]);
+  assert.equal(old.wk.time.length, 7);
+
+  // the note is the weekend in numbers, and only the part of it still to come
+  const note = (start, n, o) => { const { wk, we } = ctx.weekSpan(daily(start, n, o)); return ctx.weekendNote(wk, we); };
+  assert.equal(note("2026-09-24"), "Sat 72° · Sun 73°");
+  assert.equal(note("2026-09-26"), "Sun 71°", "on Saturday today is the page above");
+  assert.equal(note("2026-09-27"), "Sat 76° · Sun 77°", "on Sunday it is next weekend");
+  assert.equal(note("2026-09-27", 7), "Sat 76°", "a seven-day cache names only the Saturday it has");
+  // odds from WEEK_WET, the line the columns print them from, named by what that day's sky is doing
+  assert.equal(note("2026-09-24", 8, { pop: [10, 10, 34, 60, 10, 10, 10, 10] }), "Sat 72° · Sun 73° 60% rain");
+  assert.equal(note("2026-09-24", 8, { pop: [10, 10, 35, 70, 10, 10, 10, 10], code: [1, 1, 73, 66] }), "Sat 72° 35% snow · Sun 73° 70% ice");
+  // a missing chance prints no odds; a week without any says so rather than passing for dry
+  assert.equal(note("2026-09-24", 8, { pop: [10, 10, null, 80, 10, 10, 10, 10] }), "Sat 72° · Sun 73° 80% rain");
+  assert.equal(note("2026-09-24", 8, { pop: Array(8).fill(null) }), "rain odds unavailable");
+  // and a forecast too short to reach the weekend says nothing about it
+  assert.equal(note("2026-09-21", 3), "");
+  // no adjectives: five to seven days out, "dry" is a claim without its odds
+  const noteCode = html.slice(html.indexOf("function weekendNote("), html.indexOf("function renderWeek("));
+  assert.doesNotMatch(noteCode, /dry|nice|lovely|great/i);
+});
+
+test("a tapped day says its feel and its sky, and a note only when there is something to plan", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const lift = (re) => { const m = html.match(re); assert.ok(m, `${re} should be extractable`); return m[0]; };
+  const ctx = vm.createContext({});
+  vm.runInContext([
+    lift(/const SNOW=\[[\s\S]*?const isWet=w=>WETC\.includes\(w\);/),
+    lift(/const WEEK_H=132,WEEK_WET=35;/),
+    html.slice(html.indexOf("function dailyBrief("), html.indexOf("/* ── the week")),
+    "globalThis.dailyBrief=dailyBrief;",
+  ].join("\n"), ctx);
+  const brief = (high, code, pop, wind = 10) => ctx.dailyBrief({ temperature_2m_max: [high], weather_code: [code],
+    precipitation_probability_max: [pop], wind_speed_10m_max: [wind] }, 0);
+  assert.equal(brief(85, 0, 10), "Warm, sunny.");
+  assert.equal(brief(75, 1, 10), "Mild, mostly sunny.");
+  assert.equal(brief(75, 2, 10), "Mild, partly sunny.");
+  assert.equal(brief(60, 3, 10), "Cool, mostly cloudy.");
+  assert.equal(brief(60, 45, 10), "Cool, foggy.");
+  assert.equal(brief(95, 1, 10), "Hot, mostly sunny. Keep the middle of the day short.");
+  assert.equal(brief(84, 95, 70), "Warm, storms possible. Watch for alerts.");
+  assert.equal(brief(30, 66, 70), "Chilly, freezing rain. Give the roads time.");
+  assert.equal(brief(30, 75, 70), "Chilly, heavy snow. Plan on slow going.");
+  assert.equal(brief(30, 77, 40), "Chilly, snow grains. Plan on slow going.");
+  assert.equal(brief(30, 73, 40), "Chilly, snow. Plan on slow going.");
+  assert.equal(brief(70, 63, 80), "Mild, rain at times. Expect a wet stretch.");
+  assert.equal(brief(70, 81, 50), "Mild, showers. Expect a wet stretch.");
+  assert.equal(brief(70, 53, 30), "Mild, drizzle. Expect a wet stretch.");
+  assert.equal(brief(70, 3, 60), "Mild, mostly cloudy. Expect a wet stretch.");
+  assert.equal(brief(70, 3, 40), "Mild, mostly cloudy. Maybe a passing shower.");
+  assert.equal(brief(70, 2, 10, 22), "Mild, partly sunny. Could get windy.");
+  // a missing sky or chance is left unsaid: no invented sun, no easy day on missing odds
+  assert.equal(brief(70, null, 10), "Mild.");
+  assert.equal(brief(70, 2, null), "Mild, partly sunny. Rain odds unavailable.");
 });
 
 test("Denver is a parked travel scene: kept as the template, out of the rotation", async () => {
