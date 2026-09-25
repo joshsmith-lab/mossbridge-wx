@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v73/);
+  assert.match(worker, /mbwx-shell-v74/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -1502,28 +1502,28 @@ test("installable assets exist", async () => {
     access(new URL("icon-512.png", root)),
   ]);
   // each PNG is the size its name and the manifest say (IHDR width and height), exported from
-  // the one master drawn on the home screen's 180px grid
+  // the one master, icon.svg
   for (const s of [180, 512]) {
     const png = await readFile(new URL(`icon-${s}.png`, root));
     assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [s, s], `icon-${s}.png is ${s}x${s}`);
   }
   const svg = await readFile(new URL("icon.svg", root), "utf8");
-  assert.match(svg, /viewBox="0 0 180 180"/);
-  // the original's flat mark and colours, one 4px weight, round ends, the sun on its path
-  assert.match(svg, /<rect width="180" height="180" fill="#12313F"\/>/);
-  assert.match(svg, /stroke-width="4" stroke-linecap="round"/);
-  // the arc's four ends sit on the one ellipse whose top is the sun's centre (90,65), and the two
-  // inner ends stop 25 from it: the sun's r 20, the round cap's 2, and 3 clear
-  const n = svg.match(/<path d="M([\d.]+) ([\d.]+) A64 89\.7 0 0 1 ([\d.]+) ([\d.]+) M([\d.]+) ([\d.]+) A64 89\.7 0 0 1 ([\d.]+) ([\d.]+)" stroke="#F5C445"\/>/).slice(1).map(Number);
-  for (let i = 0; i < 8; i += 2) assert.ok(Math.abs(((n[i] - 90) / 64) ** 2 + ((n[i + 1] - 154.7) / 89.7) ** 2 - 1) < 1e-3, "the arc's top is on the sun's centre");
-  for (const i of [2, 4]) assert.ok(Math.abs(Math.hypot(n[i] - 90, n[i + 1] - 65) - 25) < 0.05, "the arc stops 3px clear of the sun");
-  assert.match(svg, /<line x1="24" y1="148" x2="156" y2="148" stroke="#7FB3C9"\/>/);
-  assert.match(svg, /<circle cx="90" cy="65" r="20" fill="#F5C445"\/>/);
-  assert.doesNotMatch(svg, /<filter|<image|<text|gradient/i, "the icon stays flat");
+  // the sun half-set on the horizon under the header's own rays, in the Mark's plum dusk, with
+  // the Mark's wavelets drawn once and mirrored. The master carries everything it needs (the grain
+  // is one embedded image), and no mask is made of <use>, which CoreSVG draws as empty
+  assert.match(svg, /viewBox="0 0 1024 1024"/);
+  assert.match(svg, /<stop offset="0" stop-color="#4A3F6B"\/>/, "the Mark's plum at the top of the sky");
+  assert.match(svg, /<g transform="matrix\(-1 0 0 1 1024 0\)"><path d="M 128 716 q 40 -14 80 0"/, "the wavelets, mirrored");
+  assert.doesNotMatch(svg, /<mask\b[^>]*>(?:(?!<\/mask>)[\s\S])*<use/, "masks drawn out in full");
+  assert.doesNotMatch(svg, /href="(?!#|data:image\/png;base64,)/, "no outside references");
+  assert.doesNotMatch(svg, /<text/, "no letters");
+  // and it is built by tools/icon/build.mjs from C2_SHIP, the plum sky and the mirrored wavelets
+  const gen = await readFile(new URL("tools/icon/gen.mjs", root), "utf8");
+  assert.match(gen, /export const C2_SHIP = merge\(C2, C2_SHIP_PATCH\);/);
 });
 
 // the phone never loads icon.svg: it loads the PNGs, so the export is checked too. 8-bit RGB,
-// non-interlaced, which is what the Chrome export writes
+// non-interlaced, which is what tools/icon.mjs writes
 const rgbPng = (b) => {
   assert.deepEqual([b[24], b[25], b[28]], [8, 2, 0], "8-bit RGB, not interlaced");
   const w = b.readUInt32BE(16), h = b.readUInt32BE(20), idat = [];
@@ -1537,11 +1537,30 @@ const rgbPng = (b) => {
   return { at: (x, y) => px.subarray((y * w + x) * 3, (y * w + x) * 3 + 3).toString("hex"),
     colours: new Set(Array.from({ length: w * h }, (_, i) => px.subarray(i * 3, i * 3 + 3).toString("hex"))).size };
 };
-test("the shipped icon is the refined export, not the stair-stepped original", async () => {
-  const icon = rgbPng(await readFile(new URL("icon-180.png", root)));
-  assert.ok(icon.colours > 3, "anti-aliased: the original had exactly three colours");
-  assert.equal(icon.at(90, 65), "f5c445");
-  assert.equal(icon.at(90, 148), "7fb3c9");
-  for (const [x, y] of [[68, 70], [111, 70]]) assert.equal(icon.at(x, y), "12313f", "the arc stops short of the sun");
-  for (const [x, y] of [[67, 62], [112, 62]]) assert.equal(icon.at(x, y), "12313f", "the arc's top is not back across the sun");
+test("the shipped icon is the export of icon.svg", async () => {
+  // both sizes, sampled at the same places in the tile: the sun, the water under it, the plum at
+  // the top of the sky and the top ray
+  for (const n of [180, 512]) {
+    const icon = rgbPng(await readFile(new URL(`icon-${n}.png`, root)));
+    const rgb = (x, y) => icon.at(Math.round(x * n / 180), Math.round(y * n / 180)).match(/../g).map((h) => parseInt(h, 16));
+    assert.ok(icon.colours > 3, `icon-${n}: anti-aliased, not the three-colour original`);
+    const [sr, sg, sb] = rgb(90, 70), [wr, wg, wb] = rgb(90, 150), [kr, kg, kb] = rgb(90, 10), [yr, yg, yb] = rgb(90, 30);
+    assert.ok(sr > 220 && sg > 170 && sb < 120, `icon-${n}: the sun, above the horizon`);
+    assert.ok(wb > wr && wr < 90 && wg < 90, `icon-${n}: the water, dark blue under it`);
+    assert.ok(kr > kg && kb > kg, `icon-${n}: the sky, dusk purple at the top`);
+    assert.ok(yr > 220 && yg > 200 && yb > 160, `icon-${n}: the sun's top ray, cream`);
+  }
+  // the export renders the master once at 1024 and area-averages it down: a straight 180 render
+  // leaves a pixel of khaki between the sun's ink and its lit rim
+  const exporter = await readFile(new URL("tools/icon.mjs", root), "utf8");
+  assert.match(exporter, /const SRC = 1024;/);
+  assert.match(exporter, /encode\(n, n, areaAverage\(full, n\)\)/);
+});
+
+test("icon.svg is exactly what tools/icon builds", async () => {
+  // no Chrome needed: the master is a string, built from C2_SHIP with the grain it already carries
+  const svg = await readFile(new URL("icon.svg", root), "utf8");
+  const grain = svg.match(/<image id="grainI" href="(data:image\/png;base64,[^"]+)"/)[1];
+  const { master } = await import(new URL("tools/icon/gen.mjs", root));
+  assert.equal(master(grain), svg, "rebuild with node tools/icon/build.mjs, then node tools/icon.mjs");
 });
