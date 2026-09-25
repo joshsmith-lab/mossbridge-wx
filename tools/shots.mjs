@@ -80,13 +80,42 @@ const CASES = [
   { name: "14-week-porters-neck", loc: "mb", when: "2026-09-24T17:10:00",
     o: { baseTemp: 66, nowTemp: 68, feels: 68, rh: 70, isDay: 1, code: 3, cloud: 70, nowWind: 15, nowDir: 5, nowGust: 30, nowUv: .6, uvMax: 6,
       windAmp: 8, gustAmp: 14, sunrise: "07:02", sunset: "19:06",
-      popCurve: () => 4, dailyPop: (p) => p.splice(0, 7, 20, 4, 1, 0, 1, 6, 5),
-      dailyTemps: (hi, lo, c) => { hi.splice(0, 7, 70, 67, 80, 82, 82, 84, 85); lo.splice(0, 7, 63, 57, 53, 59, 61, 68, 72); c.splice(0, 7, 61, 3, 2, 1, 2, 3, 3); } } },
-  // a wet, stormy week: three-digit heat, 100% odds, a storm and a washout next to dry days
+      popCurve: () => 4, dailyPop: (p) => p.splice(0, 8, 20, 4, 1, 0, 1, 6, 5, 10),
+      dailyTemps: (hi, lo, c) => { hi.splice(0, 8, 70, 67, 80, 82, 82, 84, 85, 83); lo.splice(0, 8, 63, 57, 53, 59, 61, 68, 72, 70); c.splice(0, 8, 61, 3, 2, 1, 2, 3, 3, 2); } } },
+  // a wet, stormy week: three-digit heat, 100% odds, a storm and a washout next to dry days.
+  // A Sunday, so it is also the eight-column week: next Saturday and Sunday are days 7 and 8
   { name: "15-wet-week-shady-spring", loc: "sp", when: "2026-08-02T12:20:00",
     o: { baseTemp: 84, nowTemp: 90, feels: 97, rh: 70, isDay: 1, code: 2, cloud: 40, nowWind: 6, nowDir: 250, nowGust: 12, nowUv: 8, uvMax: 9,
-      windAmp: 6, gustAmp: 10, popCurve: () => 10, dailyPop: (p) => p.splice(0, 7, 35, 85, 100, 45, 10, 0, 65),
-      dailyTemps: (hi, lo, c) => { hi.splice(0, 7, 96, 101, 88, 84, 83, 86, 90); lo.splice(0, 7, 74, 76, 71, 66, 64, 66, 70); c.splice(0, 7, 2, 95, 63, 80, 1, 0, 81); } } },
+      windAmp: 6, gustAmp: 10, popCurve: () => 10, dailyPop: (p) => p.splice(0, 8, 35, 85, 100, 45, 10, 0, 65, 20),
+      dailyTemps: (hi, lo, c) => { hi.splice(0, 8, 96, 101, 88, 84, 83, 86, 90, 87); lo.splice(0, 8, 74, 76, 71, 66, 64, 66, 70, 68); c.splice(0, 8, 2, 95, 63, 80, 1, 0, 81, 2); } },
+    expect: { cols: 8, weekend: ["Sat", "Sun"] } },
+  // a Saturday in boat season: the weekend is today and tomorrow, so the note names only Sunday
+  { name: "16-saturday-porters-neck", loc: "mb", when: "2026-09-26T10:30:00",
+    o: { baseTemp: 74, nowTemp: 75, feels: 75, rh: 58, isDay: 1, code: 1, cloud: 18, nowWind: 7, nowDir: 60, nowGust: 12, nowUv: 4.6, uvMax: 5.8,
+      windAmp: 7, gustAmp: 10, sunrise: "07:03", sunset: "19:02", popCurve: () => 6, dailyPop: (p) => p.splice(0, 7, 8, 45, 20, 10, 5, 10, 15),
+      dailyTemps: (hi, lo, c) => { hi.splice(0, 7, 79, 81, 77, 75, 78, 80, 82); lo.splice(0, 7, 64, 67, 62, 58, 60, 63, 65); c.splice(0, 7, 1, 80, 3, 2, 1, 2, 2); } },
+    expect: { cols: 7, weekend: ["Today", "Sun"], note: /^Sun \d+° 45% rain$/ } },
+  // a Saturday in mid-November: off season, so the coast gets the outside call and no seas are asked for
+  { name: "17-off-season-saturday-porters-neck", loc: "mb", when: "2026-11-14T11:15:00",
+    o: { baseTemp: 58, nowTemp: 61, feels: 61, rh: 55, isDay: 1, code: 2, cloud: 35, nowWind: 9, nowDir: 330, nowGust: 15, nowUv: 2.9, uvMax: 3.2,
+      windAmp: 7, gustAmp: 10, sunrise: "06:48", sunset: "17:09", popCurve: () => 5, dailyPop: (p) => p.fill(10),
+      dailyTemps: (hi, lo, c) => { hi.splice(0, 7, 62, 60, 58, 62, 65, 61, 57); lo.splice(0, 7, 46, 43, 40, 44, 49, 45, 39); } },
+    // and the card says "Sunscreen if you're out a while." at 2.9: the 3.1 still to come crosses into
+    // moderate, so its ring stays, or the only UV on the page read LOW under a sunscreen sentence
+    expect: { cols: 7, weekend: ["Today", "Sun"], out: "Outside · Porters Neck", marine: 0, detail: 0,
+      sun: "Sunscreen if you're out a while.", uvBar: /^UV 2\.9 now, low, peaking at 3\.1 around 12 p\.m\.$/ } },
+  // a cold, clear January morning on the coast: the outside call is iffy on the cold, and the sun card steps aside
+  { name: "18-january-porters-neck", loc: "mb", when: "2027-01-14T08:40:00",
+    o: { baseTemp: 32, nowTemp: 28, feels: 20, rh: 58, isDay: 1, code: 0, cloud: 4, nowWind: 11, nowDir: 340, nowGust: 19, nowUv: 0.6, uvMax: 2.4,
+      windAmp: 7, gustAmp: 10, sunrise: "07:22", sunset: "17:25", popCurve: () => 3, dailyPop: (p) => p.fill(5),
+      dailyTemps: (hi, lo, c) => { hi.splice(1, 6, 44, 51, 55, 47, 40, 36); lo.splice(1, 6, 26, 33, 39, 31, 25, 21); c.splice(1, 6, 1, 2, 3, 3, 1, 0); } },
+    expect: { out: "Outside · Porters Neck", call: "Iffy", why: /^Cold, feels \d+°$/, sun: "(steps aside)", marine: 0 } },
+  // boat season with the marine run answering but carrying no seas: never a go, and the line says unavailable
+  { name: "19-no-seas-porters-neck", loc: "mb", when: "2026-09-15T10:10:00",
+    o: { baseTemp: 76, nowTemp: 77, feels: 78, rh: 62, isDay: 1, code: 1, cloud: 20, nowWind: 6, nowDir: 190, nowGust: 10, nowUv: 5.2, uvMax: 6.4,
+      windAmp: 6, gustAmp: 8, sunrise: "06:56", sunset: "19:21", wave: null, popCurve: () => 6, dailyPop: (p) => p.fill(10),
+      dailyTemps: (hi, lo, c) => { hi.splice(1, 6, 83, 84, 81, 79, 82, 84); lo.splice(1, 6, 68, 70, 67, 64, 66, 69); c.splice(1, 6, 1, 2, 2, 1, 1, 2); } },
+    expect: { out: "On the water · Figure 8", call: "Iffy", detail: /seas unavailable/ } },
 ];
 
 const cases = ONLY.length ? CASES.filter((c) => ONLY.some((q) => c.name.includes(q))) : CASES;
@@ -110,6 +139,9 @@ for (const cs of cases) {
     const errs = [];
     page.on("pageerror", (e) => errs.push(String(e)));
     page.on("console", (m) => { if (m.type() === "error") errs.push("console: " + m.text()); });
+    // off season the seas are not asked for at all, so count the asks rather than the answers
+    let marineAsks = 0;
+    page.on("request", (r) => { if (r.url().includes("marine-api.open-meteo.com")) marineAsks++; });
 
     await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: "domcontentloaded" });
     await page.evaluate(() => document.fonts.ready).catch(() => {});
@@ -132,12 +164,30 @@ for (const cs of cases) {
       } catch {}
       const copy = await page.evaluate(() => {
         const T = (id) => { const e = document.getElementById(id); return e ? e.textContent.trim() : null; };
+        /* what is on screen: the compass point and the bite windows' framing are spoken only */
+        const seen = (el) => { if (!el) return null; const k = el.cloneNode(true); k.querySelectorAll(".sr-only").forEach((x) => x.remove()); return k.textContent.replace(/\s+/g, " ").trim(); };
+        const shown = (id) => { const e = document.getElementById(id); return !e || e.hidden ? null : seen(e); };
+        const sunOff = document.getElementById("sunCard")?.hidden;
         return {
           verdict: T("verdict"), condition: T("condLabel"), stamp: T("stamp"),
-          chips: [...document.querySelectorAll(".chip")].map((c) => c.textContent.trim()),
-          water: T("waterLead"), wind: T("wWind"), window: T("wWindow"), fish: T("wFish"),
-          sun: T("uvLead"), tonight: T("eveLead"),
-          tideNote: T("tideNote"), hourlyNote: T("hourlyNote"), weekNote: T("weekNote"),
+          feels: document.getElementById("feelsRow")?.hidden ? null : T("feels"),
+          chips: [...document.querySelectorAll(".chip")].map(seen),
+          nowcast: document.getElementById("nowcast")?.classList.contains("on") ? T("ncText") : null,
+          // the outside call: its title, the word and the when beside it, the one why line, and the lines under it
+          out: T("outTitle"),
+          call: seen(document.querySelector("#waterLead .call-word")),
+          when: seen(document.querySelector("#waterLead .call-when")),
+          why: shown("callWhy"),
+          detail: [...document.querySelectorAll("#outSection .out-line:not([hidden])")].map(seen),
+          // the sun card steps aside when nothing is left today; the bar speaks its reading
+          sun: sunOff ? "(steps aside)" : T("uvLead"),
+          uvBar: sunOff || document.getElementById("uvDetails")?.style.display === "none"
+            ? null : document.getElementById("uvSvg")?.getAttribute("aria-label"),
+          tonight: T("eveLead"),
+          tideNote: getComputedStyle(document.getElementById("tideSection")).display === "none" ? null : T("tideNote"),
+          hourlyNote: T("hourlyNote"), weekNote: T("weekNote"),
+          // the week's days, with the weekend's banded columns in brackets
+          week: [...document.querySelectorAll("#weekRows .wk-day")].map((d) => { const n = d.querySelector(".wk-name").textContent; return d.classList.contains("we") ? `[${n}]` : n; }).join(" "),
         };
       });
       console.log(`\n### ${cs.name}`);
@@ -179,6 +229,21 @@ for (const cs of cases) {
       if (cs.name === "09-after-midnight-porters-neck" && !/before morning/.test(copy.tonight || "")) {
         failures++; console.log(`!! after-midnight Tonight card describes the wrong night (${copy.tonight})`);
       }
+      /* what a scenario is there to show: the week's columns and its banded days, the call's
+         title, word and lines, and whether the seas were asked for at all */
+      const ex = cs.expect || {}, days = copy.week.split(" "), fail = (m) => { failures++; console.log(`!! ${cs.name}: ${m}`); };
+      if (ex.cols && days.length !== ex.cols) fail(`${days.length} week columns, expected ${ex.cols}`);
+      if (ex.weekend) { const we = days.filter((d) => d.startsWith("[")).map((d) => d.slice(1, -1));
+        if (we.join() !== ex.weekend.join()) fail(`weekend banded ${we.join(" ") || "nowhere"}, expected ${ex.weekend.join(" ")}`); }
+      if (ex.note && !ex.note.test(copy.weekNote || "")) fail(`week note "${copy.weekNote}"`);
+      if (ex.out && copy.out !== ex.out) fail(`call titled "${copy.out}", expected "${ex.out}"`);
+      if (ex.call && copy.call !== ex.call) fail(`call "${copy.call}", expected "${ex.call}"`);
+      if (ex.why && !ex.why.test(copy.why || "")) fail(`why "${copy.why}"`);
+      if (typeof ex.detail === "number" && copy.detail.length !== ex.detail) fail(`${copy.detail.length} detail lines, expected ${ex.detail}`);
+      if (ex.detail instanceof RegExp && !copy.detail.some((l) => ex.detail.test(l))) fail(`detail ${JSON.stringify(copy.detail)}`);
+      if (ex.sun && copy.sun !== ex.sun) fail(`sun card "${copy.sun}", expected "${ex.sun}"`);
+      if (ex.uvBar && !ex.uvBar.test(copy.uvBar || "")) fail(`sun bar "${copy.uvBar}"`);
+      if ("marine" in ex && marineAsks !== ex.marine) fail(`${marineAsks} marine requests, expected ${ex.marine}`);
     }
     if (errs.length) { failures++; console.log(`!! ${cs.name} ${vp.tag}: ${errs.join(" | ")}`); }
     await ctx.close();
@@ -202,8 +267,10 @@ for (const cs of cases) {
     scene: document.getElementById("sceneSvg").getAttribute("aria-label"),
     card: document.getElementById("outTitle").textContent,
     window: document.getElementById("wWindowLbl").textContent,
+    // the sun bar is drawn only from a reading, so its scale words go with it
+    uvScale: getComputedStyle(document.getElementById("uvDetails")).display,
   }));
-  if (shell.tide !== "none" || !shell.scene.includes("Appalachian") || !shell.card.includes("farm") || shell.window !== "best time to piddle") {
+  if (shell.tide !== "none" || !shell.scene.includes("Appalachian") || !shell.card.includes("farm") || shell.window !== "best time to piddle" || shell.uvScale !== "none") {
     failures++; console.log(`!! location-correct loading shell: ${JSON.stringify(shell)}`);
   }
   if (errs.length) { failures++; console.log(`!! loading hourly explorer: ${errs.join(" | ")}`); }
@@ -212,4 +279,4 @@ for (const cs of cases) {
 await browser.close();
 server.close();
 console.log(`\nwrote screenshots to ${OUT}`);
-if (failures) { console.error(`${failures} scenario(s) logged page errors`); process.exit(1); }
+if (failures) { console.error(`${failures} problem(s): page errors or a scenario that did not show what it is there for`); process.exit(1); }
