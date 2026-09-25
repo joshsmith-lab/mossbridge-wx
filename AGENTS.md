@@ -363,7 +363,8 @@ Established with Josh and enforced by `test.mjs`:
   and went between the phone and the desktop. Each label gets a box in chart units (screen
   pixels, off the mono face's .6em advance) and goes down in priority order against what is
   already drawn: the bars and key dots, then the high, now and the low, then the regular
-  hours where they have room, then the rain odds, then the AFTER DARK tag. The high always
+  hours where they have room, then the rain odds, then the moon on the night band (the words
+  AFTER DARK went: the band and the moon already say it, so the moon has only its own box). The high always
   keeps the space above its dot; now or the low take the space under their own dot when the
   space above is taken. Check it at 320, 375, 393 and 430, not only at one width.
 
@@ -399,8 +400,9 @@ chart is drawn along its own time axis: a pen runs the line with a small light a
 (coloured by the hour it is passing on the hourly, a glint on the water on the tide) and a
 comet of glow trailing it that gathers as the pen speeds up and folds away as it lands, the fill comes in behind it, the rain bars rise as it passes, each label
 and dot arrives as the pen reaches it, the high rings once, and the skiff settles onto the
-water at now with a ripple. The hourly takes about 2.3s on a phone and the tide follows
-0.4s behind it when both are on screen. All of it is in `REVEAL` in index.html.
+water at now with a ripple. The hourly takes about 2.3s on a phone. Charts on screen together
+draw down the page: the week follows the hourly by 0.4s and the tide follows whichever chart
+above it is still drawing (`REVEAL`'s keys are in page order). All of it is in `REVEAL` in index.html.
 
 - **It plays to someone.** It waits until the chart is at least 30% on screen, so on a
   phone the tide plays when you scroll to it. It waits for the live forecast, or 0.9s when

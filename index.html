@@ -56,6 +56,7 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .app>*:nth-child(2){animation-delay:.07s}.app>*:nth-child(3){animation-delay:.13s}
 .app>*:nth-child(4){animation-delay:.19s}.app>*:nth-child(5){animation-delay:.25s}
 .app>*:nth-child(6){animation-delay:.31s}.app>*:nth-child(7){animation-delay:.37s}
+.app>*:nth-child(8){animation-delay:.43s}
 
 /* ── sky ─────────────────────────────────────────────── */
 /* The sunrise and sunset times sit on open sky, whose colour changes all day, so their
@@ -379,6 +380,8 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .chip{font-family:var(--mono);font-size:11.5px;padding:5px 11px;border-radius:999px;
   background:var(--chip-bg,rgba(16,40,50,.09));backdrop-filter:blur(6px);display:flex;align-items:center;gap:5px}
 .chip svg{display:block;opacity:.7}
+/* the chip's arrow is the reading, so it wears the chip's ink rather than the card's water blue */
+.chip .vane{color:currentColor;opacity:.8}
 
 .alert-strip{display:none;background:var(--marker);color:#FFF7F3;font-family:var(--mono);font-size:11.5px;
   letter-spacing:.11em;text-transform:uppercase;padding:10px 13px;border-radius:11px;margin-bottom:15px;
@@ -463,8 +466,6 @@ html:not([data-theme=dark]) .rv-core{display:none}
   border-bottom:1px solid var(--line);align-items:baseline}
 .storm-row:last-child{border-bottom:none}
 .storm-row .s-name{font-weight:600;font-size:16.5px;letter-spacing:-.012em;display:flex;align-items:center;gap:7px}
-.storm-row .s-name em{font-style:normal;color:var(--marker);font-size:11.5px;font-family:var(--mono);
-  letter-spacing:.05em;text-transform:uppercase;border:1px solid var(--marker);border-radius:4px;padding:1px 5px}
 .storm-row .swirl{color:var(--marker);flex:0 0 auto;display:flex}
 .storm-row .swirl svg{display:block;animation:spin 9s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -510,7 +511,7 @@ html:not([data-theme=dark]) .rv-core{display:none}
 /* The chart on top, then the same quiet axis as the hourly chart under a hairline: the day,
    its sky, and the odds only where there is rain to talk about. The chart is drawn over the
    gap each column leaves at its top, so it lands without measuring anything. */
-.week{padding:12px 20px 0}
+.week{padding:28px 20px 0}
 .wk-wrap{position:relative}
 .wk{display:grid;grid-template-columns:repeat(7,1fr)}
 .wk-day{position:relative;display:flex;flex-direction:column;align-items:center;min-width:0;padding:0 0 6px;margin:0;
@@ -565,8 +566,10 @@ html[data-theme=dark] .moon-phase .moon-rim{display:none}
   color:#9A6B20;white-space:nowrap}
 html[data-theme=dark] .gold-key{color:#E8BC69}
 
+/* one quiet credit: Open-Meteo's data is CC BY 4.0 and asks for it */
 .foot{padding:32px 20px 0;font-family:var(--mono);font-size:10px;color:var(--ink-faint);line-height:1.6}
-.foot-note{display:block;margin-top:9px}
+.foot a{color:inherit;text-decoration:none}
+.foot a:hover,.foot a:focus-visible{text-decoration:underline}
 .skel{display:inline-block;min-width:2.2em;border-radius:5px;background:var(--wash);color:transparent!important;
   animation:shimmer 1.5s ease-in-out infinite}
 .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;
@@ -616,7 +619,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
     <div class="big-temp" id="bigTemp"><span class="skel">00</span><span class="deg">°</span></div>
     <div class="now-meta">
       <div id="condLabel"><span class="skel">loading</span></div>
-      <div>feels <b id="feels">—</b></div>
+      <div id="feelsRow">feels <b id="feels">—</b></div>
       <div>H <b id="hiNow">—</b> · L <b id="loNow">—</b></div>
     </div>
   </div>
@@ -639,6 +642,15 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   </div>
 </section>
 
+<div class="week">
+  <div class="eyebrow"><b>The week</b><span id="weekNote"></span></div>
+  <div class="wk-wrap">
+    <div class="wk" id="weekRows"></div>
+    <svg id="weekSvg" class="wk-svg" viewBox="0 0 350 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
+  </div>
+  <p class="day-brief" id="weekBrief" hidden></p>
+</div>
+
 <section id="tideSection">
   <div class="eyebrow"><b>Tide · Wrightsville Beach</b><span id="tideNote">loading…</span></div>
   <div class="tide-explore" id="tideExplore" role="group" tabindex="0" aria-label="Tide forecast. Use left and right arrow keys to explore in 15-minute steps.">
@@ -650,7 +662,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
 </section>
 
 <section id="stormSection" style="display:none">
-  <div class="eyebrow"><b>Tropics · Atlantic</b><span id="stormNote"></span></div>
+  <div class="eyebrow"><b>Tropics · Atlantic</b></div>
   <div id="stormRows"></div>
 </section>
 
@@ -664,7 +676,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
         <span>gusts <b id="wGust">—</b></span>
         <span id="wWaveWrap">seas <b id="wWave">—</b></span>
         <span id="wTideWrap">next tide <b id="wTide">—</b></span>
-        <span id="wFishWrap" class="wide-stat" style="display:none">fish bite <b id="wFish">—</b></span>
+        <span id="wFishWrap" class="wide-stat" style="display:none" title="Bite windows: solunar tables, computed from the moon.">fish bite<span class="sr-only">. Bite windows: solunar tables, computed from the moon.</span> <b id="wFish">—</b></span>
         <span class="wide-stat"><span id="wWindowLbl">best window</span><b id="wWindow">—</b></span>
       </div>
     </div>
@@ -685,16 +697,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   </div>
 </div>
 
-<div class="week">
-  <div class="eyebrow"><b>The week</b><span id="weekNote"></span></div>
-  <div class="wk-wrap">
-    <div class="wk" id="weekRows"></div>
-    <svg id="weekSvg" class="wk-svg" viewBox="0 0 350 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
-  </div>
-  <p class="day-brief" id="weekBrief" hidden></p>
-</div>
-
-<p class="foot"><span id="footSrc"></span><span class="foot-note">Refreshes on open and when you return to the app. Tap the timestamp to force it. Tap the place name to switch.</span></p>
+<p class="foot"><a href="https://open-meteo.com/" rel="noopener">Weather data by Open-Meteo.com</a></p>
 </div>
 
 <script>
@@ -704,25 +707,26 @@ const LOCS={
       tz:"America/New_York",tzLabel:"ET",
       sceneLabel:"Sun and moon over the marsh horizon",
       marine:{lat:34.26,lon:-77.68},tide:8658163,tropics:true,
-      outTitle:"On the water · Figure 8",
-      foot:"Forecast: Open-Meteo (NWS-blended), grid cell over Porters Neck · Marine: buoy grid off Mason Inlet · Tides: NOAA, Wrightsville Beach station 8658163 · Alerts: National Weather Service · Tropics: National Hurricane Center."},
+      outTitle:"On the water · Figure 8",boatSeason:["03-15","10-31"]},
   sp:{id:"sp",addrFull:"Bob Plumley Rd · Shady Spring",addrShort:"Shady Spring",
       lat:37.8215,lon:-80.9942,scene:"ridge",kind:"farm",fish:true,windowLabel:"best time to piddle",
       tz:"America/New_York",tzLabel:"ET",
       sceneLabel:"Sun and moon over Appalachian ridgelines and the farm pond",
-      outTitle:"Outside · Around the farm",
-      foot:"Forecast: Open-Meteo (NWS-blended), grid cell over Shady Spring, WV · Alerts: National Weather Service · Bite windows: solunar tables, computed from the moon."},
+      outTitle:"Outside · Around the farm"},
   den:{id:"den",addrFull:"Next up · Denver",addrShort:"Denver",
       lat:39.7392,lon:-104.9903,scene:"front-range",kind:"trip",windowLabel:"best time to head out",
       tz:"America/Denver",tzLabel:"MT",
       sceneLabel:"Sun and moon over Denver and the Front Range",
-      outTitle:"Outside · Around Denver",
-      foot:"Forecast: Open-Meteo (NWS-blended), grid cell over Denver, CO · Alerts: National Weather Service."}
+      outTitle:"Outside · Around Denver"}
 };
 /* The trip is over, so Denver is parked: still in LOCS as the template for the next travel
    scene, but out of the rotation. A phone last left on Denver has to open at home rather
    than on a place nobody can tap back to, so a saved id only counts while it is in the order. */
 const LOC_ORDER=["mb","sp"];
+/* Boating season at Porters Neck: Josh's club trips run from late March through October. A
+   season is a pair of month-days on the location's own calendar, and it may wrap the new year. */
+const mdOf=d=>typeof d==="string"?d.slice(5,10):String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const inSeason=(d,r)=>{if(!r)return false;const md=mdOf(d);return r[0]<=r[1]?md>=r[0]&&md<=r[1]:md>=r[0]||md<=r[1]};
 let LOC;try{const saved=localStorage.getItem("mbwx-loc");LOC=LOC_ORDER.includes(saved)?LOCS[saved]:LOCS.mb}catch(e){LOC=LOCS.mb}
 let LAT=LOC.lat, LON=LOC.lon;
 
@@ -748,7 +752,7 @@ const trueTime=d=>new Date(d.getTime()-TZSHIFT);
 const locToday=()=>new Date().toLocaleDateString("en-CA",{timeZone:LOC.tz});
 syncClock();
 
-const WMO={0:"Clear",1:"Mostly clear",2:"Partly cloudy",3:"Cloudy",45:"Fog",48:"Fog",51:"Drizzle",53:"Drizzle",55:"Drizzle",56:"Freezing drizzle",57:"Freezing drizzle",61:"Light rain",63:"Rain",65:"Heavy rain",66:"Freezing rain",67:"Freezing rain",71:"Light snow",73:"Snow",75:"Heavy snow",77:"Snow grains",80:"Showers",81:"Showers",82:"Downpours",85:"Snow showers",86:"Snow showers",95:"Thunderstorms",96:"Storms w/ hail",99:"Severe storms"};
+const WMO={0:"Clear",1:"Mostly clear",2:"Partly cloudy",3:"Cloudy",45:"Fog",48:"Fog",51:"Drizzle",53:"Drizzle",55:"Drizzle",56:"Freezing drizzle",57:"Freezing drizzle",61:"Light rain",63:"Rain",65:"Heavy rain",66:"Freezing rain",67:"Freezing rain",71:"Light snow",73:"Snow",75:"Heavy snow",77:"Snow grains",80:"Showers",81:"Showers",82:"Downpours",85:"Snow showers",86:"Snow showers",95:"Thunderstorms",96:"Storms with hail",99:"Storms, heavy hail"};
 /* Shady Spring is at 2,500 feet in the Alleghenies and it snows there. Every one of these
    codes used to fall through: the label went blank, the icon said rain, and the scene drew
    a dry marsh. Freezing rain is the one that matters most, so it never gets called rain. */
@@ -771,6 +775,9 @@ const GLYPHS={
 const glyphFor=w=>w>=95?"storm":isIce(w)?"ice":isSnow(w)?"snow":w>=51?"rain":w>=45?"fog":w===3?"cloud":w>=1?"part":"sun";
 const icon=(w,sz)=>`<svg width="${sz||18}" height="${sz||18}" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">${GLYPHS[glyphFor(w)]}</svg>`;
 const dirTxt=d=>["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"][Math.round(d/22.5)%16];
+/* the porch wind is an arrow on screen, so its compass point is only spoken */
+const dirLong=d=>["north","north-northeast","northeast","east-northeast","east","east-southeast","southeast","south-southeast",
+  "south","south-southwest","southwest","west-southwest","west","west-northwest","northwest","north-northwest"][Math.round((((Number(d)||0)%360)+360)%360/22.5)%16];
 const hh=t=>{const h=+t.slice(11,13);return h===0?"12a":h===12?"12p":h<12?h+"a":(h-12)+"p"};
 const dayName=s=>new Date(s+"T12:00").toLocaleDateString("en-US",{weekday:"short"});
 const mmdd=s=>new Date(s+"T12:00").toLocaleDateString("en-US",{month:"numeric",day:"numeric"});
@@ -3127,7 +3134,7 @@ function toggleAlert(){
   el.dataset.open=open?"1":"0";
   el.setAttribute("aria-expanded",open?"true":"false");
 }
-function renderNowcast(mins){
+function renderNowcast(mins,code,h){
   const el=document.getElementById("nowcast");
   if(!mins||!mins.time||!mins.precipitation){el.className="nowcast";return}
   const th=.1,p=mins.precipitation,n=Math.min(10,p.length);
@@ -3135,9 +3142,14 @@ function renderNowcast(mins){
   for(let i=0;i<n;i++){if(p[i]>=th){if(first<0)first=i;last=i}}
   if(first<0){el.className="nowcast";return}
   const st=new Date(mins.time[first]),en=last<n-1?new Date(new Date(mins.time[last]).getTime()+9e5):null;
+  /* it names what is falling: the strip said "Rain" through snow and freezing rain at the farm.
+     What is falling now is the current code; what starts later is the code for its own hour */
+  const hi=h&&h.time?h.time.findIndex(t=>t.slice(0,13)===mins.time[first].slice(0,13)):-1;
+  const w=first>0&&!isWet(code)&&hi>=0?Number(h.code?.[hi]):code;
+  const kind=isIce(w)?"Freezing rain":isSnow(w)?"Snow":"Rain";
   let txt;
-  if(first===0)txt=en?"Rain now, ending ~"+clock(en):"Rain now, continuing 2h+";
-  else txt=en?"Rain ~"+clock(st)+"–"+clock(en):"Rain starting ~"+clock(st);
+  if(first===0)txt=en?kind+" now, ending ~"+clock(en):kind+" now, for 2h+";
+  else txt=en?kind+" ~"+clock(st)+"–"+clock(en):kind+" from ~"+clock(st);
   document.getElementById("ncText").textContent=txt;
   const mx=Math.max(...p.slice(0,n),.5);
   document.getElementById("ncBars").innerHTML=Array.from({length:n},(_,i)=>
@@ -3151,16 +3163,14 @@ function renderStorms(storms){
   document.getElementById("stormRows").innerHTML=storms.map(s=>{
     const d=Math.round(distMi(LAT,LON,s.lat,s.lon)),near=d<500;
     const motion=s.spd>0?(s.dirDeg!=null?"moving "+dirTxt(s.dirDeg)+" "+s.spd+" mph":"moving "+s.spd+" mph"):"stationary";
-    const meta=[s.mph?"winds "+s.mph+" mph":null,s.mb?s.mb+" mb":null,
-      motion,
-      s.adv?"adv "+s.adv:null].filter(Boolean).join(" · ");
+    /* the distance says how close it is, and pressure and advisory numbers are forecaster detail */
+    const meta=[s.mph?s.mph+" mph winds":null,motion].filter(Boolean).join(" · ");
     return `<div class="storm-row">
-      <div class="s-name"><span class="swirl">${SWIRL}</span>${s.type} ${s.name}${near?' <em>within 500 mi</em>':''}</div>
+      <div class="s-name"><span class="swirl">${SWIRL}</span>${s.type} ${s.name}</div>
       <div class="s-dist ${near?'storm-near':''}">${d.toLocaleString()} mi away</div>
       <div class="s-meta">${meta}</div>
     </div>`;
   }).join("");
-  document.getElementById("stormNote").textContent=storms.length+(storms.length>1?" active systems":" active system");
   sec.style.display="";
 }
 async function fetchStorms(){
@@ -3366,29 +3376,33 @@ function bestOutsideWindow(h,coastal){
   return best;
 }
 function dayStory(c,dy,h){
+  /* the water only gets named while the boat is actually going out */
   if([95,96,99].includes(c.weather_code))
-    return{html:LOC.id==="mb"?"<em>Storms are overhead now.</em> Stay off the water and keep an eye on warnings."
-                              :"<em>Storms are overhead now.</em> Head inside and keep an eye on warnings.",best:null};
+    return{html:LOC.boatSeason&&inSeason(c.time,LOC.boatSeason)?"<em>Storms overhead.</em> Stay off the water."
+                              :"<em>Storms overhead.</em> Head inside.",best:null};
 
   const hr=+c.time.slice(11,13),evening=hr>=18,overnight=hr>=21||hr<5;
   const high=Math.round(dy.temperature_2m_max[0]),feels=Math.round(c.apparent_temperature);
+  /* after dark the day's high is spent, and after midnight it is tomorrow's: the night is
+     graded by the air it is actually in */
+  const ref=evening||overnight?c.temperature_2m:high;
   const humid=(c.relative_humidity_2m||0)>=70&&high>=78;
   /* "soupy" is earned, not decorative: real humidity sitting on real heat */
-  const soupy=(c.relative_humidity_2m||0)>=74&&(evening||overnight?c.temperature_2m:high)>=88;
-  const damp=soupy?", soupy":humid?", humid":"";
-  const tempWord=(evening?c.temperature_2m:high)>=94?"hot":(evening?c.temperature_2m:high)>=82?"warm":
-    (evening?c.temperature_2m:high)>=68?"mild":(evening?c.temperature_2m:high)>=52?"cool":"chilly";
-  const cloud=c.cloud_cover||0;
+  const soupy=(c.relative_humidity_2m||0)>=74&&ref>=88;
+  const damp=soupy?" and soupy":humid?" and humid":"";
+  const tempWord=ref>=94?"Hot":ref>=82?"Warm":ref>=68?"Mild":ref>=52?"Cool":"Chilly";
+  /* The sky is left out: the condition beside the number and the scene under it already say
+     it, and saying it again is how "breaks of sun" came to sit next to "Cloudy". */
   let first;
-  if([45,48].includes(c.weather_code))first="Fog is softening the morning, but visibility should improve.";
+  if([45,48].includes(c.weather_code))first=hr<12?"Foggy this morning.":"Foggy.";
   /* freezing rain gets said plainly. It is the one condition here where the wrong word
      could put somebody on a road they should have stayed off. */
-  else if(isIce(c.weather_code))first="Freezing rain is falling. Expect ice on anything untreated.";
-  else if(isSnow(c.weather_code))first=c.weather_code===75||c.weather_code===86?"Snow is coming down hard.":"Snow is falling right now.";
-  else if([51,53,55,61,63,65,80,81,82].includes(c.weather_code))first="Rain is moving through right now.";
-  else if(overnight)first=`A ${tempWord}${damp} night with ${cloud>=65?"plenty of cloud cover":"some breaks in the sky"}.`;
-  else if(evening)first=`A ${tempWord}${damp} evening ${cloud>=70?"under a cloudy sky":cloud>=35?"with a few breaks in the clouds":"under a mostly clear sky"}.`;
-  else first=`A ${tempWord}${damp} day${cloud>=75?" under mostly gray skies":cloud>=38?" with clouds and breaks of sun":" with plenty of sun"}.`;
+  else if(isIce(c.weather_code))first="Freezing rain. Expect ice on anything untreated.";
+  else if(isSnow(c.weather_code))first=c.weather_code===75||c.weather_code===86?"Heavy snow.":"Snowing now.";
+  else if([51,53,55,61,63,65,80,81,82].includes(c.weather_code))first="Raining now.";
+  else if(overnight)first=`${tempWord}${damp} tonight.`;
+  else if(evening)first=`${tempWord}${damp} this evening.`;
+  else first=`${tempWord}${damp} today.`;
 
   const indices=Array.from({length:h.temp.length},(_,i)=>i).filter(i=>
     overnight||evening||h.time[i].slice(0,10)===dy.time[0]);
@@ -3403,19 +3417,21 @@ function dayStory(c,dy,h){
     const dryI=win.find(i=>(Number(h.pop[i])||0)<30);
     const frozen=isSnow(c.weather_code)||isIce(c.weather_code);
     second=dryI==null
-      ?(frozen?"Give yourself extra time if you have to go anywhere.":"Keep rain gear close for the next several hours.")
-      :dryI===0?"It should ease soon.":`It should ease around ${when(dryI)}`;
-  /* index 0 is the hour already under way: at 1:40 "rain is likely around 1 p.m." names a
+      ?(frozen?"Give yourself extra time on the roads.":"Keep the rain gear close.")
+      :dryI===0?"Should let up soon.":`Should let up around ${when(dryI)}`;
+  /* index 0 is the hour already under way: at 1:40 "rain likely around 1 p.m." names a
      time that has gone, so the first hour is spoken as now */
   }else if(wetI!=null)
-    second=wetI===0?(maxPop>=70?"Rain is likely any time now.":"A few showers could pop up any time now.")
-      :maxPop>=70?`Rain is likely around ${when(wetI)}`:`A few showers may arrive around ${when(wetI)}`;
-  else if(maxPop>=25)second="A stray shower is possible, but most of the day should stay dry.";
-  else if(maxGust>=28)second=gustI===0?"It stays dry, but it is blustery now.":`It stays dry, though it turns blustery around ${when(gustI)}`;
-  else second=overnight?"It should stay dry through the night.":"It should stay dry.";
+    second=wetI===0?(maxPop>=70?"Rain likely any time now.":"Showers could pop up any time.")
+      :maxPop>=70?`Rain likely around ${when(wetI)}`:`Showers possible around ${when(wetI)}`;
+  else if(maxPop>=25)second="Maybe a stray shower.";
+  /* hour 0 carries the live gust (see render), so a wind the chip is showing is a wind the
+     headline knows about */
+  else if(maxGust>=28)second=gustI===0?"Dry, but windy now.":`Dry, but windy by ${when(gustI)}`;
+  else second="Should stay dry.";
 
   if(feels>=98&&!evening&&!overnight)second+=" Keep the middle of the day short.";
-  else if(feels<=25)second+=" Bundle up before heading out.";
+  else if(feels<=25)second+=" Bundle up.";
 
   /* The window is a stat, and it is already printed as one on the card below. Appending it to
      this paragraph said the same thing twice and ran the verdict to four lines on a phone,
@@ -3713,8 +3729,9 @@ let SCENE_IN=false;
    fill. The fill is a static clip (the area under the curve) over a rect that slides in:
    animating the content of a static clip is the one form of wipe WebKit and Chrome agree on. */
 const REVEAL_EASE=[.5,.04,.2,1];               /* a gentle start and a long, soft landing */
-const REVEAL={hourly:{state:PRM?"done":"armed",seen:false,anims:[]},tide:{state:PRM?"done":"armed",seen:false,anims:[]},
-  week:{state:PRM?"done":"armed",seen:false,anims:[]}};
+/* the keys are in page order: a chart on screen with one above it that is still drawing follows it */
+const REVEAL={hourly:{state:PRM?"done":"armed",seen:false,anims:[]},week:{state:PRM?"done":"armed",seen:false,anims:[]},
+  tide:{state:PRM?"done":"armed",seen:false,anims:[]}};
 let REVEAL_READY=false,REVEAL_WAIT=0;
 const bezier=(a,b,c,d)=>t=>{                  /* CSS cubic-bezier(a,b,c,d) as a function of time */
   let u=t;
@@ -3735,11 +3752,16 @@ function revealChart(k,svg,g){
 function revealTry(k){
   const R=REVEAL[k];
   if(R.state!=="armed"||!R.g||!REVEAL_READY||!R.seen||!R.g.svg.isConnected)return;
+  /* the observer's word can be a render old: in the loading shell the week is only its eyebrow,
+     so the tide sits on a phone's first screen, and the live paint pushes it below the fold in
+     the same task that arms it. Measured once more, it waits for the scroll like it should. */
+  if("IntersectionObserver" in window){const b=R.g.svg.getBoundingClientRect();
+    if(!(b.height>0&&Math.min(b.bottom,innerHeight)-Math.max(b.top,0)>=b.height*.3)){R.seen=false;return}}
   let t0=performance.now();
-  const up=REVEAL.hourly;                     /* both on screen at once: the tide follows the hours down the page */
-  if(k==="tide"&&up.state==="running")t0=Math.max(t0,up.t0+420);
-  /* and the week follows whichever of them is still drawing above it */
-  if(k==="week")for(const u of [up,REVEAL.tide])if(u.state==="running")t0=Math.max(t0,u.t0+420);
+  /* on screen together, they draw down the page: the week follows the hours, and the tide
+     follows whichever of them is still drawing above it */
+  const order=Object.keys(REVEAL);
+  for(const u of order.slice(0,order.indexOf(k)))if(REVEAL[u].state==="running")t0=Math.max(t0,REVEAL[u].t0+420);
   R.state="running";R.t0=t0;
   revealApply(k);
 }
@@ -3859,8 +3881,8 @@ if(!PRM){
   if("IntersectionObserver" in window){
     const io=new IntersectionObserver(es=>{for(const e of es)
       seen(e.target.id==="tideSvg"?"tide":e.target.id==="weekSvg"?"week":"hourly",e.isIntersecting&&e.intersectionRatio>=.3)},{threshold:[0,.3,.6,1]});
-    for(const id of ["hourlySvg","tideSvg","weekSvg"])io.observe(document.getElementById(id));
-  }else{REVEAL.hourly.seen=REVEAL.tide.seen=REVEAL.week.seen=true}
+    for(const id of ["hourlySvg","weekSvg","tideSvg"])io.observe(document.getElementById(id));
+  }else{REVEAL.hourly.seen=REVEAL.week.seen=REVEAL.tide.seen=true}
 }
 let HOURLY_PEEK=null,PEEK_I=0,PEEK_TOUCH_X=null,PEEK_HIDE=0;
 let TIDE_PEEK=null,TIDE_I=0,TIDE_TOUCH_X=null,TIDE_HIDE=0;
@@ -4038,10 +4060,12 @@ function render(d,live,savedAt=0){
   /* The hourly run starts at the top of the current hour, so its first temperature is a
      forecast for 2:00 while the header shows the 2:20 reading, and the chart's NOW dot sat a
      degree or three away from the big number above it. The first hour is now: it carries the
-     live reading (a copy, so the cache keeps the run as it came). */
+     live reading (a copy, so the cache keeps the run as it came). The gust too: the chip
+     showed 30 mph while the headline, reading the top-of-hour forecast, said nothing. */
   const now0=(v,k)=>c[k]!=null&&Number.isFinite(+c[k])?+c[k]:v;
   const h={...d.hourly,temp:d.hourly.temp.map((t,i)=>i?t:now0(t,"temperature_2m")),
-    feels:d.hourly.feels&&d.hourly.feels.map((t,i)=>i?t:now0(t,"apparent_temperature"))};
+    feels:d.hourly.feels&&d.hourly.feels.map((t,i)=>i?t:now0(t,"apparent_temperature")),
+    gust:d.hourly.gust&&d.hourly.gust.map((g,i)=>i?g:now0(g,"wind_gusts_10m"))};
   const alerts=activeAlerts(d.alerts),warning=outdoorWarning(alerts);
   syncClock();
   const now=wallNow(), sunrise=new Date(dy.sunrise[0]), sunset=new Date(dy.sunset[0]);
@@ -4106,6 +4130,9 @@ function render(d,live,savedAt=0){
   paintTemperature(document.getElementById("bigTemp"),c.temperature_2m);
   document.getElementById("condLabel").textContent=WMO[c.weather_code]||"—";
   document.getElementById("feels").textContent=Math.round(c.apparent_temperature)+"°";
+  /* feels-like earns its line the way it earns the hourly readout: only when it differs by 3° */
+  document.getElementById("feelsRow").hidden=c.apparent_temperature==null||!Number.isFinite(+c.apparent_temperature)
+    ||Math.abs(Math.round(c.apparent_temperature)-Math.round(c.temperature_2m))<3;
   document.getElementById("hiNow").textContent=Math.round(dy.temperature_2m_max[0])+"°";
   document.getElementById("loNow").textContent=Math.round(dy.temperature_2m_min[0])+"°";
 
@@ -4115,10 +4142,14 @@ function render(d,live,savedAt=0){
   const CI={wind:'<svg width="12" height="12" viewBox="0 0 16 16"><path d="M2 5.5h7.5a2 2 0 1 0-2-2M2 9h10a2 2 0 1 1-2 2M2 12.5h6" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>',
     uv:'<svg width="12" height="12" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.8" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M8 1.4v1.6M8 13v1.6M1.4 8H3M13 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'};
   /* two chips, not four: gusts only appear when they are actually above the wind,
-     and humidity is already carried by the feels-like number above */
-  const wNow=Math.round(c.wind_speed_10m),gNow=Math.round(c.wind_gusts_10m);
-  const chipData=[[CI.wind,`${dirTxt(c.wind_direction_10m)} ${wNow}${gNow-wNow>=6?`, gusts ${gNow}`:""} mph`]];
-  if(c.uv_index>=.5)chipData.push([CI.uv,`uv ${c.uv_index.toFixed(1)}`]);
+     and humidity is already carried by the feels-like number above. The wind is its speed and
+     an arrow pointing into it, like the vane on the barn, and the compass point is only spoken.
+     Calm air has no direction, so it gets no arrow. UV earns a chip where it earns the sun
+     card, from 3. */
+  const wNow=Math.round(c.wind_speed_10m),gNow=Math.round(c.wind_gusts_10m),chipData=[];
+  if(c.wind_speed_10m!=null&&Number.isFinite(+c.wind_speed_10m))chipData.push(wNow<1?[CI.wind,"calm"]
+    :[vane(c.wind_direction_10m),`<span class="sr-only">Wind from the ${dirLong(c.wind_direction_10m)}, </span>${wNow}${gNow-wNow>=6?`, gusts ${gNow}`:""} mph`]);
+  if(Number(c.uv_index)>=3)chipData.push([CI.uv,`uv ${Number(c.uv_index).toFixed(1)}`]);
   document.getElementById("chips").innerHTML=chipData.map(([ic,t])=>`<span class="chip">${ic}${t}</span>`).join("");
 
   /* the charts' entrance waits for the live forecast, or for a moment when there is only the cache */
@@ -4182,7 +4213,7 @@ function render(d,live,savedAt=0){
   const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3" stroke-linejoin="round"`;
   /* Labels are placed, not stamped. Everything already drawn is an obstacle (the rain bars
      and the dots), then the high, now and the low go down, then every fourth hour only where
-     it has room, then the rain odds, then the AFTER DARK tag. On a phone an hour is about
+     it has room, then the rain odds, then the moon on the night band. On a phone an hour is about
      twelve pixels wide, so the 78° beside a 79° high used to print straight through it and a
      62° sat under the 61° low; now the lesser label steps aside. When now or the low has no
      room above its own dot it takes the space under it instead. Boxes are in chart units,
@@ -4202,9 +4233,9 @@ function render(d,live,savedAt=0){
     const x0=xTime(from),x1=xTime(to);
     if(x1-x0<2)continue;
     bands+=`<rect x="${x0.toFixed(1)}" y="12" width="${(x1-x0).toFixed(1)}" height="${base-12}" fill="url(#nightband)" rx="4"/>`;
-    /* the unit is centred on its own ink, and kept clear of both chart edges, so the label
-       names the band it sits in instead of running off the right side of the night */
-    if(x1-x0>90)nightTags.push([x0,x1]);
+    /* the moon is centred on its own ink, and kept clear of both chart edges, so it names
+       the band it sits in instead of running off the right side of the night */
+    if(x1-x0>30)nightTags.push([x0,x1]);
   }
   let bars="",dots="",labels="";
   const hiI=h.temp.indexOf(Math.max(...h.temp)),loI=h.temp.indexOf(Math.min(...h.temp));
@@ -4269,16 +4300,16 @@ function render(d,live,savedAt=0){
     bars+=`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="8.5" fill="${css.water}" ${halo}${rvAt(x,"label",240)}>${h.pop[i]}</text>`;
   }
   for(const [x0,x1] of nightTags){
-    /* centred on its band if it can be; otherwise it slides along the band, and only a band
-       with no clear spot goes without its tag */
-    const lo=Math.max(x0+47,pad+52),hi=Math.min(x1-38,W-pad-52),mid=clamp((x0+x1)/2,lo,hi);
+    /* The band and the moon already say it is dark, so the words went and the moon stays. It
+       is placed last, against its own box: centred on its band if it can be, otherwise it
+       slides along the band, and only a band with no clear spot goes without it. */
+    const lo=Math.max(x0+10,pad+10),hi=Math.min(x1-10,W-pad-10),mid=clamp((x0+x1)/2,lo,hi);
     let cx=null;
     for(let st=0;st<=Math.max(0,hi-lo)&&cx==null;st+=6)
-      for(const c0 of st?[mid-st,mid+st]:[mid])if(c0>=lo-.1&&c0<=hi+.1&&!hit([c0-47,12,c0+38,27])){cx=c0;break}
+      for(const c0 of st?[mid-st,mid+st]:[mid])if(c0>=lo-.1&&c0<=hi+.1&&!hit([c0-7,15,c0+7,29])){cx=c0;break}
     if(cx==null)continue;
     bands+=`<g transform="translate(${cx.toFixed(1)},22)" fill="${css.faint}" opacity=".85">
-      <path d="M -37 0 a 4.6 4.6 0 1 1-4.6-4.6 A 3.6 3.6 0 0 0 -37 0 Z"/>
-      <text x="-31" y="3" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="9.5" letter-spacing="1.1" fill="${css.faint}" ${halo}>AFTER DARK</text></g>`;
+      <path d="M 4.6 0 a 4.6 4.6 0 1 1-4.6-4.6 A 3.6 3.6 0 0 0 4.6 0 Z"/></g>`;
   }
   const areaTop=Math.min(...pts.map(p=>p[1]));
   const gstops=h.temp.map((t,i)=>`<stop offset="${(i/(n-1)*100).toFixed(1)}%" stop-color="${tempColor(t)}"/>`).join("");
@@ -4317,21 +4348,32 @@ function render(d,live,savedAt=0){
   revealChart("hourly",hourlySvg,{xa:X(0),xb:X(n-1),dur:clamp(1900+W*1.1,2200,2700),tail:60,
     color:x=>tempColor(hourAt(x))});
   document.getElementById("hrLabels").innerHTML=labels;
+
+  /* week: drawn before the tide because it sits above it, so its entrance is armed first */
+  renderWeek(dy,css);
+  let wi=-1;
+  for(let i=0;i<dy.time.length;i++){
+    const p=dy.precipitation_probability_max[i];
+    if(p>=60&&(wi<0||p>dy.precipitation_probability_max[wi]))wi=i;
+  }
+  const weekWet=wi>=0?(isSnow(dy.weather_code[wi])?"snow":isIce(dy.weather_code[wi])?"ice":"rain"):"";
+  const weekOdds=dy.precipitation_probability_max.some(p=>p!=null&&Number.isFinite(+p));
+  document.getElementById("weekNote").textContent=!weekOdds?"rain odds unavailable":wi<0?"mostly dry"
+    :`${weekWet} looks most likely ${wi===0?"today":dayName(dy.time[wi])}`;
+
   document.getElementById("tideSection").style.display=LOC.tide?"":"none";
   const tide=LOC.tide?renderTides(d.tides,css,c.wind_gusts_10m,c.wind_speed_10m):null;
   renderAlerts(alerts);
-  renderNowcast(d.nowcast);
+  renderNowcast(d.nowcast,c.weather_code,h);
   renderStorms(d.storms);
 
-  const maxPop=Math.max(...h.pop);
-  const ncOn=document.getElementById("nowcast").classList.contains("on");
+  /* the note names the gold band, which the picture cannot do on its own; the bars and the
+     headline already say whether it rains */
   document.getElementById("hourlyNote").innerHTML=nextLight
-    ?`<span class="gold-key">golden hour</span> ${spanTxt(nextLight.a,nextLight.b)}`
-    :maxPop<20&&!ncOn?"staying mostly dry":"blue bars show rain chance";
+    ?`<span class="gold-key">golden hour</span> ${spanTxt(nextLight.a,nextLight.b)}`:"";
 
   /* outside card: boating at Moss Bridge, farm weather at Bob Plumley, walking in Denver */
   document.getElementById("outTitle").textContent=LOC.outTitle;
-  document.getElementById("footSrc").textContent=LOC.foot;
   const coastal=!!LOC.marine;
   document.getElementById("wWaveWrap").style.display=coastal?"":"none";
   document.getElementById("wTideWrap").style.display=coastal?"":"none";
@@ -4426,19 +4468,22 @@ function render(d,live,savedAt=0){
   const nightPop=nightHours.length?Math.max(...nightHours.map(hour=>hour.pop)):Number(dy.precipitation_probability_max[fallbackDay])||0;
   const nightSnow=nightHours.some(hour=>isSnow(hour.code)),nightIce=nightHours.some(hour=>isIce(hour.code));
   const nightWhen=beforeSunrise?"before morning":"tonight";
-  let tonightText=nightPop>=35&&nightIce?`Freezing rain is possible ${nightWhen}, with a low around\u00A0${nightLow}°.`:
-    nightPop>=35&&nightSnow?`Snow is likely at times ${nightWhen}, with a low around\u00A0${nightLow}°.`:
-    nightPop>=60?`Rain is likely at times ${nightWhen}, with a low around\u00A0${nightLow}°.`:
-    nightPop>=35?`A shower is possible ${nightWhen}, with a low around\u00A0${nightLow}°.`:
-    nightLow>=74?`Warm and mostly dry ${nightWhen}, with a low around\u00A0${nightLow}°.`:
-    `Mostly dry ${nightWhen}, cooling to around\u00A0${nightLow}°.`;
+  /* under 35% the night says nothing about rain, the way the week does, and the odds word
+     follows the odds: 35% snow is possible, not likely */
+  const lowTxt=`Low\u00A0${nightLow}°`;
+  let tonightText=nightPop>=35&&nightIce?`Freezing rain possible ${nightWhen}. ${lowTxt}.`:
+    nightPop>=35&&nightSnow?`Snow ${nightPop>=60?"likely":"possible"} ${nightWhen}. ${lowTxt}.`:
+    nightPop>=60?`Rain likely at times ${nightWhen}. ${lowTxt}.`:
+    nightPop>=35?`Maybe a shower ${nightWhen}. ${lowTxt}.`:
+    nightLow>=74?`Warm ${nightWhen}. ${lowTxt}.`:
+    `${lowTxt} ${nightWhen}.`;
   el.textContent=tonightText;
   /* both ends of the light on one gold line, out of the sentence's way */
   const gw=goldenWindow(sunset);
   const gwAm=beforeSunrise?goldenWindow(sunrise):(dy.sunrise[1]?goldenWindow(new Date(dy.sunrise[1])):null);
   const goldBits=[];
-  if(beforeSunrise&&gwAm)goldBits.push(now>=gwAm.a?`<b>now, until ${clock(gwAm.b)}</b>`:`<b>${spanTxt(gwAm.a,gwAm.b)}</b> this morning`);
-  if(gw&&now<gw.b)goldBits.push(now>=gw.a?`<b>now, until ${clock(gw.b)}</b>`:`<b>${spanTxt(gw.a,gw.b)}</b> tonight`);
+  if(beforeSunrise&&gwAm)goldBits.push(now>=gwAm.a?`<b>now until ${clock(gwAm.b)}</b>`:`<b>${spanTxt(gwAm.a,gwAm.b)}</b> this morning`);
+  if(gw&&now<gw.b)goldBits.push(now>=gw.a?`<b>now until ${clock(gw.b)}</b>`:`<b>${spanTxt(gw.a,gw.b)}</b> tonight`);
   if(!beforeSunrise&&gwAm)goldBits.push(`<b>${spanTxt(gwAm.a,gwAm.b)}</b> tomorrow`);
   document.getElementById("goldTimes").innerHTML=goldBits.length
     ?`<span class="gold-dot" aria-hidden="true"></span><span class="gold-key">golden hour</span><span class="gold-val${goldBits.length>1?" pair":""}">${goldBits.map(b=>`<span class="gold-bit">${b}</span>`).join(" · ")}</span>`
@@ -4446,17 +4491,6 @@ function render(d,live,savedAt=0){
   document.getElementById("eveLine").className="lead tonight-line "+(nightPop>=35?"caution":"go");
   document.getElementById("moonTxt").innerHTML=moonPhaseIcon(scene.moon);
 
-  /* week */
-  renderWeek(dy,css);
-  let wi=-1;
-  for(let i=0;i<dy.time.length;i++){
-    const p=dy.precipitation_probability_max[i];
-    if(p>=60&&(wi<0||p>dy.precipitation_probability_max[wi]))wi=i;
-  }
-  const weekWet=wi>=0?(isSnow(dy.weather_code[wi])?"snow":isIce(dy.weather_code[wi])?"ice":"rain"):"";
-  const weekOdds=dy.precipitation_probability_max.some(p=>p!=null&&Number.isFinite(+p));
-  document.getElementById("weekNote").textContent=!weekOdds?"rain odds unavailable":wi<0?"mostly dry"
-    :`${weekWet} looks most likely ${wi===0?"today":dayName(dy.time[wi])}`;
   /* Last, because everything above adds height to the header: the alert strip, the
      headline, the chips, the rain card and the scene are all inside .sky, and a bolt
      measured before them stops in mid-air where the sky used to end. */
@@ -4564,7 +4598,7 @@ async function refresh(){
       document.getElementById("stamp").textContent=navigator.onLine?"unavailable":"offline";
       document.getElementById("bigTemp").textContent="—";
       document.getElementById("condLabel").textContent="No reading";
-      document.getElementById("verdict").textContent="Weather couldn't refresh. Tap the timestamp to try again.";
+      document.getElementById("verdict").textContent="Couldn't load the weather. Tap the timestamp to try again.";
     }
   }finally{
     if(request===REFRESH_ID){
@@ -4588,7 +4622,6 @@ function paintLocationShell(){
   document.getElementById("wTideWrap").style.display=coastal?"":"none";
   document.getElementById("wFishWrap").style.display=LOC.fish?"":"none";
   document.getElementById("wWindowLbl").textContent=LOC.windowLabel;
-  document.getElementById("footSrc").textContent=LOC.foot;
   document.getElementById("sceneSvg").setAttribute("aria-label",LOC.sceneLabel);
   const comfort=LOC.kind==="trip";
   document.getElementById("sunTitle").textContent=comfort?"What to wear":"Sun & heat";
@@ -4606,6 +4639,7 @@ function paintLoadingState(){
   document.getElementById("bigTemp").innerHTML='<span class="skel">00</span><span class="deg">°</span>';
   document.getElementById("condLabel").innerHTML='<span class="skel">loading</span>';
   for(const id of ["feels","hiNow","loNow"])document.getElementById(id).textContent="—";
+  document.getElementById("feelsRow").hidden=false;
   document.getElementById("verdict").textContent="Reading the sky…";
   for(const id of ["chips","skyFx","rainFx","sceneSvg","hourlySvg","hrLabels","weekRows","weekSvg","goldTimes","moonTxt"])
     document.getElementById(id).innerHTML="";

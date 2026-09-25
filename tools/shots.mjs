@@ -134,7 +134,9 @@ for (const cs of cases) {
         const T = (id) => { const e = document.getElementById(id); return e ? e.textContent.trim() : null; };
         return {
           verdict: T("verdict"), condition: T("condLabel"), stamp: T("stamp"),
+          feels: document.getElementById("feelsRow")?.hidden ? null : T("feels"),
           chips: [...document.querySelectorAll(".chip")].map((c) => c.textContent.trim()),
+          nowcast: document.getElementById("nowcast")?.classList.contains("on") ? T("ncText") : null,
           water: T("waterLead"), wind: T("wWind"), window: T("wWindow"), fish: T("wFish"),
           sun: T("uvLead"), tonight: T("eveLead"),
           tideNote: T("tideNote"), hourlyNote: T("hourlyNote"), weekNote: T("weekNote"),

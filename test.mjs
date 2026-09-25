@@ -33,7 +33,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v71/);
+  assert.match(worker, /mbwx-shell-v72/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -186,7 +186,7 @@ test("the hourly labels step aside instead of printing through each other", asyn
   // On a phone an hour is about twelve pixels wide. The 78° beside a 79° high printed
   // straight through it, and a 62° sat under the 61° low. Labels are placed against boxes:
   // obstacles first (bars, key dots), then the high, now and the low, then every fourth hour
-  // where it has room, then the rain odds, then the AFTER DARK tag.
+  // where it has room, then the rain odds, then the moon on the night band.
   assert.match(html, /const taken=\[\],hit=b=>taken\.some\(/);
   assert.match(html, /const keys=\[\.\.\.new Set\(\[hiI,0,loI\]\)\];/);
   // the high always keeps the space above its dot; now and the low may take the space under theirs
@@ -201,8 +201,11 @@ test("the hourly labels step aside instead of printing through each other", asyn
   assert.match(html, /if\(hit\(b\)\|\|Math\.min\(\.\.\.ys\)<b\[3\]\+3&&Math\.max\(\.\.\.ys\)>b\[1\]-3\)continue;/);
   // a regular hour that has no room is left out, dot and all
   assert.match(html, /if\(hit\(b\)\|\|hit\(d\)\|\|prev&&prev\.t===t&&x-prev\.x<64\)continue;/);
-  // the night tag is decoration: it gives way to the numbers
-  assert.match(html, /!hit\(\[c0-47,12,c0\+38,27\]\)\)\{cx=c0;break\}/);
+  // the night tag is decoration: it gives way to the numbers. The band and the moon already say
+  // it is dark, so the words are gone and the moon is placed against its own box
+  assert.match(html, /!hit\(\[c0-7,15,c0\+7,29\]\)\)\{cx=c0;break\}/);
+  assert.match(html, /<path d="M 4\.6 0 a 4\.6 4\.6 0 1 1-4\.6-4\.6 A 3\.6 3\.6 0 0 0 4\.6 0 Z"\/><\/g>`;/);
+  assert.doesNotMatch(html, /AFTER DARK<\/text>/);
 });
 
 test("the page agrees with itself", async () => {
@@ -213,12 +216,16 @@ test("the page agrees with itself", async () => {
   // ink is judged against the cloud the text sits on as well as the bare gradient
   assert.match(html, /const cInk=Math\.min\(contrast\(INK_ON,field\),contrast\(INK_ON,lit\)\)/);
   // the headline never names an hour that has already started
-  assert.match(html, /second=wetI===0\?\(maxPop>=70\?"Rain is likely any time now\."/);
+  assert.match(html, /second=wetI===0\?\(maxPop>=70\?"Rain likely any time now\."/);
   // no sunscreen schedule when the rest of today's hourly UV stays under 3
   assert.match(html, /return\{text:"UV stays low the rest of today\.",cls:"go"\}/);
   // a golden-hour range is never cut at its dash, and the low stays with its words
   assert.match(html, /\.gold-bit\{white-space:nowrap\}/);
-  assert.match(html, /cooling to around\\u00A0\$\{nightLow\}°\./);
+  assert.match(html, /const lowTxt=`Low\\u00A0\$\{nightLow\}°`;/);
+  assert.match(html, /`\$\{lowTxt\} \$\{nightWhen\}\.`;/);
+  // under 35% the night says nothing about rain, the way the week does
+  assert.doesNotMatch(html, /mostly dry \$\{nightWhen\}/i);
+  assert.match(html, /<b>now until \$\{clock\(gw\.b\)\}<\/b>/);
   // the lit side of the moon is the light side on both themes
   assert.match(html, /\.moon-phase \.moon-lit\{fill:#FFF6E2\}/);
   // a star on a line of type is left out
@@ -454,7 +461,7 @@ test("it snows in Shady Spring", async () => {
   assert.match(html, /71:"Light snow",73:"Snow",75:"Heavy snow"/);
   // freezing precipitation is never called rain, and never called snow
   assert.match(html, /66:"Freezing rain",67:"Freezing rain"/);
-  assert.match(html, /Freezing rain is falling\. Expect ice on anything untreated\./);
+  assert.match(html, /"Freezing rain\. Expect ice on anything untreated\."/);
   assert.doesNotMatch(html, /66:"Rain"|67:"Rain"/);
   // the icon ladder checks ice and snow before it falls through to rain
   assert.match(html, /glyphFor=w=>w>=95\?"storm":isIce\(w\)\?"ice":isSnow\(w\)\?"snow":w>=51\?"rain"/);
@@ -466,7 +473,8 @@ test("it snows in Shady Spring", async () => {
   // and the week's one-line brief no longer calls a heavy snow day "periods of rain"
   assert.match(html, /isSnow\(code\)\?\(code===75\|\|code===86\?"heavy snow"/);
   assert.match(html, /code:wj\.hourly\.weather_code\.slice\(i0,i0\+24\)/);
-  assert.match(html, /nightPop>=35&&nightSnow\?`Snow is likely at times/);
+  // and the odds word follows the odds: 35% snow is possible, not likely
+  assert.match(html, /nightPop>=35&&nightSnow\?`Snow \$\{nightPop>=60\?"likely":"possible"\} \$\{nightWhen\}/);
   assert.match(html, /isSnow\(dy\.weather_code\[wi\]\)\?"snow"/);
 });
 
@@ -530,8 +538,9 @@ test("the almanac fishes the farm pond, the coast keeps sunscreen, and Denver dr
   assert.match(html, /id="uvDetails"/);
   // the pond dimples during a bite window, off the same moon the card reads
   assert.match(html, /solunarWindows\(now\)\.some\(w=>now>=w\.start&&now<=w\.end\)/);
-  // and the footer says where the bite times come from
-  assert.match(html, /Bite windows: solunar tables, computed from the moon/);
+  // and the fish bite label says where the bite times come from (the footer used to)
+  assert.match(html, /id="wFishWrap"[^>]*title="Bite windows: solunar tables, computed from the moon\."/);
+  assert.match(html, /fish bite<span class="sr-only">\. Bite windows: solunar tables, computed from the moon\.<\/span>/);
 });
 
 test("golden hour reaches the whole page, and the two ends differ", async () => {
@@ -649,7 +658,7 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /flight-wing/);
   assert.match(html, /deer-ear/);
   // "soupy" is earned, not decorative: real humidity sitting on real heat
-  assert.match(html, /soupy\?", soupy":humid\?", humid":""/);
+  assert.match(html, /soupy\?" and soupy":humid\?" and humid":""/);
   assert.match(html, /id="sunTitle">Sun &amp; heat</);
   assert.doesNotMatch(html, />UV · sun exposure</);
   assert.doesNotMatch(html, />Evening outlook</);
@@ -861,6 +870,120 @@ test("out-of-order refreshes cannot repaint or stop a newer request", async () =
   assert.equal(node("stamp").textContent,"unavailable");
   assert.match(node("verdict").textContent,/Tap the timestamp to try again/);
   assert.equal(node("refreshBtn").classList.contains("spin"),false);
+});
+
+test("the page reads top down: now, today, the week, and nothing it has already said", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+
+  // The first screen is now, the next day and the week, because the weekend is what the family
+  // looks for. The week moved up from the foot of the page to sit right under the hours.
+  const at = (s) => { const i = html.indexOf(s); assert.ok(i > 0, `${s} should be in the markup`); return i; };
+  const order = ['<header class="sky"', "<b>Next 24 hours</b>", '<div class="week">', '<section id="tideSection">',
+    '<section id="stormSection"', '<div class="cards">', '<p class="foot">'].map(at);
+  assert.deepEqual([...order].sort((a, b) => a - b), order, "sections run in page order");
+  assert.match(html, /\.week\{padding:28px 20px 0\}/);
+  // and the charts draw in down the page in the same order: REVEAL's keys are that order, and
+  // each chart follows whichever chart above it is still drawing
+  assert.match(html, /const REVEAL=\{hourly:\{[^}]*\},week:\{[^}]*\},\n  tide:\{/);
+  assert.match(html, /const order=Object\.keys\(REVEAL\);\n  for\(const u of order\.slice\(0,order\.indexOf\(k\)\)\)if\(REVEAL\[u\]\.state==="running"\)t0=Math\.max\(t0,REVEAL\[u\]\.t0\+420\);/);
+  assert.match(html, /for\(const id of \["hourlySvg","weekSvg","tideSvg"\]\)io\.observe/);
+  // and a chart the live paint has just pushed below the fold is measured again, not drawn to nobody
+  assert.match(html, /if\(!\(b\.height>0&&Math\.min\(b\.bottom,innerHeight\)-Math\.max\(b\.top,0\)>=b\.height\*\.3\)\)\{R\.seen=false;return\}/);
+  assert.ok(html.indexOf("renderWeek(dy,css);") < html.indexOf("const tide=LOC.tide?renderTides("),
+    "the week is armed before the tide, or the tide would not see it running");
+
+  // The wind chip is the speed and an arrow into the wind; the compass point is only spoken,
+  // and calm air gets no arrow at all. dirTxt stays for the tropics rows.
+  const chips = html.slice(html.indexOf("const wNow=Math.round(c.wind_speed_10m)"), html.indexOf('document.getElementById("chips").innerHTML'));
+  assert.match(chips, /\[vane\(c\.wind_direction_10m\),`<span class="sr-only">Wind from the \$\{dirLong\(c\.wind_direction_10m\)\}, <\/span>/);
+  assert.match(chips, /wNow<1\?\[CI\.wind,"calm"\]/);
+  assert.doesNotMatch(chips, /dirTxt/);
+  assert.match(html, /\.chip \.vane\{color:currentColor;opacity:\.8\}/);
+  // the chip never carries the barn vane's attribute: scene.mjs reads the first one in the page
+  assert.doesNotMatch(html.slice(html.indexOf("const vane=deg=>"), html.indexOf("function paintTemperature(")), /data-vane-bearing/);
+  // UV earns a chip where it earns the sun card, from 3
+  assert.match(chips, /if\(Number\(c\.uv_index\)>=3\)chipData\.push/);
+  // feels-like earns its line by the rule the hourly readout already uses
+  assert.match(html, /<div id="feelsRow">feels <b id="feels">/);
+  assert.match(html, /\|\|Math\.abs\(Math\.round\(c\.apparent_temperature\)-Math\.round\(c\.temperature_2m\)\)<3;/);
+  // hour 0 carries the live gust, so the headline knows about the wind the chip is showing
+  assert.match(html, /gust:d\.hourly\.gust&&d\.hourly\.gust\.map\(\(g,i\)=>i\?g:now0\(g,"wind_gusts_10m"\)\)/);
+
+  // The hourly note names the gold band and nothing else: the bars and the headline say the rain.
+  assert.doesNotMatch(html, /staying mostly dry|blue bars show rain chance/);
+  // The nowcast names what is falling. It said "Rain" through snow and freezing rain at the farm.
+  assert.match(html, /const kind=isIce\(w\)\?"Freezing rain":isSnow\(w\)\?"Snow":"Rain";/);
+  assert.match(html, /renderNowcast\(d\.nowcast,c\.weather_code,h\)/);
+  assert.doesNotMatch(html, /"Rain now, ending ~"/);
+  // code 99 is not a warning, so it does not borrow the NWS warning word
+  assert.match(html, /96:"Storms with hail",99:"Storms, heavy hail"/);
+  // the tropics rows: the distance says how close, the count is the rows, and pressure and
+  // advisory numbers are forecaster detail
+  assert.doesNotMatch(html, /within 500 mi|active system|" mb":null|"adv "/);
+  assert.match(html, /const meta=\[s\.mph\?s\.mph\+" mph winds":null,motion\]/);
+  // a failed first load still offers the timestamp as the retry
+  assert.match(html, /"Couldn't load the weather\. Tap the timestamp to try again\."/);
+
+  // The footer is one quiet credit (Open-Meteo's data is CC BY 4.0). The sources, the refresh
+  // instructions and the per-place footnotes are gone, and nothing still writes to them.
+  assert.match(html, /<p class="foot"><a href="https:\/\/open-meteo\.com\/" rel="noopener">Weather data by Open-Meteo\.com<\/a><\/p>/);
+  assert.match(html, /\.foot a\{color:inherit;text-decoration:none\}/);
+  assert.doesNotMatch(html, /footSrc|foot-note|Refreshes on open|LOC\.foot\b/);
+  assert.doesNotMatch(html.slice(html.indexOf("const LOCS={"), html.indexOf("const LOC_ORDER=")), /\bfoot:/);
+
+  // The headline says what is coming, never the sky the label and the scene already show.
+  const story = html.slice(html.indexOf("function dayStory("), html.indexOf("/* The farm's sun line"));
+  const storyCode = story.replace(/\/\*[\s\S]*?\*\//g, "");
+  assert.doesNotMatch(storyCode, /breaks of sun|breaks in the sky|gray skies|plenty of sun|cloud cover|clear sky|c\.cloud_cover/);
+  // and it says windy, the way the family does
+  assert.doesNotMatch(storyCode, /blustery|breezy|wind-whipped/i);
+  const lift = (re) => { const m = html.match(re); assert.ok(m, `${re} should be extractable`); return m[0]; };
+  const ctx = vm.createContext({ bestOutsideWindow: () => null });
+  vm.runInContext([
+    lift(/const SNOW=\[[\s\S]*?const isWet=w=>WETC\.includes\(w\);/),
+    lift(/const hh=t=>\{[^\n]*\};/),
+    lift(/const spokenAt=t=>[^\n]*;/),
+    lift(/const mdOf=[^\n]*\nconst inSeason=[^\n]*/),
+    story,
+  ].join("\n"), ctx);
+  const dy = { time: ["2026-08-02"], temperature_2m_max: [90] };
+  const hours = (from, o = {}) => {
+    const t0 = new Date(from.slice(0, 13) + ":00:00Z").getTime();
+    const time = Array.from({ length: 24 }, (_, i) => new Date(t0 + i * 3.6e6).toISOString().slice(0, 16));
+    return { time, temp: time.map(() => 75), pop: time.map((_, i) => o.pop?.(i) ?? 5), gust: time.map((_, i) => o.gust?.(i) ?? 10) };
+  };
+  const tell = (c, o, loc = { id: "sp" }) => {
+    ctx.LOC = loc;
+    return ctx.dayStory({ relative_humidity_2m: 50, apparent_temperature: c.temperature_2m, ...c }, dy, hours(c.time, o)).html;
+  };
+  // after midnight the night is graded by the air it is in, not by the new day's forecast high
+  assert.equal(tell({ time: "2026-08-02T01:15", temperature_2m: 70, weather_code: 1 }), "Mild tonight. Should stay dry.");
+  assert.equal(tell({ time: "2026-08-02T19:15", temperature_2m: 84, weather_code: 1 }), "Warm this evening. Should stay dry.");
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 88, weather_code: 1, relative_humidity_2m: 80 }), "Warm and soupy today. Should stay dry.");
+  // a live gust in hour 0 is a windy headline; one later in the day is named by its hour
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 3 }, { gust: (i) => (i ? 12 : 30) }), "Warm today. Dry, but windy now.");
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 3 }, { gust: (i) => (i === 3 ? 31 : 12) }), "Warm today. Dry, but windy by 4 p.m.");
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 1 }, { pop: (i) => (i === 2 ? 80 : 5) }), "Warm today. Rain likely around 3 p.m.");
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 1 }, { pop: (i) => (i === 2 ? 45 : 5) }), "Warm today. Showers possible around 3 p.m.");
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 1 }, { pop: () => 30 }), "Warm today. Maybe a stray shower.");
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 63 }, { pop: (i) => (i < 3 ? 80 : 10) }), "Raining now. Should let up around 4 p.m.");
+  assert.equal(tell({ time: "2026-08-02T15:00", temperature_2m: 70, weather_code: 45 }), "Foggy. Should stay dry.");
+  assert.equal(tell({ time: "2026-08-02T08:00", temperature_2m: 70, weather_code: 45 }), "Foggy this morning. Should stay dry.");
+  assert.match(tell({ time: "2026-08-02T08:00", temperature_2m: 31, weather_code: 66 }, { pop: () => 90 }), /^Freezing rain\. Expect ice on anything untreated\. Give yourself extra time on the roads\./);
+  // storms overhead: the water is named only while the boat is going out
+  const coast = { id: "mb", boatSeason: ["03-15", "10-31"] };
+  assert.equal(tell({ time: "2026-08-02T16:00", temperature_2m: 80, weather_code: 95 }, {}, coast), "<em>Storms overhead.</em> Stay off the water.");
+  assert.equal(tell({ time: "2026-11-14T16:00", temperature_2m: 60, weather_code: 95 }, {}, coast), "<em>Storms overhead.</em> Head inside.");
+  assert.equal(tell({ time: "2026-08-02T16:00", temperature_2m: 80, weather_code: 95 }), "<em>Storms overhead.</em> Head inside.");
+  // the season is month-days on the place's own calendar, and may wrap the new year
+  const inSeason = vm.runInContext("inSeason", ctx);
+  assert.equal(inSeason("2026-03-14T12:00", coast.boatSeason), false);
+  assert.equal(inSeason("2026-03-15T12:00", coast.boatSeason), true);
+  assert.equal(inSeason("2026-10-31T23:00", coast.boatSeason), true);
+  assert.equal(inSeason(new Date(2026, 10, 1, 9), coast.boatSeason), false);
+  assert.equal(inSeason("2026-12-20T12:00", ["11-01", "02-28"]), true);
+  assert.equal(inSeason("2026-06-20T12:00", ["11-01", "02-28"]), false);
+  assert.equal(inSeason("2026-06-20T12:00", undefined), false);
 });
 
 test("installable assets exist", async () => {
