@@ -499,30 +499,28 @@ html:not([data-theme=dark]) .rv-core{display:none}
 .out-line>span{white-space:nowrap}
 .out-why[hidden],.out-line[hidden]{display:none}
 .call-iffy .tip b{color:var(--heat)}.call-no .tip b{color:var(--marker)}
-/* even columns, so labels and values line up down the card instead of wrapping ragged */
-.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:15px 18px;
-  font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);flex:1;letter-spacing:.02em;min-width:0}
-/* values wrap rather than overrun their neighbour: a time range is longer than a wind speed */
-.stat-row b{color:var(--ink);font-weight:600;font-size:13.5px;letter-spacing:0;
-  display:flex;flex-wrap:wrap;align-items:center;gap:2px 4px;min-width:0}
-/* a stat whose value is a span of clock times gets two tracks to say it in */
-.stat-row .wide-stat{grid-column:span 2}
-.stat-row span{display:flex;flex-direction:column;gap:3px;min-width:0}
 .vane{flex:0 0 auto;color:var(--water);opacity:.85}
-.uv-bar{height:6px;border-radius:4px;background:linear-gradient(90deg,#4E9E6E,#D9B437 38%,#C7431F 68%,#7A3A86);
-  position:relative;margin-top:13px;opacity:.9}
-.uv-pin{position:absolute;top:-5px;width:3px;height:16px;background:var(--ink);border-radius:2px;
-  box-shadow:0 0 0 2.5px var(--paper);transition:left 1s var(--ease)}
+/* The sun card says it with the bar. The pin is now and carries the reading, the bar is lit
+   as high as the rest of today goes, a ring marks a peak still to come with its hour, and the
+   scale past what today will reach stays dim. The charts' pen draws it in (REVEAL). */
+.uv-svg{display:block;width:100%;height:38px;overflow:visible;margin-top:2px}
+.uv-svg .uv-track{opacity:.2}
+html[data-theme=dark] .uv-svg .uv-track{opacity:.28}
 .uv-scale{position:relative;height:1.3em;font-family:var(--mono);font-size:10.5px;
-  color:var(--ink-faint);margin-top:6px;letter-spacing:.11em}
-/* on the same 0-12 scale as the pin: moderate from 3, high from 6, extreme at the end, so a
+  color:var(--ink-faint);margin-top:5px;letter-spacing:.11em}
+/* on the same 0-12 scale as the bar: moderate from 3, high from 6, extreme at the end, so a
    6.2 sits under HIGH instead of short of it */
 .uv-scale span{position:absolute;top:0;white-space:nowrap}
 .uv-scale span:nth-child(2){left:25%}
 .uv-scale span:nth-child(3){left:50%}
 .uv-scale span:last-child{right:0}
+/* the band the reading is in is the one word with ink; the face is monospaced, so the
+   heavier weight moves nothing */
+.uv-scale span.on{color:var(--ink);font-weight:600}
 @media (max-width:359px){.uv-scale{letter-spacing:.03em}}
 @media (max-width:339px){.uv-scale{font-size:9.5px;letter-spacing:.04em}}
+/* two columns on a narrow tablet leave a card about 250px wide, where MODERATE ran into HIGH */
+@media (min-width:560px) and (max-width:639px){.uv-scale{letter-spacing:.04em}}
 
 /* ── week ───────────────────────────────────────────── */
 /* The chart on top, then the same quiet axis as the hourly chart under a hairline: the day,
@@ -694,16 +692,15 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
 </section>
 
 <div class="cards">
-  <div class="card">
-    <h3 id="sunTitle">Sun &amp; heat</h3>
+  <div class="card" id="sunCard">
+    <h3 id="sunTitle">Sun</h3>
     <div class="lead" id="uvLead">—</div>
     <div id="uvDetails">
-      <div class="stat-row"><span>right now <b id="uvNow">—</b></span><span class="wide-stat">peak <b id="uvPeak">—</b></span></div>
-      <div class="uv-bar"><div class="uv-pin" id="uvPin"></div></div>
-      <div class="uv-scale"><span>LOW</span><span>MODERATE</span><span>HIGH</span><span>EXTREME</span></div>
+      <svg id="uvSvg" class="uv-svg" viewBox="0 0 350 38" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="UV index"></svg>
+      <div class="uv-scale" aria-hidden="true"><span>LOW</span><span>MODERATE</span><span>HIGH</span><span>EXTREME</span></div>
     </div>
   </div>
-  <div class="card">
+  <div class="card" id="eveCard">
     <h3>Tonight into tomorrow</h3>
     <div class="lead tonight-line" id="eveLine"><span id="eveLead">—</span><span id="moonTxt">—</span></div>
     <div class="gold-times" id="goldTimes"></div>
@@ -818,6 +815,13 @@ const tempColor=t=>{
     return mix(st[i][1],st[i+1][1],(t-st[i][0])/(st[i+1][0]-st[i][0]));
   return st[st.length-1][1];
 };
+/* the UV bar's gradient as a function, so the pen's light and the peak's ring take the colour
+   of the level they sit on */
+const UV_STOPS=[[0,"#4E9E6E"],[.38,"#D9B437"],[.68,"#C7431F"],[1,"#7A3A86"]];
+const uvColor=u=>{const f=clamp(u/12,0,1);
+  for(let i=0;i<UV_STOPS.length-1;i++)if(f<=UV_STOPS[i+1][0])
+    return mix(UV_STOPS[i][1],UV_STOPS[i+1][1],(f-UV_STOPS[i][0])/(UV_STOPS[i+1][0]-UV_STOPS[i][0]));
+  return UV_STOPS[UV_STOPS.length-1][1]};
 
 /* ── astronomy (SunCalc-derived) ────────────────────── */
 const RD=Math.PI/180, J1970=2440588, J2000=2451545, OB=RD*23.4397;
@@ -3524,20 +3528,21 @@ function dayStory(c,dy,h){
   return{html:first+" "+second,best:bestOutsideWindow(h,!!LOC.marine,dy)};
 }
 /* The farm's sun line states when, not what to wear: the sunscreen language was built
-   for the kids, and the kids are at the coast. */
+   for the kids, and the kids are at the coast. Nothing left to say today is null, and the
+   card steps aside rather than saying so. */
 function ridgeSunLine(c,dy,h,now){
   const today=dy.time[0];
-  const slots=h.time.map((t,i)=>({time:new Date(t),uv:Number(h.uv[i])||0,day:t.slice(0,10)}))
+  const slots=h.time.map((t,i)=>({time:new Date(t),uv:Number(h.uv?.[i])||0,day:t.slice(0,10)}))
     .filter(slot=>slot.day===today&&slot.uv>=3);
-  const peak=Math.max(Number(dy.uv_index_max[0])||0,...slots.map(slot=>slot.uv));
+  const peak=Math.max(Number(dy.uv_index_max?.[0])||0,...slots.map(slot=>slot.uv));
   const cls=peak>=6?"caution":"go";
   if(!slots.length){
-    if(now.getHours()>=17&&peak>=3)return{text:"The strong sun is done for today.",cls:"go"};
-    if(h.time.some((t,i)=>t.slice(0,10)===today&&h.uv?.[i]!=null))return{text:"Easy sun the rest of today.",cls:"go"};
-    return peak>=3?{text:"Strongest sun 10 a.m. to 5 p.m.",cls}:{text:"Easy sun today.",cls:"go"};
+    if(now.getHours()>=17&&peak>=3)return null;
+    if(h.time.some((t,i)=>t.slice(0,10)===today&&h.uv?.[i]!=null))return null;
+    return peak>=3?{text:"Strongest sun 10 a.m. to 5 p.m.",cls}:null;
   }
   const start=slots[0].time,end=new Date(slots[slots.length-1].time.getTime()+3.6e6);
-  if(now>=end)return{text:"The strong sun is done for today.",cls:"go"};
+  if(now>=end)return null;
   return{text:sentence(now>=start?`Strongest sun until ${spokenClock(end)}`:`Strongest sun ${spokenClock(start)} to ${spokenClock(end)}`),cls};
 }
 /* The window comes off the hourly curve crossing 3, the WHO line, and that part is
@@ -3547,36 +3552,38 @@ function ridgeSunLine(c,dy,h,now){
    sentence now matches the size of the number. Under 6 — WHO's "moderate" — there
    is no schedule, because a mild window is not worth one; from 6 up the clock
    earns its precision. As the season slides, the coast drifts from the windowed
-   sentence to the mild one to the low one without anyone touching it.
+   sentence to the mild one to no card at all without anyone touching it.
    The register keys off the sun still to come, not the day's peak. An August
    day that peaked at 8 over lunch is genuinely mild by late afternoon, and a
    card that keeps quoting the lunchtime number past it is answering a question
    nobody is asking any more. Morning of a high day warns with the window;
    once every remaining hour is under 6 it softens to the mild sentence; past
-   the window it is over. Today means today, applied to the hour. */
+   the window it is over. Today means today, applied to the hour.
+   The bar under the sentence already says mild, so the mild sentence keeps only the part
+   for the kids. Nothing left to say today is null, and the card steps aside. */
 function sunProtectionAdvice(c,dy,h,now){
   const today=dy.time[0];
-  const slots=h.time.map((t,i)=>({time:new Date(t),uv:Number(h.uv[i])||0,day:t.slice(0,10)}))
+  const slots=h.time.map((t,i)=>({time:new Date(t),uv:Number(h.uv?.[i])||0,day:t.slice(0,10)}))
     .filter(slot=>slot.day===today&&slot.uv>=3);
-  const peak=Math.max(Number(dy.uv_index_max[0])||0,...slots.map(slot=>slot.uv));
+  const peak=Math.max(Number(dy.uv_index_max?.[0])||0,...slots.map(slot=>slot.uv));
   const ahead=Math.max(Number(c.uv_index)||0,...slots.filter(slot=>slot.time>=now).map(slot=>slot.uv));
   if(!slots.length){
-    if(now.getHours()>=17&&peak>=3)return{text:"Sunscreen weather is over for today.",cls:"go"};
+    if(now.getHours()>=17&&peak>=3)return null;
     /* the hourly run covers the rest of today and none of it reaches 3: a storm or an
        overcast has taken the sun, whatever the clear-sky daily peak said. The 10-to-5 rule of
        thumb is only for when there is no hourly UV to read. */
-    if(h.time.some((t,i)=>t.slice(0,10)===today&&h.uv?.[i]!=null))return{text:"UV stays low the rest of today.",cls:"go"};
-    if(peak>=6)return{text:"Sunscreen weather from 10 a.m. to 5 p.m.",cls:"caution"};
-    if(peak>=3)return{text:"Mild sun today. Sunscreen if you're out a while.",cls:"go"};
-    return{text:"UV stays low today.",cls:"go"};
+    if(h.time.some((t,i)=>t.slice(0,10)===today&&h.uv?.[i]!=null))return null;
+    if(peak>=6)return{text:"Sunscreen from 10 a.m. to 5 p.m.",cls:"caution"};
+    if(peak>=3)return{text:"Sunscreen if you're out a while.",cls:"go"};
+    return null;
   }
   const start=slots[0].time;
   const end=new Date(slots[slots.length-1].time.getTime()+3.6e6);
-  if(now>=end)return{text:"Sunscreen weather is over for today.",cls:"go"};
-  if(ahead<6)return{text:"Mild sun today. Sunscreen if you're out a while.",cls:"go"};
+  if(now>=end)return null;
+  if(ahead<6)return{text:"Sunscreen if you're out a while.",cls:"go"};
   const timing=now>=start
-    ?`Sunscreen weather until ${spokenClock(end)}`
-    :`Sunscreen weather from ${spokenClock(start)} to ${spokenClock(end)}`;
+    ?`Sunscreen until ${spokenClock(end)}`
+    :`Sunscreen from ${spokenClock(start)} to ${spokenClock(end)}`;
   return{text:sentence(timing),cls:"caution"};
 }
 /* Denver answers the question a visitor actually has: what will feel comfortable while
@@ -3795,6 +3802,63 @@ document.getElementById("weekRows").addEventListener("click",e=>{
   weekBrief(open?b:null);
 });
 
+/* ── the sun bar ────────────────────────────────────── */
+/* One bar on the 0-12 UV scale says what the card used to spell out. The pin is now and
+   carries the reading, the bar is lit as high as the rest of today goes and the scale past it
+   stays dim, and a peak still to come is a ring with its hour. A unit is a screen pixel, as on
+   the charts, so the labels are placed off the mono face's .6em advance: the reading first,
+   then the peak's hour, stepped right of it when they would touch, or left unsaid (the
+   sentence above has the clock) rather than printed over it. The charts' pen draws it in:
+   its light climbs the scale in the colour of the level it passes, the pin drops onto the
+   bar as the pen reaches it, and a peak still to come rings once. */
+const UV_BANDS=["low","moderate","high","extreme"];
+function renderUV(uvNow,uvPk,uvI,h,css){
+  const svg=document.getElementById("uvSvg");
+  /* the card's own width: one column on a phone, half the row (less the gap) from 560 */
+  const W=matchMedia("(min-width:560px)").matches?(appW()-74)/2:appW()-40,H=38,y=25;
+  const X=u=>clamp(u,0,12)/12*W,adv=(s,fs)=>s.length*fs*.6;
+  const rv=REVEAL.sun.state!=="done",rvAt=(x,k)=>rvTag(rv,x,k);
+  const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3" stroke-linejoin="round"`;
+  const mono=`text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace"`;
+  const xe=Math.max(1,X(uvPk)),pin=uvNow!=null&&uvNow>=.5;
+  /* the word that gets ink is the band of the number printed on the pin, so a 2.96 that
+     reads 3.0 is moderate */
+  const shown=pin?+uvNow.toFixed(1):null,on=!pin?-1:shown<3?0:shown<6?1:shown<11?2:3;
+  let marks="",pinR=-Infinity;
+  if(pin){
+    const px=clamp(X(uvNow),2,W-2),t=shown.toFixed(1),tw=adv(t,14),tx=clamp(px,tw/2,W-tw/2);
+    pinR=tx+tw/2;
+    marks+=`<rect x="${(px-1.5).toFixed(1)}" y="${y-8}" width="3" height="16" rx="1.5" fill="${css.ink}" stroke="${css.paper}" stroke-width="5" paint-order="stroke"${rvAt(px,"pin")}/>
+      <text x="${tx.toFixed(1)}" y="11" ${mono} font-size="14" font-weight="600" fill="${css.ink}" ${halo}${rvAt(px,"label")}>${t}</text>`;
+  }
+  if(uvI>=0){
+    const u=+h.uv[uvI],cx=clamp(X(u),4.5,W-4.5),col=uvColor(u),t=hh(h.time[uvI]),tw=adv(t,10.5);
+    const tx=Math.max(clamp(cx,tw/2,W-tw/2),pinR+6+tw/2);
+    if(rv)marks+=`<circle cx="${cx.toFixed(1)}" cy="${y}" r="13" fill="none" stroke="${col}" stroke-width="1.6" opacity="0"${rvAt(cx,"ring")}/>`;
+    marks+=`<circle cx="${cx.toFixed(1)}" cy="${y}" r="4.2" fill="${css.paper}" stroke="${col}" stroke-width="2.4"${rvAt(cx,"dot")}/>`;
+    if(tx+tw/2<=W+.5)marks+=`<text x="${tx.toFixed(1)}" y="11" ${mono} font-size="10.5" font-weight="500" fill="${css.faint}" ${halo}${rvAt(cx,"label")}>${t}</text>`;
+  }
+  /* one cubic, so the pen's walk reads it like the charts' splines */
+  const bar=`M0 ${y}C${(xe/3).toFixed(1)} ${y} ${(xe*2/3).toFixed(1)} ${y} ${xe.toFixed(1)} ${y}`;
+  svg.setAttribute("viewBox",`0 0 ${W.toFixed(1)} ${H}`);
+  svg.setAttribute("aria-label",[pin?`UV ${shown.toFixed(1)} now, ${UV_BANDS[on]}`:"UV today",
+    uvI>=0?`${(+h.uv[uvI]).toFixed(1)} around ${hh(h.time[uvI])}`:null].filter(Boolean).join(", ")+".");
+  /* the lit stretch is a stroke clipped by a still rect, the WebKit-safe wipe: only the
+     stroke's dash moves, never the clip */
+  svg.innerHTML=`
+    <defs>
+      <linearGradient id="uvGrad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${W.toFixed(1)}" y2="0">${UV_STOPS.map(([o,c])=>`<stop offset="${o}" stop-color="${c}"/>`).join("")}</linearGradient>
+      <clipPath id="uvTrack"><rect x="0" y="${y-3}" width="${W.toFixed(1)}" height="6" rx="3"/></clipPath>
+    </defs>
+    <rect class="uv-track" x="0" y="${y-3}" width="${W.toFixed(1)}" height="6" rx="3" fill="url(#uvGrad)"/>
+    ${rv?[[12,.3,.2],[9,.6,.16],[7.5,1,.12]].map(([w,f,o])=>`<path class="rv-tail" data-f="${f}" data-o="${o}" d="${bar}" fill="none" stroke="url(#uvGrad)" stroke-width="${w}" stroke-linecap="round" opacity="0"/>`).join(""):""}
+    <g clip-path="url(#uvTrack)"><path class="tline" d="${bar}" fill="none" stroke="url(#uvGrad)" stroke-width="6" stroke-linecap="round" opacity=".92"/></g>
+    ${marks}
+    ${rv?`<g class="rv-tip" opacity="0" fill="${uvColor(0)}"><circle r="10" opacity=".14"/><circle r="6" opacity=".26"/><circle r="3.4"/><circle class="rv-core" r="1.5" fill="#FFF8EC" opacity=".95"/></g>`:""}`;
+  document.querySelectorAll(".uv-scale span").forEach((s,i)=>s.classList.toggle("on",i===on));
+  revealChart("sun",svg,{xa:0,xb:xe,dur:clamp(600+xe*4,900,1700),tail:40,color:x=>uvColor(x/W*12)});
+}
+
 /* ── golden hour, everywhere ────────────────────────── */
 /* The two ends of the day are not the same light and should not look it. Morning comes up
    through air that has been still all night, so it runs clean and rose and it lifts. Evening
@@ -3839,7 +3903,9 @@ let SCENE_IN=false;
    glow trailing it, the warmth or the water fills in behind it, the rain bars rise as it
    passes, and every mark arrives the moment the pen reaches it. The light takes the colour
    of the hour it is passing, the high rings once, and the skiff settles onto the water at
-   now. Three rules keep it an entrance rather than a show:
+   now. The sun card's bar is drawn by the same pen, up the UV scale rather than along the
+   clock, and its pin settles the way the skiff does. Three rules keep it an entrance rather
+   than a show:
    - It waits until the chart is on screen. On a phone the tide sits below the fold, so it
      plays when you scroll to it rather than to nobody.
    - It waits for the live forecast, or for a moment when there is only the cache, so the
@@ -3859,7 +3925,7 @@ let SCENE_IN=false;
 const REVEAL_EASE=[.5,.04,.2,1];               /* a gentle start and a long, soft landing */
 /* the keys are in page order: a chart on screen with one above it that is still drawing follows it */
 const REVEAL={hourly:{state:PRM?"done":"armed",seen:false,anims:[]},week:{state:PRM?"done":"armed",seen:false,anims:[]},
-  tide:{state:PRM?"done":"armed",seen:false,anims:[]}};
+  tide:{state:PRM?"done":"armed",seen:false,anims:[]},sun:{state:PRM?"done":"armed",seen:false,anims:[]}};
 let REVEAL_READY=false,REVEAL_WAIT=0;
 const bezier=(a,b,c,d)=>t=>{                  /* CSS cubic-bezier(a,b,c,d) as a function of time */
   let u=t;
@@ -3886,8 +3952,9 @@ function revealTry(k){
   if("IntersectionObserver" in window){const b=R.g.svg.getBoundingClientRect();
     if(!(b.height>0&&Math.min(b.bottom,innerHeight)-Math.max(b.top,0)>=b.height*.3)){R.seen=false;return}}
   let t0=performance.now();
-  /* on screen together, they draw down the page: the week follows the hours, and the tide
-     follows whichever of them is still drawing above it */
+  /* on screen together, they draw down the page: the week follows the hours, the tide
+     follows whichever of them is still drawing above it, and the sun bar whichever of the
+     three still is */
   const order=Object.keys(REVEAL);
   for(const u of order.slice(0,order.indexOf(k)))if(REVEAL[u].state==="running")t0=Math.max(t0,REVEAL[u].t0+420);
   R.state="running";R.t0=t0;
@@ -3964,7 +4031,7 @@ function revealApply(k){
   run(svg.querySelector(".rv-fill"),fillF,opt(0,D));
   for(const el of svg.querySelectorAll("[data-rk]")){
     const t=tAt(+el.dataset.rx)+(+el.dataset.rd||0),op=+(el.getAttribute("opacity")||1),a=n=>+el.getAttribute(n);
-    if(el.dataset.rk!=="label"&&el.dataset.rk!=="fade"&&el.dataset.rk!=="boat")
+    if(el.dataset.rk!=="label"&&el.dataset.rk!=="fade"&&el.dataset.rk!=="boat"&&el.dataset.rk!=="pin")
       el.style.transformOrigin=el.tagName==="rect"?`${a("x")+a("width")/2}px ${a("y")+a("height")}px`:`${a("cx")}px ${a("cy")}px`;
     switch(el.dataset.rk){
       case "rise":run(el,[{transform:"scaleY(0)",opacity:0},{transform:"scaleY(1)",opacity:op}],opt(t,560,"cubic-bezier(.3,1.4,.6,1)"));break;
@@ -3972,7 +4039,7 @@ function revealApply(k){
       case "label":run(el,[{transform:"translateY(5px)",opacity:0},{transform:"none",opacity:op}],opt(t+70,460,"cubic-bezier(.22,.68,.28,1)"));break;
       case "fade":run(el,[{opacity:0},{opacity:op}],opt(t,800,"ease-out"));break;
       case "ring":run(el,[{transform:"scale(.3)",opacity:0},{offset:.14,opacity:.8},{transform:"scale(1)",opacity:0}],opt(t+40,1300,"cubic-bezier(.2,.7,.3,1)"));break;
-      case "boat":run(el,[{transform:"translateY(-9px)",opacity:0},{offset:.45,opacity:1},{transform:"none",opacity:1}],opt(t,780,"cubic-bezier(.3,1.3,.5,1)"));break;
+      case "boat":case "pin":run(el,[{transform:"translateY(-9px)",opacity:0},{offset:.45,opacity:1},{transform:"none",opacity:1}],opt(t,780,"cubic-bezier(.3,1.3,.5,1)"));break;
     }
   }
   /* clean up after the last thing this apply actually scheduled, so a resize that lengthens
@@ -4006,11 +4073,13 @@ function revealArm(){
 function revealReady(){REVEAL_READY=true;clearTimeout(REVEAL_WAIT);REVEAL_WAIT=0;for(const k in REVEAL)revealTry(k)}
 if(!PRM){
   const seen=(k,on)=>{REVEAL[k].seen=on;if(on)revealTry(k)};
+  /* each drawing and the key it draws under, in page order */
+  const RV_OF={hourlySvg:"hourly",weekSvg:"week",tideSvg:"tide",uvSvg:"sun"};
   if("IntersectionObserver" in window){
     const io=new IntersectionObserver(es=>{for(const e of es)
-      seen(e.target.id==="tideSvg"?"tide":e.target.id==="weekSvg"?"week":"hourly",e.isIntersecting&&e.intersectionRatio>=.3)},{threshold:[0,.3,.6,1]});
-    for(const id of ["hourlySvg","weekSvg","tideSvg"])io.observe(document.getElementById(id));
-  }else{REVEAL.hourly.seen=REVEAL.week.seen=REVEAL.tide.seen=true}
+      seen(RV_OF[e.target.id],e.isIntersecting&&e.intersectionRatio>=.3)},{threshold:[0,.3,.6,1]});
+    for(const id in RV_OF)io.observe(document.getElementById(id));
+  }else{for(const k in REVEAL)REVEAL[k].seen=true}
 }
 let HOURLY_PEEK=null,PEEK_I=0,PEEK_TOUCH_X=null,PEEK_HIDE=0;
 let TIDE_PEEK=null,TIDE_I=0,TIDE_TOUCH_X=null,TIDE_HIDE=0;
@@ -4189,11 +4258,13 @@ function render(d,live,savedAt=0){
      forecast for 2:00 while the header shows the 2:20 reading, and the chart's NOW dot sat a
      degree or three away from the big number above it. The first hour is now: it carries the
      live reading (a copy, so the cache keeps the run as it came). The gust too: the chip
-     showed 30 mph while the headline, reading the top-of-hour forecast, said nothing. */
+     showed 30 mph while the headline, reading the top-of-hour forecast, said nothing. And
+     the UV, so the sun card's sentence and its pin read the same number. */
   const now0=(v,k)=>c[k]!=null&&Number.isFinite(+c[k])?+c[k]:v;
   const h={...d.hourly,temp:d.hourly.temp.map((t,i)=>i?t:now0(t,"temperature_2m")),
     feels:d.hourly.feels&&d.hourly.feels.map((t,i)=>i?t:now0(t,"apparent_temperature")),
-    gust:d.hourly.gust&&d.hourly.gust.map((g,i)=>i?g:now0(g,"wind_gusts_10m"))};
+    gust:d.hourly.gust&&d.hourly.gust.map((g,i)=>i?g:now0(g,"wind_gusts_10m")),
+    uv:d.hourly.uv&&d.hourly.uv.map((u,i)=>i?u:now0(u,"uv_index"))};
   const alerts=activeAlerts(d.alerts),warning=outdoorWarning(alerts);
   syncClock();
   const now=wallNow(), sunrise=new Date(dy.sunrise[0]), sunset=new Date(dy.sunset[0]);
@@ -4273,11 +4344,14 @@ function render(d,live,savedAt=0){
      and humidity is already carried by the feels-like number above. The wind is its speed and
      an arrow pointing into it, like the vane on the barn, and the compass point is only spoken.
      Calm air has no direction, so it gets no arrow. UV earns a chip where it earns the sun
-     card, from 3. */
+     card, from 3, and never without the card: a cache opened after the strong sun has gone
+     still holds a 3 from an hour that has passed, and the card has already stepped aside. */
+  const comfort=LOC.kind==="trip";
+  const sunAdvice=comfort?comfortAdvice(c,h):LOC.scene==="ridge"?ridgeSunLine(c,dy,h,now):sunProtectionAdvice(c,dy,h,now);
   const wNow=Math.round(c.wind_speed_10m),gNow=Math.round(c.wind_gusts_10m),chipData=[];
   if(c.wind_speed_10m!=null&&Number.isFinite(+c.wind_speed_10m))chipData.push(wNow<1?[CI.wind,"calm"]
     :[vane(c.wind_direction_10m),`<span class="sr-only">Wind from the ${dirLong(c.wind_direction_10m)}, </span>${wNow}${gNow-wNow>=6?`, gusts ${gNow}`:""} mph`]);
-  if(Number(c.uv_index)>=3)chipData.push([CI.uv,`uv ${Number(c.uv_index).toFixed(1)}`]);
+  if(sunAdvice&&Number(c.uv_index)>=3)chipData.push([CI.uv,`uv ${Number(c.uv_index).toFixed(1)}`]);
   document.getElementById("chips").innerHTML=chipData.map(([ic,t])=>`<span class="chip">${ic}${t}</span>`).join("");
 
   /* the charts' entrance waits for the live forecast, or for a moment when there is only the cache */
@@ -4534,20 +4608,29 @@ function render(d,live,savedAt=0){
       now>=w.start?"now–"+clock(w.end):spanTxt(w.start,w.end)).join(" · ")||"—";
   }
 
-  /* uv */
-  const uvNow=c.uv_index,uvPk=dy.uv_index_max[0];
-  const uvI=h.uv.indexOf(Math.max(...h.uv)),uvStrong=uvI>=0?Number(h.uv[uvI]):uvPk;
-  const uvTomorrow=uvI>=0&&h.time[uvI].slice(0,10)!==dy.time[0];
+  /* sun: the rest of today, off the hourly run whose first hour is the live reading. When
+     nothing is left today worth a sentence the card steps aside rather than saying so, and
+     the tonight card takes the row. Tomorrow's peak is tomorrow's. */
+  document.getElementById("sunCard").hidden=!sunAdvice;
+  document.getElementById("eveCard").classList.toggle("wide",!sunAdvice);
+  document.getElementById("sunTitle").textContent=comfort?"What to wear":"Sun";
   const ul=document.getElementById("uvLead");
-  const comfort=LOC.kind==="trip";
-  document.getElementById("sunTitle").textContent=comfort?"What to wear":"Sun & heat";
-  document.getElementById("uvDetails").style.display=comfort?"none":"";
-  const sunAdvice=comfort?comfortAdvice(c,h):LOC.scene==="ridge"?ridgeSunLine(c,dy,h,now):sunProtectionAdvice(c,dy,h,now);
-  ul.textContent=sunAdvice.text;
-  ul.className="lead "+sunAdvice.cls;
-  document.getElementById("uvNow").textContent=uvNow.toFixed(1);
-  document.getElementById("uvPeak").textContent=uvStrong.toFixed(1)+(uvI>=0?" around "+hh(h.time[uvI])+(uvTomorrow?" tomorrow":""):"");
-  document.getElementById("uvPin").style.left=Math.min(97,uvNow/12*100)+"%";
+  ul.textContent=sunAdvice?sunAdvice.text:"";
+  ul.className="lead "+(sunAdvice?sunAdvice.cls:"");
+  const fin=v=>v!=null&&Number.isFinite(+v)?+v:null;
+  const uvNow=fin(h.uv?.[0]);
+  let uvI=-1;
+  for(let i=1;i<h.time.length&&h.time[i].slice(0,10)===dy.time[0];i++){
+    const u=fin(h.uv?.[i]);
+    if(u!=null&&u>(uvI<0?uvNow??0:+h.uv[uvI]))uvI=i;
+  }
+  const uvPk=Math.max(uvNow??0,uvI>=0?+h.uv[uvI]:0);
+  /* a peak within half a point of the pin is the pin: a ring there would sit on it */
+  if(uvI>=0&&uvPk-(uvNow??0)<.5)uvI=-1;
+  /* a bar with neither a pin nor a peak on it has nothing to say */
+  const uvBar=!!sunAdvice&&!comfort&&(uvNow>=.5||uvI>=0);
+  document.getElementById("uvDetails").style.display=uvBar?"":"none";
+  if(uvBar)renderUV(uvNow,uvPk,uvI,h,css);
 
   /* tonight: one useful read, rather than another row of weather instruments */
   const el=document.getElementById("eveLead");
@@ -4725,7 +4808,7 @@ function paintLocationShell(){
   document.getElementById("wFishWrap").hidden=!LOC.fish;
   document.getElementById("sceneSvg").setAttribute("aria-label",LOC.sceneLabel);
   const comfort=LOC.kind==="trip";
-  document.getElementById("sunTitle").textContent=comfort?"What to wear":"Sun & heat";
+  document.getElementById("sunTitle").textContent=comfort?"What to wear":"Sun";
   document.getElementById("uvDetails").style.display=comfort?"none":"";
 }
 function paintLoadingState(){
@@ -4742,7 +4825,7 @@ function paintLoadingState(){
   for(const id of ["feels","hiNow","loNow"])document.getElementById(id).textContent="—";
   document.getElementById("feelsRow").hidden=false;
   document.getElementById("verdict").textContent="Reading the sky…";
-  for(const id of ["chips","skyFx","rainFx","sceneSvg","hourlySvg","hrLabels","weekRows","weekSvg","goldTimes","moonTxt"])
+  for(const id of ["chips","skyFx","rainFx","sceneSvg","hourlySvg","hrLabels","weekRows","weekSvg","goldTimes","moonTxt","uvSvg"])
     document.getElementById(id).innerHTML="";
   document.getElementById("flash").className="flash";
   document.getElementById("rainFx").className="rainfx";
@@ -4755,7 +4838,10 @@ function paintLoadingState(){
   document.getElementById("alertStrip").className="alert-strip";
   document.getElementById("alertStrip").innerHTML="";
   document.getElementById("stormSection").style.display="none";
-  for(const id of ["wFish","wWindow","uvLead","uvNow","uvPeak","eveLead"])
+  /* a place with no reading yet shows both cards as skeletons, not the last place's absence */
+  document.getElementById("sunCard").hidden=false;document.getElementById("eveCard").classList.remove("wide");
+  document.querySelectorAll(".uv-scale span").forEach(s=>s.classList.remove("on"));
+  for(const id of ["wFish","wWindow","uvLead","eveLead"])
     document.getElementById(id).textContent="—";
   HOURLY_PEEK=null;hideHourlyPeek();TIDE_PEEK=null;hideTidePeek();LAST=null;
 }

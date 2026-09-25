@@ -217,8 +217,12 @@ test("the page agrees with itself", async () => {
   assert.match(html, /const cInk=Math\.min\(contrast\(INK_ON,field\),contrast\(INK_ON,lit\)\)/);
   // the headline never names an hour that has already started
   assert.match(html, /second=wetI===0\?\(maxPop>=70\?"Rain likely any time now\."/);
-  // no sunscreen schedule when the rest of today's hourly UV stays under 3
-  assert.match(html, /return\{text:"UV stays low the rest of today\.",cls:"go"\}/);
+  // no sunscreen schedule when the rest of today's hourly UV stays under 3: the sun card steps
+  // aside rather than say so, and the hour it starts from is the live reading
+  assert.match(html, /if\(h\.time\.some\(\(t,i\)=>t\.slice\(0,10\)===today&&h\.uv\?\.\[i\]!=null\)\)return null;/);
+  assert.match(html, /document\.getElementById\("sunCard"\)\.hidden=!sunAdvice;/);
+  assert.match(html, /uv:d\.hourly\.uv&&d\.hourly\.uv\.map\(\(u,i\)=>i\?u:now0\(u,"uv_index"\)\)/);
+  assert.doesNotMatch(html, /UV stays low|Sunscreen weather is over|The strong sun is done|Easy sun/);
   // a golden-hour range is never cut at its dash, and the low stays with its words
   assert.match(html, /\.gold-bit\{white-space:nowrap\}/);
   assert.match(html, /const lowTxt=`Low\\u00A0\$\{nightLow\}°`;/);
@@ -233,8 +237,11 @@ test("the page agrees with itself", async () => {
   // text boxes only, and each star placed from its own percentages so a second call agrees
   assert.match(html, /createTreeWalker\(el,NodeFilter\.SHOW_TEXT\)/);
   assert.match(html, /parseFloat\(st\.getAttribute\("cx"\)\)/);
-  // the UV words start where their bands start on the pin's 0-12 scale
+  // the UV words start where their bands start on the bar's 0-12 scale
   assert.match(html, /\.uv-scale span:nth-child\(3\)\{left:50%\}/);
+  // and the bar is that same scale, lit in the gradient's own stops
+  assert.match(html, /const X=u=>clamp\(u,0,12\)\/12\*W/);
+  assert.match(html, /const UV_STOPS=\[\[0,"#4E9E6E"\],\[\.38,"#D9B437"\],\[\.68,"#C7431F"\],\[1,"#7A3A86"\]\];/);
 });
 
 test("each location keeps its own clock", async () => {
@@ -534,7 +541,7 @@ test("the almanac fishes the farm pond, the coast keeps sunscreen, and Denver dr
   assert.match(html, /Strongest sun /);
   // the travel slot replaces the UV meter with one concise, weather-aware clothing answer
   assert.match(html, /function comfortAdvice\(c,h\)/);
-  assert.match(html, /comfort\?"What to wear":"Sun & heat"/);
+  assert.match(html, /comfort\?"What to wear":"Sun"/);
   assert.match(html, /Warm coat, gloves, and waterproof shoes/);
   assert.match(html, /T-shirt weather\. Bring a light layer for tonight/);
   assert.match(html, /id="uvDetails"/);
@@ -616,14 +623,17 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /one local wildlife cue at a time/);
   assert.match(html, /seasonalFlies/);
   assert.match(html, /function sunProtectionAdvice\(c,dy,h,now\)/);
-  assert.match(html, /Sunscreen weather from /);
-  assert.match(html, /Sunscreen weather until /);
+  assert.match(html, /Sunscreen from /);
+  assert.match(html, /Sunscreen until /);
+  assert.doesNotMatch(html, /Sunscreen weather /);
   // the clock-and-warning sentence is reserved for 6+, WHO's "high" — measured on
   // the sun still to come, not the day's peak: an August day that peaked at 8 over
   // lunch is genuinely mild by late afternoon
   assert.match(html, /const ahead=Math\.max\(Number\(c\.uv_index\)\|\|0,\.\.\.slots\.filter\(slot=>slot\.time>=now\)/);
-  assert.match(html, /if\(ahead<6\)return\{text:"Mild sun today\. Sunscreen if you're out a while\.",cls:"go"\}/);
-  assert.match(html, /if\(peak>=6\)return\{text:"Sunscreen weather from 10 a\.m\. to 5 p\.m\."/);
+  // the bar already says mild, so the sentence keeps only the part for the kids
+  assert.match(html, /if\(ahead<6\)return\{text:"Sunscreen if you're out a while\.",cls:"go"\}/);
+  assert.match(html, /if\(peak>=6\)return\{text:"Sunscreen from 10 a\.m\. to 5 p\.m\."/);
+  assert.doesNotMatch(html, /Mild sun today\./);
   assert.doesNotMatch(html, /Wear SPF 30\+/);
   assert.doesNotMatch(html, /Reapply after two hours/);
   assert.match(html, /class="wildlife heron"/);
@@ -682,8 +692,10 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /deer-ear/);
   // "soupy" is earned, not decorative: real humidity sitting on real heat
   assert.match(html, /soupy\?" and soupy":humid\?" and humid":""/);
-  assert.match(html, /id="sunTitle">Sun &amp; heat</);
+  // nothing on the card is about heat; the headline and feels-like carry that
+  assert.match(html, /id="sunTitle">Sun</);
   assert.doesNotMatch(html, />UV · sun exposure</);
+  assert.doesNotMatch(html, /Sun &amp; heat|"Sun & heat"/);
   assert.doesNotMatch(html, />Evening outlook</);
 });
 
@@ -771,6 +783,78 @@ test("a tapped day says its feel and its sky, and a note only when there is some
   // a missing sky or chance is left unsaid: no invented sun, no easy day on missing odds
   assert.equal(brief(70, null, 10), "Mild.");
   assert.equal(brief(70, 2, null), "Mild, partly sunny. Rain odds unavailable.");
+});
+
+test("the sun card says it with the bar, and steps aside when today has nothing left", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const lift = (re) => { const m = html.match(re); assert.ok(m, `${re} should be extractable`); return m[0]; };
+
+  // the stat row is gone: the reading rides on the pin and a later peak is a ring with its hour
+  assert.doesNotMatch(html, /id="uvPeak"|id="uvPin"|right now <b id="uvNow">|class="uv-bar"/);
+  assert.match(html, /<svg id="uvSvg" class="uv-svg"/);
+  // today means today: the ring is the highest hour still to come today, never tomorrow's
+  assert.match(html, /for\(let i=1;i<h\.time\.length&&h\.time\[i\]\.slice\(0,10\)===dy\.time\[0\];i\+\+\)/);
+  assert.doesNotMatch(html, /uvTomorrow/);
+  // a ring within half a point of the pin would sit on it
+  assert.match(html, /if\(uvI>=0&&uvPk-\(uvNow\?\?0\)<\.5\)uvI=-1;/);
+  // labels are placed, not stamped: the peak's hour steps right of the reading or goes unsaid
+  assert.match(html, /const tx=Math\.max\(clamp\(cx,tw\/2,W-tw\/2\),pinR\+6\+tw\/2\)/);
+  assert.match(html, /if\(tx\+tw\/2<=W\+\.5\)marks\+=/);
+  // the band with ink is the band of the number printed on the pin
+  assert.match(html, /on=!pin\?-1:shown<3\?0:shown<6\?1:shown<11\?2:3;/);
+  assert.match(html, /\.uv-scale span\.on\{color:var\(--ink\);font-weight:600\}/);
+  // the charts' pen draws it in: one-shot, only on screen, never under reduced motion, and last
+  // in page order, so it follows whichever chart above it is still drawing
+  assert.match(html, /sun:\{state:PRM\?"done":"armed",seen:false,anims:\[\]\}\};/);
+  assert.match(html, /revealChart\("sun",svg,\{xa:0,xb:xe,/);
+  assert.match(html, /case "boat":case "pin":run\(/);
+  // the lit stretch is a stroke under a still clip: the WebKit-safe wipe
+  assert.match(html, /<g clip-path="url\(#uvTrack\)"><path class="tline" d="\$\{bar\}"/);
+  // with nothing left to say today the card steps aside and the tonight card takes the row;
+  // a place with no reading yet brings it back as a skeleton
+  assert.match(html, /document\.getElementById\("eveCard"\)\.classList\.toggle\("wide",!sunAdvice\)/);
+  assert.match(html, /document\.getElementById\("sunCard"\)\.hidden=false;document\.getElementById\("eveCard"\)\.classList\.remove\("wide"\);/);
+  // a bar with neither a pin nor a peak on it is not drawn
+  assert.match(html, /const uvBar=!!sunAdvice&&!comfort&&\(uvNow>=\.5\|\|uvI>=0\);/);
+
+  // The two sentences, run: what they say, and that each says nothing (null) rather than a
+  // sentence about nothing. The chip shows from 3, so a live 3 must always leave a sentence.
+  const ctx = vm.createContext({});
+  vm.runInContext([
+    lift(/const clock=d=>\{[^\n]*\};/),
+    lift(/const spokenClock=[^\n]*/),
+    lift(/const sentence=[^\n]*/),
+    html.slice(html.indexOf("function ridgeSunLine("), html.indexOf("/* Denver answers the question")),
+    "globalThis.ridgeSunLine=ridgeSunLine;globalThis.sunProtectionAdvice=sunProtectionAdvice;",
+  ].join("\n"), ctx);
+  const day = "2026-08-02";
+  const run = (from, uv) => ({ time: uv.map((_, i) => `${day}T${String(from + i).padStart(2, "0")}:00`), uv });
+  const dy = (max = 9) => ({ time: [day, "2026-08-03"], uv_index_max: [max, max] });
+  const at = (hm) => new Date(`${day}T${hm}`);
+  const coast = (hm, uvNow, uv, max) => ctx.sunProtectionAdvice({ uv_index: uvNow }, dy(max), run(+hm.slice(0, 2), [uvNow, ...uv]), at(hm));
+  const farm = (hm, uvNow, uv, max) => ctx.ridgeSunLine({ uv_index: uvNow }, dy(max), run(+hm.slice(0, 2), [uvNow, ...uv]), at(hm));
+  assert.equal(coast("14:20", 8.4, [7.2, 4.9, 2.1, .6]).text, "Sunscreen until 5 p.m.");
+  assert.equal(coast("09:05", 4.1, [5.8, 7, 7, 6.6, 5.1, 3.4, 1.8]).text, "Sunscreen until 4 p.m.", "a live 4.1 is inside the window");
+  assert.equal(coast("07:05", 1.2, [2.6, 4, 6, 7, 7, 6.6, 5.1, 3.4, 1.8]).text, "Sunscreen from 9 a.m. to 4 p.m.");
+  assert.equal(coast("14:40", 3.8, [3.6, 2.4, 1], 4.2).text, "Sunscreen if you're out a while.");
+  assert.equal(farm("09:05", 4.1, [5.8, 7, 7, 6.6, 5.1, 3.4, 1.8]).text, "Strongest sun until 4 p.m.");
+  assert.equal(farm("07:05", 1.2, [2.6, 4, 6, 7, 7, 6.6, 5.1, 3.4, 1.8]).text, "Strongest sun 9 a.m. to 4 p.m.");
+  // evening, an overcast that took the sun, and a winter noon all have nothing to say
+  assert.equal(coast("19:58", .5, [.2, 0, 0]), null);
+  assert.equal(coast("12:10", 1.4, [1.8, 1.6, 1.1, .6]), null, "the hourly run never reaches 3");
+  assert.equal(farm("19:58", .4, [.1, 0, 0], 7), null);
+  assert.equal(farm("12:10", 2.6, [2.6, 2.2, 1.4], 2.8), null);
+  // a live 3 is a sentence at both places, even when the hours after it fall away
+  for (const hm of ["10:15", "14:59", "16:40"]) {
+    assert.ok(coast(hm, 3, [2.4, 1, 0]), `coast ${hm}: a chip at 3 needs its card`);
+    assert.ok(farm(hm, 3, [2.4, 1, 0]), `farm ${hm}: a chip at 3 needs its card`);
+  }
+  // no hourly UV to read: the rule of thumb, off the daily peak, and nothing without one
+  const noHourly = (max) => ctx.sunProtectionAdvice({ uv_index: null }, { time: [day], uv_index_max: max == null ? undefined : [max] }, { time: [`${day}T11:00`] }, at("11:10"));
+  assert.equal(noHourly(7).text, "Sunscreen from 10 a.m. to 5 p.m.");
+  assert.equal(noHourly(null), null);
+  // and the chip is never shown without the card
+  assert.match(html, /if\(sunAdvice&&Number\(c\.uv_index\)>=3\)chipData\.push\(\[CI\.uv,/);
 });
 
 test("Denver is a parked travel scene: kept as the template, out of the rotation", async () => {
@@ -1090,13 +1174,16 @@ test("the page reads top down: now, today, the week, and nothing it has already 
   assert.match(html, /\.week\{padding:28px 20px 0\}/);
   // and the charts draw in down the page in the same order: REVEAL's keys are that order, and
   // each chart follows whichever chart above it is still drawing
-  assert.match(html, /const REVEAL=\{hourly:\{[^}]*\},week:\{[^}]*\},\n  tide:\{/);
+  assert.match(html, /const REVEAL=\{hourly:\{[^}]*\},week:\{[^}]*\},\n  tide:\{[^}]*\},sun:\{[^}]*\}\};/);
   assert.match(html, /const order=Object\.keys\(REVEAL\);\n  for\(const u of order\.slice\(0,order\.indexOf\(k\)\)\)if\(REVEAL\[u\]\.state==="running"\)t0=Math\.max\(t0,REVEAL\[u\]\.t0\+420\);/);
-  assert.match(html, /for\(const id of \["hourlySvg","weekSvg","tideSvg"\]\)io\.observe/);
+  assert.match(html, /const RV_OF=\{hourlySvg:"hourly",weekSvg:"week",tideSvg:"tide",uvSvg:"sun"\};/);
+  assert.match(html, /for\(const id in RV_OF\)io\.observe\(document\.getElementById\(id\)\)/);
   // and a chart the live paint has just pushed below the fold is measured again, not drawn to nobody
   assert.match(html, /if\(!\(b\.height>0&&Math\.min\(b\.bottom,innerHeight\)-Math\.max\(b\.top,0\)>=b\.height\*\.3\)\)\{R\.seen=false;return\}/);
   assert.ok(html.indexOf("renderWeek(wk,css,we);") > 0 && html.indexOf("renderWeek(wk,css,we);") < html.indexOf("if(LOC.tide)renderTides("),
     "the week is armed before the tide, or the tide would not see it running");
+  assert.ok(html.indexOf("if(LOC.tide)renderTides(") < html.indexOf("if(uvBar)renderUV("),
+    "the sun bar is armed after the tide, or it would not see the tide running");
 
   // The wind chip is the speed and an arrow into the wind; the compass point is only spoken,
   // and calm air gets no arrow at all. dirTxt stays for the tropics rows.
@@ -1107,8 +1194,8 @@ test("the page reads top down: now, today, the week, and nothing it has already 
   assert.match(html, /\.chip \.vane\{color:currentColor;opacity:\.8\}/);
   // the chip never carries the barn vane's attribute: scene.mjs reads the first one in the page
   assert.doesNotMatch(html.slice(html.indexOf("const vane=deg=>"), html.indexOf("function paintTemperature(")), /data-vane-bearing/);
-  // UV earns a chip where it earns the sun card, from 3
-  assert.match(chips, /if\(Number\(c\.uv_index\)>=3\)chipData\.push/);
+  // UV earns a chip where it earns the sun card, from 3, and never without the card
+  assert.match(chips, /if\(sunAdvice&&Number\(c\.uv_index\)>=3\)chipData\.push/);
   // feels-like earns its line by the rule the hourly readout already uses
   assert.match(html, /<div id="feelsRow">feels <b id="feels">/);
   assert.match(html, /\|\|Math\.abs\(Math\.round\(c\.apparent_temperature\)-Math\.round\(c\.temperature_2m\)\)<3;/);

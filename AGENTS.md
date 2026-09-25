@@ -84,6 +84,18 @@ place name.
   differ. The marine run is two days, because after dark the call is tomorrow's, and a day
   it does not reach is unavailable. `boatCall` and `outsideCall` are pure and test.mjs runs
   them. The family says windy, never blustery or breezy, and test.mjs checks the whole file.
+- **The sun card is the rest of today, and it steps aside.** In September 2026 the card became
+  `Sun` over one bar on the 0-12 scale: the pin is now and carries the reading, the bar is lit
+  as high as the rest of today goes and dims past it, and a peak still to come today is a ring
+  with its hour. The four scale words stay, because they are the only thing that says what 8.4
+  means, and the band the pin is in is the one with ink. One sentence survives: the coast's
+  sunscreen clock for the kids ("Sunscreen until 4 p.m.", "Sunscreen if you're out a while."),
+  the farm's "Strongest sun until 4 p.m.". When nothing left today reaches 3, which is every
+  evening, a storm and most winter days, both sentence functions return null, `#sunCard` is
+  hidden and Tonight goes wide. A peak is never borrowed from tomorrow. The hourly run's first
+  hour carries the live UV, so the sentence and the pin read the same number. The UV chip
+  shows from 3 and only while the card does (`sunAdvice&&`), because a cache opened after the
+  strong sun still holds a 3 from an hour that has passed.
 - Golden hour is sun elevation +6° to -4°, the convention the photo apps use.
   Blue hour is -4° to -6°. The displayed sunrise and sunset times come from the
   forecast API; sun and moon positions and the golden-hour boundaries are
@@ -443,9 +455,13 @@ chart is drawn along its own time axis: a pen runs the line with a small light a
 (coloured by the hour it is passing on the hourly, a glint on the water on the tide) and a
 comet of glow trailing it that gathers as the pen speeds up and folds away as it lands, the fill comes in behind it, the rain bars rise as it passes, each label
 and dot arrives as the pen reaches it, the high rings once, and the skiff settles onto the
-water at now with a ripple. The hourly takes about 2.3s on a phone. Charts on screen together
-draw down the page: the week follows the hourly by 0.4s and the tide follows whichever chart
-above it is still drawing (`REVEAL`'s keys are in page order). All of it is in `REVEAL` in index.html.
+water at now with a ripple. The sun card's bar is drawn by the same pen (`sun` in `REVEAL`),
+up the UV scale rather than along a clock: its light takes the colour of the level it passes,
+the pin drops onto the bar the way the skiff settles when the pen reaches now, and a peak still
+to come today pops and rings once. The hourly takes about 2.3s on a phone. Charts on screen
+together draw down the page: the week follows the hourly by 0.4s, and the tide and then the sun
+bar follow whichever drawing above them is still running (`REVEAL`'s keys are in page order,
+and so is `RV_OF`, the observer's map). All of it is in `REVEAL` in index.html.
 
 - **It plays to someone.** It waits until the chart is at least 30% on screen, so on a
   phone the tide plays when you scroll to it. It waits for the live forecast, or 0.9s when

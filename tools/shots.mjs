@@ -142,7 +142,11 @@ for (const cs of cases) {
           out: T("outTitle"), call: T("waterLead"),
           why: document.getElementById("callWhy")?.hidden ? null : T("callWhy"),
           detail: [...document.querySelectorAll("#outSection .out-line:not([hidden])")].map((l) => l.textContent.trim()),
-          sun: T("uvLead"), tonight: T("eveLead"),
+          // the sun card steps aside when nothing is left today; the bar speaks its reading
+          sun: document.getElementById("sunCard")?.hidden ? "(steps aside)" : T("uvLead"),
+          uvBar: document.getElementById("sunCard")?.hidden || document.getElementById("uvDetails")?.style.display === "none"
+            ? null : document.getElementById("uvSvg")?.getAttribute("aria-label"),
+          tonight: T("eveLead"),
           tideNote: T("tideNote"), hourlyNote: T("hourlyNote"), weekNote: T("weekNote"),
           // the week's days, with the weekend's banded columns in brackets
           week: [...document.querySelectorAll("#weekRows .wk-day")].map((d) => { const n = d.querySelector(".wk-name").textContent; return d.classList.contains("we") ? `[${n}]` : n; }).join(" "),
