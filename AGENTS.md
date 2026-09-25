@@ -63,7 +63,13 @@ place name.
 - **Never promise what the forecast cannot keep.** The headline is built from
   the hourly run, not from 7-day weather codes, because those flip between model
   runs and made the app name a storm date that moved every few hours. The headline's
-  look-ahead is capped at three days and always prints the odds. The week reaches further
+  look-ahead is capped at three days and always prints the odds. It names what is coming from
+  the wet hours' own codes, freezing rain before snow before rain (`Snow likely around 4 p.m.`,
+  `Freezing rain could start any time.`, `Maybe a few flurries.`), because it once called the
+  snow the Tonight card named "Rain likely". After dark the small hours before morning are
+  tonight's (`Showers possible around 1 a.m.`) and only daylight is "tomorrow", so one night is
+  not given two names. Windy is said from the first hour the gusts reach 28, not the windiest,
+  so a gust the chip is already showing is `windy now`. The week reaches further
   because it is a chart of the run's own numbers, and the weekend note beside it stays
   numbers: a high, and the odds wherever there is rain to talk about.
 - **Scales are honest.** The tide chart is measured up from the chart datum
@@ -78,7 +84,9 @@ place name.
   way a rooftop vane does. The wind chip carries the same vane: the speed and an arrow
   into the wind. Josh does not care about "NNW", the arrow already says it, so the compass
   point is spoken only (`dirLong`, sr-only) and `dirTxt` is left to the tropics rows. Under
-  1 mph the chip says `calm` with no arrow, because calm air has no direction to point.
+  1 mph the chip says `calm` with no arrow, because calm air has no direction to point, and
+  gusts running 6 or more over it are still said (`calm, gusts 9 mph`): the burgee and the
+  trees are moving to them.
 - **Alignment comes from a rule, not a magic number.** The now block uses
   `align-items: last baseline`; the degree mark is its own flex column so
   numeral tracking can never crowd it.
@@ -88,7 +96,11 @@ place name.
   literal: a window runs from sunrise minus 30 minutes to sunset plus 30, so in
   December nobody is offered 4–7p on the water, and from about three the window is
   tomorrow's. It is said on the hour (`4–7p`, `11a–2p`, `now–5p`); today goes unsaid
-  and tomorrow is always said.
+  and tomorrow is always said. It is picked against the wall clock
+  (`bestOutsideWindow(h,coastal,dy,now)`), because a cache opened hours after it was written
+  still starts at its own first hour and offered `now–12p` at 1:40. Nothing that has ended is
+  offered, `now–` is said only while now is inside the window, and a window under way is graded
+  on the hours it has left.
 - **The outside call is one word.** Boating season is almost over, so in September 2026
   the "On the water" card became `#outSection`: Go, Iffy or No go, with a dot in the
   call's colour, graded over the window `bestOutsideWindow` picked rather than the moment
@@ -102,17 +114,31 @@ place name.
   plain outside ladder, and no marine forecast is asked for. The farm keeps its own
   sentences as the why ("Windy up here.", "Cold one. Bundle up for the morning rounds.")
   and its piddle window on a line of its own, so the word there only ever says
-  "tomorrow". A warning or a storm overhead is No go with the event's name, and takes the
-  window, the piddle line and the bite times with it. There is no wind arrow or speed on
+  "tomorrow". A warning or a storm overhead is No go with the event's name. Any No go (a
+  warning, a storm overhead, thunder in the window, ice, a gale) takes the window, the piddle
+  line and the bite times with it: the bite line once sat under `No go · Thunder around 4p`
+  with a window inside the thunder hour. Thunder in the hour under way is `Thunder nearby`. A
+  gust or a rain chance the run does not carry is unknown, never calm or dry: at best Iffy,
+  `gusts unavailable` on the boat's line, `Rain odds unavailable` (and off the water
+  `Gusts unavailable`) as the why, and a known No go still wins. There is no wind arrow or speed on
   the card: the chip is now and the card is the window, which is why the two gusts can
   differ. The marine run is two days, because after dark the call is tomorrow's, and a day
-  it does not reach is unavailable. `boatCall` and `outsideCall` are pure and test.mjs runs
-  them.
+  it does not reach is unavailable. `boatCall`, `outsideCall` and `outsideCard` (the whole
+  card: title, word, when, the boat's line, the piddle and bite lines) are pure and test.mjs
+  runs them. `render()` only paints the card.
 - **The sun card is the rest of today, and it steps aside.** In September 2026 the card became
   `Sun` over one bar on the 0-12 scale: the pin is now and carries the reading, the bar is lit
   as high as the rest of today goes and dims past it, and a peak still to come today is a ring
-  with its hour. The four scale words stay, because they are the only thing that says what 8.4
-  means, and the band the pin is in is the one with ink. One sentence survives: the coast's
+  with its hour. The four scale words stay as a quiet ruler, because they are the only thing
+  that says what 8.4 means, and none of them is inked: they are laid out by CSS, and EXTREME,
+  set flush right, covers about 10.2 to 12, so an inked HIGH once sat 100px left of a 10.6 pin
+  standing under EXTREME. The pin's number and the lit bar carry the reading, and the bar's
+  label speaks the band and the peak (`UV 4.1 now, moderate, peaking at 7.0 around 11 a.m.`). A
+  peak within half a point of the pin and in its band is the pin and gets no ring. One that
+  crosses into a higher band keeps its ring, its dot nudged clear of the pin, or
+  `Sunscreen if you're out a while.` sat over a bar that showed nothing past LOW. The peak is
+  searched from the hour now is in, so a cache opened late rings nothing that has passed, and
+  the loading and error shell hide the scale with the bar. One sentence survives: the coast's
   sunscreen clock for the kids ("Sunscreen until 4 p.m.", "Sunscreen if you're out a while."),
   the farm's "Strongest sun until 4 p.m.". When nothing left today reaches 3, which is every
   evening, a storm and most winter days, both sentence functions return null, `#sunCard` is
@@ -212,8 +238,9 @@ never Go. It writes screenshots to `tools/shots/` and prints the generated copy 
 headline, the chips as they are seen, the call's title, word, when, why and lines, the sun
 sentence, tonight and the week's note, with the banded weekend in brackets), so wording
 changes are reviewable as text. A scenario can carry an `expect`: the week's columns and
-banded days, the call's title, word, why and lines, the sun card, and how many times the seas
-were asked for. It exits non-zero when one does not show what it is there for.
+banded days, the call's title, word, why and lines, the sun card, the sun bar's spoken label,
+and how many times the seas were asked for. The loading-shell check at the end also holds
+the sun scale hidden while there is no bar. It exits non-zero when one does not show what it is there for.
 
 `tools/scene.mjs` is for anything that moves. Nineteen scenes force the light
 and weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
@@ -264,11 +291,12 @@ If you add a location, give it a `tz` and a `tzLabel`. Nothing else needs to kno
 
 ## On file size
 
-`index.html` is around 160 KB of source, and an early plan set 160 KB as a
-ceiling. That number was about the source file and it is not the number that
-matters. GitHub Pages serves the file gzipped, so what a phone actually
-downloads is **about 53 KB**, once, and the service worker caches it after
-that. Crossing the old line costs a phone roughly one extra kilobyte.
+`index.html` is about 400 KB of source (September 2026), and an early plan set
+160 KB as a ceiling. That number was about the source file and it is not the
+number that matters. GitHub Pages serves the file gzipped, so what a phone
+actually downloads is **about 130 KB**, once, and the service worker caches it
+after that. Measure both rather than trusting this paragraph: `wc -c index.html`
+for the source and `gzip -6c index.html | wc -c` for roughly what is sent.
 
 So: do not delete working code to stay under a self-imposed source limit. Write
 what the app needs. If the transferred size ever approaches a few hundred KB,
@@ -407,8 +435,8 @@ Established with Josh and enforced by `test.mjs`:
   Do not upgrade them into a forecast, and do not replace them with an API; the
   honesty is that the moon times are real and the theory is the almanac's. The
   pond's extra rise rings during a window read the same moon as the card, and
-  the windows disappear under a warned storm so they never read as an
-  invitation to stand in a thunderstorm with a rod. The footer used to carry that
+  the windows disappear under any No go, a warned storm and thunder in the window among
+  them, so they never read as an invitation to stand in a thunderstorm with a rod. The footer used to carry that
   framing. Now the line carries it, `fish bite · by the moon`, with the full sentence in
   its title and for screen readers.
 
@@ -505,6 +533,11 @@ and so is `RV_OF`, the observer's map). All of it is in `REVEAL` in index.html.
 - **It plays to someone.** It waits until the chart is at least 30% on screen, so on a
   phone the tide plays when you scroll to it. It waits for the live forecast, or 0.9s when
   there is only the cache, so the pen does not draw one line and then swap it for another.
+  The observer's word can be a render old, so a chart is measured once more before it plays,
+  a frame after the paint, because the alerts, the nowcast strip and the call are painted
+  after the charts and move them again. That look only ever holds a chart back. It never
+  clears the observer's word: cleared mid-render, a week that grew back on screen stayed blank
+  until the next scroll crossed a threshold.
 - **A re-render continues it.** The live data landing or a resize while it runs re-applies
   the same clock with the elapsed time, instead of restarting it or snapping it to full. The
   old draw-in restarted on the live paint, so a cached line vanished and redrew.
@@ -526,19 +559,28 @@ and so is `RV_OF`, the observer's map). All of it is in `REVEAL` in index.html.
   or pops takes its transform origin from its own geometry in user space, not a fill-box
   percentage.
 
-`tools/interactions.mjs` runs ten scenarios: narrow and wide chart edges, keyboard
+`tools/interactions.mjs` runs thirteen scenarios: narrow and wide chart edges, keyboard
 navigation, location switching, snow/ice labels, a warning that makes the call No go with
 the event's name and takes the window and bite lines until it expires, source instructions,
-retry, and cached/online recovery. Run it with the same font and browser settings as
+a farm afternoon with thunder in the run and nothing warned (No go, no piddle or bite line),
+the entrance across a cache-to-live paint that drops the nowcast strip with the week at the
+fold (nothing on screen left undrawn) and with no cache (the tide the live paint pushes below
+the fold waits for the scroll, then draws), retry, and cached/online recovery. The two
+entrance checks run with motion on; everything else runs under reduced motion. Run it with the same font and browser settings as
 `tools/shots.mjs`. Request ordering and alert expiry also run in `node --test test.mjs`.
 
 ## Known issues
 
 - `api.open-meteo.com` and `marine-api.open-meteo.com` are unreachable from some
-  networks. DNS resolves, TCP never connects, on both 443 and 80. The app falls
-  back to cached data behind a quiet "cached" label, which reads as working but
-  stale. `api.weather.gov` answers fine on the same network. The fix under
-  discussion is an NWS gridpoint fallback source: temperature, rain chance,
-  wind, gusts and cloud all come through it, UV, the 15-minute nowcast and wave
-  height do not. On such a network the boat call stays Iffy with seas unavailable,
-  unless the wind alone makes it No go. That is the honest answer, not a bug.
+  networks. DNS resolves, TCP never connects, on both 443 and 80. With both hosts
+  down the forecast fetch fails and the page shows the last cached reading (same
+  day, up to 6 hours old) and the call worked out from it, cached seas and all,
+  behind the age stamp and the dimmed live dot, which reads as working but stale.
+  Past 6 hours or into a new day there is no cache, and the page shows the
+  unavailable state with no call. When the marine host alone fails, the forecast
+  still lands and the boat call is Iffy with seas unavailable, unless the wind
+  alone makes it No go. That is the honest answer, not a bug. `api.weather.gov`
+  answers fine on the same network. The fix under discussion is an NWS gridpoint
+  fallback source: temperature, rain chance, wind, gusts and cloud all come
+  through it, UV, the 15-minute nowcast and wave height do not, so under it the
+  boat call would be Iffy with seas unavailable in the same way.

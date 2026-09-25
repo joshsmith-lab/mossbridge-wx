@@ -100,7 +100,10 @@ const CASES = [
     o: { baseTemp: 58, nowTemp: 61, feels: 61, rh: 55, isDay: 1, code: 2, cloud: 35, nowWind: 9, nowDir: 330, nowGust: 15, nowUv: 2.9, uvMax: 3.2,
       windAmp: 7, gustAmp: 10, sunrise: "06:48", sunset: "17:09", popCurve: () => 5, dailyPop: (p) => p.fill(10),
       dailyTemps: (hi, lo, c) => { hi.splice(0, 7, 62, 60, 58, 62, 65, 61, 57); lo.splice(0, 7, 46, 43, 40, 44, 49, 45, 39); } },
-    expect: { cols: 7, weekend: ["Today", "Sun"], out: "Outside · Porters Neck", marine: 0, detail: 0 } },
+    // and the card says "Sunscreen if you're out a while." at 2.9: the 3.1 still to come crosses into
+    // moderate, so its ring stays, or the only UV on the page read LOW under a sunscreen sentence
+    expect: { cols: 7, weekend: ["Today", "Sun"], out: "Outside · Porters Neck", marine: 0, detail: 0,
+      sun: "Sunscreen if you're out a while.", uvBar: /^UV 2\.9 now, low, peaking at 3\.1 around 12 p\.m\.$/ } },
   // a cold, clear January morning on the coast: the outside call is iffy on the cold, and the sun card steps aside
   { name: "18-january-porters-neck", loc: "mb", when: "2027-01-14T08:40:00",
     o: { baseTemp: 32, nowTemp: 28, feels: 20, rh: 58, isDay: 1, code: 0, cloud: 4, nowWind: 11, nowDir: 340, nowGust: 19, nowUv: 0.6, uvMax: 2.4,
@@ -239,6 +242,7 @@ for (const cs of cases) {
       if (typeof ex.detail === "number" && copy.detail.length !== ex.detail) fail(`${copy.detail.length} detail lines, expected ${ex.detail}`);
       if (ex.detail instanceof RegExp && !copy.detail.some((l) => ex.detail.test(l))) fail(`detail ${JSON.stringify(copy.detail)}`);
       if (ex.sun && copy.sun !== ex.sun) fail(`sun card "${copy.sun}", expected "${ex.sun}"`);
+      if (ex.uvBar && !ex.uvBar.test(copy.uvBar || "")) fail(`sun bar "${copy.uvBar}"`);
       if ("marine" in ex && marineAsks !== ex.marine) fail(`${marineAsks} marine requests, expected ${ex.marine}`);
     }
     if (errs.length) { failures++; console.log(`!! ${cs.name} ${vp.tag}: ${errs.join(" | ")}`); }
@@ -263,8 +267,10 @@ for (const cs of cases) {
     scene: document.getElementById("sceneSvg").getAttribute("aria-label"),
     card: document.getElementById("outTitle").textContent,
     window: document.getElementById("wWindowLbl").textContent,
+    // the sun bar is drawn only from a reading, so its scale words go with it
+    uvScale: getComputedStyle(document.getElementById("uvDetails")).display,
   }));
-  if (shell.tide !== "none" || !shell.scene.includes("Appalachian") || !shell.card.includes("farm") || shell.window !== "best time to piddle") {
+  if (shell.tide !== "none" || !shell.scene.includes("Appalachian") || !shell.card.includes("farm") || shell.window !== "best time to piddle" || shell.uvScale !== "none") {
     failures++; console.log(`!! location-correct loading shell: ${JSON.stringify(shell)}`);
   }
   if (errs.length) { failures++; console.log(`!! loading hourly explorer: ${errs.join(" | ")}`); }
