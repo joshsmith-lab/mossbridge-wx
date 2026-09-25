@@ -107,9 +107,10 @@ try{
     let features=SEVERE(now);
     await page.route("**api.weather.gov/alerts**",route=>route.fulfill({json:{features}}));
     await load(page);
-    assert.match(await page.locator("#waterLead").innerText(),/Severe Thunderstorm Warning/);
+    assert.match(await page.locator("#waterLead").innerText(),/^No go$/);
+    assert.match(await page.locator("#callWhy").innerText(),/Severe Thunderstorm Warning/);
     assert.equal(await page.locator("#wFishWrap").isVisible(),false);
-    assert.equal(await page.locator("#wWindow").innerText(),"Warning in effect");
+    assert.equal(await page.locator("#wWindowWrap").isVisible(),false);
     await page.locator("#alertStrip").click();
     assert.match(await page.locator(".alert-body").innerText(),/Move to an interior room/);
     assert.equal(await page.locator("#alertStrip").getAttribute("aria-expanded"),"true");
@@ -117,7 +118,9 @@ try{
     await page.evaluate(()=>refresh());
     assert.equal(await page.locator("#alertStrip").isVisible(),false);
     assert.equal(await page.locator("#wFishWrap").isVisible(),true);
-    assert.match(await page.locator("#waterLead").innerText(),/Good day to be outside/);
+    assert.equal(await page.locator("#wWindowWrap").isVisible(),true);
+    assert.match(await page.locator("#waterLead").innerText(),/^Go/);
+    assert.equal(await page.locator("#callWhy").isVisible(),false);
     assert.deepEqual(errors,[]);await context.close();checks++;
   }
   {

@@ -60,7 +60,30 @@ place name.
   numeral tracking can never crowd it.
 - **Today means today.** Cards about today do not silently recommend tomorrow.
   Mornings almost always outscore afternoons, so `bestOutsideWindow` stays on
-  today unless today is out of daylight or genuinely rough.
+  today unless today is out of daylight or genuinely rough. "Out of daylight" is
+  literal: a window runs from sunrise minus 30 minutes to sunset plus 30, so in
+  December nobody is offered 4–7p on the water, and from about three the window is
+  tomorrow's. It is said on the hour (`4–7p`, `11a–2p`, `now–5p`); today goes unsaid
+  and tomorrow is always said.
+- **The outside call is one word.** Boating season is almost over, so in September 2026
+  the "On the water" card became `#outSection`: Go, Iffy or No go, with a dot in the
+  call's colour, graded over the window `bestOutsideWindow` picked rather than the moment
+  you look, so the word and the time beside it cannot disagree. On the coast in boat
+  season (`LOCS.mb.boatSeason`, March 15 to October 31, from Josh's club trips) it is the
+  boat call, titled `On the water · Figure 8`, with the window beside the word and one line
+  under it: that window's top gust and that day's seas. Gusts 30 or seas 5 is No go, gusts
+  22 or seas 3 is Iffy ("Stick to the ICW"), no seas reading is Iffy and never Go, rain
+  likely and a feels-like under 50 are Iffy. The reading that tipped it wears the call's
+  colour and nothing else is said. Off season the coast is `Outside · Porters Neck`, the
+  plain outside ladder, and no marine forecast is asked for. The farm keeps its own
+  sentences as the why ("Windy up here.", "Cold one. Bundle up for the morning rounds.")
+  and its piddle window on a line of its own, so the word there only ever says
+  "tomorrow". A warning or a storm overhead is No go with the event's name, and takes the
+  window, the piddle line and the bite times with it. There is no wind arrow or speed on
+  the card: the chip is now and the card is the window, which is why the two gusts can
+  differ. The marine run is two days, because after dark the call is tomorrow's, and a day
+  it does not reach is unavailable. `boatCall` and `outsideCall` are pure and test.mjs runs
+  them. The family says windy, never blustery or breezy, and test.mjs checks the whole file.
 - Golden hour is sun elevation +6° to -4°, the convention the photo apps use.
   Blue hour is -4° to -6°. The displayed sunrise and sunset times come from the
   forecast API; sun and moon positions and the golden-hour boundaries are
@@ -334,7 +357,9 @@ Established with Josh and enforced by `test.mjs`:
   honesty is that the moon times are real and the theory is the almanac's. The
   pond's extra rise rings during a window read the same moon as the card, and
   the windows disappear under a warned storm so they never read as an
-  invitation to stand in a thunderstorm with a rod.
+  invitation to stand in a thunderstorm with a rod. The footer used to carry that
+  framing. Now the line carries it, `fish bite · by the moon`, with the full sentence in
+  its title and for screen readers.
 
 ## Interaction and reading refinements
 
@@ -459,4 +484,5 @@ and cached/online recovery. Run it with the same font and browser settings as
   stale. `api.weather.gov` answers fine on the same network. The fix under
   discussion is an NWS gridpoint fallback source: temperature, rain chance,
   wind, gusts and cloud all come through it, UV, the 15-minute nowcast and wave
-  height do not.
+  height do not. On such a network the boat call stays Iffy with seas unavailable,
+  unless the wind alone makes it No go. That is the honest answer, not a bug.

@@ -138,7 +138,10 @@ for (const cs of cases) {
           feels: document.getElementById("feelsRow")?.hidden ? null : T("feels"),
           chips: [...document.querySelectorAll(".chip")].map((c) => c.textContent.trim()),
           nowcast: document.getElementById("nowcast")?.classList.contains("on") ? T("ncText") : null,
-          water: T("waterLead"), wind: T("wWind"), window: T("wWindow"), fish: T("wFish"),
+          // the outside call: its title, the word and when, the one why line, and the lines under it
+          out: T("outTitle"), call: T("waterLead"),
+          why: document.getElementById("callWhy")?.hidden ? null : T("callWhy"),
+          detail: [...document.querySelectorAll("#outSection .out-line:not([hidden])")].map((l) => l.textContent.trim()),
           sun: T("uvLead"), tonight: T("eveLead"),
           tideNote: T("tideNote"), hourlyNote: T("hourlyNote"), weekNote: T("weekNote"),
           // the week's days, with the weekend's banded columns in brackets

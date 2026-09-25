@@ -183,7 +183,10 @@ export async function stage(page, { now, loc, o, tidePhase = 0, fontDir = "", po
     await page.route("**fonts.gstatic.com**", (r) => r.abort());
   }
   await page.route("**api.open-meteo.com**", (r) => r.fulfill({ json: forecast(now, o, LOC_TZ[loc], loc) }));
-  await page.route("**marine-api.open-meteo.com**", (r) => r.fulfill({ json: { daily: { wave_height_max: [o.wave ?? 2.4], wave_period_max: [6] } } }));
+  // two days of seas, because after dark the call speaks for tomorrow's window. wave: null is a
+  // marine run with no reading in it; waveNext sets tomorrow's on its own
+  const w0 = "wave" in o ? o.wave : 2.4;
+  await page.route("**marine-api.open-meteo.com**", (r) => r.fulfill({ json: { daily: { wave_height_max: [w0, "waveNext" in o ? o.waveNext : w0], wave_period_max: [6, 6] } } }));
   await page.route("**tidesandcurrents.noaa.gov**", (r) => r.fulfill({ json: tides(now, tidePhase) }));
   await page.route("**api.weather.gov/alerts**", (r) => r.fulfill({ json: { features: o.code >= 95 ? SEVERE(now) : [] } }));
   await page.route("**api.weather.gov/products**", (r) => r.fulfill({ json: { "@graph": [] } }));
