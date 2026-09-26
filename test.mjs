@@ -930,6 +930,19 @@ test("the scenes dress for the holidays and take it all down when they pass", as
   assert.match(html, /const candleK=clamp\(\(gust-3\)\/24,0,1\),flick=!PRM&&candleK>\.04/);
   assert.match(html, /#sceneSvg \.candle\.flicker\{animation:candle/);
   assert.match(html, /@keyframes candle\{0%,100%\{opacity:1\}/);
+  // everything the candle lights is in that one flickering group: the spill on what is beside
+  // it, its light on the water, the glow and the face
+  assert.match(html, /<g class="candle\$\{flick\?" flicker":""\}"\$\{st\}>\$\{spill\}\$\{water\}\$\{halo\}/);
+  // the spill never paints over the pumpkin, and the water column is cut where the piling stands
+  assert.match(html, /<g clip-path="url\(#\$\{id\}c\)" mask="url\(#\$\{id\}m\)">/);
+  assert.match(html, /gaps:\[\[dx\+12\.2,dx\+15\.8,base\+15\.4\]\]/);
+  // at the barn the big ones flank the door on the ground, so neither hides a lit window, and
+  // they are drawn after the grass along the fence so no blade crosses a lit face
+  assert.match(html, /pumpkinAt\(barnX-10\.2,barnFoot,\.9,/);
+  assert.match(html, /pumpkinAt\(barnX\+10\.7,barnFoot,\.9,/);
+  const ridge = html.slice(html.indexOf("${fence}"), html.indexOf("${catsL}${catsR}"));
+  assert.ok(ridge.includes("${tufts.map") && ridge.indexOf("${barnDecor}") > ridge.indexOf("${tufts.map"),
+    "the barn's decorations are painted after the grass along the fence");
   // the carved face is its own role, so the heron's own `face` keeps its outline
   assert.match(html, /const INK_INNER=new Set\(\[[^\]]*"carve"\]\)/);
   assert.match(html, /heron:\{body:"#8C92B5",wing:"#6B6E95",neck:"#A9A9C4",bill:"#E8B04A",face:/);

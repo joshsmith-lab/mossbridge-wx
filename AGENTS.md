@@ -257,14 +257,35 @@ decorations coming down once each holiday passes. Halloween is the first.
 - **The candle is lit when the barn lamps are** (the sun below -0.83°), and not in the rain or
   a storm. Its flicker is the only thing Halloween adds that moves, and it moves with the air:
   steady under 3 mph of gust, guttering deeper and quicker up to 27 (`candleK`), and no
-  animation at all in a calm or under PRM. The glow, the face in the flame's colour and, on the
-  dock, its three bars of light on the water are one group, so they flicker together. That is
-  one animation per lit pumpkin: one on the coast, two at the farm.
+  animation at all in a calm or under PRM. The glow, the face in the flame's colour, the light
+  it lays on what is beside it and, on the dock, its light on the water are one group, so they
+  flicker together. That is one animation per lit pumpkin: one on the coast, two at the farm.
+- **The candle is a light, not a sticker.** It is measured from where a candle stands, low in
+  the pumpkin behind the grin. The shell glows round the face and the rim, ribs and outline are
+  left to say it is round; the face is white-gold at the candle and amber at its tips. The glow
+  falls off the way light does, a core about the size of the pumpkin and a faint warmth in the
+  air round it, never an even disc, and fog spreads it wider. It lays still shapes of its light
+  on what stands right beside it (`lights`: the dock's planks, with a brighter line raked along
+  their top edges, the bale, the ground at the barn door), masked off the pumpkin's own
+  silhouette so the pool never paints over it. On the dock its light on the water is the column
+  the moon lays down, warm, hung straight under the lantern from below the bank's lip to the
+  foot of the frame: glints that shorten and deepen from gold to orange as they come nearer,
+  broken wider as `chopK` rises, and cut where the end piling stands in front of them, so what
+  shows either side of the post is the reflection going on behind it. The first draft's three
+  bars sat on the bank under the rail, which is why they were barely there.
 - **They are placed off the dock and the barn, never off a fraction of the frame, and they give
   way to the animals.** The dock's middle piling is the cormorant's: drying its wings it reaches
   20 units left of the dock's centre and 9 right, so the pumpkins stand at the ends. At the
   barn everything stands inside the barn's footprint, in front of the fence, so the hens' yard
-  and the pond's edge are untouched. `tools/scene.mjs` fails a scene whose decorations are not
+  and the pond's edge are untouched. The bale stands in front of the corn shock's foot, so the
+  shock keeps its waist and its broken top, with the small white pumpkin on it clear of the
+  window. The two big ones stand on the ground either side of the door, under the windows and
+  never in front of them: at night the lit windows are the barn's lamps, and the first draft's
+  lantern held up on the bale against one hid it and was lost in it. They stand a step nearer
+  than the grass rooted along the fence, so they are drawn after it and no blade crosses a lit
+  face. The pumpkins are sized to the animals on their own plane (the marsh's big one is about a
+  third of the drying cormorant's span, the farm's a little under half a hen's height), not to
+  the dock and the barn, which are drawn small. `tools/scene.mjs` fails a scene whose decorations are not
   exactly the ones the date calls for, whose candles are lit when they should not be, or where
   a decoration runs off the frame or into an animal.
 
