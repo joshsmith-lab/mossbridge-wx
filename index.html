@@ -281,6 +281,10 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes rabbitBreathe{from{transform:scaleY(.985)}to{transform:scaleY(1.015)}}
 .city-window.spark{animation:citySparkle var(--spark-d,12s) ease-in-out infinite}
 @keyframes citySparkle{0%,68%,100%{opacity:var(--spark-lo,.34)}74%,82%{opacity:var(--spark-hi,.92)}88%{opacity:var(--spark-lo,.34)}}
+/* a carved pumpkin's candle gutters only as hard as the gusts say: the depth and the tempo are
+   set per render off the wind (candleK), and in a calm it gets no animation at all */
+#sceneSvg .candle.flicker{animation:candle 2.4s ease-in-out infinite}
+@keyframes candle{0%,100%{opacity:1}17%{opacity:var(--c1,.9)}26%{opacity:var(--c0,.8)}38%{opacity:1}57%{opacity:var(--c1,.9)}64%{opacity:var(--c0,.8)}71%{opacity:var(--c1,.9)}83%{opacity:.98}}
 .city-beacon{opacity:.15;animation:cityBeacon var(--beacon-d,7s) ease-in-out infinite}
 @keyframes cityBeacon{0%,78%,100%{opacity:.12}82%,87%{opacity:.82}91%{opacity:.12}}
 .fox-head{animation:foxSniff 31s ease-in-out infinite}
@@ -736,6 +740,13 @@ const mdOf=d=>typeof d==="string"?d.slice(5,10):String(d.getMonth()+1).padStart(
 const inSeason=(d,r)=>{if(!r)return false;const md=mdOf(d);return r[0]<=r[1]?md>=r[0]&&md<=r[1]:md>=r[0]||md<=r[1]};
 /* off season the coast asks the question everywhere else does, under its own name */
 const titleFor=(L,day)=>L.boatSeason&&!inSeason(day,L.boatSeason)?L.offTitle:L.outTitle;
+/* The scenes dress for the holidays the way the family does: the decorations go out on a date
+   and come down the morning after the holiday passes. A window is a pair of month-days on the
+   location's own calendar, read the way the boat season is. Halloween's pumpkins go out on the
+   first of October and are carved for the last week, because a carved pumpkin on the coast
+   is soft inside a week. */
+const HOLIDAYS=[{id:"halloween",window:["10-01","10-31"],carved:"10-24"}];
+const holidayOn=d=>HOLIDAYS.find(h=>inSeason(d,h.window))||null;
 let LOC;try{const saved=localStorage.getItem("mbwx-loc");LOC=LOC_ORDER.includes(saved)?LOCS[saved]:LOCS.mb}catch(e){LOC=LOCS.mb}
 let LAT=LOC.lat, LON=LOC.lon;
 
@@ -1162,8 +1173,8 @@ const pBlob=(pts,role,x)=>part(inkSpline(pts,true),role,x);
 const pTaper=(pts,role,opts,x)=>part(taper(pts,opts),role,x);
 const pDot=(cx,cy,r,role,x)=>part(`M ${f1(cx-r)} ${f1(cy)} a ${f1(r)} ${f1(r)} 0 1 0 ${f1(2*r)} 0 a ${f1(r)} ${f1(r)} 0 1 0 ${f1(-2*r)} 0 Z`,role,x);
 /* roles that sit inside the silhouette and never take the outline */
-const INK_INNER=new Set(["mark","eye","eyeRing","nose","detail","band"]);
-const INK_LAST=new Set(["eye","eyeRing","nose","glint"]);
+const INK_INNER=new Set(["mark","eye","eyeRing","nose","detail","band","carve"]);
+const INK_LAST=new Set(["eye","eyeRing","nose","glint","carve"]);
 /* the bounding box of a set of path strings (M L C A a Z, which is all the kit writes),
    so a mask only rasterises the area the unit actually covers */
 function pathBox(ds){
@@ -1437,6 +1448,48 @@ const propBarn=()=>[
   part("M 15.4 -30 L 15.4 -34.6 L 20.6 -34.6 L 20.6 -30 Z","wall"),part("M 14.2 -34.2 L 18 -37.4 L 21.8 -34.2 Z","roof"),
   part("M 12.4 0 L 12.4 -11.6 L 23.6 -11.6 L 23.6 0 Z","door"),part("M 15.8 -22.4 L 15.8 -26.2 L 20.2 -26.2 L 20.2 -22.4 Z","loft"),
   part("M 5 -3.6 L 9 -3.6 L 9 -8.4 L 5 -8.4 Z M 27 -3.6 L 31 -3.6 L 31 -8.4 L 27 -8.4 Z","window")];
+/* ── the holidays' props ─────────────────────────────────────────────────────────
+   Decorations are scenery like the dock and the barn: parts with roles, lit by the same sky.
+   A pumpkin sits on y=0, centred on x=0, w wide and h tall: a squat body with a dimple where
+   the stem goes, its ribs drawn in as bands that follow the curve, a crooked stem and a curl of
+   vine. `carved` cuts the face, two eyes, a nose and a grin with two teeth, as its own role, so
+   the scene can paint it dark by day and lit by the candle after sunset. */
+const propPumpkin=(w=10,h=7,{carved=false,seed=1}={})=>{
+  const r=mulberry(seed),X=w/2,k=Math.min(1,h/7);
+  const P=[pBlob([[0,-h*.86],[X*.34,-h*.99],[X*.76,-h*.93],[X,-h*.66],[X*1.03,-h*.34],[X*.86,-h*.09],[X*.46,0],[0,-h*.03],
+    [-X*.46,0],[-X*.86,-h*.09],[-X*1.03,-h*.34],[-X,-h*.66],[-X*.76,-h*.93],[-X*.34,-h*.99]],"body")];
+  for(const s of[-1,1]){
+    P.push(pTaper([[s*X*.14,-h*.84,.2*k],[s*X*.46,-h*.68,.55*k],[s*X*.56,-h*.42,.62*k],[s*X*.46,-h*.16,.45*k],[s*X*.2,-h*.04,.15*k]],"band"));
+    P.push(pTaper([[s*X*.56,-h*.92,.15*k],[s*X*.84,-h*.7,.42*k],[s*X*.88,-h*.38,.42*k],[s*X*.68,-h*.1,.15*k]],"band"));
+  }
+  const lean=(r()-.5)*1.6;
+  P.push(pTaper([[0,-h*.84,1.5*k],[lean*.4,-h*1.02,1.25*k],[lean+.55,-h*1.19,.95*k]],"stem"));
+  P.push(part(curlT(lean+1.7,-h*1.08,1.05*k,1.05,1,3.3,.42*k,.12),"stem"));
+  if(carved){
+    const tri=(cx,by,bw,ht)=>`M ${f1(cx-bw/2)} ${f1(by)} L ${f1(cx+bw/2)} ${f1(by)} L ${f1(cx)} ${f1(by-ht)} Z`;
+    const mT=-h*.34,mB=-h*.12,mX=X*.64,tw=X*.13,tx=X*.24,td=h*.075;
+    const mouth=`M ${f1(-mX)} ${f1(mT-h*.03)} L ${f1(-tx-tw)} ${f1(mT)} L ${f1(-tx-tw)} ${f1(mT+td)} L ${f1(-tx+tw)} ${f1(mT+td)} L ${f1(-tx+tw)} ${f1(mT)}`
+      +` L ${f1(tx-tw)} ${f1(mT)} L ${f1(tx-tw)} ${f1(mT+td)} L ${f1(tx+tw)} ${f1(mT+td)} L ${f1(tx+tw)} ${f1(mT)} L ${f1(mX)} ${f1(mT-h*.03)}`
+      +` Q ${f1(X*.36)} ${f1(mB+h*.01)} 0 ${f1(mB)} Q ${f1(-X*.36)} ${f1(mB+h*.01)} ${f1(-mX)} ${f1(mT-h*.03)} Z`;
+    P.push(part(tri(-X*.4,-h*.53,X*.36,h*.21)+" "+tri(X*.4,-h*.53,X*.36,h*.21),"carve"),
+      part(tri(0,-h*.41,X*.17,h*.11),"carve"),part(mouth,"carve"));
+  }
+  return P};
+/* a corn shock: cut stalks stood on end and tied a third of the way down, the foot splayed
+   and the top broken over into leaves. About 12 wide and 24 tall */
+const propCornShock=seed=>{const r=mulberry(seed),P=[];
+  for(let i=0;i<7;i++){const t=i/6-.5;
+    P.push(pTaper([[t*2.4,-15,1.1],[t*6.2,-7.5,1.25],[t*11.5+(r()-.5)*.9,0,1.35]],"stalk"))}
+  for(let i=0;i<6;i++){const t=i/5-.5;
+    P.push(pTaper([[t*2.6,-14.4,1.15],[t*2.9,-19.5,1],[t*4.8+(r()-.5)*.8,-23.4-r()*1.6,.45]],"stalk"))}
+  for(const[s,len,y0]of[[-1,6.4,-21.5],[1,7.2,-22],[-1,4.6,-19.2],[1,4.4,-18.6]])
+    P.push(pTaper([[s*1.2,y0,1.05],[s*len*.62,y0-1.4,.85],[s*len,y0+3.6,.12]],"leaf"));
+  P.push(pTaper([[-2.7,-14.7,1.05],[0,-14.3,1.1],[2.7,-14.7,1.05]],"band"));
+  return P};
+/* a square bale of straw, about 12 by 6, with its two strings */
+const propBale=()=>[pBlob([[-6,0],[-6.3,-3],[-5.9,-5.8],[0,-6.15],[5.9,-5.8],[6.3,-3],[6,0],[0,.2]],"straw"),
+  pTaper([[-2.3,-6,.5],[-2.5,-3,.55],[-2.3,.1,.5]],"band"),pTaper([[2.5,-6,.5],[2.7,-3,.55],[2.5,.1,.5]],"band"),
+  pTaper([[-5,-4.2,.3],[-3.6,-4.5,.3]],"detail"),pTaper([[-.6,-2,.3],[1,-2.3,.3]],"detail"),pTaper([[3.6,-4.6,.3],[5.1,-4.3,.3]],"detail")];
 /* the meadow and the marsh grass keep the same calendar: tip, middle and root per month */
 const SEASON_BLADE=[["#E4CFA0","#B8A070","#7A6446"],["#E4CFA0","#B8A070","#7A6446"],["#DCCB94","#A9A064","#6E6842"],
   ["#C8D878","#86A84A","#4E6A30"],["#D9CF6A","#8DAA4A","#4E6A30"],["#D9CF6A","#8DAA4A","#4E6A30"],["#D9CF6A","#8DAA4A","#4E6A30"],
@@ -1991,6 +2044,12 @@ const INK={
   henBarred:{ink:"#2A1B33",shade:"#2D3550",lit:"#FFE7A6",litOp:0.55,eye:"#1A1014",glint:"#FFF4DE",comb:"#C92B22",wattle:"#B52520",face:"#C83A26",body:"#9C9EA3",hackle:"#A8AAAD",wing:"#96989D",tail:"#8A8C92",band:"#30313B",detail:"#5A5C66",mark:"#E6E6E2",leg:"#EDBB45",far:"#B98A2E",beak:"#E6BA56",lobe:"#B52520",eyeRing:"#C9762A"},
   cardinal:{body:"#CB2424",tail:"#A01F1B",wing:"#9A2D27",far:"#7A4A40",leg:"#B7806C",band:"#1D1216",mask:"#1D1216",bill:"#E4502C",sheen:"#F59268",detail:"#8A1A14",eyeRing:"#3A2226",eye:"#0B0608",glint:"#FFF3E0",ink:"#2A1620",shade:"#3A1E5C",lit:"#FFD7A0",litOp:0.3},
   oystercatcher:{body:"#5E4A3E",hood:"#1E1A24",mark:"#FBF6EC",bill:"#F07A2A",eye:"#F6D34A",eyeRing:"#E0452F",leg:"#EBB9A6",legFar:"#C99A8A",ink:"#2A1B33",shade:"#3A2350",lit:"#FFD99A",litOp:0.55},
+  /* the holidays' props: the carve is the pumpkin's dark inside by day, and the candle's
+     colour once it is lit (candleLit) */
+  pumpkin:{body:"#E27B2C",band:"#B4561F",stem:"#6C6230",carve:"#3E2012",candleLit:"#FFB443",ink:"#2A1B33",shade:"#5A2438",lit:"#FFE3A6",litOp:0.5},
+  lumina:{body:"#EEE7D5",band:"#CBBFA2",stem:"#76703C",carve:"#4A3A26",candleLit:"#FFC45A",ink:"#2A1B33",shade:"#4A3A5C",lit:"#FFF6DE",litOp:0.5},
+  cornShock:{stalk:"#CDB06E",leaf:"#BFA162",band:"#8A6A3A",ink:"#2A1B33",shade:"#4A3450",lit:"#FFEBB8",litOp:0.5},
+  bale:{straw:"#DDBF6E",band:"#9A7A3E",detail:"#B89A52",ink:"#2A1B33",shade:"#5A4450",lit:"#FFF0C4",litOp:0.5},
 };
 
 /* ── the scene: arc, sun / moon, marsh horizon ──────── */
@@ -2162,6 +2221,37 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     const lean=clamp(.45/Math.tan(Math.max(4,sunAltDeg)*Math.PI/180),.3,2.4)*(x>sunXY[0]?1:-1);
     return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) matrix(1 0 ${(-lean).toFixed(2)} -.13 0 0) scale(${(flip*s).toFixed(2)} ${s.toFixed(2)})" fill="${shadeC}" opacity="${(.22*shadowK).toFixed(2)}">${parts.map(p=>`<path d="${p.d}"/>`).join("")}</g>`};
   const flatParts=L=>L.flatMap(l=>l.parts?l.parts.filter(p=>!INK_INNER.has(p.role)&&!p.soft):flatParts(l.layers));
+  /* ── the holiday ──────────────────────────────────────────────────────────────────
+     Decorations are things set out in the scene, painted like the dock and the barn and lit by
+     the same sky. They say nothing about the weather, and they move only where the air moves
+     them: a carved pumpkin's candle is lit when the barn lamps are, is not lit in the rain, and
+     burns steady in a calm and gutters in a blow. */
+  const hol=holidayOn(now),halloween=hol?.id==="halloween";
+  const carved=halloween&&mdOf(now)>=hol.carved;
+  const candles=carved&&sunAltDeg< -.83&&!wet&&!storm;
+  const decorPal=(p,d,lit=false)=>{const o={};for(const[k,v]of Object.entries(p))o[k]=typeof v==="string"&&v[0]==="#"?air(v,d):v;
+    if(p.carve)o.carve=lit?p.candleLit:air(p.carve,d);
+    return Object.assign(o,{ink:inkAir(d),shade:shadeC,lit:litC,litOp:(p.litOp??.5)*litK,shadeOp:.34*shadeK})};
+  const decorAt=(parts,p,x,y,s,d=.04)=>inkAt(x,y,s,1,inkUnit(parts,decorPal(p,d),{s,light:lightAt(x,y-10*s)}));
+  /* One pumpkin at a place. A lit one carries its candle: the carve again in the flame's
+     colour, a glow round it and, over water, its light on the water, all in one group whose
+     opacity is the flicker, so the three can never disagree. refl is the water's top y */
+  const pumpkinAt=(x,y,s,{w=10,h=7,carved:cv=false,seed=1,white=false,refl=null}={})=>{
+    const parts=propPumpkin(w,h,{carved:cv,seed}),lit=cv&&candles;
+    const paint=inkAt(x,y,s,1,inkUnit(parts,decorPal(white?INK.lumina:INK.pumpkin,.04,lit),{s,light:lightAt(x,y-h*s)}));
+    let flame="";
+    if(lit){
+      const face=parts.filter(p=>p.role==="carve").map(p=>`<path d="${p.d}"/>`).join("");
+      /* how hard the candle works: nothing below 3 mph of gust, all it has by 27 */
+      const candleK=clamp((gust-3)/24,0,1),flick=!PRM&&candleK>.04;
+      const st=flick?` style="--c0:${(1-.55*candleK).toFixed(2)};--c1:${(1-.25*candleK).toFixed(2)};animation-duration:${(3.4-2.2*candleK).toFixed(2)}s;animation-delay:-${(seed*.61%1*2).toFixed(2)}s"`:"";
+      const water=refl==null?"":[[.36,1.1,.5],[.25,1,.34],[.15,.9,.2]].map(([hw,th,op],i)=>
+        `<rect x="${f1(x-w*s*hw)}" y="${f1(refl+1.6+i*3.2)}" width="${f1(w*s*hw*2)}" height="${th}" rx="${th/2}" fill="#FFC766" opacity="${op}"/>`).join("");
+      flame=`<g class="candle${flick?" flicker":""}"${st}><ellipse cx="${f1(x)}" cy="${f1(y-h*s*.45)}" rx="${f1(w*s*1.3)}" ry="${f1(h*s*1.25)}" fill="url(#candleglow)"/>${water}${inkAt(x,y,s,1,`<g fill="#FFE7A0">${face}</g>`)}</g>`;
+    }
+    return `<g class="decor" data-decor="${cv?"jack-o-lantern":white?"white-pumpkin":"pumpkin"}">${paint}${flame}</g>`;
+  };
+  const candleDefs=`<radialGradient id="candleglow"><stop offset="0" stop-color="#FFB443" stop-opacity=".5"/><stop offset=".45" stop-color="#FF9A33" stop-opacity=".18"/><stop offset="1" stop-color="#FF9A33" stop-opacity="0"/></radialGradient>`;
 
   /* how hard the water is working: 0 glassy, 1 chop. Six knots is where a marsh stops
      looking like glass, twenty-five is where it is all texture */
@@ -2571,6 +2661,16 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       if(i){const [qx,qy]=fpts[i-1];
         if(px_-qx<48)fr+=`M ${qx.toFixed(1)} ${(qy-7.2).toFixed(1)} L ${px_.toFixed(1)} ${(py_-7.2).toFixed(1)} M ${qx.toFixed(1)} ${(qy-3.6).toFixed(1)} L ${px_.toFixed(1)} ${(py_-3.6).toFixed(1)} `}
     }
+    /* Halloween at the barn door: a corn shock at the corner, a straw bale with a pumpkin on it
+       left of the door and a pair at the foot of the wall on the right, the big ones carved for
+       the last week. It stands in front of the fence, measured off the barn and inside its
+       footprint, so the hens' yard and the pond's edge stay what they were */
+    const barnFoot=base+2.4;
+    const barnDecor=halloween?`<g class="decor" data-decor="corn-shock">${decorAt(propCornShock(5),INK.cornShock,barnX-21.5,barnFoot,.74)}</g>`
+      +`<g class="decor" data-decor="straw-bale">${decorAt(propBale(),INK.bale,barnX-13,barnFoot,.92)}</g>`
+      +pumpkinAt(barnX-13,barnFoot-5.4,.84,{w:9,h:6.8,carved,seed:4})
+      +pumpkinAt(barnX+11.5,barnFoot,.84,{w:9.4,h:6.8,carved,seed:6})
+      +pumpkinAt(barnX+18.6,barnFoot+.2,.84,{w:6,h:4.4,seed:9,white:true}):"";
     /* split rails: inked, then the weathered wood laid over the ink */
     const fence=`<path d="${fp}${fr}" stroke="${lineC}" stroke-width="2.1" fill="none" stroke-linecap="round" opacity=".85"/><path d="${fp}${fr}" stroke="${air("#B99A76",.04)}" stroke-width="1.05" fill="none" stroke-linecap="round"/>`;
 
@@ -2751,6 +2851,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
         <linearGradient id="cloudInk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${tone(mix("#FFFFFF",skyS[1],.25))}"/><stop offset=".6" stop-color="${tone(mix("#FFF4E6",skyS[2],.35))}"/><stop offset="1" stop-color="${mix(tone("#FFF4E6"),litC,.5*litK)}"/></linearGradient>
         <radialGradient id="bloom"><stop offset="0" stop-color="${litC}" stop-opacity=".55"/><stop offset=".5" stop-color="${litC}" stop-opacity=".16"/><stop offset="1" stop-color="${litC}" stop-opacity="0"/></radialGradient>
         <radialGradient id="lampglow"><stop offset="0" stop-color="#FFD27A" stop-opacity=".55"/><stop offset="1" stop-color="#FFD27A" stop-opacity="0"/></radialGradient>
+        ${candles?candleDefs:""}
         <radialGradient id="flyglow"><stop offset="0" stop-color="#F8F7B0" stop-opacity=".7"/><stop offset=".45" stop-color="#F8F7B0" stop-opacity=".18"/><stop offset="1" stop-color="#F8F7B0" stop-opacity="0"/></radialGradient>
         ${texOn?`<pattern id="paper" width="160" height="160" patternUnits="userSpaceOnUse"><image href="${paperTex()}" width="160" height="160"/></pattern>`:""}
         ${nearRain?`<linearGradient id="ridgerainfade" gradientUnits="userSpaceOnUse" x1="0" y1="${nrTop.toFixed(1)}" x2="0" y2="${nrLand.toFixed(1)}">
@@ -2773,7 +2874,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       ${pond}
       ${castShadow(propBarn(),barnX-21,base+.86,1.18,1)}
       ${barn}
-      ${fence}
+      ${fence}${barnDecor}
       ${cloudShadows(base-rTop*.85,rTop*.85+8)}
       ${sparkle}${glint}${pondFx}
       ${nearRain}
@@ -2886,6 +2987,13 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const dx=W*.8;
   const dock=propAt(propDock(),{wood:"#7A5A48",piling:"#5E4638"},dx,base-5,1,.04)
     +`<g fill="${lineC}" opacity=".16">${[dx-25,dx-6,dx+14].map((p,i)=>`<rect x="${(p-.6).toFixed(1)}" y="${(base+13.2+i*1.5-(i===1?1:0)).toFixed(1)}" width="1.2" height="${5+i}"/>`).join("")}</g>`;
+  /* Halloween on the dock: a pumpkin at each end, and for the last week the big one is carved
+     and its candle lays its light on the water. Measured off the dock, not the frame. The
+     middle is the cormorant's: drying its wings on the middle piling it reaches from 20 units
+     left of the dock's centre to 9 right, so each pumpkin stands at an end, clear of it */
+  const deckY=base-6.1;
+  const dockDecor=halloween?pumpkinAt(dx+15.8,deckY,1,{w:9.6,h:7.2,carved,seed:3,refl:base-2})
+    +pumpkinAt(dx-26.8,deckY+.1,1,{w:6.6,h:4.9,seed:8}):"";
 
   /* great blue heron in the shallows (rigHeron). He stands in the channel with his legs in
      the water; at the bottom of the strike his bill tip lands 27 units ahead of his feet */
@@ -3043,6 +3151,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       <radialGradient id="bloom"><stop offset="0" stop-color="${litC}" stop-opacity=".55"/><stop offset=".5" stop-color="${litC}" stop-opacity=".16"/><stop offset="1" stop-color="${litC}" stop-opacity="0"/></radialGradient>
       <radialGradient id="flyglow"><stop offset="0" stop-color="#F8F7B0" stop-opacity=".7"/><stop offset=".45" stop-color="#F8F7B0" stop-opacity=".18"/><stop offset="1" stop-color="#F8F7B0" stop-opacity="0"/></radialGradient>
       <clipPath id="marshwater"><rect x="0" y="${GY+8}" width="${W}" height="${H-GY-8}"/></clipPath>
+      ${candles?candleDefs:""}
       ${tex?`<pattern id="paper" width="160" height="160" patternUnits="userSpaceOnUse"><image href="${paperTex()}" width="160" height="160"/></pattern>`:""}
     </defs>
     <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
@@ -3066,7 +3175,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     ${tufts.map((d,i)=>d?`<g${bandAt(i)}><path d="${d}" fill="${grassLine}" stroke="${grassLine}" stroke-width=".95" stroke-linejoin="round"/><path d="${d}" fill="${grassInk}"/></g>`:"").join("")}
     ${cloudShadows(base-26,34)}
     ${heat}
-    ${dock}
+    ${dock}${dockDecor}
     ${rake}
     ${marshResident}
     ${heron}

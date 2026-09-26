@@ -234,6 +234,40 @@ drawing to both views.
 - **To change an animal, look at it.** `node tools/rig.mjs deer ".deer-head=rotate(100deg)"`
   renders any rig straight out of index.html, close up, in any pose and at phone size.
 
+## Holidays
+
+In September 2026 Josh asked for the scenes to be decorated for the holidays, with the
+decorations coming down once each holiday passes. Halloween is the first.
+
+- **A calendar, not a switch.** `HOLIDAYS` is a table of windows in month-days on the
+  location's own calendar, read with `inSeason` the way the boat season is, and
+  `holidayOn(now)` is pure and tested. Halloween runs October 1 to 31: the decorations go up
+  on the first and are gone the morning of November 1. A new holiday is a row in the table
+  and a drawing in each scene. Nothing else needs to know.
+- **Decorations are scenery.** The pumpkins, the corn shock and the straw bale are props like
+  the dock and the barn, drawn from parts with the kit (`propPumpkin`, `propCornShock`,
+  `propBale`) and lit by the same sky, so they go blue at night, warm at golden hour and grey
+  in the rain. They are what the family would set out: on the coast a pumpkin at each end of
+  the dock, at the farm a corn shock at the barn's corner and pumpkins either side of the
+  door, one on a bale. `node tools/rig.mjs pumpkin` (or `lantern`, `lantern-lit`, `lumina`,
+  `cornshock`, `bale`) shows each one close up and at phone size.
+- **They keep a pumpkin's own calendar.** Plain until the 24th, then the big ones are carved,
+  because a carved pumpkin in coastal humidity is soft inside a week. The carved face is its
+  own role, `carve`, and not `face`: the heron already has a face, and it keeps its outline.
+- **The candle is lit when the barn lamps are** (the sun below -0.83°), and not in the rain or
+  a storm. Its flicker is the only thing Halloween adds that moves, and it moves with the air:
+  steady under 3 mph of gust, guttering deeper and quicker up to 27 (`candleK`), and no
+  animation at all in a calm or under PRM. The glow, the face in the flame's colour and, on the
+  dock, its three bars of light on the water are one group, so they flicker together. That is
+  one animation per lit pumpkin: one on the coast, two at the farm.
+- **They are placed off the dock and the barn, never off a fraction of the frame, and they give
+  way to the animals.** The dock's middle piling is the cormorant's: drying its wings it reaches
+  20 units left of the dock's centre and 9 right, so the pumpkins stand at the ends. At the
+  barn everything stands inside the barn's footprint, in front of the fence, so the hens' yard
+  and the pond's edge are untouched. `tools/scene.mjs` fails a scene whose decorations are not
+  exactly the ones the date calls for, whose candles are lit when they should not be, or where
+  a decoration runs off the frame or into an animal.
+
 ## Deploying
 
 GitHub CLI (`gh`) is installed on WorkMacPro and signed in as `joshsmith-lab`.
@@ -277,12 +311,16 @@ banded days, the call's title, word, why and lines, the sun card, the sun bar's 
 and how many times the seas were asked for. The loading-shell check at the end also holds
 the sun scale hidden while there is no bar. It exits non-zero when one does not show what it is there for.
 
-`tools/scene.mjs` is for anything that moves. Nineteen scenes force the light
+`tools/scene.mjs` is for anything that moves. Twenty-six scenes force the light
 and weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
 clear night, a storm, a fog morning, drizzle against a downpour, freezing rain on
 the coast, a night of rain over the marsh, and the ridge by day, by evening with
 the buck out, in warm rain, on a snow day, on a cold January night and in a night
-downpour. The Denver scenes (and the skyline check) went out with the trip; they are
+downpour. Seven more are Halloween: the coast on an October afternoon, on Halloween
+night, on a cold morning in the carved week with the cormorant on its piling and on a
+rainy night in it, and the farm on an October afternoon, on Halloween night and on the
+morning of November 1, when everything has to be gone. Each writes a close-up of the
+decorations at 320 and at phone width. The Denver scenes (and the skyline check) went out with the trip; they are
 in git history before the commit that parked `den`, if the next trip wants a model.
 The ridge night downpour is there on purpose: dark theme, code 82, two rain layers
 and a frog, which is where the animation count goes looking for trouble. It found

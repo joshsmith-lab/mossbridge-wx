@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v74/);
+  assert.match(worker, /mbwx-shell-v75/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -902,6 +902,47 @@ test("Denver is a parked travel scene: kept as the template, out of the rotation
   assert.match(html, /class="city-beacon"/);
   assert.match(html, /sceneLabel:"Sun and moon over Denver and the Front Range"/);
   assert.match(html, /cacheKey=id=>"mbwx-"\+id/);
+});
+
+test("the scenes dress for the holidays and take it all down when they pass", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const lift = (re) => { const m = html.match(re); assert.ok(m, `${re} should be extractable`); return m[0]; };
+  const ctx = vm.createContext({});
+  vm.runInContext([
+    lift(/const mdOf=[^\n]*\nconst inSeason=[^\n]*/),
+    lift(/const HOLIDAYS=[^\n]*\nconst holidayOn=[^\n]*/),
+    "globalThis.holidayOn=holidayOn;",
+  ].join("\n"), ctx);
+  // a window is month-days on the place's own wall clock, so it is read off local fields
+  const on = (s) => ctx.holidayOn(new Date(s))?.id ?? null;
+  assert.equal(on("2026-09-30T23:59"), null);
+  assert.equal(on("2026-10-01T00:00"), "halloween");
+  assert.equal(on("2026-10-31T23:59"), "halloween");
+  // they come down the morning after
+  assert.equal(on("2026-11-01T00:00"), null);
+  assert.equal(on("2027-10-15T12:00"), "halloween");
+  // the pumpkins go out plain and are carved for the last week
+  assert.equal(ctx.holidayOn(new Date("2026-10-24T09:00")).carved, "10-24");
+  assert.match(html, /const carved=halloween&&mdOf\(now\)>=hol\.carved/);
+  // the candle is lit with the barn lamps, and not in the rain
+  assert.match(html, /const candles=carved&&sunAltDeg< -\.83&&!wet&&!storm/);
+  // it gutters as hard as the gusts say, and in a calm or under reduced motion not at all
+  assert.match(html, /const candleK=clamp\(\(gust-3\)\/24,0,1\),flick=!PRM&&candleK>\.04/);
+  assert.match(html, /#sceneSvg \.candle\.flicker\{animation:candle/);
+  assert.match(html, /@keyframes candle\{0%,100%\{opacity:1\}/);
+  // the carved face is its own role, so the heron's own `face` keeps its outline
+  assert.match(html, /const INK_INNER=new Set\(\[[^\]]*"carve"\]\)/);
+  assert.match(html, /heron:\{body:"#8C92B5",wing:"#6B6E95",neck:"#A9A9C4",bill:"#E8B04A",face:/);
+  // placed off the dock and the barn, never off a fraction of the frame, and the middle
+  // piling is left to the cormorant
+  assert.match(html, /pumpkinAt\(dx\+15\.8,deckY,1,/);
+  assert.match(html, /pumpkinAt\(dx-26\.8,deckY/);
+  assert.match(html, /decorAt\(propCornShock\(5\),INK\.cornShock,barnX-21\.5,barnFoot/);
+  // the harness looks at them in and out of season, lit and unlit
+  const scene = await readFile(new URL("tools/scene.mjs", root), "utf8");
+  for (const name of ["27-marsh-halloween-night", "28-marsh-halloween-cold-morning", "29-marsh-halloween-rain-night", "31-ridge-halloween-night", "32-ridge-november-morning"])
+    assert.match(scene, new RegExp(`name: "${name}"`));
+  assert.match(scene, /decorations are \[/);
 });
 
 test("tide chart reads as depth over the bottom", async () => {

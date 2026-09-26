@@ -11,6 +11,10 @@
  * exactly that code, so what you see here is what the scene draws, lit by a plain day light.
  * Change a shape by looking at it here, at close range and at phone size, not by nudging
  * numbers and hoping. Writes tools/shots/rig-<name>.png.
+ *
+ * The holidays' props are drawn with the same kit and can be looked at the same way:
+ *
+ *   node tools/rig.mjs pumpkin | lantern | lantern-lit | lumina | cornshock | bale
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -23,18 +27,30 @@ const to = html.indexOf("/* ── the scene: arc, sun / moon");
 if (from < 0 || to < 0) { console.error("could not find the kit and cast sections in index.html"); process.exit(1); }
 const [name, ...rest] = process.argv.slice(2);
 if (!name) { console.error("usage: node tools/rig.mjs <deer|heron|raccoon|oystercatcher|...> [\".class=transform\" ...] [--scale n]"); process.exit(1); }
-const scaleArg = rest.indexOf("--scale"), big = scaleArg >= 0 ? +rest[scaleArg + 1] : 5;
+const scaleArg = rest.indexOf("--scale"), big = scaleArg >= 0 ? +rest[scaleArg + 1] : /^(pumpkin|lantern|lumina|cornshock|bale)/i.test(name) ? 9 : 5;
 const poses = rest.filter((a, i) => a.includes("=") && (scaleArg < 0 || i !== scaleArg + 1));
 
 const src = html.slice(from, to);
 const mulberry = (a) => () => { a |= 0; a = a + 0x6d2b79f5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 const cast = new Function("mulberry", `${src}; return {inkRig, inkAt, INK, rigs: {${
-  [...src.matchAll(/^const (rig\w+)=/gm)].map((m) => m[1]).join(",")}}};`)(mulberry);
-const key = Object.keys(cast.rigs).find((k) => k.toLowerCase() === "rig" + name.toLowerCase() || k.toLowerCase().startsWith("rig" + name.toLowerCase().slice(0, 4)));
-const palKey = Object.keys(cast.INK).find((k) => k.toLowerCase().startsWith(name.toLowerCase().slice(0, 4)));
-if (!key || !palKey) { console.error(`no rig for "${name}". Rigs: ${Object.keys(cast.rigs).join(", ")}`); process.exit(1); }
+  [...src.matchAll(/^const (rig\w+)=/gm)].map((m) => m[1]).join(",")}}, props: {${
+  [...src.matchAll(/^const (prop\w+)=/gm)].map((m) => m[1]).join(",")}}};`)(mulberry);
+/* a prop is a list of parts rather than a rig, so it is wrapped as a rig of one layer */
+const PROPS = {
+  pumpkin: ["pumpkin", (c) => c.propPumpkin(10, 7, { seed: 3 })],
+  lantern: ["pumpkin", (c) => c.propPumpkin(10, 7, { carved: true, seed: 3 })],
+  "lantern-lit": ["pumpkin", (c) => c.propPumpkin(10, 7, { carved: true, seed: 3 }), { carve: "candleLit" }],
+  lumina: ["lumina", (c) => c.propPumpkin(6.6, 4.9, { seed: 8 })],
+  cornshock: ["cornShock", (c) => c.propCornShock(5)],
+  bale: ["bale", (c) => c.propBale()],
+};
+const prop = PROPS[name.toLowerCase()];
+const key = prop ? name : Object.keys(cast.rigs).find((k) => k.toLowerCase() === "rig" + name.toLowerCase() || k.toLowerCase().startsWith("rig" + name.toLowerCase().slice(0, 4)));
+const palKey = prop ? prop[0] : Object.keys(cast.INK).find((k) => k.toLowerCase().startsWith(name.toLowerCase().slice(0, 4)));
+if (!key || !palKey) { console.error(`no rig for "${name}". Rigs: ${Object.keys(cast.rigs).join(", ")}; props: ${Object.keys(PROPS).join(", ")}`); process.exit(1); }
 const pal = { ...cast.INK[palKey], ink: "#2A2130", shade: "#3A2350", lit: "#FFE6B0" };
-const rig = () => cast.rigs[key]((p) => "");
+for (const [role, from] of Object.entries(prop?.[2] || {})) pal[role] = pal[from];
+const rig = () => prop ? [{ parts: prop[1](cast.props) }] : cast.rigs[key]((p) => "");
 const draw = (s) => cast.inkAt(0, 0, s, 1, cast.inkRig(rig(), pal, { s, light: [1, -.5] }));
 const css = `svg g[class]{transform-box:view-box;transform-origin:0 0}` +
   poses.map((p) => { const [sel, t] = p.split("="); return `.pose ${sel}{transform:${t}}`; }).join("");
