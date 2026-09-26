@@ -1476,110 +1476,115 @@ const propPumpkin=(w=10,h=7,{carved=false,seed=1}={})=>{
       part(tri(0,-h*.41,X*.17,h*.11),"carve"),part(mouth,"carve"));
   }
   return P};
-/* a corn shock, the way they stand in the hollows: cut stalks stood on end in a teepee and tied
-   a third of the way down, the butts splayed on the ground, the tops above the tie broken over.
-   What makes it corn and not a broom is the leaves: dry ribbons hanging off every stalk, curling
-   out past the edge and twisting as they go. About 12 wide and 24 tall */
+/* a corn shock, the way they stand in the hollows: cut stalks stood on end in a teepee, the
+   butts splayed on the ground, and tied high, so what is above the twine is the stiff spray of
+   the tops, the tassels and the broken stalks standing up and out. A few dry leaves hang off the
+   bundle and the rest lie flat along it. About 12 wide and 24 tall */
 const propCornShock=seed=>{const r=mulberry(seed),j=(a=.3)=>(r()-.5)*2*a,P=[];
-  /* a leaf is a ribbon from the stalk with its pale rib, and past its twist it shows its duller
-     back. One lying on the bundle throws a thin shadow on the stalks under it. What sits inside
-     the outline is painted but kept out of it (noSil), so the ink and the shading stay the
-     shock's own */
-  const IN={capStart:false},noSil={noSil:true};
-  const leaf=(pts,tw=0,sh=false,k=1)=>{pts=pts.map(([x,y,w])=>[x,y,w*k]);
-    if(sh)P.push(pTaper(pts.map(([x,y,w])=>[x+.26,y+.28,w*.6]),"stalkDk",IN,noSil));
-    P.push(pTaper(pts,"leaf",IN));if(tw)P.push(pTaper(pts.slice(tw),"leafBack",IN,noSil));
-    P.push(pTaper(pts.slice(0,-1).map(([x,y,w])=>[x,y,Math.min(.16,w*.3)]),"rib",IN,noSil))};
-  const stalk=(pts,role)=>P.push(pTaper(pts.map(([x,y,w])=>[x,y,w*1.15]),role,IN));
-  /* behind the bundle, in its shadow */
-  P.push(pTaper([[-1,-20.6,.3],[-2.9,-21.2,1.15],[-4.1,-19.4,.95],[-4.4,-17,.32],[-4.9,-14.8,.1]],"leafBack",IN),
-    pTaper([[1,-20.8,.3],[3.2,-21.8,1.15],[4.9,-21.2,.95],[5.8,-19.8,.32],[6.2,-18.4,.1]],"leafBack",IN));
-  /* the bundle: straight sides down from the tie, and a wedge of tops above it */
-  P.push(part("M -1.8 -16.5 L -5.2 -.4 L 5 -.4 L 1.7 -16.5 Z","stalkDk"),
-    part("M -1.5 -16 L -2.3 -19.2 L -1.2 -18.6 L 0 -19.8 L 1.2 -18.8 L 2.4 -19.4 L 1.5 -16 Z","stalkDk"));
+  /* Only the stalks, the tops and the few leaves that stand clear of the bundle make its
+     outline. A leaf lying on the bundle is painted but kept out of it (noSil), with a thin
+     shadow under its edge, so at phone size the ink is one clean shape and not a furry one */
+  const IN={capStart:false},noSil={noSil:true},TY=-18;
+  const leaf=(pts,{back=0,inside=false}={})=>{
+    if(inside)P.push(pTaper(pts.map(([x,y,w])=>[x+.24,y+.26,w*.7]),"stalkDk",IN,noSil));
+    P.push(pTaper(pts,"leaf",IN,inside?noSil:{}));if(back)P.push(pTaper(pts.slice(back),"leafBack",IN,noSil));
+    P.push(pTaper(pts.slice(1,-1).map(([x,y,w])=>[x,y,Math.min(.16,w*.24)]),"rib",IN,noSil))};
+  /* what stands above the twine goes out from the tie along an angle (degrees off upright) and
+     bends a little further out as it goes. A blade is a leaf, widest low and drawn to a point. A
+     top is a stalk narrowing to where it was topped, and its tassel is a spike with two branches
+     lying close along it, thick enough at the root to hold up at phone size */
+  const ray=(x,deg,len,curl)=>k=>{const a=(deg+curl*k)*Math.PI/180;return[x+Math.sin(a)*len*k,TY-.2-Math.cos(a)*len*k]};
+  const blade=(x,deg,len,w,curl,back=3)=>{const f=ray(x,deg,len,curl);leaf([0,.22,.5,.78,1].map((k,i)=>[...f(k),[.34,w,w*.8,w*.42,.05][i]]),{back})};
+  const top=(x,deg,len,role,tas=0)=>{const f=ray(x,deg,len,deg*.25);
+    P.push(pTaper([[...f(0),.8],[...f(.45),.64],[...f(.85),.46],[...f(1),.34]],role,IN));
+    if(tas){const[tx,ty]=f(1),[qx,qy]=f(.9),d=Math.atan2(tx-qx,qy-ty)*180/Math.PI,sp=(a,l,c,w)=>{const g=ray(0,a,l,c);
+        return pTaper([0,.5,1].map((k,i)=>{const[gx,gy]=g(k);return[tx+gx,ty+gy-TY+.2,[w,w*.7,.06][i]]}),"tassel",IN)};
+      P.push(sp(d+15*tas,1.15,12*tas,.26),sp(d-12*tas,.95,-10*tas,.24),sp(d,1.5,0,.42))}
+    return f(1)};
+  /* behind: the shadowed core of the bundle, and the foot of the spray */
+  P.push(part(`M -2.2 ${TY-.3} L -5 -.4 L 4.9 -.4 L 2.15 ${TY-.3} Z`,"stalkDk"),
+    part(`M -1.9 ${TY} L -2.9 ${TY-1.8} L -1 ${TY-2.4} L 0 ${TY-2.8} L 1.1 ${TY-2.4} L 2.9 ${TY-1.8} L 1.9 ${TY} Z`,"stalkDk"));
   /* each stalk from the tie to its own butt, as they fell, cut square where it stands */
-  const N=11;for(let i=0;i<N;i++){const t=i/(N-1)-.5,x0=t*3.1,x1=t*10.4+j(.18),y1=.05+r()*.3,xm=x0+(x1-x0)*.52+j(.1);
-    P.push(pTaper([[x0,-16.3,.5],[xm,-8.2,.85],[x1,y1,1.05]],i%3===1?"stalkLt":i%3===2?"stalkMd":"stalk",{capEnd:false,capStart:false}));
+  const N=11;for(let i=0;i<N;i++){const t=i/(N-1)-.5,x0=t*4,x1=t*9.8+j(.2),y1=.05+r()*.3,xm=x0+(x1-x0)*.5+j(.1);
+    P.push(pTaper([[x0,TY-.2,.6],[xm,TY*.5,.88],[x1,y1,1.08]],i%3===1?"stalkLt":i%3===2?"stalkMd":"stalk",{capEnd:false,capStart:false}));
     /* and its joints, where the leaves came off */
-    for(let y=-14+r()*2.4;y<-2;y+=3.4+r()*1.6){const k=(y+16.3)/16.3,x=x0+(x1-x0)*k,w=.5+.55*k;
+    for(let y=TY+2.2+r()*2.4;y<-2;y+=3.4+r()*1.6){const k=(y-TY)/-TY,x=x0+(x1-x0)*k,w=.5+.55*k;
       if(i%2===0&&r()<.7)P.push(pTaper([[x-w*.4,y+.05,.15],[x+w*.4,y-.05,.12]],"joint",{},noSil))}}
-  /* two that were stood a little wide */
-  P.push(pTaper([[-3.6,-8,.6],[-5.2,-2.6,.9],[-6,.15,1]],"stalkMd",{capEnd:false,capStart:false}),
-    pTaper([[3.5,-8.6,.6],[5,-3,.9],[5.9,.2,1]],"stalkLt",{capEnd:false,capStart:false}));
-  /* above the tie the tops, fanned out a little, some standing, some broken over at a joint */
-  stalk([[-1.2,-16.3,.5],[-2.3,-19.6,.55],[-2.9,-21.4,.4],[-3.7,-22,.25],[-4.2,-21.5,.1]],"stalkMd");
-  stalk([[-.8,-16.3,.5],[-1.4,-20,.55],[-1.7,-22.6,.35],[-2,-23.6,.1]],"stalk");
-  stalk([[-.35,-16.3,.5],[-.6,-20.2,.55],[-.7,-22.4,.35],[-1.3,-23.4,.2],[-1.9,-23.2,.08]],"stalkLt");
-  stalk([[.1,-16.3,.5],[.2,-20.4,.55],[.3,-23,.35],[.4,-24,.1]],"stalkMd");
-  stalk([[.55,-16.3,.5],[1,-20.2,.55],[1.3,-22.4,.35],[1.6,-23.3,.1]],"stalk");
-  stalk([[1,-16.3,.5],[1.9,-19.8,.55],[2.5,-21.6,.4],[3.4,-22.1,.25],[4,-21.5,.1]],"stalkLt");
-  stalk([[1.4,-16.3,.5],[2.4,-19,.5],[3,-20.4,.35],[3.2,-21.4,.1]],"stalkMd");
-  /* the leaves that broke over at the top and hang close, twisting */
-  leaf([[-1.3,-21.6,.2],[-2.6,-22.3,.85],[-3.6,-21.2,.75],[-3.9,-19.4,.22],[-4,-17.4,.55],[-3.7,-15.8,.1]],3,false,1.3);
-  leaf([[1.3,-21.8,.2],[2.9,-22.8,.85],[4.3,-22.2,.75],[5.1,-20.6,.22],[5.3,-19,.45],[5.9,-18.1,.1]],3,false,1.3);
-  leaf([[.8,-22.4,.2],[1.8,-23.7,.6],[2.9,-24,.45],[3.5,-23.1,.3],[3.6,-22.2,.1]],0,false,1.3);
-  leaf([[-.3,-22.6,.2],[-.9,-23.6,.6],[-1.7,-23.7,.5],[-2.4,-22.8,.1]],0,false,1.3);
-  leaf([[.4,-19.8,.2],[1.6,-20,.7],[2.4,-18.8,.6],[2.5,-17.2,.1]],0,true,1.25);
-  leaf([[-.4,-21.2,.2],[-1,-20.4,.65],[-1.4,-18.8,.55],[-1.2,-17.4,.1]],0,true,1.25);
-  /* and the ones still hanging off the stalks lower down, long and loose */
-  leaf([[-1.5,-14.4,.2],[-2.7,-13.8,.75],[-3.5,-12.2,.7],[-3.8,-10.4,.25],[-4.3,-8.4,.55],[-5,-6.8,.1]],3);
-  leaf([[1.1,-15,.2],[2.3,-14.3,.75],[3,-12.8,.65],[3.3,-11,.22],[3.8,-9.2,.5],[4.6,-8,.1]],3);
-  leaf([[-2.9,-8.2,.2],[-3.9,-7.3,.7],[-4.6,-5.6,.6],[-5,-4,.22],[-5.8,-2.6,.4],[-6.4,-1.9,.1]],3);
-  leaf([[2.6,-7.6,.2],[3.7,-6.6,.7],[4.4,-4.8,.6],[4.8,-3.2,.22],[5.6,-1.8,.1]],3);
-  leaf([[1.8,-11.4,.2],[3,-10.6,.65],[3.7,-8.8,.55],[3.9,-7.2,.2],[4.6,-6,.35],[5.2,-5.8,.1]],3);
-  leaf([[-2.2,-11,.2],[-3,-10,.6],[-3.4,-8.2,.5],[-3.3,-6.6,.1]]);
-  leaf([[-.4,-13.2,.2],[.2,-12.2,.6],[.5,-10.2,.55],[.4,-8.2,.4],[.7,-6.8,.1]],0,true);
-  leaf([[-1.3,-9.2,.2],[-1.8,-8,.55],[-2.1,-6,.45],[-1.8,-4.4,.1]],0,true);
-  leaf([[1.6,-5.6,.2],[2.1,-4.6,.55],[2.3,-2.9,.45],[2,-1.5,.1]],0,true);
-  leaf([[3,-3.4,.2],[4,-2.6,.55],[4.9,-1.4,.4],[5.6,-.9,.1]]);
-  /* a few tassels still up top */
-  P.push(pTaper([[.4,-23.8,.3],[.5,-24.7,.1]],"tassel"),pTaper([[.42,-24.1,.2],[1.2,-24.6,.08]],"tassel"),
-    pTaper([[-1.9,-23.3,.3],[-2.6,-24.1,.1]],"tassel"),pTaper([[1.5,-23.1,.28],[1.9,-24,.08]],"tassel"),pTaper([[-4.1,-21.6,.25],[-4.9,-22.2,.08]],"tassel"));
+  /* two that were stood a little wide, so the foot is legs and not a hem */
+  P.push(pTaper([[-3.4,-8,.6],[-5,-2.8,.9],[-6,.15,1.05]],"stalkMd",{capEnd:false,capStart:false}),
+    pTaper([[3.3,-8.6,.6],[4.8,-3,.9],[5.9,.2,1.05]],"stalkLt",{capEnd:false,capStart:false}));
+  /* the leaves lying along the bundle, below the twine */
+  leaf([[-.6,-16.6,.25],[-1,-14.6,.72],[-1.3,-12.2,.62],[-1.4,-10.2,.2]],{inside:true});
+  leaf([[1.1,-14.6,.25],[1.7,-12.6,.66],[2.1,-10.4,.55],[2.2,-8.6,.15]],{inside:true});
+  leaf([[-1.7,-8,.25],[-2.2,-6.2,.62],[-2.5,-4,.5],[-2.4,-2.4,.12]],{inside:true});
+  leaf([[.6,-6.4,.25],[1,-4.6,.56],[1.3,-2.6,.45],[1.2,-1.2,.1]],{inside:true});
+  /* and three come away from it, hanging down and out off the stalks */
+  leaf([[-2.5,-15.4,.3],[-3,-13.6,.8],[-3.6,-11.2,.74],[-4.3,-9.2,.52],[-5.1,-7.7,.05]],{back:3});
+  leaf([[2.6,-13.4,.3],[3.3,-11.6,.8],[3.9,-9.6,.7],[4.6,-7.8,.48],[5.5,-6.5,.05]],{back:3});
+  leaf([[-3.9,-6.6,.3],[-4.6,-4.8,.72],[-5.3,-3.1,.5],[-6.2,-2,.05]],{back:2});
+  /* above the twine, the far ones first: stiff leaves out at the sides, the tops with their
+     tassels standing up past them, and one broken over at a joint */
+  blade(-1.8,-56,4.8,1.05,-10);blade(1.9,60,4.5,1,10);
+  blade(-1.5,-42,4.1,1.1,-6,2);blade(1.6,46,3.6,1.05,6,2);
+  top(-1.3,-30,5.2,"stalkMd",1);
+  const[bx,by]=top(1.3,36,3.8,"stalk");
+  P.push(pTaper([[bx,by,.42],[bx+1.1,by-.3,.34],[bx+2,by-.2,.22],[bx+2.5,by+.1,.08]],"stalk",IN),pDot(bx,by,.22,"joint",noSil));
+  top(1,22,4.9,"stalkLt",-1);
+  blade(-.8,-14,6,1.1,-8);
+  top(-.1,-2,5,"stalk",-1);
+  blade(.5,13,5.6,1.05,10);
   /* the twine, round the front of the bundle, and its knot */
-  P.push(pTaper([[-1.95,-16.75,.7],[0,-16.2,.75],[1.9,-16.75,.7]],"band"),pDot(.7,-16.3,.42,"band"));
-  for(const x of[-1.4,-.7,.1,1.3])P.push(pTaper([[x-.12,-16.75+Math.abs(x)*.16,.14],[x+.18,-16.2+Math.abs(x)*.16,.1]],"twist",{},noSil));
-  /* one leaf from above has fallen across the twine */
-  leaf([[-1,-19.2,.2],[-.5,-17.8,.55],[.2,-16,.5],[.6,-14.6,.2],[1.1,-13.4,.1]],0,true);
+  P.push(pTaper([[-2.35,TY-.35,1],[-1.2,TY+.05,1.08],[0,TY+.15,1.08],[1.2,TY+.05,1.08],[2.3,TY-.35,1]],"band"),pDot(.9,TY+.15,.52,"band"),
+    pTaper([[.95,TY+.4,.32],[1.2,TY+1.1,.22],[1.2,TY+1.5,.08]],"band"));
+  for(const x of[-1.8,-1.1,-.4,1.8])P.push(pTaper([[x-.14,TY-.34+Math.abs(x)*.12,.16],[x+.2,TY+.36+Math.abs(x)*.12,.12]],"twist",{},noSil));
   return P};
-/* a small square bale, about 12 by 6, set end on and seen from a little above and to the left:
-   its end, its long side running back and its top, flat faces with the corners barely softened.
-   The two strings run the length of the bale, over the top and down across the end, the way a
-   baler ties them. The end is the flat of the last flake. The long side is the cut side, the
-   flakes pressed one against the next with the ends of the straw showing */
+/* a small square bale, about 12 by 6, sitting flat on the ground with its long side to us, seen
+   from a little above: the long side, the top and the far end, soft faces with rounded corners.
+   The two strings run the length of it, along the top and down over the end, the way a baler
+   ties them. The long side is the flakes pressed one against the next with the ends of the straw
+   showing, and the end is the flat of the last flake */
 const propBale=()=>{const r=mulberry(11),P=[];
   const box=(pts,rad)=>{let d="";pts.forEach((p,i)=>{const a=pts[(i+pts.length-1)%pts.length],c=pts[(i+1)%pts.length];
     const u=(q,k)=>{const l=Math.hypot(q[0]-p[0],q[1]-p[1]);return[p[0]+(q[0]-p[0])*k/l,p[1]+(q[1]-p[1])*k/l]};
     d+=`${i?" L ":"M "}${P2(u(a,rad))} C ${P2(u(a,rad*.45))} ${P2(u(c,rad*.45))} ${P2(u(c,rad))}`});return d+" Z"};
-  /* a straight stroke, w wide at its root and w1 at its tip. Strokes inside the bale are painted
-     but kept out of its outline (noSil), so only the loose straws take ink of their own */
+  /* a straw's stroke, w wide at its root and w1 at its tip. What lies on the bale is painted but
+     kept out of its outline (noSil), so the bale is one inked block */
   const noSil={noSil:true};
-  const seg=(x0,y0,x1,y1,w,role,w1=w*.6,x=noSil)=>{const l=Math.hypot(x1-x0,y1-y0),ux=-(y1-y0)/l/2,uy=(x1-x0)/l/2;
-    P.push(part(`M ${f1(x0+ux*w)} ${f1(y0+uy*w)} L ${f1(x1+ux*w1)} ${f1(y1+uy*w1)} L ${f1(x1-ux*w1)} ${f1(y1-uy*w1)} L ${f1(x0-ux*w)} ${f1(y0-uy*w)} Z`,role,x))};
-  /* the end runs from E0 to E1 and is H tall, and the length runs back up and to the left by (bx, by) */
-  const E0=.4,E1=6,H=4.7,bx=-6.3,by=-1.5;
-  const at=(u,v,t)=>[E0+(E1-E0)*u+bx*t,-H*v+by*t];   /* across the end, up it, back along the bale */
-  /* a few loose straws standing out of the corners and the edges, drawn first so the bale holds them */
-  for(const[x0,y0,x1,y1]of[[-5.7,-2.6,-6.55,-3.1],[-4.6,-6.3,-5.5,-6.75],[5.7,-1.4,6.45,-1.9],[-5.8,-4.6,-6.4,-5.3]])
-    seg(x0,y0,x1,y1,.2,"straw",.14,{});
-  P.push(part(box([at(0,0,0),at(1,0,0),at(1,1,0),at(1,1,1),at(0,1,1),at(0,0,1)],.5),"straw"),
-    part(box([at(0,1,0),at(1,1,0),at(1,1,1),at(0,1,1)],.3),"top",noSil),part(box([at(0,0,0),at(1,0,0),at(1,1,0),at(0,1,0)],.35),"end",noSil));
-  /* the flakes along the side, every other one a shade lighter, their seams over the top */
-  const cuts=[0];for(let t=.13;t<.93;t+=.1+r()*.04)cuts.push(t);cuts.push(1);
-  cuts.forEach((t,i)=>{if(i%2||i===cuts.length-1)return;const n=cuts[i+1],a=at(0,0,t),b=at(0,1,t),c=at(0,1,n),d=at(0,0,n);
-    P.push(part(`M ${P2([a[0]-.05,a[1]-.15])} L ${P2([b[0]-.05,b[1]+.12])} L ${P2([c[0]+.05,c[1]+.12])} L ${P2([d[0]+.05,d[1]-.15])} Z`,"flake",noSil))});
-  for(const t of cuts.slice(1,-1)){const[x,y0]=at(0,0,t),y1=at(0,1,t)[1],m=x+(r()-.5)*.25;
-    seg(x,y0-.25,m,(y0+y1)/2,.16,"seam",.13);seg(m,(y0+y1)/2,x+(r()-.5)*.2,y1+.2,.13,"seam",.1);
-    const[tx,ty]=at(.08,1,t),[ux,uy]=at(.9,1,t);seg(tx,ty,ux,uy,.13,"seam",.08)}
-  /* the straw in the side, and its cut ends */
-  for(let v=.18;v<.9;v+=.2)for(let t=.04+r()*.08;t<.95;t+=.1+r()*.1){const[x,y]=at(0,v+(r()-.5)*.1,t),a=Math.PI*(r()<.5?1:0)+(r()-.5)*1.1,l=.3+r()*.3;
-    seg(x,y,x+Math.cos(a)*l,y+Math.sin(a)*l*.7,.13,r()<.3?"stubLt":"stub",.1)}
-  for(let t=.04;t<.97;t+=.045+r()*.04){const[x,y]=at(0,1,t),h=.2+r()*.3;seg(x+.05,y+.35,x-.08+(r()-.5)*.12,y-h,.13,r()<.5?"stubLt":"stub",.09)}
+  const seg=(x0,y0,x1,y1,w,role,w1=w*.6)=>{const l=Math.hypot(x1-x0,y1-y0),ux=-(y1-y0)/l/2,uy=(x1-x0)/l/2;
+    P.push(part(`M ${f1(x0+ux*w)} ${f1(y0+uy*w)} L ${f1(x1+ux*w1)} ${f1(y1+uy*w1)} L ${f1(x1-ux*w1)} ${f1(y1-uy*w1)} L ${f1(x0-ux*w)} ${f1(y0-uy*w)} Z`,role,noSil))};
+  /* the long side runs from X0 to X1 and is H tall, and the bale runs back from it by (DX, DY),
+     up and away from its foot, so the foot on the ground is level */
+  const X0=-6,X1=4.3,H=4.5,DX=1.7,DY=-1.5;
+  const at=(u,v,d)=>[X0+(X1-X0)*u+DX*d,-H*v+DY*d];   /* along the bale, up it, back into it */
+  /* a few loose straws standing out of the top and the corners, drawn first so the bale holds
+     them, and left without ink so they are straw and not pegs */
+  for(const[x0,y0,xm,ym,x1,y1]of[[-4.6,-4.7,-5.2,-5.3,-5.9,-5.7],[1.8,-5.8,2,-6.4,2.5,-6.9],[-5.7,-1.3,-6.2,-1.5,-6.8,-1.4],[5.8,-4.2,6.3,-4.5,6.7,-4.4],[-2.2,-5.9,-2.5,-6.4,-2.4,-6.9]])
+    P.push(pTaper([[x0,y0,.2],[xm,ym,.13],[x1,y1,.04]],"stubLt",{},noSil));
+  P.push(part(box([at(0,0,0),at(1,0,0),at(1,0,1),at(1,1,1),at(0,1,1),at(0,1,0)],.8),"straw"),
+    part(box([at(0,1,0),at(1,1,0),at(1,1,1),at(0,1,1)],.45),"top",noSil),part(box([at(1,0,0),at(1,0,1),at(1,1,1),at(1,1,0)],.4),"end",noSil));
+  /* the flakes along the side, pressed one against the next: every other one a shade lighter, and
+     their seams soft and broken, the straw of one flake running over into the next */
+  const cuts=[0];for(let t=.1;t<.93;t+=.085+r()*.035)cuts.push(t);cuts.push(1);
+  cuts.forEach((t,i)=>{if(i%2||i===cuts.length-1)return;const n=cuts[i+1],a=at(t,.06,0),b=at(t,.94,0),c=at(n,.94,0),d=at(n,.06,0);
+    P.push(part(`M ${P2(a)} L ${P2(b)} L ${P2(c)} L ${P2(d)} Z`,"flake",noSil))});
+  for(const t of cuts.slice(1,-1)){let v=.08+r()*.16;while(v<.88){const l=.12+r()*.2,x=at(t,0,0)[0]+(r()-.5)*.36;
+    seg(x,-H*v,x+(r()-.5)*.3,-H*Math.min(.9,v+l),.13,"seam",.08);v+=l+.18+r()*.24}}
+  /* the ends of the straw showing in the side */
+  for(let v=.14;v<.92;v+=.16)for(let t=.03+r()*.06;t<.97;t+=.06+r()*.08){const[x,y]=at(t,v+(r()-.5)*.08,0),a=Math.PI*(r()<.5?1:0)+(r()-.5)*1.2,l=.22+r()*.26;
+    seg(x,y,x+Math.cos(a)*l,y+Math.sin(a)*l*.6,.13,r()<.35?"stubLt":"stub",.08)}
+  /* the top: straw lying along the bale, and the stubble standing up along its front edge */
+  for(let d=.18;d<.9;d+=.24)for(let u=.04+r()*.08;u<.94;u+=.12+r()*.1){const[x,y]=at(u,1,d+(r()-.5)*.12),l=.3+r()*.4;
+    seg(x,y,x+l,y+(r()-.5)*.14,.12,r()<.5?"stubLt":"stub",.07)}
+  for(let u=.03;u<.97;u+=.07+r()*.06){const[x,y]=at(u,1,0),h=.16+r()*.22;seg(x+.04,y+.3,x-.06+(r()-.5)*.14,y-h,.12,"stubLt",.07)}
   /* the end: the flat of the last flake, the straw lying across it */
-  for(let v=.14;v<.95;v+=.2){let u=.06+r()*.1;while(u<.92){const l=.12+r()*.18,[x0,y0]=at(u,v,0),[x1,y1]=at(Math.min(.95,u+l),v+(r()-.5)*.08,0);
-    seg(x0,y0,x1,y1,.14,r()<.35?"endLt":"endDk",.1);u+=l+.1+r()*.16}}
-  /* the two strings: back along the top, over the corner and down across the end */
-  for(const u of[.27,.73]){const[x0,y0]=at(u,1,.97),[x1,y1]=at(u,1,0),[x2,y2]=at(u,0,0);
-    seg(x0,y0,x1,y1,.36,"band",.46);seg(x1,y1,x2,y2-.2,.5,"band",.5)}
+  for(let v=.12;v<.95;v+=.17){let d=.1+r()*.12;while(d<.88){const l=.2+r()*.24,[x0,y0]=at(1,v,d),[x1,y1]=at(1,v+(r()-.5)*.05,Math.min(.92,d+l));
+    seg(x0,y0,x1,y1,.13,r()<.4?"endLt":"endDk",.09);d+=l+.1+r()*.14}}
+  /* the two strings, baler twine: along the top from the near end, over the corner and down the
+     far end, bedded a little into the straw and never quite straight */
+  for(const d of[.34,.74]){const pts=[0,.25,.5,.75,.98].map((u,i)=>{const[x,y]=at(u,1,d);return[x,y+.06+(i%2?.05:-.03),.24]});
+    P.push(pTaper(pts,"band",{},noSil));
+    const[ex,ey]=at(1,1,d),[fx,fy]=at(1,0,d);
+    P.push(pTaper([[ex-.05,ey+.12,.24],[ex+.06,ey+1.6,.24],[ex+.02,(ey+fy)/2+.8,.22],[fx+.06,fy-.3,.2]],"band",{},noSil))}
   return P};
 /* the meadow and the marsh grass keep the same calendar: tip, middle and root per month */
 const SEASON_BLADE=[["#E4CFA0","#B8A070","#7A6446"],["#E4CFA0","#B8A070","#7A6446"],["#DCCB94","#A9A064","#6E6842"],
@@ -2139,8 +2144,8 @@ const INK={
      colour once it is lit (candleLit) */
   pumpkin:{body:"#E27B2C",band:"#B4561F",stem:"#6C6230",carve:"#3E2012",candleLit:"#FFB443",ink:"#2A1B33",shade:"#5A2438",lit:"#FFE3A6",litOp:0.5},
   lumina:{body:"#EEE7D5",band:"#CBBFA2",stem:"#76703C",carve:"#4A3A26",candleLit:"#FFC45A",ink:"#2A1B33",shade:"#4A3A5C",lit:"#FFF6DE",litOp:0.5},
-  cornShock:{stalk:"#C8A865",stalkLt:"#D8BD7C",stalkMd:"#BC9C5C",stalkDk:"#8E7446",joint:"#A88B52",leaf:"#DDCB98",leafBack:"#B49D6A",rib:"#EEE2BC",tassel:"#E9D49A",band:"#6A4A2A",twist:"#9A7446",ink:"#2A1B33",shade:"#4A3450",lit:"#FFEBB8",litOp:0.5},
-  bale:{straw:"#D3B062",flake:"#D8B767",top:"#EDD490",end:"#E2C475",endLt:"#EFD999",endDk:"#CFAF62",seam:"#BC9C4E",stub:"#B39448",stubLt:"#E8CD86",band:"#5E401D",ink:"#2A1B33",shade:"#5A4450",lit:"#FFF0C4",litOp:0.5},
+  cornShock:{stalk:"#C8A865",stalkLt:"#D8BD7C",stalkMd:"#BC9C5C",stalkDk:"#846A42",joint:"#A88B52",leaf:"#CCA660",leafBack:"#AD8A4E",rib:"#D6B878",tassel:"#C9A060",band:"#5C3E22",twist:"#8C6A40",ink:"#2A1B33",shade:"#4A3450",lit:"#FFEBB8",litOp:0.5},
+  bale:{straw:"#CFAA5A",flake:"#D3AE5E",top:"#EFD896",end:"#E0C070",endLt:"#EFD999",endDk:"#CFAF62",seam:"#C2A052",stub:"#BA9A4E",stubLt:"#E4C880",band:"#A47C48",ink:"#2A1B33",shade:"#5A4450",lit:"#FFF0C4",litOp:0.5},
 };
 
 /* ── the scene: arc, sun / moon, marsh horizon ──────── */
