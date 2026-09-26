@@ -27,7 +27,7 @@ const to = html.indexOf("/* ── the scene: arc, sun / moon");
 if (from < 0 || to < 0) { console.error("could not find the kit and cast sections in index.html"); process.exit(1); }
 const [name, ...rest] = process.argv.slice(2);
 if (!name) { console.error("usage: node tools/rig.mjs <deer|heron|raccoon|oystercatcher|...> [\".class=transform\" ...] [--scale n]"); process.exit(1); }
-const scaleArg = rest.indexOf("--scale"), big = scaleArg >= 0 ? +rest[scaleArg + 1] : /^(pumpkin|lantern|lumina|cornshock|bale)/i.test(name) ? 9 : 5;
+const scaleArg = rest.indexOf("--scale"), big = scaleArg >= 0 ? +rest[scaleArg + 1] : /^(pumpkin|lantern|lumina|cornshock|bale)/i.test(name) ? 14 : 5;
 const poses = rest.filter((a, i) => a.includes("=") && (scaleArg < 0 || i !== scaleArg + 1));
 
 const src = html.slice(from, to);
@@ -56,7 +56,8 @@ const css = `svg g[class]{transform-box:view-box;transform-origin:0 0}` +
   poses.map((p) => { const [sel, t] = p.split("="); return `.pose ${sel}{transform:${t}}`; }).join("");
 const fig = (inner, w, h, ox, oy, bg, label) => `<figure><svg width="${w}" height="${h}" viewBox="${-ox} ${-oy} ${w} ${h}" style="background:${bg}">${inner}</svg><figcaption>${label}</figcaption></figure>`;
 const page = `<!doctype html><meta charset="utf-8"><style>body{margin:0;padding:12px;background:#2a2a2a;color:#ddd;font:12px monospace;display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}figure{margin:0}${css}</style>
-${fig(`<g class="pose">${draw(big)}</g>`, 100 * big, 96 * big, 50 * big, 84 * big, "#E8DCC4", `${key} ×${big}${poses.length ? " " + poses.join(" ") : ""}`)}
+${prop ? fig(`<g class="pose">${draw(big)}</g>`, 40 * big, 34 * big, 20 * big, 29 * big, "#E8DCC4", `${key} ×${big}`)
+  : fig(`<g class="pose">${draw(big)}</g>`, 100 * big, 96 * big, 50 * big, 84 * big, "#E8DCC4", `${key} ×${big}${poses.length ? " " + poses.join(" ") : ""}`)}
 ${fig(`<rect x="-200" y="0" width="400" height="30" fill="#6d8b4a"/><g class="pose">${draw(1)}</g>`, 160, 100, 80, 80, "linear-gradient(#A9CADB,#E6E2CE)", "phone scale ×1")}`;
 const out = path.join(HERE, "shots");
 mkdirSync(out, { recursive: true });
@@ -65,7 +66,7 @@ writeFileSync(path.join(out, `rig-${name}.html`), page);
 let chromium;
 try { ({ chromium } = await import("playwright")); } catch { console.error("playwright is not installed.\n  npm i playwright && npx playwright install chromium"); process.exit(1); }
 const browser = await chromium.launch(process.env.PORCH_CHROME_PATH ? { executablePath: process.env.PORCH_CHROME_PATH } : {});
-const pg = await browser.newPage({ viewport: { width: 100 * big + 220, height: 96 * big + 60 }, deviceScaleFactor: 2 });
+const pg = await browser.newPage({ viewport: { width: (prop ? 40 : 100) * big + 220, height: (prop ? 34 : 96) * big + 60 }, deviceScaleFactor: 2 });
 await pg.setContent(page);
 await pg.screenshot({ path: path.join(out, `rig-${name}.png`), fullPage: true });
 await browser.close();
