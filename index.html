@@ -283,9 +283,10 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes citySparkle{0%,68%,100%{opacity:var(--spark-lo,.34)}74%,82%{opacity:var(--spark-hi,.92)}88%{opacity:var(--spark-lo,.34)}}
 /* a carved pumpkin's candle gutters only as hard as the gusts say: the depth and the tempo are
    set per render off the wind (candleK), and in a calm it gets no animation at all. A flame
-   ducks fast and comes back slower, and no two ducks in a cycle are the same depth */
+   ducks fast and comes back slower. Each cycle has two deep ducks, the second shallower than
+   the first (--c0, then --c2), among smaller flutters (--c1) */
 #sceneSvg .candle.flicker{animation:candle 2.4s ease-in-out infinite}
-@keyframes candle{0%,100%{opacity:1}7%{opacity:var(--c1,.9)}12%{opacity:.98}27%{opacity:var(--c1,.9)}31%{opacity:var(--c0,.8)}44%{opacity:1}60%{opacity:.97}66%{opacity:var(--c1,.9)}74%{opacity:var(--c0,.8)}79%{opacity:var(--c1,.9)}90%{opacity:1}}
+@keyframes candle{0%,100%{opacity:1}7%{opacity:var(--c1,.9)}12%{opacity:.98}27%{opacity:var(--c1,.9)}31%{opacity:var(--c0,.8)}44%{opacity:1}60%{opacity:.97}66%{opacity:var(--c1,.9)}74%{opacity:var(--c2,.85)}79%{opacity:var(--c1,.9)}90%{opacity:1}}
 .city-beacon{opacity:.15;animation:cityBeacon var(--beacon-d,7s) ease-in-out infinite}
 @keyframes cityBeacon{0%,78%,100%{opacity:.12}82%,87%{opacity:.82}91%{opacity:.12}}
 .fox-head{animation:foxSniff 31s ease-in-out infinite}
@@ -2421,15 +2422,15 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     return Object.assign(o,{ink:inkAir(d),shade:shadeC,lit:litC,litOp:(p.litOp??.5)*litK,shadeOp:.34*shadeK})};
   const decorAt=(parts,p,x,y,s,d=.04)=>inkAt(x,y,s,1,inkUnit(parts,decorPal(p,d),{s,light:lightAt(x,y-10*s)}));
   /* One pumpkin at a place. A lit one carries its candle, and everything the candle does is one
-     group whose opacity is the flicker, so no part of the light can disagree with the rest:
-       the spill, its light on whatever stands right beside it (`lights`: props as parts at a
-         place, the dock's planks, the bale, the ground at the door), a pool that never paints
-         over the pumpkin itself because a mask cuts its silhouette out;
-       its light on the water (`refl`, the marsh), the column the moon lays down, warm, hung
-         straight under the lantern, cut where a piling stands in front of it and broken wider
-         the harder the water is working;
-       the glow round the face, low and a little wider than tall, where the light comes out;
-       and the face in the flame's colour, white-gold at the candle and amber at the tips.
+     group whose opacity is the flicker, so no part of the light can disagree with the rest.
+       `lights` are the props right beside it, as parts at a place. The ground (the dock's
+         planks, the doorstep) takes a flat pool. A thing that stands up (`face`: the bale's
+         end, the white pumpkin, the corn shock) takes a round falloff on what faces the
+         candle, less where a nearer prop throws its shadow (`shade`), and a warm edge on the
+         side toward the flame (`edge`). A mask cuts the pumpkin itself out of all of it.
+       `refl` is its light on the water: warm glints hung under the lantern, cut where a piling
+         stands in front of them.
+       The glow sits round the face, and the face is in the flame's colour.
      The candle stands low in the pumpkin, behind the grin, and all of it is measured from there. */
   const silOf=ps=>ps.filter(p=>!INK_INNER.has(p.role)&&!p.soft&&!p.noSil);
   const pumpkinAt=(x,y,s,{w=10,h=7,carved:cv=false,seed=1,white=false,lights=[],refl=null}={})=>{
@@ -2440,30 +2441,57 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       const id=`cn${++inkUid}`,cy=y-h*s*.3,W0=w*s;
       /* how hard the candle works: nothing below 3 mph of gust, all it has by 27 */
       const candleK=clamp((gust-3)/24,0,1),flick=!PRM&&candleK>.04;
-      const st=flick?` style="--c0:${(1-.55*candleK).toFixed(2)};--c1:${(1-.25*candleK).toFixed(2)};animation-duration:${(3.4-2.2*candleK).toFixed(2)}s;animation-delay:-${(seed*.61%1*2).toFixed(2)}s"`:"";
+      const st=flick?` style="--c0:${(1-.55*candleK).toFixed(2)};--c2:${(1-.4*candleK).toFixed(2)};--c1:${(1-.25*candleK).toFixed(2)};animation-duration:${(3.4-2.2*candleK).toFixed(2)}s;animation-delay:-${(seed*.61%1*2).toFixed(2)}s"`:"";
       let spill="";
       if(lights.length){
         const R=W0*1.75,bx=`x="${f1(x-R)}" y="${f1(cy-R)}" width="${f1(2*R)}" height="${f1(2*R)}"`;
-        /* a top edge the light rakes across (a plank's) takes a brighter line, falling off
-           either side of the lantern */
-        const rims=lights.flatMap(L=>L.rims||[]).map(([x0,x1,ry,th])=>`<rect x="${f1(Math.max(x0,x-R))}" y="${f1(ry)}" width="${f1(Math.min(x1,x+R)-Math.max(x0,x-R))}" height="${th}" fill="url(#${id}r)"/>`).join("");
-        spill=`<clipPath id="${id}c">${lights.map(L=>silOf(L.parts).map(p=>`<path transform="translate(${f1(L.x)} ${f1(L.y)}) scale(${L.s})" d="${p.d}"/>`).join("")).join("")}</clipPath>`
-          +`<mask id="${id}m" maskUnits="userSpaceOnUse" ${bx}><rect ${bx} fill="#fff"/>${inkAt(x,y,s,1,`<g fill="#000" stroke="#000" stroke-width="${f1(1.6/s)}" stroke-linejoin="round">${silOf(parts).map(p=>`<path d="${p.d}"/>`).join("")}</g>`)}</mask>`
-          +(rims?`<linearGradient id="${id}r" gradientUnits="userSpaceOnUse" x1="${f1(x-R)}" y1="0" x2="${f1(x+R)}" y2="0"><stop offset="0" stop-color="#FFC45C" stop-opacity="0"/><stop offset=".5" stop-color="#FFD886" stop-opacity=".95"/><stop offset="1" stop-color="#FFC45C" stop-opacity="0"/></linearGradient>`:"")
-          +`<g clip-path="url(#${id}c)" mask="url(#${id}m)"><ellipse cx="${f1(x)}" cy="${f1(cy)}" rx="${f1(R)}" ry="${f1(R*.7)}" fill="url(#candlepool)"/>${rims}</g>`;
+        const at=(L,ps)=>ps.map(p=>`<path transform="translate(${f1(L.x)} ${f1(L.y)}) scale(${L.s})" d="${p.d}"/>`).join("");
+        /* what the light falls on: the prop's silhouette, or only the faces named in `roles` */
+        const recv=L=>{const f=L.roles?L.parts.filter(p=>L.roles.includes(p.role)):[];return f.length?f:silOf(L.parts)};
+        const self=inkAt(x,y,s,1,`<g fill="#000" stroke="#000" stroke-width="${f1(1.6/s)}" stroke-linejoin="round">${silOf(parts).map(p=>`<path d="${p.d}"/>`).join("")}</g>`);
+        /* a top edge the light rakes across (a plank's, the bale's end) takes a brighter line,
+           falling off either side of the lantern */
+        const rimsOf=L=>(L.rims||[]).map(([x0,x1,ry,th])=>`<rect x="${f1(Math.max(x0,x-R))}" y="${f1(ry)}" width="${f1(Math.min(x1,x+R)-Math.max(x0,x-R))}" height="${th}" fill="url(#${id}r)"/>`).join("");
+        const ground=lights.filter(L=>!L.face),up=lights.filter(L=>L.face);
+        /* on what stands up beside it the light carries further than on the ground it rakes */
+        const RU=R*1.3,ubx=`x="${f1(x-RU)}" y="${f1(cy-RU)}" width="${f1(2*RU)}" height="${f1(2*RU)}"`;
+        /* the ground's pool goes under what stands on it */
+        const standing=up.map(L=>at(L,silOf(L.parts))).join("");
+        spill=`<mask id="${id}m" maskUnits="userSpaceOnUse" ${bx}><rect ${bx} fill="#fff"/>${self}${standing?`<g fill="#000">${standing}</g>`:""}</mask>`
+          +(lights.some(L=>L.rims)?`<linearGradient id="${id}r" gradientUnits="userSpaceOnUse" x1="${f1(x-R)}" y1="0" x2="${f1(x+R)}" y2="0"><stop offset="0" stop-color="#FFC45C" stop-opacity="0"/><stop offset=".5" stop-color="#FFD886" stop-opacity=".95"/><stop offset="1" stop-color="#FFC45C" stop-opacity="0"/></linearGradient>`:"");
+        if(ground.length)spill+=`<clipPath id="${id}c">${ground.map(L=>at(L,recv(L))).join("")}</clipPath>`
+          +`<g clip-path="url(#${id}c)" mask="url(#${id}m)"><ellipse cx="${f1(x)}" cy="${f1(cy)}" rx="${f1(R)}" ry="${f1(R*.7)}" fill="url(#candlepool)"/>${ground.map(rimsOf).join("")}</g>`;
+        up.forEach((L,i)=>{
+          /* which way the light travels to it: from the candle to the middle of what it lights */
+          const[bx0,by0,bw,bh]=pathBox(recv(L).map(p=>p.d)),mx=L.x+(bx0+bw/2)*L.s,my=L.y+(by0+bh/2)*L.s;
+          const dl=Math.hypot(mx-x,my-cy)||1,ux=(mx-x)/dl,uy=(my-cy)/dl,k=L.k??1;
+          /* what is nearer covers it, and throws its shadow on it away from the flame, a little
+             up because the candle stands low */
+          const near=L.shade?L.shade.map(O=>at(O,silOf(O.parts))).join(""):"";
+          const cut=self+(near?`<g fill="#000">${near}</g><g fill="#000" transform="translate(${f1(ux*1.3)} ${f1(uy*1.3-.9)})">${near}</g>`:"");
+          spill+=`<mask id="${id}m${i}" maskUnits="userSpaceOnUse" ${ubx}><rect ${ubx} fill="#fff"/>${cut}</mask><clipPath id="${id}c${i}">${at(L,recv(L))}</clipPath>`
+            +`<g clip-path="url(#${id}c${i})" mask="url(#${id}m${i})"><circle cx="${f1(x)}" cy="${f1(cy)}" r="${f1(RU)}" fill="url(#candlewash)" opacity="${k}"/>${rimsOf(L)}</g>`;
+          /* the warm edge: its own silhouette, less itself pushed away from the flame */
+          if(L.edge)spill+=`<mask id="${id}e${i}" maskUnits="userSpaceOnUse" ${ubx}><rect ${ubx} fill="#fff"/>${cut}<g fill="#000" transform="translate(${f1(ux*L.edge)} ${f1(uy*L.edge)})">${at(L,silOf(L.parts))}</g></mask>`
+            +`<g clip-path="url(#${id}c${i})" mask="url(#${id}e${i})"><circle cx="${f1(x)}" cy="${f1(cy)}" r="${f1(RU)}" fill="url(#candlerim)" opacity="${k}"/></g>`;
+        });
       }
       let water="";
       if(refl){const r=mulberry(seed*131+7),span=refl.bottom-refl.top;
-        /* further down the column is nearer the bank you are standing on: the rows spread out,
-           shorten and go from the flame's gold to a deeper orange as they fade */
-        for(const[t,wk,ok]of[[0,.68,.8],[.19,.54,.64],[.4,.42,.5],[.64,.3,.36],[.9,.2,.24]]){
-          const hw=W0*wk*(1+chopK*.8)*(.82+r()*.36),cx=x+(r()-.5)*(.8+chopK*3);
-          const yy=refl.top+span*t,th=1.8-.6*t;
-          /* each glint a brush stroke, fuller in the middle and thinning to round ends; where
-             the piling stands in front of one, what shows either side is a glint of its own */
+        /* Broken water. The glints lie at uneven depths, each its own length and weight, and a
+           long one is now and then broken in two. Further down is nearer the bank you stand on,
+           so they thin out, dim and deepen in colour. Even the first sits well under the lit
+           planks and the face. */
+        for(let t=r()*.05;t<1;t+=.12+r()*.2){
+          const hw=W0*(.62-.42*t)*(.62+r()*.56)*(1+chopK*.8),cx=x+(r()-.5)*(2.6+chopK*3);
+          const yy=refl.top+span*t,th=(1.2-.45*t)*(.82+r()*.3),ok=(.52-.28*t)*(.92+r()*.16);
           let seg=[[cx-hw,cx+hw]];
-          for(const[g0,g1,gb]of refl.gaps||[])if(yy<gb)seg=seg.flatMap(([a,b])=>b<=g0||a>=g1?[[a,b]]:[[a,Math.min(b,g0)],[Math.max(a,g1),b]].filter(([p,q])=>q-p>1.4));
-          water+=seg.map(([a,b])=>`<path d="${taper([[a+th*.3,yy,th*.5],[a+(b-a)*.45,yy,th],[b-th*.3,yy,th*.5]],{per:4})}" fill="${mix("#FFD47E","#FF9C42",t)}" opacity="${ok}"/>`).join("");
+          if(hw>2.4&&r()<.5){const c=cx+(r()-.5)*hw,g=.5+r()*.7;seg=[[cx-hw,c-g],[c+g,cx+hw]]}
+          /* where the piling stands in front of one, what shows either side is a glint of its own */
+          for(const[g0,g1,gb]of refl.gaps||[])if(yy<gb)seg=seg.flatMap(([a,b])=>b<=g0||a>=g1?[[a,b]]:[[a,Math.min(b,g0)],[Math.max(a,g1),b]]);
+          /* each glint a flat brush stroke, fullest off its middle. Dim gold over blue water goes
+             green, so they are the flame's orange rather than its gold */
+          water+=seg.filter(([a,b])=>b-a>1.2).map(([a,b])=>`<path d="${taper([[a+th*.2,yy,th*.4],[a+(b-a)*(.3+r()*.4),yy,th],[b-th*.2,yy,th*.4]],{per:4})}" fill="${mix("#FFA444","#FF7A30",t)}" opacity="${ok.toFixed(2)}"/>`).join("");
         }
       }
       /* fog holds the light and spreads it, so a lantern in fog wears a wider halo */
@@ -2482,7 +2510,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   /* the glow falls off the way light does, fast and then a long way: a core about the size of
      the pumpkin and a faint warmth in the air round it, never an even disc */
   const candleDefs=`<radialGradient id="candleglow"><stop offset="0" stop-color="#FFB443" stop-opacity=".34"/><stop offset=".2" stop-color="#FFA83E" stop-opacity=".2"/><stop offset=".45" stop-color="#FF9E38" stop-opacity=".08"/><stop offset=".75" stop-color="#FF9A33" stop-opacity=".025"/><stop offset="1" stop-color="#FF9A33" stop-opacity="0"/></radialGradient>`
-    +`<radialGradient id="candlepool"><stop offset="0" stop-color="#FFB24A" stop-opacity=".62"/><stop offset=".4" stop-color="#FFA23E" stop-opacity=".3"/><stop offset=".75" stop-color="#FF9A36" stop-opacity=".08"/><stop offset="1" stop-color="#FF9A36" stop-opacity="0"/></radialGradient>`;
+    +`<radialGradient id="candlepool"><stop offset="0" stop-color="#FFB24A" stop-opacity=".62"/><stop offset=".4" stop-color="#FFA23E" stop-opacity=".3"/><stop offset=".75" stop-color="#FF9A36" stop-opacity=".08"/><stop offset="1" stop-color="#FF9A36" stop-opacity="0"/></radialGradient>`
+    /* the light on what stands up beside it, and the brighter edge on its side toward the flame */
+    +`<radialGradient id="candlewash"><stop offset="0" stop-color="#FFB84E" stop-opacity=".7"/><stop offset=".35" stop-color="#FFAA42" stop-opacity=".46"/><stop offset=".7" stop-color="#FF9E3A" stop-opacity=".16"/><stop offset="1" stop-color="#FF9A36" stop-opacity="0"/></radialGradient>`
+    +`<radialGradient id="candlerim"><stop offset="0" stop-color="#FFD886" stop-opacity="1"/><stop offset=".45" stop-color="#FFC45C" stop-opacity=".75"/><stop offset=".8" stop-color="#FFB24A" stop-opacity=".25"/><stop offset="1" stop-color="#FFB24A" stop-opacity="0"/></radialGradient>`;
 
   /* how hard the water is working: 0 glassy, 1 chop. Six knots is where a marsh stops
      looking like glass, twenty-five is where it is all texture */
@@ -2892,33 +2923,49 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       if(i){const [qx,qy]=fpts[i-1];
         if(px_-qx<48)fr+=`M ${qx.toFixed(1)} ${(qy-7.2).toFixed(1)} L ${px_.toFixed(1)} ${(py_-7.2).toFixed(1)} M ${qx.toFixed(1)} ${(qy-3.6).toFixed(1)} L ${px_.toFixed(1)} ${(py_-3.6).toFixed(1)} `}
     }
-    /* Halloween at the barn door: a corn shock at the corner, a straw bale in front of its foot
-       with the small white pumpkin on it, and the big ones either side of the
-       door, carved for the last week. It stands in front of the fence, measured off the barn and
-       inside its footprint, so the hens' yard and the pond's edge stay what they were. The bale
-       at the shock's foot leaves the shock its waist and its broken top, and the white one sits
-       clear of the window. The two big ones stand on the ground, under the windows rather than in
-       front of them: at night the barn's lit windows are its lamps, and a lit pumpkin held up on
-       the bale against one hid it and was lost in it. Each lays its light on the ground at the
-       door, and the left one on the bale beside it */
-    const barnFoot=base+2.4,baleX=barnX-18.6;
+    /* Halloween at the barn door, measured off the barn. A corn shock stands at the corner, a
+       straw bale at its foot with the small white pumpkin on it, clear of the window, and a big
+       pumpkin on the ground under each window, carved for the last week. It all runs from the
+       shock's corner to the door, in front of the fence. The two big ones are not a pair: the
+       left one is bigger and a step nearer, by the bale, and the right one smaller and back
+       under its window. Each lights the ground at the door. The left one also lights the end
+       of the bale, the white pumpkin, and the shock above the bale's shadow */
+    const barnFoot=base+2.4,baleX=barnX-18.6,lanL=barnX-10.2,lanR=barnX+11.4;
     const doorstep={parts:[part(`M ${f1(barnX-34)} ${f1(base+.9)} L ${f1(barnX+30)} ${f1(base+.9)} L ${f1(barnX+30)} ${f1(barnFoot+12)} L ${f1(barnX-34)} ${f1(barnFoot+12)} Z`,"ground")],x:0,y:0,s:1};
+    const shock={parts:propCornShock(5),x:barnX-21.5,y:barnFoot,s:.74},bale={parts:propBale(),x:baleX,y:barnFoot,s:.92};
+    const whiteOne={parts:propPumpkin(6,4.4,{seed:9}),x:baleX+.3,y:barnFoot-5.4,s:.84};
+    /* where they stand, from the shock's splayed foot to each big one's side */
+    const setOut=halloween?[[barnX-21.5-4.8,lanL+9.2*.9/2],[lanR-8.6*.8/2,lanR+8.6*.8/2]]:[];
+    /* the bale stands against the shock, so the shock is in its shade just above it: a hard
+       band, the way the kit draws its own crescents, so the two read apart. After dark the
+       band is deeper and taller, the shadow of a light that stands low */
+    const silAt=(L,ox=0,oy=0)=>silOf(L.parts).map(p=>`<path transform="translate(${f1(L.x+ox)} ${f1(L.y+oy)}) scale(${L.s})" d="${p.d}"/>`).join("");
+    const aoId=halloween?`ao${++inkUid}`:"",aoX=-.7-.5*nightK,aoY=-1.3-1.1*nightK;
+    const baleShade=halloween?`<clipPath id="${aoId}">${silAt(shock)}</clipPath><g clip-path="url(#${aoId})" fill="${shadeC}" opacity="${(.32+.22*nightK).toFixed(2)}">${silAt(bale,aoX,aoY)}${silAt(whiteOne,aoX*.7,aoY*.7)}</g>`:"";
     const barnDecor=halloween?`<g class="decor" data-decor="corn-shock">${decorAt(propCornShock(5),INK.cornShock,barnX-21.5,barnFoot,.74)}</g>`
-      +`<g class="decor" data-decor="straw-bale">${decorAt(propBale(),INK.bale,baleX,barnFoot,.92)}</g>`
+      +baleShade+`<g class="decor" data-decor="straw-bale">${decorAt(propBale(),INK.bale,baleX,barnFoot,.92)}</g>`
       +pumpkinAt(baleX+.3,barnFoot-5.4,.84,{w:6,h:4.4,seed:9,white:true})
-      +pumpkinAt(barnX-10.2,barnFoot,.9,{w:9.2,h:6.8,carved,seed:4,lights:[{parts:propBale(),x:baleX,y:barnFoot,s:.92},doorstep]})
-      +pumpkinAt(barnX+10.7,barnFoot,.9,{w:9.4,h:6.8,carved,seed:6,lights:[doorstep]}):"";
+      +pumpkinAt(lanL,barnFoot+.8,.9,{w:9.2,h:6.8,carved,seed:4,lights:[
+        {...whiteOne,face:true,edge:.9},
+        {...bale,face:true,roles:["end"],rims:[[baleX+.4,baleX+5.5,barnFoot-4.35,.5]]},
+        {...shock,face:true,edge:1,k:.85,shade:[bale,whiteOne]},doorstep]})
+      +pumpkinAt(lanR,barnFoot,.8,{w:8.6,h:7.4,carved,seed:6,lights:[doorstep]}):"";
     /* split rails: inked, then the weathered wood laid over the ink */
     const fence=`<path d="${fp}${fr}" stroke="${lineC}" stroke-width="2.1" fill="none" stroke-linecap="round" opacity=".85"/><path d="${fp}${fr}" stroke="${air("#B99A76",.04)}" stroke-width="1.05" fill="none" stroke-linecap="round"/>`;
 
     const blade=(bx,ht,lean)=>`M ${(bx-.7).toFixed(1)} ${base+1} Q ${(bx+lean*.3-.4).toFixed(1)} ${(base+1-ht*.6).toFixed(1)} ${(bx+lean).toFixed(1)} ${(base+1-ht).toFixed(1)} Q ${(bx+lean*.38+.5).toFixed(1)} ${(base+1-ht*.46).toFixed(1)} ${(bx+.7).toFixed(1)} ${base+1} Z `;
     const tufts=Array.from({length:BANDS},()=>"");
+    /* what is set out at the door stands in front of the grass along the fence, so no blade is
+       drawn across it and none crosses a lit face. Only the blade is skipped, so the rest of the
+       grass keeps its place */
+    const keepClear=setOut.map(([a,b])=>[a-.4,b+.4]);
     for(let x=-6;x<W+10;){
       const cnt=3+Math.floor(g()*4),x0=x;let t="";
       for(let k=0;k<cnt;k++){let ht=5+g()*9,lean=(2+g()*5)*(g()<.5?-1:1);
         const yard=x>animalLeft-18&&x<animalRight+22;
         if(yard){ht*=.3;lean*=.3}                      /* a worn, legible barnyard */
-        if(x<pondL+6||x>pondR-6)t+=blade(x,ht,lean);   /* no grass in the water */
+        const b0=x+Math.min(0,lean)-.7,b1=x+Math.max(0,lean)+.7;
+        if((x<pondL+6||x>pondR-6)&&!keepClear.some(([a,b])=>b1>a&&b0<b))t+=blade(x,ht,lean);   /* no grass in the water */
         x+=2.4+g()*3}
       tufts[bandOf(x0)]+=t;
       x+=22+g()*40;
@@ -3111,13 +3158,11 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       ${pond}
       ${castShadow(propBarn(),barnX-21,base+.86,1.18,1)}
       ${barn}
-      ${fence}
+      ${fence}${barnDecor}
       ${cloudShadows(base-rTop*.85,rTop*.85+8)}
       ${sparkle}${glint}${pondFx}
       ${nearRain}
       ${tufts.map((d,i)=>d?`<g${bandAt(i)}><path d="${d}" fill="${grassLine}" stroke="${grassLine}" stroke-width=".8" stroke-linejoin="round"/><path d="${d}" fill="url(#blade)"/></g>`:"").join("")}
-      ${/* the decorations stand on the ground in front of the fence, a step nearer than the grass
-           rooted along it, so the grass goes behind them and never across a lit face */""}${barnDecor}
       ${catsL}${catsR}
       ${tree(W*.055,1.3,.08,3)}${tree(W*.105,.72,.16,8)}${(owl||temp<48)?tree(rightTreeX,1.4,.04,5):""}
       ${ridgeResident}
@@ -3226,16 +3271,15 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const dx=W*.8;
   const dock=propAt(propDock(),{wood:"#7A5A48",piling:"#5E4638"},dx,base-5,1,.04)
     +`<g fill="${lineC}" opacity=".16">${[dx-25,dx-6,dx+14].map((p,i)=>`<rect x="${(p-.6).toFixed(1)}" y="${(base+13.2+i*1.5-(i===1?1:0)).toFixed(1)}" width="1.2" height="${5+i}"/>`).join("")}</g>`;
-  /* Halloween on the dock: a pumpkin at each end, and for the last week the big one is carved
-     and its candle lays its light on the water. Measured off the dock, not the frame. The
-     middle is the cormorant's: drying its wings on the middle piling it reaches from 20 units
-     left of the dock's centre to 9 right, so each pumpkin stands at an end, clear of it */
-  /* The lit one lays its light on the planks round it and on the water under it. The water
-     starts below the bank's lip and runs to the foot of the frame; the end piling stands in
-     front of it down to where it meets the water, so the column is cut there and shows either
-     side of the post */
+  /* Halloween on the dock: a pumpkin at each end, and for the last week the big one is carved.
+     Measured off the dock, not the frame. The middle is the cormorant's. Drying its wings on the
+     middle piling it reaches from 20 units left of the dock's centre to 9 right, so each pumpkin
+     stands at an end, clear of it */
+  /* The lit one lays its light on the planks round it and on the water under it. The glints
+     start below the bank's lip and thin out before the wavelets nearer the bank. The end piling
+     stands in front of them, so they are cut there and show either side of the post */
   const deckY=base-6.1;
-  const dockLit={lights:[{parts:propDock(),x:dx,y:base-5,s:1,rims:[[dx-32,dx+22,base-6.4,.8],[dx-32,dx+22,base-1.6,.5]]}],refl:{top:base+4.2,bottom:H-1.6,gaps:[[dx+12.2,dx+15.8,base+15.4]]}};
+  const dockLit={lights:[{parts:propDock(),x:dx,y:base-5,s:1,rims:[[dx-32,dx+22,base-6.4,.8],[dx-32,dx+22,base-1.6,.5]]}],refl:{top:base+4.2,bottom:base+11.6,gaps:[[dx+12.2,dx+15.8,base+15.4]]}};
   const dockDecor=halloween?pumpkinAt(dx+15.8,deckY,1,{w:9.6,h:7.2,carved,seed:3,...dockLit})
     +pumpkinAt(dx-26.8,deckY+.1,1,{w:6.6,h:4.9,seed:8}):"";
 

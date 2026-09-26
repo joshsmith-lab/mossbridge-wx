@@ -930,19 +930,37 @@ test("the scenes dress for the holidays and take it all down when they pass", as
   assert.match(html, /const candleK=clamp\(\(gust-3\)\/24,0,1\),flick=!PRM&&candleK>\.04/);
   assert.match(html, /#sceneSvg \.candle\.flicker\{animation:candle/);
   assert.match(html, /@keyframes candle\{0%,100%\{opacity:1\}/);
+  // its two deep ducks in a cycle are not the same depth
+  assert.match(html, /31%\{opacity:var\(--c0,\.8\)\}[^\n]*74%\{opacity:var\(--c2,\.85\)\}/);
+  assert.match(html, /--c0:\$\{\(1-\.55\*candleK\)[^\n]*--c2:\$\{\(1-\.4\*candleK\)[^\n]*--c1:\$\{\(1-\.25\*candleK\)/);
   // everything the candle lights is in that one flickering group: the spill on what is beside
   // it, its light on the water, the glow and the face
   assert.match(html, /<g class="candle\$\{flick\?" flicker":""\}"\$\{st\}>\$\{spill\}\$\{water\}\$\{halo\}/);
   // the spill never paints over the pumpkin, and the water column is cut where the piling stands
   assert.match(html, /<g clip-path="url\(#\$\{id\}c\)" mask="url\(#\$\{id\}m\)">/);
   assert.match(html, /gaps:\[\[dx\+12\.2,dx\+15\.8,base\+15\.4\]\]/);
-  // at the barn the big ones flank the door on the ground, so neither hides a lit window, and
-  // they are drawn after the grass along the fence so no blade crosses a lit face
-  assert.match(html, /pumpkinAt\(barnX-10\.2,barnFoot,\.9,/);
-  assert.match(html, /pumpkinAt\(barnX\+10\.7,barnFoot,\.9,/);
-  const ridge = html.slice(html.indexOf("${fence}"), html.indexOf("${catsL}${catsR}"));
-  assert.ok(ridge.includes("${tufts.map") && ridge.indexOf("${barnDecor}") > ridge.indexOf("${tufts.map"),
-    "the barn's decorations are painted after the grass along the fence");
+  // and it thins out before the wavelets nearer the bank, at glints of uneven depth and length
+  assert.match(html, /refl:\{top:base\+4\.2,bottom:base\+11\.6,/);
+  assert.match(html, /for\(let t=r\(\)\*\.05;t<1;t\+=\.12\+r\(\)\*\.2\)\{/);
+  // at the barn the big ones flank the door on the ground, so neither hides a lit window. They
+  // are not a pair: the left one is bigger and a step nearer, the right one smaller and back
+  assert.match(html, /lanL=barnX-10\.2,lanR=barnX\+11\.4/);
+  assert.match(html, /pumpkinAt\(lanL,barnFoot\+\.8,\.9,/);
+  assert.match(html, /pumpkinAt\(lanR,barnFoot,\.8,/);
+  // the left one lights the white pumpkin on the bale, the bale's end and the shock above the
+  // bale's shadow, and the bale throws a band of shade on the shock
+  assert.match(html, /\{\.\.\.whiteOne,face:true/);
+  assert.match(html, /\{\.\.\.shock,face:true[^}]*shade:\[bale,whiteOne\]\}/);
+  assert.match(html, /\+baleShade\+`<g class="decor" data-decor="straw-bale">/);
+  // they are drawn with the barn, right after the fence, so the cloud shadows, the pond and the
+  // near rain pass over them as they do over the barn. The grass leaves out only the blades
+  // that would cross them, so no blade crosses a lit face and no other grass moves
+  const ridge = html.slice(html.indexOf("${fence}${barnDecor}"), html.indexOf("${catsL}${catsR}"));
+  assert.ok(ridge.startsWith("${fence}${barnDecor}"), "the barn's decorations follow the fence directly");
+  assert.ok(ridge.indexOf("${cloudShadows(") > 0 && ridge.indexOf("${nearRain}") > 0 && ridge.indexOf("${tufts.map") > 0,
+    "the cloud shadows, the near rain and the grass are painted over the barn's decorations");
+  assert.match(html, /const keepClear=setOut\.map/);
+  assert.match(html, /if\(\(x<pondL\+6\|\|x>pondR-6\)&&!keepClear\.some\(\(\[a,b\]\)=>b1>a&&b0<b\)\)t\+=blade\(x,ht,lean\);/);
   // the carved face is its own role, so the heron's own `face` keeps its outline
   assert.match(html, /const INK_INNER=new Set\(\[[^\]]*"carve"\]\)/);
   assert.match(html, /heron:\{body:"#8C92B5",wing:"#6B6E95",neck:"#A9A9C4",bill:"#E8B04A",face:/);
