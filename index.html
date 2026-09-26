@@ -1451,29 +1451,117 @@ const propBarn=()=>[
   part("M 5 -3.6 L 9 -3.6 L 9 -8.4 L 5 -8.4 Z M 27 -3.6 L 31 -3.6 L 31 -8.4 L 27 -8.4 Z","window")];
 /* ── the holidays' props ─────────────────────────────────────────────────────────
    Decorations are scenery like the dock and the barn: parts with roles, lit by the same sky.
-   A pumpkin sits on y=0, centred on x=0, w wide and h tall: a squat body with a dimple where
-   the stem goes, its ribs drawn in as bands that follow the curve, a crooked stem and a curl of
-   vine. `carved` cuts the face, two eyes, a nose and a grin with two teeth, as its own role, so
-   the scene can paint it dark by day and lit by the candle after sunset. */
+   A pumpkin sits on y=0, centred on x=0, in a box w wide and h tall, and its stem stands up out
+   of the top of the box. The stem is painted first, so the body covers its foot. `carved` cuts
+   the face as `carve` holes, dark by day and in the candle's colour after sunset, with the rind's
+   cut wall as `eyeRing` painted over them and kept inside each hole. The seed decides how this
+   one grew and how it was cut: its fullness, lean and ribs, its stem, its eyes, grin and teeth.
+   One under 8 wide is a mini, and a mini grows flatter. */
 const propPumpkin=(w=10,h=7,{carved=false,seed=1}={})=>{
-  const r=mulberry(seed),X=w/2,k=Math.min(1,h/7);
-  const P=[pBlob([[0,-h*.86],[X*.34,-h*.99],[X*.76,-h*.93],[X,-h*.66],[X*1.03,-h*.34],[X*.86,-h*.09],[X*.46,0],[0,-h*.03],
-    [-X*.46,0],[-X*.86,-h*.09],[-X*1.03,-h*.34],[-X,-h*.66],[-X*.76,-h*.93],[-X*.34,-h*.99]],"body")];
-  for(const s of[-1,1]){
-    P.push(pTaper([[s*X*.14,-h*.84,.2*k],[s*X*.46,-h*.68,.55*k],[s*X*.56,-h*.42,.62*k],[s*X*.46,-h*.16,.45*k],[s*X*.2,-h*.04,.15*k]],"band"));
-    P.push(pTaper([[s*X*.56,-h*.92,.15*k],[s*X*.84,-h*.7,.42*k],[s*X*.88,-h*.38,.42*k],[s*X*.68,-h*.1,.15*k]],"band"));
+  const r=mulberry(seed),X=w/2,k=Math.min(1,h/7),J=(a,b)=>a+(b-a)*r(),mini=w<8;
+  /* how it grew: each side's fullness, the lean of its crown, where its ribs fall and its
+     build. A mini sits low and wide on the ground, its widest point low and its crown a dome */
+  const full=[J(.95,1.02),J(.95,1.02)],lean=J(-1,1)*X*.05,r1=J(.25,.3),r2=J(.6,.66);
+  const sq=mini?J(.8,.84):J(.93,1),yc=mini?J(.38,.42):J(.44,.48),n=mini?J(2.3,2.5):J(2.2,2.45),mt=mini?J(2.2,2.35):J(2.3,2.6);
+  /* x in half-widths and y in heights up from the ground. The crown leans and the foot stays put */
+  const U=(x,y)=>[x*X+lean*y,-y*h*sq];
+  const runs=R=>R.map((pts,i)=>{const d=inkSpline(pts);return i?d.replace(/^M [^C]*/,""):d}).join("")+" Z";
+  /* a brush stroke drawn as one smooth closed curve through its edges, pointed at both ends:
+     at this size a polyline taper shows its corners */
+  const stroke=(pts,role,x)=>{const n=pts.length-1,L=[],R=[];
+    pts.forEach((p,i)=>{const a=pts[Math.max(0,i-1)],b=pts[Math.min(n,i+1)],l=Math.hypot(b[0]-a[0],b[1]-a[1])||1,dx=(b[0]-a[0])/l,dy=(b[1]-a[1])/l;
+      L.push([p[0]-dy*p[2]/2,p[1]+dx*p[2]/2]);R.push([p[0]+dy*p[2]/2,p[1]-dx*p[2]/2])});
+    return pBlob([pts[0],...L.slice(1,n),pts[n],...R.slice(1,n).reverse()],role,x)};
+  /* the outline is a rounded body pinched in where the ribs meet it: the stem's well at the top,
+     a crease where each outer rib goes over the shoulder, and one under every rib where it sits
+     on the ground. Between them each lobe bows out on its own */
+  const dW=mini?.1:.08,sW=mini?.12:.07,dT=.05,dB=.04;
+  const edge=(f,p)=>{const c=Math.max(0,Math.cos(p)),s=Math.sin(p),x=f*c**(2/n),y=s>=0?yc+(1-yc)*s**(2/mt):yc-yc*(-s)**.7;
+    const pin=s>=0?dW*Math.exp(-x/sW)+dT*Math.exp(-Math.abs(x-r2*f)/.04):dB*(Math.exp(-Math.abs(x-r1*f)/.035)+Math.exp(-Math.abs(x-r2*f)/.035));
+    const vx=x*X,vy=(y-yc)*h*sq,l=Math.hypot(vx,vy)||1;
+    return[x-vx/l*pin*h*sq/X,y-vy/l*pin]};
+  const pT=Math.acos(r2**(n/2)),p1=-Math.acos(r1**(n/2)),HP=Math.PI/2;
+  const half=s=>{const f=full[s>0?1:0],run=(a,b,m)=>Array.from({length:m+1},(_,i)=>{const[x,y]=edge(f,a+(b-a)*i/m);return U(s*x,y)});
+    return[run(HP,pT,5),run(pT,-pT,12),run(-pT,p1,4),run(p1,-HP,3)]};
+  const Rt=half(1),Lf=half(-1),bk=a=>a.slice().reverse();
+  const P=[part(runs([Rt[0],Rt[1],Rt[2],[...Rt[3],...bk(Lf[3]).slice(1)],bk(Lf[2]),bk(Lf[1]),bk(Lf[0])]),"body")];
+  /* the ribs, crease to crease, bowing out with the form and thinning where they turn under */
+  for(const s of[-1,1]){const f=full[s>0?1:0],yT=edge(f,pT)[1],yB1=edge(f,p1)[1],yB2=edge(f,-pT)[1];
+    const rib=(x0,y0,x1,y1,bow,wd)=>stroke([0,.2,.5,.8,1].map(t=>[...U(s*(x0+(x1-x0)*t+bow*Math.sin(Math.PI*t)),y0+(y1-y0)*t),wd*k*Math.sin(Math.PI*t)**.6]),"band");
+    P.push(rib(r1*f*.4,.9,r1*f,yB1,.13,.56),rib(r2*f,yT,r2*f,yB2,.19,.5));
   }
-  const lean=(r()-.5)*1.6;
-  P.push(pTaper([[0,-h*.84,1.5*k],[lean*.4,-h*1.02,1.25*k],[lean+.55,-h*1.19,.95*k]],"stem"));
-  P.push(part(curlT(lean+1.7,-h*1.08,1.05*k,1.05,1,3.3,.42*k,.12),"stem"));
+  /* the stem: a stalk that grew up out of the well and bent over, flared where it leaves the
+     crown and cut square across the end. A mini's is slimmer and bent further, with no cut face
+     or fibres, because at five pixels a stalk that is mostly ink reads as a stalk and a wider one
+     fills with light and reads as a pale nub */
+  const bw=X*(mini?J(.28,.32):J(.34,.38)),nw=bw*J(.62,.7),sH=h*sq*(mini?J(.36,.4):J(.36,.42)),tip=(r()<.5?-1:1)*X*(mini?J(.24,.3):J(.16,.26));
+  const b0=U(0,1-dW-.06),t0=[b0[0]+tip,b0[1]-sH],c0=[b0[0]+tip*.1,b0[1]-sH*.72];
+  const C=t=>[(1-t)**2*b0[0]+2*t*(1-t)*c0[0]+t*t*t0[0],(1-t)**2*b0[1]+2*t*(1-t)*c0[1]+t*t*t0[1]];
+  const Nm=t=>{const dx=2*(1-t)*(c0[0]-b0[0])+2*t*(t0[0]-c0[0]),dy=2*(1-t)*(c0[1]-b0[1])+2*t*(t0[1]-c0[1]),l=Math.hypot(dx,dy)||1;return[-dy/l,dx/l]};
+  const S=(t,u)=>{const c=C(t),m=Nm(t),wd=nw*(1+(1-t)*.08)+(bw-nw)*(1-t)**5;return[c[0]+m[0]*u*wd/2,c[1]+m[1]*u*wd/2]};
+  const tl=S(1,-1),tr=S(1,1),lo=u=>{const p=S(0,u);return[p[0],p[1]+h*.07]};
+  const tm=C(1),tn=Nm(1);
+  const stem=[part(inkSpline([lo(-1),S(.1,-1),S(.35,-1),S(.7,-1),tl])+` L ${P2(tr)}`+inkSpline([tr,S(.7,1),S(.35,1),S(.1,1),lo(1)]).replace(/^M [^C]*/,"")+" Z","stem")];
+  /* fibres run up it to the cut end, which is only a shade paler than the stalk */
+  if(!mini)stem.push(...[-.36,.32].map(u=>stroke([[...S(.1,u*1.3),0],[...S(.4,u),.2*k],[...S(.75,u*.92),.18*k],[...S(.97,u*.88),.06*k]],"fibre",{noSil:true})),
+    part(`M ${P2(tl)} L ${P2(tr)} Q ${P2([tm[0]-tn[1]*nw*.4,tm[1]+tn[0]*nw*.4])} ${P2(tl)} Z`,"cut",{noSil:true}));
+  P.unshift(...stem);
+  /* a tendril of vine left on a big one: off the stalk, a long arc and a single loose curl, the
+     way the clouds end, never a coiled spring */
+  if(!mini){const vs=-Math.sign(tip),vl=J(.85,1.1),a=S(.4,vs),o=(x,y)=>[a[0]+vs*x*X*vl,a[1]-y*h*vl];
+    const lead=[[0,0],[.1,.08],[.22,.11],[.32,.07],[.38,0]].map(([x,y])=>o(x,y)),rr=.1*X*vl,e=lead[4],cc=[e[0]-vs*rr,e[1]];
+    const pts=[...lead,...curlPts(cc[0],cc[1],rr,.8,vs,vs>0?0:Math.PI).slice(1,-1)];
+    P.push(stroke(pts.map((p,i)=>[p[0],p[1],i?(.46-.36*i/(pts.length-1))*k:.4*k]),"vine",{noSil:true}));
+  }
   if(carved){
-    const tri=(cx,by,bw,ht)=>`M ${f1(cx-bw/2)} ${f1(by)} L ${f1(cx+bw/2)} ${f1(by)} L ${f1(cx)} ${f1(by-ht)} Z`;
-    const mT=-h*.34,mB=-h*.12,mX=X*.64,tw=X*.13,tx=X*.24,td=h*.075;
-    const mouth=`M ${f1(-mX)} ${f1(mT-h*.03)} L ${f1(-tx-tw)} ${f1(mT)} L ${f1(-tx-tw)} ${f1(mT+td)} L ${f1(-tx+tw)} ${f1(mT+td)} L ${f1(-tx+tw)} ${f1(mT)}`
-      +` L ${f1(tx-tw)} ${f1(mT)} L ${f1(tx-tw)} ${f1(mT+td)} L ${f1(tx+tw)} ${f1(mT+td)} L ${f1(tx+tw)} ${f1(mT)} L ${f1(mX)} ${f1(mT-h*.03)}`
-      +` Q ${f1(X*.36)} ${f1(mB+h*.01)} 0 ${f1(mB)} Q ${f1(-X*.36)} ${f1(mB+h*.01)} ${f1(-mX)} ${f1(mT-h*.03)} Z`;
-    P.push(part(tri(-X*.4,-h*.53,X*.36,h*.21)+" "+tri(X*.4,-h*.53,X*.36,h*.21),"carve"),
-      part(tri(0,-h*.41,X*.17,h*.11),"carve"),part(mouth,"carve"));
+    /* the knife's cuts, every edge straight. Q maps face units (x in half-widths from the middle,
+       y in heights up) onto the pumpkin, narrowing x as it turns away round the curve. The cuts
+       are written to a hundredth, because the rind along them is only a fifth of a unit thick */
+    const Q=(x,y)=>U(Math.sin(x*1.18)/1.18,y),F=v=>Math.round(v*100)/100,path=E=>"M "+E.map(p=>`${F(p[0])} ${F(p[1])}`).join(" L ")+" Z";
+    const lp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t],rt=.22*k,holes=[],rind=[];
+    /* a strip of rind along part of a hole's edge: C runs along the edge in the hole's own order,
+       T is how thick the strip is at each point, and it is set in toward the inside */
+    const wall=(C,T,E)=>{let A=0;E.forEach((p,i)=>{const q=E[(i+1)%E.length];A+=p[0]*q[1]-q[0]*p[1]});
+      const nrm=(a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1;return A>0?[-dy/l,dx/l]:[dy/l,-dx/l]};
+      const inner=C.map((p,i)=>{const a=i?nrm(C[i-1],p):null,b=i<C.length-1?nrm(p,C[i+1]):null,v=a&&b?[a[0]+b[0],a[1]+b[1]]:a||b,l=Math.hypot(v[0],v[1])||1,m=a&&b?Math.max(.5,(a[0]*v[0]+a[1]*v[1])/l):1;
+        return[p[0]+v[0]/l*T[i]/m,p[1]+v[1]/l*T[i]/m]});
+      return[...C,...inner.reverse()]};
+    /* the carving has its own draws, so how a pumpkin grew never changes how it was cut. The
+       eyes come to a point at the top, so the face looks awake: a triangle whose point leans out
+       as far as the seed says, a wedge cut down toward the middle, which is the sly one, or a tall
+       point over a round base. Each sits on a base cut in facets. u runs outward from the middle
+       of the face, v up */
+    const cr=mulberry(seed*4+17),K2=(a,b)=>a+(b-a)*cr(),eye=Math.floor(cr()*3),teeth=Math.floor(cr()*3);
+    const ex=K2(.35,.39),ey=K2(.58,.62),ew=K2(.19,.22)*[1,1.1,.84][eye],eh=K2(.12,.14)*[1,.94,1.24][eye],ap=K2(.05,.35),rs=K2(.93,1.07),dy=K2(-.02,.02);
+    const EYE=[[[ap,1],[1,-.62],[.5,-.96],[-.4,-1],[-1,-.68]],[[1,1],[.74,-.52],[.12,-1],[-.58,-.78],[-1,-.24]],[[ap*.3,1],[.92,-.5],[.45,-.96],[-.45,-.96],[-.92,-.5]]][eye];
+    for(const s of[-1,1]){const W=ew*(s>0?rs:1),H=eh*(s>0?rs:1),cx=s*ex,cy=ey+(s>0?dy:0);
+      const E=EYE.map(([u,v])=>Q(cx+s*u*W,cy+v*H));
+      holes.push(E);
+      /* the rind is the wall across the top and down the outer side, thinning into the point and
+         gone at both ends, so it reads as the cut and never as a brow */
+      rind.push(wall([lp(E[4],E[0],eye===1?.12:.4),lp(E[4],E[0],eye===1?.6:.75),E[0],lp(E[0],E[1],.38),lp(E[0],E[1],.74),E[1]],[0,rt*.8,rt*.4,rt,rt*.75,0],E));
+    }
+    /* the grin: a crescent faceted the way a knife cuts a curve, turned up at the ends and tipped
+       as the seed says, with one square tooth left in the top, or two, and sometimes one in the
+       bottom, never in the middle */
+    const mw=K2(.6,.7),my=K2(.3,.34),mt=K2(.19,.22),up=K2(.07,.1),tilt=K2(-.035,.035),N=8;
+    const yT=x=>{const t=x/mw;return my+up*t*t+tilt*t},yB=x=>{const t=x/mw;return yT(x)-mt*Math.max(0,1-t*t)**.75};
+    const two=teeth===2,tw=K2(.075,.09),tx=two?[K2(-.36,-.26),K2(.1,.2)]:[K2(-.24,.16)];
+    const low=teeth===1,bx=low?tx[0]+(tx[0]>-.04?-1:1)*K2(.26,.32):null;
+    const cut=(xs,teeth,fy,dp)=>{let E=xs.filter(x=>teeth.every(c=>Math.abs(x-c)>tw*1.3)).map(x=>[x,fy(x)]);
+      for(const c of teeth)E.push([c-tw,fy(c-tw)],[c-tw*.88,fy(c)+dp],[c+tw*.9,fy(c)+dp*1.06],[c+tw,fy(c+tw)]);
+      return E.sort((a,b)=>a[0]-b[0])};
+    const xs=Array.from({length:N+1},(_,i)=>(i/N*2-1)*mw);
+    const top=cut(xs,tx,yT,-mt*.5),bot=cut(xs.slice(1,-1),low?[bx]:[],yB,mt*.42).reverse();
+    const G=[...top,...bot].map(p=>Q(...p));
+    holes.push(G);
+    /* the floor of the grin shows its rind, thickest where the grin is deepest and gone round the
+       bottom tooth */
+    const fl=[top[top.length-1],...bot,top[0]];
+    rind.push(wall(fl.map(p=>Q(...p)),fl.map(([x])=>rt*.9*Math.max(0,1-(x/mw)**2)**.6*(low?Math.min(1,Math.max(0,(Math.abs(x-bx)-tw*1.05)/(tw*1.5))):1)),G));
+    const named=["tri","sly","tall"][eye],bite=["one","top and bottom","two"][teeth];
+    holes.forEach((E,i)=>P.push(part(path(E),"carve",{cut:i<2?named:bite})));
+    for(const E of rind)P.push(part(path(E),"eyeRing"));
   }
   return P};
 /* a corn shock, the way they stand in the hollows: cut stalks stood on end in a teepee, the
@@ -2141,9 +2229,11 @@ const INK={
   cardinal:{body:"#CB2424",tail:"#A01F1B",wing:"#9A2D27",far:"#7A4A40",leg:"#B7806C",band:"#1D1216",mask:"#1D1216",bill:"#E4502C",sheen:"#F59268",detail:"#8A1A14",eyeRing:"#3A2226",eye:"#0B0608",glint:"#FFF3E0",ink:"#2A1620",shade:"#3A1E5C",lit:"#FFD7A0",litOp:0.3},
   oystercatcher:{body:"#5E4A3E",hood:"#1E1A24",mark:"#FBF6EC",bill:"#F07A2A",eye:"#F6D34A",eyeRing:"#E0452F",leg:"#EBB9A6",legFar:"#C99A8A",ink:"#2A1B33",shade:"#3A2350",lit:"#FFD99A",litOp:0.55},
   /* the holidays' props: the carve is the pumpkin's dark inside by day, and the candle's
-     colour once it is lit (candleLit) */
-  pumpkin:{body:"#E27B2C",band:"#B4561F",stem:"#6C6230",carve:"#3E2012",candleLit:"#FFB443",ink:"#2A1B33",shade:"#5A2438",lit:"#FFE3A6",litOp:0.5},
-  lumina:{body:"#EEE7D5",band:"#CBBFA2",stem:"#76703C",carve:"#4A3A26",candleLit:"#FFC45A",ink:"#2A1B33",shade:"#4A3A5C",lit:"#FFF6DE",litOp:0.5},
+     colour once it is lit (candleLit). eyeRing is the rind's cut wall, pale by day and glowing
+     once the candle is lit (rindLit). fibre and cut are the stem's grain and its cut end, only a
+     shade off the stalk, and vine is the tendril left on it */
+  pumpkin:{body:"#E27B2C",band:"#B4561F",stem:"#6E6232",fibre:"#4B4020",cut:"#9A8C54",vine:"#5E5A2A",carve:"#3E2012",eyeRing:"#F6BE67",rindLit:"#FFDA8E",candleLit:"#FFB443",ink:"#2A1B33",shade:"#5A2438",lit:"#FFE3A6",litOp:0.5},
+  lumina:{body:"#EEE7D5",band:"#C9BC9B",stem:"#76703C",fibre:"#54502A",cut:"#A29C66",vine:"#646130",carve:"#4A3A26",eyeRing:"#F4D694",rindLit:"#FFE29C",candleLit:"#FFC45A",ink:"#2A1B33",shade:"#4A3A5C",lit:"#FFF6DE",litOp:0.5},
   cornShock:{stalk:"#C8A865",stalkLt:"#D8BD7C",stalkMd:"#BC9C5C",stalkDk:"#846A42",joint:"#A88B52",leaf:"#CCA660",leafBack:"#AD8A4E",rib:"#D6B878",tassel:"#C9A060",band:"#5C3E22",twist:"#8C6A40",ink:"#2A1B33",shade:"#4A3450",lit:"#FFEBB8",litOp:0.5},
   bale:{straw:"#CFAA5A",flake:"#D3AE5E",top:"#EFD896",end:"#E0C070",endLt:"#EFD999",endDk:"#CFAF62",seam:"#C2A052",stub:"#BA9A4E",stubLt:"#E4C880",band:"#A47C48",ink:"#2A1B33",shade:"#5A4450",lit:"#FFF0C4",litOp:0.5},
 };
@@ -2327,6 +2417,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const candles=carved&&sunAltDeg< -.83&&!wet&&!storm;
   const decorPal=(p,d,lit=false)=>{const o={};for(const[k,v]of Object.entries(p))o[k]=typeof v==="string"&&v[0]==="#"?air(v,d):v;
     if(p.carve)o.carve=lit?p.candleLit:air(p.carve,d);
+    if(lit&&p.rindLit)o.eyeRing=p.rindLit;
     return Object.assign(o,{ink:inkAir(d),shade:shadeC,lit:litC,litOp:(p.litOp??.5)*litK,shadeOp:.34*shadeK})};
   const decorAt=(parts,p,x,y,s,d=.04)=>inkAt(x,y,s,1,inkUnit(parts,decorPal(p,d),{s,light:lightAt(x,y-10*s)}));
   /* One pumpkin at a place. A lit one carries its candle, and everything the candle does is one

@@ -254,6 +254,19 @@ decorations coming down once each holiday passes. Halloween is the first.
 - **They keep a pumpkin's own calendar.** Plain until the 24th, then the big ones are carved,
   because a carved pumpkin in coastal humidity is soft inside a week. The carved face is its
   own role, `carve`, and not `face`: the heron already has a face, and it keeps its outline.
+- **A jack-o'-lantern has to read as one at eight pixels.** Phone size wins over the close-up.
+  Five lobes show, creased where the ribs meet the outline, and the stem is painted first so it
+  comes up out of the well. The face is two eyes and a grin and no nose, so lit or dark it is
+  three marks. The eyes come to a point at the top, because a flat-topped half moon reads as
+  sleepy. The grin is deep enough to carry the light: the carved area is more than a tenth of
+  the box, about what the first draft's face had. The rind's cut wall (`eyeRing`) is a thin strip
+  inside its hole, never a pale tab standing out of the face, and it takes `rindLit` once the
+  candle is lit, so the wall glows with the face when the flame gutters. The carving has its own
+  draws off the seed, so the three lit ones (seed 3 on the dock, 4 and 6 at the barn door) are
+  three different carvings, and a change to how a pumpkin grows never recuts a face. One under 8
+  wide is a mini: squat and wide with a round crown, and a slim stalk that is mostly ink, with
+  no cut face, fibres or vine. At five pixels a stalk that fills with light is a pale nub, and a
+  crown that rises to the stem is a bulb of garlic. test.mjs checks each of these.
 - **The candle is lit when the barn lamps are** (the sun below -0.83°), and not in the rain or
   a storm. Its flicker is the only thing Halloween adds that moves, and it moves with the air:
   steady under 3 mph of gust, guttering deeper and quicker up to 27 (`candleK`), and no

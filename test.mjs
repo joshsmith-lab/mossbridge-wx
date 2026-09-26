@@ -958,6 +958,65 @@ test("the scenes dress for the holidays and take it all down when they pass", as
   assert.match(scene, /decorations are \[/);
 });
 
+test("a pumpkin still reads as one at seven pixels, and no two are cut alike", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const kit = html.slice(html.indexOf("/* ── Storybook ink: the drawing kit"), html.indexOf("/* ── the scene: arc, sun / moon"));
+  const ctx = vm.createContext({});
+  vm.runInContext(`${html.match(/function mulberry\(a\)\{[\s\S]*?\}\}/)[0]}\n${kit}\nglobalThis.propPumpkin=propPumpkin;`, ctx);
+  const plain = ctx.propPumpkin(10, 7, { seed: 3 }), carved = ctx.propPumpkin(10, 7, { carved: true, seed: 3 });
+  // two eyes and a grin and no nose, so the face is still three marks at seven pixels, with the
+  // rind's cut edge painted over the holes on the walls you can see into
+  assert.equal(carved.filter((p) => p.role === "carve").length, 3);
+  assert.ok(carved.findIndex((p) => p.role === "eyeRing") > carved.findLastIndex((p) => p.role === "carve"));
+  assert.equal(plain.filter((p) => p.role === "carve" || p.role === "eyeRing").length, 0);
+  // a woody stem cut square, with its fibres and its cut end, and a tendril of vine. None of those
+  // three joins the outline, so the ink stays on the pumpkin and the stalk. The stalk is painted
+  // before the body, so it comes up out of the well rather than sitting on it like a peg
+  for (const role of ["body", "band", "stem", "fibre", "cut", "vine"]) assert.ok(plain.some((p) => p.role === role), role);
+  assert.ok(plain.filter((p) => ["fibre", "cut", "vine"].includes(p.role)).every((p) => p.noSil));
+  assert.ok(plain.findIndex((p) => p.role === "stem") < plain.findIndex((p) => p.role === "body"));
+  // the seed is how it grew: the pair on the dock and the three at the barn are not stamped copies
+  const body = (seed) => ctx.propPumpkin(9, 6.8, { seed }).find((p) => p.role === "body").d;
+  assert.equal(new Set([3, 8, 4, 6, 9].map(body)).size, 5);
+  assert.equal(body(4), body(4));
+  // the cuts are straight-edged polygons, so their corners and areas can be read off the path
+  const poly = (d) => [...d.matchAll(/(-?\d*\.?\d+) (-?\d*\.?\d+)/g)].map((m) => [+m[1], +m[2]]);
+  const area = (E) => Math.abs(E.reduce((a, p, i) => { const q = E[(i + 1) % E.length]; return a + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2;
+  const inside = (E, [x, y]) => {
+    let hit = false;
+    for (let i = 0, j = E.length - 1; i < E.length; j = i++) if ((E[i][1] > y) !== (E[j][1] > y) && x < (E[j][0] - E[i][0]) * (y - E[i][1]) / (E[j][1] - E[i][1]) + E[i][0]) hit = !hit;
+    return hit || E.some((p, i) => { const q = E[(i + 1) % E.length], l = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1; return Math.abs((q[0] - p[0]) * (p[1] - y) - (p[0] - x) * (q[1] - p[1])) / l < .02; });
+  };
+  // the three that are lit are three carvings: the dock's and the pair at the barn door, each with
+  // its own eyes and its own teeth
+  const lit = [[9.6, 7.2, 3], [9.2, 6.8, 4], [9.4, 6.8, 6]].map(([w, h, seed]) => ({ w, h, P: ctx.propPumpkin(w, h, { carved: true, seed }) }));
+  assert.equal(new Set(lit.map(({ P }) => P.find((p) => p.role === "carve").cut)).size, 3);
+  assert.equal(new Set(lit.map(({ P }) => P.filter((p) => p.role === "carve")[2].cut)).size, 3);
+  for (const { w, h, P } of lit) {
+    const holes = P.filter((p) => p.role === "carve").map((p) => poly(p.d)), rind = P.filter((p) => p.role === "eyeRing").map((p) => poly(p.d));
+    // the eyes come to a point at the top, never a flat-topped half moon, so the face looks awake
+    for (const E of holes.slice(0, 2)) {
+      const ys = E.map((p) => p[1]).sort((a, b) => a - b), tall = ys[ys.length - 1] - ys[0];
+      assert.ok(ys[1] - ys[0] > tall * .3, "a pointed eye");
+    }
+    // the face carries about as much light as the first draft's did, more than a tenth of its box
+    assert.ok(holes.reduce((a, E) => a + area(E), 0) > .1 * w * h, "a face that lights");
+    // the rind is a thin wall inside its own hole, never a pale tab standing out of the face
+    rind.forEach((R, i) => { for (const p of R) assert.ok(inside(holes[i], p), "rind inside its hole"); });
+  }
+  // the candle lights the rind too, so the cut wall glows with the rest of the face
+  assert.match(html, /if\(lit&&p\.rindLit\)o\.eyeRing=p\.rindLit;/);
+  for (const k of ["pumpkin", "lumina"]) assert.match(html, new RegExp(`\\b${k}:\\{[^}]*rindLit:"#`));
+  // a mini is squat and wide under a stalk that is mostly ink: no cut face, fibres or vine to
+  // fill it with light at five pixels
+  for (const [w, h, seed] of [[6, 4.4, 9], [6.6, 4.9, 8]]) {
+    const P = ctx.propPumpkin(w, h, { seed }), B = poly(P.find((p) => p.role === "body").d);
+    const xs = B.map((p) => p[0]), ys = B.map((p) => p[1]);
+    assert.ok((Math.max(...xs) - Math.min(...xs)) / (Math.max(...ys) - Math.min(...ys)) > 1.55, "a squat mini");
+    assert.ok(P.some((p) => p.role === "stem") && !P.some((p) => ["cut", "fibre", "vine"].includes(p.role)));
+  }
+});
+
 test("tide chart reads as depth over the bottom", async () => {
   const html = await readFile(new URL("index.html", root), "utf8");
 

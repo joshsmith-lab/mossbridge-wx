@@ -39,8 +39,8 @@ const cast = new Function("mulberry", `${src}; return {inkRig, inkAt, INK, rigs:
 const PROPS = {
   pumpkin: ["pumpkin", (c) => c.propPumpkin(10, 7, { seed: 3 })],
   lantern: ["pumpkin", (c) => c.propPumpkin(10, 7, { carved: true, seed: 3 })],
-  "lantern-lit": ["pumpkin", (c) => c.propPumpkin(10, 7, { carved: true, seed: 3 }), { carve: "candleLit" }],
-  lumina: ["lumina", (c) => c.propPumpkin(6.6, 4.9, { seed: 8 })],
+  "lantern-lit": ["pumpkin", (c) => c.propPumpkin(10, 7, { carved: true, seed: 3 }), { carve: "candleLit", eyeRing: "rindLit" }],
+  lumina: ["lumina", (c) => c.propPumpkin(6, 4.4, { seed: 9 })],
   cornshock: ["cornShock", (c) => c.propCornShock(5)],
   bale: ["bale", (c) => c.propBale()],
 };
