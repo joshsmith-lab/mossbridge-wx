@@ -945,22 +945,31 @@ test("the scenes dress for the holidays and take it all down when they pass", as
   // at the barn the big ones flank the door on the ground, so neither hides a lit window. They
   // are not a pair: the left one is bigger and a step nearer, the right one smaller and back
   assert.match(html, /lanL=barnX-10\.2,lanR=barnX\+11\.4/);
-  assert.match(html, /pumpkinAt\(lanL,barnFoot\+\.8,\.9,/);
-  assert.match(html, /pumpkinAt\(lanR,barnFoot,\.8,/);
+  assert.match(html, /const bigL=\{w:9\.2,h:6\.8,s:\.9\},bigR=\{w:8\.6,h:7\.4,s:\.8\}/);
+  assert.match(html, /pumpkinAt\(lanL,barnFoot\+\.8,bigL\.s,/);
+  assert.match(html, /pumpkinAt\(lanR,barnFoot,bigR\.s,/);
   // the left one lights the white pumpkin on the bale, the bale's end and the shock above the
   // bale's shadow, and the bale throws a band of shade on the shock
   assert.match(html, /\{\.\.\.whiteOne,face:true/);
   assert.match(html, /\{\.\.\.shock,face:true[^}]*shade:\[bale,whiteOne\]\}/);
   assert.match(html, /\+baleShade\+`<g class="decor" data-decor="straw-bale">/);
+  // that band is a contact shadow by day, deeper only when the lantern beside it is lit, and it
+  // fades under cloud like the kit's own crescents
+  assert.match(html, /const lowK=candles\?nightK:0,/);
+  assert.match(html, /opacity="\$\{\(\(\.32\+\.22\*lowK\)\*shadeK\)\.toFixed\(2\)\}"/);
+  // the props are built only while they are out, and the rim the light rakes is read off the bale
+  assert.match(html, /let barnDecor="",keepClear=\[\];\n    if\(halloween\)\{/);
+  assert.match(html, /pathBox\(bale\.parts\.filter\(p=>p\.role==="top"\)/);
   // they are drawn with the barn, right after the fence, so the cloud shadows, the pond and the
-  // near rain pass over them as they do over the barn. The grass leaves out only the blades
-  // that would cross them, so no blade crosses a lit face and no other grass moves
+  // near rain pass over them as they do over the barn. The grass leaves out whole the tufts that
+  // would cross them, measured off the shock's own foot, so no blade crosses a lit face and no
+  // other grass moves
   const ridge = html.slice(html.indexOf("${fence}${barnDecor}"), html.indexOf("${catsL}${catsR}"));
   assert.ok(ridge.startsWith("${fence}${barnDecor}"), "the barn's decorations follow the fence directly");
   assert.ok(ridge.indexOf("${cloudShadows(") > 0 && ridge.indexOf("${nearRain}") > 0 && ridge.indexOf("${tufts.map") > 0,
     "the cloud shadows, the near rain and the grass are painted over the barn's decorations");
-  assert.match(html, /const keepClear=setOut\.map/);
-  assert.match(html, /if\(\(x<pondL\+6\|\|x>pondR-6\)&&!keepClear\.some\(\(\[a,b\]\)=>b1>a&&b0<b\)\)t\+=blade\(x,ht,lean\);/);
+  assert.match(html, /keepClear=\[\[shock\.x\+sx0\*shock\.s-\.4,lanR\+bigR\.w\*bigR\.s\/2\+\.4\]\]/);
+  assert.match(html, /if\(!keepClear\.some\(\(\[a,b\]\)=>t1>a&&t0<b\)\)tufts\[bandOf\(x0\)\]\+=t;/);
   // the carved face is its own role, so the heron's own `face` keeps its outline
   assert.match(html, /const INK_INNER=new Set\(\[[^\]]*"carve"\]\)/);
   assert.match(html, /heron:\{body:"#8C92B5",wing:"#6B6E95",neck:"#A9A9C4",bill:"#E8B04A",face:/);
@@ -968,7 +977,8 @@ test("the scenes dress for the holidays and take it all down when they pass", as
   // piling is left to the cormorant
   assert.match(html, /pumpkinAt\(dx\+15\.8,deckY,1,/);
   assert.match(html, /pumpkinAt\(dx-26\.8,deckY/);
-  assert.match(html, /decorAt\(propCornShock\(5\),INK\.cornShock,barnX-21\.5,barnFoot/);
+  assert.match(html, /const shock=\{parts:propCornShock\(5\),x:barnX-21\.5,y:barnFoot,s:\.74\}/);
+  assert.match(html, /decorAt\(shock\.parts,INK\.cornShock,shock\.x,shock\.y,shock\.s\)/);
   // the harness looks at them in and out of season, lit and unlit
   const scene = await readFile(new URL("tools/scene.mjs", root), "utf8");
   for (const name of ["27-marsh-halloween-night", "28-marsh-halloween-cold-morning", "29-marsh-halloween-rain-night", "31-ridge-halloween-night", "32-ridge-november-morning"])

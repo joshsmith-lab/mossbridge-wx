@@ -248,73 +248,61 @@ decorations coming down once each holiday passes. Halloween is the first.
   the dock and the barn, drawn from parts with the kit (`propPumpkin`, `propCornShock`,
   `propBale`) and lit by the same sky, so they go blue at night, warm at golden hour and grey
   in the rain. They are what the family would set out: on the coast a pumpkin at each end of
-  the dock, at the farm a corn shock at the barn's corner and pumpkins either side of the
-  door, one on a bale. `node tools/rig.mjs pumpkin` (or `lantern`, `lantern-lit`, `lumina`,
-  `cornshock`, `bale`) shows each one close up and at phone size.
+  the dock, at the farm a corn shock at the barn's corner with a bale at its foot and a small
+  white pumpkin on it, and a big pumpkin either side of the door. `node tools/rig.mjs pumpkin`
+  (or `lantern`, `lantern-lit`, `lumina`, `cornshock`, `bale`) shows each one close up and at
+  phone size.
 - **They keep a pumpkin's own calendar.** Plain until the 24th, then the big ones are carved,
   because a carved pumpkin in coastal humidity is soft inside a week. The carved face is its
   own role, `carve`, and not `face`: the heron already has a face, and it keeps its outline.
 - **A jack-o'-lantern has to read as one at eight pixels.** Phone size wins over the close-up.
-  Five lobes show, creased where the ribs meet the outline, and the stem is painted first so it
-  comes up out of the well. The face is two eyes and a grin and no nose, so lit or dark it is
-  three marks. The eyes come to a point at the top, because a flat-topped half moon reads as
-  sleepy. The grin is deep enough to carry the light: the carved area is more than a tenth of
-  the box, about what the first draft's face had. The rind's cut wall (`eyeRing`) is a thin strip
-  inside its hole, never a pale tab standing out of the face, and it takes `rindLit` once the
-  candle is lit, so the wall glows with the face when the flame gutters. The carving has its own
-  draws off the seed, so the three lit ones (seed 3 on the dock, 4 and 6 at the barn door) are
-  three different carvings, and a change to how a pumpkin grows never recuts a face. One under 8
-  wide is a mini: squat and wide with a round crown, and a slim stalk that is mostly ink, with
-  no cut face, fibres or vine. At five pixels a stalk that fills with light is a pale nub, and a
-  crown that rises to the stem is a bulb of garlic. test.mjs checks each of these.
+  The face is two eyes and a grin and no nose, so lit or dark it is three marks. The eyes come
+  to a point, because a flat-topped half moon reads as sleepy, and the grin is deep enough to
+  carry the light. No tooth sits in the middle, which is the stock clip-art face. The rind's
+  cut wall (`eyeRing`) is a thin strip inside its hole and glows with the face (`rindLit`) once
+  the candle is lit. The carving has its own draws off the seed, so the three lit ones (seed 3
+  on the dock, 4 and 6 at the door) are three different carvings. A pumpkin under 8 wide is a
+  mini: squat, with a round crown and a slim stalk that is mostly ink, because at five pixels a
+  pale stalk is a nub and a crown that rises to the stem is a bulb of garlic. test.mjs checks
+  the three marks, the pointed eyes, the lit area, the rind inside its hole, the three carvings
+  and the minis.
+- **The corn shock is tied high**, and its crown is broken stalk tops and dry leaves standing
+  up and out, so at phone size it is a sheaf and never a figure in a dress. Only the leaves
+  that break the silhouette take ink. The bale sits level on the ground, with its long side to
+  us.
 - **The candle is lit when the barn lamps are** (the sun below -0.83°), and not in the rain or
   a storm. Its flicker is the only thing Halloween adds that moves, and it moves with the air:
   steady under 3 mph of gust, guttering deeper and quicker up to 27 (`candleK`), and no
-  animation at all in a calm or under PRM. The glow, the face in the flame's colour, the light
-  it lays on what is beside it and, on the dock, its light on the water are one group, so they
-  flicker together. That is one animation per lit pumpkin: one on the coast, two at the farm.
+  animation at all in a calm or under PRM. Everything the candle lights is in one group, so it
+  all flickers together. That is one animation per lit pumpkin: one on the coast, two at the
+  farm.
 - **The candle is a light, not a sticker.** It is measured from where a candle stands, low in
-  the pumpkin behind the grin. The shell glows round the face and the rim, ribs and outline are
-  left to say it is round. The face is white-gold at the candle and amber at its tips. The glow
-  falls off the way light does, a core about the size of the pumpkin and a faint warmth in the
-  air round it, never an even disc, and fog spreads it wider. It lays still shapes of its light
-  on what stands right beside it (`lights`), masked off the pumpkin's own silhouette so it never
-  paints over it. The ground (the dock's planks, the doorstep) takes a flat pool, with a brighter
-  line raked along a top edge. What stands up (`face`: the white pumpkin, the end of the bale,
-  the corn shock) takes a rounder falloff that carries further, only on the faces toward the
-  flame (`roles`), with a warm edge on its side toward the candle (`edge`) and none of it where a
-  nearer prop throws its shadow (`shade`). A lamp that warms the bale warms the pale pumpkin
-  sitting on it. On the dock its light on the water is broken water hung under the lantern:
-  seeded glints at uneven depths and lengths, a long one now and then broken in two, broken
-  wider as `chopK` rises, and cut where the end piling stands in front of them, so what shows
-  either side of the post is the reflection going on behind it. They thin out before the
-  wavelets nearer the bank. They are the flame's orange rather than its gold, because dim gold
-  over blue water goes green, and even the first sits well under the lit planks and the face.
-  The first draft's three bars sat on the bank under the rail, and the next, an even ladder of
-  bright pills, outshone the planks and ran into the wavelets.
+  the pumpkin behind the grin. The shell glows round the face, the face is white-gold at the
+  candle and amber at its tips, and the glow falls off the way light does, wider in fog. It lays
+  still shapes of its light on what stands right beside it (`lights`): the ground (the planks,
+  the doorstep) takes a pool, and a thing that stands up (`face`) takes a falloff over its
+  silhouette, or only the faces named in `roles`, with a warm edge toward the flame (`edge`) and
+  none where a nearer prop shades it (`shade`). On the dock its light on the water is broken
+  water hung under the lantern: seeded glints at uneven depths, cut where the end piling stands
+  in front of them, thinning out before the wavelets nearer the bank, and in the flame's orange
+  rather than its gold, because dim gold over blue water goes green. Each row of glints makes the
+  same draws, so a change in the wind widens them and never moves them.
 - **They are placed off the dock and the barn, never off a fraction of the frame, and they give
   way to the animals.** The dock's middle piling is the cormorant's: drying its wings it reaches
-  20 units left of the dock's centre and 9 right, so the pumpkins stand at the ends. At the
-  barn the decorations run from the corn shock at the barn's corner to the door, in front of the
-  fence, so the hens' yard and the pond's edge are untouched. The bale stands in front of the
-  corn shock's foot, so the shock keeps its waist and its broken top, with the small white
-  pumpkin on it clear of the window. Where the bale stands against the shock it throws a hard
-  band of shade on it, deeper and taller after dark, so the shock, the bale and the white
-  pumpkin read as three things and not one khaki mass. The two big ones stand on the ground
-  either side of the door, under the windows and never in front of them: at night the lit
-  windows are the barn's lamps, and the first draft's lantern held up on the bale against one
-  hid it and was lost in it. They are not one pumpkin copied twice. The left one is bigger and a
-  step nearer, by the bale, and the right one smaller, rounder and back under its window. The
-  barn's decorations are drawn with the barn, right after the fence, so the cloud shadows, the
-  pond's effects and the near rain pass over them as they pass over the barn. What is set out
-  at the door stands a step nearer than the grass rooted along the fence, so the yard's grass
-  leaves out the blades that would cross it, and no blade crosses a lit face. Only those blades
-  go, so the rest of the grass keeps its place. The pumpkins are sized to the animals on their
-  own plane (the marsh's big one is about a third of the drying cormorant's span, the farm's a
-  little under half a hen's height), not to the dock and the barn, which are drawn small.
-  `tools/scene.mjs` fails a scene whose decorations are not exactly the ones the date calls
-  for, whose candles are lit when they should not be, or where a decoration runs off the frame
-  or into an animal.
+  20 units left of the dock's centre and 9 right, so the pumpkins stand at the ends. At the barn
+  they run from the shock's corner to the door, in front of the fence, so the hens' yard and the
+  pond's edge are untouched. The two big ones stand under the lit windows rather than in front
+  of them, because at night the windows are the barn's lamps, and they are not one pumpkin
+  copied twice: the left one is bigger and a step nearer, the right one smaller and back. The
+  bale throws a band of shade on the shock so the two read apart, a contact shadow by day and
+  deeper only when the lantern beside them is lit. The barn's decorations are drawn with the
+  barn, right after the fence, so the cloud shadows, the pond's effects and the near rain pass
+  over them. The yard's grass leaves out whole any tuft that would cross them, measured off the
+  shock's own foot, and still makes every draw, so no other grass moves. The props are built
+  only while they are out, and what the light rakes on the bale is read off the bale's drawing,
+  so a redrawn prop cannot leave a line floating. `tools/scene.mjs` fails a scene whose
+  decorations are not exactly the ones the date calls for, whose candles are lit when they
+  should not be, or where a decoration runs off the frame or into an animal.
 
 ## Deploying
 
@@ -359,15 +347,16 @@ banded days, the call's title, word, why and lines, the sun card, the sun bar's 
 and how many times the seas were asked for. The loading-shell check at the end also holds
 the sun scale hidden while there is no bar. It exits non-zero when one does not show what it is there for.
 
-`tools/scene.mjs` is for anything that moves. Twenty-six scenes force the light
+`tools/scene.mjs` is for anything that moves. Twenty-eight scenes force the light
 and weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
 clear night, a storm, a fog morning, drizzle against a downpour, freezing rain on
 the coast, a night of rain over the marsh, and the ridge by day, by evening with
 the buck out, in warm rain, on a snow day, on a cold January night and in a night
-downpour. Seven more are Halloween: the coast on an October afternoon, on Halloween
+downpour. Nine more are Halloween: the coast on an October afternoon, on Halloween
 night, on a cold morning in the carved week with the cormorant on its piling and on a
-rainy night in it, and the farm on an October afternoon, on Halloween night and on the
-morning of November 1, when everything has to be gone. Each writes a close-up of the
+rainy night in it, and the farm on an October afternoon, on an October night before the
+carving, on Halloween night, on a rainy night in the carved week and on the morning of
+November 1, when everything has to be gone. Each writes a close-up of the
 decorations at 320 and at phone width. The Denver scenes (and the skyline check) went out with the trip; they are
 in git history before the commit that parked `den`, if the next trip wants a model.
 The ridge night downpour is there on purpose: dark theme, code 82, two rain layers

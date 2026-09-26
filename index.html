@@ -1547,8 +1547,9 @@ const propPumpkin=(w=10,h=7,{carved=false,seed=1}={})=>{
        bottom, never in the middle */
     const mw=K2(.6,.7),my=K2(.3,.34),mt=K2(.19,.22),up=K2(.07,.1),tilt=K2(-.035,.035),N=8;
     const yT=x=>{const t=x/mw;return my+up*t*t+tilt*t},yB=x=>{const t=x/mw;return yT(x)-mt*Math.max(0,1-t*t)**.75};
-    const two=teeth===2,tw=K2(.075,.09),tx=two?[K2(-.36,-.26),K2(.1,.2)]:[K2(-.24,.16)];
-    const low=teeth===1,bx=low?tx[0]+(tx[0]>-.04?-1:1)*K2(.26,.32):null;
+    const two=teeth===2,tw=K2(.075,.09),off=v=>(v<0?-1:1)*Math.max(Math.abs(v),tw+.05);
+    const tx=two?[K2(-.36,-.26),K2(.1,.2)]:[off(K2(-.24,.16))];
+    const low=teeth===1,bx=low?off(tx[0]+(tx[0]>-.04?-1:1)*K2(.26,.32)):null;
     const cut=(xs,teeth,fy,dp)=>{let E=xs.filter(x=>teeth.every(c=>Math.abs(x-c)>tw*1.3)).map(x=>[x,fy(x)]);
       for(const c of teeth)E.push([c-tw,fy(c-tw)],[c-tw*.88,fy(c)+dp],[c+tw*.9,fy(c)+dp*1.06],[c+tw,fy(c+tw)]);
       return E.sort((a,b)=>a[0]-b[0])};
@@ -2425,9 +2426,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
      group whose opacity is the flicker, so no part of the light can disagree with the rest.
        `lights` are the props right beside it, as parts at a place. The ground (the dock's
          planks, the doorstep) takes a flat pool. A thing that stands up (`face`: the bale's
-         end, the white pumpkin, the corn shock) takes a round falloff on what faces the
-         candle, less where a nearer prop throws its shadow (`shade`), and a warm edge on the
-         side toward the flame (`edge`). A mask cuts the pumpkin itself out of all of it.
+         end, the white pumpkin, the corn shock) takes a round falloff over its silhouette, or
+         only the faces named in `roles`, none where a nearer prop throws its shadow (`shade`),
+         and a warm edge on the side toward the flame (`edge`). A mask cuts the pumpkin itself
+         out of all of it.
        `refl` is its light on the water: warm glints hung under the lantern, cut where a piling
          stands in front of them.
        The glow sits round the face, and the face is in the flame's colour.
@@ -2483,15 +2485,18 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
            so they thin out, dim and deepen in colour. Even the first sits well under the lit
            planks and the face. */
         for(let t=r()*.05;t<1;t+=.12+r()*.2){
-          const hw=W0*(.62-.42*t)*(.62+r()*.56)*(1+chopK*.8),cx=x+(r()-.5)*(2.6+chopK*3);
-          const yy=refl.top+span*t,th=(1.2-.45*t)*(.82+r()*.3),ok=(.52-.28*t)*(.92+r()*.16);
+          /* every row makes the same draws in the same order, so a change in the wind widens and
+             spreads the glints and never moves them */
+          const q=Array.from({length:10},r);
+          const hw=W0*(.62-.42*t)*(.62+q[0]*.56)*(1+chopK*.8),cx=x+(q[1]-.5)*(2.6+chopK*3);
+          const yy=refl.top+span*t,th=(1.2-.45*t)*(.82+q[2]*.3),ok=(.52-.28*t)*(.92+q[3]*.16);
           let seg=[[cx-hw,cx+hw]];
-          if(hw>2.4&&r()<.5){const c=cx+(r()-.5)*hw,g=.5+r()*.7;seg=[[cx-hw,c-g],[c+g,cx+hw]]}
+          if(hw>2.4&&q[4]<.5){const c=cx+(q[5]-.5)*hw,g=.5+q[6]*.7;seg=[[cx-hw,c-g],[c+g,cx+hw]]}
           /* where the piling stands in front of one, what shows either side is a glint of its own */
           for(const[g0,g1,gb]of refl.gaps||[])if(yy<gb)seg=seg.flatMap(([a,b])=>b<=g0||a>=g1?[[a,b]]:[[a,Math.min(b,g0)],[Math.max(a,g1),b]]);
           /* each glint a flat brush stroke, fullest off its middle. Dim gold over blue water goes
              green, so they are the flame's orange rather than its gold */
-          water+=seg.filter(([a,b])=>b-a>1.2).map(([a,b])=>`<path d="${taper([[a+th*.2,yy,th*.4],[a+(b-a)*(.3+r()*.4),yy,th],[b-th*.2,yy,th*.4]],{per:4})}" fill="${mix("#FFA444","#FF7A30",t)}" opacity="${ok.toFixed(2)}"/>`).join("");
+          water+=seg.filter(([a,b])=>b-a>1.2).map(([a,b],j)=>`<path d="${taper([[a+th*.2,yy,th*.4],[a+(b-a)*(.3+q[7+j%3]*.4),yy,th],[b-th*.2,yy,th*.4]],{per:4})}" fill="${mix("#FFA444","#FF7A30",t)}" opacity="${ok.toFixed(2)}"/>`).join("");
         }
       }
       /* fog holds the light and spreads it, so a lantern in fog wears a wider halo */
@@ -2925,49 +2930,56 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     }
     /* Halloween at the barn door, measured off the barn. A corn shock stands at the corner, a
        straw bale at its foot with the small white pumpkin on it, clear of the window, and a big
-       pumpkin on the ground under each window, carved for the last week. It all runs from the
-       shock's corner to the door, in front of the fence. The two big ones are not a pair: the
-       left one is bigger and a step nearer, by the bale, and the right one smaller and back
-       under its window. Each lights the ground at the door. The left one also lights the end
-       of the bale, the white pumpkin, and the shock above the bale's shadow */
+       pumpkin on the ground either side of the door, carved for the last week. They are not a
+       pair: the left one is bigger and a step nearer, the right one smaller and back under its
+       window. Each lights the doorstep, and the left one the end of the bale, the white pumpkin
+       and the shock above the bale's shadow */
     const barnFoot=base+2.4,baleX=barnX-18.6,lanL=barnX-10.2,lanR=barnX+11.4;
-    const doorstep={parts:[part(`M ${f1(barnX-34)} ${f1(base+.9)} L ${f1(barnX+30)} ${f1(base+.9)} L ${f1(barnX+30)} ${f1(barnFoot+12)} L ${f1(barnX-34)} ${f1(barnFoot+12)} Z`,"ground")],x:0,y:0,s:1};
-    const shock={parts:propCornShock(5),x:barnX-21.5,y:barnFoot,s:.74},bale={parts:propBale(),x:baleX,y:barnFoot,s:.92};
-    const whiteOne={parts:propPumpkin(6,4.4,{seed:9}),x:baleX+.3,y:barnFoot-5.4,s:.84};
-    /* where they stand, from the shock's splayed foot to each big one's side */
-    const setOut=halloween?[[barnX-21.5-4.8,lanL+9.2*.9/2],[lanR-8.6*.8/2,lanR+8.6*.8/2]]:[];
-    /* the bale stands against the shock, so the shock is in its shade just above it: a hard
-       band, the way the kit draws its own crescents, so the two read apart. After dark the
-       band is deeper and taller, the shadow of a light that stands low */
-    const silAt=(L,ox=0,oy=0)=>silOf(L.parts).map(p=>`<path transform="translate(${f1(L.x+ox)} ${f1(L.y+oy)}) scale(${L.s})" d="${p.d}"/>`).join("");
-    const aoId=halloween?`ao${++inkUid}`:"",aoX=-.7-.5*nightK,aoY=-1.3-1.1*nightK;
-    const baleShade=halloween?`<clipPath id="${aoId}">${silAt(shock)}</clipPath><g clip-path="url(#${aoId})" fill="${shadeC}" opacity="${(.32+.22*nightK).toFixed(2)}">${silAt(bale,aoX,aoY)}${silAt(whiteOne,aoX*.7,aoY*.7)}</g>`:"";
-    const barnDecor=halloween?`<g class="decor" data-decor="corn-shock">${decorAt(propCornShock(5),INK.cornShock,barnX-21.5,barnFoot,.74)}</g>`
-      +baleShade+`<g class="decor" data-decor="straw-bale">${decorAt(propBale(),INK.bale,baleX,barnFoot,.92)}</g>`
-      +pumpkinAt(baleX+.3,barnFoot-5.4,.84,{w:6,h:4.4,seed:9,white:true})
-      +pumpkinAt(lanL,barnFoot+.8,.9,{w:9.2,h:6.8,carved,seed:4,lights:[
-        {...whiteOne,face:true,edge:.9},
-        {...bale,face:true,roles:["end"],rims:[[baleX+.4,baleX+5.5,barnFoot-4.35,.5]]},
-        {...shock,face:true,edge:1,k:.85,shade:[bale,whiteOne]},doorstep]})
-      +pumpkinAt(lanR,barnFoot,.8,{w:8.6,h:7.4,carved,seed:6,lights:[doorstep]}):"";
+    let barnDecor="",keepClear=[];
+    if(halloween){
+      const doorstep={parts:[part(`M ${f1(barnX-34)} ${f1(base+.9)} L ${f1(barnX+30)} ${f1(base+.9)} L ${f1(barnX+30)} ${f1(barnFoot+12)} L ${f1(barnX-34)} ${f1(barnFoot+12)} Z`,"ground")],x:0,y:0,s:1};
+      const shock={parts:propCornShock(5),x:barnX-21.5,y:barnFoot,s:.74},bale={parts:propBale(),x:baleX,y:barnFoot,s:.92};
+      const whiteOne={parts:propPumpkin(6,4.4,{seed:9}),x:baleX-.7,y:barnFoot-5.4,s:.84};
+      const bigL={w:9.2,h:6.8,s:.9},bigR={w:8.6,h:7.4,s:.8};
+      /* the grass leaves the doorstep to them, from the shock's splayed foot to the right one's side */
+      const[sx0]=pathBox(silOf(shock.parts).map(p=>p.d));
+      keepClear=[[shock.x+sx0*shock.s-.4,lanR+bigR.w*bigR.s/2+.4]];
+      /* The bale stands against the shock, so the shock is in its shade just above it: a hard band,
+         the way the kit draws its own crescents, so the two read apart. By day it is a contact
+         shadow. When the lantern beside them is lit it is deeper and taller, the shadow of a light
+         that stands low. It fades under cloud the way the crescents do */
+      const silAt=(L,ox=0,oy=0)=>silOf(L.parts).map(p=>`<path transform="translate(${f1(L.x+ox)} ${f1(L.y+oy)}) scale(${L.s})" d="${p.d}"/>`).join("");
+      const lowK=candles?nightK:0,aoId=`ao${++inkUid}`,aoX=-.7-.5*lowK,aoY=-1.3-1.1*lowK;
+      const baleShade=`<clipPath id="${aoId}">${silAt(shock)}</clipPath><g clip-path="url(#${aoId})" fill="${shadeC}" opacity="${((.32+.22*lowK)*shadeK).toFixed(2)}">${silAt(bale,aoX,aoY)}${silAt(whiteOne,aoX*.7,aoY*.7)}</g>`;
+      /* the edge the left one's light rakes is the front of the bale's top face, on the side
+         toward it, read off the bale's own drawing */
+      const[tx0,ty0,tw0,th0]=pathBox(bale.parts.filter(p=>p.role==="top").map(p=>p.d));
+      const rim=[bale.x+(tx0+tw0*.53)*bale.s,bale.x+(tx0+tw0*.86)*bale.s,bale.y+(ty0+th0)*bale.s-.21,.5];
+      barnDecor=`<g class="decor" data-decor="corn-shock">${decorAt(shock.parts,INK.cornShock,shock.x,shock.y,shock.s)}</g>`
+        +baleShade+`<g class="decor" data-decor="straw-bale">${decorAt(bale.parts,INK.bale,bale.x,bale.y,bale.s)}</g>`
+        +pumpkinAt(whiteOne.x,whiteOne.y,whiteOne.s,{w:6,h:4.4,seed:9,white:true})
+        +pumpkinAt(lanL,barnFoot+.8,bigL.s,{w:bigL.w,h:bigL.h,carved,seed:4,lights:[
+          {...whiteOne,face:true,edge:.9},
+          {...bale,face:true,roles:["end"],rims:[rim]},
+          {...shock,face:true,edge:1,k:.85,shade:[bale,whiteOne]},doorstep]})
+        +pumpkinAt(lanR,barnFoot,bigR.s,{w:bigR.w,h:bigR.h,carved,seed:6,lights:[doorstep]});
+    }
     /* split rails: inked, then the weathered wood laid over the ink */
     const fence=`<path d="${fp}${fr}" stroke="${lineC}" stroke-width="2.1" fill="none" stroke-linecap="round" opacity=".85"/><path d="${fp}${fr}" stroke="${air("#B99A76",.04)}" stroke-width="1.05" fill="none" stroke-linecap="round"/>`;
 
     const blade=(bx,ht,lean)=>`M ${(bx-.7).toFixed(1)} ${base+1} Q ${(bx+lean*.3-.4).toFixed(1)} ${(base+1-ht*.6).toFixed(1)} ${(bx+lean).toFixed(1)} ${(base+1-ht).toFixed(1)} Q ${(bx+lean*.38+.5).toFixed(1)} ${(base+1-ht*.46).toFixed(1)} ${(bx+.7).toFixed(1)} ${base+1} Z `;
     const tufts=Array.from({length:BANDS},()=>"");
-    /* what is set out at the door stands in front of the grass along the fence, so no blade is
-       drawn across it and none crosses a lit face. Only the blade is skipped, so the rest of the
-       grass keeps its place */
-    const keepClear=setOut.map(([a,b])=>[a-.4,b+.4]);
     for(let x=-6;x<W+10;){
-      const cnt=3+Math.floor(g()*4),x0=x;let t="";
+      const cnt=3+Math.floor(g()*4),x0=x;let t="",t0=1e9,t1=-1e9;
       for(let k=0;k<cnt;k++){let ht=5+g()*9,lean=(2+g()*5)*(g()<.5?-1:1);
         const yard=x>animalLeft-18&&x<animalRight+22;
         if(yard){ht*=.3;lean*=.3}                      /* a worn, legible barnyard */
-        const b0=x+Math.min(0,lean)-.7,b1=x+Math.max(0,lean)+.7;
-        if((x<pondL+6||x>pondR-6)&&!keepClear.some(([a,b])=>b1>a&&b0<b))t+=blade(x,ht,lean);   /* no grass in the water */
+        t0=Math.min(t0,x+Math.min(0,lean)-.7);t1=Math.max(t1,x+Math.max(0,lean)+.7);
+        if(x<pondL+6||x>pondR-6)t+=blade(x,ht,lean);   /* no grass in the water */
         x+=2.4+g()*3}
-      tufts[bandOf(x0)]+=t;
+      /* what is set out at the door stands a step nearer than the grass along the fence, so a tuft
+         that would cross it is left out whole. Every draw is still made, so no other grass moves */
+      if(!keepClear.some(([a,b])=>t1>a&&t0<b))tufts[bandOf(x0)]+=t;
       x+=22+g()*40;
     }
     /* gusts push the throw past what the steady wind alone would give */
