@@ -241,8 +241,10 @@ decorations coming down once each holiday passes. Halloween is the first.
 
 - **A calendar, not a switch.** `HOLIDAYS` is a table of windows in month-days on the
   location's own calendar, read with `inSeason` the way the boat season is, and
-  `holidayOn(now)` is pure and tested. Halloween runs October 1 to 31: the decorations go up
-  on the first and are gone the morning of November 1. A new holiday is a row in the table
+  `holidayOn` is pure and tested. It is handed `locToday()`, the place's own date string, and
+  never the shifted wall clock, which runs an hour slow in the small hours of the night the
+  clocks go back (in 2026, Halloween night into November 1). Halloween runs October 1 to 31:
+  the decorations go up on the first and are gone the morning of November 1. A new holiday is a row in the table
   and a drawing in each scene. Nothing else needs to know.
 - **Decorations are scenery.** The pumpkins, the corn shock and the straw bale are props like
   the dock and the barn, drawn from parts with the kit (`propPumpkin`, `propCornShock`,
@@ -291,16 +293,15 @@ decorations coming down once each holiday passes. Halloween is the first.
   way to the animals.** The dock's middle piling is the cormorant's: drying its wings it reaches
   20 units left of the dock's centre and 9 right, so the pumpkins stand at the ends. At the barn
   they run from the shock's corner to the door, in front of the fence, so the hens' yard and the
-  pond's edge are untouched. The two big ones stand under the lit windows rather than in front
-  of them, because at night the windows are the barn's lamps, and they are not one pumpkin
-  copied twice: the left one is bigger and a step nearer, the right one smaller and back. The
+  pond's edge are untouched. The two big ones stand under the lit windows, so neither hides one
+  (their stalks just cross the sills), because at night the windows are the barn's lamps, and
+  they are not one pumpkin copied twice: the left one is bigger and a step nearer, the right one smaller and back. The
   bale throws a band of shade on the shock so the two read apart, a contact shadow by day and
   deeper only when the lantern beside them is lit. The barn's decorations are drawn with the
   barn, right after the fence, so the cloud shadows, the pond's effects and the near rain pass
   over them. The yard's grass leaves out whole any tuft that would cross them, measured off the
-  shock's own foot, and still makes every draw, so no other grass moves. The props are built
-  only while they are out, and what the light rakes on the bale is read off the bale's drawing,
-  so a redrawn prop cannot leave a line floating. `tools/scene.mjs` fails a scene whose
+  shock's own foot, and still makes every draw, so no other grass moves. The barn's props are
+  built only while they are out. `tools/scene.mjs` fails a scene whose
   decorations are not exactly the ones the date calls for, whose candles are lit when they
   should not be, or where a decoration runs off the frame or into an animal.
 
@@ -347,18 +348,19 @@ banded days, the call's title, word, why and lines, the sun card, the sun bar's 
 and how many times the seas were asked for. The loading-shell check at the end also holds
 the sun scale hidden while there is no bar. It exits non-zero when one does not show what it is there for.
 
-`tools/scene.mjs` is for anything that moves. Twenty-eight scenes force the light
+`tools/scene.mjs` is for anything that moves. Twenty-nine scenes force the light
 and weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
 clear night, a storm, a fog morning, drizzle against a downpour, freezing rain on
 the coast, a night of rain over the marsh, and the ridge by day, by evening with
 the buck out, in warm rain, on a snow day, on a cold January night and in a night
-downpour. Nine more are Halloween: the coast on an October afternoon, on Halloween
-night, on a cold morning in the carved week with the cormorant on its piling and on a
-rainy night in it, and the farm on an October afternoon, on an October night before the
-carving, on Halloween night, on a rainy night in the carved week and on the morning of
-November 1, when everything has to be gone. Each writes a close-up of the
-decorations at 320 and at phone width. The Denver scenes (and the skyline check) went out with the trip; they are
-in git history before the commit that parked `den`, if the next trip wants a model.
+downpour. Ten more are Halloween: the coast on an October afternoon, on Halloween
+night, on a cold morning in the carved week with the cormorant on its piling, on a rainy
+night in it and at half past midnight on November 1 2026, the night the clocks go back,
+and the farm on an October afternoon, on an October night before the carving, on
+Halloween night, on a rainy night in the carved week and on the morning of November 1.
+On both November ones everything has to be gone. Each one with decorations out writes a
+close-up of them at 320 and at phone width. The Denver scenes (and the skyline check)
+went out with the trip; they are in git history before the commit that parked `den`, if the next trip wants a model.
 The ridge night downpour is there on purpose: dark theme, code 82, two rain layers
 and a frog, which is where the animation count goes looking for trouble. It found
 some, which is the point of having it. The marsh night rain is there for the same

@@ -923,7 +923,12 @@ test("the scenes dress for the holidays and take it all down when they pass", as
   assert.equal(on("2027-10-15T12:00"), "halloween");
   // the pumpkins go out plain and are carved for the last week
   assert.equal(ctx.holidayOn(new Date("2026-10-24T09:00")).carved, "10-24");
-  assert.match(html, /const carved=halloween&&mdOf\(now\)>=hol\.carved/);
+  // the gate reads the place's own date string, as the boat season does, never the shifted wall
+  // clock, which runs an hour slow in the small hours of November 1 2026 when the clocks go back
+  assert.match(html, /const today=locToday\(\),hol=holidayOn\(today\),halloween=hol\?\.id==="halloween";/);
+  assert.match(html, /const carved=halloween&&mdOf\(today\)>=hol\.carved/);
+  assert.equal(ctx.holidayOn("2026-10-31")?.id, "halloween");
+  assert.equal(ctx.holidayOn("2026-11-01"), null);
   // the candle is lit with the barn lamps, and not in the rain
   assert.match(html, /const candles=carved&&sunAltDeg< -\.83&&!wet&&!storm/);
   // it gutters as hard as the gusts say, and in a calm or under reduced motion not at all
@@ -957,9 +962,8 @@ test("the scenes dress for the holidays and take it all down when they pass", as
   // fades under cloud like the kit's own crescents
   assert.match(html, /const lowK=candles\?nightK:0,/);
   assert.match(html, /opacity="\$\{\(\(\.32\+\.22\*lowK\)\*shadeK\)\.toFixed\(2\)\}"/);
-  // the props are built only while they are out, and the rim the light rakes is read off the bale
+  // the props are built only while they are out
   assert.match(html, /let barnDecor="",keepClear=\[\];\n    if\(halloween\)\{/);
-  assert.match(html, /pathBox\(bale\.parts\.filter\(p=>p\.role==="top"\)/);
   // they are drawn with the barn, right after the fence, so the cloud shadows, the pond and the
   // near rain pass over them as they do over the barn. The grass leaves out whole the tufts that
   // would cross them, measured off the shock's own foot, so no blade crosses a lit face and no
@@ -972,6 +976,7 @@ test("the scenes dress for the holidays and take it all down when they pass", as
   assert.match(html, /if\(!keepClear\.some\(\(\[a,b\]\)=>t1>a&&t0<b\)\)tufts\[bandOf\(x0\)\]\+=t;/);
   // the carved face is its own role, so the heron's own `face` keeps its outline
   assert.match(html, /const INK_INNER=new Set\(\[[^\]]*"carve"\]\)/);
+  assert.doesNotMatch(html, /const INK_INNER=new Set\(\[[^\]]*"face"/);
   assert.match(html, /heron:\{body:"#8C92B5",wing:"#6B6E95",neck:"#A9A9C4",bill:"#E8B04A",face:/);
   // placed off the dock and the barn, never off a fraction of the frame, and the middle
   // piling is left to the cormorant
@@ -981,7 +986,7 @@ test("the scenes dress for the holidays and take it all down when they pass", as
   assert.match(html, /decorAt\(shock\.parts,INK\.cornShock,shock\.x,shock\.y,shock\.s\)/);
   // the harness looks at them in and out of season, lit and unlit
   const scene = await readFile(new URL("tools/scene.mjs", root), "utf8");
-  for (const name of ["27-marsh-halloween-night", "28-marsh-halloween-cold-morning", "29-marsh-halloween-rain-night", "31-ridge-halloween-night", "32-ridge-november-morning"])
+  for (const name of ["27-marsh-halloween-night", "28-marsh-halloween-cold-morning", "29-marsh-halloween-rain-night", "31-ridge-halloween-night", "32-ridge-november-morning", "35-marsh-november-small-hours"])
     assert.match(scene, new RegExp(`name: "${name}"`));
   assert.match(scene, /decorations are \[/);
 });
@@ -1004,9 +1009,10 @@ test("a pumpkin still reads as one at seven pixels, and no two are cut alike", a
   assert.ok(plain.filter((p) => ["fibre", "cut", "vine"].includes(p.role)).every((p) => p.noSil));
   assert.ok(plain.findIndex((p) => p.role === "stem") < plain.findIndex((p) => p.role === "body"));
   // the seed is how it grew: the pair on the dock and the three at the barn are not stamped copies
-  const body = (seed) => ctx.propPumpkin(9, 6.8, { seed }).find((p) => p.role === "body").d;
-  assert.equal(new Set([3, 8, 4, 6, 9].map(body)).size, 5);
-  assert.equal(body(4), body(4));
+  const drawn = [[9.6, 7.2, 3], [6.6, 4.9, 8], [9.2, 6.8, 4], [8.6, 7.4, 6], [6, 4.4, 9]];
+  const body = ([w, h, seed]) => ctx.propPumpkin(w, h, { seed }).find((p) => p.role === "body").d;
+  assert.equal(new Set(drawn.map(body)).size, 5);
+  assert.equal(body(drawn[2]), body(drawn[2]));
   // the cuts are straight-edged polygons, so their corners and areas can be read off the path
   const poly = (d) => [...d.matchAll(/(-?\d*\.?\d+) (-?\d*\.?\d+)/g)].map((m) => [+m[1], +m[2]]);
   const area = (E) => Math.abs(E.reduce((a, p, i) => { const q = E[(i + 1) % E.length]; return a + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2;
@@ -1017,7 +1023,7 @@ test("a pumpkin still reads as one at seven pixels, and no two are cut alike", a
   };
   // the three that are lit are three carvings: the dock's and the pair at the barn door, each with
   // its own eyes and its own teeth
-  const lit = [[9.6, 7.2, 3], [9.2, 6.8, 4], [9.4, 6.8, 6]].map(([w, h, seed]) => ({ w, h, P: ctx.propPumpkin(w, h, { carved: true, seed }) }));
+  const lit = [[9.6, 7.2, 3], [9.2, 6.8, 4], [8.6, 7.4, 6]].map(([w, h, seed]) => ({ w, h, P: ctx.propPumpkin(w, h, { carved: true, seed }) }));
   assert.equal(new Set(lit.map(({ P }) => P.find((p) => p.role === "carve").cut)).size, 3);
   assert.equal(new Set(lit.map(({ P }) => P.filter((p) => p.role === "carve")[2].cut)).size, 3);
   for (const { w, h, P } of lit) {

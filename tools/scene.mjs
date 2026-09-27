@@ -131,8 +131,8 @@ const CASES = [
       hourlyCode: (i, hr) => (hr >= 17 && hr <= 21 ? 95 : hr >= 14 ? 80 : 3),
       popCurve: (i, hr) => (hr >= 14 && hr <= 21 ? 72 : 20), dailyPop: (p) => { p[0] = 80; p[1] = 55; } } },
   // ── the holidays ───────────────────────────────────────────────────────
-  // `decor` is what has to be set out (and nothing else), `candles` how many are lit. Every
-  // one of these also writes a close-up of the decorations, because a pumpkin is seven pixels
+  // `decor` is what has to be set out (and nothing else), `candles` how many are lit. Each one
+  // with decorations out also writes a close-up of them, because a pumpkin is seven pixels
   // across on a phone and has to hold up at both sizes.
   { name: "26-marsh-october-afternoon", loc: "mb", when: "2026-10-10T15:30:00", decor: ["pumpkin"], candles: 0,
     note: "Halloween is up: two pumpkins on the dock, nothing carved yet, the oystercatcher on the rake",
@@ -170,6 +170,10 @@ const CASES = [
     note: "the morning after: everything Halloween put out has come down",
     o: { baseTemp: 50, nowTemp: 47, feels: 45, rh: 66, isDay: 1, code: 2, cloud: 35, nowWind: 6, nowDir: 250, nowGust: 11, nowUv: 1.8, uvMax: 3, windAmp: 5, gustAmp: 9,
       sunrise: "06:48", sunset: "17:26", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "35-marsh-november-small-hours", loc: "mb", when: "2026-11-01T00:30:00", decor: [], candles: 0,
+    note: "half past midnight on November 1 2026, the night the clocks go back: Halloween is over, though the shifted wall clock still reads October 31",
+    o: { baseTemp: 60, nowTemp: 58, feels: 58, rh: 82, isDay: 0, code: 0, cloud: 10, nowWind: 6, nowDir: 20, nowGust: 10, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
+      sunrise: "06:33", sunset: "17:17", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
   { name: "23-ridge-night-downpour", loc: "sp", when: "2026-05-12T22:40:00",
     note: "the hardest test of the ridge rain: dark theme, code 82, drops over a black fold",
     o: { baseTemp: 62, nowTemp: 61, feels: 61, rh: 96, isDay: 0, code: 82, cloud: 97, nowWind: 15, nowDir: 210, nowGust: 26, nowUv: 0, uvMax: 5,

@@ -2414,8 +2414,11 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
      the same sky. They say nothing about the weather, and they move only where the air moves
      them: a carved pumpkin's candle is lit when the barn lamps are, is not lit in the rain, and
      burns steady in a calm and gutters in a blow. */
-  const hol=holidayOn(now),halloween=hol?.id==="halloween";
-  const carved=halloween&&mdOf(now)>=hol.carved;
+  /* the date is read the way the boat season reads it, off the place's own calendar, because the
+     shifted wall clock runs an hour slow in the small hours of the night the clocks go back, which
+     in 2026 is Halloween night into November 1 */
+  const today=locToday(),hol=holidayOn(today),halloween=hol?.id==="halloween";
+  const carved=halloween&&mdOf(today)>=hol.carved;
   const candles=carved&&sunAltDeg< -.83&&!wet&&!storm;
   const decorPal=(p,d,lit=false)=>{const o={};for(const[k,v]of Object.entries(p))o[k]=typeof v==="string"&&v[0]==="#"?air(v,d):v;
     if(p.carve)o.carve=lit?p.candleLit:air(p.carve,d);
@@ -2451,8 +2454,8 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
         /* what the light falls on: the prop's silhouette, or only the faces named in `roles` */
         const recv=L=>{const f=L.roles?L.parts.filter(p=>L.roles.includes(p.role)):[];return f.length?f:silOf(L.parts)};
         const self=inkAt(x,y,s,1,`<g fill="#000" stroke="#000" stroke-width="${f1(1.6/s)}" stroke-linejoin="round">${silOf(parts).map(p=>`<path d="${p.d}"/>`).join("")}</g>`);
-        /* a top edge the light rakes across (a plank's, the bale's end) takes a brighter line,
-           falling off either side of the lantern */
+        /* a top edge the light rakes across (a plank's) takes a brighter line, falling off
+           either side of the lantern */
         const rimsOf=L=>(L.rims||[]).map(([x0,x1,ry,th])=>`<rect x="${f1(Math.max(x0,x-R))}" y="${f1(ry)}" width="${f1(Math.min(x1,x+R)-Math.max(x0,x-R))}" height="${th}" fill="url(#${id}r)"/>`).join("");
         const ground=lights.filter(L=>!L.face),up=lights.filter(L=>L.face);
         /* on what stands up beside it the light carries further than on the ground it rakes */
@@ -2951,16 +2954,12 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       const silAt=(L,ox=0,oy=0)=>silOf(L.parts).map(p=>`<path transform="translate(${f1(L.x+ox)} ${f1(L.y+oy)}) scale(${L.s})" d="${p.d}"/>`).join("");
       const lowK=candles?nightK:0,aoId=`ao${++inkUid}`,aoX=-.7-.5*lowK,aoY=-1.3-1.1*lowK;
       const baleShade=`<clipPath id="${aoId}">${silAt(shock)}</clipPath><g clip-path="url(#${aoId})" fill="${shadeC}" opacity="${((.32+.22*lowK)*shadeK).toFixed(2)}">${silAt(bale,aoX,aoY)}${silAt(whiteOne,aoX*.7,aoY*.7)}</g>`;
-      /* the edge the left one's light rakes is the front of the bale's top face, on the side
-         toward it, read off the bale's own drawing */
-      const[tx0,ty0,tw0,th0]=pathBox(bale.parts.filter(p=>p.role==="top").map(p=>p.d));
-      const rim=[bale.x+(tx0+tw0*.53)*bale.s,bale.x+(tx0+tw0*.86)*bale.s,bale.y+(ty0+th0)*bale.s-.21,.5];
       barnDecor=`<g class="decor" data-decor="corn-shock">${decorAt(shock.parts,INK.cornShock,shock.x,shock.y,shock.s)}</g>`
         +baleShade+`<g class="decor" data-decor="straw-bale">${decorAt(bale.parts,INK.bale,bale.x,bale.y,bale.s)}</g>`
         +pumpkinAt(whiteOne.x,whiteOne.y,whiteOne.s,{w:6,h:4.4,seed:9,white:true})
         +pumpkinAt(lanL,barnFoot+.8,bigL.s,{w:bigL.w,h:bigL.h,carved,seed:4,lights:[
           {...whiteOne,face:true,edge:.9},
-          {...bale,face:true,roles:["end"],rims:[rim]},
+          {...bale,face:true,roles:["end"]},
           {...shock,face:true,edge:1,k:.85,shade:[bale,whiteOne]},doorstep]})
         +pumpkinAt(lanR,barnFoot,bigR.s,{w:bigR.w,h:bigR.h,carved,seed:6,lights:[doorstep]});
     }
