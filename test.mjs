@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v75/);
+  assert.match(worker, /mbwx-shell-v76/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -964,6 +964,23 @@ test("the scenes dress for the holidays and take it all down when they pass", as
   assert.match(html, /opacity="\$\{\(\(\.32\+\.22\*lowK\)\*shadeK\)\.toFixed\(2\)\}"/);
   // the props are built only while they are out
   assert.match(html, /let barnDecor="",keepClear=\[\];\n    if\(halloween\)\{/);
+  // the head in the loft window is Halloween's. For October the loft opens wider, and the rest
+  // of the year the barn is drawn exactly as it was
+  assert.match(html, /let loftHead="";const barnParts=propBarn\(halloween\?LOFT_WIDE:LOFT\);\n    if\(halloween\)\{/);
+  assert.match(html, /castShadow\(propBarn\(halloween\?LOFT_WIDE:LOFT\),/);
+  const bctx = vm.createContext({});
+  vm.runInContext([lift(/const f1=[^\n]*/), lift(/const part=[^\n]*/), lift(/const LOFT=[^\n]*\nconst propBarn=[\s\S]*?"window"\)\];/),
+    "globalThis.loftOf=l=>propBarn(l).find(p=>p.role==='loft').d;globalThis.W=LOFT_WIDE;"].join("\n"), bctx);
+  assert.equal(bctx.loftOf(), "M 15.8 -22.4 L 15.8 -26.2 L 20.2 -26.2 L 20.2 -22.4 Z");
+  assert.equal(bctx.loftOf(bctx.W), "M 14.7 -21.5 L 14.7 -27.3 L 21.3 -27.3 L 21.3 -21.5 Z");
+  // he is clipped to that window, drawn over the lamp's glow so it never washes out his eyes,
+  // stands in the loft's own deeper light, and never moves
+  assert.match(html, /<rect x="\$\{lx\}" y="\$\{ly\}" width="\$\{lw\}" height="\$\{lh\}"\/><\/clipPath><g class="decor" data-decor="michael-myers" clip-path=/);
+  assert.match(html, /fill="url\(#lampglow\)"\/>`:""\}\$\{loftHead\}/);
+  assert.match(html, /loft:lamps\?\(halloween\?INK\.myers\.loftLamp:"#FFD27A"\):"#E8D7B0"/);
+  const head = html.slice(html.indexOf("const propLoftHead="), html.indexOf("/* the meadow and the marsh grass"));
+  assert.ok(head.includes("mulberry(1978)"), "the head's drawing is where the guard looks");
+  assert.doesNotMatch(head, /class=|Math\.random/);
   // they are drawn with the barn, right after the fence, so the cloud shadows, the pond and the
   // near rain pass over them as they do over the barn. The grass leaves out whole the tufts that
   // would cross them, measured off the shock's own foot, so no blade crosses a lit face and no

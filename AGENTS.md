@@ -268,6 +268,19 @@ decorations coming down once each holiday passes. Halloween is the first.
   pale stalk is a nub and a crown that rises to the stem is a bulb of garlic. test.mjs checks
   the three marks, the pointed eyes, the lit area, the rind inside its hole, the three carvings
   and the minis.
+- **The head in the loft window is a family joke, and it stays one.** For years the real barn
+  has had a head in its window, a cast Josh's dad made of his own head for a college art class,
+  put there to keep off robbers. For Halloween the scene's loft window has it as Michael Myers:
+  the bone-white mask with black eye holes, the shaggy brown hair and the navy coveralls, head
+  tipped the way he tips it (`propLoftHead`). Five pixels of glass is too small for a face, so
+  for October the loft window opens half as wide again (`LOFT_WIDE`, which Josh okayed). The rest
+  of the year the barn is drawn exactly as it was. The mask is about half the window's width, the
+  hair stops above the jaw so he reads as a face on a pair of shoulders and never as a hood, and
+  both eye holes are big enough to survive at phone size. He is drawn at ten times the window's
+  units, so the kit's rounding cannot step his edges, then scaled down and clipped to the glass.
+  At night he is drawn over the loft lamp's glow, never under it, and the loft's light is a shade
+  deeper amber than the barn's other lamps, with the mask still whiter than it, so it reads as a
+  mask and not as skin. He never moves. `node tools/rig.mjs loft-head` shows him close up.
 - **The corn shock is tied high**, and its crown is broken stalk tops and dry leaves standing
   up and out, so at phone size it is a sheaf and never a figure in a dress. Only the leaves
   that break the silhouette take ink. The bale sits level on the ground, with its long side to

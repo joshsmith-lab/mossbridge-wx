@@ -1443,12 +1443,15 @@ const propCloud=seed=>[part(scallop(0,0,36,7.5,15,seed,{flat:.78,bulge:.64}),"bo
   part(scallop(12,-4.6,10,4.6,7,seed+8,{flat:.55}),"body"),pTaper([[30,3.6,5.6],[38,1.6,4.6],[44,-2.6,3.2],[45,-7,2.4]],"body"),part(curlT(41.6,-7.2,3.6,1.05,-1,0,2.6,.5),"body")];
 /* Barn with a broken gambrel roof, a cupola and a mast for the vane. Ground at y=0, about 36
    wide, centred on x=18. The door is braced in an X and the loft sits under the peak */
-const propBarn=()=>[
+/* the loft window: x, y of its top left, width and height. For Halloween it is wider and taller,
+   because a head stands in it (propLoftHead) and five pixels of glass is too small for a face */
+const LOFT=[15.8,-26.2,4.4,3.8],LOFT_WIDE=[14.7,-27.3,6.6,5.8];
+const propBarn=(l=LOFT)=>[
   part("M 1 0 L 1 -15 L 35 -15 L 35 0 Z","wall"),
   part("M -1.4 -14 L 4.4 -24.4 L 12 -30.6 L 24 -30.6 L 31.6 -24.4 L 37.4 -14 L 35 -13.2 L 29.8 -22.8 L 23 -28.2 L 13 -28.2 L 6.2 -22.8 L 1 -13.2 Z","roof"),
   part("M 2.2 -14.4 L 6.8 -23 L 13.4 -28.4 L 22.6 -28.4 L 29.2 -23 L 33.8 -14.4 Z","wall"),
   part("M 15.4 -30 L 15.4 -34.6 L 20.6 -34.6 L 20.6 -30 Z","wall"),part("M 14.2 -34.2 L 18 -37.4 L 21.8 -34.2 Z","roof"),
-  part("M 12.4 0 L 12.4 -11.6 L 23.6 -11.6 L 23.6 0 Z","door"),part("M 15.8 -22.4 L 15.8 -26.2 L 20.2 -26.2 L 20.2 -22.4 Z","loft"),
+  part("M 12.4 0 L 12.4 -11.6 L 23.6 -11.6 L 23.6 0 Z","door"),part(`M ${f1(l[0])} ${f1(l[1]+l[3])} L ${f1(l[0])} ${f1(l[1])} L ${f1(l[0]+l[2])} ${f1(l[1])} L ${f1(l[0]+l[2])} ${f1(l[1]+l[3])} Z`,"loft"),
   part("M 5 -3.6 L 9 -3.6 L 9 -8.4 L 5 -8.4 Z M 27 -3.6 L 31 -3.6 L 31 -8.4 L 27 -8.4 Z","window")];
 /* ── the holidays' props ─────────────────────────────────────────────────────────
    Decorations are scenery like the dock and the barn: parts with roles, lit by the same sky.
@@ -1675,6 +1678,37 @@ const propBale=()=>{const r=mulberry(11),P=[];
     P.push(pTaper(pts,"band",{},noSil));
     const[ex,ey]=at(1,1,d),[fx,fy]=at(1,0,d);
     P.push(pTaper([[ex-.05,ey+.12,.24],[ex+.06,ey+1.6,.24],[ex+.02,(ey+fy)/2+.8,.22],[fx+.06,fy-.3,.2]],"band",{},noSil))}
+  return P};
+/* The head in the loft window. For years the real barn has had a head in its window: a cast of
+   Josh's dad's own head, made for a college art class, set there as a joke to keep off robbers.
+   For Halloween it is Michael Myers: the bone-white mask with its black eye holes, the shaggy brown
+   hair and the navy coveralls, head tipped the way he tips it. It is drawn at ten times the loft
+   window's units, so the kit's rounding stays under a hundredth of a unit, with y=0 on the sill and
+   x=0 at its middle, and the scene scales it down and clips it to the window. The hair stops above
+   the jaw, so the pale face reads as a face on a pair of shoulders and never as a hood */
+const propLoftHead=()=>{
+  const r=mulberry(1978),F=16,tip=-.24,cx=-.2,cy=-1.95,ca=Math.cos(tip),sa=Math.sin(tip),ny=cy+.95;
+  /* everything above the shoulders is tipped about the neck, then set at the drawing's scale */
+  const T=([x,y])=>{const dy=y-ny;return[(cx+x*ca-dy*sa)*F,(ny+x*sa+dy*ca)*F]};
+  const B=(pts,role,x)=>pBlob(pts.map(T),role,x),S=(pts,role,x)=>pTaper(pts.map(([a,b,w])=>[...T([a,b]),w*F]),role,{},x);
+  const P=[pBlob([[-2.5,.4],[-2.2,-.45],[-1.3,-.86],[-.45,-1],[.35,-1],[1.2,-.84],[2.05,-.42],[2.4,.4]].map(([x,y])=>[x*F,y*F]),"coverall")];
+  /* the hair: a shaggy mop over the crown and the ears, ragged at its ends, gone by the cheekbones */
+  const hair=[],N=15;
+  for(let i=0;i<=N;i++){const a=Math.PI*(1.05-i/N*1.1),k=.94+r()*.14,rag=i%2?.09:0;
+    hair.push([Math.cos(a)*1.2*(1+Math.abs(Math.cos(a))*.08)*k,Math.min(.05,-Math.sin(a)*(1.26+rag)*k)])}
+  hair.push([.7,.05],[-.7,.05]);
+  P.push(B(hair.map(([x,y])=>[x,cy+y]),"hair"));
+  /* the mask: a long pale oval with a squared jaw, about half the window's width */
+  P.push(B([[0,cy-1.12],[.66,cy-1],[.95,cy-.45],[.92,cy+.3],[.66,cy+.86],[0,cy+1],[-.66,cy+.86],[-.92,cy+.3],[-.95,cy-.45],[-.66,cy-1]],"mask"));
+  /* the fringe falls over the brow in points, and a lock either side over the temples */
+  const inner={noSil:true};
+  P.push(S([[-1,cy-.62,.36],[-.6,cy-.95,.6],[-.15,cy-.8,.46],[.3,cy-1.02,.6],[.66,cy-.78,.42],[.96,cy-.55,.26]],"hair",inner),
+    S([[-.95,cy-.6,.32],[-1.02,cy-.1,.26],[-.96,cy+.2,.06]],"hair",inner),S([[.93,cy-.56,.3],[1,cy-.08,.22],[.95,cy+.18,.05]],"hair",inner));
+  /* two black eye holes, level across the top and a little heavy lidded at the outer corner, big
+     enough that both survive at phone size. The nose is only a shadow, and the mouth a straight line */
+  for(const ex of[-.37,.37]){const o=Math.sign(ex),i0=ex-o*.25,o0=ex+o*.25;
+    P.push(B([[i0,cy-.16],[ex,cy-.26],[o0,cy-.2],[o0+o*.02,cy-.02],[ex,cy+.1],[i0,cy-.02]],"eye"))}
+  P.push(S([[.06,cy+.08,.1],[.11,cy+.36,.16],[.03,cy+.43,.06]],"detail"),S([[-.26,cy+.66,.09],[.24,cy+.64,.09]],"detail"));
   return P};
 /* the meadow and the marsh grass keep the same calendar: tip, middle and root per month */
 const SEASON_BLADE=[["#E4CFA0","#B8A070","#7A6446"],["#E4CFA0","#B8A070","#7A6446"],["#DCCB94","#A9A064","#6E6842"],
@@ -2237,6 +2271,11 @@ const INK={
   pumpkin:{body:"#E27B2C",band:"#B4561F",stem:"#6E6232",fibre:"#4B4020",cut:"#9A8C54",vine:"#5E5A2A",carve:"#3E2012",eyeRing:"#F6BE67",rindLit:"#FFDA8E",candleLit:"#FFB443",ink:"#2A1B33",shade:"#5A2438",lit:"#FFE3A6",litOp:0.5},
   lumina:{body:"#EEE7D5",band:"#C9BC9B",stem:"#76703C",fibre:"#54502A",cut:"#A29C66",vine:"#646130",carve:"#4A3A26",eyeRing:"#F4D694",rindLit:"#FFE29C",candleLit:"#FFC45A",ink:"#2A1B33",shade:"#4A3A5C",lit:"#FFF6DE",litOp:0.5},
   cornShock:{stalk:"#C8A865",stalkLt:"#D8BD7C",stalkMd:"#BC9C5C",stalkDk:"#846A42",joint:"#A88B52",leaf:"#CCA660",leafBack:"#AD8A4E",rib:"#D6B878",tassel:"#C9A060",band:"#5C3E22",twist:"#8C6A40",ink:"#2A1B33",shade:"#4A3450",lit:"#FFEBB8",litOp:0.5},
+  /* the head in the loft: the mask a cool bone white, the hair brown, the coveralls a faded navy.
+     maskLamp is the mask in the light of the loft he stands in, still whiter than the lamp so it
+     reads as a mask and not as skin, and loftLamp is that loft's light, a shade deeper amber than
+     the barn's other lamps so the white stands out of it */
+  myers:{coverall:"#3A4760",hair:"#3A2A20",mask:"#E9E7E0",maskLamp:"#F4F4EF",eye:"#0B090E",detail:"#ABA69B",ink:"#2A1B33",shade:"#3A2350",lit:"#FFE6B0",litOp:0.4,loftLamp:"#F2B259"},
   bale:{straw:"#CFAA5A",flake:"#D3AE5E",top:"#EFD896",end:"#E0C070",endLt:"#EFD999",endDk:"#CFAF62",seam:"#C2A052",stub:"#BA9A4E",stubLt:"#E4C880",band:"#A47C48",ink:"#2A1B33",shade:"#5A4450",lit:"#FFF0C4",litOp:0.5},
 };
 
@@ -2903,15 +2942,24 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
        building and its residents do not dissolve into the grass. */
     const vaneHunt=clamp((gust-wind)*.11,.15,1.25),vaneTempo=clamp(11-(gust-wind)*.2,4.5,11);
     const lamps=sunAltDeg< -.83;
-    const barnPal={wall:"#B34A3A",roof:snowing?"#EEF3F6":"#4E4A5C",door:"#7A2E28",loft:lamps?"#FFD27A":"#E8D7B0",window:lamps?"#FFC766":"#E8D7B0"};
+    const barnPal={wall:"#B34A3A",roof:snowing?"#EEF3F6":"#4E4A5C",door:"#7A2E28",loft:lamps?(halloween?INK.myers.loftLamp:"#FFD27A"):"#E8D7B0",window:lamps?"#FFC766":"#E8D7B0"};
     const barnO={};for(const[k,v]of Object.entries(barnPal))barnO[k]=(lamps&&(k==="loft"||k==="window"))?v:air(v,.04);
     Object.assign(barnO,{ink:lineC,shade:shadeC,lit:litC,litOp:.5*litK,shadeOp:.3*shadeK});
     const trim=air("#F3E6CC",.04);
+    /* Halloween's head in the loft window (propLoftHead), in the barn's wider October loft and
+       clipped to it. He is drawn over the lamp's glow, so the glow is round him and never washes
+       out his eyes */
+    let loftHead="";const barnParts=propBarn(halloween?LOFT_WIDE:LOFT);
+    if(halloween){
+      const id=`lh${++inkUid}`,hp=decorPal(INK.myers,.04),[lx,ly,lw,lh]=LOFT_WIDE;
+      if(lamps)hp.mask=INK.myers.maskLamp;
+      loftHead=`<g transform="translate(0 27)"><clipPath id="${id}"><rect x="${lx}" y="${ly}" width="${lw}" height="${lh}"/></clipPath><g class="decor" data-decor="michael-myers" clip-path="url(#${id})"><g transform="translate(${f1(lx+lw/2)} ${f1(ly+lh)}) scale(.1)">${inkUnit(propLoftHead(),hp,{s:.118,line:.5,heavy:.25,shade:.7,lit:.45,light:lightAt(barnX,base-28)})}</g></g></g>`;
+    }
     const barn=`<g class="barn" data-scene-anchor="barn" transform="translate(${(barnX-21).toFixed(1)} ${(base-31).toFixed(1)}) scale(1.18)" fill="${lineC}">
-      <g transform="translate(0 27)">${inkUnit(propBarn(),barnO,{s:1.18,light:lightAt(barnX,base-20)})}
+      <g transform="translate(0 27)">${inkUnit(barnParts,barnO,{s:1.18,light:lightAt(barnX,base-20)})}
       <path d="M 12.4 -11.6 L 23.6 0 M 23.6 -11.6 L 12.4 0 M 12.4 -11.6 L 23.6 -11.6" fill="none" stroke="${trim}" stroke-width=".7"/>
       <path d="M 1 -15 L 35 -15" stroke="${trim}" stroke-width=".6" opacity=".8"/></g>
-      ${lamps?`<circle cx="18" cy="2.7" r="5" fill="url(#lampglow)"/>`:""}
+      ${lamps?`<circle cx="18" cy="2.7" r="5" fill="url(#lampglow)"/>`:""}${loftHead}
       ${/* a broken gambrel under snow keeps its ridge line: the roof goes white, the eaves stay inked */""}
       ${/* the arrow points into the reported source direction. A real vane may quiver, but
            never far enough that the picture contradicts the WNW or SE beside it. */""}
@@ -3167,7 +3215,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       ${fog?`<rect x="0" y="${(base-rTop*.72).toFixed(1)}" width="${W}" height="${(rTop*.72+8).toFixed(1)}" fill="url(#fogveil)"/>`:""}
       ${hawk}${soarer}
       ${pond}
-      ${castShadow(propBarn(),barnX-21,base+.86,1.18,1)}
+      ${castShadow(propBarn(halloween?LOFT_WIDE:LOFT),barnX-21,base+.86,1.18,1)}
       ${barn}
       ${fence}${barnDecor}
       ${cloudShadows(base-rTop*.85,rTop*.85+8)}
