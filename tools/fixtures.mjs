@@ -153,6 +153,39 @@ export function tides(now, phase = 0) {
   return { predictions: preds };
 }
 
+/**
+ * Two days of hourly seas shaped like the Open-Meteo marine response, on the location's clock.
+ * `wave` is today's height (null is a run with no reading in it) and `waveNext` tomorrow's.
+ */
+export function marine(now, o, tz) {
+  const start = new Date(now), p = partsIn(now, tz);
+  start.setTime(now.getTime() - (+p.hour % 24) * 3600e3 - (+p.minute) * 60e3);
+  const w0 = "wave" in o ? o.wave : 2.4, w1 = "waveNext" in o ? o.waveNext : w0, time = [], wave = [];
+  for (let i = 0; i < 48; i++) { time.push(iso(new Date(start.getTime() + i * 3600e3), tz)); wave.push(i < 24 ? w0 : w1); }
+  return { hourly: { time, wave_height: wave } };
+}
+
+/**
+ * NOAA CO-OPS answers for the tide station: the hi/lo table the chart draws, and the water that
+ * is there (the latest water temperature, the last hour of the six-minute gauge and the table's
+ * six-minute marks it is read against). `waterTemp` null is a station with no thermometer
+ * reading, and `surge` is how far the gauge runs off the table (0 draws no level line).
+ */
+export function coops(url, now, o, tidePhase = 0) {
+  const q = new URL(url).searchParams, product = q.get("product");
+  if (product === "predictions" && q.get("interval") === "hilo") return tides(now, tidePhase);
+  const stamp = (d) => `${day(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const last = new Date(now); last.setMinutes(last.getMinutes() - (last.getMinutes() % 6) - 6, 0, 0);
+  const marks = Array.from({ length: 11 }, (_, i) => new Date(last.getTime() - (10 - i) * 6 * 6e4));
+  const table = (d) => (2 + Math.sin(d.getTime() / 7.1e6)).toFixed(3);
+  if (product === "water_temperature")
+    return o.waterTemp === null ? { error: { message: "No data was found." } } : { data: [{ t: stamp(last), v: String(o.waterTemp ?? 77.0), f: "0,0,0" }] };
+  if (product === "water_level")
+    return { data: marks.map((d) => ({ t: stamp(d), v: (+table(d) + (o.surge || 0)).toFixed(3), s: "0.05", f: "1,0,0,0", q: "p" })) };
+  if (product === "predictions") return { predictions: marks.map((d) => ({ t: stamp(d), v: table(d) })) };
+  return { error: { message: "unknown product" } };
+}
+
 export const SEVERE = (now) => [{
   properties: {
     event: "Severe Thunderstorm Warning", severity: "Severe",
@@ -183,11 +216,9 @@ export async function stage(page, { now, loc, o, tidePhase = 0, fontDir = "", po
     await page.route("**fonts.gstatic.com**", (r) => r.abort());
   }
   await page.route("**api.open-meteo.com**", (r) => r.fulfill({ json: forecast(now, o, LOC_TZ[loc], loc) }));
-  // two days of seas, because after dark the call speaks for tomorrow's window. wave: null is a
-  // marine run with no reading in it; waveNext sets tomorrow's on its own
-  const w0 = "wave" in o ? o.wave : 2.4;
-  await page.route("**marine-api.open-meteo.com**", (r) => r.fulfill({ json: { daily: { wave_height_max: [w0, "waveNext" in o ? o.waveNext : w0], wave_period_max: [6, 6] } } }));
-  await page.route("**tidesandcurrents.noaa.gov**", (r) => r.fulfill({ json: tides(now, tidePhase) }));
+  // two days of seas, because after dark the boat's sentence speaks for tomorrow
+  await page.route("**marine-api.open-meteo.com**", (r) => r.fulfill({ json: marine(now, o, LOC_TZ[loc]) }));
+  await page.route("**tidesandcurrents.noaa.gov**", (r) => r.fulfill({ json: coops(r.request().url(), now, o, tidePhase) }));
   await page.route("**api.weather.gov/alerts**", (r) => r.fulfill({ json: { features: o.code >= 95 ? SEVERE(now) : [] } }));
   await page.route("**api.weather.gov/products**", (r) => r.fulfill({ json: { "@graph": [] } }));
 }

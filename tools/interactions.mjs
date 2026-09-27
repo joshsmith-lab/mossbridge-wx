@@ -5,13 +5,14 @@
  */
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
-import { serve, stage, SEVERE, forecast, tides, LOC_TZ } from "./fixtures.mjs";
+import { serve, stage, SEVERE, forecast, tides, marine, LOC_TZ } from "./fixtures.mjs";
 
 /* the payload refresh() builds from a raw forecast, so it can be planted as a cache */
 const cachePayload=(t,o,loc)=>{
   const wj=forecast(t,o,LOC_TZ[loc],loc),i0=Math.max(0,wj.hourly.time.findIndex(x=>x>=wj.current.time.slice(0,13)+":00"));
   const S=a=>a&&a.slice(i0,i0+24),H=wj.hourly;
-  return{current:wj.current,daily:wj.daily,marine:{wave_height_max:2.4,wave_period_max:6,wave_height_next:2.4},
+  const mj=marine(t,o,LOC_TZ[loc]).hourly;
+  return{current:wj.current,daily:wj.daily,marine:{time:mj.time,wave:mj.wave_height},water:null,
     hourly:{time:S(H.time),temp:S(H.temperature_2m),feels:S(H.apparent_temperature),pop:S(H.precipitation_probability),
       code:S(H.weather_code),wind:S(H.wind_speed_10m),gust:S(H.wind_gusts_10m),uv:S(H.uv_index)},
     tides:tides(t).predictions,alerts:[],storms:null,nowcast:wj.minutely_15};
@@ -117,31 +118,55 @@ try{
     let features=SEVERE(now);
     await page.route("**api.weather.gov/alerts**",route=>route.fulfill({json:{features}}));
     await load(page);
-    assert.match(await page.locator("#waterLead").innerText(),/^No go$/);
-    assert.match(await page.locator("#callWhy").innerText(),/Severe Thunderstorm Warning/);
+    /* a warning at the farm is the family's action in red, and no bite time under it: the alert
+       strip names the event and its instruction */
+    assert.equal(await page.locator("#farmSay").innerText(),"Chores can wait.");
+    assert.equal(await page.locator("#farmSay").getAttribute("class"),"say no");
     assert.equal(await page.locator("#wFishWrap").isVisible(),false);
-    assert.equal(await page.locator("#wWindowWrap").isVisible(),false);
     await page.locator("#alertStrip").click();
     assert.match(await page.locator(".alert-body").innerText(),/Move to an interior room/);
     assert.equal(await page.locator("#alertStrip").getAttribute("aria-expanded"),"true");
     features=features.map(f=>({properties:{...f.properties,ends:new Date(now.getTime()-60000).toISOString()}}));
     await page.evaluate(()=>refresh());
     assert.equal(await page.locator("#alertStrip").isVisible(),false);
+    /* and when it has ended an ordinary day is the bite line and nothing else, never a green go */
     assert.equal(await page.locator("#wFishWrap").isVisible(),true);
-    assert.equal(await page.locator("#wWindowWrap").isVisible(),true);
-    assert.match(await page.locator("#waterLead").innerText(),/^Go/);
-    assert.equal(await page.locator("#callWhy").isVisible(),false);
+    assert.equal(await page.locator("#farmSay").isVisible(),false);
+    assert.equal(await page.locator("#outTitle").innerText(),"THE FARM");
     assert.deepEqual(errors,[]);await context.close();checks++;
   }
   {
     /* the ordinary summer afternoon at the farm: thunder in the hourly run, nothing warned. The
-       call is No go, and it takes the piddle line and the bite times with it */
+       headline gives the hour, the card what to do, and a bite window that runs into the thunder is dropped */
     const {context,page,errors}=await open(390,{...base,code:2,cloud:40,popCurve:()=>5,hourlyCode:(i,hr)=>i<24&&hr>=12&&hr<=19?95:undefined});
     await load(page);
-    assert.match(await page.locator("#waterLead").innerText(),/^No go/);
-    assert.match(await page.locator("#callWhy").innerText(),/^Thunder (around \d+[ap]|nearby)$/);
-    assert.equal(await page.locator("#wFishWrap").isVisible(),false,"no bite times under a thunder no go");
-    assert.equal(await page.locator("#wWindowWrap").isVisible(),false);
+    /* the headline names the thunder the run carries, so the card says only what to do about it */
+    assert.match(await page.locator("#verdict").innerText(),/Thunder possible around 12 p\.m\.$/);
+    assert.equal(await page.locator("#farmSay").innerText(),"Piddle before the thunder.");
+    assert.equal(await page.locator("#farmSay").getAttribute("class"),"say caution");
+    const bites=await page.evaluate(()=>{const n=new Date(),t0=new Date(n).setHours(12,0,0,0),t1=new Date(n).setHours(20,0,0,0);
+      return solunarWindows(n).filter(w=>w.end>n&&w.start.getTime()<t1&&w.end.getTime()>t0).map(w=>spanTxt(w.start,w.end))});
+    const fish=await page.locator("#wFishWrap").isVisible()?await page.locator("#wFish").innerText():"";
+    for(const b of bites)assert.ok(!fish.includes(b),`no bite time in the thunder: ${b} in "${fish}"`);
+    assert.deepEqual(errors,[]);await context.close();checks++;
+  }
+  {
+    /* A phone that opens at the coast and taps to the farm paints the farm's cache first. The card's
+       title has to be on that paint and on the live one: render() did not paint it, and after a trip
+       to the coast the farm's card came up with no heading */
+    const o={...base,code:1,popCurve:()=>5},t=new Date(now.getTime()-3.6e6);
+    const {context,page,errors}=await open(390,o,"mb");
+    await page.addInitScript(c=>localStorage.setItem("mbwx-sp",JSON.stringify(c)),{savedAt:t.getTime(),data:cachePayload(t,o,"sp")});
+    await load(page);
+    let release;const gate=new Promise(r=>release=r);
+    await page.route("**api.open-meteo.com**",async r=>{if(r.request().url().includes("marine-api"))return r.fallback();await gate;r.fallback()});
+    await page.locator("#locBtn").click();
+    await page.waitForFunction(()=>document.getElementById("stamp").textContent.startsWith("updated"));
+    assert.equal(await page.locator("#outTitle").innerText(),"THE FARM","the cached farm paint has its title");
+    assert.equal(await page.locator("#tideSection").isVisible(),false);
+    release();
+    await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
+    assert.equal(await page.locator("#outTitle").innerText(),"THE FARM","and so does the live one");
     assert.deepEqual(errors,[]);await context.close();checks++;
   }
   {
@@ -233,7 +258,7 @@ try{
     await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
     assert.deepEqual(errors,[]);await context.close();checks++;
   }
-  console.log(`${checks} interaction scenarios passed: matched chart heights, hourly and tide exploration, warnings, a thunder no go, the entrance across a cache-to-live paint and below the fold, and offline recovery.`);
+  console.log(`${checks} interaction scenarios passed: matched chart heights, hourly and tide exploration, warnings, thunder coming at the farm, the farm's title after the coast, the entrance across a cache-to-live paint and below the fold, and offline recovery.`);
 }finally{
   await browser.close();server.close();
 }
