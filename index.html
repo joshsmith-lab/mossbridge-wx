@@ -765,10 +765,20 @@ let LAT=LOC.lat, LON=LOC.lon;
    converts back at its own door, so the sun is where it actually is over that latitude.
 
    For the two family locations with the phone at home this shift is exactly zero and
-   nothing about their behaviour changes. Away from home it quietly starts being right. */
+   nothing about their behaviour changes. Away from home it quietly starts being right.
+
+   The offset is read off the zone's own clock fields and assembled with Date.UTC, and the
+   phone's comes from getTimezoneOffset. It used to parse two locale strings back as phone
+   time, and on the nights the clocks change the UTC string is past 2 a.m. while the place's
+   is not, so the two landed on different offsets: from 10 p.m. until the change, a phone at
+   home ran an hour off at home (slow on October 31, fast in March). The phone's offset is
+   taken again at the shifted instant, because away from home the two zones change on
+   different hours. */
 let TZSHIFT=0;
-const tzOffset=(tz,d)=>new Date(d.toLocaleString("en-US",{timeZone:tz}))-new Date(d.toLocaleString("en-US",{timeZone:"UTC"}));
-function syncClock(){const d=new Date();TZSHIFT=tzOffset(LOC.tz,d)+d.getTimezoneOffset()*6e4}
+const tzOffset=(tz,d)=>{const p={};
+  for(const x of new Intl.DateTimeFormat("en-US",{timeZone:tz,hourCycle:"h23",year:"numeric",month:"numeric",day:"numeric",hour:"numeric",minute:"numeric",second:"numeric"}).formatToParts(d))p[x.type]=+x.value;
+  return Date.UTC(p.year,p.month-1,p.day,p.hour%24,p.minute,p.second)-Math.floor(d/1e3)*1e3};
+function syncClock(){const d=new Date(),off=tzOffset(LOC.tz,d);TZSHIFT=off+new Date(+d+off+d.getTimezoneOffset()*6e4).getTimezoneOffset()*6e4}
 const wallNow=()=>new Date(Date.now()+TZSHIFT);
 const trueTime=d=>new Date(d.getTime()-TZSHIFT);
 const locToday=()=>new Date().toLocaleDateString("en-CA",{timeZone:LOC.tz});

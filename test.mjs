@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v75/);
+  assert.match(worker, /mbwx-shell-v76/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -284,6 +284,56 @@ test("each location keeps its own clock", async () => {
   // and the offsets are the real ones, not a fixed guess
   assert.equal(at("America/Denver", "2026-08-15T18:00:00Z"), -6);
   assert.equal(at("America/Denver", "2026-01-15T18:00:00Z"), -7);
+  // A locale string is never parsed back into a Date: that reads it as phone time.
+  assert.doesNotMatch(html, /new Date\([^()]*\.toLocale(?:Date|Time)?String\(/);
+});
+
+test("the clock holds across the nights the clocks change", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const code = html.match(/let TZSHIFT=0;[\s\S]*?const trueTime=[^\n]*/)?.[0];
+  assert.ok(code, "the clock shift should be extractable");
+
+  // The oracle is written out by hand rather than asked of Intl, so it cannot share a
+  // mistake with the code it checks: each zone's offset and the instant it changes.
+  const ZONES = {
+    "America/New_York": [["2026-11-01T06:00Z", -4, -5], ["2027-03-14T07:00Z", -5, -4]],
+    "America/Denver": [["2026-11-01T08:00Z", -6, -7], ["2027-03-14T09:00Z", -7, -6]],
+  };
+  // 8 p.m. Eastern the evening before until both zones have turned, every ten minutes.
+  const WINDOWS = [["2026-11-01T00:00Z", "2026-11-01T10:00Z"], ["2027-03-14T01:00Z", "2027-03-14T11:00Z"]];
+
+  // Run in a phone whose own clock is really set to the zone, because the old shift went
+  // wrong exactly where a string is read back as phone time, and injecting an offset would
+  // not reproduce that.
+  const child = `
+    const vm=require("vm"),{code,zones,windows}=JSON.parse(require("fs").readFileSync(0,"utf8"));
+    const ctx=vm.createContext({NOW:0,LOC:null});
+    vm.runInContext("const RealDate=Date;globalThis.Date=class extends RealDate{constructor(...a){a.length?super(...a):super(NOW)}static now(){return NOW}};"+code,ctx);
+    const pad=n=>String(n).padStart(2,"0"),at=(d,utc)=>{const g=k=>d[(utc?"getUTC":"get")+k]();
+      return g("FullYear")+"-"+pad(g("Month")+1)+"-"+pad(g("Date"))+" "+pad(g("Hours"))+":"+pad(g("Minutes"))};
+    const off=(tz,t)=>{const [x]=zones[tz].filter(([iso])=>Math.abs(t-Date.parse(iso))<864e5);return (t<Date.parse(x[0])?x[1]:x[2])*36e5};
+    const rows=[];
+    for(const tz in zones)for(const [a,b] of windows)for(let t=Date.parse(a);t<=Date.parse(b);t+=6e5){
+      ctx.NOW=t;ctx.LOC={tz};
+      const [shift,wall]=vm.runInContext("syncClock();[TZSHIFT,wallNow().getTime()]",ctx);
+      rows.push({tz,at:new Date(t).toISOString().slice(0,16)+"Z",shift:shift/36e5,reads:at(new Date(wall)),wants:at(new Date(t+off(tz,t)),true)});
+    }
+    process.stdout.write(JSON.stringify(rows));`;
+  const { execFileSync } = await import("node:child_process");
+  const sweep = (phone) => JSON.parse(execFileSync(process.execPath, ["-e", child], {
+    input: JSON.stringify({ code, zones: ZONES, windows: WINDOWS }),
+    env: { ...process.env, TZ: phone }, encoding: "utf8",
+  })).map((r) => ({ phone, ...r }));
+
+  for (const phone of Object.keys(ZONES)) {
+    const rows = sweep(phone);
+    assert.equal(rows.length, 4 * 61);
+    // A phone at home reads its own clock: no shift at all, so every instant is the real one.
+    // This is the night the old shift ran an hour slow, from 10 p.m. on October 31 Eastern.
+    assert.deepEqual(rows.filter((r) => r.tz === phone && r.shift !== 0), []);
+    // Away from home, the wall clock reads the place's, through its own change and the phone's.
+    assert.deepEqual(rows.filter((r) => r.reads !== r.wants), []);
+  }
 });
 
 test("every motion is driven by a reading, not by decoration", async () => {
