@@ -25,7 +25,7 @@
 import { mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { serve, stage } from "./fixtures.mjs";
+import { LOC_TZ, serve, stage } from "./fixtures.mjs";
 
 const OUT = path.join(path.dirname(fileURLToPath(import.meta.url)), "shots", "scene");
 const FONT_DIR = process.env.PORCH_FONT_DIR || "";
@@ -171,7 +171,7 @@ const CASES = [
     o: { baseTemp: 50, nowTemp: 47, feels: 45, rh: 66, isDay: 1, code: 2, cloud: 35, nowWind: 6, nowDir: 250, nowGust: 11, nowUv: 1.8, uvMax: 3, windAmp: 5, gustAmp: 9,
       sunrise: "06:48", sunset: "17:26", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
   { name: "35-marsh-november-small-hours", loc: "mb", when: "2026-11-01T00:30:00", decor: [], candles: 0,
-    note: "half past midnight on November 1 2026, the night the clocks go back: Halloween is over, though the shifted wall clock still reads October 31",
+    note: "half past midnight on November 1 2026, the night the clocks go back: Halloween is over, and the wall clock, which once ran an hour slow here and read October 31, reads November 1",
     o: { baseTemp: 60, nowTemp: 58, feels: 58, rh: 82, isDay: 0, code: 0, cloud: 10, nowWind: 6, nowDir: 20, nowGust: 10, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
       sunrise: "06:33", sunset: "17:17", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
   { name: "23-ridge-night-downpour", loc: "sp", when: "2026-05-12T22:40:00",
@@ -250,6 +250,12 @@ for (const cs of cases) {
     console.log(`    wildlife: ${species.join(", ") || "none"}`);
     const stormy = [95, 96, 99].includes(cs.o.code);
     if (!species.length && !stormy) problems.push(`${cs.name}: no wildlife in scene`);
+    // The browser here is an Eastern phone, so at an Eastern place it reads its own clock and the
+    // shift onto the place's wall clock is exactly zero, the night the clocks go back included.
+    if (LOC_TZ[cs.loc] === "America/New_York") {
+      const shift = await page.evaluate(() => TZSHIFT);
+      if (shift !== 0) problems.push(`${cs.name}: a phone at home should read its own clock, but it is shifted ${shift / 36e5}h`);
+    }
     const clipped=await page.evaluate(()=>{
       const frame=document.getElementById("sceneSvg").getBoundingClientRect(),out=[];
       for(const el of document.querySelectorAll("#sceneSvg [data-species]")){
