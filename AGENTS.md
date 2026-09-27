@@ -242,8 +242,9 @@ decorations coming down once each holiday passes. Halloween is the first.
 - **A calendar, not a switch.** `HOLIDAYS` is a table of windows in month-days on the
   location's own calendar, read with `inSeason` the way the boat season is, and
   `holidayOn` is pure and tested. It is handed `locToday()`, the place's own date string, and
-  never the shifted wall clock, which runs an hour slow in the small hours of the night the
-  clocks go back (in 2026, Halloween night into November 1). Halloween runs October 1 to 31:
+  never a date read off the shifted wall clock, which ran an hour slow in the small hours of
+  the night the clocks go back (in 2026, Halloween night into November 1) until that was fixed
+  (see Time and place). Halloween runs October 1 to 31:
   the decorations go up on the first and are gone the morning of November 1. A new holiday is a row in the table
   and a drawing in each scene. Nothing else needs to know.
 - **Decorations are scenery.** The pumpkins, the corn shock and the straw bale are props like
@@ -383,8 +384,10 @@ collide and where either of them can end up floating. Per scene it writes the sk
 and the scene on their own, counts the animations *still running* grouped by keyframe, reads
 `LayoutCount` off CDP while the scene idles, and proves the page holds perfectly
 still under `prefers-reduced-motion` by comparing two screenshots taken 1.4s
-apart. It exits non-zero on a page error, on layout thrash, or on anything that
-survives reduced motion.
+apart. It exits non-zero on a page error, on layout thrash, on anything that
+survives reduced motion, or on a scene at a family place whose wall clock is shifted at all
+off the Eastern phone it runs in (the half past midnight scene on November 1 is the one that
+used to be).
 
 Two numbers worth knowing before you change motion: every scene idles at **0-2
 layouts per 6 seconds**, and the busiest scene runs **115 animations**. If either
@@ -403,11 +406,20 @@ of every comparison agree. `trueTime()` converts back, and `sunPos`, `moonPos` a
 `moonPhase` call it at their own door, because astronomy needs a real instant rather than a
 wall clock.
 
-Two consequences worth knowing:
+Three things worth knowing:
 
 - For the two family locations with the phone at home the shift is exactly zero, so their
   behaviour is unchanged. Away from home it quietly starts being right instead of showing
   the phone's clock against home data.
+- The zero is exact only because nothing is read back as phone time. `tzOffset` takes the
+  place's clock fields from `Intl.DateTimeFormat(...).formatToParts` and assembles them with
+  `Date.UTC`, and the phone's own offset comes from `getTimezoneOffset`, taken again at the
+  shifted instant because two zones change on different hours. The first version parsed two
+  `toLocaleString` strings back as phone time, and for the four hours before each clock
+  change the UTC string had passed 2 a.m. and the place's had not, so a phone at home ran an
+  hour off at home: slow from 10 p.m. Halloween night 2026, fast from 10 p.m. on March 13
+  2027. test.mjs sweeps both nights every ten minutes with the phone's clock really set to
+  Eastern and to Mountain.
 - `tools/fixtures.mjs` writes each fixture on the location's own clock too. Without that the
   Denver scenes were fed Eastern sunrise and sunset, which is how a mid-August Denver
   morning came out reading 8:12am.
