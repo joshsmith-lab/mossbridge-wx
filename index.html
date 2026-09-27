@@ -281,6 +281,12 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes rabbitBreathe{from{transform:scaleY(.985)}to{transform:scaleY(1.015)}}
 .city-window.spark{animation:citySparkle var(--spark-d,12s) ease-in-out infinite}
 @keyframes citySparkle{0%,68%,100%{opacity:var(--spark-lo,.34)}74%,82%{opacity:var(--spark-hi,.92)}88%{opacity:var(--spark-lo,.34)}}
+/* a carved pumpkin's candle gutters only as hard as the gusts say: the depth and the tempo are
+   set per render off the wind (candleK), and in a calm it gets no animation at all. A flame
+   ducks fast and comes back slower. Each cycle has two deep ducks, the second shallower than
+   the first (--c0, then --c2), among smaller flutters (--c1) */
+#sceneSvg .candle.flicker{animation:candle 2.4s ease-in-out infinite}
+@keyframes candle{0%,100%{opacity:1}7%{opacity:var(--c1,.9)}12%{opacity:.98}27%{opacity:var(--c1,.9)}31%{opacity:var(--c0,.8)}44%{opacity:1}60%{opacity:.97}66%{opacity:var(--c1,.9)}74%{opacity:var(--c2,.85)}79%{opacity:var(--c1,.9)}90%{opacity:1}}
 .city-beacon{opacity:.15;animation:cityBeacon var(--beacon-d,7s) ease-in-out infinite}
 @keyframes cityBeacon{0%,78%,100%{opacity:.12}82%,87%{opacity:.82}91%{opacity:.12}}
 .fox-head{animation:foxSniff 31s ease-in-out infinite}
@@ -736,6 +742,13 @@ const mdOf=d=>typeof d==="string"?d.slice(5,10):String(d.getMonth()+1).padStart(
 const inSeason=(d,r)=>{if(!r)return false;const md=mdOf(d);return r[0]<=r[1]?md>=r[0]&&md<=r[1]:md>=r[0]||md<=r[1]};
 /* off season the coast asks the question everywhere else does, under its own name */
 const titleFor=(L,day)=>L.boatSeason&&!inSeason(day,L.boatSeason)?L.offTitle:L.outTitle;
+/* The scenes dress for the holidays the way the family does: the decorations go out on a date
+   and come down the morning after the holiday passes. A window is a pair of month-days on the
+   location's own calendar, read the way the boat season is. Halloween's pumpkins go out on the
+   first of October and are carved for the last week, because a carved pumpkin on the coast
+   is soft inside a week. */
+const HOLIDAYS=[{id:"halloween",window:["10-01","10-31"],carved:"10-24"}];
+const holidayOn=d=>HOLIDAYS.find(h=>inSeason(d,h.window))||null;
 let LOC;try{const saved=localStorage.getItem("mbwx-loc");LOC=LOC_ORDER.includes(saved)?LOCS[saved]:LOCS.mb}catch(e){LOC=LOCS.mb}
 let LAT=LOC.lat, LON=LOC.lon;
 
@@ -1162,8 +1175,8 @@ const pBlob=(pts,role,x)=>part(inkSpline(pts,true),role,x);
 const pTaper=(pts,role,opts,x)=>part(taper(pts,opts),role,x);
 const pDot=(cx,cy,r,role,x)=>part(`M ${f1(cx-r)} ${f1(cy)} a ${f1(r)} ${f1(r)} 0 1 0 ${f1(2*r)} 0 a ${f1(r)} ${f1(r)} 0 1 0 ${f1(-2*r)} 0 Z`,role,x);
 /* roles that sit inside the silhouette and never take the outline */
-const INK_INNER=new Set(["mark","eye","eyeRing","nose","detail","band"]);
-const INK_LAST=new Set(["eye","eyeRing","nose","glint"]);
+const INK_INNER=new Set(["mark","eye","eyeRing","nose","detail","band","carve"]);
+const INK_LAST=new Set(["eye","eyeRing","nose","glint","carve"]);
 /* the bounding box of a set of path strings (M L C A a Z, which is all the kit writes),
    so a mask only rasterises the area the unit actually covers */
 function pathBox(ds){
@@ -1437,6 +1450,232 @@ const propBarn=()=>[
   part("M 15.4 -30 L 15.4 -34.6 L 20.6 -34.6 L 20.6 -30 Z","wall"),part("M 14.2 -34.2 L 18 -37.4 L 21.8 -34.2 Z","roof"),
   part("M 12.4 0 L 12.4 -11.6 L 23.6 -11.6 L 23.6 0 Z","door"),part("M 15.8 -22.4 L 15.8 -26.2 L 20.2 -26.2 L 20.2 -22.4 Z","loft"),
   part("M 5 -3.6 L 9 -3.6 L 9 -8.4 L 5 -8.4 Z M 27 -3.6 L 31 -3.6 L 31 -8.4 L 27 -8.4 Z","window")];
+/* ── the holidays' props ─────────────────────────────────────────────────────────
+   Decorations are scenery like the dock and the barn: parts with roles, lit by the same sky.
+   A pumpkin sits on y=0, centred on x=0, in a box w wide and h tall, and its stem stands up out
+   of the top of the box. The stem is painted first, so the body covers its foot. `carved` cuts
+   the face as `carve` holes, dark by day and in the candle's colour after sunset, with the rind's
+   cut wall as `eyeRing` painted over them and kept inside each hole. The seed decides how this
+   one grew and how it was cut: its fullness, lean and ribs, its stem, its eyes, grin and teeth.
+   One under 8 wide is a mini, and a mini grows flatter. */
+const propPumpkin=(w=10,h=7,{carved=false,seed=1}={})=>{
+  const r=mulberry(seed),X=w/2,k=Math.min(1,h/7),J=(a,b)=>a+(b-a)*r(),mini=w<8;
+  /* how it grew: each side's fullness, the lean of its crown, where its ribs fall and its
+     build. A mini sits low and wide on the ground, its widest point low and its crown a dome */
+  const full=[J(.95,1.02),J(.95,1.02)],lean=J(-1,1)*X*.05,r1=J(.25,.3),r2=J(.6,.66);
+  const sq=mini?J(.8,.84):J(.93,1),yc=mini?J(.38,.42):J(.44,.48),n=mini?J(2.3,2.5):J(2.2,2.45),mt=mini?J(2.2,2.35):J(2.3,2.6);
+  /* x in half-widths and y in heights up from the ground. The crown leans and the foot stays put */
+  const U=(x,y)=>[x*X+lean*y,-y*h*sq];
+  const runs=R=>R.map((pts,i)=>{const d=inkSpline(pts);return i?d.replace(/^M [^C]*/,""):d}).join("")+" Z";
+  /* a brush stroke drawn as one smooth closed curve through its edges, pointed at both ends:
+     at this size a polyline taper shows its corners */
+  const stroke=(pts,role,x)=>{const n=pts.length-1,L=[],R=[];
+    pts.forEach((p,i)=>{const a=pts[Math.max(0,i-1)],b=pts[Math.min(n,i+1)],l=Math.hypot(b[0]-a[0],b[1]-a[1])||1,dx=(b[0]-a[0])/l,dy=(b[1]-a[1])/l;
+      L.push([p[0]-dy*p[2]/2,p[1]+dx*p[2]/2]);R.push([p[0]+dy*p[2]/2,p[1]-dx*p[2]/2])});
+    return pBlob([pts[0],...L.slice(1,n),pts[n],...R.slice(1,n).reverse()],role,x)};
+  /* the outline is a rounded body pinched in where the ribs meet it: the stem's well at the top,
+     a crease where each outer rib goes over the shoulder, and one under every rib where it sits
+     on the ground. Between them each lobe bows out on its own */
+  const dW=mini?.1:.08,sW=mini?.12:.07,dT=.05,dB=.04;
+  const edge=(f,p)=>{const c=Math.max(0,Math.cos(p)),s=Math.sin(p),x=f*c**(2/n),y=s>=0?yc+(1-yc)*s**(2/mt):yc-yc*(-s)**.7;
+    const pin=s>=0?dW*Math.exp(-x/sW)+dT*Math.exp(-Math.abs(x-r2*f)/.04):dB*(Math.exp(-Math.abs(x-r1*f)/.035)+Math.exp(-Math.abs(x-r2*f)/.035));
+    const vx=x*X,vy=(y-yc)*h*sq,l=Math.hypot(vx,vy)||1;
+    return[x-vx/l*pin*h*sq/X,y-vy/l*pin]};
+  const pT=Math.acos(r2**(n/2)),p1=-Math.acos(r1**(n/2)),HP=Math.PI/2;
+  const half=s=>{const f=full[s>0?1:0],run=(a,b,m)=>Array.from({length:m+1},(_,i)=>{const[x,y]=edge(f,a+(b-a)*i/m);return U(s*x,y)});
+    return[run(HP,pT,5),run(pT,-pT,12),run(-pT,p1,4),run(p1,-HP,3)]};
+  const Rt=half(1),Lf=half(-1),bk=a=>a.slice().reverse();
+  const P=[part(runs([Rt[0],Rt[1],Rt[2],[...Rt[3],...bk(Lf[3]).slice(1)],bk(Lf[2]),bk(Lf[1]),bk(Lf[0])]),"body")];
+  /* the ribs, crease to crease, bowing out with the form and thinning where they turn under */
+  for(const s of[-1,1]){const f=full[s>0?1:0],yT=edge(f,pT)[1],yB1=edge(f,p1)[1],yB2=edge(f,-pT)[1];
+    const rib=(x0,y0,x1,y1,bow,wd)=>stroke([0,.2,.5,.8,1].map(t=>[...U(s*(x0+(x1-x0)*t+bow*Math.sin(Math.PI*t)),y0+(y1-y0)*t),wd*k*Math.sin(Math.PI*t)**.6]),"band");
+    P.push(rib(r1*f*.4,.9,r1*f,yB1,.13,.56),rib(r2*f,yT,r2*f,yB2,.19,.5));
+  }
+  /* the stem: a stalk that grew up out of the well and bent over, flared where it leaves the
+     crown and cut square across the end. A mini's is slimmer and bent further, with no cut face
+     or fibres, because at five pixels a stalk that is mostly ink reads as a stalk and a wider one
+     fills with light and reads as a pale nub */
+  const bw=X*(mini?J(.28,.32):J(.34,.38)),nw=bw*J(.62,.7),sH=h*sq*(mini?J(.36,.4):J(.36,.42)),tip=(r()<.5?-1:1)*X*(mini?J(.24,.3):J(.16,.26));
+  const b0=U(0,1-dW-.06),t0=[b0[0]+tip,b0[1]-sH],c0=[b0[0]+tip*.1,b0[1]-sH*.72];
+  const C=t=>[(1-t)**2*b0[0]+2*t*(1-t)*c0[0]+t*t*t0[0],(1-t)**2*b0[1]+2*t*(1-t)*c0[1]+t*t*t0[1]];
+  const Nm=t=>{const dx=2*(1-t)*(c0[0]-b0[0])+2*t*(t0[0]-c0[0]),dy=2*(1-t)*(c0[1]-b0[1])+2*t*(t0[1]-c0[1]),l=Math.hypot(dx,dy)||1;return[-dy/l,dx/l]};
+  const S=(t,u)=>{const c=C(t),m=Nm(t),wd=nw*(1+(1-t)*.08)+(bw-nw)*(1-t)**5;return[c[0]+m[0]*u*wd/2,c[1]+m[1]*u*wd/2]};
+  const tl=S(1,-1),tr=S(1,1),lo=u=>{const p=S(0,u);return[p[0],p[1]+h*.07]};
+  const tm=C(1),tn=Nm(1);
+  const stem=[part(inkSpline([lo(-1),S(.1,-1),S(.35,-1),S(.7,-1),tl])+` L ${P2(tr)}`+inkSpline([tr,S(.7,1),S(.35,1),S(.1,1),lo(1)]).replace(/^M [^C]*/,"")+" Z","stem")];
+  /* fibres run up it to the cut end, which is only a shade paler than the stalk */
+  if(!mini)stem.push(...[-.36,.32].map(u=>stroke([[...S(.1,u*1.3),0],[...S(.4,u),.2*k],[...S(.75,u*.92),.18*k],[...S(.97,u*.88),.06*k]],"fibre",{noSil:true})),
+    part(`M ${P2(tl)} L ${P2(tr)} Q ${P2([tm[0]-tn[1]*nw*.4,tm[1]+tn[0]*nw*.4])} ${P2(tl)} Z`,"cut",{noSil:true}));
+  P.unshift(...stem);
+  /* a tendril of vine left on a big one: off the stalk, a long arc and a single loose curl, the
+     way the clouds end, never a coiled spring */
+  if(!mini){const vs=-Math.sign(tip),vl=J(.85,1.1),a=S(.4,vs),o=(x,y)=>[a[0]+vs*x*X*vl,a[1]-y*h*vl];
+    const lead=[[0,0],[.1,.08],[.22,.11],[.32,.07],[.38,0]].map(([x,y])=>o(x,y)),rr=.1*X*vl,e=lead[4],cc=[e[0]-vs*rr,e[1]];
+    const pts=[...lead,...curlPts(cc[0],cc[1],rr,.8,vs,vs>0?0:Math.PI).slice(1,-1)];
+    P.push(stroke(pts.map((p,i)=>[p[0],p[1],i?(.46-.36*i/(pts.length-1))*k:.4*k]),"vine",{noSil:true}));
+  }
+  if(carved){
+    /* the knife's cuts, every edge straight. Q maps face units (x in half-widths from the middle,
+       y in heights up) onto the pumpkin, narrowing x as it turns away round the curve. The cuts
+       are written to a hundredth, because the rind along them is only a fifth of a unit thick */
+    const Q=(x,y)=>U(Math.sin(x*1.18)/1.18,y),F=v=>Math.round(v*100)/100,path=E=>"M "+E.map(p=>`${F(p[0])} ${F(p[1])}`).join(" L ")+" Z";
+    const lp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t],rt=.22*k,holes=[],rind=[];
+    /* a strip of rind along part of a hole's edge: C runs along the edge in the hole's own order,
+       T is how thick the strip is at each point, and it is set in toward the inside */
+    const wall=(C,T,E)=>{let A=0;E.forEach((p,i)=>{const q=E[(i+1)%E.length];A+=p[0]*q[1]-q[0]*p[1]});
+      const nrm=(a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1;return A>0?[-dy/l,dx/l]:[dy/l,-dx/l]};
+      const inner=C.map((p,i)=>{const a=i?nrm(C[i-1],p):null,b=i<C.length-1?nrm(p,C[i+1]):null,v=a&&b?[a[0]+b[0],a[1]+b[1]]:a||b,l=Math.hypot(v[0],v[1])||1,m=a&&b?Math.max(.5,(a[0]*v[0]+a[1]*v[1])/l):1;
+        return[p[0]+v[0]/l*T[i]/m,p[1]+v[1]/l*T[i]/m]});
+      return[...C,...inner.reverse()]};
+    /* the carving has its own draws, so how a pumpkin grew never changes how it was cut. The
+       eyes come to a point at the top, so the face looks awake: a triangle whose point leans out
+       as far as the seed says, a wedge cut down toward the middle, which is the sly one, or a tall
+       point over a round base. Each sits on a base cut in facets. u runs outward from the middle
+       of the face, v up */
+    const cr=mulberry(seed*4+17),K2=(a,b)=>a+(b-a)*cr(),eye=Math.floor(cr()*3),teeth=Math.floor(cr()*3);
+    const ex=K2(.35,.39),ey=K2(.58,.62),ew=K2(.19,.22)*[1,1.1,.84][eye],eh=K2(.12,.14)*[1,.94,1.24][eye],ap=K2(.05,.35),rs=K2(.93,1.07),dy=K2(-.02,.02);
+    const EYE=[[[ap,1],[1,-.62],[.5,-.96],[-.4,-1],[-1,-.68]],[[1,1],[.74,-.52],[.12,-1],[-.58,-.78],[-1,-.24]],[[ap*.3,1],[.92,-.5],[.45,-.96],[-.45,-.96],[-.92,-.5]]][eye];
+    for(const s of[-1,1]){const W=ew*(s>0?rs:1),H=eh*(s>0?rs:1),cx=s*ex,cy=ey+(s>0?dy:0);
+      const E=EYE.map(([u,v])=>Q(cx+s*u*W,cy+v*H));
+      holes.push(E);
+      /* the rind is the wall across the top and down the outer side, thinning into the point and
+         gone at both ends, so it reads as the cut and never as a brow */
+      rind.push(wall([lp(E[4],E[0],eye===1?.12:.4),lp(E[4],E[0],eye===1?.6:.75),E[0],lp(E[0],E[1],.38),lp(E[0],E[1],.74),E[1]],[0,rt*.8,rt*.4,rt,rt*.75,0],E));
+    }
+    /* the grin: a crescent faceted the way a knife cuts a curve, turned up at the ends and tipped
+       as the seed says, with one square tooth left in the top, or two, and sometimes one in the
+       bottom, never in the middle */
+    const mw=K2(.6,.7),my=K2(.3,.34),mt=K2(.19,.22),up=K2(.07,.1),tilt=K2(-.035,.035),N=8;
+    const yT=x=>{const t=x/mw;return my+up*t*t+tilt*t},yB=x=>{const t=x/mw;return yT(x)-mt*Math.max(0,1-t*t)**.75};
+    const two=teeth===2,tw=K2(.075,.09),off=v=>(v<0?-1:1)*Math.max(Math.abs(v),tw+.05);
+    const tx=two?[K2(-.36,-.26),K2(.1,.2)]:[off(K2(-.24,.16))];
+    const low=teeth===1,bx=low?off(tx[0]+(tx[0]>-.04?-1:1)*K2(.26,.32)):null;
+    const cut=(xs,teeth,fy,dp)=>{let E=xs.filter(x=>teeth.every(c=>Math.abs(x-c)>tw*1.3)).map(x=>[x,fy(x)]);
+      for(const c of teeth)E.push([c-tw,fy(c-tw)],[c-tw*.88,fy(c)+dp],[c+tw*.9,fy(c)+dp*1.06],[c+tw,fy(c+tw)]);
+      return E.sort((a,b)=>a[0]-b[0])};
+    const xs=Array.from({length:N+1},(_,i)=>(i/N*2-1)*mw);
+    const top=cut(xs,tx,yT,-mt*.5),bot=cut(xs.slice(1,-1),low?[bx]:[],yB,mt*.42).reverse();
+    const G=[...top,...bot].map(p=>Q(...p));
+    holes.push(G);
+    /* the floor of the grin shows its rind, thickest where the grin is deepest and gone round the
+       bottom tooth */
+    const fl=[top[top.length-1],...bot,top[0]];
+    rind.push(wall(fl.map(p=>Q(...p)),fl.map(([x])=>rt*.9*Math.max(0,1-(x/mw)**2)**.6*(low?Math.min(1,Math.max(0,(Math.abs(x-bx)-tw*1.05)/(tw*1.5))):1)),G));
+    const named=["tri","sly","tall"][eye],bite=["one","top and bottom","two"][teeth];
+    holes.forEach((E,i)=>P.push(part(path(E),"carve",{cut:i<2?named:bite})));
+    for(const E of rind)P.push(part(path(E),"eyeRing"));
+  }
+  return P};
+/* a corn shock, the way they stand in the hollows: cut stalks stood on end in a teepee, the
+   butts splayed on the ground, and tied high, so what is above the twine is the stiff spray of
+   the tops, the tassels and the broken stalks standing up and out. A few dry leaves hang off the
+   bundle and the rest lie flat along it. About 12 wide and 24 tall */
+const propCornShock=seed=>{const r=mulberry(seed),j=(a=.3)=>(r()-.5)*2*a,P=[];
+  /* Only the stalks, the tops and the few leaves that stand clear of the bundle make its
+     outline. A leaf lying on the bundle is painted but kept out of it (noSil), with a thin
+     shadow under its edge, so at phone size the ink is one clean shape and not a furry one */
+  const IN={capStart:false},noSil={noSil:true},TY=-18;
+  const leaf=(pts,{back=0,inside=false}={})=>{
+    if(inside)P.push(pTaper(pts.map(([x,y,w])=>[x+.24,y+.26,w*.7]),"stalkDk",IN,noSil));
+    P.push(pTaper(pts,"leaf",IN,inside?noSil:{}));if(back)P.push(pTaper(pts.slice(back),"leafBack",IN,noSil));
+    P.push(pTaper(pts.slice(1,-1).map(([x,y,w])=>[x,y,Math.min(.16,w*.24)]),"rib",IN,noSil))};
+  /* what stands above the twine goes out from the tie along an angle (degrees off upright) and
+     bends a little further out as it goes. A blade is a leaf, widest low and drawn to a point. A
+     top is a stalk narrowing to where it was topped, and its tassel is a spike with two branches
+     lying close along it, thick enough at the root to hold up at phone size */
+  const ray=(x,deg,len,curl)=>k=>{const a=(deg+curl*k)*Math.PI/180;return[x+Math.sin(a)*len*k,TY-.2-Math.cos(a)*len*k]};
+  const blade=(x,deg,len,w,curl,back=3)=>{const f=ray(x,deg,len,curl);leaf([0,.22,.5,.78,1].map((k,i)=>[...f(k),[.34,w,w*.8,w*.42,.05][i]]),{back})};
+  const top=(x,deg,len,role,tas=0)=>{const f=ray(x,deg,len,deg*.25);
+    P.push(pTaper([[...f(0),.8],[...f(.45),.64],[...f(.85),.46],[...f(1),.34]],role,IN));
+    if(tas){const[tx,ty]=f(1),[qx,qy]=f(.9),d=Math.atan2(tx-qx,qy-ty)*180/Math.PI,sp=(a,l,c,w)=>{const g=ray(0,a,l,c);
+        return pTaper([0,.5,1].map((k,i)=>{const[gx,gy]=g(k);return[tx+gx,ty+gy-TY+.2,[w,w*.7,.06][i]]}),"tassel",IN)};
+      P.push(sp(d+15*tas,1.15,12*tas,.26),sp(d-12*tas,.95,-10*tas,.24),sp(d,1.5,0,.42))}
+    return f(1)};
+  /* behind: the shadowed core of the bundle, and the foot of the spray */
+  P.push(part(`M -2.2 ${TY-.3} L -5 -.4 L 4.9 -.4 L 2.15 ${TY-.3} Z`,"stalkDk"),
+    part(`M -1.9 ${TY} L -2.9 ${TY-1.8} L -1 ${TY-2.4} L 0 ${TY-2.8} L 1.1 ${TY-2.4} L 2.9 ${TY-1.8} L 1.9 ${TY} Z`,"stalkDk"));
+  /* each stalk from the tie to its own butt, as they fell, cut square where it stands */
+  const N=11;for(let i=0;i<N;i++){const t=i/(N-1)-.5,x0=t*4,x1=t*9.8+j(.2),y1=.05+r()*.3,xm=x0+(x1-x0)*.5+j(.1);
+    P.push(pTaper([[x0,TY-.2,.6],[xm,TY*.5,.88],[x1,y1,1.08]],i%3===1?"stalkLt":i%3===2?"stalkMd":"stalk",{capEnd:false,capStart:false}));
+    /* and its joints, where the leaves came off */
+    for(let y=TY+2.2+r()*2.4;y<-2;y+=3.4+r()*1.6){const k=(y-TY)/-TY,x=x0+(x1-x0)*k,w=.5+.55*k;
+      if(i%2===0&&r()<.7)P.push(pTaper([[x-w*.4,y+.05,.15],[x+w*.4,y-.05,.12]],"joint",{},noSil))}}
+  /* two that were stood a little wide, so the foot is legs and not a hem */
+  P.push(pTaper([[-3.4,-8,.6],[-5,-2.8,.9],[-6,.15,1.05]],"stalkMd",{capEnd:false,capStart:false}),
+    pTaper([[3.3,-8.6,.6],[4.8,-3,.9],[5.9,.2,1.05]],"stalkLt",{capEnd:false,capStart:false}));
+  /* the leaves lying along the bundle, below the twine */
+  leaf([[-.6,-16.6,.25],[-1,-14.6,.72],[-1.3,-12.2,.62],[-1.4,-10.2,.2]],{inside:true});
+  leaf([[1.1,-14.6,.25],[1.7,-12.6,.66],[2.1,-10.4,.55],[2.2,-8.6,.15]],{inside:true});
+  leaf([[-1.7,-8,.25],[-2.2,-6.2,.62],[-2.5,-4,.5],[-2.4,-2.4,.12]],{inside:true});
+  leaf([[.6,-6.4,.25],[1,-4.6,.56],[1.3,-2.6,.45],[1.2,-1.2,.1]],{inside:true});
+  /* and three come away from it, hanging down and out off the stalks */
+  leaf([[-2.5,-15.4,.3],[-3,-13.6,.8],[-3.6,-11.2,.74],[-4.3,-9.2,.52],[-5.1,-7.7,.05]],{back:3});
+  leaf([[2.6,-13.4,.3],[3.3,-11.6,.8],[3.9,-9.6,.7],[4.6,-7.8,.48],[5.5,-6.5,.05]],{back:3});
+  leaf([[-3.9,-6.6,.3],[-4.6,-4.8,.72],[-5.3,-3.1,.5],[-6.2,-2,.05]],{back:2});
+  /* above the twine, the far ones first: stiff leaves out at the sides, the tops with their
+     tassels standing up past them, and one broken over at a joint */
+  blade(-1.8,-56,4.8,1.05,-10);blade(1.9,60,4.5,1,10);
+  blade(-1.5,-42,4.1,1.1,-6,2);blade(1.6,46,3.6,1.05,6,2);
+  top(-1.3,-30,5.2,"stalkMd",1);
+  const[bx,by]=top(1.3,36,3.8,"stalk");
+  P.push(pTaper([[bx,by,.42],[bx+1.1,by-.3,.34],[bx+2,by-.2,.22],[bx+2.5,by+.1,.08]],"stalk",IN),pDot(bx,by,.22,"joint",noSil));
+  top(1,22,4.9,"stalkLt",-1);
+  blade(-.8,-14,6,1.1,-8);
+  top(-.1,-2,5,"stalk",-1);
+  blade(.5,13,5.6,1.05,10);
+  /* the twine, round the front of the bundle, and its knot */
+  P.push(pTaper([[-2.35,TY-.35,1],[-1.2,TY+.05,1.08],[0,TY+.15,1.08],[1.2,TY+.05,1.08],[2.3,TY-.35,1]],"band"),pDot(.9,TY+.15,.52,"band"),
+    pTaper([[.95,TY+.4,.32],[1.2,TY+1.1,.22],[1.2,TY+1.5,.08]],"band"));
+  for(const x of[-1.8,-1.1,-.4,1.8])P.push(pTaper([[x-.14,TY-.34+Math.abs(x)*.12,.16],[x+.2,TY+.36+Math.abs(x)*.12,.12]],"twist",{},noSil));
+  return P};
+/* a small square bale, about 12 by 6, sitting flat on the ground with its long side to us, seen
+   from a little above: the long side, the top and the far end, soft faces with rounded corners.
+   The two strings run the length of it, along the top and down over the end, the way a baler
+   ties them. The long side is the flakes pressed one against the next with the ends of the straw
+   showing, and the end is the flat of the last flake */
+const propBale=()=>{const r=mulberry(11),P=[];
+  const box=(pts,rad)=>{let d="";pts.forEach((p,i)=>{const a=pts[(i+pts.length-1)%pts.length],c=pts[(i+1)%pts.length];
+    const u=(q,k)=>{const l=Math.hypot(q[0]-p[0],q[1]-p[1]);return[p[0]+(q[0]-p[0])*k/l,p[1]+(q[1]-p[1])*k/l]};
+    d+=`${i?" L ":"M "}${P2(u(a,rad))} C ${P2(u(a,rad*.45))} ${P2(u(c,rad*.45))} ${P2(u(c,rad))}`});return d+" Z"};
+  /* a straw's stroke, w wide at its root and w1 at its tip. What lies on the bale is painted but
+     kept out of its outline (noSil), so the bale is one inked block */
+  const noSil={noSil:true};
+  const seg=(x0,y0,x1,y1,w,role,w1=w*.6)=>{const l=Math.hypot(x1-x0,y1-y0),ux=-(y1-y0)/l/2,uy=(x1-x0)/l/2;
+    P.push(part(`M ${f1(x0+ux*w)} ${f1(y0+uy*w)} L ${f1(x1+ux*w1)} ${f1(y1+uy*w1)} L ${f1(x1-ux*w1)} ${f1(y1-uy*w1)} L ${f1(x0-ux*w)} ${f1(y0-uy*w)} Z`,role,noSil))};
+  /* the long side runs from X0 to X1 and is H tall, and the bale runs back from it by (DX, DY),
+     up and away from its foot, so the foot on the ground is level */
+  const X0=-6,X1=4.3,H=4.5,DX=1.7,DY=-1.5;
+  const at=(u,v,d)=>[X0+(X1-X0)*u+DX*d,-H*v+DY*d];   /* along the bale, up it, back into it */
+  /* a few loose straws standing out of the top and the corners, drawn first so the bale holds
+     them, and left without ink so they are straw and not pegs */
+  for(const[x0,y0,xm,ym,x1,y1]of[[-4.6,-4.7,-5.2,-5.3,-5.9,-5.7],[1.8,-5.8,2,-6.4,2.5,-6.9],[-5.7,-1.3,-6.2,-1.5,-6.8,-1.4],[5.8,-4.2,6.3,-4.5,6.7,-4.4],[-2.2,-5.9,-2.5,-6.4,-2.4,-6.9]])
+    P.push(pTaper([[x0,y0,.2],[xm,ym,.13],[x1,y1,.04]],"stubLt",{},noSil));
+  P.push(part(box([at(0,0,0),at(1,0,0),at(1,0,1),at(1,1,1),at(0,1,1),at(0,1,0)],.8),"straw"),
+    part(box([at(0,1,0),at(1,1,0),at(1,1,1),at(0,1,1)],.45),"top",noSil),part(box([at(1,0,0),at(1,0,1),at(1,1,1),at(1,1,0)],.4),"end",noSil));
+  /* the flakes along the side, pressed one against the next: every other one a shade lighter, and
+     their seams soft and broken, the straw of one flake running over into the next */
+  const cuts=[0];for(let t=.1;t<.93;t+=.085+r()*.035)cuts.push(t);cuts.push(1);
+  cuts.forEach((t,i)=>{if(i%2||i===cuts.length-1)return;const n=cuts[i+1],a=at(t,.06,0),b=at(t,.94,0),c=at(n,.94,0),d=at(n,.06,0);
+    P.push(part(`M ${P2(a)} L ${P2(b)} L ${P2(c)} L ${P2(d)} Z`,"flake",noSil))});
+  for(const t of cuts.slice(1,-1)){let v=.08+r()*.16;while(v<.88){const l=.12+r()*.2,x=at(t,0,0)[0]+(r()-.5)*.36;
+    seg(x,-H*v,x+(r()-.5)*.3,-H*Math.min(.9,v+l),.13,"seam",.08);v+=l+.18+r()*.24}}
+  /* the ends of the straw showing in the side */
+  for(let v=.14;v<.92;v+=.16)for(let t=.03+r()*.06;t<.97;t+=.06+r()*.08){const[x,y]=at(t,v+(r()-.5)*.08,0),a=Math.PI*(r()<.5?1:0)+(r()-.5)*1.2,l=.22+r()*.26;
+    seg(x,y,x+Math.cos(a)*l,y+Math.sin(a)*l*.6,.13,r()<.35?"stubLt":"stub",.08)}
+  /* the top: straw lying along the bale, and the stubble standing up along its front edge */
+  for(let d=.18;d<.9;d+=.24)for(let u=.04+r()*.08;u<.94;u+=.12+r()*.1){const[x,y]=at(u,1,d+(r()-.5)*.12),l=.3+r()*.4;
+    seg(x,y,x+l,y+(r()-.5)*.14,.12,r()<.5?"stubLt":"stub",.07)}
+  for(let u=.03;u<.97;u+=.07+r()*.06){const[x,y]=at(u,1,0),h=.16+r()*.22;seg(x+.04,y+.3,x-.06+(r()-.5)*.14,y-h,.12,"stubLt",.07)}
+  /* the end: the flat of the last flake, the straw lying across it */
+  for(let v=.12;v<.95;v+=.17){let d=.1+r()*.12;while(d<.88){const l=.2+r()*.24,[x0,y0]=at(1,v,d),[x1,y1]=at(1,v+(r()-.5)*.05,Math.min(.92,d+l));
+    seg(x0,y0,x1,y1,.13,r()<.4?"endLt":"endDk",.09);d+=l+.1+r()*.14}}
+  /* the two strings, baler twine: along the top from the near end, over the corner and down the
+     far end, bedded a little into the straw and never quite straight */
+  for(const d of[.34,.74]){const pts=[0,.25,.5,.75,.98].map((u,i)=>{const[x,y]=at(u,1,d);return[x,y+.06+(i%2?.05:-.03),.24]});
+    P.push(pTaper(pts,"band",{},noSil));
+    const[ex,ey]=at(1,1,d),[fx,fy]=at(1,0,d);
+    P.push(pTaper([[ex-.05,ey+.12,.24],[ex+.06,ey+1.6,.24],[ex+.02,(ey+fy)/2+.8,.22],[fx+.06,fy-.3,.2]],"band",{},noSil))}
+  return P};
 /* the meadow and the marsh grass keep the same calendar: tip, middle and root per month */
 const SEASON_BLADE=[["#E4CFA0","#B8A070","#7A6446"],["#E4CFA0","#B8A070","#7A6446"],["#DCCB94","#A9A064","#6E6842"],
   ["#C8D878","#86A84A","#4E6A30"],["#D9CF6A","#8DAA4A","#4E6A30"],["#D9CF6A","#8DAA4A","#4E6A30"],["#D9CF6A","#8DAA4A","#4E6A30"],
@@ -1991,6 +2230,14 @@ const INK={
   henBarred:{ink:"#2A1B33",shade:"#2D3550",lit:"#FFE7A6",litOp:0.55,eye:"#1A1014",glint:"#FFF4DE",comb:"#C92B22",wattle:"#B52520",face:"#C83A26",body:"#9C9EA3",hackle:"#A8AAAD",wing:"#96989D",tail:"#8A8C92",band:"#30313B",detail:"#5A5C66",mark:"#E6E6E2",leg:"#EDBB45",far:"#B98A2E",beak:"#E6BA56",lobe:"#B52520",eyeRing:"#C9762A"},
   cardinal:{body:"#CB2424",tail:"#A01F1B",wing:"#9A2D27",far:"#7A4A40",leg:"#B7806C",band:"#1D1216",mask:"#1D1216",bill:"#E4502C",sheen:"#F59268",detail:"#8A1A14",eyeRing:"#3A2226",eye:"#0B0608",glint:"#FFF3E0",ink:"#2A1620",shade:"#3A1E5C",lit:"#FFD7A0",litOp:0.3},
   oystercatcher:{body:"#5E4A3E",hood:"#1E1A24",mark:"#FBF6EC",bill:"#F07A2A",eye:"#F6D34A",eyeRing:"#E0452F",leg:"#EBB9A6",legFar:"#C99A8A",ink:"#2A1B33",shade:"#3A2350",lit:"#FFD99A",litOp:0.55},
+  /* the holidays' props: the carve is the pumpkin's dark inside by day, and the candle's
+     colour once it is lit (candleLit). eyeRing is the rind's cut wall, pale by day and glowing
+     once the candle is lit (rindLit). fibre and cut are the stem's grain and its cut end, only a
+     shade off the stalk, and vine is the tendril left on it */
+  pumpkin:{body:"#E27B2C",band:"#B4561F",stem:"#6E6232",fibre:"#4B4020",cut:"#9A8C54",vine:"#5E5A2A",carve:"#3E2012",eyeRing:"#F6BE67",rindLit:"#FFDA8E",candleLit:"#FFB443",ink:"#2A1B33",shade:"#5A2438",lit:"#FFE3A6",litOp:0.5},
+  lumina:{body:"#EEE7D5",band:"#C9BC9B",stem:"#76703C",fibre:"#54502A",cut:"#A29C66",vine:"#646130",carve:"#4A3A26",eyeRing:"#F4D694",rindLit:"#FFE29C",candleLit:"#FFC45A",ink:"#2A1B33",shade:"#4A3A5C",lit:"#FFF6DE",litOp:0.5},
+  cornShock:{stalk:"#C8A865",stalkLt:"#D8BD7C",stalkMd:"#BC9C5C",stalkDk:"#846A42",joint:"#A88B52",leaf:"#CCA660",leafBack:"#AD8A4E",rib:"#D6B878",tassel:"#C9A060",band:"#5C3E22",twist:"#8C6A40",ink:"#2A1B33",shade:"#4A3450",lit:"#FFEBB8",litOp:0.5},
+  bale:{straw:"#CFAA5A",flake:"#D3AE5E",top:"#EFD896",end:"#E0C070",endLt:"#EFD999",endDk:"#CFAF62",seam:"#C2A052",stub:"#BA9A4E",stubLt:"#E4C880",band:"#A47C48",ink:"#2A1B33",shade:"#5A4450",lit:"#FFF0C4",litOp:0.5},
 };
 
 /* ── the scene: arc, sun / moon, marsh horizon ──────── */
@@ -2162,6 +2409,119 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     const lean=clamp(.45/Math.tan(Math.max(4,sunAltDeg)*Math.PI/180),.3,2.4)*(x>sunXY[0]?1:-1);
     return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) matrix(1 0 ${(-lean).toFixed(2)} -.13 0 0) scale(${(flip*s).toFixed(2)} ${s.toFixed(2)})" fill="${shadeC}" opacity="${(.22*shadowK).toFixed(2)}">${parts.map(p=>`<path d="${p.d}"/>`).join("")}</g>`};
   const flatParts=L=>L.flatMap(l=>l.parts?l.parts.filter(p=>!INK_INNER.has(p.role)&&!p.soft):flatParts(l.layers));
+  /* ── the holiday ──────────────────────────────────────────────────────────────────
+     Decorations are things set out in the scene, painted like the dock and the barn and lit by
+     the same sky. They say nothing about the weather, and they move only where the air moves
+     them: a carved pumpkin's candle is lit when the barn lamps are, is not lit in the rain, and
+     burns steady in a calm and gutters in a blow. */
+  /* the date is read the way the boat season reads it, off the place's own calendar, because the
+     shifted wall clock runs an hour slow in the small hours of the night the clocks go back, which
+     in 2026 is Halloween night into November 1 */
+  const today=locToday(),hol=holidayOn(today),halloween=hol?.id==="halloween";
+  const carved=halloween&&mdOf(today)>=hol.carved;
+  const candles=carved&&sunAltDeg< -.83&&!wet&&!storm;
+  const decorPal=(p,d,lit=false)=>{const o={};for(const[k,v]of Object.entries(p))o[k]=typeof v==="string"&&v[0]==="#"?air(v,d):v;
+    if(p.carve)o.carve=lit?p.candleLit:air(p.carve,d);
+    if(lit&&p.rindLit)o.eyeRing=p.rindLit;
+    return Object.assign(o,{ink:inkAir(d),shade:shadeC,lit:litC,litOp:(p.litOp??.5)*litK,shadeOp:.34*shadeK})};
+  const decorAt=(parts,p,x,y,s,d=.04)=>inkAt(x,y,s,1,inkUnit(parts,decorPal(p,d),{s,light:lightAt(x,y-10*s)}));
+  /* One pumpkin at a place. A lit one carries its candle, and everything the candle does is one
+     group whose opacity is the flicker, so no part of the light can disagree with the rest.
+       `lights` are the props right beside it, as parts at a place. The ground (the dock's
+         planks, the doorstep) takes a flat pool. A thing that stands up (`face`: the bale's
+         end, the white pumpkin, the corn shock) takes a round falloff over its silhouette, or
+         only the faces named in `roles`, none where a nearer prop throws its shadow (`shade`),
+         and a warm edge on the side toward the flame (`edge`). A mask cuts the pumpkin itself
+         out of all of it.
+       `refl` is its light on the water: warm glints hung under the lantern, cut where a piling
+         stands in front of them.
+       The glow sits round the face, and the face is in the flame's colour.
+     The candle stands low in the pumpkin, behind the grin, and all of it is measured from there. */
+  const silOf=ps=>ps.filter(p=>!INK_INNER.has(p.role)&&!p.soft&&!p.noSil);
+  const pumpkinAt=(x,y,s,{w=10,h=7,carved:cv=false,seed=1,white=false,lights=[],refl=null}={})=>{
+    const parts=propPumpkin(w,h,{carved:cv,seed}),lit=cv&&candles;
+    const paint=inkAt(x,y,s,1,inkUnit(parts,decorPal(white?INK.lumina:INK.pumpkin,.04,lit),{s,light:lightAt(x,y-h*s)}));
+    let flame="";
+    if(lit){
+      const id=`cn${++inkUid}`,cy=y-h*s*.3,W0=w*s;
+      /* how hard the candle works: nothing below 3 mph of gust, all it has by 27 */
+      const candleK=clamp((gust-3)/24,0,1),flick=!PRM&&candleK>.04;
+      const st=flick?` style="--c0:${(1-.55*candleK).toFixed(2)};--c2:${(1-.4*candleK).toFixed(2)};--c1:${(1-.25*candleK).toFixed(2)};animation-duration:${(3.4-2.2*candleK).toFixed(2)}s;animation-delay:-${(seed*.61%1*2).toFixed(2)}s"`:"";
+      let spill="";
+      if(lights.length){
+        const R=W0*1.75,bx=`x="${f1(x-R)}" y="${f1(cy-R)}" width="${f1(2*R)}" height="${f1(2*R)}"`;
+        const at=(L,ps)=>ps.map(p=>`<path transform="translate(${f1(L.x)} ${f1(L.y)}) scale(${L.s})" d="${p.d}"/>`).join("");
+        /* what the light falls on: the prop's silhouette, or only the faces named in `roles` */
+        const recv=L=>{const f=L.roles?L.parts.filter(p=>L.roles.includes(p.role)):[];return f.length?f:silOf(L.parts)};
+        const self=inkAt(x,y,s,1,`<g fill="#000" stroke="#000" stroke-width="${f1(1.6/s)}" stroke-linejoin="round">${silOf(parts).map(p=>`<path d="${p.d}"/>`).join("")}</g>`);
+        /* a top edge the light rakes across (a plank's) takes a brighter line, falling off
+           either side of the lantern */
+        const rimsOf=L=>(L.rims||[]).map(([x0,x1,ry,th])=>`<rect x="${f1(Math.max(x0,x-R))}" y="${f1(ry)}" width="${f1(Math.min(x1,x+R)-Math.max(x0,x-R))}" height="${th}" fill="url(#${id}r)"/>`).join("");
+        const ground=lights.filter(L=>!L.face),up=lights.filter(L=>L.face);
+        /* on what stands up beside it the light carries further than on the ground it rakes */
+        const RU=R*1.3,ubx=`x="${f1(x-RU)}" y="${f1(cy-RU)}" width="${f1(2*RU)}" height="${f1(2*RU)}"`;
+        /* the ground's pool goes under what stands on it */
+        const standing=up.map(L=>at(L,silOf(L.parts))).join("");
+        spill=`<mask id="${id}m" maskUnits="userSpaceOnUse" ${bx}><rect ${bx} fill="#fff"/>${self}${standing?`<g fill="#000">${standing}</g>`:""}</mask>`
+          +(lights.some(L=>L.rims)?`<linearGradient id="${id}r" gradientUnits="userSpaceOnUse" x1="${f1(x-R)}" y1="0" x2="${f1(x+R)}" y2="0"><stop offset="0" stop-color="#FFC45C" stop-opacity="0"/><stop offset=".5" stop-color="#FFD886" stop-opacity=".95"/><stop offset="1" stop-color="#FFC45C" stop-opacity="0"/></linearGradient>`:"");
+        if(ground.length)spill+=`<clipPath id="${id}c">${ground.map(L=>at(L,recv(L))).join("")}</clipPath>`
+          +`<g clip-path="url(#${id}c)" mask="url(#${id}m)"><ellipse cx="${f1(x)}" cy="${f1(cy)}" rx="${f1(R)}" ry="${f1(R*.7)}" fill="url(#candlepool)"/>${ground.map(rimsOf).join("")}</g>`;
+        up.forEach((L,i)=>{
+          /* which way the light travels to it: from the candle to the middle of what it lights */
+          const[bx0,by0,bw,bh]=pathBox(recv(L).map(p=>p.d)),mx=L.x+(bx0+bw/2)*L.s,my=L.y+(by0+bh/2)*L.s;
+          const dl=Math.hypot(mx-x,my-cy)||1,ux=(mx-x)/dl,uy=(my-cy)/dl,k=L.k??1;
+          /* what is nearer covers it, and throws its shadow on it away from the flame, a little
+             up because the candle stands low */
+          const near=L.shade?L.shade.map(O=>at(O,silOf(O.parts))).join(""):"";
+          const cut=self+(near?`<g fill="#000">${near}</g><g fill="#000" transform="translate(${f1(ux*1.3)} ${f1(uy*1.3-.9)})">${near}</g>`:"");
+          spill+=`<mask id="${id}m${i}" maskUnits="userSpaceOnUse" ${ubx}><rect ${ubx} fill="#fff"/>${cut}</mask><clipPath id="${id}c${i}">${at(L,recv(L))}</clipPath>`
+            +`<g clip-path="url(#${id}c${i})" mask="url(#${id}m${i})"><circle cx="${f1(x)}" cy="${f1(cy)}" r="${f1(RU)}" fill="url(#candlewash)" opacity="${k}"/>${rimsOf(L)}</g>`;
+          /* the warm edge: its own silhouette, less itself pushed away from the flame */
+          if(L.edge)spill+=`<mask id="${id}e${i}" maskUnits="userSpaceOnUse" ${ubx}><rect ${ubx} fill="#fff"/>${cut}<g fill="#000" transform="translate(${f1(ux*L.edge)} ${f1(uy*L.edge)})">${at(L,silOf(L.parts))}</g></mask>`
+            +`<g clip-path="url(#${id}c${i})" mask="url(#${id}e${i})"><circle cx="${f1(x)}" cy="${f1(cy)}" r="${f1(RU)}" fill="url(#candlerim)" opacity="${k}"/></g>`;
+        });
+      }
+      let water="";
+      if(refl){const r=mulberry(seed*131+7),span=refl.bottom-refl.top;
+        /* Broken water. The glints lie at uneven depths, each its own length and weight, and a
+           long one is now and then broken in two. Further down is nearer the bank you stand on,
+           so they thin out, dim and deepen in colour. Even the first sits well under the lit
+           planks and the face. */
+        for(let t=r()*.05;t<1;t+=.12+r()*.2){
+          /* every row makes the same draws in the same order, so a change in the wind widens and
+             spreads the glints and never moves them */
+          const q=Array.from({length:10},r);
+          const hw=W0*(.62-.42*t)*(.62+q[0]*.56)*(1+chopK*.8),cx=x+(q[1]-.5)*(2.6+chopK*3);
+          const yy=refl.top+span*t,th=(1.2-.45*t)*(.82+q[2]*.3),ok=(.52-.28*t)*(.92+q[3]*.16);
+          let seg=[[cx-hw,cx+hw]];
+          if(hw>2.4&&q[4]<.5){const c=cx+(q[5]-.5)*hw,g=.5+q[6]*.7;seg=[[cx-hw,c-g],[c+g,cx+hw]]}
+          /* where the piling stands in front of one, what shows either side is a glint of its own */
+          for(const[g0,g1,gb]of refl.gaps||[])if(yy<gb)seg=seg.flatMap(([a,b])=>b<=g0||a>=g1?[[a,b]]:[[a,Math.min(b,g0)],[Math.max(a,g1),b]]);
+          /* each glint a flat brush stroke, fullest off its middle. Dim gold over blue water goes
+             green, so they are the flame's orange rather than its gold */
+          water+=seg.filter(([a,b])=>b-a>1.2).map(([a,b],j)=>`<path d="${taper([[a+th*.2,yy,th*.4],[a+(b-a)*(.3+q[7+j%3]*.4),yy,th],[b-th*.2,yy,th*.4]],{per:4})}" fill="${mix("#FFA444","#FF7A30",t)}" opacity="${ok.toFixed(2)}"/>`).join("");
+        }
+      }
+      /* fog holds the light and spreads it, so a lantern in fog wears a wider halo */
+      const haloK=fog?1.45:1;
+      const halo=`<ellipse cx="${f1(x)}" cy="${f1(cy-h*s*.1)}" rx="${f1(W0*2.2*haloK)}" ry="${f1(h*s*1.9*haloK)}" fill="url(#candleglow)"/>`;
+      /* a thin shell glows round its openings: the body is warmed from the candle out, and its
+         rim, ribs and outline are left to say it is round */
+      const shell=(parts.filter(p=>p.role==="body")[0]||silOf(parts)[0])?.d||"";
+      const face=parts.filter(p=>p.role==="carve").map(p=>`<path d="${p.d}"/>`).join("");
+      const faceG=`<radialGradient id="${id}f" gradientUnits="userSpaceOnUse" cx="0" cy="${f1(-h*.3)}" r="${f1(w*.5)}"><stop offset="0" stop-color="#FFF7D8"/><stop offset=".42" stop-color="#FFDA7A"/><stop offset="1" stop-color="#FFA23A"/></radialGradient>`
+        +`<radialGradient id="${id}g" gradientUnits="userSpaceOnUse" cx="0" cy="${f1(-h*.32)}" r="${f1(w*.6)}"><stop offset="0" stop-color="#FFB24A" stop-opacity=".6"/><stop offset=".55" stop-color="#FF9535" stop-opacity=".26"/><stop offset="1" stop-color="#FF8A2E" stop-opacity="0"/></radialGradient>`;
+      flame=`<g class="candle${flick?" flicker":""}"${st}>${spill}${water}${halo}${inkAt(x,y,s,1,`${faceG}<path d="${shell}" fill="url(#${id}g)"/><g fill="url(#${id}f)">${face}</g>`)}</g>`;
+    }
+    return `<g class="decor" data-decor="${cv?"jack-o-lantern":white?"white-pumpkin":"pumpkin"}">${paint}${flame}</g>`;
+  };
+  /* the glow falls off the way light does, fast and then a long way: a core about the size of
+     the pumpkin and a faint warmth in the air round it, never an even disc */
+  const candleDefs=`<radialGradient id="candleglow"><stop offset="0" stop-color="#FFB443" stop-opacity=".34"/><stop offset=".2" stop-color="#FFA83E" stop-opacity=".2"/><stop offset=".45" stop-color="#FF9E38" stop-opacity=".08"/><stop offset=".75" stop-color="#FF9A33" stop-opacity=".025"/><stop offset="1" stop-color="#FF9A33" stop-opacity="0"/></radialGradient>`
+    +`<radialGradient id="candlepool"><stop offset="0" stop-color="#FFB24A" stop-opacity=".62"/><stop offset=".4" stop-color="#FFA23E" stop-opacity=".3"/><stop offset=".75" stop-color="#FF9A36" stop-opacity=".08"/><stop offset="1" stop-color="#FF9A36" stop-opacity="0"/></radialGradient>`
+    /* the light on what stands up beside it, and the brighter edge on its side toward the flame */
+    +`<radialGradient id="candlewash"><stop offset="0" stop-color="#FFB84E" stop-opacity=".7"/><stop offset=".35" stop-color="#FFAA42" stop-opacity=".46"/><stop offset=".7" stop-color="#FF9E3A" stop-opacity=".16"/><stop offset="1" stop-color="#FF9A36" stop-opacity="0"/></radialGradient>`
+    +`<radialGradient id="candlerim"><stop offset="0" stop-color="#FFD886" stop-opacity="1"/><stop offset=".45" stop-color="#FFC45C" stop-opacity=".75"/><stop offset=".8" stop-color="#FFB24A" stop-opacity=".25"/><stop offset="1" stop-color="#FFB24A" stop-opacity="0"/></radialGradient>`;
 
   /* how hard the water is working: 0 glassy, 1 chop. Six knots is where a marsh stops
      looking like glass, twenty-five is where it is all texture */
@@ -2571,19 +2931,54 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       if(i){const [qx,qy]=fpts[i-1];
         if(px_-qx<48)fr+=`M ${qx.toFixed(1)} ${(qy-7.2).toFixed(1)} L ${px_.toFixed(1)} ${(py_-7.2).toFixed(1)} M ${qx.toFixed(1)} ${(qy-3.6).toFixed(1)} L ${px_.toFixed(1)} ${(py_-3.6).toFixed(1)} `}
     }
+    /* Halloween at the barn door, measured off the barn. A corn shock stands at the corner, a
+       straw bale at its foot with the small white pumpkin on it, clear of the window, and a big
+       pumpkin on the ground either side of the door, carved for the last week. They are not a
+       pair: the left one is bigger and a step nearer, the right one smaller and back under its
+       window. Each lights the doorstep, and the left one the end of the bale, the white pumpkin
+       and the shock above the bale's shadow */
+    const barnFoot=base+2.4,baleX=barnX-18.6,lanL=barnX-10.2,lanR=barnX+11.4;
+    let barnDecor="",keepClear=[];
+    if(halloween){
+      const doorstep={parts:[part(`M ${f1(barnX-34)} ${f1(base+.9)} L ${f1(barnX+30)} ${f1(base+.9)} L ${f1(barnX+30)} ${f1(barnFoot+12)} L ${f1(barnX-34)} ${f1(barnFoot+12)} Z`,"ground")],x:0,y:0,s:1};
+      const shock={parts:propCornShock(5),x:barnX-21.5,y:barnFoot,s:.74},bale={parts:propBale(),x:baleX,y:barnFoot,s:.92};
+      const whiteOne={parts:propPumpkin(6,4.4,{seed:9}),x:baleX-.7,y:barnFoot-5.4,s:.84};
+      const bigL={w:9.2,h:6.8,s:.9},bigR={w:8.6,h:7.4,s:.8};
+      /* the grass leaves the doorstep to them, from the shock's splayed foot to the right one's side */
+      const[sx0]=pathBox(silOf(shock.parts).map(p=>p.d));
+      keepClear=[[shock.x+sx0*shock.s-.4,lanR+bigR.w*bigR.s/2+.4]];
+      /* The bale stands against the shock, so the shock is in its shade just above it: a hard band,
+         the way the kit draws its own crescents, so the two read apart. By day it is a contact
+         shadow. When the lantern beside them is lit it is deeper and taller, the shadow of a light
+         that stands low. It fades under cloud the way the crescents do */
+      const silAt=(L,ox=0,oy=0)=>silOf(L.parts).map(p=>`<path transform="translate(${f1(L.x+ox)} ${f1(L.y+oy)}) scale(${L.s})" d="${p.d}"/>`).join("");
+      const lowK=candles?nightK:0,aoId=`ao${++inkUid}`,aoX=-.7-.5*lowK,aoY=-1.3-1.1*lowK;
+      const baleShade=`<clipPath id="${aoId}">${silAt(shock)}</clipPath><g clip-path="url(#${aoId})" fill="${shadeC}" opacity="${((.32+.22*lowK)*shadeK).toFixed(2)}">${silAt(bale,aoX,aoY)}${silAt(whiteOne,aoX*.7,aoY*.7)}</g>`;
+      barnDecor=`<g class="decor" data-decor="corn-shock">${decorAt(shock.parts,INK.cornShock,shock.x,shock.y,shock.s)}</g>`
+        +baleShade+`<g class="decor" data-decor="straw-bale">${decorAt(bale.parts,INK.bale,bale.x,bale.y,bale.s)}</g>`
+        +pumpkinAt(whiteOne.x,whiteOne.y,whiteOne.s,{w:6,h:4.4,seed:9,white:true})
+        +pumpkinAt(lanL,barnFoot+.8,bigL.s,{w:bigL.w,h:bigL.h,carved,seed:4,lights:[
+          {...whiteOne,face:true,edge:.9},
+          {...bale,face:true,roles:["end"]},
+          {...shock,face:true,edge:1,k:.85,shade:[bale,whiteOne]},doorstep]})
+        +pumpkinAt(lanR,barnFoot,bigR.s,{w:bigR.w,h:bigR.h,carved,seed:6,lights:[doorstep]});
+    }
     /* split rails: inked, then the weathered wood laid over the ink */
     const fence=`<path d="${fp}${fr}" stroke="${lineC}" stroke-width="2.1" fill="none" stroke-linecap="round" opacity=".85"/><path d="${fp}${fr}" stroke="${air("#B99A76",.04)}" stroke-width="1.05" fill="none" stroke-linecap="round"/>`;
 
     const blade=(bx,ht,lean)=>`M ${(bx-.7).toFixed(1)} ${base+1} Q ${(bx+lean*.3-.4).toFixed(1)} ${(base+1-ht*.6).toFixed(1)} ${(bx+lean).toFixed(1)} ${(base+1-ht).toFixed(1)} Q ${(bx+lean*.38+.5).toFixed(1)} ${(base+1-ht*.46).toFixed(1)} ${(bx+.7).toFixed(1)} ${base+1} Z `;
     const tufts=Array.from({length:BANDS},()=>"");
     for(let x=-6;x<W+10;){
-      const cnt=3+Math.floor(g()*4),x0=x;let t="";
+      const cnt=3+Math.floor(g()*4),x0=x;let t="",t0=1e9,t1=-1e9;
       for(let k=0;k<cnt;k++){let ht=5+g()*9,lean=(2+g()*5)*(g()<.5?-1:1);
         const yard=x>animalLeft-18&&x<animalRight+22;
         if(yard){ht*=.3;lean*=.3}                      /* a worn, legible barnyard */
+        t0=Math.min(t0,x+Math.min(0,lean)-.7);t1=Math.max(t1,x+Math.max(0,lean)+.7);
         if(x<pondL+6||x>pondR-6)t+=blade(x,ht,lean);   /* no grass in the water */
         x+=2.4+g()*3}
-      tufts[bandOf(x0)]+=t;
+      /* what is set out at the door stands a step nearer than the grass along the fence, so a tuft
+         that would cross it is left out whole. Every draw is still made, so no other grass moves */
+      if(!keepClear.some(([a,b])=>t1>a&&t0<b))tufts[bandOf(x0)]+=t;
       x+=22+g()*40;
     }
     /* gusts push the throw past what the steady wind alone would give */
@@ -2751,6 +3146,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
         <linearGradient id="cloudInk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${tone(mix("#FFFFFF",skyS[1],.25))}"/><stop offset=".6" stop-color="${tone(mix("#FFF4E6",skyS[2],.35))}"/><stop offset="1" stop-color="${mix(tone("#FFF4E6"),litC,.5*litK)}"/></linearGradient>
         <radialGradient id="bloom"><stop offset="0" stop-color="${litC}" stop-opacity=".55"/><stop offset=".5" stop-color="${litC}" stop-opacity=".16"/><stop offset="1" stop-color="${litC}" stop-opacity="0"/></radialGradient>
         <radialGradient id="lampglow"><stop offset="0" stop-color="#FFD27A" stop-opacity=".55"/><stop offset="1" stop-color="#FFD27A" stop-opacity="0"/></radialGradient>
+        ${candles?candleDefs:""}
         <radialGradient id="flyglow"><stop offset="0" stop-color="#F8F7B0" stop-opacity=".7"/><stop offset=".45" stop-color="#F8F7B0" stop-opacity=".18"/><stop offset="1" stop-color="#F8F7B0" stop-opacity="0"/></radialGradient>
         ${texOn?`<pattern id="paper" width="160" height="160" patternUnits="userSpaceOnUse"><image href="${paperTex()}" width="160" height="160"/></pattern>`:""}
         ${nearRain?`<linearGradient id="ridgerainfade" gradientUnits="userSpaceOnUse" x1="0" y1="${nrTop.toFixed(1)}" x2="0" y2="${nrLand.toFixed(1)}">
@@ -2773,7 +3169,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       ${pond}
       ${castShadow(propBarn(),barnX-21,base+.86,1.18,1)}
       ${barn}
-      ${fence}
+      ${fence}${barnDecor}
       ${cloudShadows(base-rTop*.85,rTop*.85+8)}
       ${sparkle}${glint}${pondFx}
       ${nearRain}
@@ -2886,6 +3282,17 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const dx=W*.8;
   const dock=propAt(propDock(),{wood:"#7A5A48",piling:"#5E4638"},dx,base-5,1,.04)
     +`<g fill="${lineC}" opacity=".16">${[dx-25,dx-6,dx+14].map((p,i)=>`<rect x="${(p-.6).toFixed(1)}" y="${(base+13.2+i*1.5-(i===1?1:0)).toFixed(1)}" width="1.2" height="${5+i}"/>`).join("")}</g>`;
+  /* Halloween on the dock: a pumpkin at each end, and for the last week the big one is carved.
+     Measured off the dock, not the frame. The middle is the cormorant's. Drying its wings on the
+     middle piling it reaches from 20 units left of the dock's centre to 9 right, so each pumpkin
+     stands at an end, clear of it */
+  /* The lit one lays its light on the planks round it and on the water under it. The glints
+     start below the bank's lip and thin out before the wavelets nearer the bank. The end piling
+     stands in front of them, so they are cut there and show either side of the post */
+  const deckY=base-6.1;
+  const dockLit={lights:[{parts:propDock(),x:dx,y:base-5,s:1,rims:[[dx-32,dx+22,base-6.4,.8],[dx-32,dx+22,base-1.6,.5]]}],refl:{top:base+4.2,bottom:base+11.6,gaps:[[dx+12.2,dx+15.8,base+15.4]]}};
+  const dockDecor=halloween?pumpkinAt(dx+15.8,deckY,1,{w:9.6,h:7.2,carved,seed:3,...dockLit})
+    +pumpkinAt(dx-26.8,deckY+.1,1,{w:6.6,h:4.9,seed:8}):"";
 
   /* great blue heron in the shallows (rigHeron). He stands in the channel with his legs in
      the water; at the bottom of the strike his bill tip lands 27 units ahead of his feet */
@@ -3043,6 +3450,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       <radialGradient id="bloom"><stop offset="0" stop-color="${litC}" stop-opacity=".55"/><stop offset=".5" stop-color="${litC}" stop-opacity=".16"/><stop offset="1" stop-color="${litC}" stop-opacity="0"/></radialGradient>
       <radialGradient id="flyglow"><stop offset="0" stop-color="#F8F7B0" stop-opacity=".7"/><stop offset=".45" stop-color="#F8F7B0" stop-opacity=".18"/><stop offset="1" stop-color="#F8F7B0" stop-opacity="0"/></radialGradient>
       <clipPath id="marshwater"><rect x="0" y="${GY+8}" width="${W}" height="${H-GY-8}"/></clipPath>
+      ${candles?candleDefs:""}
       ${tex?`<pattern id="paper" width="160" height="160" patternUnits="userSpaceOnUse"><image href="${paperTex()}" width="160" height="160"/></pattern>`:""}
     </defs>
     <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
@@ -3066,7 +3474,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     ${tufts.map((d,i)=>d?`<g${bandAt(i)}><path d="${d}" fill="${grassLine}" stroke="${grassLine}" stroke-width=".95" stroke-linejoin="round"/><path d="${d}" fill="${grassInk}"/></g>`:"").join("")}
     ${cloudShadows(base-26,34)}
     ${heat}
-    ${dock}
+    ${dock}${dockDecor}
     ${rake}
     ${marshResident}
     ${heron}

@@ -130,6 +130,50 @@ const CASES = [
       windAmp: 11, gustAmp: 20,
       hourlyCode: (i, hr) => (hr >= 17 && hr <= 21 ? 95 : hr >= 14 ? 80 : 3),
       popCurve: (i, hr) => (hr >= 14 && hr <= 21 ? 72 : 20), dailyPop: (p) => { p[0] = 80; p[1] = 55; } } },
+  // ── the holidays ───────────────────────────────────────────────────────
+  // `decor` is what has to be set out (and nothing else), `candles` how many are lit. Each one
+  // with decorations out also writes a close-up of them, because a pumpkin is seven pixels
+  // across on a phone and has to hold up at both sizes.
+  { name: "26-marsh-october-afternoon", loc: "mb", when: "2026-10-10T15:30:00", decor: ["pumpkin"], candles: 0,
+    note: "Halloween is up: two pumpkins on the dock, nothing carved yet, the oystercatcher on the rake",
+    o: { baseTemp: 71, nowTemp: 75, feels: 75, rh: 55, isDay: 1, code: 1, cloud: 18, nowWind: 9, nowDir: 40, nowGust: 15, nowUv: 3.4, uvMax: 5, windAmp: 6, gustAmp: 10,
+      sunrise: "07:13", sunset: "18:44", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "27-marsh-halloween-night", loc: "mb", when: "2026-10-31T20:40:00", decor: ["jack-o-lantern", "pumpkin"], candles: 1,
+    note: "Halloween night: the carved one lit, its light on the water, the candle guttering in a light breeze",
+    o: { baseTemp: 63, nowTemp: 61, feels: 61, rh: 80, isDay: 0, code: 0, cloud: 8, nowWind: 7, nowDir: 30, nowGust: 12, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
+      sunrise: "07:32", sunset: "18:18", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "28-marsh-halloween-cold-morning", loc: "mb", when: "2026-10-27T08:40:00", decor: ["jack-o-lantern", "pumpkin"], candles: 0,
+    note: "a cold snap in the carved week: the cormorant on the middle piling beside the pumpkins, and no candle by day",
+    o: { baseTemp: 50, nowTemp: 45, feels: 41, rh: 70, isDay: 1, code: 1, cloud: 22, nowWind: 12, nowDir: 350, nowGust: 20, nowUv: 1.2, uvMax: 4, windAmp: 8, gustAmp: 12,
+      sunrise: "07:28", sunset: "18:23", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "29-marsh-halloween-rain-night", loc: "mb", when: "2026-10-29T21:00:00", decor: ["jack-o-lantern", "pumpkin"], candles: 0,
+    note: "rain in the carved week: the pumpkins stay out and the candle is not lit",
+    o: { baseTemp: 64, nowTemp: 63, feels: 63, rh: 95, isDay: 0, code: 63, cloud: 96, nowWind: 11, nowDir: 60, nowGust: 19, nowUv: 0, uvMax: 3, windAmp: 8, gustAmp: 14,
+      sunrise: "07:30", sunset: "18:20", popCurve: () => 85, dailyPop: (p) => p.fill(85) } },
+  { name: "30-ridge-october-afternoon", loc: "sp", when: "2026-10-10T13:30:00", decor: ["corn-shock", "straw-bale", "pumpkin", "white-pumpkin"], candles: 0,
+    note: "Halloween at the barn door: corn shock, bale, pumpkins, the hens working the yard beside it",
+    o: { baseTemp: 55, nowTemp: 57, feels: 57, rh: 60, isDay: 1, code: 1, cloud: 20, nowWind: 7, nowDir: 280, nowGust: 13, nowUv: 3.1, uvMax: 4, windAmp: 6, gustAmp: 10,
+      sunrise: "07:25", sunset: "18:55", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "31-ridge-halloween-night", loc: "sp", when: "2026-10-31T20:15:00", decor: ["corn-shock", "straw-bale", "jack-o-lantern", "white-pumpkin"], candles: 2,
+    note: "Halloween night at the farm: both carved pumpkins lit beside the barn lamps, the fox out and the owl up",
+    o: { baseTemp: 48, nowTemp: 44, feels: 39, rh: 72, isDay: 0, code: 1, cloud: 15, nowWind: 10, nowDir: 300, nowGust: 18, nowUv: 0, uvMax: 3, windAmp: 7, gustAmp: 12,
+      sunrise: "07:47", sunset: "18:27", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "33-ridge-october-night", loc: "sp", when: "2026-10-12T21:00:00", decor: ["corn-shock", "straw-bale", "pumpkin", "white-pumpkin"], candles: 0,
+    note: "an October night before the carving: the pumpkins are out and dark, and nothing at the door gives off light",
+    o: { baseTemp: 52, nowTemp: 49, feels: 47, rh: 70, isDay: 0, code: 1, cloud: 20, nowWind: 6, nowDir: 280, nowGust: 11, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 9,
+      sunrise: "07:27", sunset: "18:52", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "34-ridge-halloween-rain-night", loc: "sp", when: "2026-10-29T21:00:00", decor: ["corn-shock", "straw-bale", "jack-o-lantern", "white-pumpkin"], candles: 0,
+    note: "rain in the carved week at the farm: nothing lit, and the near rain falls over the door the way it falls over the barn",
+    o: { baseTemp: 52, nowTemp: 50, feels: 47, rh: 95, isDay: 0, code: 63, cloud: 96, nowWind: 11, nowDir: 230, nowGust: 20, nowUv: 0, uvMax: 3, windAmp: 8, gustAmp: 14,
+      sunrise: "07:45", sunset: "18:30", popCurve: () => 85, dailyPop: (p) => p.fill(85) } },
+  { name: "32-ridge-november-morning", loc: "sp", when: "2026-11-01T09:30:00", decor: [], candles: 0,
+    note: "the morning after: everything Halloween put out has come down",
+    o: { baseTemp: 50, nowTemp: 47, feels: 45, rh: 66, isDay: 1, code: 2, cloud: 35, nowWind: 6, nowDir: 250, nowGust: 11, nowUv: 1.8, uvMax: 3, windAmp: 5, gustAmp: 9,
+      sunrise: "06:48", sunset: "17:26", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "35-marsh-november-small-hours", loc: "mb", when: "2026-11-01T00:30:00", decor: [], candles: 0,
+    note: "half past midnight on November 1 2026, the night the clocks go back: Halloween is over, though the shifted wall clock still reads October 31",
+    o: { baseTemp: 60, nowTemp: 58, feels: 58, rh: 82, isDay: 0, code: 0, cloud: 10, nowWind: 6, nowDir: 20, nowGust: 10, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
+      sunrise: "06:33", sunset: "17:17", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
   { name: "23-ridge-night-downpour", loc: "sp", when: "2026-05-12T22:40:00",
     note: "the hardest test of the ridge rain: dark theme, code 82, drops over a black fold",
     o: { baseTemp: 62, nowTemp: 61, feels: 61, rh: 96, isDay: 0, code: 82, cloud: 97, nowWind: 15, nowDir: 210, nowGust: 26, nowUv: 0, uvMax: 5,
@@ -170,9 +214,9 @@ async function pixelDelta(page, a, b) {
 }
 
 /** Open a scenario, wait for it to settle, and hand back the page. */
-async function open(cs, { width, height = 932, reducedMotion }) {
+async function open(cs, { width, height = 932, reducedMotion, dpr = 2 }) {
   const ctx = await browser.newContext({
-    viewport: { width, height }, deviceScaleFactor: 2,
+    viewport: { width, height }, deviceScaleFactor: dpr,
     timezoneId: "America/New_York", reducedMotion,
   });
   const page = await ctx.newPage();
@@ -217,6 +261,39 @@ for (const cs of cases) {
       return out;
     });
     if(clipped.length)problems.push(`${cs.name}: wildlife clipped at ${PHONE_WIDTH}px: ${clipped.join(", ")}`);
+
+    // ── the holiday: what is set out, whether it is lit, and whether it is in anyone's way ──
+    // Decorations go up and come down on the calendar, so a scene outside the window must have
+    // none. Inside it they are measured by what they paint (the candle's glow is light, not a
+    // thing), and nothing grounded may stand in them: they are placed off the dock and the barn
+    // for exactly that reason.
+    const decor = await page.evaluate(() => {
+      const svg = document.getElementById("sceneSvg"), frame = svg.getBoundingClientRect();
+      const items = [...svg.querySelectorAll("[data-decor]")];
+      const painted = (el) => el.firstElementChild.getBoundingClientRect();
+      const out = { kinds: [...new Set(items.map((el) => el.dataset.decor))].sort(), candles: svg.querySelectorAll(".candle").length,
+        flicker: svg.querySelectorAll(".candle.flicker").length, clipped: [], hits: [] };
+      for (const el of items) {
+        const b = painted(el);
+        if (b.left < frame.left - 2 || b.right > frame.right + 2 || b.top < frame.top - 2 || b.bottom > frame.bottom + 2) out.clipped.push(el.dataset.decor);
+        for (const a of svg.querySelectorAll("[data-species]")) {
+          if (["gull", "hawk"].includes(a.dataset.species) || a.classList.contains("ff")) continue;
+          const A = a.getBoundingClientRect();
+          const overlap = Math.max(0, Math.min(A.right, b.right) - Math.max(A.left, b.left)) * Math.max(0, Math.min(A.bottom, b.bottom) - Math.max(A.top, b.top));
+          if (overlap > 2) out.hits.push(`${el.dataset.decor} overlaps ${a.dataset.species} by ${Math.round(overlap)} px²`);
+        }
+      }
+      return out;
+    });
+    if (decor.kinds.length || cs.decor) {
+      console.log(`    decor: ${decor.kinds.join(", ") || "none"}; ${decor.candles} lit${decor.flicker ? `, ${decor.flicker} guttering` : ""}`
+        + `${decor.hits.length ? "; !! " + decor.hits.join("; ") : ""}`);
+      const want = [...(cs.decor || [])].sort();
+      if (want.join() !== decor.kinds.join()) problems.push(`${cs.name}: decorations are [${decor.kinds.join(", ")}], expected [${want.join(", ")}]`);
+      if ((cs.candles ?? 0) !== decor.candles) problems.push(`${cs.name}: ${decor.candles} candles lit, expected ${cs.candles ?? 0}`);
+      if (decor.clipped.length) problems.push(`${cs.name}: decorations clipped at ${PHONE_WIDTH}px: ${decor.clipped.join(", ")}`);
+      for (const h of decor.hits) problems.push(`${cs.name}: ${h}`);
+    }
 
     // The count that matters for battery is what is still running. One-shot entrances
     // (rise, wipe, grow) finish in under a second but linger in getAnimations() because
@@ -396,6 +473,24 @@ for (const cs of cases) {
     try { await page.locator(".sky").screenshot({ path: path.join(OUT, `${cs.name}-sky-760.png`) }); } catch {}
     if (errs.length) problems.push(`${cs.name} 760: ${errs.join(" | ")}`);
     await ctx.close();
+  }
+
+  // ── the decorations close up, and at the narrowest phone ─────────────────
+  if (cs.decor?.length) {
+    for (const width of [320, PHONE_WIDTH]) {
+      const { ctx, page, errs } = await open(cs, { width, dpr: 5 });
+      const box = await page.evaluate(() => {
+        const bs = [...document.querySelectorAll("#sceneSvg [data-decor]")].map((el) => el.getBoundingClientRect());
+        if (!bs.length) return null;
+        const x0 = Math.min(...bs.map((b) => b.left)), y0 = Math.min(...bs.map((b) => b.top));
+        const x1 = Math.max(...bs.map((b) => b.right)), y1 = Math.max(...bs.map((b) => b.bottom));
+        return { x: x0 - 26, y: y0 - 18, width: x1 - x0 + 52, height: y1 - y0 + 30 };
+      });
+      if (box) await page.screenshot({ path: path.join(OUT, `${cs.name}-decor-${width}.png`), clip: box });
+      if (width === 320) try { await page.locator(".scene").screenshot({ path: path.join(OUT, `${cs.name}-scene-320.png`) }); } catch {}
+      if (errs.length) problems.push(`${cs.name} decor ${width}: ${errs.join(" | ")}`);
+      await ctx.close();
+    }
   }
 
   // ── reduced motion: nothing may move, at all ──────────────────────────

@@ -11,6 +11,10 @@
  * exactly that code, so what you see here is what the scene draws, lit by a plain day light.
  * Change a shape by looking at it here, at close range and at phone size, not by nudging
  * numbers and hoping. Writes tools/shots/rig-<name>.png.
+ *
+ * The holidays' props are drawn with the same kit and can be looked at the same way:
+ *
+ *   node tools/rig.mjs pumpkin | lantern | lantern-lit | lumina | cornshock | bale
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -23,24 +27,37 @@ const to = html.indexOf("/* ── the scene: arc, sun / moon");
 if (from < 0 || to < 0) { console.error("could not find the kit and cast sections in index.html"); process.exit(1); }
 const [name, ...rest] = process.argv.slice(2);
 if (!name) { console.error("usage: node tools/rig.mjs <deer|heron|raccoon|oystercatcher|...> [\".class=transform\" ...] [--scale n]"); process.exit(1); }
-const scaleArg = rest.indexOf("--scale"), big = scaleArg >= 0 ? +rest[scaleArg + 1] : 5;
+const scaleArg = rest.indexOf("--scale"), big = scaleArg >= 0 ? +rest[scaleArg + 1] : /^(pumpkin|lantern|lumina|cornshock|bale)/i.test(name) ? 14 : 5;
 const poses = rest.filter((a, i) => a.includes("=") && (scaleArg < 0 || i !== scaleArg + 1));
 
 const src = html.slice(from, to);
 const mulberry = (a) => () => { a |= 0; a = a + 0x6d2b79f5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 const cast = new Function("mulberry", `${src}; return {inkRig, inkAt, INK, rigs: {${
-  [...src.matchAll(/^const (rig\w+)=/gm)].map((m) => m[1]).join(",")}}};`)(mulberry);
-const key = Object.keys(cast.rigs).find((k) => k.toLowerCase() === "rig" + name.toLowerCase() || k.toLowerCase().startsWith("rig" + name.toLowerCase().slice(0, 4)));
-const palKey = Object.keys(cast.INK).find((k) => k.toLowerCase().startsWith(name.toLowerCase().slice(0, 4)));
-if (!key || !palKey) { console.error(`no rig for "${name}". Rigs: ${Object.keys(cast.rigs).join(", ")}`); process.exit(1); }
+  [...src.matchAll(/^const (rig\w+)=/gm)].map((m) => m[1]).join(",")}}, props: {${
+  [...src.matchAll(/^const (prop\w+)=/gm)].map((m) => m[1]).join(",")}}};`)(mulberry);
+/* a prop is a list of parts rather than a rig, so it is wrapped as a rig of one layer */
+const PROPS = {
+  pumpkin: ["pumpkin", (c) => c.propPumpkin(10, 7, { seed: 3 })],
+  lantern: ["pumpkin", (c) => c.propPumpkin(10, 7, { carved: true, seed: 3 })],
+  "lantern-lit": ["pumpkin", (c) => c.propPumpkin(10, 7, { carved: true, seed: 3 }), { carve: "candleLit", eyeRing: "rindLit" }],
+  lumina: ["lumina", (c) => c.propPumpkin(6, 4.4, { seed: 9 })],
+  cornshock: ["cornShock", (c) => c.propCornShock(5)],
+  bale: ["bale", (c) => c.propBale()],
+};
+const prop = PROPS[name.toLowerCase()];
+const key = prop ? name : Object.keys(cast.rigs).find((k) => k.toLowerCase() === "rig" + name.toLowerCase() || k.toLowerCase().startsWith("rig" + name.toLowerCase().slice(0, 4)));
+const palKey = prop ? prop[0] : Object.keys(cast.INK).find((k) => k.toLowerCase().startsWith(name.toLowerCase().slice(0, 4)));
+if (!key || !palKey) { console.error(`no rig for "${name}". Rigs: ${Object.keys(cast.rigs).join(", ")}; props: ${Object.keys(PROPS).join(", ")}`); process.exit(1); }
 const pal = { ...cast.INK[palKey], ink: "#2A2130", shade: "#3A2350", lit: "#FFE6B0" };
-const rig = () => cast.rigs[key]((p) => "");
+for (const [role, from] of Object.entries(prop?.[2] || {})) pal[role] = pal[from];
+const rig = () => prop ? [{ parts: prop[1](cast.props) }] : cast.rigs[key]((p) => "");
 const draw = (s) => cast.inkAt(0, 0, s, 1, cast.inkRig(rig(), pal, { s, light: [1, -.5] }));
 const css = `svg g[class]{transform-box:view-box;transform-origin:0 0}` +
   poses.map((p) => { const [sel, t] = p.split("="); return `.pose ${sel}{transform:${t}}`; }).join("");
 const fig = (inner, w, h, ox, oy, bg, label) => `<figure><svg width="${w}" height="${h}" viewBox="${-ox} ${-oy} ${w} ${h}" style="background:${bg}">${inner}</svg><figcaption>${label}</figcaption></figure>`;
 const page = `<!doctype html><meta charset="utf-8"><style>body{margin:0;padding:12px;background:#2a2a2a;color:#ddd;font:12px monospace;display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}figure{margin:0}${css}</style>
-${fig(`<g class="pose">${draw(big)}</g>`, 100 * big, 96 * big, 50 * big, 84 * big, "#E8DCC4", `${key} ×${big}${poses.length ? " " + poses.join(" ") : ""}`)}
+${prop ? fig(`<g class="pose">${draw(big)}</g>`, 40 * big, 34 * big, 20 * big, 29 * big, "#E8DCC4", `${key} ×${big}`)
+  : fig(`<g class="pose">${draw(big)}</g>`, 100 * big, 96 * big, 50 * big, 84 * big, "#E8DCC4", `${key} ×${big}${poses.length ? " " + poses.join(" ") : ""}`)}
 ${fig(`<rect x="-200" y="0" width="400" height="30" fill="#6d8b4a"/><g class="pose">${draw(1)}</g>`, 160, 100, 80, 80, "linear-gradient(#A9CADB,#E6E2CE)", "phone scale ×1")}`;
 const out = path.join(HERE, "shots");
 mkdirSync(out, { recursive: true });
@@ -49,7 +66,7 @@ writeFileSync(path.join(out, `rig-${name}.html`), page);
 let chromium;
 try { ({ chromium } = await import("playwright")); } catch { console.error("playwright is not installed.\n  npm i playwright && npx playwright install chromium"); process.exit(1); }
 const browser = await chromium.launch(process.env.PORCH_CHROME_PATH ? { executablePath: process.env.PORCH_CHROME_PATH } : {});
-const pg = await browser.newPage({ viewport: { width: 100 * big + 220, height: 96 * big + 60 }, deviceScaleFactor: 2 });
+const pg = await browser.newPage({ viewport: { width: (prop ? 40 : 100) * big + 220, height: (prop ? 34 : 96) * big + 60 }, deviceScaleFactor: 2 });
 await pg.setContent(page);
 await pg.screenshot({ path: path.join(out, `rig-${name}.png`), fullPage: true });
 await browser.close();

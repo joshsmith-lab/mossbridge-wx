@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v74/);
+  assert.match(worker, /mbwx-shell-v75/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -902,6 +902,153 @@ test("Denver is a parked travel scene: kept as the template, out of the rotation
   assert.match(html, /class="city-beacon"/);
   assert.match(html, /sceneLabel:"Sun and moon over Denver and the Front Range"/);
   assert.match(html, /cacheKey=id=>"mbwx-"\+id/);
+});
+
+test("the scenes dress for the holidays and take it all down when they pass", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const lift = (re) => { const m = html.match(re); assert.ok(m, `${re} should be extractable`); return m[0]; };
+  const ctx = vm.createContext({});
+  vm.runInContext([
+    lift(/const mdOf=[^\n]*\nconst inSeason=[^\n]*/),
+    lift(/const HOLIDAYS=[^\n]*\nconst holidayOn=[^\n]*/),
+    "globalThis.holidayOn=holidayOn;",
+  ].join("\n"), ctx);
+  // a window is month-days on the place's own wall clock, so it is read off local fields
+  const on = (s) => ctx.holidayOn(new Date(s))?.id ?? null;
+  assert.equal(on("2026-09-30T23:59"), null);
+  assert.equal(on("2026-10-01T00:00"), "halloween");
+  assert.equal(on("2026-10-31T23:59"), "halloween");
+  // they come down the morning after
+  assert.equal(on("2026-11-01T00:00"), null);
+  assert.equal(on("2027-10-15T12:00"), "halloween");
+  // the pumpkins go out plain and are carved for the last week
+  assert.equal(ctx.holidayOn(new Date("2026-10-24T09:00")).carved, "10-24");
+  // the gate reads the place's own date string, as the boat season does, never the shifted wall
+  // clock, which runs an hour slow in the small hours of November 1 2026 when the clocks go back
+  assert.match(html, /const today=locToday\(\),hol=holidayOn\(today\),halloween=hol\?\.id==="halloween";/);
+  assert.match(html, /const carved=halloween&&mdOf\(today\)>=hol\.carved/);
+  assert.equal(ctx.holidayOn("2026-10-31")?.id, "halloween");
+  assert.equal(ctx.holidayOn("2026-11-01"), null);
+  // the candle is lit with the barn lamps, and not in the rain
+  assert.match(html, /const candles=carved&&sunAltDeg< -\.83&&!wet&&!storm/);
+  // it gutters as hard as the gusts say, and in a calm or under reduced motion not at all
+  assert.match(html, /const candleK=clamp\(\(gust-3\)\/24,0,1\),flick=!PRM&&candleK>\.04/);
+  assert.match(html, /#sceneSvg \.candle\.flicker\{animation:candle/);
+  assert.match(html, /@keyframes candle\{0%,100%\{opacity:1\}/);
+  // its two deep ducks in a cycle are not the same depth
+  assert.match(html, /31%\{opacity:var\(--c0,\.8\)\}[^\n]*74%\{opacity:var\(--c2,\.85\)\}/);
+  assert.match(html, /--c0:\$\{\(1-\.55\*candleK\)[^\n]*--c2:\$\{\(1-\.4\*candleK\)[^\n]*--c1:\$\{\(1-\.25\*candleK\)/);
+  // everything the candle lights is in that one flickering group: the spill on what is beside
+  // it, its light on the water, the glow and the face
+  assert.match(html, /<g class="candle\$\{flick\?" flicker":""\}"\$\{st\}>\$\{spill\}\$\{water\}\$\{halo\}/);
+  // the spill never paints over the pumpkin, and the water column is cut where the piling stands
+  assert.match(html, /<g clip-path="url\(#\$\{id\}c\)" mask="url\(#\$\{id\}m\)">/);
+  assert.match(html, /gaps:\[\[dx\+12\.2,dx\+15\.8,base\+15\.4\]\]/);
+  // and it thins out before the wavelets nearer the bank, at glints of uneven depth and length
+  assert.match(html, /refl:\{top:base\+4\.2,bottom:base\+11\.6,/);
+  assert.match(html, /for\(let t=r\(\)\*\.05;t<1;t\+=\.12\+r\(\)\*\.2\)\{/);
+  // at the barn the big ones flank the door on the ground, so neither hides a lit window. They
+  // are not a pair: the left one is bigger and a step nearer, the right one smaller and back
+  assert.match(html, /lanL=barnX-10\.2,lanR=barnX\+11\.4/);
+  assert.match(html, /const bigL=\{w:9\.2,h:6\.8,s:\.9\},bigR=\{w:8\.6,h:7\.4,s:\.8\}/);
+  assert.match(html, /pumpkinAt\(lanL,barnFoot\+\.8,bigL\.s,/);
+  assert.match(html, /pumpkinAt\(lanR,barnFoot,bigR\.s,/);
+  // the left one lights the white pumpkin on the bale, the bale's end and the shock above the
+  // bale's shadow, and the bale throws a band of shade on the shock
+  assert.match(html, /\{\.\.\.whiteOne,face:true/);
+  assert.match(html, /\{\.\.\.shock,face:true[^}]*shade:\[bale,whiteOne\]\}/);
+  assert.match(html, /\+baleShade\+`<g class="decor" data-decor="straw-bale">/);
+  // that band is a contact shadow by day, deeper only when the lantern beside it is lit, and it
+  // fades under cloud like the kit's own crescents
+  assert.match(html, /const lowK=candles\?nightK:0,/);
+  assert.match(html, /opacity="\$\{\(\(\.32\+\.22\*lowK\)\*shadeK\)\.toFixed\(2\)\}"/);
+  // the props are built only while they are out
+  assert.match(html, /let barnDecor="",keepClear=\[\];\n    if\(halloween\)\{/);
+  // they are drawn with the barn, right after the fence, so the cloud shadows, the pond and the
+  // near rain pass over them as they do over the barn. The grass leaves out whole the tufts that
+  // would cross them, measured off the shock's own foot, so no blade crosses a lit face and no
+  // other grass moves
+  const ridge = html.slice(html.indexOf("${fence}${barnDecor}"), html.indexOf("${catsL}${catsR}"));
+  assert.ok(ridge.startsWith("${fence}${barnDecor}"), "the barn's decorations follow the fence directly");
+  assert.ok(ridge.indexOf("${cloudShadows(") > 0 && ridge.indexOf("${nearRain}") > 0 && ridge.indexOf("${tufts.map") > 0,
+    "the cloud shadows, the near rain and the grass are painted over the barn's decorations");
+  assert.match(html, /keepClear=\[\[shock\.x\+sx0\*shock\.s-\.4,lanR\+bigR\.w\*bigR\.s\/2\+\.4\]\]/);
+  assert.match(html, /if\(!keepClear\.some\(\(\[a,b\]\)=>t1>a&&t0<b\)\)tufts\[bandOf\(x0\)\]\+=t;/);
+  // the carved face is its own role, so the heron's own `face` keeps its outline
+  assert.match(html, /const INK_INNER=new Set\(\[[^\]]*"carve"\]\)/);
+  assert.doesNotMatch(html, /const INK_INNER=new Set\(\[[^\]]*"face"/);
+  assert.match(html, /heron:\{body:"#8C92B5",wing:"#6B6E95",neck:"#A9A9C4",bill:"#E8B04A",face:/);
+  // placed off the dock and the barn, never off a fraction of the frame, and the middle
+  // piling is left to the cormorant
+  assert.match(html, /pumpkinAt\(dx\+15\.8,deckY,1,/);
+  assert.match(html, /pumpkinAt\(dx-26\.8,deckY/);
+  assert.match(html, /const shock=\{parts:propCornShock\(5\),x:barnX-21\.5,y:barnFoot,s:\.74\}/);
+  assert.match(html, /decorAt\(shock\.parts,INK\.cornShock,shock\.x,shock\.y,shock\.s\)/);
+  // the harness looks at them in and out of season, lit and unlit
+  const scene = await readFile(new URL("tools/scene.mjs", root), "utf8");
+  for (const name of ["27-marsh-halloween-night", "28-marsh-halloween-cold-morning", "29-marsh-halloween-rain-night", "31-ridge-halloween-night", "32-ridge-november-morning", "35-marsh-november-small-hours"])
+    assert.match(scene, new RegExp(`name: "${name}"`));
+  assert.match(scene, /decorations are \[/);
+});
+
+test("a pumpkin still reads as one at seven pixels, and no two are cut alike", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const kit = html.slice(html.indexOf("/* ── Storybook ink: the drawing kit"), html.indexOf("/* ── the scene: arc, sun / moon"));
+  const ctx = vm.createContext({});
+  vm.runInContext(`${html.match(/function mulberry\(a\)\{[\s\S]*?\}\}/)[0]}\n${kit}\nglobalThis.propPumpkin=propPumpkin;`, ctx);
+  const plain = ctx.propPumpkin(10, 7, { seed: 3 }), carved = ctx.propPumpkin(10, 7, { carved: true, seed: 3 });
+  // two eyes and a grin and no nose, so the face is still three marks at seven pixels, with the
+  // rind's cut edge painted over the holes on the walls you can see into
+  assert.equal(carved.filter((p) => p.role === "carve").length, 3);
+  assert.ok(carved.findIndex((p) => p.role === "eyeRing") > carved.findLastIndex((p) => p.role === "carve"));
+  assert.equal(plain.filter((p) => p.role === "carve" || p.role === "eyeRing").length, 0);
+  // a woody stem cut square, with its fibres and its cut end, and a tendril of vine. None of those
+  // three joins the outline, so the ink stays on the pumpkin and the stalk. The stalk is painted
+  // before the body, so it comes up out of the well rather than sitting on it like a peg
+  for (const role of ["body", "band", "stem", "fibre", "cut", "vine"]) assert.ok(plain.some((p) => p.role === role), role);
+  assert.ok(plain.filter((p) => ["fibre", "cut", "vine"].includes(p.role)).every((p) => p.noSil));
+  assert.ok(plain.findIndex((p) => p.role === "stem") < plain.findIndex((p) => p.role === "body"));
+  // the seed is how it grew: the pair on the dock and the three at the barn are not stamped copies
+  const drawn = [[9.6, 7.2, 3], [6.6, 4.9, 8], [9.2, 6.8, 4], [8.6, 7.4, 6], [6, 4.4, 9]];
+  const body = ([w, h, seed]) => ctx.propPumpkin(w, h, { seed }).find((p) => p.role === "body").d;
+  assert.equal(new Set(drawn.map(body)).size, 5);
+  assert.equal(body(drawn[2]), body(drawn[2]));
+  // the cuts are straight-edged polygons, so their corners and areas can be read off the path
+  const poly = (d) => [...d.matchAll(/(-?\d*\.?\d+) (-?\d*\.?\d+)/g)].map((m) => [+m[1], +m[2]]);
+  const area = (E) => Math.abs(E.reduce((a, p, i) => { const q = E[(i + 1) % E.length]; return a + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2;
+  const inside = (E, [x, y]) => {
+    let hit = false;
+    for (let i = 0, j = E.length - 1; i < E.length; j = i++) if ((E[i][1] > y) !== (E[j][1] > y) && x < (E[j][0] - E[i][0]) * (y - E[i][1]) / (E[j][1] - E[i][1]) + E[i][0]) hit = !hit;
+    return hit || E.some((p, i) => { const q = E[(i + 1) % E.length], l = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1; return Math.abs((q[0] - p[0]) * (p[1] - y) - (p[0] - x) * (q[1] - p[1])) / l < .02; });
+  };
+  // the three that are lit are three carvings: the dock's and the pair at the barn door, each with
+  // its own eyes and its own teeth
+  const lit = [[9.6, 7.2, 3], [9.2, 6.8, 4], [8.6, 7.4, 6]].map(([w, h, seed]) => ({ w, h, P: ctx.propPumpkin(w, h, { carved: true, seed }) }));
+  assert.equal(new Set(lit.map(({ P }) => P.find((p) => p.role === "carve").cut)).size, 3);
+  assert.equal(new Set(lit.map(({ P }) => P.filter((p) => p.role === "carve")[2].cut)).size, 3);
+  for (const { w, h, P } of lit) {
+    const holes = P.filter((p) => p.role === "carve").map((p) => poly(p.d)), rind = P.filter((p) => p.role === "eyeRing").map((p) => poly(p.d));
+    // the eyes come to a point at the top, never a flat-topped half moon, so the face looks awake
+    for (const E of holes.slice(0, 2)) {
+      const ys = E.map((p) => p[1]).sort((a, b) => a - b), tall = ys[ys.length - 1] - ys[0];
+      assert.ok(ys[1] - ys[0] > tall * .3, "a pointed eye");
+    }
+    // the face carries about as much light as the first draft's did, more than a tenth of its box
+    assert.ok(holes.reduce((a, E) => a + area(E), 0) > .1 * w * h, "a face that lights");
+    // the rind is a thin wall inside its own hole, never a pale tab standing out of the face
+    rind.forEach((R, i) => { for (const p of R) assert.ok(inside(holes[i], p), "rind inside its hole"); });
+  }
+  // the candle lights the rind too, so the cut wall glows with the rest of the face
+  assert.match(html, /if\(lit&&p\.rindLit\)o\.eyeRing=p\.rindLit;/);
+  for (const k of ["pumpkin", "lumina"]) assert.match(html, new RegExp(`\\b${k}:\\{[^}]*rindLit:"#`));
+  // a mini is squat and wide under a stalk that is mostly ink: no cut face, fibres or vine to
+  // fill it with light at five pixels
+  for (const [w, h, seed] of [[6, 4.4, 9], [6.6, 4.9, 8]]) {
+    const P = ctx.propPumpkin(w, h, { seed }), B = poly(P.find((p) => p.role === "body").d);
+    const xs = B.map((p) => p[0]), ys = B.map((p) => p[1]);
+    assert.ok((Math.max(...xs) - Math.min(...xs)) / (Math.max(...ys) - Math.min(...ys)) > 1.55, "a squat mini");
+    assert.ok(P.some((p) => p.role === "stem") && !P.some((p) => ["cut", "fibre", "vine"].includes(p.role)));
+  }
 });
 
 test("tide chart reads as depth over the bottom", async () => {
