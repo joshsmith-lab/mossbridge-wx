@@ -487,24 +487,22 @@ html:not([data-theme=dark]) .rv-core{display:none}
   color:var(--ink-faint);font-weight:500;margin-bottom:10px}
 .card .lead{font-size:16.5px;font-weight:550;letter-spacing:-.012em;margin-bottom:10px;text-wrap:pretty}
 .card .lead.go{color:var(--go)}.card .lead.caution{color:var(--heat)}.card .lead.no{color:var(--marker)}
-/* ── the outside call ── one word you can read across the kitchen, in the colours the leads
-   use, with the stretch it is about on the same baseline. The dot is a light, not a control, and
-   nothing in the weather moves it. The detail lines are the window's own numbers, and the one
-   that tipped the call wears the call's colour instead of a sentence saying so. */
-.call{display:flex;flex-wrap:wrap;align-items:last baseline;column-gap:12px;row-gap:2px;margin-top:-2px}
-.call-word{font-size:clamp(28px,8.2vw,34px);font-weight:560;line-height:1.05;letter-spacing:-.032em;
-  font-variation-settings:"opsz" 48;white-space:nowrap;color:var(--ink-faint)}
-:is(.call-go,.call-iffy,.call-no) .call-word::before{content:"";display:inline-block;width:.27em;height:.27em;
-  border-radius:50%;background:currentColor;margin-right:.3em;vertical-align:.1em}
-.call-go .call-word{color:var(--go)}.call-iffy .call-word{color:var(--heat)}.call-no .call-word{color:var(--marker)}
-.call-when{font-family:var(--mono);font-size:13.5px;font-weight:600;color:var(--ink);white-space:nowrap}
+/* ── the water and the farm ── a short sentence in the colours the Sun and Tonight leads use,
+   then the readings on one mono line, and nothing else. The one big word it replaced was too
+   little on a boat day and meant nothing at the farm. A reading is inked in the sentence's
+   colour only when it is the reason for it. */
+.say{font-size:16.5px;font-weight:550;letter-spacing:-.012em;line-height:1.3;text-wrap:pretty}
+.say.go{color:var(--go)}.say.caution{color:var(--heat)}.say.no{color:var(--marker)}
+.water-read{display:grid;gap:7px;margin:-2px 0 6px}
+.water-read>*{margin:0}
+.say+.out-line{margin-top:8px}
 .out-why{font-size:15px;font-weight:520;letter-spacing:-.008em;color:var(--ink-soft);margin-top:6px;text-wrap:pretty}
 .out-line{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:6px;row-gap:3px;margin-top:9px;
   font-family:var(--mono);font-size:10.5px;letter-spacing:.02em;color:var(--ink-faint)}
 .out-line b{color:var(--ink);font-weight:600;font-size:13.5px;letter-spacing:0}
 .out-line>span{white-space:nowrap}
-.out-why[hidden],.out-line[hidden]{display:none}
-.call-iffy .tip b{color:var(--heat)}.call-no .tip b{color:var(--marker)}
+.out-why[hidden],.out-line[hidden],.water-read[hidden]{display:none}
+.out-line .caution b{color:var(--heat)}.out-line .no b{color:var(--marker)}
 .vane{flex:0 0 auto;color:var(--water);opacity:.85}
 /* The sun card says it with the bar. The pin is now and carries the reading, the bar is lit
    as high as the rest of today goes, a ring marks a peak still to come with its hour, and the
@@ -670,17 +668,19 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   <p class="day-brief" id="weekBrief" hidden></p>
 </div>
 
-<section id="outSection">
+<section id="outSection" hidden>
   <div class="eyebrow"><b id="outTitle">—</b></div>
-  <div class="call" id="waterLead"><span class="call-word">—</span></div>
-  <p class="out-why" id="callWhy" hidden></p>
-  <p class="out-line" id="callDetail" hidden></p>
-  <p class="out-line" id="wWindowWrap" hidden><span id="wWindowLbl"></span> <b id="wWindow">—</b></p>
+  <p class="say" id="farmSay" hidden></p>
   <p class="out-line" id="wFishWrap" hidden title="Bite windows: solunar tables, computed from the moon."><span>fish bite · by the moon<span class="sr-only">. Bite windows: solunar tables, computed from the moon.</span></span> <b id="wFish">—</b></p>
 </section>
 
 <section id="tideSection">
-  <div class="eyebrow"><b>Tide · Wrightsville Beach</b><span id="tideNote">loading…</span></div>
+  <div class="eyebrow"><b>Water · Wrightsville Beach</b><span id="tideNote">loading…</span></div>
+  <div class="water-read" id="waterRead" hidden>
+    <p class="say" id="waterSay" hidden></p>
+    <p class="out-line" id="waterLine" hidden></p>
+    <p class="out-why" id="waterLevel" hidden></p>
+  </div>
   <div class="tide-explore" id="tideExplore" role="group" tabindex="0" aria-label="Tide forecast. Use left and right arrow keys to explore in 15-minute steps.">
     <svg id="tideSvg" class="tide-svg" viewBox="0 0 760 158" xmlns="http://www.w3.org/2000/svg" aria-label="Tide curve, next 27 hours"></svg>
     <div class="tide-cursor" id="tideCursor" hidden></div>
@@ -720,28 +720,29 @@ const LOCS={
       tz:"America/New_York",tzLabel:"ET",
       sceneLabel:"Sun and moon over the marsh horizon",
       marine:{lat:34.26,lon:-77.68},tide:8658163,tropics:true,
-      outTitle:"On the water · Figure 8",offTitle:"Outside · Porters Neck",boatSeason:["03-15","10-31"]},
+      /* The boat went out March 15 to October 31, on Josh's club trips. The club is paused from
+         September 27 2026 and the season stays off until Josh says it is back: the water still
+         reads every day, and only the boat's sentence waits. To bring it back, put a pair of
+         month-days here again, ["03-15","10-31"]. */
+      boatSeason:null},
   sp:{id:"sp",addrFull:"Bob Plumley Rd · Shady Spring",addrShort:"Shady Spring",
-      lat:37.8215,lon:-80.9942,scene:"ridge",kind:"farm",fish:true,windowLabel:"best time to piddle",
+      lat:37.8215,lon:-80.9942,scene:"ridge",kind:"farm",fish:true,
       tz:"America/New_York",tzLabel:"ET",
       sceneLabel:"Sun and moon over Appalachian ridgelines and the farm pond",
-      outTitle:"Around the farm"},
+      outTitle:"The farm"},
   den:{id:"den",addrFull:"Next up · Denver",addrShort:"Denver",
-      lat:39.7392,lon:-104.9903,scene:"front-range",kind:"trip",windowLabel:"best time to head out",
+      lat:39.7392,lon:-104.9903,scene:"front-range",kind:"trip",
       tz:"America/Denver",tzLabel:"MT",
-      sceneLabel:"Sun and moon over Denver and the Front Range",
-      outTitle:"Around Denver"}
+      sceneLabel:"Sun and moon over Denver and the Front Range"}
 };
 /* The trip is over, so Denver is parked: still in LOCS as the template for the next travel
    scene, but out of the rotation. A phone last left on Denver has to open at home rather
    than on a place nobody can tap back to, so a saved id only counts while it is in the order. */
 const LOC_ORDER=["mb","sp"];
-/* Boating season at Porters Neck: Josh's club trips run from late March through October. A
-   season is a pair of month-days on the location's own calendar, and it may wrap the new year. */
+/* A season (the boat's, a holiday's) is a pair of month-days on the location's own calendar, and
+   it may wrap the new year. No pair is no season. */
 const mdOf=d=>typeof d==="string"?d.slice(5,10):String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 const inSeason=(d,r)=>{if(!r)return false;const md=mdOf(d);return r[0]<=r[1]?md>=r[0]&&md<=r[1]:md>=r[0]||md<=r[1]};
-/* off season the coast asks the question everywhere else does, under its own name */
-const titleFor=(L,day)=>L.boatSeason&&!inSeason(day,L.boatSeason)?L.offTitle:L.outTitle;
 /* The scenes dress for the holidays the way the family does: the decorations go out on a date
    and come down the morning after the holiday passes. A window is a pair of month-days on the
    location's own calendar, read the way the boat season is. Halloween's pumpkins go out on the
@@ -907,10 +908,6 @@ const clock12=d=>{let h=d.getHours(),m=d.getMinutes();const ap=h<12?"am":"pm";h=
   return h+":"+String(m).padStart(2,"0")+"\u00A0"+ap};
 const spanTxt=(a,b)=>{const A=clock(a),B=clock(b);
   return A.slice(-1)===B.slice(-1)?A.slice(0,-1)+"–"+B:A+"–"+B};
-/* a window on the hour is said on the hour: "4–7p", "11a–2p", "now–5p". Today goes unsaid and
-   tomorrow is always said */
-const hourSpan=(a,b)=>spanTxt(a,b).replace(/:00(?=[–ap])/g,"");
-const windowTxt=w=>(w.live?"now–"+clock(w.end).replace(":00",""):hourSpan(w.start,w.end))+(w.isToday?"":" tomorrow");
 function moonPhaseIcon(m,size=21){
   const x=10.5,y=10.5,r=7.1,ill=clamp(m.fraction,0,1),waxing=m.phase<.5;
   const k=(1-2*ill)*r,sweep=waxing?(ill>.5?0:1):(ill>.5?1:0);
@@ -3831,167 +3828,278 @@ const spokenClock=d=>clock(d).replace(":00","").replace(/a$/," a.m.").replace(/p
    the app was shipping every afternoon */
 const sentence=s=>s.endsWith(".")?s:s+".";
 const spokenSpan=(a,b)=>spanTxt(a,b).replace(/a$/," a.m.").replace(/p$/," p.m.");
-function bestOutsideWindow(h,coastal,dy,now){
-  const run=3,n=h.temp.length,day0=h.time[0].slice(0,10),cands=[];
-  /* The wall clock, not the run's first hour: a cache painted at 1:40 still starts at the 9a it
-     was written in, and offered "now–12p" for a window that ended an hour and forty minutes ago.
-     A window has to start in the hour now is in or later, the way the live run does: one that
-     began at 9a is scored on hours that are gone, and a cache opened at 2:55 offered "now–3p",
-     five minutes graded on the 2p hour. One is "now–" only while now is inside it. Without a
-     clock the run's first hour is now. */
-  const t=(now||new Date(h.time[0])).getTime();
-  /* a window is in daylight, give or take civil twilight: in December "4–7p" is two hours of
-     dark on the water or at the barn. Without that day's sunrise and sunset the old 7a–8p frame
-     is all there is */
-  const light=d=>{const k=dy?.time?dy.time.indexOf(d):-1;
-    return k<0||!dy.sunrise?.[k]||!dy.sunset?.[k]?null:[new Date(dy.sunrise[k]).getTime()-18e5,new Date(dy.sunset[k]).getTime()+18e5]};
-  for(let i=0;i<=n-run;i++){
-    const start=new Date(h.time[i]),last=new Date(h.time[i+run-1]);
-    const end=new Date(last.getTime()+3.6e6);
-    if(start.getTime()<new Date(t).setMinutes(0,0,0))continue;
-    if(start.getHours()<7||start.getHours()>17||start.toDateString()!==end.toDateString())continue;
-    const L=light(h.time[i].slice(0,10));
-    if(L&&(start.getTime()<L[0]||end.getTime()>L[1]))continue;
-    let score=0,maxPop=0,maxGust=0;
-    for(let j=i;j<i+run;j++){
-      const pop=Number(h.pop[j])||0,gust=Number(h.gust[j])||0,temp=Number(h.temp[j])||65;
-      maxPop=Math.max(maxPop,pop);maxGust=Math.max(maxGust,gust);
-      score+=pop*.72+gust*(coastal?.9:.65)+Math.max(0,temp-90)*2.2+Math.max(0,45-temp)*1.4;
-    }
-    if(maxPop>=70)score+=55;if(maxGust>=30)score+=42;
-    /* live: the window is under way, and cur is the hour of it that now is in */
-    const live=start.getTime()<=t;
-    cands.push({i,start,end,score,maxPop,maxGust,isToday:h.time[i].slice(0,10)===day0,live,
-      ...(live?{cur:i+Math.floor((t-start.getTime())/3.6e6)}:{})});
-  }
-  if(!cands.length)return null;
-  const pick=list=>list.reduce((b,c)=>!b||c.score<b.score?c:b,null);
-  const bToday=pick(cands.filter(c=>c.isToday)),bTom=pick(cands.filter(c=>!c.isToday));
-  /* this card is about today. Mornings almost always score better than afternoons, so comparing
-     across days silently sends you to tomorrow on a perfectly good afternoon. Only cross the
-     midnight line when today has no daylight window left, or today is rough and tomorrow is far
-     better. */
-  const rough=bToday&&(bToday.maxPop>=60||bToday.maxGust>=28);
-  const best=!bToday?bTom
-    :(rough&&bTom&&bTom.score<bToday.score*.6)?bTom
-    :bToday;
-  if(!best)return null;
-  best.today=bToday||null;
-  best.text=windowTxt(best);
-  return best;
+/* ── the water and the farm ────────────────────────────
+   In September 2026 the outside call was one word, Go, Iffy or No go, beside a "best" three
+   hours. Josh sent it back: a word was too little on a boat day and made no sense at the farm,
+   and the best time was a score nobody could see the reason for. So nothing here is scored or
+   picked. The coast says what the water is doing every day of the year, and a short sentence in
+   the call's colours only while the boat is going out. The farm says something only when there
+   is something to plan around, in the family's own words. A clock is said only for the hour a
+   real thing happens at: thunder coming in, the wind laying down. */
+const known=v=>v!=null&&v!==""&&Number.isFinite(+v);
+const hourKey=d=>{const p=v=>String(v).padStart(2,"0");
+  return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"T"+p(d.getHours())+":00"};
+/* The hours a sentence speaks for: the daylight still to come today, from the hour now is in,
+   each hour inside sunrise-30 to sunset+30, so in December nobody is told about 5p on the water.
+   Once today's has gone they are tomorrow's, which a live 24-hour run by then holds whole. Without
+   that day's sunrise and sunset, 7a to 8p. `now` says the first of them is the hour under way. */
+function coveredHours(h,dy,now){
+  const t=new Date(now).setMinutes(0,0,0),today=hourKey(new Date(t)).slice(0,10),byDay={};
+  (h.time||[]).forEach((s,i)=>{
+    const a=new Date(s).getTime();if(a<t)return;
+    const d=s.slice(0,10),k=dy?.time?dy.time.indexOf(d):-1,hr=+s.slice(11,13);
+    const lit=k>=0&&dy.sunrise?.[k]&&dy.sunset?.[k]
+      ?a>=new Date(dy.sunrise[k]).getTime()-18e5&&a+36e5<=new Date(dy.sunset[k]).getTime()+18e5
+      :hr>=7&&hr<=19;
+    if(lit)(byDay[d]=byDay[d]||[]).push(i);
+  });
+  const d=Object.keys(byDay).sort()[0];
+  if(!d)return{hrs:[],day:today,isToday:true,now:false,whole:false};
+  /* A live run holds the rest of today and, once today's light has gone, the whole of tomorrow's
+     (give or take an hour on the evening sunset crosses the half hour, when this says no).
+     A cache opened after dark does not: saved at three, it stops at one tomorrow. `whole` says
+     whether the last hour of the day's light is in it, so nothing green stands on hours it lacks. */
+  const k=dy?.time?dy.time.indexOf(d):-1,hs=byDay[d];
+  const lastLit=k>=0&&dy.sunset?.[k]?new Date(new Date(dy.sunset[k]).getTime()+18e5).setMinutes(0,0,0)-36e5:new Date(d+"T19:00").getTime();
+  return{hrs:hs,day:d,isToday:d===today,now:new Date(h.time[hs[0]]).getTime()===t,whole:new Date(h.time[hs[hs.length-1]]).getTime()>=lastLit};
 }
-/* ── the outside call ──────────────────────────────────
-   Go, iffy or no go, for the three hours you would actually be out: the stretch
-   bestOutsideWindow picks, not the moment you look. A calm dawn before a 30 mph afternoon is
-   a morning boat day, and a blow that drops out by eleven does not cancel one, and the word
-   and the time beside it can never disagree. The hour under way reads the live readings as
-   well as the hourly run. The first reading that tips it is the one thing said. A warning and
-   a storm overhead are the caller's, before either ladder runs.
-   The boat keeps the thresholds the water card always used: gusts 30 or seas 5 is no go,
-   gusts 22 or seas 3 is iffy, which is a fine day in the ICW and a rough one at the inlet. No
-   seas reading is never a go, but wind strong enough decides on its own. Missing gusts and
-   missing rain odds are the same: a gap in the run used to grade as calm and dry, and print
-   "gusts 0". An unknown is at best iffy and says so, and a known no go still wins. */
-const CALL_WORD={go:"Go",iffy:"Iffy",no:"No go"};
+/* The boat keeps the thresholds the water card always used: gusts 30 or seas 5 ft is too much,
+   gusts 22 or seas 3 ft is a fine day in the ICW and a rough one at the inlet. Rain likely and a
+   day that never feels 50 are said too. The seas are said to the whole foot and graded on the
+   foot that is printed: the model runs low against the buoy off Masonboro Inlet and its makers
+   say it is not for navigation, so "about 2 ft" is as close as it can honestly get, and a line
+   that reads 3 ft never sits under a green sentence. */
 const BOAT={noGust:30,noSeas:5,iffyGust:22,iffySeas:3,wet:60,cold:50};
-const OUTSIDE={noGust:30,iffyGust:22,wet:50,cold:36};
-function windowRead(h,c,run){
-  /* the hours of the window still to come: a cache opened late is into a window its run began
-     hours earlier, and an hour that has gone is not a reason to stay in */
-  const hrs=[run.i,run.i+1,run.i+2].filter(j=>j>=(run.cur??0)&&j<h.time.length),live=j=>j===0;
-  const fin=v=>v!=null&&v!==""&&Number.isFinite(+v);
-  const gusts=hrs.flatMap(j=>[h.gust?.[j],live(j)?c.wind_gusts_10m:null]).filter(fin).map(Number);
-  const pops=hrs.map(j=>h.pop?.[j]).filter(fin).map(Number);
-  const feelsAt=j=>{const v=Number(h.feels?.[j]??h.temp?.[j]),f=Number(c.apparent_temperature);
-    return live(j)&&c.apparent_temperature!=null&&Number.isFinite(f)?Math.min(v,f):v};
-  const codes=j=>live(j)?[Number(h.code?.[j]),Number(c.weather_code)]:[Number(h.code?.[j])];
-  const ts=hrs.find(j=>codes(j).some(v=>[95,96,99].includes(v)));
-  /* the hour under way is now: at 3:40 "Thunder around 3p" names an hour that has started */
-  return{gust:gusts.length?Math.round(Math.max(...gusts)):null,pop:pops.length?Math.max(...pops):null,
-    feels:Math.round(Math.min(...hrs.map(feelsAt))),
-    thunder:ts==null?"":ts===(run.cur??0)?"Thunder nearby":"Thunder around "+hh(h.time[ts]),
-    ice:hrs.some(j=>codes(j).some(isIce)),snow:hrs.some(j=>codes(j).some(isSnow))};
+const seasFt=v=>known(v)?Math.round(+v):null;
+/* one hour on the water. Where the wind and the seas land on the same step the wind is named,
+   because it is the one you feel first */
+function waterGrade(gust,seas){
+  if(gust>=BOAT.noGust)return"windy";if(seas>=BOAT.noSeas)return"rough";
+  if(gust>=BOAT.iffyGust)return"choppy";if(seas>=BOAT.iffySeas)return"outside";return"easy";
 }
-function boatCall(h,c,run,seas){
-  const w=windowRead(h,c,run),r={gust:w.gust,seas:seas!=null&&Number.isFinite(+seas)?+seas:null};
-  if(w.thunder)return{...r,call:"no",why:w.thunder};
-  if(w.ice)return{...r,call:"no",why:"Freezing rain"};
-  if(w.snow)return{...r,call:"no",why:"Snow"};
-  if(w.gust>=BOAT.noGust)return{...r,call:"no",tip:"gust"};
-  if(r.seas!=null&&r.seas>=BOAT.noSeas)return{...r,call:"no",tip:"seas"};
-  if(w.gust>=BOAT.iffyGust)return{...r,call:"iffy",tip:"gust",why:"Stick to the ICW"};
-  if(r.seas!=null&&r.seas>=BOAT.iffySeas)return{...r,call:"iffy",tip:"seas",why:"Stick to the ICW"};
-  if(r.seas==null)return{...r,call:"iffy",tip:"seas"};
-  if(w.gust==null)return{...r,call:"iffy",tip:"gust"};
-  if(w.pop==null)return{...r,call:"iffy",why:"Rain odds unavailable"};
-  if(w.pop>=BOAT.wet)return{...r,call:"iffy",why:"Rain likely"};
-  if(w.feels<BOAT.cold)return{...r,call:"iffy",why:`Cold, feels ${w.feels}°`};
-  return{...r,call:"go"};
+const WATER_SAY={easy:"easy",choppy:"choppy",outside:"rough outside",windy:"too windy",rough:"too rough"};
+const waterStep=g=>g==="windy"||g==="rough"?2:g==="easy"?0:1;
+/* The water temperature is NOAA's own at Wrightsville Beach, read every six minutes, and it is
+   said only while it is under an hour old. There is no model to fall back on: the ocean model's
+   cell is eight kilometres out and its makers call it limited at the coast. */
+function waterTemp(w,now){
+  const r=w?.temp;if(!r||!r.t||!known(r.v))return null;
+  const age=new Date(now).getTime()-new Date(r.t.replace(" ","T")).getTime();
+  return age<=36e5&&age>=-9e5&&+r.v>28&&+r.v<100?Math.round(+r.v):null;
 }
-/* Off the water the same window gets the same kind of answer. The farm says it the way the
-   farm does, in sentences, and the coast off season and a trip say it plainly. Ice outranks
-   wind because it is the one where the wrong word matters. */
-const OUT_WHY={
-  farm:{ice:"Icy. Stay off the hill until it turns over.",gale:"Too windy. Chores can wait.",
-    snow:"Snow coming down. Feed early and keep a path open.",wind:"Windy up here.",
-    wet:"Showers around. Slip out between them.",cold:()=>"Cold one. Bundle up for the morning rounds."},
-  plain:{ice:"Freezing rain",gale:"Too windy",snow:"Snow",wind:"Windy",wet:"Rain likely",cold:f=>`Cold, feels ${f}°`}};
-function outsideCall(h,c,run,kind){
-  const w=windowRead(h,c,run),say=OUT_WHY[kind==="farm"?"farm":"plain"];
-  if(w.thunder)return{call:"no",why:w.thunder};
-  if(w.ice)return{call:"no",why:say.ice};
-  if(w.gust>=OUTSIDE.noGust)return{call:"no",why:say.gale};
-  if(w.snow)return{call:"iffy",why:say.snow};
-  if(w.gust>=OUTSIDE.iffyGust)return{call:"iffy",why:say.wind};
-  /* no line of numbers under this card to say it, so the why does */
-  if(w.gust==null)return{call:"iffy",why:"Gusts unavailable"};
-  if(w.pop==null)return{call:"iffy",why:"Rain odds unavailable"};
-  if(w.pop>=OUTSIDE.wet)return{call:"iffy",why:say.wet};
-  if(w.feels<=OUTSIDE.cold)return{call:"iffy",why:say.cold(w.feels)};
-  return{call:"go"};
+/* The tide chart is NOAA's table, and the water does not always keep it: a northeaster or a
+   king tide can hold it two feet over for a day, and on September 27 2026 it was, under a coastal
+   flood advisory, while the chart drew a low. So the station's own gauge is read against the
+   table for the same six-minute marks, averaged over its last half hour because the readings are
+   preliminary, and said to the half foot from half a foot. It is a measurement, never a forecast,
+   and it is hidden when the gauge is more than half an hour old (a cached page never shows an
+   old surge), thin, or reads six feet off, which is a sensor, not the sea. */
+function levelGap(w,now){
+  const tOf=s=>new Date(String(s).replace(" ","T")).getTime();
+  const lv=(w?.level||[]).filter(r=>r&&r.t&&known(r.v));
+  if(!lv.length)return null;
+  const newest=Math.max(...lv.map(r=>tOf(r.t)));
+  if(!Number.isFinite(newest)||new Date(now).getTime()-newest>18e5)return null;
+  const pred=new Map((w.pred||[]).filter(r=>r&&known(r.v)).map(r=>[r.t,+r.v]));
+  const pairs=lv.filter(r=>tOf(r.t)>newest-18e5&&pred.has(r.t));
+  if(pairs.length<3)return null;
+  const gap=pairs.reduce((s,r)=>s+(+r.v-pred.get(r.t)),0)/pairs.length;
+  if(Math.abs(gap)<.5||Math.abs(gap)>=6)return null;
+  const half=Math.round(Math.abs(gap)*2)/2;
+  return`Running ${half===.5?"half a foot":half+" ft"} ${gap>0?"above":"below"} the tide table.`;
 }
-/* The card, put together from the readings, so test.mjs can run it the way it runs the ladders:
-   the title for the season, the word and what sits beside it, the boat's line of numbers, and the
-   farm's two invitations. render() only paints it. A null line is a hidden one. */
-function outsideCard(L,h,c,best,m,warning,storm,now){
-  /* the boat at Moss Bridge while the boat is going out, and the same question off season, at
-     the farm and on a trip */
-  const coastal=!!L.marine,boating=coastal&&inSeason(c.time,L.boatSeason);
-  /* the seas are the window's day's: tomorrow's window reads tomorrow's forecast, and a day
-     the marine run does not reach is unavailable rather than borrowed from today */
-  const seasFor=w=>{const v=w.isToday?m?.wave_height_max:m?.wave_height_next;return v!=null&&Number.isFinite(+v)?+v:null};
-  /* a current warning or a storm overhead outranks every reading, and takes the window, the
-     piddle and the bite times with it: printed under a warning they read as an invitation */
-  const call=warning?{call:"no",why:warning.event}
-    :storm?{call:"no",why:"Thunderstorms"}
-    :!best?{call:"iffy",why:coastal?"No clear window":L.kind==="farm"?"Not really today":"No easy stretch today"}
-    :boating?boatCall(h,c,best,seasFor(best)):outsideCall(h,c,best,L.kind);
-  const invited=!!best&&!warning&&!storm&&call.call!=="no";
-  /* On the water the time is the answer, so it sits beside the word. Where the window has a
-     line of its own (the piddle line, a trip's) the word only says which day. A no go names
-     no stretch to go out in, but it still says when it is tomorrow's. */
-  const when=!best||warning||storm?"":L.windowLabel||call.call==="no"?(best.isToday?"":"tomorrow"):best.text;
-  /* the boat's numbers are the window's, not now's: the chip is now. A reading the run does not
-     carry is said to be unavailable, never printed as a zero */
-  const detail="gust" in call?`<span${call.tip==="gust"?' class="tip"':""}>gusts <b>${call.gust==null?"unavailable":call.gust}</b></span> <span aria-hidden="true">·</span> `
-    +`<span${call.tip==="seas"?' class="tip"':""}>seas <b>${call.seas==null?"unavailable":call.seas.toFixed(1)+" ft"}</b></span>`:null;
-  /* At the farm the window answers "when should I go do the outside jobs", and least wind,
-     least rain and least extreme heat is exactly that question, so it is called what Josh's
-     parents call it. The word above has already said whether it is tomorrow. */
-  const piddle=invited&&L.windowLabel?windowTxt({...best,isToday:true}):null;
-  /* The almanac's bite windows, farm only, and never under a no go. A warning, a storm overhead,
-     thunder in the window, ice and a gale all say stay in, and a bite window printed under
-     "No go · Thunder around 4p" pointed at the thunder hour with a rod in your hand. */
-  const fishOn=!!L.fish&&!storm&&!warning&&call.call!=="no";
-  const fish=fishOn?solunarWindows(now).filter(w=>w.end>now).slice(0,2).map(w=>
-    now>=w.start?"now–"+clock(w.end):spanTxt(w.start,w.end)).join(" · ")||"—":null;
-  return{title:titleFor(L,c.time),call,when,detail,piddle,fish};
+/* the boat's sentence, for the hours it speaks for. A warning, thunder, ice and snow come first,
+   then the wind and the seas, then the rain and the cold. An unknown is never a green: a gap in
+   the run used to grade as calm and dry and print "gusts 0". */
+function boatSay(h,c,cov,gs,ss,warning,told){
+  const {hrs}=cov,tom=cov.isToday?"":" tomorrow",code=i=>+h.code?.[i],TS=v=>[95,96,99].includes(v);
+  const say=(text,cls)=>({text:sentence(text),cls});
+  if(warning)return say("Stay off the water","no");
+  if(!hrs.length)return null;
+  const k=hrs.findIndex(i=>TS(code(i))),namedTS=i=>(told||[]).some(x=>x.kind==="Thunder"&&x.time===h.time[i]);
+  if(k===0&&cov.now)return say(namedTS(hrs[0])?"Stay off the water":"Thunder nearby. Stay off the water","no");
+  const live=cov.now?+c.weather_code:NaN;
+  if(isIce(live)||isSnow(live)||hrs.some(i=>(isIce(code(i))||isSnow(code(i)))&&(+h.pop?.[i]||0)>=40))
+    return say("Stay off the water"+tom,"no");
+  const gMax=gs.some(known)?Math.max(...gs.filter(known)):null,sMax=ss.some(known)?Math.max(...ss.filter(known)):null;
+  if(k>=0){
+    /* the first thunder hour, in the headline's odds words, and "be in early" only when there are
+       two decent hours before it to be out in, both readings known. When the headline has named
+       that hour already, only what to do is said */
+    const t=`Thunder ${(+h.pop?.[hrs[k]]||0)>=70?"likely":"possible"} around ${spokenAt(h.time[hrs[k]])}${tom}`;
+    const named=namedTS(hrs[k]);
+    /* a gale or rough seas before it are the day's answer, and nobody is invited out across them */
+    const worse=hrs.slice(0,k).map((_,j)=>waterGrade(gs[j],ss[j])).find(g=>waterStep(g)===2);
+    if(worse)return say((worse==="windy"?"Too windy for the boat":"Too rough for the boat")+tom+(named?"":". "+t),"no");
+    const usable=hrs.slice(0,k).filter((_,j)=>known(gs[j])&&known(ss[j])&&waterStep(waterGrade(gs[j],ss[j]))<2).length;
+    return usable>=2?{text:named?`Be in before the thunder${tom}.`:sentence(t)+" Be in early.",cls:"caution"}:say(named?"Stay off the water"+tom:t,"no");
+  }
+  const steady=g=>({windy:say("Too windy for the boat"+tom,"no"),rough:say("Too rough for the boat"+tom,"no"),
+    choppy:{text:`Choppy${tom}. Stick to the ICW.`,cls:"caution"},outside:{text:`Rough outside${tom}. Stick to the ICW.`,cls:"caution"}})[g];
+  if(gMax==null&&sMax==null)return say("Gusts and seas unavailable","caution");
+  if(gMax==null||sMax==null){
+    /* one reading missing: the one there is can still say too much, and otherwise the gap is said */
+    const g=waterGrade(gMax,sMax);
+    return g!=="easy"?steady(g):say(sMax==null?"Seas unavailable":"Gusts unavailable","caution");
+  }
+  /* The day can change, and it is said with the hour it does: worse first with the hour it lays
+     down, once two better hours follow it, better first with the hour it comes up, and the hour
+     it lays down again when it does. Every hour has to have both readings to say it. */
+  const gr=hrs.map((_,j)=>waterGrade(gs[j],ss[j])),st=gr.map(waterStep),W=Math.max(...st);
+  const worst=js=>gr[js.reduce((b,j)=>st[j]>st[b]?j:b,js[0])],cap=s=>s[0].toUpperCase()+s.slice(1);
+  const all=gr.map((_,j)=>j),full=gs.every(known)&&ss.every(known);
+  if(full&&st.some(v=>v!==W)){
+    if(st[0]===W){
+      let T=st.length;while(T>0&&st[T-1]<W)T--;
+      if(st.length-T>=2)return{text:`${cap(WATER_SAY[worst(all.slice(0,T))])} until about ${spokenAt(h.time[hrs[T]])}${tom}, then ${WATER_SAY[worst(all.slice(T))]}.`,cls:"caution"};
+    }else{
+      const f=st.indexOf(W);let e=st.length-1;while(st[e]<W)e--;
+      const back=st.length-1-e>=2?` until about ${spokenAt(h.time[hrs[e+1]])}`:"";
+      return say(`${cap(WATER_SAY[worst(all.slice(0,f))])} until about ${spokenAt(h.time[hrs[f]])}${tom}, then ${WATER_SAY[worst(all)]}${back}`,"caution");
+    }
+  }
+  const g=waterGrade(gMax,sMax);
+  if(g!=="easy")return steady(g);
+  const pops=hrs.map(i=>h.pop?.[i]).filter(known).map(Number);
+  const feels=hrs.map(i=>h.feels?.[i]??h.temp?.[i]).filter(known).map(Number);
+  const easy="Easy out there"+tom;
+  if(!pops.length)return{text:easy+". Rain odds unavailable.",cls:"caution"};
+  if(Math.max(...pops)>=BOAT.wet)return say(easy+", but wet at times","caution");
+  /* the warmest hour, so a chilly dawn does not turn a mild afternoon amber */
+  if(feels.length&&Math.max(...feels)<BOAT.cold)return say(easy+", but cold","caution");
+  /* green only on a whole day: a cache opened after dark knows tomorrow's morning and not its
+     afternoon */
+  return cov.whole?say(easy,"go"):null;
 }
+/* The water, for the section over the tide chart: the boat's sentence while the boat is going out,
+   and the readings on one line. In season they are the hours the sentence speaks for (the day's
+   top gust and seas) and the one that is the reason wears its colour. Off season nothing is
+   graded or coloured: the seas are the hour now is in, and the wind is the chip's. The water
+   temperature is always now. Pure, so test.mjs runs it; render() only paints it. */
+function waterCard(L,h,c,dy,marine,water,warning,storm,now,told){
+  const cov=coveredHours(h,dy,now),boating=inSeason(cov.day,L.boatSeason);
+  /* the seas hour by hour, matched to the forecast's hours by their own time */
+  const mt=Array.isArray(marine?.time)&&Array.isArray(marine?.wave)?new Map(marine.time.map((t,i)=>[t,marine.wave[i]])):new Map();
+  const temp=waterTemp(water,now),level=levelGap(water,now);
+  const item=(label,value,cls="")=>({label,value,cls}),tempItem=temp==null?[]:[item("water",temp+"°")];
+  const seasItem=(s,cls="")=>s===0?item("seas","under 1 ft",cls):item("seas about",s+" ft",cls);
+  /* the water now: the seas for the hour now is in and the thermometer, ungraded */
+  const nowLine=()=>{const s=seasFt(mt.get(hourKey(new Date(now))));
+    const line=[...(s==null?[]:[seasItem(s)]),...tempItem];return line.length?line:null};
+  if(!boating)return{say:null,line:nowLine(),level};
+  /* a warning or a storm tonight is tonight's: tomorrow's daylight numbers under it, with no day
+     on them, would read as a calm night under a 40 mph chip */
+  if((warning||storm)&&!cov.isToday)return{say:storm?null:boatSay(h,c,cov,[],[],warning),line:nowLine(),level};
+  const gs=cov.hrs.map(i=>known(h.gust?.[i])?Math.round(+h.gust[i]):null),ss=cov.hrs.map(i=>seasFt(mt.get(h.time[i])));
+  const gMax=gs.some(known)?Math.max(...gs.filter(known)):null,sMax=ss.some(known)?Math.max(...ss.filter(known)):null;
+  /* a storm overhead is the headline's: "Storms overhead. Stay off the water." */
+  const say=storm?null:boatSay(h,c,cov,gs,ss,warning,told);
+  const named=l=>!!say&&say.text.toLowerCase().includes(l);
+  const line=[
+    ...(gMax==null?named("gusts")?[]:[item("gusts","unavailable","caution")]
+      :[item("gusts to",gMax,gMax>=BOAT.noGust?"no":gMax>=BOAT.iffyGust?"caution":"")]),
+    ...(sMax==null?named("seas")?[]:[item("seas","unavailable","caution")]
+      :[seasItem(sMax,sMax>=BOAT.noSeas?"no":sMax>=BOAT.iffySeas?"caution":"")]),
+    ...tempItem];
+  return{say,line:line.length?line:null,level};
+}
+/* The almanac's bite windows, the next two that have not ended. Each is dropped on its own
+   hours: thunder, freezing rain or a 30 mph gust in it, a gust the run does not carry (a gap is
+   never calm), or running past the end of the run, where nothing is known. The old card took
+   them all away under any no go, and a gale at noon hid an evening with nothing wrong in it. */
+function fishLine(h,now){
+  const n=h.time?.length||0;if(!n)return null;
+  const end=new Date(h.time[n-1]).getTime()+36e5;
+  const clear=w=>w.end.getTime()<=end&&h.time.every((s,i)=>{const a=new Date(s).getTime();
+    return a>=w.end.getTime()||a+36e5<=w.start.getTime()
+      ||![95,96,99].includes(+h.code?.[i])&&!isIce(+h.code?.[i])&&known(h.gust?.[i])&&+h.gust[i]<30});
+  const wins=solunarWindows(now).filter(w=>w.end>now&&clear(w)).slice(0,2);
+  return wins.length?wins.map(w=>now>=w.start?"now–"+clock(w.end):spanTxt(w.start,w.end)).join(" · "):null;
+}
+/* The farm makes no call and is never green: on an ordinary day the card is the bite line. It
+   speaks when there is something to plan around, in the words the family uses, for the hours the
+   coast's sentence speaks for. Anything that says stay in takes the bite line with it. Pure. */
+function farmCard(L,h,c,dy,warning,storm,now,told){
+  /* a storm overhead is the headline's, and a bite time under it is an invitation */
+  if(storm)return{say:null,fish:null};
+  const cov=coveredHours(h,dy,now),{hrs}=cov,tom=cov.isToday?"":" tomorrow";
+  const code=i=>+h.code?.[i],pop=i=>known(h.pop?.[i])?+h.pop[i]:null,gust=i=>known(h.gust?.[i])?+h.gust[i]:null;
+  const TS=v=>[95,96,99].includes(v),odds=i=>(pop(i)??0)>=70?"likely":"possible";
+  /* freezing rain falling now takes the bite times even after dark, when the hours the card
+     speaks for are tomorrow's and the hourly run has not caught up with the sky */
+  const iceNow=isIce(+c.weather_code);
+  const live=cov.now?+c.weather_code:NaN;
+  /* What the headline has already named is not said again: thunder and wind at that very hour,
+     rain, freezing rain and snow at that hour or earlier inside the hours this card speaks for,
+     so tonight's 2 a.m. snow is not tomorrow's 10 a.m. snow. */
+  const named=(kind,i)=>(told||[]).some(x=>x.kind===kind&&(kind==="Thunder"||kind==="Windy"?x.time===h.time[i]
+    :x.time<=h.time[i]&&x.time>=h.time[hrs[0]]&&x.time.slice(0,10)===h.time[i].slice(0,10)));
+  /* A sentence is what is coming, when the headline has not said it, then what to do. What is
+     coming carries its hour and its day. When it goes unsaid, what to do carries the day, so a
+     card about tomorrow never reads as tonight's. */
+  const say=(clauses,act,cls,stayIn)=>{const c0=clauses.filter(Boolean).map(sentence).join(" ");
+    return{say:{text:[c0,act(c0?"":tom)].filter(Boolean).join(" "),cls},fish:L.fish&&!stayIn&&!iceNow?fishLine(h,now):null}};
+  const at=i=>`${spokenAt(h.time[i])}${tom}`;
+  const coming=(kind,i)=>isIce(live)&&kind==="Freezing rain"||isSnow(live)&&kind==="Snow"||named(kind,i)?""
+    :cov.now&&i===hrs[0]?`${kind} ${odds(i)==="likely"?"likely any time now":"could start any time"}`:`${kind} ${odds(i)} around ${at(i)}`;
+  const HILL=d=>`Stay off the hill${d} until it turns over.`,FEED=d=>`Feed early${d} and keep a path open.`,
+    CHORES=d=>`Chores can wait${d}.`,EARLY=d=>`Get the chores done early${d}.`,SLIP=d=>`Slip out between the showers${d}.`;
+  const iceI=hrs.find(i=>isIce(code(i))&&(pop(i)??0)>=40),snowI=hrs.find(i=>isSnow(code(i))&&(pop(i)??0)>=40);
+  const icy=iceI!=null||isIce(live),snowy=snowI!=null||isSnow(live);
+  /* the alert strip names a warning and its instruction, so only the family's action is said */
+  if(warning)return say([],()=>icy?HILL(""):/winter|ice|snow|blizzard|freez|sleet/i.test(warning.event||"")?FEED(""):CHORES(""),"no",true);
+  const k=hrs.findIndex(i=>TS(code(i)));
+  if(k===0&&cov.now)return named("Thunder",hrs[0])?say([],CHORES,"no",true):say(["Thunder nearby"],()=>"","no",true);
+  if(icy)return say([iceI==null?"":coming("Freezing rain",iceI)],HILL,"no",true);
+  const gs=hrs.map(gust),galeI=gs.findIndex(v=>known(v)&&v>=30);
+  const thunder=k<0||named("Thunder",hrs[k])?"":`Thunder ${odds(hrs[k])} around ${at(hrs[k])}`;
+  /* a gale in the first hour is said with the hour it lays down, and any thunder behind it is said
+     too, so the clock never sends anyone out into it */
+  if(galeI===0){
+    let T=gs.length;while(T>0&&known(gs[T-1])&&gs[T-1]<30)T--;
+    const lays=k<0&&gs.length-T>=2?" until about "+spokenAt(h.time[hrs[T]]):"";
+    return say([lays||!named("Windy",hrs[0])?`Too windy${lays}${tom}`:"",thunder],CHORES,"no",true);
+  }
+  /* Thunder still to come. A gale before it is said with its hour, and stay in. Thunder within the
+     hour, or behind hours whose gusts the run does not carry, is stay in too. Rain before it is
+     slip out between the showers. Only two or more clear hours before it are "piddle before". */
+  if(k>=0){
+    if(galeI>0&&galeI<k)return say([named("Windy",hrs[galeI])?"":`Too windy from about ${at(hrs[galeI])}`,thunder],CHORES,"no",true);
+    if(k<2||!gs.slice(0,k).every(known))return say([thunder],d=>thunder?"":CHORES(d),"no",true);
+    if(isWet(live)||hrs.slice(0,k).some(i=>(pop(i)??0)>=70))return say([thunder],SLIP,"caution");
+    return say([thunder],d=>thunder?"Piddle before then.":`Piddle before the thunder${d}.`,"caution");
+  }
+  /* a gale still to come is said with its hour, because the headline says the wind only when
+     nothing wetter is coming, and at 28, not 30 */
+  if(galeI>0)return say([named("Windy",hrs[galeI])?"":`Too windy from about ${at(hrs[galeI])}`],EARLY,"caution");
+  if(snowy)return say([snowI==null?"":coming("Snow",snowI)],FEED,"caution");
+  /* rain gets no clock: the headline names the first wet stretch and its hour, and when it has,
+     the card says only what to do */
+  const ps=hrs.map(pop),wetI=ps.findIndex(v=>known(v)&&v>=70);
+  if(wetI===0||wetI===1)return say([named("Rain",hrs[wetI])||cov.isToday?"":"Rain likely tomorrow"],SLIP,"caution");
+  if(wetI>=2)return say([],d=>`Piddle early${d}.`+(named("Rain",hrs[wetI])?"":" Rain likely later."),"caution");
+  /* The morning rounds are the sunrise hour and the two after it: this morning's until ten, and
+     from sunset, tomorrow's. Cold is feeling 36° or under. When the headline has already said
+     "Bundle up." (feels 25° or under now) it is not said twice. */
+  const nd=new Date(now),set0=dy?.sunset?.[0]?new Date(dy.sunset[0]).getTime():NaN;
+  const kd=nd.getHours()<10?0:nd.getTime()>=set0?1:-1;
+  if(kd>=0&&dy?.sunrise?.[kd]&&dy.time?.[kd]){
+    const sr=new Date(dy.sunrise[kd]).getHours(),t0=new Date(now).setMinutes(0,0,0);
+    const fs=(h.time||[]).map((s,i)=>s.slice(0,10)===dy.time[kd]&&+s.slice(11,13)>=sr&&+s.slice(11,13)<=sr+2&&new Date(s).getTime()>=t0
+      ?h.feels?.[i]??h.temp?.[i]:null).filter(known).map(Number);
+    if(fs.length&&Math.min(...fs)<=36){
+      const t=kd?" tomorrow":"",bundled=known(c.apparent_temperature)&&Math.round(+c.apparent_temperature)<=25;
+      return say([],()=>bundled?`Cold one${t} for the morning rounds.`:`Cold one${t}. Bundle up for the morning rounds.`,"caution");
+    }
+  }
+  return{say:null,fish:L.fish&&!iceNow?fishLine(h,now):null};
+}
+const paintSay=(id,s)=>{const e=document.getElementById(id);e.hidden=!s;e.textContent=s?s.text:"";e.className="say"+(s?" "+s.cls:"")};
 function dayStory(c,dy,h,now){
   /* the water only gets named while the boat is actually going out */
   if([95,96,99].includes(c.weather_code))
     return{html:LOC.boatSeason&&inSeason(c.time,LOC.boatSeason)?"<em>Storms overhead.</em> Stay off the water."
-                              :"<em>Storms overhead.</em> Head inside.",best:null};
+                              :"<em>Storms overhead.</em> Head inside."};
 
   const hr=+c.time.slice(11,13),evening=hr>=18,overnight=hr>=21||hr<5;
   const high=Math.round(dy.temperature_2m_max[0]),feels=Math.round(c.apparent_temperature);
@@ -4018,16 +4126,19 @@ function dayStory(c,dy,h,now){
   else if(evening)first=`${tempWord}${damp} this evening.`;
   else first=`${tempWord}${damp} today.`;
 
-  const indices=Array.from({length:h.temp.length},(_,i)=>i).filter(i=>
-    overnight||evening||h.time[i].slice(0,10)===dy.time[0]);
-  const win=indices.length?indices:Array.from({length:Math.min(12,h.temp.length)},(_,i)=>i);
+  /* the hours still to come: a cache opened at 11:40 still starts at the 9a it was written in, and
+     said "Thunder nearby." about a storm two hours gone. w0 is the hour now is in */
+  const t0=now?new Date(now).setMinutes(0,0,0):-Infinity;
+  const indices=Array.from({length:h.temp.length},(_,i)=>i).filter(i=>new Date(h.time[i]).getTime()>=t0&&
+    (overnight||evening||h.time[i].slice(0,10)===dy.time[0]));
+  const win=indices.length?indices:Array.from({length:Math.min(12,h.temp.length)},(_,i)=>i),w0=win[0];
   const peak=(arr)=>win.reduce((b,i)=>(Number(arr[i])||0)>(Number(arr[b])||0)?i:b,win[0]);
   const maxPop=Number(h.pop[peak(h.pop)])||0,wetI=win.find(i=>(Number(h.pop[i])||0)>=40);
   /* the first windy hour, not the windiest: with gusts of 30 now and 34 at four, "windy by 4
      p.m." sat under a chip that already said 30 */
   const gustI=win.find(i=>(Number(h.gust?.[i])||0)>=28);
   /* no odds in the run is not a dry run: the headline says what it knows (the wind) or that the
-     odds are missing, the way the call under it does, and never "Should stay dry." */
+     odds are missing, the way the cards under it do, and never "Should stay dry." */
   const popKnown=win.some(i=>h.pop[i]!=null&&Number.isFinite(+h.pop[i]));
   /* What is coming is named by its own hours' codes, ice first because it is the one where the
      wrong word matters. The look-ahead only knew rain, and called three o'clock's snow "Rain
@@ -4038,41 +4149,56 @@ function dayStory(c,dy,h,now){
      only "tomorrow" from daylight. "Showers possible around 1 a.m. tomorrow" sat over a Tonight
      card that called the same shower tonight's. */
   const when=i=>spokenAt(h.time[i])+(h.time[i].slice(0,10)===dy.time[0]||evening&&+h.time[i].slice(11,13)<6?"":" tomorrow.");
-  let second;
+  const bare=i=>spokenAt(h.time[i])+(h.time[i].slice(0,10)===dy.time[0]||evening&&+h.time[i].slice(11,13)<6?"":" tomorrow");
+  /* what this names and when, so the cards under it do not say it a second time */
+  let second;const told=[];
+  const tsI=win.find(i=>[95,96,99].includes(+h.code?.[i]));
   if(currentlyWet){
     const dryI=win.find(i=>(Number(h.pop[i])||0)<30);
     const frozen=isSnow(c.weather_code)||isIce(c.weather_code);
     second=dryI==null
       ?(frozen?"Give yourself extra time on the roads.":"Keep the rain gear close.")
-      :dryI===0?"Should let up soon.":`Should let up around ${when(dryI)}`;
+      :dryI===w0?"Should let up soon.":`Should let up around ${when(dryI)}`;
   /* index 0 is the hour already under way: at 1:40 "rain likely around 1 p.m." names a
      time that has gone, so the first hour is spoken as now */
-  }else if(!popKnown)second=gustI!=null?(gustI===0?"Windy now.":`Windy by ${when(gustI)}`):"Rain odds unavailable.";
+  }else if(!popKnown){
+    second=gustI!=null?(gustI===w0?"Windy now.":`Windy by ${when(gustI)}`):"Rain odds unavailable.";
+    if(gustI!=null)told.push({kind:"Windy",time:h.time[gustI]});
+  }
   else if(wetI!=null){
     /* the wet stretch is the run of wet hours that starts at wetI, not every wet hour after it: a
        rain shower at one and snow at eight are two events, and the shower's hour cannot carry the
        snow's name. Likely comes off the stretch's own odds */
     const stretch=[];for(const i of win){if(i<wetI)continue;if((Number(h.pop[i])||0)<40)break;stretch.push(i)}
     const kind=wetKind(stretch),likely=Math.max(...stretch.map(i=>Number(h.pop[i])||0))>=70;
-    second=wetI===0
+    told.push({kind:kind||"Rain",time:h.time[wetI]});
+    second=wetI===w0
       ?(kind?`${kind} ${likely?"likely any time now.":"could start any time."}`:likely?"Rain likely any time now.":"Showers could pop up any time.")
       :kind?`${kind} ${likely?"likely":"possible"} around ${when(wetI)}`:likely?`Rain likely around ${when(wetI)}`:`Showers possible around ${when(wetI)}`;
+  }else if(tsI!=null){
+    /* thunder the run carries on poor odds is still thunder: "Should stay dry." sat over a farm
+       card that said "Thunder possible around 12 p.m." */
+    /* wind that comes first is said with it, once, and on the same day the day is said once */
+    const windFirst=tsI!==w0&&gustI!=null&&gustI<tsI;
+    const windAt=()=>gustI===w0?"Windy now":"Windy by "+(h.time[gustI].slice(0,10)===h.time[tsI].slice(0,10)?spokenAt(h.time[gustI]):bare(gustI));
+    second=tsI===w0?"Thunder nearby."
+      :windFirst?`${windAt()}, then thunder possible around ${when(tsI)}`
+      :`Thunder possible around ${when(tsI)}`;
+    if(windFirst)told.push({kind:"Windy",time:h.time[gustI]});
+    told.push({kind:"Thunder",time:h.time[tsI]});
   }else if(maxPop>=25){
     const kind=wetKind(win.filter(i=>(Number(h.pop[i])||0)>=25));
     second=kind==="Freezing rain"?"Maybe a little freezing rain.":kind==="Snow"?"Maybe a few flurries.":"Maybe a stray shower.";
   }
   /* hour 0 carries the live gust (see render), so a wind the chip is showing is a wind the
      headline knows about */
-  else if(gustI!=null)second=gustI===0?"Dry, but windy now.":`Dry, but windy by ${when(gustI)}`;
+  else if(gustI!=null){second=gustI===w0?"Dry, but windy now.":`Dry, but windy by ${when(gustI)}`;told.push({kind:"Windy",time:h.time[gustI]})}
   else second="Should stay dry.";
 
   if(feels>=98&&!evening&&!overnight)second+=" Keep the middle of the day short.";
   else if(feels<=25)second+=" Bundle up.";
 
-  /* The window is a stat, and it is already printed as one on the card below. Appending it to
-     this paragraph said the same thing twice and ran the verdict to four lines on a phone,
-     right after a sentence that has just named the hour the rain arrives. */
-  return{html:first+" "+second,best:bestOutsideWindow(h,!!LOC.marine,dy,now)};
+  return{html:first+" "+second,told};
 }
 /* The farm's sun line states when, not what to wear: the sunscreen language was built
    for the kids, and the kids are at the coast. Nothing left to say today is null, and the
@@ -4503,7 +4629,7 @@ function revealTry(k,settled){
      so the tide sits on a phone's first screen, and the live paint pushes it below the fold in
      the same task that arms it. Measured once more, it waits for the scroll like it should. A chart
      this look finds off screen is looked at again a frame later, once the alerts, the nowcast
-     strip and the call (painted after the charts) have moved it; that look only ever holds a
+     strip and the farm's card (painted after the charts) have moved it; that look only ever holds a
      chart back, and one that passes mid-render plays. It never clears the observer's
      word: cleared mid-render, a week that grew back on screen sat blank until a scroll crossed a
      threshold, and the observer says when a chart has really left. */
@@ -5116,6 +5242,14 @@ function render(d,live,savedAt=0){
   document.getElementById("weekNote").textContent=weekendNote(wk,we);
 
   document.getElementById("tideSection").style.display=LOC.tide?"":"none";
+  /* the water over the tide chart, assembled by waterCard and painted before the chart is drawn,
+     so the chart's entrance measures it where it will stay */
+  const water=LOC.tide?waterCard(LOC,h,c,dy,m,d.water,warning,storm,now,dayRead.told):null;
+  paintSay("waterSay",water&&water.say);
+  const wLine=document.getElementById("waterLine");wLine.hidden=!water||!water.line;
+  if(water&&water.line)wLine.innerHTML=water.line.map(x=>`<span${x.cls?` class="${x.cls}"`:""}>${x.label} <b>${x.value}</b></span>`).join(' <span aria-hidden="true">·</span> ');
+  const wLevel=document.getElementById("waterLevel");wLevel.hidden=!water||!water.level;wLevel.textContent=water&&water.level||"";
+  document.getElementById("waterRead").hidden=!water||!water.say&&!water.line&&!water.level;
   if(LOC.tide)renderTides(d.tides,css,c.wind_gusts_10m,c.wind_speed_10m);
   renderAlerts(alerts);
   renderNowcast(d.nowcast,c.weather_code,h);
@@ -5126,20 +5260,14 @@ function render(d,live,savedAt=0){
   document.getElementById("hourlyNote").innerHTML=nextLight
     ?`<span class="gold-key">golden hour</span> ${spanTxt(nextLight.a,nextLight.b)}`:"";
 
-  /* the outside call, assembled by outsideCard and painted here */
-  const card=outsideCard(LOC,h,c,dayRead.best,m,warning,storm,now),call=card.call;
-  document.getElementById("outTitle").textContent=card.title;
-  const outSec=document.getElementById("outSection");
-  outSec.classList.remove("call-go","call-iffy","call-no");outSec.classList.add("call-"+call.call);
-  document.getElementById("waterLead").innerHTML=`<span class="call-word">${CALL_WORD[call.call]}</span>${card.when?` <span class="call-when">${card.when}</span>`:""}`;
-  const whyEl=document.getElementById("callWhy");whyEl.textContent=call.why||"";whyEl.hidden=!call.why;
-  const detail=document.getElementById("callDetail");detail.hidden=card.detail==null;
-  if(card.detail!=null)detail.innerHTML=card.detail;
-  document.getElementById("wWindowWrap").hidden=card.piddle==null;
-  document.getElementById("wWindowLbl").textContent=LOC.windowLabel||"";
-  if(card.piddle!=null)document.getElementById("wWindow").textContent=card.piddle;
-  document.getElementById("wFishWrap").hidden=card.fish==null;
-  if(card.fish!=null)document.getElementById("wFish").textContent=card.fish;
+  /* the farm's card, assembled by farmCard and painted here: hidden when it has nothing to say
+     and no bite time to give, the way the sun card steps aside */
+  const farm=LOC.kind==="farm"?farmCard(LOC,h,c,dy,warning,storm,now,dayRead.told):null;
+  document.getElementById("outSection").hidden=!farm||!farm.say&&!farm.fish;
+  document.getElementById("outTitle").textContent=LOC.outTitle||"";
+  paintSay("farmSay",farm&&farm.say);
+  document.getElementById("wFishWrap").hidden=!farm||!farm.fish;
+  if(farm&&farm.fish)document.getElementById("wFish").textContent=farm.fish;
 
   /* sun: the rest of today, off the hourly run whose first hour is the live reading. When
      nothing is left today worth a sentence the card steps aside rather than saying so, and
@@ -5281,17 +5409,23 @@ async function refresh(){
     const yest=new Date(Date.now()-864e5);
     const bd=yest.toLocaleDateString("en-CA",{timeZone:L.tz}).replace(/-/g,"");
     const stormsP=L.tropics?fetchStorms():Promise.resolve(null);
-    const [wj,marine,tides,alerts,storms]=await Promise.all([
+    const [wj,marine,tides,water,alerts,storms]=await Promise.all([
       fetchJSON(`https://api.open-meteo.com/v1/forecast?latitude=${L.lat}&longitude=${L.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,wind_speed_10m_max,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=${encodeURIComponent(L.tz)}&forecast_days=8&minutely_15=precipitation&forecast_minutely_15=12`,10000),
-      /* the seas are only asked for while the boat is going out, and for two days, because after
-         dark the call speaks for tomorrow's window */
-      L.marine&&inSeason(new Date().toLocaleDateString("en-CA",{timeZone:L.tz}),L.boatSeason)?fetchJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${L.marine.lat}&longitude=${L.marine.lon}&daily=wave_height_max,wave_period_max&timezone=${encodeURIComponent(L.tz)}&forecast_days=2&length_unit=imperial`,6000).then(mj=>{
-        const d=mj&&mj.daily||{},num=v=>v==null?NaN:Number(v);
-        const wave=num(d.wave_height_max?.[0]),next=num(d.wave_height_max?.[1]),period=num(d.wave_period_max?.[0]);
-        const or=v=>Number.isFinite(v)?v:null;
-        return Number.isFinite(wave)||Number.isFinite(next)?{wave_height_max:or(wave),wave_period_max:or(period),wave_height_next:or(next)}:null;
+      /* the seas every day of the year, hour by hour for two days, because after dark the boat's
+         sentence speaks for tomorrow */
+      L.marine?fetchJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${L.marine.lat}&longitude=${L.marine.lon}&hourly=wave_height&timezone=${encodeURIComponent(L.tz)}&forecast_days=2&length_unit=imperial`,6000).then(mj=>{
+        const t=mj?.hourly?.time,w=mj?.hourly?.wave_height;
+        return Array.isArray(t)&&Array.isArray(w)&&w.some(v=>v!=null&&Number.isFinite(+v))?{time:t,wave:w}:null;
       }).catch(()=>null):Promise.resolve(null),
       L.tide?fetchJSON(`https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&datum=MLLW&station=${L.tide}&time_zone=lst_ldt&units=english&interval=hilo&format=json&begin_date=${bd}&range=96`,6000).then(tj=>tj.predictions||null).catch(()=>null):Promise.resolve(null),
+      /* the water that is there: NOAA's own gauge and thermometer at the tide station, with the
+         table's six-minute marks to read the gauge against. Each is the station's latest, and a
+         failure hides only its own reading */
+      L.tide?Promise.all(["product=water_temperature&date=latest","product=water_level&datum=MLLW&range=1","product=predictions&datum=MLLW&interval=6&range=1"].map(q=>
+        fetchJSON(`https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?${q}&station=${L.tide}&units=english&time_zone=lst_ldt&format=json`,6000).catch(()=>null)))
+        .then(([wt,wl,pr])=>{const rows=a=>Array.isArray(a)?a.map(r=>({t:r.t,v:r.v})):null;
+          const temp=rows(wt?.data)?.[0]||null,level=rows(wl?.data);
+          return temp||level?{temp,level,pred:rows(pr?.predictions)}:null}):Promise.resolve(null),
       fetchJSON(`https://api.weather.gov/alerts/active?point=${L.lat},${L.lon}`,6000).then(aj=>(aj.features||[]).map(f=>({event:f.properties.event,severity:f.properties.severity,ends:f.properties.ends,expires:f.properties.expires,desc:f.properties.description||"",inst:f.properties.instruction||""}))).catch(()=>null),
       stormsP
     ]);
@@ -5302,7 +5436,7 @@ async function refresh(){
       feels:wj.hourly.apparent_temperature?.slice(i0,i0+24),
       pop:wj.hourly.precipitation_probability.slice(i0,i0+24),code:wj.hourly.weather_code.slice(i0,i0+24),wind:wj.hourly.wind_speed_10m.slice(i0,i0+24),
       gust:wj.hourly.wind_gusts_10m.slice(i0,i0+24),uv:wj.hourly.uv_index.slice(i0,i0+24)};
-    const data={current:wj.current,daily:wj.daily,hourly:s,marine,tides,alerts,storms,nowcast};
+    const data={current:wj.current,daily:wj.daily,hourly:s,marine,tides,water,alerts,storms,nowcast};
     if(L!==LOC||request!==REFRESH_ID)return; /* a newer refresh or location change won */
     render(data,true);
     writeCache(L.id,data);
@@ -5333,16 +5467,14 @@ function paintAddr(){
     `<span class="addr-full">${LOC.addrFull}</span><span class="addr-short">${LOC.addrShort}</span>${SWAP}`;
 }
 function paintLocationShell(){
-  const coastal=!!LOC.marine;
-  document.getElementById("tideSection").style.display=coastal?"":"none";
-  /* the call's shape for this place, before any reading: its title, the piddle and bite lines
-     where the place has them, and no word until there is something to say it about */
-  document.getElementById("outTitle").textContent=titleFor(LOC,locToday());
-  document.getElementById("outSection").classList.remove("call-go","call-iffy","call-no");
-  document.getElementById("waterLead").innerHTML='<span class="call-word">—</span>';
-  document.getElementById("callWhy").hidden=document.getElementById("callDetail").hidden=true;
-  document.getElementById("wWindowWrap").hidden=!LOC.windowLabel;
-  document.getElementById("wWindowLbl").textContent=LOC.windowLabel||"";
+  document.getElementById("tideSection").style.display=LOC.tide?"":"none";
+  /* this place's shape before any reading: the water section with the chart and nothing said
+     over it, and the farm's card with its title and the bite line waiting. No sentence until
+     there is something to say it about */
+  document.getElementById("waterRead").hidden=true;
+  document.getElementById("outSection").hidden=LOC.kind!=="farm";
+  document.getElementById("outTitle").textContent=LOC.outTitle||"";
+  paintSay("farmSay",null);
   document.getElementById("wFishWrap").hidden=!LOC.fish;
   document.getElementById("sceneSvg").setAttribute("aria-label",LOC.sceneLabel);
   const comfort=LOC.kind==="trip";
@@ -5381,7 +5513,7 @@ function paintLoadingState(){
   /* the bar is drawn only from a reading, so its scale goes with it: the words floated under an
      empty band in the loading and error shell */
   document.getElementById("uvDetails").style.display="none";
-  for(const id of ["wFish","wWindow","uvLead","eveLead"])
+  for(const id of ["wFish","uvLead","eveLead"])
     document.getElementById(id).textContent="—";
   HOURLY_PEEK=null;hideHourlyPeek();TIDE_PEEK=null;hideTidePeek();LAST=null;
 }

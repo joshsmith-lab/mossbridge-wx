@@ -58,11 +58,11 @@ const CASES = [
   { name: "06-dusk-porters-neck", loc: "mb", when: "2026-08-02T19:58:00",
     o: { baseTemp: 84, nowTemp: 86, feels: 92, rh: 70, isDay: 1, code: 1, cloud: 20, nowWind: 8, nowDir: 200, nowGust: 14, nowUv: 0.5, uvMax: 9, windAmp: 8, gustAmp: 13,
       popCurve: () => 10, dailyPop: (p) => p.fill(20) } },
-  // should say "today": a fine afternoon must not be displaced by a calmer tomorrow morning
+  // a fine farm afternoon: nothing to plan around, so the card is the bite line and nothing else
   { name: "07-fine-afternoon-shady-spring", loc: "sp", when: "2026-08-02T15:10:00",
     o: { baseTemp: 72, nowTemp: 78, feels: 78, rh: 52, isDay: 1, code: 1, cloud: 12, nowWind: 6, nowDir: 280, nowGust: 11, nowUv: 6.2, uvMax: 8, windAmp: 6, gustAmp: 10,
       popCurve: () => 5, dailyPop: (p) => p.fill(10) } },
-  // should say "tomorrow": today is a washout, tomorrow is clear
+  // a washout at the coast: the headline carries it, and the water section says only the water
   { name: "08-washout-porters-neck", loc: "mb", when: "2026-08-02T13:40:00",
     o: { baseTemp: 84, nowTemp: 88, feels: 97, rh: 80, isDay: 1, code: 3, cloud: 85, nowWind: 14, nowDir: 210, nowGust: 26, nowUv: 3.1, uvMax: 8, windAmp: 12, gustAmp: 22,
       popCurve: (i, hr) => (hr >= 13 && hr <= 20 ? 80 : 15),
@@ -71,51 +71,64 @@ const CASES = [
   { name: "09-after-midnight-porters-neck", loc: "mb", when: "2026-08-02T01:15:00",
     o: { baseTemp: 80, nowTemp: 76, feels: 79, rh: 88, isDay: 0, code: 1, cloud: 20, nowWind: 4, nowDir: 35, nowGust: 7, nowUv: 0, uvMax: 9, windAmp: 5, gustAmp: 8,
       popCurve: () => 3, dailyPop: (p) => p.fill(10) } },
+  // and the water two feet over the tide table, the way it ran on September 27 2026
   { name: "13-shoulder-season-porters-neck", loc: "mb", when: "2026-09-28T14:40:00",
     note: "UV peaks at 4: the mild sentence, no schedule — a moderate day must not read like July",
     o: { baseTemp: 72, nowTemp: 76, feels: 78, rh: 60, isDay: 1, code: 1, cloud: 24, nowWind: 8, nowDir: 40, nowGust: 13, nowUv: 3.8, uvMax: 4.2,
-      windAmp: 7, gustAmp: 11, sunrise: "07:04", sunset: "18:59",
-      popCurve: () => 8, dailyPop: (p) => p.fill(12) } },
+      windAmp: 7, gustAmp: 11, sunrise: "07:04", sunset: "18:59", surge: 1.9,
+      popCurve: () => 8, dailyPop: (p) => p.fill(12) },
+    expect: { say: null, line: /^seas about 2 ft · water 77°$/, level: "Running 2 ft above the tide table.", marine: 1 } },
   // the week as lines: a late-September swing from a cool snap to a warm run
   { name: "14-week-porters-neck", loc: "mb", when: "2026-09-24T17:10:00",
     o: { baseTemp: 66, nowTemp: 68, feels: 68, rh: 70, isDay: 1, code: 3, cloud: 70, nowWind: 15, nowDir: 5, nowGust: 30, nowUv: .6, uvMax: 6,
       windAmp: 8, gustAmp: 14, sunrise: "07:02", sunset: "19:06",
       popCurve: () => 4, dailyPop: (p) => p.splice(0, 8, 20, 4, 1, 0, 1, 6, 5, 10),
-      dailyTemps: (hi, lo, c) => { hi.splice(0, 8, 70, 67, 80, 82, 82, 84, 85, 83); lo.splice(0, 8, 63, 57, 53, 59, 61, 68, 72, 70); c.splice(0, 8, 61, 3, 2, 1, 2, 3, 3, 2); } } },
+      dailyTemps: (hi, lo, c) => { hi.splice(0, 8, 70, 67, 80, 82, 82, 84, 85, 83); lo.splice(0, 8, 63, 57, 53, 59, 61, 68, 72, 70); c.splice(0, 8, 61, 3, 2, 1, 2, 3, 3, 2); } },
+    // with the boat season switched on: gusting 30 at five is the evening you are in, never tomorrow's
+    boat: true, expect: { say: "Too windy for the boat.", sayCls: "no", line: /^gusts to 30 · seas about 2 ft · water 77°$/ } },
   // a wet, stormy week: three-digit heat, 100% odds, a storm and a washout next to dry days.
   // A Sunday, so it is also the eight-column week: next Saturday and Sunday are days 7 and 8
   { name: "15-wet-week-shady-spring", loc: "sp", when: "2026-08-02T12:20:00",
     o: { baseTemp: 84, nowTemp: 90, feels: 97, rh: 70, isDay: 1, code: 2, cloud: 40, nowWind: 6, nowDir: 250, nowGust: 12, nowUv: 8, uvMax: 9,
       windAmp: 6, gustAmp: 10, popCurve: () => 10, dailyPop: (p) => p.splice(0, 8, 35, 85, 100, 45, 10, 0, 65, 20),
       dailyTemps: (hi, lo, c) => { hi.splice(0, 8, 96, 101, 88, 84, 83, 86, 90, 87); lo.splice(0, 8, 74, 76, 71, 66, 64, 66, 70, 68); c.splice(0, 8, 2, 95, 63, 80, 1, 0, 81, 2); } },
-    expect: { cols: 8, weekend: ["Sat", "Sun"] } },
-  // a Saturday in boat season: the weekend is today and tomorrow, so the note names only Sunday
+    expect: { cols: 8, weekend: ["Sat", "Sun"], farm: "The farm", say: null, fish: true } },
+  // a Saturday with the boat season switched on: the weekend is today and tomorrow, so the note
+  // names only Sunday, and the water is an easy day in words
   { name: "16-saturday-porters-neck", loc: "mb", when: "2026-09-26T10:30:00",
     o: { baseTemp: 74, nowTemp: 75, feels: 75, rh: 58, isDay: 1, code: 1, cloud: 18, nowWind: 7, nowDir: 60, nowGust: 12, nowUv: 4.6, uvMax: 5.8,
       windAmp: 7, gustAmp: 10, sunrise: "07:03", sunset: "19:02", popCurve: () => 6, dailyPop: (p) => p.splice(0, 7, 8, 45, 20, 10, 5, 10, 15),
       dailyTemps: (hi, lo, c) => { hi.splice(0, 7, 79, 81, 77, 75, 78, 80, 82); lo.splice(0, 7, 64, 67, 62, 58, 60, 63, 65); c.splice(0, 7, 1, 80, 3, 2, 1, 2, 2); } },
-    expect: { cols: 7, weekend: ["Today", "Sun"], note: /^Sun \d+° 45% rain$/ } },
-  // a Saturday in mid-November: off season, so the coast gets the outside call and no seas are asked for
+    boat: true, expect: { cols: 7, weekend: ["Today", "Sun"], note: /^Sun \d+° 45% rain$/, say: "Easy out there.", sayCls: "go",
+      line: /^gusts to \d+ · seas about 2 ft · water 77°$/ } },
+  // a Saturday in mid-November: no boat sentence, and the seas and the water are read all the same
   { name: "17-off-season-saturday-porters-neck", loc: "mb", when: "2026-11-14T11:15:00",
     o: { baseTemp: 58, nowTemp: 61, feels: 61, rh: 55, isDay: 1, code: 2, cloud: 35, nowWind: 9, nowDir: 330, nowGust: 15, nowUv: 2.9, uvMax: 3.2,
-      windAmp: 7, gustAmp: 10, sunrise: "06:48", sunset: "17:09", popCurve: () => 5, dailyPop: (p) => p.fill(10),
+      windAmp: 7, gustAmp: 10, sunrise: "06:48", sunset: "17:09", waterTemp: 63.1, popCurve: () => 5, dailyPop: (p) => p.fill(10),
       dailyTemps: (hi, lo, c) => { hi.splice(0, 7, 62, 60, 58, 62, 65, 61, 57); lo.splice(0, 7, 46, 43, 40, 44, 49, 45, 39); } },
     // and the card says "Sunscreen if you're out a while." at 2.9: the 3.1 still to come crosses into
     // moderate, so its ring stays, or the only UV on the page read LOW under a sunscreen sentence
-    expect: { cols: 7, weekend: ["Today", "Sun"], out: "Outside · Porters Neck", marine: 0, detail: 0,
+    expect: { cols: 7, weekend: ["Today", "Sun"], say: null, line: /^seas about 2 ft · water 63°$/, level: null, marine: 1,
       sun: "Sunscreen if you're out a while.", uvBar: /^UV 2\.9 now, low, peaking at 3\.1 around 12 p\.m\.$/ } },
-  // a cold, clear January morning on the coast: the outside call is iffy on the cold, and the sun card steps aside
+  // a cold, clear January morning on the coast: the headline owns the cold, the water section says
+  // only the water, and the sun card steps aside. The station's thermometer is down: no water at all
   { name: "18-january-porters-neck", loc: "mb", when: "2027-01-14T08:40:00",
     o: { baseTemp: 32, nowTemp: 28, feels: 20, rh: 58, isDay: 1, code: 0, cloud: 4, nowWind: 11, nowDir: 340, nowGust: 19, nowUv: 0.6, uvMax: 2.4,
-      windAmp: 7, gustAmp: 10, sunrise: "07:22", sunset: "17:25", popCurve: () => 3, dailyPop: (p) => p.fill(5),
+      windAmp: 7, gustAmp: 10, sunrise: "07:22", sunset: "17:25", waterTemp: null, popCurve: () => 3, dailyPop: (p) => p.fill(5),
       dailyTemps: (hi, lo, c) => { hi.splice(1, 6, 44, 51, 55, 47, 40, 36); lo.splice(1, 6, 26, 33, 39, 31, 25, 21); c.splice(1, 6, 1, 2, 3, 3, 1, 0); } },
-    expect: { out: "Outside · Porters Neck", call: "Iffy", why: /^Cold, feels \d+°$/, sun: "(steps aside)", marine: 0 } },
-  // boat season with the marine run answering but carrying no seas: never a go, and the line says unavailable
+    expect: { say: null, line: /^seas about 2 ft$/, sun: "(steps aside)", marine: 1 } },
+  // the boat season on, with the marine run answering but carrying no seas: never green, and said once
   { name: "19-no-seas-porters-neck", loc: "mb", when: "2026-09-15T10:10:00",
     o: { baseTemp: 76, nowTemp: 77, feels: 78, rh: 62, isDay: 1, code: 1, cloud: 20, nowWind: 6, nowDir: 190, nowGust: 10, nowUv: 5.2, uvMax: 6.4,
       windAmp: 6, gustAmp: 8, sunrise: "06:56", sunset: "19:21", wave: null, popCurve: () => 6, dailyPop: (p) => p.fill(10),
       dailyTemps: (hi, lo, c) => { hi.splice(1, 6, 83, 84, 81, 79, 82, 84); lo.splice(1, 6, 68, 70, 67, 64, 66, 69); c.splice(1, 6, 1, 2, 2, 1, 1, 2); } },
-    expect: { out: "On the water · Figure 8", call: "Iffy", detail: /seas unavailable/ } },
+    boat: true, expect: { say: "Seas unavailable.", sayCls: "caution", line: /^gusts to \d+ · water 77°$/ } },
+  // a cold October morning at the farm: the card speaks for the morning rounds, in amber, over the bite times
+  { name: "20-cold-morning-shady-spring", loc: "sp", when: "2026-10-22T07:40:00",
+    o: { baseTemp: 44, nowTemp: 31, feels: 27, rh: 80, isDay: 1, code: 0, cloud: 5, nowWind: 4, nowDir: 320, nowGust: 8, nowUv: 0.2, uvMax: 3.5,
+      windAmp: 5, gustAmp: 8, sunrise: "07:32", sunset: "18:40", popCurve: () => 3, dailyPop: (p) => p.fill(5),
+      dailyTemps: (hi, lo, c) => { hi.splice(0, 8, 53, 58, 61, 57, 55, 60, 63, 59); lo.splice(0, 8, 29, 33, 38, 41, 35, 34, 39, 42); c.splice(0, 8, 0, 1, 2, 3, 3, 2, 1, 2); } },
+    expect: { farm: "The farm", say: "Cold one. Bundle up for the morning rounds.", sayCls: "caution", fish: true } },
 ];
 
 const cases = ONLY.length ? CASES.filter((c) => ONLY.some((q) => c.name.includes(q))) : CASES;
@@ -139,10 +152,17 @@ for (const cs of cases) {
     const errs = [];
     page.on("pageerror", (e) => errs.push(String(e)));
     page.on("console", (m) => { if (m.type() === "error") errs.push("console: " + m.text()); });
-    // off season the seas are not asked for at all, so count the asks rather than the answers
+    // the seas are asked for every day of the year, so count the asks rather than the answers
     let marineAsks = 0;
     page.on("request", (r) => { if (r.url().includes("marine-api.open-meteo.com")) marineAsks++; });
 
+    // the boat season is off until Josh says, so a scenario that shows the boat's sentence serves
+    // the page with the season switched back on, and fails if there was nothing to switch
+    if (cs.boat) await page.route("**/index.html", async (r) => {
+      const res = await r.fetch(), src = await res.text(), on = src.replace("boatSeason:null", 'boatSeason:["03-15","10-31"]');
+      if (on === src) errs.push("no boatSeason:null to switch on");
+      await r.fulfill({ response: res, body: on });
+    });
     await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: "domcontentloaded" });
     await page.evaluate(() => document.fonts.ready).catch(() => {});
     await page.waitForTimeout(1400);
@@ -173,12 +193,13 @@ for (const cs of cases) {
           feels: document.getElementById("feelsRow")?.hidden ? null : T("feels"),
           chips: [...document.querySelectorAll(".chip")].map(seen),
           nowcast: document.getElementById("nowcast")?.classList.contains("on") ? T("ncText") : null,
-          // the outside call: its title, the word and the when beside it, the one why line, and the lines under it
-          out: T("outTitle"),
-          call: seen(document.querySelector("#waterLead .call-word")),
-          when: seen(document.querySelector("#waterLead .call-when")),
-          why: shown("callWhy"),
-          detail: [...document.querySelectorAll("#outSection .out-line:not([hidden])")].map(seen),
+          // the water over the tide chart: the boat's sentence and its colour, the readings, and the
+          // gauge against the table
+          water: document.getElementById("waterRead").hidden ? null : { say: shown("waterSay"),
+            cls: document.getElementById("waterSay").className.replace("say", "").trim() || null, line: shown("waterLine"), level: shown("waterLevel") },
+          // the farm's card, when it is out: its title, its sentence and colour, and the bite line
+          farm: document.getElementById("outSection").hidden ? null : { title: T("outTitle"), say: shown("farmSay"),
+            cls: document.getElementById("farmSay").className.replace("say", "").trim() || null, fish: shown("wFishWrap") },
           // the sun card steps aside when nothing is left today; the bar speaks its reading
           sun: sunOff ? "(steps aside)" : T("uvLead"),
           uvBar: sunOff || document.getElementById("uvDetails")?.style.display === "none"
@@ -229,18 +250,20 @@ for (const cs of cases) {
       if (cs.name === "09-after-midnight-porters-neck" && !/before morning/.test(copy.tonight || "")) {
         failures++; console.log(`!! after-midnight Tonight card describes the wrong night (${copy.tonight})`);
       }
-      /* what a scenario is there to show: the week's columns and its banded days, the call's
-         title, word and lines, and whether the seas were asked for at all */
+      /* what a scenario is there to show: the week's columns and its banded days, the water's
+         sentence, readings and level line, the farm's card, and whether the seas were asked for */
       const ex = cs.expect || {}, days = copy.week.split(" "), fail = (m) => { failures++; console.log(`!! ${cs.name}: ${m}`); };
       if (ex.cols && days.length !== ex.cols) fail(`${days.length} week columns, expected ${ex.cols}`);
       if (ex.weekend) { const we = days.filter((d) => d.startsWith("[")).map((d) => d.slice(1, -1));
         if (we.join() !== ex.weekend.join()) fail(`weekend banded ${we.join(" ") || "nowhere"}, expected ${ex.weekend.join(" ")}`); }
       if (ex.note && !ex.note.test(copy.weekNote || "")) fail(`week note "${copy.weekNote}"`);
-      if (ex.out && copy.out !== ex.out) fail(`call titled "${copy.out}", expected "${ex.out}"`);
-      if (ex.call && copy.call !== ex.call) fail(`call "${copy.call}", expected "${ex.call}"`);
-      if (ex.why && !ex.why.test(copy.why || "")) fail(`why "${copy.why}"`);
-      if (typeof ex.detail === "number" && copy.detail.length !== ex.detail) fail(`${copy.detail.length} detail lines, expected ${ex.detail}`);
-      if (ex.detail instanceof RegExp && !copy.detail.some((l) => ex.detail.test(l))) fail(`detail ${JSON.stringify(copy.detail)}`);
+      const card = copy.water || copy.farm || {};
+      if ("say" in ex && (card.say ?? null) !== ex.say) fail(`sentence "${card.say}", expected "${ex.say}"`);
+      if (ex.sayCls && card.cls !== ex.sayCls) fail(`sentence coloured ${card.cls}, expected ${ex.sayCls}`);
+      if (ex.line && !ex.line.test(copy.water?.line || "")) fail(`water line "${copy.water?.line}"`);
+      if ("level" in ex && (copy.water?.level ?? null) !== ex.level) fail(`level line "${copy.water?.level}", expected "${ex.level}"`);
+      if (ex.farm && copy.farm?.title !== ex.farm) fail(`farm card ${JSON.stringify(copy.farm)}, expected "${ex.farm}"`);
+      if ("fish" in ex && !!copy.farm?.fish !== ex.fish) fail(`bite line "${copy.farm?.fish}"`);
       if (ex.sun && copy.sun !== ex.sun) fail(`sun card "${copy.sun}", expected "${ex.sun}"`);
       if (ex.uvBar && !ex.uvBar.test(copy.uvBar || "")) fail(`sun bar "${copy.uvBar}"`);
       if ("marine" in ex && marineAsks !== ex.marine) fail(`${marineAsks} marine requests, expected ${ex.marine}`);
@@ -265,12 +288,11 @@ for (const cs of cases) {
   const shell = await page.evaluate(() => ({
     tide: getComputedStyle(document.getElementById("tideSection")).display,
     scene: document.getElementById("sceneSvg").getAttribute("aria-label"),
-    card: document.getElementById("outTitle").textContent,
-    window: document.getElementById("wWindowLbl").textContent,
+    card: document.getElementById("outSection").hidden ? null : document.getElementById("outTitle").textContent,
     // the sun bar is drawn only from a reading, so its scale words go with it
     uvScale: getComputedStyle(document.getElementById("uvDetails")).display,
   }));
-  if (shell.tide !== "none" || !shell.scene.includes("Appalachian") || !shell.card.includes("farm") || shell.window !== "best time to piddle" || shell.uvScale !== "none") {
+  if (shell.tide !== "none" || !shell.scene.includes("Appalachian") || shell.card !== "The farm" || shell.uvScale !== "none") {
     failures++; console.log(`!! location-correct loading shell: ${JSON.stringify(shell)}`);
   }
   if (errs.length) { failures++; console.log(`!! loading hourly explorer: ${errs.join(" | ")}`); }
