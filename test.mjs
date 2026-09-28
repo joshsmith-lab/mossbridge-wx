@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v79/);
+  assert.match(worker, /mbwx-shell-v80/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -1928,7 +1928,14 @@ test("the copy harness keeps looking at the days the water, the farm and the wee
   assert.match(shots, /on = src\.replace\("boatSeason:null", 'boatSeason:\["03-15","10-31"\]'\)/);
   assert.match(shots, /if \(on === src\) errs\.push\("no boatSeason:null to switch on"\)/);
   // and each says what it is there to show, so the harness fails when it stops showing it
-  assert.match(shots, /expect: \{ cols: 8, weekend: \["Sat", "Sun"\], moon: true, say: null, fish: true \}/);
+  assert.match(shots, /expect: \{ cols: 8, weekend: \["Sat", "Sun"\], moon: true, say: null, fish: true, xp: \{ week: /);
+  // and each chart's pill where it starts is printed and held: the water at now and an hour on while
+  // the gauge runs off the table, the Sunday week, a January coast with no snow, an October farm with its snow
+  assert.match(shots, /xp: Object\.fromEntries\(Object\.entries\(XP\)/);
+  assert.equal(shots.split("tideHour: / by the table$/").length - 1, 3, "the three surge scenarios read the table an hour on");
+  assert.match(shots, /xp: \{ year: \/\^Jan 57° \\\/ 36° rain 3\\\.8 in\$\/ \}/);
+  assert.match(shots, /xp: \{ year: \/\^Oct 64° \\\/ 44° rain 2\\\.7 in snow 1 in\$\/ \}/);
+  assert.match(shots, /for \(const \[k, re\] of Object\.entries\(ex\.xp \|\| \{\}\)\) if \(!re\.test\(copy\.xp\[k\] \|\| ""\)\) fail\(/);
   assert.match(shots, /expect: \{ cols: 7, weekend: \["Today", "Sun"\], note: \/\^Sun \\d\+° 45% rain\$\/, sayTitle: "The boat", say: "Easy out there\.", sayCls: "go"/);
   assert.match(shots, /sayTitle: "The boat", say: "Too windy for the boat\.", sayCls: "no"/);
   assert.match(shots, /sayTitle: "The boat", say: "Seas unavailable\.", sayCls: "caution", tide: \/\^77°\$\//);
@@ -1976,7 +1983,7 @@ test("every line reads the same way: one machine, and readers that say only what
   // the week: its days stay buttons and tab stops, a slide opens the day you let go on the way a tap
   // does (weekPick), the click a drag leaves behind is swallowed, and the arrows move and open
   assert.match(html, /xpSetup\("week",\{pick:true,release:weekPick\}\);/);
-  assert.match(html, /if\(performance\.now\(\)-\(XP\.week\?\.end\|\|0\)<600\)return;/);
+  assert.match(html, /if\(performance\.now\(\)-\(XP\.week\?\.end\?\?-Infinity\)<600\)return;/);
   assert.match(html, /const to=e\.key==="ArrowRight"\?j\+1:/);
   assert.doesNotMatch(html.slice(html.indexOf("function renderWeek("), html.indexOf("function weekBrief(")), /tabindex="-1"/);
   assert.match(html, /const said=readDay\(dy,i\)\.said;/, "the button speaks the pill's sentence");
@@ -1989,6 +1996,24 @@ test("every line reads the same way: one machine, and readers that say only what
   assert.match(html, /xpPublish\("year",\{svg,W,x:ms\.map\(X\),y:ms\.map\(m=>\[Y\(N\.hi\[m\]\),Y\(N\.lo\[m\]\)\]\),t:ms,band:\[12,H-1\],start:m0,marks:\[m0,hiI,loI\]/);
   for (const l of ["Almanac fishing times, 15 minutes a step", "The year, month by month"])
     assert.ok(html.includes(`<input class="xp-key" type="range" min="0" max="0" step="1" value="0" disabled aria-label="${l}">`), l);
+  // one explorer per chart, set up in page order, and every one of them is a chart the entrance draws
+  const setups = [...html.matchAll(/xpSetup\("(\w+)"/g)].map((m) => m[1]);
+  assert.deepEqual(setups, ["hourly", "week", "tide", "moon", "year"]);
+  const revealKeys = Object.keys(Object.fromEntries([...html.match(/const REVEAL=\{([\s\S]*?)\};/)[1].matchAll(/(\w+):\{state/g)].map((m) => [m[1], 1])));
+  for (const k of setups) assert.ok(revealKeys.includes(k), `${k} is in REVEAL`);
+  assert.deepEqual(setups, revealKeys.filter((k) => setups.includes(k)), "in REVEAL's page order");
+  // one cursor slot per chart, over its line and under its words: in each chart's template it comes
+  // before the first literal text and the labels, so their paper halos break the hairline
+  assert.equal(html.split('<g class="xp-cursor"').length - 1, 5);
+  for (const [fn, words] of [["function render(", "${dots}"], ["function renderWeek(", "${marks}"], ["function renderTides(", "${labels}"], ["function renderMoon(", "${labels}"], ["function renderYear(", "${marks}"]]) {
+    const src = html.slice(html.indexOf(fn)), tpl = src.slice(src.indexOf("innerHTML=`"), src.indexOf("innerHTML=`") + 9000);
+    const slot = tpl.indexOf('<g class="xp-cursor"'), firstText = tpl.indexOf("<text");
+    assert.ok(slot > 0 && slot < tpl.indexOf(words) && (firstText < 0 || slot < firstText), `${fn} draws its cursor under its words`);
+  }
+  // four range inputs, one per chart that is not already a row of buttons
+  assert.equal(html.split('<input class="xp-key" type="range"').length - 1, 4);
+  for (const l of ["Next 24 hours, hour by hour", "Water, 15 minutes a step", "Almanac fishing times, 15 minutes a step", "The year, month by month"])
+    assert.ok(html.includes(`aria-label="${l}">`), l);
   // the Sun bar is a scale, not a day, and has none
   assert.match(html, /The Sun bar has none: it is a scale, not\n   a day/);
   assert.doesNotMatch(html, /uvExplore/);
@@ -2147,6 +2172,12 @@ test("every line reads the same way: one machine, and readers that say only what
   }
   assert.deepEqual([...qs].sort((a, b) => a - b), qs);
 
+  // the interaction harness reads the charts with a real finger, since a synthetic event skips the
+  // browser's gesture handling and that is how the hourly chart's freeze went unseen
+  const inter = await readFile(new URL("tools/interactions.mjs", root), "utf8");
+  assert.match(inter, /Input\.dispatchTouchEvent/);
+  assert.match(inter, /hasTouch:true,isMobile:true/);
+  assert.match(inter, /the slide is the chart's, not the page's/);
   // and nothing any reader says breaks the house voice
   for (const s of outs) {
     assert.doesNotMatch(s, /;|—/, `"${s}" has no semicolon or em dash`);

@@ -4734,7 +4734,7 @@ function weekPick(i){
 }
 document.getElementById("weekRows").addEventListener("click",e=>{
   /* the click a mouse drag can leave behind is the slide's, not a tap */
-  if(performance.now()-(XP.week?.end||0)<600)return;
+  if(performance.now()-(XP.week?.end??-Infinity)<600)return;
   const b=e.target.closest("button.wk-day");
   if(!b)return;
   weekPick(b.getAttribute("aria-expanded")==="true"?0:+b.dataset.i);
@@ -5161,7 +5161,7 @@ function moonCross(a,b){
 function xpSetup(k,{view=null,pick=false,release=null}={}){
   const box=document.getElementById(k+"Explore");
   const X=XP[k]={k,box,view,pick,release,peek:box.querySelector(".xp-peek"),key:box.querySelector(".xp-key"),
-    D:null,i:-1,shown:false,hideT:0,holdT:0,ptr:null,x0:0,y0:0,slide:false,held:false,end:0,loc:null};
+    D:null,i:-1,shown:false,hideT:0,holdT:0,ptr:null,x0:0,y0:0,slide:false,held:false,end:-Infinity,loc:null};
   const drop=()=>{clearTimeout(X.holdT);X.ptr=null;X.slide=false;X.held=false;box.classList.remove("xp-drag")};
   box.addEventListener("pointerdown",e=>{
     if(!X.D||!e.isPrimary)return;                        /* the first finger only */

@@ -45,7 +45,8 @@ place name.
   thing twice. The headline no longer names the sky, because the condition beside the
   number and the scene under it already do. Feels-like gets its line only when it is 3° or
   more off the air, the rule the hourly readout already used, because inside that it is the
-  same number twice. The hourly note is the golden-hour span or nothing.
+  same number twice. The hourly note is the golden-hour span or nothing. It names the next band;
+  a finger inside any gold band, tomorrow morning's too, reads a quiet gold `golden hour` on the pill.
 - **The page reads top down, and the first screen is the answer.** What the family opens it
   for is now, today and the weekend, so that is the first screen on a phone: the sky (the
   reading, the headline, the chips, the scene), the next 24 hours, then this week. The week
@@ -241,6 +242,27 @@ place name.
   retry. The one thing they said that the page needed, that the fishing times are the almanac's,
   now rides on the moon chart's title, `Almanac fishing times` (see The moon over the farm). Do not
   grow the footer back.
+- **Every line reads the same way.** Josh asked for the slider to do something helpful on every
+  line (September 28 2026). Put a finger on any chart and slide it sideways: a ring rides the line,
+  a hairline marks the stop under the labels (their halos break it, so it never strikes through a
+  number), and one pill above the finger says what the picture cannot, or puts a number on what the
+  finger covers. A vertical swipe scrolls and shows nothing. A tap reads where it lands, a still
+  press reads after 140ms, and a lifted reading stays 2.2 seconds. The keys are the same everywhere:
+  the arrows step, Home and End go to the ends, PageUp and PageDown jump to the points the chart
+  names, Escape puts it away, and a screen reader hears the same sentence as the slider's value
+  (one hidden range input per chart, never a live region). The week's days were already buttons, so
+  a tap still opens a day, a slide opens the day you let go on (`weekPick`), and the arrows move and
+  open. A missing value is a dash, never a number and never `dry`. The hours say thunder at any
+  odds, gusts from `WINDY_GUST` (28, the headline's windy line, one constant), and golden hour inside
+  a gold band. The water says the water that is there at now (the table plus the gauge's gap, where
+  the gauge's mark is drawn on the now line, and the ring goes on that mark when it is drawn and
+  nowhere at now when the skiff covers it) and `by the table` everywhere else while the gauge runs off
+  it. The moon says when a fishing time ends, or when the moon rises or sets, and never names a
+  window it dropped. A day is named only where a clock time could mean two moments. The Sun bar has
+  none, because it is a scale and not a day. A chart still drawing in finishes first, a repaint
+  under a finger keeps the moment, and the explorer adds no animation. `xpSetup` and `xpPublish` are
+  the one machine, and `readHour`, `readDay`, `readTide`, `readMoon` and `readMonth` are pure and
+  test.mjs runs them.
 - Golden hour is sun elevation +6° to -4°, the convention the photo apps use.
   Blue hour is -4° to -6°. The displayed sunrise and sunset times come from the
   forecast API; sun and moon positions and the golden-hour boundaries are
@@ -452,12 +474,13 @@ the morning rounds.` on the `Piddling` card over the moon. A scenario marked `bo
 to `tools/shots/` and prints the generated copy (the headline, the chips as they are seen, the
 water's note, the level the chart speaks and the tag on the skiff, the moon's phase and the
 fishing times it speaks, the sentence card, the sun sentence, tonight, the week's note with the
-banded weekend in brackets, and the year's title and note), so wording changes are reviewable as
-text. A scenario can carry an `expect`: the week's columns and banded days, the sentence card's
-title, sentence and colour, the water's note, the level and its tag, the moon and whether it has
-fishing times, the year, the sun card, the sun bar's spoken label, and how many times the seas were
-asked for. The loading-shell check at the end also holds the sun scale hidden while there is no
-bar, and the farm's moon and its year's title in place before any forecast lands. Every scenario
+banded weekend in brackets, the year's title and note, and `xp`, each chart's pill where it starts
+and the water an hour on), so wording changes are reviewable as text. A scenario can carry an
+`expect`: the week's columns and banded days, the sentence card's title, sentence and colour, the
+water's note, the level and its tag, the moon and whether it has fishing times, the year, the sun
+card, the sun bar's spoken label, how many times the seas were asked for, and its pills (`xp`). The
+loading-shell check at the end also holds the sun scale hidden and every slider off while there is no
+bar or reading, and the farm's moon and its year's title in place before any forecast lands. Every scenario
 also fails when a word on the tide, the moon or the year runs off its chart or into another word,
 or when the skiff's level tag sits on the bed, measured at 390 and 900 and once more at 320, the
 width where they meet. It exits non-zero when one does not show what it
@@ -725,8 +748,8 @@ lines over bars. They change once a decade, so they live in `NORMALS` and nothin
 
 ## Interaction and reading refinements
 
-- The hourly tooltip is measured against the visible scroll area, not the full
-  820-unit chart. Keep its intrinsic width independent of its current position
+- Every chart's pill is measured against the visible part of its chart (for the hours, the scroll
+  area), not the full chart. Keep its intrinsic width independent of its current position
   (`width:max-content`), or moving from a short reading to a long one at an edge
   measures the old constrained width and clips the next reading. Its background
   is opaque so the chart's text cannot show through.
@@ -847,16 +870,25 @@ order, hourly, week, tide, moon, sun, year, and so is `RV_OF`, the observer's ma
   or pops takes its transform origin from its own geometry in user space, not a fill-box
   percentage.
 
-`tools/interactions.mjs` runs fourteen scenarios: narrow and wide chart edges, keyboard
-navigation, location switching, snow/ice labels, a warning at the farm that is `Chores can
+`tools/interactions.mjs` runs twenty-three scenarios: every pill kept inside its chart at both edges
+at 320, 390 and 900, keyboard navigation, location switching, snow/ice labels, a warning at the farm that is `Chores can
 wait.` in red and takes the fishing times until it expires, source instructions, a farm day with
 thunder in the run from noon and nothing warned (the headline `Thunder possible around noon.`,
 the card `Piddle before the thunder.` in amber, and no fishing time inside the thunder), a phone that opens at the coast and taps to the farm's
 cache (the farm's moon and its year's title on the cached paint and the live one),
 the entrance across a cache-to-live paint that drops the nowcast strip with the week at the
 fold (nothing on screen left undrawn) and with no cache (the tide the live paint pushes below
-the fold waits for the scroll, then draws), retry, and cached/online recovery. The two
-entrance checks run with motion on; everything else runs under reduced motion. Run it with the same font and browser settings as
+the fold waits for the scroll, then draws), retry, and cached/online recovery. Then the explorer
+with a real finger (CDP touch in a phone context, because a synthetic dispatchEvent skips the
+browser's gesture handling, which is how the hourly chart's freeze went unseen): a sideways slide on
+every chart at 390 that keeps the finger, follows it and rings the published point, a vertical drag
+on every chart that scrolls and shows nothing, a tap, a still press, one reading at a time; the
+keys, Tab order and spoken values, with the sliders off in the loading shell; the Sunday week at
+320 by touch and by mouse (a slide opens the day you let go on, Today closes, hover opens nothing);
+the water two feet over the table; the farm's snowy January and the clamped ends of the year; a
+finger held through a repaint; a cache opened three hours late; and, with motion on, a slide
+during the entrance and the animation count across a slide. The entrance checks run with motion
+on; everything else runs under reduced motion. Run it with the same font and browser settings as
 `tools/shots.mjs`. Request ordering and alert expiry also run in `node --test test.mjs`.
 
 ## Known issues

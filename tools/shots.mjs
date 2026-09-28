@@ -77,7 +77,8 @@ const CASES = [
     o: { baseTemp: 72, nowTemp: 76, feels: 78, rh: 60, isDay: 1, code: 1, cloud: 24, nowWind: 8, nowDir: 40, nowGust: 13, nowUv: 3.8, uvMax: 4.2,
       windAmp: 7, gustAmp: 11, sunrise: "07:04", sunset: "18:59", surge: 1.9,
       popCurve: () => 8, dailyPop: (p) => p.fill(12) },
-    expect: { say: null, tide: /^77° · seas ~2 ft$/, level: "Running 2 ft above the tide table.", marine: 1 } },
+    expect: { say: null, tide: /^77° · seas ~2 ft$/, level: "Running 2 ft above the tide table.", marine: 1,
+      xp: { tide: /^now ~\d+\.\d ft$/, tideHour: / by the table$/ } } },
   // the week as lines: a late-September swing from a cool snap to a warm run
   { name: "14-week-porters-neck", loc: "mb", when: "2026-09-24T17:10:00",
     o: { baseTemp: 66, nowTemp: 68, feels: 68, rh: 70, isDay: 1, code: 3, cloud: 70, nowWind: 15, nowDir: 5, nowGust: 30, nowUv: .6, uvMax: 6,
@@ -92,7 +93,7 @@ const CASES = [
     o: { baseTemp: 84, nowTemp: 90, feels: 97, rh: 70, isDay: 1, code: 2, cloud: 40, nowWind: 6, nowDir: 250, nowGust: 12, nowUv: 8, uvMax: 9,
       windAmp: 6, gustAmp: 10, popCurve: () => 10, dailyPop: (p) => p.splice(0, 8, 35, 85, 100, 45, 10, 0, 65, 20),
       dailyTemps: (hi, lo, c) => { hi.splice(0, 8, 96, 101, 88, 84, 83, 86, 90, 87); lo.splice(0, 8, 74, 76, 71, 66, 64, 66, 70, 68); c.splice(0, 8, 2, 95, 63, 80, 1, 0, 81, 2); } },
-    expect: { cols: 8, weekend: ["Sat", "Sun"], moon: true, say: null, fish: true } },
+    expect: { cols: 8, weekend: ["Sat", "Sun"], moon: true, say: null, fish: true, xp: { week: /^Mon 8\/3 101° \/ 76° thunder 85%$/ } } },
   // a Saturday with the boat season switched on: the weekend is today and tomorrow, so the note
   // names only Sunday, and the water is an easy day in words
   { name: "16-saturday-porters-neck", loc: "mb", when: "2026-09-26T10:30:00",
@@ -116,7 +117,7 @@ const CASES = [
     o: { baseTemp: 32, nowTemp: 28, feels: 20, rh: 58, isDay: 1, code: 0, cloud: 4, nowWind: 11, nowDir: 340, nowGust: 19, nowUv: 0.6, uvMax: 2.4,
       windAmp: 7, gustAmp: 10, sunrise: "07:22", sunset: "17:25", waterTemp: null, popCurve: () => 3, dailyPop: (p) => p.fill(5),
       dailyTemps: (hi, lo, c) => { hi.splice(1, 6, 44, 51, 55, 47, 40, 36); lo.splice(1, 6, 26, 33, 39, 31, 25, 21); c.splice(1, 6, 1, 2, 3, 3, 1, 0); } },
-    expect: { say: null, tide: /^seas ~2 ft$/, sun: "(steps aside)", marine: 1 } },
+    expect: { say: null, tide: /^seas ~2 ft$/, sun: "(steps aside)", marine: 1, xp: { year: /^Jan 57° \/ 36° rain 3\.8 in$/ } } },
   // the boat season on, with the marine run answering but carrying no seas: never green, and said once
   { name: "19-no-seas-porters-neck", loc: "mb", when: "2026-09-15T10:10:00",
     o: { baseTemp: 76, nowTemp: 77, feels: 78, rh: 62, isDay: 1, code: 1, cloud: 20, nowWind: 6, nowDir: 190, nowGust: 10, nowUv: 5.2, uvMax: 6.4,
@@ -128,19 +129,20 @@ const CASES = [
   { name: "21-surge-at-high-porters-neck", loc: "mb", when: "2026-09-27T13:05:00",
     o: { baseTemp: 74, nowTemp: 78, feels: 78, rh: 70, isDay: 1, code: 3, cloud: 70, nowWind: 14, nowDir: 45, nowGust: 22, nowUv: 3, uvMax: 5,
       windAmp: 9, gustAmp: 13, sunrise: "07:04", sunset: "18:59", surge: 2.1, popCurve: () => 10, dailyPop: (p) => p.fill(15) },
-    expect: { level: "Running 2 ft above the tide table.", tide: /^77° · seas ~2 ft$/ } },
+    expect: { level: "Running 2 ft above the tide table.", tide: /^77° · seas ~2 ft$/, xp: { tide: /^now ~\d+\.\d ft$/, tideHour: / by the table$/ } } },
   // a winter northwester blowing the water out a foot and a half under the table at the 7:24a low:
   // the chart deepens below the datum rather than sinking the gauge's mark into the sand with its tag
   { name: "22-blown-out-low-porters-neck", loc: "mb", when: "2027-01-14T07:10:00",
     o: { baseTemp: 36, nowTemp: 33, feels: 24, rh: 55, isDay: 1, code: 0, cloud: 5, nowWind: 16, nowDir: 320, nowGust: 28, nowUv: 0.2, uvMax: 2.4,
       windAmp: 8, gustAmp: 12, sunrise: "07:22", sunset: "17:25", surge: -1.6, waterTemp: 48, popCurve: () => 3, dailyPop: (p) => p.fill(5) },
-    expect: { level: "Running 1.5 ft below the tide table.", tide: /^48° · seas ~2 ft$/ } },
+    expect: { level: "Running 1.5 ft below the tide table.", tide: /^48° · seas ~2 ft$/, xp: { tide: /^now ~−?\d+\.\d ft$/, tideHour: / by the table$/ } } },
   // a cold October morning at the farm: the card speaks for the morning rounds, in amber, over the bite times
   { name: "20-cold-morning-shady-spring", loc: "sp", when: "2026-10-22T07:40:00",
     o: { baseTemp: 44, nowTemp: 31, feels: 27, rh: 80, isDay: 1, code: 0, cloud: 5, nowWind: 4, nowDir: 320, nowGust: 8, nowUv: 0.2, uvMax: 3.5,
       windAmp: 5, gustAmp: 8, sunrise: "07:32", sunset: "18:40", popCurve: () => 3, dailyPop: (p) => p.fill(5),
       dailyTemps: (hi, lo, c) => { hi.splice(0, 8, 53, 58, 61, 57, 55, 60, 63, 59); lo.splice(0, 8, 29, 33, 38, 41, 35, 34, 39, 42); c.splice(0, 8, 0, 1, 2, 3, 3, 2, 1, 2); } },
-    expect: { moon: true, sayTitle: "Piddling", say: "Cold one. Bundle up for the morning rounds.", sayCls: "caution", fish: true, year: /^The year · Shady Spring \/ \d+° cooler this week$/ } },
+    expect: { moon: true, sayTitle: "Piddling", say: "Cold one. Bundle up for the morning rounds.", sayCls: "caution", fish: true, year: /^The year · Shady Spring \/ \d+° cooler this week$/,
+      xp: { year: /^Oct 64° \/ 44° rain 2\.7 in snow 1 in$/ } } },
 ];
 
 /* labels are placed, not stamped: on the tide, the moon and the year every word sits inside its
@@ -254,6 +256,13 @@ for (const cs of cases) {
           hourlyNote: T("hourlyNote"), weekNote: T("weekNote"),
           // the week's days, with the weekend's banded columns in brackets
           week: [...document.querySelectorAll("#weekRows .wk-day")].map((d) => { const n = d.querySelector(".wk-name").textContent; return d.classList.contains("we") ? `[${n}]` : n; }).join(" "),
+          /* each chart's pill where it starts (the hours and the water and the moon at now, the week
+             tomorrow, the year this month), and the water an hour on, as the finger would read them */
+          xp: Object.fromEntries(Object.entries(XP).filter(([, X]) => X.D).flatMap(([k, X]) => {
+            const say = (i) => X.D.read(i).parts.map((q) => q[0]).join(" "), out = [[k, say(k === "week" ? 1 : X.D.start)]];
+            if (k === "tide") { const t = X.D.t[X.D.start] + 36e5, i = X.D.t.findIndex((v) => v >= t); if (i >= 0) out.push(["tideHour", say(i)]); }
+            return out;
+          })),
         };
       });
       console.log(`\n### ${cs.name}`);
@@ -264,33 +273,35 @@ for (const cs of cases) {
         if (!box) { failures++; console.log("!! hourly explorer: chart has no box"); }
         else {
           const target = await page.evaluate(() => {
-            const {h,x,W}=HOURLY_PEEK;
-            const i=h.temp.findIndex((t,i)=>Math.abs(Math.round(h.feels?.[i])-Math.round(t))>=3);
-            return {i,share:i<0?0:x[i]/W};
+            const { D } = XP.hourly, h = LAST.d.hourly;
+            const i = h.temp.findIndex((t, i) => i > 0 && Math.abs(Math.round(h.feels?.[i]) - Math.round(t)) >= 3);
+            return { i, share: i < 0 ? 0 : D.x[i] / D.W };
           });
-          if(target.i<0){failures++;console.log("!! hourly explorer: fixture has no meaningful feels-like difference");}
-          await page.mouse.move(box.x + target.share*box.width, box.y + box.height/2);
-          const peek = page.locator("#hourlyPeek:not([hidden])");
+          if (target.i < 0) { failures++; console.log("!! hourly explorer: fixture has no meaningful feels-like difference"); }
+          await page.mouse.move(box.x + target.share * box.width, box.y + box.height / 2);
+          const peek = page.locator("#hourlyExplore .xp-peek:not([hidden])");
           const peekText = await peek.count() ? await peek.innerText() : "";
           if (!/feels \d+°/.test(peekText)) { failures++; console.log(`!! hourly explorer: missing meaningful feels-like readout (${peekText || "hidden"})`); }
           await page.locator("#hourlyExplore").screenshot({ path: path.join(OUT, `${cs.name}-peek.png`) });
-          await page.locator("#hourlyExplore").focus();
-          await page.evaluate(() => { HOURLY_PEEK.h.pop[1] = 3; PEEK_I = 0; });
+          await page.mouse.move(5, 5);
+          await page.locator("#hourlyExplore .xp-key").focus();
+          await page.evaluate(() => { XP.hourly.D.read = ((read, h) => (i) => { h.pop[1] = 3; return read(i); })(XP.hourly.D.read, LAST.d.hourly); });
           await page.keyboard.press("ArrowRight");
-          const spoken = await page.locator("#hourlyPeekLive").textContent();
-          if (!/degrees/.test(spoken || "")) { failures++; console.log("!! hourly explorer: arrow key did not announce an hour"); }
-          const visibleRain = await page.locator("#peekRain").textContent();
+          const spoken = await page.locator("#hourlyExplore .xp-key").getAttribute("aria-valuetext");
+          if (!/degrees/.test(spoken || "")) { failures++; console.log("!! hourly explorer: arrow key did not speak an hour"); }
+          const visibleRain = await page.locator("#hourlyExplore .xp-peek span:last-child").textContent();
           if (visibleRain !== "dry" || !/dry$/.test(spoken || "")) {
             failures++; console.log(`!! hourly explorer: 3% mismatch (${visibleRain} / ${spoken})`);
           }
         }
-        const tideBox=await page.locator("#tideSvg").boundingBox();
-        await page.mouse.move(tideBox.x+tideBox.width*.58,tideBox.y+tideBox.height/2);
-        const tidePeek=page.locator("#tidePeek:not([hidden])");
-        if(!await tidePeek.count()||!/ft/.test(await tidePeek.innerText())){
-          failures++;console.log("!! tide explorer: missing depth readout");
+        await page.locator("#tideExplore .xp-key").blur();
+        const tideBox = await page.locator("#tideSvg").boundingBox();
+        await page.mouse.move(tideBox.x + tideBox.width * .58, tideBox.y + tideBox.height / 2);
+        const tidePeek = page.locator("#tideExplore .xp-peek:not([hidden])");
+        if (!await tidePeek.count() || !/ft/.test(await tidePeek.innerText())) {
+          failures++; console.log("!! tide explorer: missing depth readout");
         }
-        await page.locator("#tideExplore").screenshot({path:path.join(OUT,`${cs.name}-tide-peek.png`)});
+        await page.locator("#tideExplore").screenshot({ path: path.join(OUT, `${cs.name}-tide-peek.png`) });
       }
       if (cs.name === "09-after-midnight-porters-neck" && !/before morning/.test(copy.tonight || "")) {
         failures++; console.log(`!! after-midnight Tonight card describes the wrong night (${copy.tonight})`);
@@ -315,6 +326,7 @@ for (const cs of cases) {
       if (ex.sun && copy.sun !== ex.sun) fail(`sun card "${copy.sun}", expected "${ex.sun}"`);
       if (ex.uvBar && !ex.uvBar.test(copy.uvBar || "")) fail(`sun bar "${copy.uvBar}"`);
       if ("marine" in ex && marineAsks !== ex.marine) fail(`${marineAsks} marine requests, expected ${ex.marine}`);
+      for (const [k, re] of Object.entries(ex.xp || {})) if (!re.test(copy.xp[k] || "")) fail(`${k} pill "${copy.xp[k]}"`);
     }
     if (errs.length) { failures++; console.log(`!! ${cs.name} ${vp.tag}: ${errs.join(" | ")}`); }
     await ctx.close();
@@ -331,9 +343,9 @@ for (const cs of cases) {
   await page.addInitScript(() => localStorage.setItem("mbwx-loc", "sp"));
   await page.route("**api.open-meteo.com**", (r) => r.abort());
   await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: "domcontentloaded" });
-  await page.locator("#hourlyExplore").focus();
-  await page.keyboard.press("ArrowRight");
   const shell = await page.evaluate(() => ({
+    // no reading, no slider: every chart's is off and out of the Tab order
+    keys: [...document.querySelectorAll(".xp-key")].every((k) => k.disabled),
     tide: getComputedStyle(document.getElementById("tideSection")).display,
     scene: document.getElementById("sceneSvg").getAttribute("aria-label"),
     moon: !document.getElementById("moonSection").hidden,
@@ -341,7 +353,7 @@ for (const cs of cases) {
     // the sun bar is drawn only from a reading, so its scale words go with it
     uvScale: getComputedStyle(document.getElementById("uvDetails")).display,
   }));
-  if (shell.tide !== "none" || !shell.scene.includes("Appalachian") || !shell.moon || shell.year !== "The year · Shady Spring" || shell.uvScale !== "none") {
+  if (!shell.keys || shell.tide !== "none" || !shell.scene.includes("Appalachian") || !shell.moon || shell.year !== "The year · Shady Spring" || shell.uvScale !== "none") {
     failures++; console.log(`!! location-correct loading shell: ${JSON.stringify(shell)}`);
   }
   if (errs.length) { failures++; console.log(`!! loading hourly explorer: ${errs.join(" | ")}`); }
