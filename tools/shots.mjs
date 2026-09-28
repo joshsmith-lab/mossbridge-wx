@@ -109,7 +109,7 @@ const CASES = [
     // and the card says "Sunscreen if you're out a while." at 2.9: the 3.1 still to come crosses into
     // moderate, so its ring stays, or the only UV on the page read LOW under a sunscreen sentence
     expect: { cols: 7, weekend: ["Today", "Sun"], say: null, tide: /^63° · seas ~2 ft$/, level: null, marine: 1,
-      sun: "Sunscreen if you're out a while.", uvBar: /^UV 2\.9 now, low, peaking at 3\.1 around 12 p\.m\.$/ } },
+      sun: "Sunscreen if you're out a while.", uvBar: /^UV 2\.9 now, low, peaking at 3\.1 around noon\.$/ } },
   // a cold, clear January morning on the coast: the headline owns the cold, the water section says
   // only the water, and the sun card steps aside. The station's thermometer is down: no water at all
   { name: "18-january-porters-neck", loc: "mb", when: "2027-01-14T08:40:00",
@@ -123,14 +123,14 @@ const CASES = [
       windAmp: 6, gustAmp: 8, sunrise: "06:56", sunset: "19:21", wave: null, popCurve: () => 6, dailyPop: (p) => p.fill(10),
       dailyTemps: (hi, lo, c) => { hi.splice(1, 6, 83, 84, 81, 79, 82, 84); lo.splice(1, 6, 68, 70, 67, 64, 66, 69); c.splice(1, 6, 1, 2, 2, 1, 1, 2); } },
     boat: true, expect: { sayTitle: "The boat", say: "Seas unavailable.", sayCls: "caution", tide: /^77°$/ } },
-  // the gauge two feet over the table half an hour before the 1:36p high: the skiff floats at the
-  // water that is there, on the chart's scale, and the high's time stays on the chart over it
+  // the gauge two feet over the table half an hour before the 1:36p high: the skiff rides the curve,
+  // the water that is there is marked on the now line over it, and the high's time steps over both
   { name: "21-surge-at-high-porters-neck", loc: "mb", when: "2026-09-27T13:05:00",
     o: { baseTemp: 74, nowTemp: 78, feels: 78, rh: 70, isDay: 1, code: 3, cloud: 70, nowWind: 14, nowDir: 45, nowGust: 22, nowUv: 3, uvMax: 5,
       windAmp: 9, gustAmp: 13, sunrise: "07:04", sunset: "18:59", surge: 2.1, popCurve: () => 10, dailyPop: (p) => p.fill(15) },
     expect: { level: "Running 2 ft above the tide table.", tide: /^77° · seas ~2 ft$/ } },
   // a winter northwester blowing the water out a foot and a half under the table at the 7:24a low:
-  // the chart deepens below the datum rather than sinking the skiff into the sand and its label
+  // the chart deepens below the datum rather than sinking the gauge's mark into the sand with its tag
   { name: "22-blown-out-low-porters-neck", loc: "mb", when: "2027-01-14T07:10:00",
     o: { baseTemp: 36, nowTemp: 33, feels: 24, rh: 55, isDay: 1, code: 0, cloud: 5, nowWind: 16, nowDir: 320, nowGust: 28, nowUv: 0.2, uvMax: 2.4,
       windAmp: 8, gustAmp: 12, sunrise: "07:22", sunset: "17:25", surge: -1.6, waterTemp: 48, popCurve: () => 3, dailyPop: (p) => p.fill(5) },
@@ -140,7 +140,7 @@ const CASES = [
     o: { baseTemp: 44, nowTemp: 31, feels: 27, rh: 80, isDay: 1, code: 0, cloud: 5, nowWind: 4, nowDir: 320, nowGust: 8, nowUv: 0.2, uvMax: 3.5,
       windAmp: 5, gustAmp: 8, sunrise: "07:32", sunset: "18:40", popCurve: () => 3, dailyPop: (p) => p.fill(5),
       dailyTemps: (hi, lo, c) => { hi.splice(0, 8, 53, 58, 61, 57, 55, 60, 63, 59); lo.splice(0, 8, 29, 33, 38, 41, 35, 34, 39, 42); c.splice(0, 8, 0, 1, 2, 3, 3, 2, 1, 2); } },
-    expect: { moon: true, sayTitle: "Piddling", say: "Cold one. Bundle up for the morning rounds.", sayCls: "caution", fish: true, year: /^The year · Beckley \/ \d+° cooler this week$/ } },
+    expect: { moon: true, sayTitle: "Piddling", say: "Cold one. Bundle up for the morning rounds.", sayCls: "caution", fish: true, year: /^The year · Shady Spring \/ \d+° cooler this week$/ } },
 ];
 
 /* labels are placed, not stamped: on the tide, the moon and the year every word sits inside its
@@ -341,7 +341,7 @@ for (const cs of cases) {
     // the sun bar is drawn only from a reading, so its scale words go with it
     uvScale: getComputedStyle(document.getElementById("uvDetails")).display,
   }));
-  if (shell.tide !== "none" || !shell.scene.includes("Appalachian") || !shell.moon || shell.year !== "The year · Beckley" || shell.uvScale !== "none") {
+  if (shell.tide !== "none" || !shell.scene.includes("Appalachian") || !shell.moon || shell.year !== "The year · Shady Spring" || shell.uvScale !== "none") {
     failures++; console.log(`!! location-correct loading shell: ${JSON.stringify(shell)}`);
   }
   if (errs.length) { failures++; console.log(`!! loading hourly explorer: ${errs.join(" | ")}`); }

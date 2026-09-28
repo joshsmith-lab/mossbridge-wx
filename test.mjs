@@ -139,7 +139,9 @@ test("overnight copy follows the night the family is actually in", async () => {
   assert.match(html, /const nightEnd=beforeSunrise\?sunrise:tomorrowRise/);
   assert.match(html, /const fallbackDay=beforeSunrise\?0:Math\.min\(1/);
   assert.match(html, /const nightWhen=beforeSunrise\?"before morning":"tonight"/);
-  assert.match(html, /beforeSunrise\?goldenWindow\(sunrise\)/);
+  // after midnight the golden hour named is this morning's: the note takes the first gold band
+  // on the chart that has not ended, and the Tonight card no longer says it a second time
+  assert.match(html, /const nextLight=goldWindows\.find\(gw=>gw\.b>now\)\|\|null;/);
   // Missing storm direction does not turn a moving system into a stationary one.
   assert.match(html, /const motion=s\.spd>0\?\(s\.dirDeg!=null\?"moving "/);
 });
@@ -179,6 +181,8 @@ test("the rain chance bars can be read from across the room", async () => {
   assert.match(html, /const bh=Math\.max\(5,h\.pop\[i\]\*\.42\)/);
   // the printed number still belongs to the hours that are actually likely
   assert.match(html, /if\(h\.pop\[i\]>=40&&i%4===2&&i!==hiI&&i!==loI\)/);
+  // the odds number carries its percent sign, as the week's do, so it never reads as a temperature
+  assert.match(html, /\$\{rvAt\(x,"label",240\)\}>\$\{h\.pop\[i\]\}%<\/text>/);
 });
 
 test("the hourly labels step aside instead of printing through each other", async () => {
@@ -204,7 +208,7 @@ test("the hourly labels step aside instead of printing through each other", asyn
   assert.match(html, /if\(hit\(b\)\|\|hit\(d\)\|\|prev&&prev\.t===t&&x-prev\.x<64\)continue;/);
   // the night tag is decoration: it gives way to the numbers. The band and the moon already say
   // it is dark, so the words are gone and the moon is placed against its own box
-  assert.match(html, /!hit\(\[c0-7,15,c0\+7,29\]\)\)\{cx=c0;break\}/);
+  assert.match(html, /!hit\(\[c0-7,9,c0\+7,23\]\)\)\{cx=c0;break\}/);
   assert.match(html, /<path d="M 4\.6 0 a 4\.6 4\.6 0 1 1-4\.6-4\.6 A 3\.6 3\.6 0 0 0 4\.6 0 Z"\/><\/g>`;/);
   assert.doesNotMatch(html, /AFTER DARK<\/text>/);
 });
@@ -224,8 +228,9 @@ test("the page agrees with itself", async () => {
   assert.match(html, /document\.getElementById\("sunCard"\)\.hidden=!sunAdvice;/);
   assert.match(html, /uv:d\.hourly\.uv&&d\.hourly\.uv\.map\(\(u,i\)=>i\?u:now0\(u,"uv_index"\)\)/);
   assert.doesNotMatch(html, /UV stays low|Sunscreen weather is over|The strong sun is done|Easy sun/);
-  // a golden-hour range is never cut at its dash, and the low stays with its words
-  assert.match(html, /\.gold-bit\{white-space:nowrap\}/);
+  // golden hour is said once, as the legend of the hourly chart's gold bands: the Tonight card
+  // no longer repeats it, and the low stays with its words
+  assert.doesNotMatch(html, /id="goldTimes"|goldBits|\.gold-bit\{/);
   assert.match(html, /const lowTxt=`Low\\u00A0\$\{nightLow\}°`;/);
   assert.match(html, /`\$\{lowTxt\} \$\{nightWhen\}\.`;/);
   // under 35% the night says nothing about rain, the way the week does
@@ -233,9 +238,11 @@ test("the page agrees with itself", async () => {
   // and the odds word follows the odds for ice as it does for snow: likely from 60, possible from 35
   assert.match(html, /let tonightText=nightPop>=35&&nightIce\?`Freezing rain \$\{nightPop>=60\?"likely":"possible"\} \$\{nightWhen\}\. \$\{lowTxt\}\.`:/);
   assert.match(html, /nightPop>=35&&nightSnow\?`Snow \$\{nightPop>=60\?"likely":"possible"\} \$\{nightWhen\}\. \$\{lowTxt\}\.`:/);
-  assert.match(html, /<b>now until \$\{clock\(gw\.b\)\}<\/b>/);
+  // inside a golden hour the note says how long it has left
+  assert.match(html, /now>=nextLight\.a\?"until "\+clock\(nextLight\.b\):spanTxt\(nextLight\.a,nextLight\.b\)/);
   // the lit side of the moon is the light side on both themes
-  assert.match(html, /\.moon-phase \.moon-lit\{fill:#FFF6E2\}/);
+  // (a pale moon, not the paper: #FFF6E2 on #FAFAF6 read as an empty ring)
+  assert.match(html, /\.moon-phase \.moon-lit\{fill:#F5E6B8\}/);
   // a star on a line of type is left out
   assert.match(html, /function starsClearOfType\(\)/);
   // text boxes only, and each star placed from its own percentages so a second call agrees
@@ -1113,9 +1120,9 @@ test("tide chart reads as depth over the bottom", async () => {
   const html = await readFile(new URL("index.html", root), "utf8");
 
   // height is measured up from the chart datum, never autoscaled to the window
-  // measured up from the chart datum, and the gauge's water now is on the same scale: a skiff lifted
-  // or lowered by it is drawn at its true height, never pinned to an edge, with a label's height of
-  // sky over a lifted one, and water under the hull of a lowered one
+  // measured up from the chart datum, and the gauge's water now is on the same scale: its mark is
+  // drawn at its true height, never pinned to an edge, with a label's height of sky over a mark
+  // above the table, and its tag kept off the bed under one below it
   assert.match(html, /const wNow=interp\(now\.getTime\(\)\)\+\(gap\|\|0\);\n  const hiV=Math\.max\(\.\.\.vs,wNow\),base=Math\.min\(0,\.\.\.vs,gap<0\?wNow-\(hiV-wNow\)\*\.12:wNow\);\n  const vTop=hiV\+Math\.max\(\.5,\(hiV-base\)\*\.2\)\+\(gap>0\?1:0\);/);
   assert.match(html, /seaY=H-34/);
   // the old top rail with a height printed beside every extreme is gone
@@ -1125,28 +1132,33 @@ test("tide chart reads as depth over the bottom", async () => {
   assert.match(html, /lowY=H-9/);
   assert.match(html, /rockDeg=clamp\(2\.2\+g0\*\.13/);
   assert.match(html, /const tide=renderTides\(d\.tides,css,c\.wind_gusts_10m,c\.wind_speed_10m,levelFeet\(d\.water,now\)\);/);
-  // the skiff floats at the water that is there: the gauge's gap over the table, with the table
-  // marked under it and the gap said beside the boat. A passed high under a lifted skiff gives way
+  // the skiff rides the table's curve (Josh, September 28 2026: "I preferred the boat actually on
+  // the tide line"), and the water that is there is a short waterline on the now line at the
+  // gauge's height, with a dotted riser to the boat and the gap beside the mark. The mark is drawn
+  // only where the boat does not stand in front of it; behind the boat the tag says it alone
   assert.match(html, /function renderTides\(preds,css,gust,wind,gap=0\)\{/);
-  assert.match(html, /nyT=Y\(interp\(now\.getTime\(\)\)\),ny=Y\(wNow\);/);
+  assert.match(html, /const nx=X\(now\.getTime\(\)\),ny=Y\(interp\(now\.getTime\(\)\)\),gy=Y\(wNow\);/);
+  assert.match(html, /const seen=gap>0\?gy<=ny-22:gap<0&&gy>=ny\+7\.5,tagX=nx\+\(seen\?10:24\)\*fs;/);
   assert.match(html, /const tagTxt=gap\?`\$\{gap>0\?"\+":"−"\}\$\{Math\.abs\(gap\)\} ft`:""/);
-  // the tag is part of the boat for the labels, no label is set above the chart, and the gap's
-  // marks arrive with the skiff in the entrance
-  assert.match(html, /const onBoat=high&&lx<tagR&&lx\+lw>nx-23&&y-6>ny-22;/);
+  // the mark and its tag are part of the boat for the labels, so a high steps over them rather than
+  // giving way, no label is set above the chart, and the gap's marks arrive with the skiff
+  assert.match(html, /const boatTop=gap>0\?Math\.min\(ny-22,gy-10\):ny-22;/);
+  assert.match(html, /const onBoat=high&&lx<tagR&&lx\+lw>nx-23&&y-6>boatTop;/);
   assert.match(html, /y="\$\{\(high\?Math\.max\(12\*fs,y-lift\):lowY\)\.toFixed\(1\)\}"/);
-  assert.match(html, /\$\{gap\?`<g\$\{rvAt\(nx,"fade"\)\}><line/);
-  assert.match(html, /if\(onBoat&&gap&&tm<now\.getTime\(\)\)continue;/);
+  assert.match(html, /\$\{gap\?`<g\$\{rvAt\(nx,"fade"\)\}>\$\{seen&&/);
+  assert.doesNotMatch(html, /if\(onBoat&&gap&&tm<now\.getTime\(\)\)continue;/);
+  assert.doesNotMatch(html, /ny=Y\(wNow\)/);
   // the skiff's burgee flies on the real wind: limp in calm air, level by 15 mph, and the
   // gusts above the wind set its flutter; reduced motion holds the wind's angle, still
   assert.match(html, /const w0=Number\(wind\)\|\|0,flagDeg=-35\*\(1-clamp\(w0\/15,0,1\)\);/);
   assert.match(html, /const flutter=clamp\(1\.2\+\(g0-w0\)\*\.35,1\.2,6\)/);
   assert.match(html, /\$\{PRM\?`transform:rotate\(\$\{flagDeg\.toFixed\(1\)\}deg\)`/);
-  // the taller skiff: a high label steps over it sooner and higher, and over its gauge tag too
-  // (tagR is the boat's own right edge, 19px, when there is no tag)
-  assert.match(html, /tagR=gap\?nx\+24\*fs\+tagTxt\.length\*10\.5\*fs\*\.6\+2:nx\+19;/);
-  assert.match(html, /const lift=onBoat\?Math\.max\(9,26-\(ny-y\)\):9;/);
+  // the taller skiff: a high label steps over it sooner and higher, and over its gauge mark and tag
+  // too (tagR is the boat's own right edge, 19px, when there is no tag)
+  assert.match(html, /tagR=gap\?tagX\+tagTxt\.length\*10\.5\*fs\*\.6\+2:nx\+19;/);
+  assert.match(html, /const lift=onBoat\?Math\.max\(9,y-boatTop\+4\):9;/);
   assert.match(html, /const chartH=w=>Math\.round\(152\+\(760-w\)\*\.09\)/);
-  assert.match(html, /Ht=chartH\(W\)-22/);
+  assert.match(html, /Ht=chartH\(W\)-16/);
   assert.match(html, /H=chartH\(W\)/);
   assert.match(html, /id="tideExplore" role="group" tabindex="0"/);
   assert.match(html, /function setupTidePeek\(\)/);
@@ -1223,9 +1235,9 @@ test("light, motion and alerts stay tuned", async () => {
   assert.match(html, /function alertGist\(a\)/);
   assert.match(html, /function toggleAlert\(\)/);
   assert.match(html, /class="alert-body"/);
-  // one place to look up the light at both ends of the night: a gold line, not a sentence
-  assert.match(html, />Tonight into tomorrow</);
-  assert.match(html, /id="goldTimes"/);
+  // the card is the night and its moon; the golden hour is the hourly chart's note
+  assert.match(html, /<h3>Tonight<\/h3>/);
+  assert.doesNotMatch(html, />Tonight into tomorrow</);
   assert.match(html, /class="gold-key">golden hour</);
   assert.match(html, /\.gold-key\{/);
   assert.doesNotMatch(html, /Golden Hour is /);
@@ -1567,6 +1579,10 @@ test("the water and the farm say what is there, and nothing is scored or picked"
   // The year: NOAA's 1991-2020 normals at the two airports, as published
   const Nm = ctx.NORMALS.mb, Ns = ctx.NORMALS.sp;
   assert.deepEqual([Nm.place, Nm.hi[6], Nm.lo[0], Nm.rain[8], Ns.place, Ns.hi[6], Ns.lo[0], Ns.snow[0]], ["Wilmington", 90, 36.3, 8.69, "Beckley", 80.7, 24, 15.5]);
+  // the title names the place, the way the masthead does, and the airport is said with the source
+  assert.match(html, /document\.getElementById\("yearTitle"\)\.textContent="The year · "\+LOC\.addrShort;/);
+  assert.match(html, /normals at the \$\{N\.place\} airport/);
+  assert.doesNotMatch(html, /"The year · "\+N\.place/);
   assert.deepEqual([Nm.dhi.length, Ns.dlo.length, Nm.dhi[0], Ns.dlo[365]], [366, 366, 577, 253], "daily normals in tenths, a leap year's days");
   assert.deepEqual(["2026-01-01", "2026-02-28", "2026-03-01", "2026-12-31"].map((s) => ctx.doyOf(s)), [0, 58, 60, 365]);
   // this week against them: the days' middle temperatures against each day's normal
@@ -1770,6 +1786,7 @@ test("the page reads top down: now, today, the week, and nothing it has already 
     lift(/const SNOW=\[[\s\S]*?const isWet=w=>WETC\.includes\(w\);/),
     lift(/const hh=t=>\{[^\n]*\};/),
     lift(/const spokenAt=t=>[^\n]*;/),
+    lift(/const sentence=s=>[^\n]*;/),
     lift(/const mdOf=[^\n]*\nconst inSeason=[^\n]*/),
     story,
   ].join("\n"), ctx);
@@ -1803,7 +1820,7 @@ test("the page reads top down: now, today, the week, and nothing it has already 
   assert.equal(tell({ time: "2026-08-02T21:30", temperature_2m: 72, weather_code: 1 }, { pop: (i) => (i === 10 ? 45 : 5) }), "Mild tonight. Showers possible around 7 a.m. tomorrow.");
   assert.equal(tell({ time: "2026-08-02T19:15", temperature_2m: 76, weather_code: 63 }, { pop: (i) => (i < 7 ? 80 : 10) }), "Raining now. Should let up around 2 a.m.");
   // after midnight the next date's small hours are the night after, and still tomorrow's
-  assert.equal(tell({ time: "2026-08-02T01:15", temperature_2m: 70, weather_code: 1 }, { pop: (i) => (i === 23 ? 45 : 5) }), "Mild tonight. Showers possible around 12 a.m. tomorrow.");
+  assert.equal(tell({ time: "2026-08-02T01:15", temperature_2m: 70, weather_code: 1 }, { pop: (i) => (i === 23 ? 45 : 5) }), "Mild tonight. Showers possible around midnight tomorrow.");
   // The look-ahead names what is coming from its own hours' codes, ice first: it only knew rain,
   // and called three o'clock's snow "Rain likely around 3 p.m." over a Tonight card that said snow.
   const cold = { time: "2026-08-02T10:00", temperature_2m: 30, weather_code: 3 }, winter = { time: ["2026-08-02"], temperature_2m_max: [34] };
@@ -1834,7 +1851,7 @@ test("the page reads top down: now, today, the week, and nothing it has already 
   assert.equal(tell({ time: "2026-08-02T08:00", temperature_2m: 70, weather_code: 45 }), "Foggy this morning. Should stay dry.");
   assert.match(tell({ time: "2026-08-02T08:00", temperature_2m: 31, weather_code: 66 }, { pop: () => 90 }), /^Freezing rain\. Expect ice on anything untreated\. Give yourself extra time on the roads\./);
   // thunder the run carries on poor odds is still thunder, and never "Should stay dry."
-  assert.equal(tell({ time: "2026-08-02T10:30", temperature_2m: 70, weather_code: 2 }, { code: (i) => i >= 2 && i <= 9 ? 95 : 2 }), "Warm today. Thunder possible around 12 p.m.");
+  assert.equal(tell({ time: "2026-08-02T10:30", temperature_2m: 70, weather_code: 2 }, { code: (i) => i >= 2 && i <= 9 ? 95 : 2 }), "Warm today. Thunder possible around noon.");
   assert.equal(tell({ time: "2026-08-02T10:30", temperature_2m: 70, weather_code: 2 }, { code: (i) => i === 0 ? 95 : 2 }), "Warm today. Thunder nearby.");
   assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 1 }, { pop: (i) => (i === 2 ? 45 : 5), code: (i) => i === 5 ? 95 : 1 }), "Warm today. Showers possible around 3 p.m.", "the first wet stretch still leads");
   // and says what it named, so the cards under it do not say it again
@@ -1911,7 +1928,7 @@ test("the copy harness keeps looking at the days the water, the farm and the wee
   assert.match(shots, /moon: true, sayTitle: "Piddling", say: "Cold one\. Bundle up for the morning rounds\.", sayCls: "caution", fish: true, year: /);
   assert.match(shots, /say: null, tide: \/\^seas ~2 ft\$\/, sun: "\(steps aside\)", marine: 1/);
   // a sunscreen sentence over a LOW pin keeps the ring of the moderate peak still to come
-  assert.match(shots, /sun: "Sunscreen if you're out a while\.", uvBar: \/\^UV 2\\\.9 now, low, peaking at 3\\\.1 around 12 p\\\.m\\\.\$\//);
+  assert.match(shots, /sun: "Sunscreen if you're out a while\.", uvBar: \/\^UV 2\\\.9 now, low, peaking at 3\\\.1 around noon\\\.\$\//);
   assert.match(shots, /if \(ex\.uvBar && !ex\.uvBar\.test\(copy\.uvBar \|\| ""\)\) fail\(/);
   assert.match(shots, /if \(r\.url\(\)\.includes\("marine-api\.open-meteo\.com"\)\) marineAsks\+\+;/);
   // the readout prints what is seen: the compass point and the bite framing are spoken only

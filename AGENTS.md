@@ -68,7 +68,9 @@ place name.
   family's own words stay, because they are the character: piddle, soupy (earned: real
   humidity on real heat), "Feed early and keep a path open", "Cold one.
   Bundle up for the morning rounds.", "Stay off the hill until it turns over", golden hour,
-  "Keep the middle of the day short", "Plan on slow going", "Reading the sky…".
+  "Keep the middle of the day short", "Plan on slow going", "Reading the sky…". Noon and midnight
+  are words in a sentence (`Thunder possible around noon.`, `Sunscreen until noon.`), never
+  `12 p.m.`; the charts keep `12p` and `12a`.
 - **Never promise what the forecast cannot keep.** The headline is built from
   the hourly run, not from 7-day weather codes, because those flip between model
   runs and made the app name a storm date that moved every few hours. The headline's
@@ -78,7 +80,7 @@ place name.
   snow the Tonight card named "Rain likely". After dark the small hours before morning are
   tonight's (`Showers possible around 1 a.m.`) and only daylight is "tomorrow", so one night is
   not given two names. Thunder the run carries on poor odds is still thunder (`Thunder possible
-  around 12 p.m.`, and `Windy by 11 a.m., then thunder possible around 2 p.m.` when the wind comes
+  around noon.`, and `Windy by 11 a.m., then thunder possible around 2 p.m.` when the wind comes
   an hour or more first, with "tomorrow" said once), never `Should stay dry.`, which once sat over a
   card naming the thunder. The headline speaks from the hour now is in, so a cache opened at 11:40
   does not say `Thunder nearby.` about a storm that passed at nine. The headline
@@ -131,11 +133,14 @@ place name.
   Wrightsville Beach`, because every reading in it comes from there. The note beside the title
   is the water temperature and the seas (`77° · seas ~2 ft`, from `waterNote`), and without them
   the tide's turn (`rising · high 8:28p`); the chart already shows rising or falling and the next
-  high, so those words are only the fallback. The level is on the chart: when the station's gauge
-  runs off the table, the skiff floats at the water that is there, with the table's point marked
-  under it on a dotted line and `+1.5 ft` beside the boat, and the sentence (`Running 1.5 ft above
-  the tide table.`) is said to screen readers with the chart. A high that has passed gives way to a
-  lifted skiff. The boat's sentence, while the boat is going out, is a card, `The boat`. Nothing is
+  high, so those words are only the fallback. The skiff rides the table's curve, where Josh wants
+  it (September 28 2026, after a day of it floating at the gauge), and the level is on the chart:
+  when the station's gauge runs off the table, the water that is there is a short waterline on the
+  now line at the gauge's own height, with a dotted riser down or up to the boat and `+1.5 ft`
+  beside the mark. The mark is drawn only where the boat does not stand in front of it, and behind
+  the boat the tag says it alone, beside the bow. A high label steps over the mark and its tag.
+  The sentence (`Running 1.5 ft above the tide table.`) is said to screen readers with the chart.
+  The boat's sentence, while the boat is going out, is a card, `The boat`. Nothing is
   graded or coloured off season: the seas are the hour now is in, the water temperature is now,
   and the wind is the chip's. The seas are Open-Meteo's
   marine model, hour by hour for two days, asked for every day of the year. It ran low against
@@ -223,6 +228,12 @@ place name.
   hour carries the live UV, so the sentence and the pin read the same number. The UV chip
   shows from 3 and only while the card does (`sunAdvice&&`), because a cache opened after the
   strong sun still holds a 3 from an hour that has passed.
+- **Golden hour is said once.** Josh loves it and asked whether it was weird that it popped twice
+  (September 28 2026). It was: the Next 24 hours note and a gold line on the Tonight card named the
+  same span, and on a cold morning they named two different mornings with nearly the same times. It
+  lives in the hourly note now, because that note is the legend for the chart's gold bands and it is
+  on the first screen: `golden hour 6:27–7:15p`, `golden hour until 7:15p` inside one, and after dark
+  the next band (`golden hour 6:48–7:36a`). The card is `Tonight`, the night's sentence and its moon.
 - **The foot of the page is one credit.** `Weather data by Open-Meteo.com`, linked, in faint
   mono, because Open-Meteo's data is CC BY 4.0 and asks for it. The paragraph of sources, the
   per-place footnotes (`LOCS.*.foot`) and the refresh instructions went in September 2026:
@@ -433,9 +444,9 @@ is today and tomorrow and the water is `Easy out there.`; a mid-November Saturda
 and the water and no sentence; a cold January morning on the coast with the station's thermometer
 down and the sun card stepped aside; a boat day whose marine run carries no seas, which is `Seas
 unavailable.` and never green; the water two feet over the table half an hour before a high,
-where the skiff floats over the curve and the high's time stays over it, and a winter northwester
-blowing it out a foot and a half under the table at the low, where the skiff keeps water under its
-hull; and a cold October morning at the farm, `Cold one. Bundle up for
+where the skiff rides the curve under the gauge's mark and the high's time steps over both, and a
+winter northwester blowing it out a foot and a half under the table at the low, where the mark and
+its tag stay off the bed; and a cold October morning at the farm, `Cold one. Bundle up for
 the morning rounds.` on the `Piddling` card over the moon. A scenario marked `boat: true` is served with
 `boatSeason:null` switched back on, and fails if there is nothing to switch. It writes screenshots
 to `tools/shots/` and prints the generated copy (the headline, the chips as they are seen, the
@@ -687,8 +698,12 @@ its windows (`The almanac's fishing times: 6:58 pm to 7:58 pm, ...`). It is draw
 ## The year
 
 At the foot, above the credit: NOAA's 1991-2020 climate normals at the airport nearest each place,
-`The year · Wilmington` (USW00013748) for Porters Neck and `The year · Beckley` (USW00003872) for Shady
-Spring, named for the airport because that is where the numbers are from. Josh asked for monthly
+Wilmington (USW00013748) for Porters Neck and Beckley (USW00003872) for Shady Spring. The titles are
+`The year · Porters Neck` and `The year · Shady Spring`, the place in the masthead (Josh, September 28
+2026: "Change Beckley to Shady Spring", and the coast followed so both read alike). The airport is
+said with the source, in the chart's spoken label and the title's hover text (`NORMALS.*.place`), and
+the water keeps `Wrightsville Beach` because tide times and water temperature there really differ
+from the creek at home, where airport normals seven miles off do not. Josh asked for monthly
 averages like Carrot's, "but better, and in our design language" (September 27 2026), and picked
 lines over bars. They change once a decade, so they live in `NORMALS` and nothing is fetched.
 
@@ -835,7 +850,7 @@ order, hourly, week, tide, moon, sun, year, and so is `RV_OF`, the observer's ma
 `tools/interactions.mjs` runs fourteen scenarios: narrow and wide chart edges, keyboard
 navigation, location switching, snow/ice labels, a warning at the farm that is `Chores can
 wait.` in red and takes the fishing times until it expires, source instructions, a farm day with
-thunder in the run from noon and nothing warned (the headline `Thunder possible around 12 p.m.`,
+thunder in the run from noon and nothing warned (the headline `Thunder possible around noon.`,
 the card `Piddle before the thunder.` in amber, and no fishing time inside the thunder), a phone that opens at the coast and taps to the farm's
 cache (the farm's moon and its year's title on the cached paint and the live one),
 the entrance across a cache-to-live paint that drops the nowcast strip with the week at the

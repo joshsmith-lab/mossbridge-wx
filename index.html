@@ -21,7 +21,7 @@
   --ink:#16303B; --ink-soft:#41596A; --ink-faint:#506A77;
   --line:#E3E7E1; --wash:#EFF2ED;
   --marker:#C7431F; --marker-soft:#F5E1DA;
-  --water:#3E7CA6; --water-soft:#BFD7E4;
+  --water:#3E7CA6; --water-soft:#BFD7E4; --water-ink:#36719A;
   --sun:#E8B02F; --heat:#B4560F; --go:#1E6B44;
   --sky1:#5C9FC6; --sky2:#9ECBDC; --sky3:#EAE6D2; --on-sky:#0F2B36; --off-sky:#F7F4EA;
   --sky-scrim:rgba(250,250,246,0);
@@ -34,7 +34,7 @@ html[data-theme=dark]{
   --ink:#E9F0EE; --ink-soft:#A6BCC6; --ink-faint:#829CA9;
   --line:#1C3844; --wash:#132C36;
   --marker:#F0774E; --marker-soft:#33231F;
-  --water:#7FB0C9; --water-soft:#1B3B4A;
+  --water:#7FB0C9; --water-soft:#1B3B4A; --water-ink:#7FB0C9;
   --sun:#F0C04E; --heat:#E0A057; --go:#5FC08D;
 }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -425,6 +425,8 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 
 /* ── sections ───────────────────────────────────────── */
 section{padding:28px 20px 0}
+/* the week ends in a 6px tap margin under its odds, so what follows it starts that much sooner */
+#moonSection,#tideSection{padding-top:22px}
 .eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
   color:var(--ink-faint);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;margin-bottom:13px;gap:3px 10px}
 .eyebrow b{color:var(--ink);font-weight:600}
@@ -446,8 +448,8 @@ section{padding:28px 20px 0}
 .hourly-cursor::after,.tide-cursor::after{content:"";position:absolute;left:-4px;top:calc(var(--peek-y,60px) - 22px);
   width:7px;height:7px;border-radius:50%;background:var(--paper);border:1.8px solid var(--ink)}
 .hourly-peek[hidden],.hourly-cursor[hidden],.tide-peek[hidden],.tide-cursor[hidden]{display:none}
-.hr-labels{position:relative;min-width:0;height:15px;font-family:var(--mono);
-  font-size:10px;color:var(--ink-faint);margin-top:7px}
+.hr-labels{position:relative;min-width:0;height:13px;line-height:13px;font-family:var(--mono);
+  font-size:10px;color:var(--ink-faint);margin-top:3px}
 .hr-labels span{position:absolute;transform:translateX(-50%);text-align:center}
 .hr-labels .mark{color:var(--marker);font-weight:600}
 .tide-svg{display:block;width:100%;height:auto}
@@ -480,17 +482,18 @@ html:not([data-theme=dark]) .rv-core{display:none}
 .storm-row .s-meta{grid-column:1/-1;font-family:var(--mono);font-size:11.5px;color:var(--ink-soft)}
 
 /* ── cards ──────────────────────────────────────────── */
-.cards{display:grid;grid-template-columns:1fr;column-gap:34px;padding:16px 20px 0}
+.cards{display:grid;grid-template-columns:1fr;column-gap:34px;padding:26px 20px 0}
 @media(min-width:560px){.cards{grid-template-columns:1fr 1fr}.card.wide{grid-column:1/-1}}
 .card{border-top:1px solid var(--line);padding:16px 0 18px}
 .card h3{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
-  color:var(--ink-faint);font-weight:500;margin-bottom:10px}
+  color:var(--ink);font-weight:600;margin-bottom:10px}
 .card .lead{font-size:16.5px;font-weight:550;letter-spacing:-.012em;margin-bottom:10px;text-wrap:pretty}
+.card .lead:last-child{margin-bottom:0}
 .card .lead.go{color:var(--go)}.card .lead.caution{color:var(--heat)}.card .lead.no{color:var(--marker)}
 /* the sentences sit with the cards, in the colours the Sun and Tonight leads use: the farm's
    heads-up under the family's word for it, and the boat's while the boat is going out */
 /* the year: the week's grammar at the scale of a year, the months on the same quiet axis */
-#yearSection{padding-top:12px}
+#yearSection{padding-top:9px}
 .year-svg{display:block;width:100%;height:auto;overflow:visible}
 .yr-months{display:flex;margin-top:8px}
 .yr-months span{flex:1;text-align:center;font-family:var(--mono);font-size:10px;line-height:13px;letter-spacing:.06em;color:var(--ink-faint)}
@@ -503,7 +506,7 @@ html:not([data-theme=dark]) .rv-core{display:none}
 .uv-svg .uv-track{opacity:.2}
 html[data-theme=dark] .uv-svg .uv-track{opacity:.28}
 .uv-scale{position:relative;height:1.3em;font-family:var(--mono);font-size:10.5px;
-  color:var(--ink-faint);margin-top:5px;letter-spacing:.11em}
+  color:var(--ink-faint);margin-top:1px;letter-spacing:.11em}
 /* on the same 0-12 scale as the bar: moderate from 3, high from 6, extreme at the end, so a
    6.2 sits under HIGH instead of short of it */
 .uv-scale span{position:absolute;top:0;white-space:nowrap}
@@ -547,7 +550,7 @@ button.wk-day[aria-expanded=true]::before,button.wk-day:active::before{opacity:1
 .wk-icon.rough{color:var(--marker)}
 .wk-icon svg{display:block}
 .wk-rain{height:13px;margin-top:1px;font-family:var(--mono);font-size:10px;line-height:13px;color:var(--ink-faint);white-space:nowrap}
-.wk-rain.wet{color:var(--water);font-weight:600}
+.wk-rain.wet{color:var(--water-ink);font-weight:600}
 .wk-svg{position:absolute;left:0;top:0;width:100%;display:block;overflow:visible;pointer-events:none}
 .day-brief{margin:8px 0 2px;color:var(--ink-soft);font-size:14.5px;line-height:1.5;text-wrap:pretty;
   animation:briefIn .28s var(--ease) both}
@@ -555,7 +558,7 @@ button.wk-day[aria-expanded=true]::before,button.wk-day:active::before{opacity:1
 @keyframes briefIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
 .moon-phase{display:block;width:21px;height:21px;color:var(--ink);opacity:.9}
 .moon-phase .moon-shade{fill:currentColor;opacity:.7}
-.moon-phase .moon-lit{fill:#FFF6E2}
+.moon-phase .moon-lit{fill:#F5E6B8}
 .moon-phase .moon-rim{opacity:.55}
 html[data-theme=dark] .moon-phase .moon-shade{opacity:.14}
 html[data-theme=dark] .moon-phase .moon-lit{fill:currentColor}
@@ -563,17 +566,9 @@ html[data-theme=dark] .moon-phase .moon-rim{display:none}
 /* the moon trails the sentence and wraps with it, instead of parking at the far right */
 .tonight-line{display:block;margin-bottom:0!important}
 .tonight-line .moon-phase{display:inline-block;vertical-align:-4px;margin-left:9px}
-/* the light gets its own quiet line, wearing the same gold as the chart bands */
-.gold-times{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:10px;
-  font-family:var(--mono);font-size:12.5px;color:var(--ink-soft);text-wrap:pretty}
-.gold-times b{color:var(--ink);font-weight:600}
-/* a range cut at its dash ("6:06–" / "6:58a tomorrow") reads as two fragments: each entry
-   is kept whole, the " · " is the only break, and the times always sit under the key */
-.gold-val.pair{flex-basis:100%}
-.gold-bit{white-space:nowrap}
-.gold-dot{width:5px;height:5px;border-radius:50%;flex:0 0 auto;align-self:center;background:#C58A2A;opacity:.78}
+.eyebrow .gold-key{font-size:inherit}
 .gold-key{font-family:var(--mono);font-weight:600;font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
-  color:#9A6B20;white-space:nowrap}
+  color:#8F631D;white-space:nowrap}
 html[data-theme=dark] .gold-key{color:#E8BC69}
 
 /* one quiet credit: Open-Meteo's data is CC BY 4.0 and asks for it */
@@ -592,9 +587,12 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   .chip{font-size:10.5px;padding:4px 9px}
   .now{margin-top:18px}
   .verdict{margin-top:16px}
-  .eyebrow{font-size:10px;letter-spacing:.09em}
+  .eyebrow,.card h3{font-size:10px;letter-spacing:.09em}
   .day-brief{margin-left:0;margin-right:48px}
 }
+/* a 320 phone keeps every title and its note on one line: "Water · Wrightsville Beach" and
+   "The year · Shady Spring" beside a note ran 3 to 4px past the column at the phone tracking */
+@media (max-width:359px){.eyebrow,.card h3{letter-spacing:.06em}.eyebrow{column-gap:8px}.eyebrow span{letter-spacing:0}}
 /* Storybook ink rigs pivot on the real joint. Each moving group sits inside a wrapper whose own
    origin is the joint (joint() in the script), so its origin is simply 0 0 in its own units and
    redrawing a part can never walk the pivot off the shoulder the way a fill-box percentage does */
@@ -694,9 +692,8 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
     </div>
   </div>
   <div class="card" id="eveCard">
-    <h3>Tonight into tomorrow</h3>
+    <h3>Tonight</h3>
     <div class="lead tonight-line" id="eveLine"><span id="eveLead">—</span><span id="moonTxt">—</span></div>
-    <div class="gold-times" id="goldTimes"></div>
   </div>
 </div>
 
@@ -3702,9 +3699,9 @@ function renderTides(preds,css,gust,wind,gap=0){
   const topY=22,seaY=H-34,bedY=seaY+6,lowY=H-9,axisW=Math.round(26*fs),x0=padX+axisW;
   const vs=[];for(let t=t0;t<=t1;t+=9e5)vs.push(interp(t));
   /* measured up from the chart datum, so the height of the water on screen is the water there */
-  /* the gauge's water now is on the scale too, so a skiff lifted or lowered by it is drawn at its
-     true height and never pinned to an edge, and a lifted one keeps a label's height of sky over it.
-     A lowered one keeps water under its hull, so it and its tag never sit on the bed */
+  /* the gauge's water now is on the scale too, so its mark is drawn at its true height and never
+     pinned to an edge, a mark over the table keeps a label's height of sky over it, and one under
+     it keeps its tag off the bed */
   const wNow=interp(now.getTime())+(gap||0);
   const hiV=Math.max(...vs,wNow),base=Math.min(0,...vs,gap<0?wNow-(hiV-wNow)*.12:wNow);
   const vTop=hiV+Math.max(.5,(hiV-base)*.2)+(gap>0?1:0);
@@ -3722,11 +3719,16 @@ function renderTides(preds,css,gust,wind,gap=0){
   const path=spline(pts);
   const area=path+` L ${X(t1).toFixed(1)} ${seaY} L ${X(t0).toFixed(1)} ${seaY} Z`;
   const sand=mix(css.faint,"#C2A268",.55);
-  /* the skiff rides the water that is there: the table's curve is the forecast, and when the
-     station's gauge runs off it the boat floats at the gauge, with the table marked under it */
-  const nx=X(now.getTime()),nyT=Y(interp(now.getTime())),ny=Y(wNow);
-  /* the gap's tag rides beside the skiff, on its right, and the labels treat it as part of the boat */
-  const tagTxt=gap?`${gap>0?"+":"−"}${Math.abs(gap)} ft`:"",tagR=gap?nx+24*fs+tagTxt.length*10.5*fs*.6+2:nx+19;
+  /* the skiff rides the table's curve at now. When the station's gauge runs off the table, the water
+     that is there is a short waterline on the now line at its own height, a dotted riser down or up
+     to the boat, and the gap beside the mark, at the mark's height. The mark is drawn only where the
+     boat does not stand in front of it, over the burgee or under the keel. Behind the boat, the tag
+     steps clear of the bow and says it alone */
+  const nx=X(now.getTime()),ny=Y(interp(now.getTime())),gy=Y(wNow);
+  const seen=gap>0?gy<=ny-22:gap<0&&gy>=ny+7.5,tagX=nx+(seen?10:24)*fs;
+  /* the labels treat the mark and its tag as part of the boat */
+  const tagTxt=gap?`${gap>0?"+":"−"}${Math.abs(gap)} ft`:"",tagR=gap?tagX+tagTxt.length*10.5*fs*.6+2:nx+19;
+  const boatTop=gap>0?Math.min(ny-22,gy-10):ny-22;
   const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3.5" stroke-linejoin="round"`;
   const rv=REVEAL.tide.state!=="done",rvAt=(x,k,d)=>rvTag(rv,x,k,d);
 
@@ -3736,7 +3738,7 @@ function renderTides(preds,css,gust,wind,gap=0){
     if(ft<=base+.05)continue;
     const y=Y(ft);
     grid+=`<line x1="${x0}" y1="${y.toFixed(1)}" x2="${W-padX}" y2="${y.toFixed(1)}" stroke="${css.line}" stroke-width="1" stroke-dasharray="2 7"/>
-    <text x="${(x0-6).toFixed(1)}" y="${(y+3.2).toFixed(1)}" text-anchor="end" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(9*fs).toFixed(1)}" fill="${css.faint}">${ft} ft</text>`;
+    <text x="${(x0-6).toFixed(1)}" y="${(y+3.2).toFixed(1)}" text-anchor="end" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${Math.max(10,9*fs).toFixed(1)}" fill="${css.faint}">${ft} ft</text>`;
   }
 
   /* highs ride above their own peak, lows share one aligned row under the waterline */
@@ -3749,10 +3751,8 @@ function renderTides(preds,css,gust,wind,gap=0){
     /* step over the skiff, burgee and all, whenever the label's box would touch the boat's, and
        only as far as it needs: the skiff reaches about 23px behind now (the outboard and its
        wash), 19px ahead and 22px up at the top of a roll */
-    const onBoat=high&&lx<tagR&&lx+lw>nx-23&&y-6>ny-22;
-    /* a high that has passed, under a skiff the gauge has lifted over it, gives way to the boat */
-    if(onBoat&&gap&&tm<now.getTime())continue;
-    const lift=onBoat?Math.max(9,26-(ny-y)):9;
+    const onBoat=high&&lx<tagR&&lx+lw>nx-23&&y-6>boatTop;
+    const lift=onBoat?Math.max(9,y-boatTop+4):9;
     /* and the now-line stops under any high label it would cross, lifted or not */
     if(high&&nx>lx-2&&nx<lx+lw+2)nowTop=Math.max(nowTop,y-lift+5);
     labels+=`<text x="${x.toFixed(1)}" y="${(high?Math.max(12*fs,y-lift):lowY).toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(11*fs).toFixed(1)}" font-weight="600" fill="${high?css.ink:css.soft}" ${halo}${rvAt(anchor==="start"?x+20*fs:anchor==="end"?x-20*fs:x,"label")}>${clock(p.time)}</text>`;
@@ -3803,11 +3803,12 @@ function renderTides(preds,css,gust,wind,gap=0){
     ${rv?[[10,.3,.24],[6.5,.6,.2],[4.4,1,.16]].map(([w,f,o])=>`<path class="rv-tail" data-f="${f}" data-o="${o}" d="${path}" fill="none" stroke="${css.water}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>`).join(""):""}
     <path class="wline" d="${path}" fill="none" stroke="${css.water}" stroke-width="2.4" stroke-linecap="round"/>
     <path d="M ${x0} ${seaY-.5} L ${W-padX} ${seaY-.5} L ${W-padX} ${bedY} Q ${(W*.72).toFixed(1)} ${bedY+2.5} ${((x0+W)/2).toFixed(1)} ${bedY-1} Q ${(W*.28).toFixed(1)} ${bedY-3.5} ${x0} ${bedY} Z" fill="${sand}" opacity=".55"/>
-    <line x1="${nx.toFixed(1)}" y1="${nowTop.toFixed(1)}" x2="${nx.toFixed(1)}" y2="${(ny-6).toFixed(1)}" stroke="${css.ink}" stroke-width="1" stroke-dasharray="2 4" opacity=".22"${rvAt(nx,"fade")}/>
+    <line x1="${nx.toFixed(1)}" y1="${nowTop.toFixed(1)}" x2="${nx.toFixed(1)}" y2="${(gap>0?Math.min(ny-6,gy-5):ny-6).toFixed(1)}" stroke="${css.ink}" stroke-width="1" stroke-dasharray="2 4" opacity=".22"${rvAt(nx,"fade")}/>
     ${rv?`<ellipse cx="${nx.toFixed(1)}" cy="${(ny+3).toFixed(1)}" rx="17" ry="3.6" fill="none" stroke="${css.water}" stroke-width="1.3" opacity="0"${rvAt(nx,"ring",160)}/>`:""}
-    ${gap?`<g${rvAt(nx,"fade")}><line x1="${nx.toFixed(1)}" y1="${(Math.min(ny,nyT)+4).toFixed(1)}" x2="${nx.toFixed(1)}" y2="${(Math.max(ny,nyT)-3).toFixed(1)}" stroke="${css.water}" stroke-width="1.2" stroke-dasharray="1.5 2.5"/>
-      <circle cx="${nx.toFixed(1)}" cy="${nyT.toFixed(1)}" r="2.6" fill="${css.paper}" stroke="${css.water}" stroke-width="1.4"/>
-      <text x="${(nx+24*fs).toFixed(1)}" y="${(ny+4).toFixed(1)}" text-anchor="start" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(10.5*fs).toFixed(1)}" font-weight="600" fill="${css.water}" ${halo}>${tagTxt}</text></g>`:""}
+    ${gap?`<g${rvAt(nx,"fade")}>${seen&&(gap>0?gy+3<ny-21:gy-3>ny+9)?`<line x1="${nx.toFixed(1)}" y1="${(gap>0?gy+3:ny+5).toFixed(1)}" x2="${nx.toFixed(1)}" y2="${(gap>0?ny-17:gy-3).toFixed(1)}" stroke="${css.water}" stroke-width="1.2" stroke-dasharray="1.5 2.5"/>`:""}
+      ${seen?`<path d="M ${(nx-5).toFixed(1)} ${gy.toFixed(1)} H ${(nx+5).toFixed(1)}" stroke="${css.paper}" stroke-width="5.4" stroke-linecap="round"/>
+      <path d="M ${(nx-5).toFixed(1)} ${gy.toFixed(1)} H ${(nx+5).toFixed(1)}" stroke="${css.water}" stroke-width="2.4" stroke-linecap="round"/>`:""}
+      <text x="${tagX.toFixed(1)}" y="${Math.min(gy+4,seaY-4).toFixed(1)}" text-anchor="start" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(10.5*fs).toFixed(1)}" font-weight="600" fill="${css.wink}" ${halo}>${tagTxt}</text></g>`:""}
     <g${rvAt(nx,"boat")}>${boat}</g>
     ${labels}
     ${rv?`<g class="rv-tip" opacity="0" fill="${css.water}"><circle r="12" opacity=".14"/><circle r="6.5" opacity=".28"/><circle r="3"/><circle class="rv-core" r="1.4" fill="#FFFFFF" opacity=".95"/></g>`:""}`;
@@ -3860,7 +3861,7 @@ function renderMoon(css,wins){
   const placed=[];
   for(const mk of[...marks.filter(m=>m.major),...marks.filter(m=>!m.major)]){
     if(placed.some(p=>Math.abs(p.x-mk.x)<p.hw+mk.hw))continue;placed.push(mk);
-    labels+=`<text x="${mk.x.toFixed(1)}" y="${(12*fs).toFixed(1)}" text-anchor="middle" ${mono} font-size="${(10.5*fs).toFixed(1)}" font-weight="600" fill="${css.water}" ${halo}${rvAt(mk.cx,"label")}>${mk.txt}</text>`;
+    labels+=`<text x="${mk.x.toFixed(1)}" y="${(12*fs).toFixed(1)}" text-anchor="middle" ${mono} font-size="${(10.5*fs).toFixed(1)}" font-weight="600" fill="${css.wink}" ${halo}${rvAt(mk.cx,"label")}>${mk.txt}</text>`;
   }
   const r=6.2,ill=clamp(m.fraction,0,1),wax=m.phase<.5,k=(1-2*ill)*r,sw=wax?(ill>.5?0:1):(ill>.5?1:0);
   const disc=`<g transform="translate(${nx.toFixed(1)} ${ny.toFixed(1)})"><g opacity="${na<0?.5:1}">
@@ -3931,7 +3932,7 @@ function yearCompare(N,dy){
 function renderYear(N,dy,css){
   const svg=document.getElementById("yearSvg"),cmp=yearCompare(N,dy);
   const W=appW()-40,col=W/12,X=m=>(m+.5)*col,snowy=N.snow.some(s=>s>=1);
-  const TH=138,RH=30,GAP=snowy?12:0,SH=snowy?30:0,H=TH+RH+GAP+SH;
+  const TH=138,RH=34,GAP=snowy?12:0,SH=snowy?34:0,H=TH+RH+GAP+SH;
   const tMin=Math.min(20,cmp?cmp.wkLo-3:99),tMax=Math.max(95,cmp?cmp.wkHi+3:0);
   const top=24,bot=TH-18,Y=t=>top+(bot-top)*(1-(t-tMin)/(tMax-tMin));
   const mono=`text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace"`;
@@ -3958,29 +3959,34 @@ function renderYear(N,dy,css){
   const taken=[];let pin="";
   if(cmp){
     const a=Y(cmp.wkHi),b=Y(cmp.wkLo),th=Math.round(cmp.wkHi)+"°",tl=Math.round(cmp.wkLo)+"°",px=clamp(nx,16,W-16);
-    pin=`<line x1="${nx.toFixed(1)}" y1="${top-12}" x2="${nx.toFixed(1)}" y2="${(a-22).toFixed(1)}" stroke="${css.ink}" stroke-width="1" stroke-dasharray="2 4" opacity=".22"${rvAt(nx,"fade")}/>
+    /* over the normal high where it runs above the pin, and under the normal low where it runs below,
+       measured under both ends of the number and clear of the months' dots, the way the week places its own */
+    const hH=th.length*12*.3+2,hL=tl.length*10.5*.3+2,near=(i,hw)=>Math.abs(X(i)-px)<hw+5;
+    const ya=Math.min(a-8,yHi(px-hH)-7,yHi(px+hH)-7,...N.hi.map((t,i)=>near(i,hH)?Y(t)-(i===hiI?5:2)-4:Infinity));
+    const yb=Math.max(b+14,yLo(px-hL)+14,yLo(px+hL)+14,...N.lo.map((t,i)=>near(i,hL)?Y(t)+1.6+12:-Infinity));
+    pin=`<line x1="${nx.toFixed(1)}" y1="${top-12}" x2="${nx.toFixed(1)}" y2="${Math.min(a-22,ya-14).toFixed(1)}" stroke="${css.ink}" stroke-width="1" stroke-dasharray="2 4" opacity=".22"${rvAt(nx,"fade")}/>
       <g${rvAt(nx,"pin")}><rect x="${(nx-1.75).toFixed(1)}" y="${a.toFixed(1)}" width="3.5" height="${Math.max(3.5,b-a).toFixed(1)}" rx="1.75" fill="${css.ink}" stroke="${css.paper}" stroke-width="4" paint-order="stroke" opacity=".9"/>
-      <text x="${px.toFixed(1)}" y="${(a-8).toFixed(1)}" ${mono} font-size="12" font-weight="600" fill="${css.ink}" ${halo}>${th}</text>
-      <text x="${px.toFixed(1)}" y="${(b+14).toFixed(1)}" ${mono} font-size="10.5" fill="${css.faint}" ${halo}>${tl}</text></g>`;
-    taken.push(box(px,a-8,th,12),box(px,b+14,tl,10.5),[nx-4,a,nx+4,b]);
+      <text x="${px.toFixed(1)}" y="${ya.toFixed(1)}" ${mono} font-size="12" font-weight="600" fill="${css.ink}" ${halo}>${th}</text>
+      <text x="${px.toFixed(1)}" y="${yb.toFixed(1)}" ${mono} font-size="10.5" fill="${css.faint}" ${halo}>${tl}</text></g>`;
+    taken.push(box(px,ya,th,12),box(px,yb,tl,10.5),[nx-4,a,nx+4,b]);
   }
   const keyed=(x,y,t,fs,w,fill)=>{const hw=t.length*fs*.3+2,cx=clamp(x,hw,W-hw);
     return taken.some(b=>hit(b,box(cx,y,t,fs)))?"":`<text x="${cx.toFixed(1)}" y="${y.toFixed(1)}" ${mono} font-size="${fs}" font-weight="${w}" fill="${fill}" ${halo}${rvAt(x,"label")}>${t}</text>`};
   const th=Math.round(N.hi[hiI])+"°",hw=th.length*13*.3+2,tl=Math.round(N.lo[loI])+"°",wl=tl.length*10.5*.3+2;
   marks+=keyed(X(hiI),Math.min(Y(N.hi[hiI])-11,yHi(X(hiI)-hw)-5,yHi(X(hiI)+hw)-5),th,13,600,css.ink);
-  marks+=keyed(X(loI),Math.max(Y(N.lo[loI])+14,yLo(X(loI)-wl)+12,yLo(X(loI)+wl)+12),tl,10.5,500,css.faint);
+  marks+=keyed(X(loI),Math.max(Y(N.lo[loI])+14,yLo(X(loI)-wl)+14,yLo(X(loI)+wl)+14),tl,10.5,500,css.faint);
   const strip=(vals,y0,h,paint,labelFill,word,fmt)=>{
     const mx=Math.max(...vals),wi=vals.indexOf(mx);let s="";
-    vals.forEach((v,i)=>{if(v<.5)return;const bh=Math.max(2.5,v/mx*(h-13)),bw=Math.min(14,col*.5);
+    vals.forEach((v,i)=>{if(v<.5)return;const bh=Math.max(2.5,v/mx*(h-18)),bw=Math.min(14,col*.5);
       s+=`<rect x="${(X(i)-bw/2).toFixed(1)}" y="${(y0+h-1-bh).toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="2" ${paint(i===wi)}${rvAt(X(i),"rise")}/>`});
     const txt=`${word} ${fmt(mx)} in`,lw=txt.length*10*.3+1;
     s+=`<text x="${clamp(X(wi),lw,W-lw).toFixed(1)}" y="${(y0+9).toFixed(1)}" ${mono} font-size="10" font-weight="600" fill="${labelFill}" ${halo}${rvAt(X(wi),"label")}>${txt}</text>`;
     return s+`<line x1="3" y1="${(y0+h-.5).toFixed(1)}" x2="${(W-3).toFixed(1)}" y2="${(y0+h-.5).toFixed(1)}" stroke="${css.line}" stroke-width="1"/>`;
   };
-  const rain=strip(N.rain,TH,RH,w=>`fill="${css.water}" opacity="${w?(dark?.75:.85):(dark?.42:.5)}"`,css.water,"rain",v=>v.toFixed(1));
+  const rain=strip(N.rain,TH,RH,w=>`fill="${css.water}" opacity="${w?(dark?.75:.85):(dark?.42:.5)}"`,css.wink,"rain",v=>String(+v.toFixed(1)));
   const snow=snowy?strip(N.snow,TH+RH+GAP,SH,w=>`fill="${css.ink}" opacity="${w?.3:.17}"`,css.faint,"snow",v=>Math.round(v)):"";
   svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
-  svg.setAttribute("aria-label",`Normal highs and lows by month at ${N.place}, NOAA 1991 to 2020: warmest in ${MONTHS[hiI]} at ${th}, coldest in ${MONTHS[loI]} at ${tl}.${cmp?" This week: "+cmp.note+".":""}`);
+  svg.setAttribute("aria-label",`Normal highs and lows by month for ${LOC.addrShort}, from NOAA's 1991 to 2020 normals at the ${N.place} airport: warmest in ${MONTHS[hiI]} at ${th}, coldest in ${MONTHS[loI]} at ${tl}.${cmp?" This week: "+cmp.note+".":""}`);
   svg.innerHTML=`<defs>
       <linearGradient id="yrHi" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${W}" y2="0">${stops(N.hi)}</linearGradient>
       <linearGradient id="yrLo" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${W}" y2="0">${stops(N.lo)}</linearGradient>
@@ -3996,7 +4002,8 @@ function renderYear(N,dy,css){
     ${marks}${pin}${rain}${snow}
     ${rv?`<g class="rv-tip" opacity="0" fill="${tempColor(N.hi[0])}"><circle r="12" opacity=".12"/><circle r="6.5" opacity=".24"/><circle r="3.3"/><circle class="rv-core" r="1.5" fill="#FFF8EC" opacity=".95"/></g>`:""}`;
   document.getElementById("yearMonths").innerHTML="JFMAMJJASOND".split("").map((c,i)=>`<span${i===m0?' class="yr-now"':""}>${c}</span>`).join("");
-  document.getElementById("yearTitle").textContent="The year · "+N.place;
+  document.getElementById("yearTitle").textContent="The year · "+LOC.addrShort;
+  document.getElementById("yearTitle").title=`NOAA's 1991–2020 normals at the ${N.place} airport, the nearest station`;
   document.getElementById("yearNote").textContent=cmp?cmp.note:"";
   const hiAt=x=>{const f=clamp(x/col-.5,0,11),i=Math.min(10,Math.floor(f));return N.hi[i]+(N.hi[i+1]-N.hi[i])*(f-i)};
   revealChart("year",svg,{xa:0,xb:W,dur:clamp(1400+W*.9,1700,2200),tail:50,color:x=>tempColor(hiAt(x))});
@@ -4012,8 +4019,9 @@ function paintTemperature(el,val){
 }
 
 /* ── the headline: what the day will actually feel like ─ */
-const spokenAt=t=>hh(t).replace("a"," a.m.").replace("p"," p.m.");
-const spokenClock=d=>clock(d).replace(":00","").replace(/a$/," a.m.").replace(/p$/," p.m.");
+const spokenAt=t=>{const s=hh(t);return s==="12p"?"noon":s==="12a"?"midnight":s.replace("a"," a.m.").replace("p"," p.m.")};
+/* noon and midnight are words: "Thunder possible around noon.", never "12 p.m." */
+const spokenClock=d=>d.getMinutes()===0&&d.getHours()%12===0?(d.getHours()?"noon":"midnight"):clock(d).replace(":00","").replace(/a$/," a.m.").replace(/p$/," p.m.");
 /* a sentence ending on a spoken clock already carries its period: "until 4 p.m.." is a typo
    the app was shipping every afternoon */
 const sentence=s=>s.endsWith(".")?s:s+".";
@@ -4351,8 +4359,9 @@ function dayStory(c,dy,h,now){
   /* one night is one night: after dark the small hours before morning are tonight's, and it is
      only "tomorrow" from daylight. "Showers possible around 1 a.m. tomorrow" sat over a Tonight
      card that called the same shower tonight's. */
-  const when=i=>spokenAt(h.time[i])+(h.time[i].slice(0,10)===dy.time[0]||evening&&+h.time[i].slice(11,13)<6?"":" tomorrow.");
   const bare=i=>spokenAt(h.time[i])+(h.time[i].slice(0,10)===dy.time[0]||evening&&+h.time[i].slice(11,13)<6?"":" tomorrow");
+  /* a sentence that ends on its hour: "p.m." carries the stop, "noon" and "midnight" need one */
+  const when=i=>sentence(bare(i));
   /* what this names and when, so the cards under it do not say it a second time */
   let second;const told=[];
   const tsI=win.find(i=>[95,96,99].includes(+h.code?.[i]));
@@ -4622,8 +4631,8 @@ function renderWeek(dy,css,we=[]){
   for(let i=0;i<n;i++){
     const x=X(i),yh=Y(his[i]),yl=Y(los[i]),th=Math.round(his[i])+"°",tl=Math.round(los[i])+"°",key=keyed&&Math.round(his[i])===peak;
     const fh=key?13:12,wh=th.length*fh*.3+2,wl=tl.length*10.5*.3+2;
-    const ly=Math.min(yh-(key?11:9),yHi(x-wh)-5,yHi(x+wh)-5);
-    const lyl=Math.min(H-6,Math.max(yl+14,yLo(x-wl)+12,yLo(x+wl)+12));
+    const ly=Math.min(yh-(key?11:9),yHi(x-wh)-7,yHi(x+wh)-7);
+    const lyl=Math.min(H-6,Math.max(yl+14,yLo(x-wl)+14,yLo(x+wl)+14));
     marks+=`<circle cx="${x.toFixed(1)}" cy="${yl.toFixed(1)}" r="1.6" fill="${tempColor(los[i])}" opacity=".75"${rvAt(x,"dot")}/>
       <text x="${x.toFixed(1)}" y="${lyl.toFixed(1)}" ${mono} font-size="10.5" fill="${css.faint}" ${halo}${rvAt(x,"label")}>${tl}</text>`;
     if(key){
@@ -5207,7 +5216,7 @@ function render(d,live,savedAt=0){
   const cs=getComputedStyle(document.documentElement);
   const css={ink:cs.getPropertyValue("--ink").trim(),faint:cs.getPropertyValue("--ink-faint").trim(),
     soft:cs.getPropertyValue("--ink-soft").trim(),line:cs.getPropertyValue("--line").trim(),
-    water:cs.getPropertyValue("--water").trim(),paper:cs.getPropertyValue("--paper").trim(),
+    water:cs.getPropertyValue("--water").trim(),wink:cs.getPropertyValue("--water-ink").trim(),paper:cs.getPropertyValue("--paper").trim(),
     wash:cs.getPropertyValue("--wash").trim(),marker:cs.getPropertyValue("--marker").trim()};
 
   document.getElementById("stamp").textContent=live?"live · "+clock12(new Date(c.time))+" "+LOC.tzLabel:cacheAgeText(savedAt||new Date(c.time).getTime());
@@ -5247,7 +5256,7 @@ function render(d,live,savedAt=0){
   else if(!REVEAL_READY&&!REVEAL_WAIT)REVEAL_WAIT=setTimeout(revealReady,900);
 
   /* hourly */
-  const W=appW()-40,Ht=chartH(W)-22,pad=16,n=h.temp.length,base=Ht-6;
+  const W=appW()-40,Ht=chartH(W)-16,pad=16,n=h.temp.length,base=Ht-6;
   document.getElementById("hourlySvg").setAttribute("viewBox",`0 0 ${W} ${Ht}`);
   /* The hourly run can step up or down a degree between adjacent model hours. Blend only
      neighboring values for the drawn trend: the actual hourly reading remains available
@@ -5255,7 +5264,7 @@ function render(d,live,savedAt=0){
   const trendTemp=h.temp.map((t,i)=>i===0||i===h.temp.length-1?t:(h.temp[i-1]+2*t+h.temp[i+1])/4);
   const tMin=Math.min(...trendTemp)-4,tMax=Math.max(...trendTemp)+4;
   const X=i=>pad+i*(W-2*pad)/(n-1);
-  const Y=t=>26+(base-40)*(1-(t-tMin)/(tMax-tMin));
+  const Y=t=>20+(base-34)*(1-(t-tMin)/(tMax-tMin));
   const pts=trendTemp.map((t,i)=>[X(i),Y(t)]);
   HOURLY_PEEK={h,W,x:h.temp.map((_,i)=>X(i)),y:trendTemp.map(t=>Y(t))};
   PEEK_I=0;
@@ -5281,7 +5290,7 @@ function render(d,live,savedAt=0){
   for(const gw of goldWindows){
     const x0=clamp(xTime(gw.a.getTime()),pad,W-pad),x1=clamp(xTime(gw.b.getTime()),pad,W-pad);
     const past=gw.b<now;
-    if(x1>x0)goldenBands+=`<rect x="${x0.toFixed(1)}" y="12" width="${(x1-x0).toFixed(1)}" height="${base-12}" rx="6" fill="url(#goldenband)" opacity="${past?.28:.9}"${rvAt(x0,"fade")}/>`;
+    if(x1>x0)goldenBands+=`<rect x="${x0.toFixed(1)}" y="6" width="${(x1-x0).toFixed(1)}" height="${base-6}" rx="6" fill="url(#goldenband)" opacity="${past?.28:.9}"${rvAt(x0,"fade")}/>`;
   }
   const nextLight=goldWindows.find(gw=>gw.b>now)||null;
 
@@ -5322,7 +5331,7 @@ function render(d,live,savedAt=0){
   for(const [from,to] of darkSpans){
     const x0=xTime(from),x1=xTime(to);
     if(x1-x0<2)continue;
-    bands+=`<rect x="${x0.toFixed(1)}" y="12" width="${(x1-x0).toFixed(1)}" height="${base-12}" fill="url(#nightband)" rx="4"/>`;
+    bands+=`<rect x="${x0.toFixed(1)}" y="6" width="${(x1-x0).toFixed(1)}" height="${base-6}" fill="url(#nightband)" rx="4"/>`;
     /* the moon is centred on its own ink, and kept clear of both chart edges, so it names
        the band it sits in instead of running off the right side of the night */
     if(x1-x0>30)nightTags.push([x0,x1]);
@@ -5349,7 +5358,7 @@ function render(d,live,savedAt=0){
       /* i%4 is a subset of i%2, so every fourth hour the temperature label landed on the
          same x and its paper halo punched a hole straight through this number */
       if(h.pop[i]>=40&&i%4===2&&i!==hiI&&i!==loI)
-        oddsAt.push([i,base-bh-4]);
+        oddsAt.push([i,base-bh-5]);
     }
     labels+=`<span class="${i===0?"mark":""}" style="left:${(X(i)/W*100).toFixed(3)}%">${i===0?"NOW":i%3===0?hh(h.time[i]):""}</span>`;
   }
@@ -5383,11 +5392,11 @@ function render(d,live,savedAt=0){
       <text x="${x.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="11.5" fill="${css.soft}" ${halo}${rvAt(x,"label")}>${t}</text>`;
   }
   for(const [i,y] of oddsAt){
-    const x=X(i),b=box(x,y,8.5,String(h.pop[i])),ys=[yAt(b[0]),yAt(x),yAt(b[2])];
+    const x=X(i),b=box(x,y,10,h.pop[i]+"%"),ys=[yAt(b[0]),yAt(x),yAt(b[2])];
     /* the bar already says the odds, so a number the line would strike through is dropped */
     if(hit(b)||Math.min(...ys)<b[3]+3&&Math.max(...ys)>b[1]-3)continue;
     taken.push(b);
-    bars+=`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="8.5" fill="${css.water}" ${halo}${rvAt(x,"label",240)}>${h.pop[i]}</text>`;
+    bars+=`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="10" fill="${css.wink}" ${halo}${rvAt(x,"label",240)}>${h.pop[i]}%</text>`;
   }
   for(const [x0,x1] of nightTags){
     /* The band and the moon already say it is dark, so the words went and the moon stays. It
@@ -5396,9 +5405,9 @@ function render(d,live,savedAt=0){
     const lo=Math.max(x0+10,pad+10),hi=Math.min(x1-10,W-pad-10),mid=clamp((x0+x1)/2,lo,hi);
     let cx=null;
     for(let st=0;st<=Math.max(0,hi-lo)&&cx==null;st+=6)
-      for(const c0 of st?[mid-st,mid+st]:[mid])if(c0>=lo-.1&&c0<=hi+.1&&!hit([c0-7,15,c0+7,29])){cx=c0;break}
+      for(const c0 of st?[mid-st,mid+st]:[mid])if(c0>=lo-.1&&c0<=hi+.1&&!hit([c0-7,9,c0+7,23])){cx=c0;break}
     if(cx==null)continue;
-    bands+=`<g transform="translate(${cx.toFixed(1)},22)" fill="${css.faint}" opacity=".85">
+    bands+=`<g transform="translate(${cx.toFixed(1)},16)" fill="${css.faint}" opacity=".85">
       <path d="M 4.6 0 a 4.6 4.6 0 1 1-4.6-4.6 A 3.6 3.6 0 0 0 4.6 0 Z"/></g>`;
   }
   const areaTop=Math.min(...pts.map(p=>p[1]));
@@ -5450,7 +5459,8 @@ function render(d,live,savedAt=0){
   const water=LOC.tide?waterCard(LOC,h,c,dy,m,d.water,warning,storm,now,dayRead.told):null;
   /* One shape for every section: a title with one short note, then the picture, then its labels,
      and nothing between the title and the chart. The water's readings are its note, and the gauge
-     against the table is drawn on the chart, where the skiff floats at the water that is there */
+     against the table is drawn on the chart: the skiff rides the table's curve, and the water that is
+     there is marked on the now line */
   if(LOC.tide){
     const tide=renderTides(d.tides,css,c.wind_gusts_10m,c.wind_speed_10m,levelFeet(d.water,now));
     /* with no tide table the chart is empty, and the note says so after whatever it can read */
@@ -5464,7 +5474,7 @@ function render(d,live,savedAt=0){
   /* the note names the gold band, which the picture cannot do on its own; the bars and the
      headline already say whether it rains */
   document.getElementById("hourlyNote").innerHTML=nextLight
-    ?`<span class="gold-key">golden hour</span> ${spanTxt(nextLight.a,nextLight.b)}`:"";
+    ?`<span class="gold-key">golden hour</span> ${now>=nextLight.a?"until "+clock(nextLight.b):spanTxt(nextLight.a,nextLight.b)}`:"";
 
   /* the farm's card, assembled by farmCard and painted here: hidden when it has nothing to say
      and no bite time to give, the way the sun card steps aside */
@@ -5537,16 +5547,6 @@ function render(d,live,savedAt=0){
     nightLow>=74?`Warm ${nightWhen}. ${lowTxt}.`:
     `${lowTxt} ${nightWhen}.`;
   el.textContent=tonightText;
-  /* both ends of the light on one gold line, out of the sentence's way */
-  const gw=goldenWindow(sunset);
-  const gwAm=beforeSunrise?goldenWindow(sunrise):(dy.sunrise[1]?goldenWindow(new Date(dy.sunrise[1])):null);
-  const goldBits=[];
-  if(beforeSunrise&&gwAm)goldBits.push(now>=gwAm.a?`<b>now until ${clock(gwAm.b)}</b>`:`<b>${spanTxt(gwAm.a,gwAm.b)}</b> this morning`);
-  if(gw&&now<gw.b)goldBits.push(now>=gw.a?`<b>now until ${clock(gw.b)}</b>`:`<b>${spanTxt(gw.a,gw.b)}</b> tonight`);
-  if(!beforeSunrise&&gwAm)goldBits.push(`<b>${spanTxt(gwAm.a,gwAm.b)}</b> tomorrow`);
-  document.getElementById("goldTimes").innerHTML=goldBits.length
-    ?`<span class="gold-dot" aria-hidden="true"></span><span class="gold-key">golden hour</span><span class="gold-val${goldBits.length>1?" pair":""}">${goldBits.map(b=>`<span class="gold-bit">${b}</span>`).join(" · ")}</span>`
-    :"";
   document.getElementById("eveLine").className="lead tonight-line "+(nightPop>=35?"caution":"go");
   document.getElementById("moonTxt").innerHTML=moonPhaseIcon(scene.moon);
 
@@ -5694,7 +5694,7 @@ function paintLocationShell(){
   document.getElementById("sayCard").hidden=true;
   const N=NORMALS[LOC.id];
   document.getElementById("yearSection").hidden=!N;
-  document.getElementById("yearTitle").textContent=N?"The year · "+N.place:"The year";
+  document.getElementById("yearTitle").textContent=N?"The year · "+LOC.addrShort:"The year";
   document.getElementById("yearNote").textContent="";document.getElementById("yearMonths").innerHTML="";
   document.getElementById("sceneSvg").setAttribute("aria-label",LOC.sceneLabel);
   const comfort=LOC.kind==="trip";
@@ -5715,7 +5715,7 @@ function paintLoadingState(){
   for(const id of ["feels","hiNow","loNow"])document.getElementById(id).textContent="—";
   document.getElementById("feelsRow").hidden=false;
   document.getElementById("verdict").textContent="Reading the sky…";
-  for(const id of ["chips","skyFx","rainFx","sceneSvg","hourlySvg","hrLabels","weekRows","weekSvg","goldTimes","moonTxt","uvSvg","moonSvg","yearSvg"])
+  for(const id of ["chips","skyFx","rainFx","sceneSvg","hourlySvg","hrLabels","weekRows","weekSvg","moonTxt","uvSvg","moonSvg","yearSvg"])
     document.getElementById(id).innerHTML="";
   document.getElementById("flash").className="flash";
   document.getElementById("rainFx").className="rainfx";

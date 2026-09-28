@@ -143,7 +143,7 @@ try{
     const {context,page,errors}=await open(390,{...base,code:2,cloud:40,popCurve:()=>5,hourlyCode:(i,hr)=>i<24&&hr>=12&&hr<=19?95:undefined});
     await load(page);
     /* the headline names the thunder the run carries, so the card says only what to do about it */
-    assert.match(await page.locator("#verdict").innerText(),/Thunder possible around 12 p\.m\.$/);
+    assert.match(await page.locator("#verdict").innerText(),/Thunder possible around noon\.$/);
     assert.equal(await page.locator("#saySay").innerText(),"Piddle before the thunder.");
     assert.equal(await page.locator("#saySay").getAttribute("class"),"lead caution");
     const bites=await page.evaluate(()=>{const n=new Date(),t0=new Date(n).setHours(12,0,0,0),t1=new Date(n).setHours(20,0,0,0);
@@ -166,12 +166,12 @@ try{
     await page.locator("#locBtn").click();
     await page.waitForFunction(()=>document.getElementById("stamp").textContent.startsWith("updated"));
     assert.equal(await page.locator("#moonSection").isVisible(),true,"the cached farm paint has its moon");
-    assert.match(await page.locator("#yearTitle").innerText(),/BECKLEY/);
+    assert.match(await page.locator("#yearTitle").innerText(),/SHADY SPRING/);
     assert.equal(await page.locator("#tideSection").isVisible(),false);
     release();
     await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
     assert.equal(await page.locator("#moonSection").isVisible(),true,"and so does the live one");
-    assert.match(await page.locator("#yearTitle").innerText(),/BECKLEY/);
+    assert.match(await page.locator("#yearTitle").innerText(),/SHADY SPRING/);
     assert.deepEqual(errors,[]);await context.close();checks++;
   }
   {
