@@ -655,9 +655,10 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
 
 <div class="week">
   <div class="eyebrow"><b>This week</b><span id="weekNote"></span></div>
-  <div class="wk-wrap">
+  <div class="wk-wrap xp" id="weekExplore">
     <div class="wk" id="weekRows"></div>
     <svg id="weekSvg" class="wk-svg" viewBox="0 0 350 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
+    <div class="xp-peek" aria-hidden="true" hidden></div>
   </div>
   <p class="day-brief" id="weekBrief" hidden></p>
 </div>
@@ -4630,18 +4631,16 @@ function renderWeek(dy,css,we=[]){
   wrap.style.setProperty("--wk-n",n);
   wrap.classList.toggle("wk8",n>7);
   wrap.innerHTML=days.map(({t,has,pop,sky,code,likely,odds},i)=>{
-    const hi=Math.round(his[i]),lo=Math.round(los[i]);
-    const wet=sky&&isSnow(code)?"snow":sky&&isIce(code)?"freezing rain":"rain";
     const long=new Date(t+"T12:00").toLocaleDateString("en-US",{weekday:"long"});
-    const full=new Date(t+"T12:00").toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
-    const said=`${i===0?"Today, ":""}${full}. ${sky&&WMO[code]?WMO[code]+". ":""}High ${hi}, low ${lo}. ${has?`${pop} percent chance of ${wet}`:"Rain chance unavailable"}.`;
+    /* the day in full, the same sentence its pill reads from */
+    const said=readDay(dy,i).said;
     const face=`<span class="wk-plot" style="height:${H}px" aria-hidden="true"></span>
       <span class="wk-name" aria-hidden="true">${i===0?"Today":dayName(t)}</span>
       <span class="wk-icon${sky&&code>=95?" rough":likely&&sky&&isWet(code)?" wet":""}" aria-hidden="true">${sky?icon(code,16):""}</span>
       ${anyOdds?`<span class="wk-rain${likely?" wet":""}" aria-hidden="true">${odds?pop+"%":!has&&someOdds?"–":""}</span>`:""}`;
     const cls=we.includes(i)?" we":"";
     if(i===0)return `<div class="wk-day today${cls}"><span class="sr-only">${esc(said)}</span>${face}</div>`;
-    return `<button class="wk-day${cls}" type="button" data-day="${t}" aria-expanded="${openDay===t}" aria-controls="weekBrief"
+    return `<button class="wk-day${cls}" type="button" data-day="${t}" data-i="${i}" aria-expanded="${openDay===t}" aria-controls="weekBrief"
       aria-label="${esc(said)}" data-brief="${esc(dailyBrief(dy,i))}" data-name="${long} ${mmdd(t)}">${face}</button>`;
   }).join("");
   weekBrief(wrap.querySelector('.wk-day[aria-expanded="true"]'));
@@ -4649,7 +4648,7 @@ function renderWeek(dy,css,we=[]){
   /* the chart: a column is a screen pixel wide per unit, the same as the other two charts */
   const W=appW()-40,col=W/Math.max(1,n),X=i=>(i+.5)*col;
   svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
-  if(n<2){svg.innerHTML="";return}
+  if(n<2){svg.innerHTML="";xpPublish("week",null);return}
   let tMin=Math.min(...los),tMax=Math.max(...his);
   if(tMax-tMin<10){const m=(tMax+tMin)/2;tMin=m-5;tMax=m+5}
   const top=24,bot=H-21,Y=t=>top+(bot-top)*(1-(t-tMin)/(tMax-tMin));
@@ -4705,12 +4704,19 @@ function renderWeek(dy,css,we=[]){
     <path class="rv-line2" d="${loLine}" fill="none" stroke="url(#wkLo)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity=".72"/>
     ${rv?[[10,.3,.24],[6.5,.6,.2],[4.4,1,.16]].map(([w,f,o])=>`<path class="rv-tail" data-f="${f}" data-o="${o}" d="${hiLine}" fill="none" stroke="url(#wkHi)" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>`).join(""):""}
     <path class="tline" d="${hiLine}" fill="none" stroke="url(#wkHi)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <g class="xp-cursor"></g>
     ${marks}
     ${weBand}
     ${rv?`<g class="rv-tip" opacity="0" fill="${tempColor(his[0])}"><circle r="12" opacity=".12"/><circle r="6.5" opacity=".24"/><circle r="3.3"/><circle class="rv-core" r="1.5" fill="#FFF8EC" opacity=".95"/></g>`:""}
     <line x1="3" y1="${H-.5}" x2="${(W-3).toFixed(1)}" y2="${H-.5}" stroke="${css.line}" stroke-width="1"/>`;
   const hiAt=x=>{const f=clamp(x/col-.5,0,n-1),i=Math.min(n-2,Math.floor(f));return his[i]+(his[i+1]-his[i])*(f-i)};
   revealChart("week",svg,{xa,xb,dur:clamp(1300+W*.9,1600,2100),tail:50,color:x=>tempColor(hiAt(x))});
+  /* one stop a column, found by the nearest centre, so a 320 Sunday's 35px columns all work. The
+     days were already buttons, so the week has no key of its own: a slide shows the pill and opens
+     the day you let go on (weekPick), the way a tap does */
+  const open=[...wrap.children].findIndex(el=>el.getAttribute("aria-expanded")==="true");
+  xpPublish("week",{svg,W,x:days.map((_,i)=>X(i)),y:days.map((_,i)=>[Y(his[i]),Y(los[i])]),t:dy.time.map(s=>new Date(s+"T12:00").getTime()),
+    band:[2,H],start:open>0?open:1,marks:[],on:i=>wrap.children[i],read:i=>readDay(dy,i)});
 }
 /* one day open at a time; tapping the open day closes it */
 function weekBrief(b){
@@ -4719,13 +4725,29 @@ function weekBrief(b){
   el.innerHTML=`<b>${esc(b.dataset.name)}</b> ${esc(b.dataset.brief)}`;
   el.hidden=false;
 }
+/* opens column i, the path a tap and a slide both take; today, or no day, closes it */
+function weekPick(i){
+  const b=document.querySelectorAll("#weekRows .wk-day")[i],open=!!b&&b.matches("button");
+  for(const o of document.querySelectorAll("#weekRows button.wk-day"))o.setAttribute("aria-expanded","false");
+  if(open)b.setAttribute("aria-expanded","true");
+  weekBrief(open?b:null);
+}
 document.getElementById("weekRows").addEventListener("click",e=>{
+  /* the click a mouse drag can leave behind is the slide's, not a tap */
+  if(performance.now()-(XP.week?.end||0)<600)return;
   const b=e.target.closest("button.wk-day");
   if(!b)return;
-  const open=b.getAttribute("aria-expanded")!=="true";
-  for(const o of document.querySelectorAll("#weekRows button.wk-day"))o.setAttribute("aria-expanded","false");
-  b.setAttribute("aria-expanded",String(open));
-  weekBrief(open?b:null);
+  weekPick(b.getAttribute("aria-expanded")==="true"?0:+b.dataset.i);
+});
+/* the days stay tab stops; the arrows move to the next day and open it, and Escape closes it */
+document.getElementById("weekRows").addEventListener("keydown",e=>{
+  const b=e.target.closest("button.wk-day");if(!b)return;
+  if(e.key==="Escape"){e.preventDefault();weekPick(0);return}
+  const bs=[...document.querySelectorAll("#weekRows button.wk-day")],j=bs.indexOf(b);
+  const to=e.key==="ArrowRight"?j+1:e.key==="ArrowLeft"?j-1:e.key==="Home"?0:e.key==="End"?bs.length-1:null;
+  if(to==null)return;
+  e.preventDefault();
+  const nb=bs[clamp(to,0,bs.length-1)];nb.focus();weekPick(+nb.dataset.i);
 });
 
 /* ── the sun bar ────────────────────────────────────── */
@@ -5877,6 +5899,7 @@ paintAddr();
 paintLocationShell();
 /* one explorer per chart, in page order */
 xpSetup("hourly",{view:".hourly-scroll"});
+xpSetup("week",{pick:true,release:weekPick});
 xpSetup("tide");
 xpSetup("moon");
 xpSetup("year");

@@ -714,7 +714,7 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /<path class="rv-line2" d="\$\{loLine\}"/);
   assert.match(html, /<path class="tline" d="\$\{hiLine\}"/);
   assert.match(html, /week:\{state:PRM\?"done":"armed",seen:false,anims:\[\]\}/);
-  assert.match(html, /class="wk-day\$\{cls\}" type="button" data-day="\$\{t\}" aria-expanded=/);
+  assert.match(html, /class="wk-day\$\{cls\}" type="button" data-day="\$\{t\}" data-i="\$\{i\}" aria-expanded=/);
   // the weekend is marked, not described: a quiet ink band over its columns, laid over the
   // chart (so the labels' paper halos never draw boxes on it), fading in as the pen reaches it
   assert.match(html, /\.wk\{display:grid;grid-template-columns:repeat\(var\(--wk-n,7\),1fr\)\}/);
@@ -1973,6 +1973,14 @@ test("every line reads the same way: one machine, and readers that say only what
   assert.match(html, /\}else xpPublish\("tide",null\);/, "a paint with no tide chart publishes none");
   assert.match(html, /if\(LOC\.fish\)renderMoon\(css,farm&&farm\.fish\?fishWindows\(h,now\):\[\]\);else xpPublish\("moon",null\);/);
   assert.match(html, /if\(N\)renderYear\(N,dy,css\);else xpPublish\("year",null\);/);
+  // the week: its days stay buttons and tab stops, a slide opens the day you let go on the way a tap
+  // does (weekPick), the click a drag leaves behind is swallowed, and the arrows move and open
+  assert.match(html, /xpSetup\("week",\{pick:true,release:weekPick\}\);/);
+  assert.match(html, /if\(performance\.now\(\)-\(XP\.week\?\.end\|\|0\)<600\)return;/);
+  assert.match(html, /const to=e\.key==="ArrowRight"\?j\+1:/);
+  assert.doesNotMatch(html.slice(html.indexOf("function renderWeek("), html.indexOf("function weekBrief(")), /tabindex="-1"/);
+  assert.match(html, /const said=readDay\(dy,i\)\.said;/, "the button speaks the pill's sentence");
+  assert.match(html, /if\(n<2\)\{svg\.innerHTML="";xpPublish\("week",null\);return\}/);
   // the moon's reader is handed only the windows renderMoon drew, and the crossings of its own horizon
   assert.match(html, /const nt=now\.getTime\(\),drawn=wins\.filter\(/);
   assert.match(html, /read:i=>readMoon\(ts\[i\],nt,alts\[i\],drawn,cross\)/);
