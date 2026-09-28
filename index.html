@@ -664,7 +664,11 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
 
 <section id="moonSection" hidden>
   <div class="eyebrow"><b title="The almanac's solunar tables: its theory, worked out from the moon's real positions.">Almanac fishing times<span class="sr-only">. The almanac's solunar tables: its theory, worked out from the moon's real positions.</span></b><span id="moonNote"></span></div>
-  <svg id="moonSvg" class="tide-svg" viewBox="0 0 760 158" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The moon over the next day and a half, and the almanac's fishing times"></svg>
+  <div class="xp" id="moonExplore">
+    <svg id="moonSvg" class="tide-svg" viewBox="0 0 760 158" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The moon over the next day and a half, and the almanac's fishing times"></svg>
+    <input class="xp-key" type="range" min="0" max="0" step="1" value="0" disabled aria-label="Almanac fishing times, 15 minutes a step">
+    <div class="xp-peek" aria-hidden="true" hidden></div>
+  </div>
 </section>
 
 <section id="tideSection">
@@ -702,8 +706,12 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
 
 <section id="yearSection" hidden>
   <div class="eyebrow"><b id="yearTitle">The year</b><span id="yearNote"></span></div>
-  <svg id="yearSvg" class="year-svg" viewBox="0 0 350 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Normal highs and lows by month"></svg>
-  <div class="yr-months" id="yearMonths" aria-hidden="true"></div>
+  <div class="xp" id="yearExplore">
+    <svg id="yearSvg" class="year-svg" viewBox="0 0 350 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Normal highs and lows by month"></svg>
+    <div class="yr-months" id="yearMonths" aria-hidden="true"></div>
+    <input class="xp-key" type="range" min="0" max="0" step="1" value="0" disabled aria-label="The year, month by month">
+    <div class="xp-peek" aria-hidden="true" hidden></div>
+  </div>
 </section>
 
 <p class="foot"><a href="https://open-meteo.com/" rel="noopener">Weather data by Open-Meteo.com</a></p>
@@ -3898,12 +3906,24 @@ function renderMoon(css,wins){
       ${rv?[[10,.3,.24],[6.5,.6,.2],[4.4,1,.16]].map(([w,f,o])=>`<path class="rv-tail" data-f="${f}" data-o="${o}" d="${path}" fill="none" stroke="${MOON_INK}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>`).join(""):""}
       <path class="wline" d="${path}" fill="none" stroke="${MOON_INK}" stroke-width="2.4" stroke-linecap="round"/></g>
     <line x1="${x0}" y1="${hz.toFixed(1)}" x2="${W-padX}" y2="${hz.toFixed(1)}" stroke="${css.line}" stroke-width="1.2"/>
+    <g class="xp-cursor"></g>
     <line x1="${nx.toFixed(1)}" y1="${(topY-6).toFixed(1)}" x2="${nx.toFixed(1)}" y2="${(ny-9).toFixed(1)}" stroke="${css.ink}" stroke-width="1" stroke-dasharray="2 4" opacity=".22"${rvAt(nx,"fade")}/>
     <g${rvAt(nx,"pin")}>${disc}</g>
     ${labels}
     ${rv?`<g class="rv-tip" opacity="0" fill="${MOON_INK}"><circle r="12" opacity=".14"/><circle r="6.5" opacity=".28"/><circle r="3"/><circle class="rv-core" r="1.4" fill="#FFFFFF" opacity=".95"/></g>`:""}`;
   document.getElementById("moonNote").textContent=moonName(m);
   revealChart("moon",svg,{xa:X(t0),xb:X(t1),dur:clamp(2100+W*1.1,2400,2950),tail:72,color:()=>MOON_INK});
+  /* the quarter hours, now, each fishing time the chart drew at its start and the moon on the
+     horizon at its minute. The reader sees only the windows drawn here, so a window the weather
+     took away is never named; the disc is the mark at now */
+  const nt=now.getTime(),drawn=wins.filter(w=>Math.min(t1,w.end.getTime())>Math.max(t0,w.start.getTime()));
+  const cross=moonCross(t0,t1+26*3.6e6),starts=drawn.map(w=>w.start.getTime()).filter(t=>t>=t0&&t<=t1);
+  const rim=cross.map(c=>c.t).filter(t=>t>=t0&&t<=t1),ts=quarterStops(t0,t1,nt,[...starts,...rim]);
+  const alts=ts.map(t=>t===nt?na:moonPos(new Date(t)).alt*180/Math.PI),ni=ts.indexOf(nt);
+  const named=ts.map((t,i)=>t===nt||starts.includes(t)?i:-1).filter(i=>i>=0);
+  xpPublish("moon",{svg,W,x:ts.map(X),y:alts.map(a=>[Y(a)]),t:ts,band:[topY-6,botY],start:ni,marks:named,
+    snap:[...named,...ts.map((t,i)=>rim.includes(t)?i:-1).filter(i=>i>=0)],noRing:[ni],
+    read:i=>readMoon(ts[i],nt,alts[i],drawn,cross)});
 }
 
 /* ── the year ───────────────────────────────────────── */
@@ -4013,6 +4033,7 @@ function renderYear(N,dy,css){
       <path class="rv-line2" d="${loLine}" fill="none" stroke="url(#yrLo)" stroke-width="1.5" stroke-linecap="round" opacity=".72"/>
       ${rv?[[10,.3,.24],[6.5,.6,.2],[4.4,1,.16]].map(([w,f,o])=>`<path class="rv-tail" data-f="${f}" data-o="${o}" d="${hiLine}" fill="none" stroke="url(#yrHi)" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>`).join(""):""}
       <path class="tline" d="${hiLine}" fill="none" stroke="url(#yrHi)" stroke-width="2.4" stroke-linecap="round"/></g>
+    <g class="xp-cursor"></g>
     ${marks}${pin}${rain}${snow}
     ${rv?`<g class="rv-tip" opacity="0" fill="${tempColor(N.hi[0])}"><circle r="12" opacity=".12"/><circle r="6.5" opacity=".24"/><circle r="3.3"/><circle class="rv-core" r="1.5" fill="#FFF8EC" opacity=".95"/></g>`:""}`;
   document.getElementById("yearMonths").innerHTML="JFMAMJJASOND".split("").map((c,i)=>`<span${i===m0?' class="yr-now"':""}>${c}</span>`).join("");
@@ -4021,6 +4042,10 @@ function renderYear(N,dy,css){
   document.getElementById("yearNote").textContent=cmp?cmp.note:"";
   const hiAt=x=>{const f=clamp(x/col-.5,0,11),i=Math.min(10,Math.floor(f));return N.hi[i]+(N.hi[i+1]-N.hi[i])*(f-i)};
   revealChart("year",svg,{xa:0,xb:W,dur:clamp(1400+W*.9,1700,2200),tail:50,color:x=>tempColor(hiAt(x))});
+  /* the twelve months, never the wrapped ends: a finger past December is December */
+  const ms=[...Array(12).keys()];
+  xpPublish("year",{svg,W,x:ms.map(X),y:ms.map(m=>[Y(N.hi[m]),Y(N.lo[m])]),t:ms,band:[12,H-1],start:m0,marks:[m0,hiI,loI],
+    on:m=>document.querySelector(`#yearMonths span:nth-child(${m+1})`),read:m=>readMonth(N,m)});
 }
 
 /* ── wind vane ──────────────────────────────────────── */
@@ -5582,7 +5607,7 @@ function render(d,live,savedAt=0){
   /* the farm's picture is the moon and the almanac's fishing times, in the place the coast has its
      tide; anything that says stay in takes the windows with it */
   document.getElementById("moonSection").hidden=!LOC.fish;
-  if(LOC.fish)renderMoon(css,farm&&farm.fish?fishWindows(h,now):[]);
+  if(LOC.fish)renderMoon(css,farm&&farm.fish?fishWindows(h,now):[]);else xpPublish("moon",null);
   /* the sentences sit with the cards: the farm's when there is something to plan around, under the
      family's word for it, and the boat's while the boat is going out */
   const said=farm&&farm.say?{title:"Piddling",...farm.say}:water&&water.say?{title:"The boat",...water.say}:null;
@@ -5621,7 +5646,7 @@ function render(d,live,savedAt=0){
   /* the year at the foot: NOAA's normals for the nearest airport, and this week against them */
   const N=NORMALS[LOC.id];
   document.getElementById("yearSection").hidden=!N;
-  if(N)renderYear(N,dy,css);
+  if(N)renderYear(N,dy,css);else xpPublish("year",null);
 
   /* tonight: one useful read, rather than another row of weather instruments */
   const el=document.getElementById("eveLead");
@@ -5853,6 +5878,8 @@ paintLocationShell();
 /* one explorer per chart, in page order */
 xpSetup("hourly",{view:".hourly-scroll"});
 xpSetup("tide");
+xpSetup("moon");
+xpSetup("year");
 const initialCached=readCache(LOC.id);
 if(initialCached)render(initialCached.data,false,initialCached.savedAt);
 else paintLoadingState();

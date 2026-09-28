@@ -1971,6 +1971,16 @@ test("every line reads the same way: one machine, and readers that say only what
   assert.doesNotMatch(html, /HOURLY_PEEK|TIDE_PEEK|setupHourlyPeek|setupTidePeek|PeekLive|hourly-cursor|tide-cursor/);
   assert.match(html, /xpReset\(\);LAST=null;/, "the loading and error shell resets every explorer");
   assert.match(html, /\}else xpPublish\("tide",null\);/, "a paint with no tide chart publishes none");
+  assert.match(html, /if\(LOC\.fish\)renderMoon\(css,farm&&farm\.fish\?fishWindows\(h,now\):\[\]\);else xpPublish\("moon",null\);/);
+  assert.match(html, /if\(N\)renderYear\(N,dy,css\);else xpPublish\("year",null\);/);
+  // the moon's reader is handed only the windows renderMoon drew, and the crossings of its own horizon
+  assert.match(html, /const nt=now\.getTime\(\),drawn=wins\.filter\(/);
+  assert.match(html, /read:i=>readMoon\(ts\[i\],nt,alts\[i\],drawn,cross\)/);
+  assert.match(html, /const cross=moonCross\(t0,t1\+26\*3\.6e6\)/);
+  // the year's stops are the twelve months, never the wrapped ends, and this month is where it starts
+  assert.match(html, /xpPublish\("year",\{svg,W,x:ms\.map\(X\),y:ms\.map\(m=>\[Y\(N\.hi\[m\]\),Y\(N\.lo\[m\]\)\]\),t:ms,band:\[12,H-1\],start:m0,marks:\[m0,hiI,loI\]/);
+  for (const l of ["Almanac fishing times, 15 minutes a step", "The year, month by month"])
+    assert.ok(html.includes(`<input class="xp-key" type="range" min="0" max="0" step="1" value="0" disabled aria-label="${l}">`), l);
   // the Sun bar is a scale, not a day, and has none
   assert.match(html, /The Sun bar has none: it is a scale, not\n   a day/);
   assert.doesNotMatch(html, /uvExplore/);
