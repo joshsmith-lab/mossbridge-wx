@@ -48,11 +48,20 @@ place name.
   same number twice. The hourly note is the golden-hour span or nothing.
 - **The page reads top down, and the first screen is the answer.** What the family opens it
   for is now, today and the weekend, so that is the first screen on a phone: the sky (the
-  reading, the headline, the chips, the scene), the next 24 hours, then the week. The week
-  used to sit at the foot of the page, which put the weekend a scroll away. Under it come the
-  farm's card at the farm, the water and its tide chart on the coast, the tropics when a system
-  is out, Sun and Tonight side by side, and one credit. The charts draw in in that same order (see The charts' entrance),
-  and test.mjs checks both.
+  reading, the headline, the chips, the scene), the next 24 hours, then this week. The week
+  used to sit at the foot of the page, which put the weekend a scroll away. Under it comes the
+  wave, the water and its tide at the coast and the moon at the farm, in the same place; the
+  tropics when a system is out; the cards (a sentence card when there is something to say, then
+  Sun and Tonight side by side); the year; and one credit. The charts draw in in that same order
+  (see The charts' entrance), and test.mjs checks both.
+- **One shape for every section, and both places run alike.** Josh asked for the page to be
+  "symmetrical and predictable" through the scroll (September 27 2026), after two lines of text
+  crept in between the water's title and its chart. So every chart section is a title with one
+  short note on the right, then the picture, then its labels (the hours, the days, the tides, the
+  months), and nothing sits between a title and its chart. Sentences are cards, together with Sun
+  and Tonight. The coast and the farm have the same sections in the same order, the tide at one
+  and the moon at the other. A new reading goes in a note, on a chart or in a card, never as a
+  line of text over a chart. The week's title reads `This week`.
 - **Josh's words.** Plain, short, direct. Windy, never blustery, breezy or wind-whipped, and
   test.mjs checks the whole file for those three. No semicolons and no em dashes in the
   app's sentences (an en dash in a range like 4–7p is fine), and no "not X, it's Y". The
@@ -106,8 +115,9 @@ place name.
   Iffy or No go, beside a "best" three hours. Josh sent it back: a word was too little on a boat
   day and made no sense at the farm, and the best time was a score of rain, gusts, heat and cold
   that nobody could see the reason for ("based on what?"). So `bestOutsideWindow`, the word, its
-  dot and "best time to piddle" are gone, and the card is a short sentence in the colours the Sun
-  and Tonight leads use (`.say` with `go`, `caution`, `no`) over a line of readings. A clock is
+  dot and "best time to piddle" are gone, and what is left is a short sentence on a card of its
+  own above Sun and Tonight (`#sayCard`, a `.lead` in `go`, `caution` or `no`, the colours the
+  Sun and Tonight leads use), with nothing under it. A clock is
   said only for the hour a real thing happens at: thunder coming in, the wind coming up or laying
   down, freezing rain or snow on the way. Rain still to come gets no clock on the cards, because
   the headline names its first wet stretch and the hour. What the headline has already named is
@@ -118,22 +128,28 @@ place name.
   as tonight's.
   Josh saw the options drawn into the real page and picked these (the farm is his option A).
 - **The water, all year.** On the coast the card and the tide chart are one section, `Water ·
-  Wrightsville Beach`, because every reading in it comes from there. Over the chart: the boat's
-  sentence while the boat is going out, then one mono line (`waterLine`), then the level line.
-  Off season nothing is graded or coloured: `seas about 2 ft · water 77°`, the seas for the hour
-  now is in and the water temperature now, and the wind is the chip's. The seas are Open-Meteo's
+  Wrightsville Beach`, because every reading in it comes from there. The note beside the title
+  is the water temperature and the seas (`77° · seas ~2 ft`, from `waterNote`), and without them
+  the tide's turn (`rising · high 8:28p`); the chart already shows rising or falling and the next
+  high, so those words are only the fallback. The level is on the chart: when the station's gauge
+  runs off the table, the skiff floats at the water that is there, with the table's point marked
+  under it on a dotted line and `+1.5 ft` beside the boat, and the sentence (`Running 1.5 ft above
+  the tide table.`) is said to screen readers with the chart. A high that has passed gives way to a
+  lifted skiff. The boat's sentence, while the boat is going out, is a card, `The boat`. Nothing is
+  graded or coloured off season: the seas are the hour now is in, the water temperature is now,
+  and the wind is the chip's. The seas are Open-Meteo's
   marine model, hour by hour for two days, asked for every day of the year. It ran low against
   buoy 41110 off Masonboro Inlet and its makers say it is not for navigation, so it is said to
   the whole foot with "about" ("under 1 ft" below half a foot). The water temperature is NOAA's
   own at station 8658163, said only while under an hour old, with no model to fall back on. The
-  level line reads the station's six-minute gauge against the table's six-minute marks over the
-  gauge's last half hour, and says `Running 2 ft above the tide table.` from half a foot, to the
+  level reads the station's six-minute gauge against the table's six-minute marks over the
+  gauge's last half hour (`levelFeet`, and `levelGap` for its sentence), from half a foot, to the
   half foot. On September 27 2026 the water ran two feet over under a coastal flood advisory while
   the chart drew a low, which is why it exists. It is a measurement, never a forecast, and it is
   hidden when the gauge is half an hour old, thin, or six feet off.
 - **The boat season is paused.** The boat went out March 15 to October 31 on Josh's club trips.
   The club is paused from September 27 2026, so `LOCS.mb.boatSeason` is `null` and stays that
-  way until Josh says it is back; do not guess a date. The boat's sentence is still written and
+  way until Josh says it is back; do not guess a date. The boat's sentence (the `The boat` card) is still written and
   tested, and `tools/shots.mjs` serves the page with the season switched on for the scenarios
   marked `boat: true`. With the season on, the sentence speaks for the covered hours: `Easy out
   there.` (go), `Choppy. Stick to the ICW.` and `Rough outside. Stick to the ICW.` (gusts 22 or
@@ -151,14 +167,18 @@ place name.
   times.` and `, but cold.`. An unknown is never green: `Seas unavailable.`, `Gusts
   unavailable.`, `Rain odds unavailable`, and a reading strong enough still decides on its own.
   A green sentence needs the whole day in the run: a cache opened after dark knows tomorrow's
-  morning and not its afternoon, and says nothing rather than `Easy out there tomorrow.` Each
-  reading wears the colour of its own step, and a day that changes is amber, so `Too windy until
-  about 3 p.m., then choppy.` sits over a red 31. The season is judged on the day the sentence
+  morning and not its afternoon, and says nothing rather than `Easy out there tomorrow.` A day
+  that changes is amber. No reading is coloured on the page: the sentence is the call, and in
+  season the note beside the title carries the covered hours' top seas beside the water
+  temperature, in the note's own faint ink. `waterCard` still grades each reading (`line`, each
+  with its step's class), because that is where the note and the tests read them from. The
+  season is judged on the day the sentence
   speaks for. `waterCard`, `boatSay`, `levelGap` and `waterTemp` are pure and
   test.mjs runs them. `render()` only paints.
-- **The farm speaks only when it matters.** `#outSection` is the farm's card, `The farm`, and
-  it makes no call and is never green. On an ordinary day it is the bite line and nothing else,
-  and it steps aside when it has neither. When there is something to plan around it says so in
+- **The farm speaks only when it matters.** The farm's sentence is a card titled `Piddling`,
+  Josh's call and the family's word for pottering at the outside jobs, and it makes no call and is
+  never green. On an ordinary day there is no card, only the moon and its fishing times (see The
+  moon over the farm). When there is something to plan around it says so in
   the family's words, amber or red: a warning is `Chores can wait.` (`Feed early and keep a path
   open.` for a winter one, `Stay off the hill until it turns over.` with ice), thunder in the
   hour under way `Thunder nearby.`, freezing rain `Freezing rain possible around 5 p.m. Stay off
@@ -171,18 +191,18 @@ place name.
   named that hour). A gale before it is `Too windy from about 2 p.m. Thunder possible around 4 p.m.
   Chores can wait.`, rain before it `Thunder possible around 4 p.m. Slip out between the
   showers.`, and thunder within the hour or behind a gust the run does not carry is the thunder
-  alone in red with no bite line (`Chores can wait.` when the headline has named it). A gale still to come is `Too windy from about 5 p.m. Get the
+  alone in red with no fishing times (`Chores can wait.` when the headline has named it). A gale still to come is `Too windy from about 5 p.m. Get the
   chores done early.` (the action alone when the headline has named that hour), snow `Snow
   possible around 5 p.m. Feed early and keep a path open.`, rain `Slip out between the showers.`
   or `Piddle early. Rain likely later.`, and cold morning rounds (the sunrise hour and the two
   after it feeling 36° or under, this morning's until ten and tomorrow's from sunset) `Cold one.
   Bundle up for the morning rounds.`, which drops the bundling when the headline has already
   said it. Anything
-  that says stay in takes the bite line with it, and so does freezing rain falling now, even
-  after dark when the card speaks for tomorrow. Otherwise each bite window is dropped on its
-  own hours (`fishLine`): thunder, freezing rain or a 30 mph gust in it, a gust the run does not
-  carry, or running past the end of the run. `farmCard` and `fishLine` are pure and test.mjs
-  runs them. The parked trip has no card.
+  that says stay in takes the fishing times off the moon chart, and so does freezing rain falling
+  now, even after dark when the card speaks for tomorrow (`farmCard`'s `fish` is that gate).
+  Otherwise each window is dropped on its own hours (`fishWindows`): thunder, freezing rain or a
+  30 mph gust in it, a gust the run does not carry, or running past the end of the run.
+  `farmCard` and `fishWindows` are pure and test.mjs runs them. The parked trip has no card.
 - **The sun card is the rest of today, and it steps aside.** In September 2026 the card became
   `Sun` over one bar on the 0-12 scale: the pin is now and carries the reading, the bar is lit
   as high as the rest of today goes and dims past it, and a peak still to come today is a ring
@@ -207,8 +227,9 @@ place name.
   mono, because Open-Meteo's data is CC BY 4.0 and asks for it. The paragraph of sources, the
   per-place footnotes (`LOCS.*.foot`) and the refresh instructions went in September 2026:
   nobody reads them on a phone, the sources are in the README, and the stamp is already the
-  retry. The one thing they said that the page needed, that the bite windows are the almanac's,
-  now rides on the bite line itself (see Motion rules). Do not grow the footer back.
+  retry. The one thing they said that the page needed, that the fishing times are the almanac's,
+  now rides on the moon chart's title, `Almanac fishing times` (see The moon over the farm). Do not
+  grow the footer back.
 - Golden hour is sun elevation +6° to -4°, the convention the photo apps use.
   Blue hour is -4° to -6°. The displayed sunrise and sunset times come from the
   forecast API; sun and moon positions and the golden-hour boundaries are
@@ -402,25 +423,34 @@ TZ=America/New_York node tools/scene.mjs fog storm  # just the scenes you are wo
 node tools/rig.mjs heron                          # one animal, close up and at phone size
 ```
 
-`tools/shots.mjs` renders seventeen scenarios (day, night, after midnight, storm, dusk,
+`tools/shots.mjs` renders nineteen scenarios (day, night, after midnight, storm, dusk,
 both family locations, a fine farm afternoon, a washout, a shoulder-season moderate-UV day with
 the water running two feet over the tide table, and two shaped weeks: a cool snap into a warm run
 on a Thursday, gusting 30 at five with the boat season switched on, and a stormy Sunday week with
-100% odds and a 101° high, which is also the eight-column week), then five for the water, the
+100% odds and a 101° high, which is also the eight-column week), then seven for the water, the
 farm and the weekend: a Saturday at the coast with the boat season switched on, where the weekend
 is today and tomorrow and the water is `Easy out there.`; a mid-November Saturday, with the seas
 and the water and no sentence; a cold January morning on the coast with the station's thermometer
 down and the sun card stepped aside; a boat day whose marine run carries no seas, which is `Seas
-unavailable.` and never green; and a cold October morning at the farm, `Cold one. Bundle up for
-the morning rounds.` over the bite times. A scenario marked `boat: true` is served with
+unavailable.` and never green; the water two feet over the table half an hour before a high,
+where the skiff floats over the curve and the high's time stays over it, and a winter northwester
+blowing it out a foot and a half under the table at the low, where the skiff keeps water under its
+hull; and a cold October morning at the farm, `Cold one. Bundle up for
+the morning rounds.` on the `Piddling` card over the moon. A scenario marked `boat: true` is served with
 `boatSeason:null` switched back on, and fails if there is nothing to switch. It writes screenshots
 to `tools/shots/` and prints the generated copy (the headline, the chips as they are seen, the
-water's sentence, line and level line, the farm's card, the sun sentence, tonight and the week's
-note, with the banded weekend in brackets), so wording changes are reviewable as text. A scenario
-can carry an `expect`: the week's columns and banded days, the sentence and its colour, the
-water's line and level line, the farm's card and bite line, the sun card, the sun bar's spoken
-label, and how many times the seas were asked for. The loading-shell check at the end also holds
-the sun scale hidden while there is no bar. It exits non-zero when one does not show what it is there for.
+water's note, the level the chart speaks and the tag on the skiff, the moon's phase and the
+fishing times it speaks, the sentence card, the sun sentence, tonight, the week's note with the
+banded weekend in brackets, and the year's title and note), so wording changes are reviewable as
+text. A scenario can carry an `expect`: the week's columns and banded days, the sentence card's
+title, sentence and colour, the water's note, the level and its tag, the moon and whether it has
+fishing times, the year, the sun card, the sun bar's spoken label, and how many times the seas were
+asked for. The loading-shell check at the end also holds the sun scale hidden while there is no
+bar, and the farm's moon and its year's title in place before any forecast lands. Every scenario
+also fails when a word on the tide, the moon or the year runs off its chart or into another word,
+or when the skiff's level tag sits on the bed, measured at 390 and 900 and once more at 320, the
+width where they meet. It exits non-zero when one does not show what it
+is there for.
 
 `tools/scene.mjs` is for anything that moves. Twenty-nine scenes force the light
 and weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
@@ -488,10 +518,10 @@ If you add a location, give it a `tz` and a `tzLabel`. Nothing else needs to kno
 
 ## On file size
 
-`index.html` is about 400 KB of source (September 2026), and an early plan set
+`index.html` is about 480 KB of source (September 2026, with NOAA's daily normals baked in), and an early plan set
 160 KB as a ceiling. That number was about the source file and it is not the
 number that matters. GitHub Pages serves the file gzipped, so what a phone
-actually downloads is **about 130 KB**, once, and the service worker caches it
+actually downloads is **about 160 KB**, once, and the service worker caches it
 after that. Measure both rather than trusting this paragraph: `wc -c index.html`
 for the source and `gzip -6c index.html | wc -c` for roughly what is sent.
 
@@ -636,8 +666,47 @@ Established with Josh and enforced by `test.mjs`:
   a gale, thunder within the hour, freezing rain falling), and one by one on their own hours
   otherwise, so they never read as an
   invitation to stand in a thunderstorm with a rod. The footer used to carry that
-  framing. Now the line carries it, `fish bite · by the moon`, with the full sentence in
-  its title and for screen readers.
+  framing. Now the moon chart's title carries it, `Almanac fishing times` (Josh chose it over
+  "fish bite · by the moon" so the theory is plainly the almanac's), with the full sentence in its
+  title and for screen readers.
+
+## The moon over the farm
+
+The farm's wave, in the place the coast has its tide (Josh, September 27 2026: the farm "feels off,
+like it's missing something"). At the coast the moon moves the water; at the farm the almanac says it
+moves the fish, and its fishing times are the moon's own hours. `#moonSection`, `Almanac fishing
+times`, draws the moon's height over the same day and a half as the tide chart, on one honest linear
+scale with the horizon where zero falls: solid and washed while the moon is up, dashed while it is
+down. The windows that are clear on their own hours (`fishWindows`) are quiet water bands, a major
+darker than a minor, each marked by when it starts (`now` when under way), because the band is the
+span. The moon rides the curve at now in its own phase, the way the skiff rides the tide, and the
+phase is the note beside the title (`moonName`: new moon, waxing crescent, first quarter, waxing
+gibbous, full moon and back). Anything that says stay in takes the windows with it. The chart speaks
+its windows (`The almanac's fishing times: 6:58 pm to 7:58 pm, ...`). It is drawn in like the tide.
+
+## The year
+
+At the foot, above the credit: NOAA's 1991-2020 climate normals at the airport nearest each place,
+`The year · Wilmington` (USW00013748) for Porters Neck and `The year · Beckley` (USW00003872) for Shady
+Spring, named for the airport because that is where the numbers are from. Josh asked for monthly
+averages like Carrot's, "but better, and in our design language" (September 27 2026), and picked
+lines over bars. They change once a decade, so they live in `NORMALS` and nothing is fetched.
+
+- **Drawn the way the week is.** The normal highs as a line in the temperature's colours, the lows
+  fainter, the range washed between, the warmest month ringed with its number and the coldest low
+  named. The year wraps, December running on into January at both ends, so late December is not a
+  month held flat. The months are the week's quiet mono axis, this month in marker red.
+- **One scale at both places**, 20° to 95° and wider only for a week that runs past it, so Beckley's
+  81° July is drawn lower than Wilmington's 90°. The scale does not start at zero, because 0°F means
+  nothing here; the rain and snow bars do.
+- **This week is the Sun card's pin** at today, with its own high over it and low under it, and a
+  key month's number gives way where they meet. The note is `6° warmer this week`, `6° cooler this
+  week` or `a normal week` (under 3°): the forecast's own days, each against NOAA's daily normal for
+  that day, on the day's middle temperature the way the Weather Service says above or below normal,
+  with the size rounded apart from its sign (`yearCompare`).
+- **Rain and snow** each have a strip on their own ground line and their own scale, so 16 inches of
+  snow never reads as the same amount as 5 inches of rain. Only the tallest month is named, noun
+  first: `rain 8.7 in`, `snow 16 in`. Snow shows only where it falls (the farm).
 
 ## Interaction and reading refinements
 
@@ -657,7 +726,7 @@ Established with Josh and enforced by `test.mjs`:
   retry; a failed refresh with a valid cache keeps the reading and shows its age.
 - Filter expired alerts before rendering them or using them for lightning and
   outdoor advice. Active severe/extreme warnings take precedence over an otherwise
-  pleasant outdoor reading: the farm says the family's action in red and takes the bite line,
+  pleasant outdoor reading: the farm says the family's action in red and takes the fishing times,
   and with the boat season on the water says `Stay off the water.` Include
   the NWS instruction text in the expanded alert; do not invent an instruction.
 - Small labels need enough ink on both the plain paper and the tinted evening
@@ -725,17 +794,20 @@ and dot arrives as the pen reaches it, the high rings once, and the skiff settle
 water at now with a ripple. The sun card's bar is drawn by the same pen (`sun` in `REVEAL`),
 up the UV scale rather than along a clock: its light takes the colour of the level it passes,
 the pin drops onto the bar the way the skiff settles when the pen reaches now, and a peak still
-to come today pops and rings once. The hourly takes about 2.3s on a phone. Charts on screen
-together draw down the page: the week follows the hourly by 0.4s, and the tide and then the sun
-bar follow whichever drawing above them is still running (`REVEAL`'s keys are in page order,
-and so is `RV_OF`, the observer's map). All of it is in `REVEAL` in index.html.
+to come today pops and rings once. The farm's moon is drawn like the tide (its disc drops onto the
+curve at now), and the year like the week (the warmest month rings, the rain and snow bars rise,
+the week's pin drops at today). The hourly takes about 2.3s on a phone. Charts on screen together
+draw down the page: the week follows the hourly by 0.4s, and the tide or the moon, the sun bar and
+the year each follow whichever drawing above them is still running (`REVEAL`'s keys are in page
+order, hourly, week, tide, moon, sun, year, and so is `RV_OF`, the observer's map). All of it is in
+`REVEAL` in index.html.
 
 - **It plays to someone.** It waits until the chart is at least 30% on screen, so on a
   phone the tide plays when you scroll to it. It waits for the live forecast, or 0.9s when
   there is only the cache, so the pen does not draw one line and then swap it for another.
   The observer's word can be a render old, so a chart is measured once more before it plays.
   One that measures off screen is looked at again a frame later, because the alerts, the
-  nowcast strip and the farm's card are painted after the charts and move them again; one that
+  nowcast strip and the sentence card are painted after the charts and move them again; one that
   passes mid-render plays. That look only ever holds a chart back. It never
   clears the observer's word: cleared mid-render, a week that grew back on screen stayed blank
   until the next scroll crossed a threshold.
@@ -762,10 +834,10 @@ and so is `RV_OF`, the observer's map). All of it is in `REVEAL` in index.html.
 
 `tools/interactions.mjs` runs fourteen scenarios: narrow and wide chart edges, keyboard
 navigation, location switching, snow/ice labels, a warning at the farm that is `Chores can
-wait.` in red and takes the bite line until it expires, source instructions, a farm day with
+wait.` in red and takes the fishing times until it expires, source instructions, a farm day with
 thunder in the run from noon and nothing warned (the headline `Thunder possible around 12 p.m.`,
-the card `Piddle before the thunder.` in amber, and no bite window inside the thunder), a phone that opens at the coast and taps to the farm's
-cache (the farm's title on the cached paint and the live one),
+the card `Piddle before the thunder.` in amber, and no fishing time inside the thunder), a phone that opens at the coast and taps to the farm's
+cache (the farm's moon and its year's title on the cached paint and the live one),
 the entrance across a cache-to-live paint that drops the nowcast strip with the week at the
 fold (nothing on screen left undrawn) and with no cache (the tide the live paint pushes below
 the fold waits for the scroll, then draws), retry, and cached/online recovery. The two
@@ -779,12 +851,12 @@ entrance checks run with motion on; everything else runs under reduced motion. R
   down the forecast fetch fails and the page shows the last cached reading (same
   day, up to 6 hours old) and the cards worked out from it, cached seas and all,
   behind the age stamp and the dimmed live dot, which reads as working but stale.
-  The water temperature and the level line are not carried that far: they hide once
+  The water temperature and the level are not carried that far: they hide once
   the station's reading is an hour and half an hour old. Past 6 hours or into a new
-  day there is no cache, and the page shows the unavailable state: nothing over the tide chart,
-  and at the farm its card with the bite line dashed. When
+  day there is no cache, and the page shows the unavailable state: the sections in their
+  places with their titles and no pictures, and no sentence card. When
   the marine host alone fails, the forecast still lands and the seas are left off the
-  line (with the boat season on, `Seas unavailable.`, unless the wind alone decides it).
+  note (with the boat season on, `Seas unavailable.`, unless the wind alone decides it).
   That is the honest answer, not a bug. `api.weather.gov` and NOAA's CO-OPS answer
   fine on the same network. The fix under discussion is an NWS gridpoint fallback
   source: temperature, rain chance, wind, gusts and cloud all come through it, UV,
