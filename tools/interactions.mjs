@@ -239,9 +239,12 @@ try{
     let release;const gate=new Promise(r=>release=r);
     await page.route("**api.open-meteo.com**",async r=>{if(r.request().url().includes("marine-api"))return r.fallback();await gate;r.fallback()});
     await page.locator("#locBtn").click();
+    /* the new place's shell names the farm's airport in the hover text before any paint lands */
+    assert.match(await page.locator("#yearTitle").getAttribute("title"),/Beckley airport/,"the shell's hover text is the farm's airport");
     await page.waitForFunction(()=>document.getElementById("stamp").textContent.startsWith("updated"));
     assert.equal(await page.locator("#moonSection").isVisible(),true,"the cached farm paint has its moon");
     assert.match(await page.locator("#yearTitle").innerText(),/SHADY SPRING/);
+    assert.match(await page.locator("#yearTitle").getAttribute("title"),/Beckley airport/);
     assert.equal(await page.locator("#tideSection").isVisible(),false);
     release();
     await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
@@ -600,9 +603,65 @@ try{
     assert.deepEqual(errors,[]);await context.close();checks++;
   }
   {
+    /* a missing hourly temperature is not a zero: on a cache whose 3p is null the line keeps to the
+       known hours, nothing is drawn at NaN, the real low keeps its mark, and 3p reads unavailable */
+    const o={...base,code:1,popCurve:()=>5},t=new Date(now.getTime()-3.6e5),data=cachePayload(t,o,"mb");
+    data.hourly.temp[5]=null;
+    const {context,page,errors}=await open(390,o,"mb");
+    await page.addInitScript(c=>localStorage.setItem("mbwx-mb",JSON.stringify(c)),{savedAt:t.getTime(),data});
+    await page.route("**api.open-meteo.com**",r=>r.request().url().includes("marine-api")?r.fallback():r.abort());
+    await page.goto(`http://localhost:${PORT}/`);
+    await page.waitForFunction(()=>/updated/.test(document.getElementById("stamp").textContent));
+    const r=await page.evaluate(()=>{const h=LAST.d.hourly,known=h.temp.map((v,i)=>v==null?null:i===0&&LAST.d.current.temperature_2m!=null?LAST.d.current.temperature_2m:v).filter(v=>v!=null);
+      return{nan:/NaN/.test(document.getElementById("hourlySvg").innerHTML),marks:XP.hourly.D.marks,low:Math.round(Math.min(...known)),
+        labels:[...document.querySelectorAll("#hourlySvg text")].map(e=>e.textContent),said:XP.hourly.D.read(5).said}});
+    assert.equal(r.nan,false,"nothing in the hourly is drawn at NaN");
+    assert.ok(r.marks.every(i=>i>=0),"no mark at -1: "+r.marks);
+    assert.ok(r.labels.includes(r.low+"°"),`the real low ${r.low}° keeps its label: ${r.labels}`);
+    assert.match(r.said,/temperature unavailable/);
+    assert.deepEqual(errors,[]);await context.close();checks++;
+  }
+  {
+    /* a live paint drawn again after the top of the hour (a rotation between fetches) asks for the
+       new hour's run, once an hour, so NOW and the now pill land back on the live reading */
+    const when=new Date("2026-09-13T16:59:55-04:00");
+    const {context,page,errors}=await open(390,{...base,code:1,popCurve:()=>5},"mb",when);
+    let asks=0;page.on("request",r=>{const u=r.url();if(u.includes("api.open-meteo.com")&&!u.includes("marine-api"))asks++});
+    await load(page);
+    const a0=asks;
+    await page.waitForFunction(()=>new Date().getHours()===17,null,{timeout:15000});
+    await page.setViewportSize({width:700,height:900});await page.waitForTimeout(900);
+    assert.equal(asks-a0,1,"the rotation after the hour asks for the new hour's run");
+    await page.setViewportSize({width:390,height:900});await page.waitForTimeout(900);
+    assert.equal(asks-a0,1,"and asks once an hour");
+    assert.deepEqual(errors,[]);await context.close();checks++;
+  }
+  {
+    /* with motion on, a thumb creeping into a scroll from a chart still waiting to draw in is a
+       scroll: it never shows a reading, so it never finishes that chart's entrance under it. The
+       water came into view drawn, with no entrance, on the ordinary way up to it */
+    const {context,page,errors,cdp}=await phone(390,coast,"mb",{motion:true});
+    await page.goto(`http://localhost:${PORT}/`);
+    await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
+    await page.waitForTimeout(3200);
+    await page.evaluate(()=>{const b=document.getElementById("tideSvg").getBoundingClientRect();scrollTo(0,scrollY+b.top-innerHeight+b.height*.2)});
+    await page.waitForTimeout(400);
+    assert.equal(await page.evaluate(()=>REVEAL.tide.state),"armed","the water waits at the foot of the screen");
+    const b=await page.locator("#tideSvg").boundingBox(),x=b.x+b.width/2,y0=Math.min(790,b.y+b.height*.1);
+    const t0=Date.now();
+    await cdp.send("Input.dispatchTouchEvent",{type:"touchStart",touchPoints:[{x,y:y0}]});
+    for(let j=0;j<30;j++){await page.waitForTimeout(4);const t=Date.now()-t0;
+      await cdp.send("Input.dispatchTouchEvent",{type:"touchMove",touchPoints:[{x,y:Math.max(5,y0-.00024*t*t)}]})}
+    await cdp.send("Input.dispatchTouchEvent",{type:"touchEnd",touchPoints:[]});
+    const st=await page.evaluate(()=>[REVEAL.tide.state,!document.querySelector("#tideExplore .xp-peek").hidden]);
+    assert.ok(st[0]!=="done"&&!st[1],"the push shows nothing and leaves the water's entrance to play: "+st);
+    assert.deepEqual(errors,[]);await context.close();checks++;
+  }
+  {
     /* a tapped reading lingers 2.2s and goes, even when a repaint lands inside the linger: a tap
-       leaves :hover stuck on a phone, and that is no finger, mouse or key holding the chart. The
-       slider's spoken value goes back to the start with its value */
+       leaves :hover stuck on a phone, and that is no finger, mouse or key holding the chart. But it
+       keeps the rest of its 2.2s through the repaint, which on every open is the live data landing
+       a moment after the cache. The slider's spoken value goes back to the start with its value */
     const {context,page,errors,cdp}=await phone(390,coast,"mb");
     await load(page);
     for(const k of ["hourly","tide","year"]){
@@ -610,8 +669,12 @@ try{
       await touch(cdp,page,[[b.x+b.width*.6,b.y+b.height*.55]],{hold:40});
       await page.waitForTimeout(300);
       assert.equal((await xpState(page,k)).shown,true,`${k}: the tap reads`);
+      const before=(await xpState(page,k)).t;
       await page.evaluate(()=>render(LAST.d,true));
-      await page.waitForTimeout(2300);
+      await page.waitForTimeout(700);
+      const mid=await xpState(page,k);
+      assert.ok(mid.shown&&mid.t===before,`${k}: a repaint 300ms after the tap keeps its reading, at the same moment`);
+      await page.waitForTimeout(1600);
       const s=await xpState(page,k),v=await page.evaluate(k=>{const X=XP[k];return{value:+X.key.value,said:X.D.read(+X.key.value).said,start:X.D.start}},k);
       assert.equal(s.shown,false,`${k}: a repaint in the linger does not keep a tapped reading up`);
       assert.equal(v.value,v.start,`${k}: the slider is back at its start`);
@@ -637,11 +700,35 @@ try{
         await page.waitForTimeout(300);
         assert.ok(!mid&&!(await xpState(page,k)).shown,`${k}: a slow vertical scroll shows nothing`);
       }
+      /* and a thumb creeping into a scroll, on the real clock (0, 1, 2, 4px a frame), never reads as
+         still: each creep starts the hold's wait again */
+      const b=await inView(page,`#${k}Explore`),x=b.x+b.width/2,y0=b.y+b.height*.7;
+      await page.evaluate(k=>{window.__peeked=false;const p=XP[k].peek;window.__mo?.disconnect();
+        window.__mo=new MutationObserver(()=>{if(!p.hidden)window.__peeked=true});window.__mo.observe(p,{attributes:true})},k);
+      const t0=Date.now();
+      await cdp.send("Input.dispatchTouchEvent",{type:"touchStart",touchPoints:[{x,y:y0}]});
+      for(let j=0;j<30;j++){await page.waitForTimeout(4);const t=Date.now()-t0;
+        await cdp.send("Input.dispatchTouchEvent",{type:"touchMove",touchPoints:[{x,y:Math.max(5,y0-.00024*t*t)}]})}
+      await cdp.send("Input.dispatchTouchEvent",{type:"touchEnd",touchPoints:[]});
+      await page.waitForTimeout(300);
+      assert.equal(await page.evaluate(()=>window.__peeked),false,`${k}: a scroll that starts slowly never flashes a reading`);
+    }
+    /* the hour labels under the hourly are its axis, and a tap on one reads that hour */
+    {
+      await page.waitForTimeout(1500);                  /* the push above leaves the page gliding */
+      const l=await inView(page,"#hrLabels");
+      await touch(cdp,page,[[l.x+l.width*.6,l.y+l.height/2]],{hold:40});
+      await page.waitForTimeout(60);
+      assert.equal((await xpState(page,"hourly")).shown,true,"a tap on the hour labels reads the hour");
+      await page.waitForTimeout(2600);
     }
     /* a finger that stops a gliding page is stopping the page, and is not a tap on the chart. The
        finger has to land on the water while the page is still moving, so the flick is tried again
        if it glides past */
     await page.evaluate(()=>document.getElementById("tideExplore").addEventListener("pointerdown",()=>{window.__onTide=true},true));
+    /* and however long it rests there: a thumb that stops a glide and rests 200ms is still stopping
+       the page */
+    for(const hold of [50,200]){
     let landed=false;
     for(let tries=0;tries<4&&!landed;tries++){
       await page.evaluate(()=>{const e=document.getElementById("tideExplore"),b=e.getBoundingClientRect();scrollTo(0,scrollY+b.top-innerHeight-60);window.__onTide=false});
@@ -653,14 +740,15 @@ try{
           const b=document.getElementById("tideExplore").getBoundingClientRect(),y=b.top+b.height/2;
           return scrollY!==a&&y>b.height&&y<innerHeight-b.height?{x:b.left+b.width/2,y}:null});
         if(!g)continue;
-        await touch(cdp,page,[[g.x,g.y]],{hold:50});
+        await touch(cdp,page,[[g.x,g.y]],{hold});
         landed=await page.evaluate(()=>window.__onTide);break;
       }
       await page.waitForTimeout(80);
-      if(landed)assert.equal((await xpState(page,"tide")).shown,false,"a tap that stops the glide reads nothing");
+      if(landed)assert.equal((await xpState(page,"tide")).shown,false,`a ${hold}ms press that stops the glide reads nothing`);
       else await page.waitForTimeout(2600);
     }
-    assert.ok(landed,"the finger landed on the water while the page glided");
+    assert.ok(landed,`the finger landed on the water while the page glided (${hold}ms)`);
+    }
     await page.waitForTimeout(300);
     const still=await page.locator("#tideExplore").boundingBox();
     await touch(cdp,page,[[still.x+still.width/2,still.y+still.height/2]],{hold:50});

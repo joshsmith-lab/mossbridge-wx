@@ -138,6 +138,26 @@ const CASES = [
     o: { baseTemp: 36, nowTemp: 33, feels: 24, rh: 55, isDay: 1, code: 0, cloud: 5, nowWind: 16, nowDir: 320, nowGust: 28, nowUv: 0.2, uvMax: 2.4,
       windAmp: 8, gustAmp: 12, sunrise: "07:22", sunset: "17:25", surge: -1.6, waterTemp: 48, popCurve: () => 3, dailyPop: (p) => p.fill(5) },
     expect: { level: "Running 1.5 ft below the tide table.", tide: /^48° · seas ~2 ft$/, xp: { tide: /^now ~−?\d+\.\d ft$/, tideHour: / by the table$/ } } },
+  // the water two feet over the table at the 7:24a low, the September 27 case the level exists for:
+  // stamped beside the bow the tag sat on the rising flank, so it is placed where the line is not
+  { name: "23-surge-at-low-porters-neck", loc: "mb", when: "2027-01-14T07:24:00",
+    o: { baseTemp: 44, nowTemp: 46, feels: 41, rh: 80, isDay: 1, code: 3, cloud: 80, nowWind: 18, nowDir: 60, nowGust: 26, nowUv: 0.2, uvMax: 2.4,
+      windAmp: 8, gustAmp: 12, sunrise: "07:22", sunset: "17:25", surge: 2.1, waterTemp: 50, popCurve: () => 12, dailyPop: (p) => p.fill(15) },
+    expect: { level: "Running 2 ft above the tide table." } },
+  // a northeaster blowing the water out a foot under the table at the 1:36p high, where the tag sat
+  // on the falling flank
+  { name: "25-blown-out-high-porters-neck", loc: "mb", when: "2026-09-27T13:36:00",
+    o: { baseTemp: 70, nowTemp: 72, feels: 72, rh: 60, isDay: 1, code: 2, cloud: 40, nowWind: 16, nowDir: 330, nowGust: 26, nowUv: 3.5, uvMax: 5,
+      windAmp: 9, gustAmp: 13, sunrise: "07:04", sunset: "18:59", surge: -1, popCurve: () => 4, dailyPop: (p) => p.fill(5) },
+    expect: { level: "Running 1 ft below the tide table." } },
+  // a wet weekend of one kind, 40% and 100%: the noun is said once, so at 320 the note stays on the
+  // title's line
+  { name: "26-wet-weekend-porters-neck", loc: "mb", when: "2026-08-06T14:20:00",
+    o: { baseTemp: 84, nowTemp: 88, feels: 95, rh: 70, isDay: 1, code: 2, cloud: 40, nowWind: 9, nowDir: 200, nowGust: 16, nowUv: 7, uvMax: 9,
+      windAmp: 6, gustAmp: 9, sunrise: "06:25", sunset: "20:08", popCurve: () => 10,
+      dailyPop: (p, c) => { p.fill(10); p[2] = 40; p[3] = 100; c[2] = 80; c[3] = 63; },
+      dailyTemps: (hi) => { hi.splice(2, 2, 100, 101); } },
+    expect: { note: /^Sat 100° 40% · Sun 101° 100% rain$/ } },
   // a cold October morning at the farm: the card speaks for the morning rounds, in amber, over the bite times
   { name: "20-cold-morning-shady-spring", loc: "sp", when: "2026-10-22T07:40:00",
     o: { baseTemp: 44, nowTemp: 31, feels: 27, rh: 80, isDay: 1, code: 0, cloud: 5, nowWind: 4, nowDir: 320, nowGust: 8, nowUv: 0.2, uvMax: 3.5,
@@ -163,6 +183,15 @@ async function crowded(page) {
     if (id === "tideSvg") {
       const tag = boxes.find((x) => /^[+−][\d.]+ ft$/.test(x.t)), sea = vb.height - 34;
       if (tag && tag.b.y + tag.b.height > sea + .5) out.push(`tideSvg "${tag.t}" sits on the bed (${(tag.b.y + tag.b.height).toFixed(1)} under ${sea})`);
+      /* and never on the tide line: its paper halo cut the water at now. The tag's ink runs from its
+         baseline up its cap height (no descenders), and the line's own edge is 1.2 off its path */
+      const el = [...svg.querySelectorAll("text")].find((e) => /^[+−][\d.]+ ft$/.test(e.textContent)), line = svg.querySelector(".wline");
+      if (el && line) {
+        const fs = parseFloat(el.getAttribute("font-size")), base = +el.getAttribute("y"), b = el.getBBox(), top = base - .72 * fs, pad = 2 + 1.2;
+        const L = line.getTotalLength();
+        for (let d = 0; d <= L; d += 1) { const q = line.getPointAtLength(d);
+          if (q.x > b.x - pad && q.x < b.x + b.width + pad && q.y > top - pad && q.y < base + pad) { out.push(`tideSvg "${el.textContent}" sits on the tide line at ${q.x.toFixed(0)},${q.y.toFixed(0)}`); break; } }
+      }
     }
     return out;
   }));
@@ -185,6 +214,10 @@ async function pillClear(page) {
         if (w > 1 && h > 1) { out.push(`${X.k} pill "${X.peek.textContent}" covers its ring`); break; }
       }
       if (p.top < eb.bottom - 1) out.push(`${X.k} pill "${X.peek.textContent}" runs into the title`);
+      /* at the water's now the skiff is the mark, and it has no ring: the pill clears its box */
+      const skiff = X.k === "tide" && i === X.D.start && X.D.svg.querySelector(".boat-flag")?.closest('g[transform*="scale(1.15)"]');
+      if (skiff) { const b = skiff.getBoundingClientRect(), w = Math.min(b.right, p.right) - Math.max(b.left, p.left), h = Math.min(b.bottom, p.bottom) - Math.max(b.top, p.top);
+        if (w > 1 && h > 1) out.push(`tide pill "${X.peek.textContent}" covers the skiff by ${h.toFixed(1)}px`); }
     }
     xpHide(X); return out.slice(0, 3);
   }));
@@ -228,8 +261,14 @@ for (const cs of cases) {
     // settle the charts' entrance (a one-shot sweep that waits to be on screen) before looking
     await page.evaluate(() => typeof finishReveal === "function" && finishReveal());
     for (const m of [...await crowded(page), ...await pillClear(page)]) { failures++; console.log(`!! ${cs.name} at ${vp.w}: ${m}`); }
-    /* the narrowest phone is only measured: its words are the ones that crowd */
+    /* the narrowest phone is only measured: its words are the ones that crowd, and every title keeps
+       its note on its own line */
     if (vp.tag === "narrow") {
+      const wrapped = await page.evaluate(() => [...document.querySelectorAll(".eyebrow")].filter((e) => e.offsetParent && !e.closest("[hidden]")).flatMap((e) => {
+        const b = e.querySelector("b"), sp = e.querySelector("span"); if (!b || !sp || !sp.textContent.trim()) return [];
+        return Math.abs(sp.getBoundingClientRect().top - b.getBoundingClientRect().top) > 4 ? [`"${b.textContent}" note "${sp.textContent}" drops under its title`] : [];
+      }));
+      for (const m of wrapped) { failures++; console.log(`!! ${cs.name} at 320: ${m}`); }
       if (errs.length) { failures++; console.log(`!! ${cs.name} ${vp.tag}: ${errs.join(" | ")}`); }
       await ctx.close(); continue;
     }
@@ -373,10 +412,12 @@ for (const cs of cases) {
     scene: document.getElementById("sceneSvg").getAttribute("aria-label"),
     moon: !document.getElementById("moonSection").hidden,
     year: document.getElementById("yearTitle").textContent,
+    // and its hover text names the farm's airport, never the last place's
+    yearSrc: document.getElementById("yearTitle").title,
     // the sun bar is drawn only from a reading, so its scale words go with it
     uvScale: getComputedStyle(document.getElementById("uvDetails")).display,
   }));
-  if (!shell.keys || shell.tide !== "none" || !shell.scene.includes("Appalachian") || !shell.moon || shell.year !== "The year · Shady Spring" || shell.uvScale !== "none") {
+  if (!shell.keys || shell.tide !== "none" || !shell.scene.includes("Appalachian") || !shell.moon || shell.year !== "The year · Shady Spring" || !/Beckley airport/.test(shell.yearSrc) || shell.uvScale !== "none") {
     failures++; console.log(`!! location-correct loading shell: ${JSON.stringify(shell)}`);
   }
   if (errs.length) { failures++; console.log(`!! loading hourly explorer: ${errs.join(" | ")}`); }

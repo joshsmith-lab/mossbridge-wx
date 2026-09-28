@@ -114,11 +114,11 @@ test("loading, cached data and the hourly explorer tell the truth", async () => 
   assert.match(html, /feels:wj\.hourly\.apparent_temperature\?\.slice\(i0,i0\+24\)/);
   // and the hourly readout is one reader on the one machine every chart reads through
   assert.match(html, /const showFeels=T!=null&&F!=null&&Math\.abs\(F-T\)>=3;/);
-  assert.match(html, /function readHour\(h,i,nowI,gold=\[\]\)\{/);
+  assert.match(html, /function readHour\(h,i,nowI,golden=false\)\{/);
   assert.match(html, /function xpSetup\(k,\{view=null,pick=false,release=null\}=\{\}\)\{/);
   assert.match(html, /if\(e\.key!=="PageUp"&&e\.key!=="PageDown"\)return;/);
   assert.match(html, /xpPublish\("hourly",\{svg:hourlySvg,/);
-  assert.match(html, /else if\(pop>=DRY_UNDER\)\{parts\.push\(\[`\$\{kind\} \$\{pop\}%`,""\]\);said\.push\(`\$\{pop\} percent chance of \$\{kind\}`\)\}/);
+  assert.match(html, /else if\(pop>=DRY_UNDER\|\|isWet\(code\)\)\{parts\.push\(\[`\$\{kind\} \$\{pop\}%`,""\]\);said\.push\(`\$\{pop\} percent chance of \$\{kind\}`\)\}/);
   assert.match(html, /box\.addEventListener\("pointercancel",e=>\{if\(e\.pointerId!==X\.ptr\)return;drop\(\);xpHide\(X\)\}\);/);
   assert.match(html, /<input class="xp-key" type="range" min="0" max="0" step="1" value="0" disabled aria-label="Next 24 hours, hour by hour">/);
   assert.doesNotMatch(html, /HOURLY_PEEK|TIDE_PEEK|setupHourlyPeek|setupTidePeek|PeekLive|hourly-cursor|tide-cursor/);
@@ -127,7 +127,11 @@ test("loading, cached data and the hourly explorer tell the truth", async () => 
   assert.match(html, /\.hourly-scroll\{margin:0;padding:0;overflow:hidden;overflow:clip visible\}/);
   assert.match(html, /\.hourly-inner\{min-width:0;width:100%/);
   assert.match(html, /viewBox="0 0 700 160"/);
-  assert.match(html, /const trendTemp=h\.temp\.map/);
+  assert.match(html, /const trendTemp=fillT\.map/);
+  // a missing hour is not a zero: the line runs through it between its known neighbours, and the
+  // marks are the known hours only, so no dot is drawn at NaN and the real low keeps its mark
+  assert.match(html, /const hiI=kt\.length\?kn\.indexOf\(Math\.max\(\.\.\.kt\)\):-1,loI=kt\.length\?kn\.indexOf\(Math\.min\(\.\.\.kt\)\):-1;/);
+  assert.match(html, /marks:\[nowI,hiI,loI\]\.filter\(i=>i>=0\)/);
   assert.match(html, /class="tline"[^>]*vector-effect="non-scaling-stroke"/);
 
   // The two tiny-looking masthead controls remain full touch targets and keyboard operable.
@@ -200,7 +204,7 @@ test("the hourly labels step aside instead of printing through each other", asyn
   assert.match(html, /const taken=\[\],hit=b=>taken\.some\(/);
   // now is the hour now is in on the wall clock, so on a cache opened late the axis's NOW and the
   // now dot sit where the reading says now, not on an hour that has passed
-  assert.match(html, /const keys=\[\.\.\.new Set\(\[hiI,nowI,loI\]\)\];/);
+  assert.match(html, /const keys=\[\.\.\.new Set\(\[hiI,nowI,loI\]\)\]\.filter\(i=>i>=0&&kn\[i\]!=null\);/);
   assert.match(html, /nowF=h\.time\.findIndex\(t=>new Date\(t\)\.getTime\(\)>=nowHr0\),nowI=nowF<0\?n-1:nowF;/);
   assert.match(html, /\$\{i===nowI\?"mark":""\}[^\n]*\$\{i===nowI\?"NOW":/);
   // the high always keeps the space above its dot; now and the low may take the space under theirs
@@ -208,7 +212,7 @@ test("the hourly labels step aside instead of printing through each other", asyn
   // and every label clears the line under both of its ends, not only its own dot
   assert.match(html, /const above=\(x,y,size,txt,gap\)=>\{const hw=txt\.length\*size\*\.3\+2;return Math\.min\(y-gap,yAt\(x-hw\)-5,yAt\(x\+hw\)-5\)\};/);
   // the hour right beside a key label would only repeat it
-  assert.match(html, /if\(keys\.some\(k=>Math\.abs\(k-i\)<2\|\|\(Math\.abs\(k-i\)<=3\|\|Math\.abs\(X\(k\)-X\(i\)\)<64\)&&Math\.round\(h\.temp\[k\]\)===Math\.round\(h\.temp\[i\]\)\)\)continue;/);
+  assert.match(html, /if\(kn\[i\]==null\|\|keys\.some\(k=>Math\.abs\(k-i\)<2\|\|\(Math\.abs\(k-i\)<=3\|\|Math\.abs\(X\(k\)-X\(i\)\)<64\)&&Math\.round\(h\.temp\[k\]\)===Math\.round\(h\.temp\[i\]\)\)\)continue;/);
   // with no room over or under its dot, a key label steps along the row away from what it hit
   assert.match(html, /for\(let st=4;st<=40;st\+=2\)\{const sx=x\+dir\*st/);
   // the rain odds give way to the line too; the bar already says it
@@ -554,7 +558,7 @@ test("it snows in Shady Spring", async () => {
   // and the odds word follows the odds: 35% snow is possible, not likely
   assert.match(html, /nightPop>=35&&nightSnow\?`Snow \$\{nightPop>=60\?"likely":"possible"\} \$\{nightWhen\}/);
   // and the weekend note calls a snowy Saturday's odds snow
-  assert.match(html, /\$\{Math\.round\(\+P\[i\]\)\}% \$\{isSnow\(w\)\?"snow":isIce\(w\)\?"ice":"rain"\}/);
+  assert.match(html, /odds:wet\?`\$\{Math\.round\(\+P\[i\]\)\}%`:"",noun:wet\?isSnow\(w\)\?"snow":isIce\(w\)\?"ice":"rain":""/);
 });
 
 test("and the rain is visible when it rains there", async () => {
@@ -808,6 +812,9 @@ test("the weekend is always in the week, and it is the one coming", async () => 
   // odds from WEEK_WET, the line the columns print them from, named by what that day's sky is doing
   assert.equal(note("2026-09-24", 8, { pop: [10, 10, 34, 60, 10, 10, 10, 10] }), "Sat 72° · Sun 73° 60% rain");
   assert.equal(note("2026-09-24", 8, { pop: [10, 10, 35, 70, 10, 10, 10, 10], code: [1, 1, 73, 66] }), "Sat 72° 35% snow · Sun 73° 70% ice");
+  // two wet days of one kind say the noun once, so the note stays on its title's line at 320
+  assert.equal(note("2026-09-24", 8, { pop: [10, 10, 40, 100, 10, 10, 10, 10] }), "Sat 72° 40% · Sun 73° 100% rain");
+  assert.equal(note("2026-09-24", 8, { pop: [10, 10, 100, 100, 10, 10, 10, 10], code: [1, 1, 73, 73] }), "Sat 72° 100% · Sun 73° 100% snow");
   // a missing chance prints no odds; a week without any says so rather than passing for dry
   assert.equal(note("2026-09-24", 8, { pop: [10, 10, null, 80, 10, 10, 10, 10] }), "Sat 72° · Sun 73° 80% rain");
   assert.equal(note("2026-09-24", 8, { pop: Array(8).fill(null) }), "rain odds unavailable");
@@ -1153,12 +1160,23 @@ test("tide chart reads as depth over the bottom", async () => {
   // only where the boat does not stand in front of it; behind the boat the tag says it alone
   assert.match(html, /function renderTides\(preds,css,gust,wind,gap=0\)\{/);
   assert.match(html, /const nx=X\(now\.getTime\(\)\),ny=Y\(interp\(now\.getTime\(\)\)\),gy=Y\(wNow\);/);
-  assert.match(html, /const seen=gap>0\?gy<=ny-22:gap<0&&gy>=ny\+7\.5,tagX=nx\+\(seen\?10:24\)\*fs;/);
+  assert.match(html, /const seen=gap>0\?gy<=ny-22:gap<0&&gy>=ny\+7\.5;/);
+  // the tag is placed against the curve, not stamped: beside the bow, behind the stern, then over
+  // (or under) the mark, at the first spot the tide line does not cross
+  assert.match(html, /tag=named\.find\(c=>c\.ok&&!c\.hits\);/);
+  assert.match(html, /if\(c\.ok&&!c\.hits&&off\(c\)&&\(!best\|\|d\(c\)<d\(best\)\)\)best=c;/);
+  // the low's tick goes under the mark, the tag and the boat, and the now line stops over the mark
+  // only where the mark is drawn
+  assert.match(html, /\$\{ticks\}\n\s*\$\{nowY2>nowTop\+2\?/);
+  assert.match(html, /let nowY2=gap>0&&seen\?Math\.min\(ny-6,gy-5\):ny-6;/);
+  // and the pill rises clear of the skiff at now, which has no ring
+  assert.match(html, /over:stops\.map\(s=>s\.now\?skiffTop:NaN\)/);
+  assert.match(html, /const ys=\[\.\.\.D\.y\[i\],D\.over\?\.\[i\]\]\.filter\(Number\.isFinite\)/);
   assert.match(html, /const tagTxt=gap\?`\$\{gap>0\?"\+":"−"\}\$\{Math\.abs\(gap\)\} ft`:""/);
   // the mark and its tag are part of the boat for the labels, so a high steps over them rather than
   // giving way, no label is set above the chart, and the gap's marks arrive with the skiff
-  assert.match(html, /const boatTop=gap>0\?Math\.min\(ny-22,gy-10\):ny-22;/);
-  assert.match(html, /const onBoat=high&&lx<tagR&&lx\+lw>nx-23&&y-6>boatTop;/);
+  assert.match(html, /const boatTop=Math\.min\(ny-22,seen&&gap>0\?gy-10:Infinity,tagUp\?tag\.t-3:Infinity\);/);
+  assert.match(html, /const onBoat=high&&lx<tagR&&lx\+lw>tagL&&y-6>boatTop;/);
   assert.match(html, /y="\$\{\(high\?Math\.max\(12\*fs,y-lift\):lowY\)\.toFixed\(1\)\}"/);
   assert.match(html, /\$\{gap\?`<g\$\{rvAt\(nx,"fade"\)\}>\$\{seen&&/);
   assert.doesNotMatch(html, /if\(onBoat&&gap&&tm<now\.getTime\(\)\)continue;/);
@@ -1170,7 +1188,7 @@ test("tide chart reads as depth over the bottom", async () => {
   assert.match(html, /\$\{PRM\?`transform:rotate\(\$\{flagDeg\.toFixed\(1\)\}deg\)`/);
   // the taller skiff: a high label steps over it sooner and higher, and over its gauge mark and tag
   // too (tagR is the boat's own right edge, 19px, when there is no tag)
-  assert.match(html, /tagR=gap\?tagX\+tagTxt\.length\*10\.5\*fs\*\.6\+2:nx\+19;/);
+  assert.match(html, /tagR=tagUp\?Math\.max\(nx\+19,tag\.x1\+2\):nx\+19;/);
   assert.match(html, /const lift=onBoat\?Math\.max\(9,y-boatTop\+4\):9;/);
   assert.match(html, /const chartH=w=>Math\.round\(152\+\(760-w\)\*\.09\)/);
   assert.match(html, /Ht=chartH\(W\)-16/);
@@ -1598,7 +1616,10 @@ test("the water and the farm say what is there, and nothing is scored or picked"
   const Nm = ctx.NORMALS.mb, Ns = ctx.NORMALS.sp;
   assert.deepEqual([Nm.place, Nm.hi[6], Nm.lo[0], Nm.rain[8], Ns.place, Ns.hi[6], Ns.lo[0], Ns.snow[0]], ["Wilmington", 90, 36.3, 8.69, "Beckley", 80.7, 24, 15.5]);
   // the title names the place, the way the masthead does, and the airport is said with the source
-  assert.match(html, /document\.getElementById\("yearTitle"\)\.textContent="The year · "\+LOC\.addrShort;/);
+  assert.match(html, /el\.textContent=N\?"The year · "\+LOC\.addrShort:"The year";/);
+  // set together, by one helper, in the render and in a new place's loading shell, so the hover
+  // text never keeps the last place's airport while the new place loads
+  assert.equal((html.match(/yearTitle\(N\);/g) || []).length, 2);
   assert.match(html, /normals at the \$\{N\.place\} airport/);
   assert.doesNotMatch(html, /"The year · "\+N\.place/);
   assert.deepEqual([Nm.dhi.length, Ns.dlo.length, Nm.dhi[0], Ns.dlo[365]], [366, 366, 577, 253], "daily normals in tenths, a leap year's days");
@@ -1838,8 +1859,11 @@ test("the page reads top down: now, today, the week, and nothing it has already 
   assert.equal(tell({ time: "2026-08-02T21:30", temperature_2m: 72, weather_code: 1 }, { pop: (i) => (i === 4 ? 45 : 5) }), "Mild tonight. Showers possible around 1 a.m.");
   assert.equal(tell({ time: "2026-08-02T21:30", temperature_2m: 72, weather_code: 1 }, { pop: (i) => (i === 10 ? 45 : 5) }), "Mild tonight. Showers possible around 7 a.m. tomorrow.");
   assert.equal(tell({ time: "2026-08-02T19:15", temperature_2m: 76, weather_code: 63 }, { pop: (i) => (i < 7 ? 80 : 10) }), "Raining now. Should let up around 2 a.m.");
-  // after midnight the next date's small hours are the night after, and still tomorrow's
-  assert.equal(tell({ time: "2026-08-02T01:15", temperature_2m: 70, weather_code: 1 }, { pop: (i) => (i === 23 ? 45 : 5) }), "Mild tonight. Showers possible around midnight tomorrow.");
+  // after midnight the midnight at the far end of the run is the one that ends today, so it is
+  // plain "midnight": "midnight tomorrow" reads as the end of tomorrow, a day late
+  assert.equal(tell({ time: "2026-08-02T01:15", temperature_2m: 70, weather_code: 1 }, { pop: (i) => (i === 23 ? 45 : 5) }), "Mild tonight. Showers possible around midnight.");
+  assert.equal(tell({ time: "2026-08-02T01:15", temperature_2m: 70, weather_code: 1 }, { pop: (i) => (i === 22 ? 45 : 5) }), "Mild tonight. Showers possible around 11 p.m.");
+  assert.equal(tell({ time: "2026-08-02T21:30", temperature_2m: 72, weather_code: 1 }, { pop: (i) => (i === 3 ? 45 : 5) }), "Mild tonight. Showers possible around midnight.");
   // The look-ahead names what is coming from its own hours' codes, ice first: it only knew rain,
   // and called three o'clock's snow "Rain likely around 3 p.m." over a Tonight card that said snow.
   const cold = { time: "2026-08-02T10:00", temperature_2m: 30, weather_code: 3 }, winter = { time: ["2026-08-02"], temperature_2m_max: [34] };
@@ -2035,6 +2059,22 @@ test("every line reads the same way: one machine, and readers that say only what
   assert.match(html, /addEventListener\("scroll",\(\)=>\{XP_SCROLLED=performance\.now\(\)\},\{passive:true\}\);/);
   assert.match(html, /X\.fling=performance\.now\(\)-XP_SCROLLED<50;/);
   assert.match(html, /if\(!slid&&!held&&!moved&&!X\.fling\)xpShow\(X,xpIndex\(X,e\.clientX\)\);/);
+  // and however long it rests there: the hold is never armed for it
+  assert.match(html, /if\(!pick&&!X\.fling\)X\.holdT=setTimeout\(X\.hold=\(\)=>/);
+  // still means still for the whole wait: a thumb creeping into a scroll starts the wait again
+  assert.match(html, /else if\(X\.hold&&!X\.slide&&!X\.held&&!X\.moved&&Math\.hypot\(e\.clientX-X\.ax,e\.clientY-X\.ay\)>=2\)\{/);
+  // a tapped reading keeps the rest of its linger through a repaint, and no longer
+  assert.match(html, /const left=X\.ptr==null&&X\.hideAt\?X\.hideAt-performance\.now\(\):0;/);
+  assert.match(html, /xpShow\(X,best\);if\(!held\)xpHide\(X,left\);return\}/);
+  // the hour labels are part of the hourly's explorer, the way the year's months are the year's
+  const hx = html.slice(html.indexOf('id="hourlyExplore"'), html.indexOf('<div class="week">'));
+  assert.ok(hx.indexOf('id="hrLabels"') > 0, "the hour labels are in the hourly section");
+  assert.doesNotMatch(hx.slice(0, hx.indexOf('id="hrLabels"')), /\n    <\/div>/, "#hrLabels sits inside #hourlyExplore, before it closes");
+  // a live paint drawn after the top of the hour asks for the new hour's run, once an hour
+  assert.match(html, /if\(live&&nowI>0&&ROLL_ASKED!==nowHr0\)\{ROLL_ASKED=nowHr0;setTimeout\(refresh,0\)\}/);
+  // the pill's small coloured words take the inks that read on the golden-hour paper
+  assert.match(css, /\.xp-peek \.cold\{color:var\(--water-ink\)\}/);
+  assert.match(css, /\.xp-peek \.warm\{color:#A64F0D\}/);
   // a tap leaves :hover stuck on a phone, so only a mouse's hover holds a reading through a repaint
   assert.match(html, /const held=X\.ptr!=null\|\|X\.mouse&&X\.box\.matches\(":hover"\)\|\|X\.key&&document\.activeElement===X\.key;/);
   assert.match(html, /X\.mouse=e\.pointerType==="mouse";/);
@@ -2064,7 +2104,7 @@ test("every line reads the same way: one machine, and readers that say only what
   // the hour beside NOW gives way to it on the axis, and the now pill reads the live thunder
   assert.match(html, /\$\{i===nowI\?"NOW":i%3===0&&Math\.abs\(i-nowI\)>1\?hh\(h\.time\[i\]\):""\}/);
   assert.match(html, /hLive=liveHour\(h,c\.weather_code,nowI\);/);
-  assert.match(html, /read:i=>readHour\(hLive,i,nowI,gold\)/);
+  assert.match(html, /read:i=>readHour\(hLive,i,nowI,gold\.has\(i\)\)/);
   for (const el of html.match(/<div class="[^"]*\bxp\b[^"]*" id="\w+Explore">[\s\S]*?\n  <\/div>/g) || [])
     assert.doesNotMatch(el, /aria-live/, "no live region inside an explorer");
 
@@ -2095,7 +2135,7 @@ test("every line reads the same way: one machine, and readers that say only what
     lift(/const clock=d=>\{[^\n]*\};/),
     html.slice(html.indexOf("const NORMALS={"), html.indexOf("const DOY=")),
     html.slice(html.indexOf("const precipKind="), html.indexOf("/* where the moon crosses the chart's own horizon")),
-    "Object.assign(globalThis,{precipKind,xpWhen,xpSaid,quarterStops,liveHour,readHour,readDay,readTide,readMoon,readMonth,NORMALS});",
+    "Object.assign(globalThis,{precipKind,xpWhen,xpSaid,quarterStops,liveHour,goldStops,readHour,readDay,readTide,readMoon,readMonth,NORMALS});",
   ].join("\n"), ctx);
   const own = (r) => JSON.parse(JSON.stringify(r));
   const text = (r) => r.parts.map((p) => p[0]).join(" ");
@@ -2137,7 +2177,16 @@ test("every line reads the same way: one machine, and readers that say only what
   assert.match(live({ pop: 3, code: 3 }, 99).said, /with thunder$/);
   assert.equal(text(live({ pop: 78, code: 80 }, 95, 0, 1)), "3p 75° rain 78%", "only the now hour takes the live code");
   assert.equal(text(live({ pop: 78, code: 80 }, 95, 3)), "now 75° rain 78%", "a cache's live reading is hours old");
-  assert.equal(text(live({ pop: 78, code: 80 }, 61)), "now 75° rain 78%", "only thunder is carried over");
+  assert.equal(text(live({ pop: 78, code: 95 }, 61)), "now 75° thunder 78%", "live rain never paints over the hour's own thunder");
+  // rain or snow reported now is never dry in the now pill, whatever the odds: the header said
+  // "Light rain" and the headline "Raining now." over a pill that read "now 62° dry"
+  assert.equal(text(live({ pop: 3, code: 3 }, 71)), "now 75° snow 3%");
+  assert.equal(text(live({ pop: 3, code: 3 }, 61)), "now 75° rain 3%");
+  assert.equal(text(live({ pop: 3, code: 3 }, 61, 3)), "now 75° dry", "a cache's live reading is hours old");
+  // and an hour whose own sky is wet is never dry either
+  assert.equal(text(hr({ pop: 3, code: 61 }, 1)), "3p 75° rain 3%");
+  assert.equal(text(hr({ pop: 0, code: 51 }, 1)), "3p 75° rain 0%");
+  assert.equal(text(hr({ pop: 2, code: 73 }, 1)), "3p 75° snow 2%");
   assert.doesNotMatch(text(hr({ feels: 77 }, 1)), /feels/, "two degrees off is the same number twice");
   assert.match(text(hr({ feels: 78 }, 1)), /feels 78°/);
   assert.deepEqual(hr({ temp: null, pop: 40 }, 1).parts.slice(1), [["–", "b"], ["rain 40%", ""]]);
@@ -2148,10 +2197,24 @@ test("every line reads the same way: one machine, and readers that say only what
   assert.equal(hr({}, 0, 3).parts[0][0], "2p");
   assert.equal(hr({}, 12, 3).parts[0][0], "2a", "tomorrow's small hours carry no day");
   // inside a gold band the pill says golden hour, quietly, and nowhere else
-  const band = [[new Date("2026-08-02T19:40").getTime(), new Date("2026-08-02T20:40").getTime()]];
-  assert.deepEqual(hr({}, 6, 0, band).parts.at(-1), ["golden hour", "gold"]);
-  assert.match(hr({}, 6, 0, band).said, /, golden hour$/);
-  assert.doesNotMatch(text(hr({}, 4, 0, band)), /golden/);
+  assert.deepEqual(hr({}, 6, 0, true).parts.at(-1), ["golden hour", "gold"]);
+  assert.match(hr({}, 6, 0, true).said, /, golden hour$/);
+  assert.doesNotMatch(text(hr({}, 4, 0, false)), /golden/);
+  // the stops that say it: each stop whose own time is inside the band (now judged at now), and for
+  // a band still to come that holds no whole hour, the one hour nearest its middle. The hour before
+  // and the hour after a band stand outside its gold ("6p golden hour" under "golden hour 6:27–7:15p")
+  const T = (s) => new Date(s).getTime(), run = hours().time;
+  const gs = (bands, nowI = 0, now = T(run[0])) => [...ctx.goldStops(run, nowI, now, bands.map(([a, b]) => [T(a), T(b)]))].map((i) => run[i].slice(11, 16));
+  assert.deepEqual(gs([["2026-08-02T19:55", "2026-08-02T20:50"]]), ["20:00"], "9p is past the band");
+  assert.deepEqual(gs([["2026-08-02T18:28", "2026-08-02T19:17"]]), ["19:00"], "6p is before the band");
+  assert.deepEqual(gs([["2026-08-03T06:06", "2026-08-03T06:58"]]), ["07:00"], "a band with no hour in it gets exactly one");
+  assert.deepEqual(gs([["2026-08-03T07:02", "2026-08-03T07:51"]]), ["07:00"]);
+  const dusk = hours().time.map((_, i) => new Date(T("2026-08-02T19:00") + i * 3.6e6)).map((d) => { const p = (v) => String(v).padStart(2, "0");
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:00`; });
+  const gd = (a, b, now) => [...ctx.goldStops(dusk, 0, T(now), [[T(a), T(b)]])];
+  assert.deepEqual(gd("2026-08-02T19:37", "2026-08-02T20:28", "2026-08-02T19:58"), [0, 1], "the now pill at 7:58 inside a 7:37 band says it");
+  assert.deepEqual(gd("2026-08-02T19:25", "2026-08-02T20:15", "2026-08-02T19:05"), [1], "at 7:05, before a 7:25 band, now does not");
+  assert.deepEqual(gd("2026-08-02T18:10", "2026-08-02T18:55", "2026-08-02T19:05"), [], "a band that has passed never falls back to now");
   for (let i = 0; i < 24; i++) assert.doesNotMatch(text(hr({}, i, 0)), /Mon|Sun|Tue|Wed|Thu|Fri|Sat/);
 
   // the day: the odds are always a number, and a missing one is the column's dash
@@ -2180,6 +2243,13 @@ test("every line reads the same way: one machine, and readers that say only what
   assert.doesNotMatch(text(tide({ t: at("2026-09-27T18:15"), depth: 1.2, turn: null, now: false, dir: "falling" }, null)), /table/, "no live gap, no table");
   assert.doesNotMatch(text(tide({ t: nowT, depth: 3, turn: null, now: true, dir: "rising" }, null)), /table|rising|falling/);
   assert.equal(text(tide({ t: at("2026-09-27T14:00"), depth: 3, turn: null, now: false, dir: "falling" })), "2p ~3.0 ft", ":00 is dropped");
+  // said, noon and midnight are words, a midnight belongs to the day it ends, and a turn on
+  // another day is "High tide Monday at 2 am", never "High tide at Monday 2 am"
+  assert.match(hr({}, 22).said, /^noon, /);
+  assert.match(hr({}, 10).said, /^midnight, /);
+  assert.equal(tide({ t: at("2026-09-28T00:00"), depth: 3.4, turn: null, now: false, dir: "rising" }).said, "midnight, about 3.4 feet, rising");
+  assert.equal(tide({ t: at("2026-09-28T02:00"), depth: 4.3, turn: "H", now: false, dir: "falling" }).said, "High tide Monday at 2 am, 4.3 feet");
+  assert.equal(tide({ t: at("2026-09-28T12:00"), depth: 0.4, turn: "L", now: false, dir: "rising" }).said, "Low tide Monday at noon, 0.4 feet");
 
   // the moon: when a fishing time ends, or when the moon next rises or sets, and never a window the chart dropped
   const mNow = at("2026-08-02T15:20"), wins = [{ start: new Date("2026-08-02T15:30"), end: new Date("2026-08-02T17:30") }];
@@ -2193,6 +2263,7 @@ test("every line reads the same way: one machine, and readers that say only what
   assert.equal(text(moon("2026-08-03T01:10", 30)), "Mon 1:10a moonset 11:32a", "a target on the stop's own day carries no weekday");
   assert.equal(moon("2026-08-03T01:10", 30).said, "Monday 1:10 am, moon up, sets at 11:32 am");
   assert.equal(text(moon("2026-08-02T23:40", 5)), "11:40p moonset Mon 11:32a");
+  assert.equal(moon("2026-08-02T23:40", 5).said, "11:40 pm, moon up, sets Monday at 11:32 am");
   assert.equal(text(moon("2026-08-02T22:32", 0)), "10:32p moonrise");
   assert.equal(text(keep(own(ctx.readMoon(mNow, mNow, 12, wins, [])))), "now moon up");
   // a window's edges keep now's seconds, so a quarter hour on the minute it ends is past it, and
