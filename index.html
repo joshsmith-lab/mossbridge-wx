@@ -487,22 +487,14 @@ html:not([data-theme=dark]) .rv-core{display:none}
   color:var(--ink-faint);font-weight:500;margin-bottom:10px}
 .card .lead{font-size:16.5px;font-weight:550;letter-spacing:-.012em;margin-bottom:10px;text-wrap:pretty}
 .card .lead.go{color:var(--go)}.card .lead.caution{color:var(--heat)}.card .lead.no{color:var(--marker)}
-/* ── the water and the farm ── a short sentence in the colours the Sun and Tonight leads use,
-   then the readings on one mono line, and nothing else. The one big word it replaced was too
-   little on a boat day and meant nothing at the farm. A reading is inked in the sentence's
-   colour only when it is the reason for it. */
-.say{font-size:16.5px;font-weight:550;letter-spacing:-.012em;line-height:1.3;text-wrap:pretty}
-.say.go{color:var(--go)}.say.caution{color:var(--heat)}.say.no{color:var(--marker)}
-.water-read{display:grid;gap:7px;margin:-2px 0 6px}
-.water-read>*{margin:0}
-.say+.out-line{margin-top:8px}
-.out-why{font-size:15px;font-weight:520;letter-spacing:-.008em;color:var(--ink-soft);margin-top:6px;text-wrap:pretty}
-.out-line{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:6px;row-gap:3px;margin-top:9px;
-  font-family:var(--mono);font-size:10.5px;letter-spacing:.02em;color:var(--ink-faint)}
-.out-line b{color:var(--ink);font-weight:600;font-size:13.5px;letter-spacing:0}
-.out-line>span{white-space:nowrap}
-.out-why[hidden],.out-line[hidden],.water-read[hidden]{display:none}
-.out-line .caution b{color:var(--heat)}.out-line .no b{color:var(--marker)}
+/* the sentences sit with the cards, in the colours the Sun and Tonight leads use: the farm's
+   heads-up under the family's word for it, and the boat's while the boat is going out */
+/* the year: the week's grammar at the scale of a year, the months on the same quiet axis */
+#yearSection{padding-top:12px}
+.year-svg{display:block;width:100%;height:auto;overflow:visible}
+.yr-months{display:flex;margin-top:8px}
+.yr-months span{flex:1;text-align:center;font-family:var(--mono);font-size:10px;line-height:13px;letter-spacing:.06em;color:var(--ink-faint)}
+.yr-months span.yr-now{color:var(--marker);font-weight:600}
 .vane{flex:0 0 auto;color:var(--water);opacity:.85}
 /* The sun card says it with the bar. The pin is now and carries the reading, the bar is lit
    as high as the rest of today goes, a ring marks a peak still to come with its hour, and the
@@ -660,7 +652,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
 </section>
 
 <div class="week">
-  <div class="eyebrow"><b>The week</b><span id="weekNote"></span></div>
+  <div class="eyebrow"><b>This week</b><span id="weekNote"></span></div>
   <div class="wk-wrap">
     <div class="wk" id="weekRows"></div>
     <svg id="weekSvg" class="wk-svg" viewBox="0 0 350 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
@@ -668,19 +660,13 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   <p class="day-brief" id="weekBrief" hidden></p>
 </div>
 
-<section id="outSection" hidden>
-  <div class="eyebrow"><b id="outTitle">—</b></div>
-  <p class="say" id="farmSay" hidden></p>
-  <p class="out-line" id="wFishWrap" hidden title="Bite windows: solunar tables, computed from the moon."><span>fish bite · by the moon<span class="sr-only">. Bite windows: solunar tables, computed from the moon.</span></span> <b id="wFish">—</b></p>
+<section id="moonSection" hidden>
+  <div class="eyebrow"><b title="The almanac's solunar tables: its theory, worked out from the moon's real positions.">Almanac fishing times<span class="sr-only">. The almanac's solunar tables: its theory, worked out from the moon's real positions.</span></b><span id="moonNote"></span></div>
+  <svg id="moonSvg" class="tide-svg" viewBox="0 0 760 158" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The moon over the next day and a half, and the almanac's fishing times"></svg>
 </section>
 
 <section id="tideSection">
   <div class="eyebrow"><b>Water · Wrightsville Beach</b><span id="tideNote">loading…</span></div>
-  <div class="water-read" id="waterRead" hidden>
-    <p class="say" id="waterSay" hidden></p>
-    <p class="out-line" id="waterLine" hidden></p>
-    <p class="out-why" id="waterLevel" hidden></p>
-  </div>
   <div class="tide-explore" id="tideExplore" role="group" tabindex="0" aria-label="Tide forecast. Use left and right arrow keys to explore in 15-minute steps.">
     <svg id="tideSvg" class="tide-svg" viewBox="0 0 760 158" xmlns="http://www.w3.org/2000/svg" aria-label="Tide curve, next 27 hours"></svg>
     <div class="tide-cursor" id="tideCursor" hidden></div>
@@ -695,6 +681,10 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
 </section>
 
 <div class="cards">
+  <div class="card wide" id="sayCard" hidden>
+    <h3 id="sayTitle">—</h3>
+    <div class="lead" id="saySay">—</div>
+  </div>
   <div class="card" id="sunCard">
     <h3 id="sunTitle">Sun</h3>
     <div class="lead" id="uvLead">—</div>
@@ -709,6 +699,12 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
     <div class="gold-times" id="goldTimes"></div>
   </div>
 </div>
+
+<section id="yearSection" hidden>
+  <div class="eyebrow"><b id="yearTitle">The year</b><span id="yearNote"></span></div>
+  <svg id="yearSvg" class="year-svg" viewBox="0 0 350 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Normal highs and lows by month"></svg>
+  <div class="yr-months" id="yearMonths" aria-hidden="true"></div>
+</section>
 
 <p class="foot"><a href="https://open-meteo.com/" rel="noopener">Weather data by Open-Meteo.com</a></p>
 </div>
@@ -728,8 +724,7 @@ const LOCS={
   sp:{id:"sp",addrFull:"Bob Plumley Rd · Shady Spring",addrShort:"Shady Spring",
       lat:37.8215,lon:-80.9942,scene:"ridge",kind:"farm",fish:true,
       tz:"America/New_York",tzLabel:"ET",
-      sceneLabel:"Sun and moon over Appalachian ridgelines and the farm pond",
-      outTitle:"The farm"},
+      sceneLabel:"Sun and moon over Appalachian ridgelines and the farm pond"},
   den:{id:"den",addrFull:"Next up · Denver",addrShort:"Denver",
       lat:39.7392,lon:-104.9903,scene:"front-range",kind:"trip",
       tz:"America/Denver",tzLabel:"MT",
@@ -3059,7 +3054,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     }
     if(!PRM&&!wet&&!storm)pondFx+=ringAt(pcx-prx*.3,base+12,5,31,9)+ringAt(pcx+prx*.35,base+16,4,25,17);
     /* when the almanac says the fish are moving, the pond dimples a little more often.
-       The card's bite window and this water agree, because they read the same moon. */
+       The moon chart's fishing times and this water agree, because they read the same moon. */
     if(!PRM&&!wet&&!storm&&solunarWindows(now).some(w=>now>=w.start&&now<=w.end))
       pondFx+=ringAt(pcx-prx*.08,base+13,4.5,13,4)+ringAt(pcx+prx*.16,base+10,3.5,17,11);
     /* and rain, which every one of those rules used to switch the water off for. The pond
@@ -3687,7 +3682,7 @@ async function fetchStorms(){
 }
 
 /* ── tide ───────────────────────────────────────────── */
-function renderTides(preds,css,gust,wind){
+function renderTides(preds,css,gust,wind,gap=0){
   if(!preds||preds.length<2){
     TIDE_PEEK=null;hideTidePeek();
     document.getElementById("tideSvg").innerHTML="";
@@ -3707,8 +3702,12 @@ function renderTides(preds,css,gust,wind){
   const topY=22,seaY=H-34,bedY=seaY+6,lowY=H-9,axisW=Math.round(26*fs),x0=padX+axisW;
   const vs=[];for(let t=t0;t<=t1;t+=9e5)vs.push(interp(t));
   /* measured up from the chart datum, so the height of the water on screen is the water there */
-  const hiV=Math.max(...vs),base=Math.min(0,...vs);
-  const vTop=hiV+Math.max(.5,(hiV-base)*.2);
+  /* the gauge's water now is on the scale too, so a skiff lifted or lowered by it is drawn at its
+     true height and never pinned to an edge, and a lifted one keeps a label's height of sky over it.
+     A lowered one keeps water under its hull, so it and its tag never sit on the bed */
+  const wNow=interp(now.getTime())+(gap||0);
+  const hiV=Math.max(...vs,wNow),base=Math.min(0,...vs,gap<0?wNow-(hiV-wNow)*.12:wNow);
+  const vTop=hiV+Math.max(.5,(hiV-base)*.2)+(gap>0?1:0);
   const X=t=>x0+(t-t0)/(t1-t0)*(W-padX-x0);
   const Y=v=>seaY-(v-base)/(vTop-base)*(seaY-topY);
   const samples=[];
@@ -3723,7 +3722,11 @@ function renderTides(preds,css,gust,wind){
   const path=spline(pts);
   const area=path+` L ${X(t1).toFixed(1)} ${seaY} L ${X(t0).toFixed(1)} ${seaY} Z`;
   const sand=mix(css.faint,"#C2A268",.55);
-  const nx=X(now.getTime()),ny=Y(interp(now.getTime()));
+  /* the skiff rides the water that is there: the table's curve is the forecast, and when the
+     station's gauge runs off it the boat floats at the gauge, with the table marked under it */
+  const nx=X(now.getTime()),nyT=Y(interp(now.getTime())),ny=Y(wNow);
+  /* the gap's tag rides beside the skiff, on its right, and the labels treat it as part of the boat */
+  const tagTxt=gap?`${gap>0?"+":"−"}${Math.abs(gap)} ft`:"",tagR=gap?nx+24*fs+tagTxt.length*10.5*fs*.6+2:nx+19;
   const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3.5" stroke-linejoin="round"`;
   const rv=REVEAL.tide.state!=="done",rvAt=(x,k,d)=>rvTag(rv,x,k,d);
 
@@ -3746,11 +3749,13 @@ function renderTides(preds,css,gust,wind){
     /* step over the skiff, burgee and all, whenever the label's box would touch the boat's, and
        only as far as it needs: the skiff reaches about 23px behind now (the outboard and its
        wash), 19px ahead and 22px up at the top of a roll */
-    const onBoat=high&&lx<nx+19&&lx+lw>nx-23&&y-6>ny-22;
+    const onBoat=high&&lx<tagR&&lx+lw>nx-23&&y-6>ny-22;
+    /* a high that has passed, under a skiff the gauge has lifted over it, gives way to the boat */
+    if(onBoat&&gap&&tm<now.getTime())continue;
     const lift=onBoat?Math.max(9,26-(ny-y)):9;
     /* and the now-line stops under any high label it would cross, lifted or not */
     if(high&&nx>lx-2&&nx<lx+lw+2)nowTop=Math.max(nowTop,y-lift+5);
-    labels+=`<text x="${x.toFixed(1)}" y="${(high?y-lift:lowY).toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(11*fs).toFixed(1)}" font-weight="600" fill="${high?css.ink:css.soft}" ${halo}${rvAt(anchor==="start"?x+20*fs:anchor==="end"?x-20*fs:x,"label")}>${clock(p.time)}</text>`;
+    labels+=`<text x="${x.toFixed(1)}" y="${(high?Math.max(12*fs,y-lift):lowY).toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(11*fs).toFixed(1)}" font-weight="600" fill="${high?css.ink:css.soft}" ${halo}${rvAt(anchor==="start"?x+20*fs:anchor==="end"?x-20*fs:x,"label")}>${clock(p.time)}</text>`;
     if(!high)labels+=`<line x1="${x.toFixed(1)}" y1="${(y+1).toFixed(1)}" x2="${x.toFixed(1)}" y2="${(bedY+2).toFixed(1)}" stroke="${css.line}" stroke-width="1"${rvAt(x,"fade")}/>`;
   }
 
@@ -3800,16 +3805,201 @@ function renderTides(preds,css,gust,wind){
     <path d="M ${x0} ${seaY-.5} L ${W-padX} ${seaY-.5} L ${W-padX} ${bedY} Q ${(W*.72).toFixed(1)} ${bedY+2.5} ${((x0+W)/2).toFixed(1)} ${bedY-1} Q ${(W*.28).toFixed(1)} ${bedY-3.5} ${x0} ${bedY} Z" fill="${sand}" opacity=".55"/>
     <line x1="${nx.toFixed(1)}" y1="${nowTop.toFixed(1)}" x2="${nx.toFixed(1)}" y2="${(ny-6).toFixed(1)}" stroke="${css.ink}" stroke-width="1" stroke-dasharray="2 4" opacity=".22"${rvAt(nx,"fade")}/>
     ${rv?`<ellipse cx="${nx.toFixed(1)}" cy="${(ny+3).toFixed(1)}" rx="17" ry="3.6" fill="none" stroke="${css.water}" stroke-width="1.3" opacity="0"${rvAt(nx,"ring",160)}/>`:""}
+    ${gap?`<g${rvAt(nx,"fade")}><line x1="${nx.toFixed(1)}" y1="${(Math.min(ny,nyT)+4).toFixed(1)}" x2="${nx.toFixed(1)}" y2="${(Math.max(ny,nyT)-3).toFixed(1)}" stroke="${css.water}" stroke-width="1.2" stroke-dasharray="1.5 2.5"/>
+      <circle cx="${nx.toFixed(1)}" cy="${nyT.toFixed(1)}" r="2.6" fill="${css.paper}" stroke="${css.water}" stroke-width="1.4"/>
+      <text x="${(nx+24*fs).toFixed(1)}" y="${(ny+4).toFixed(1)}" text-anchor="start" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(10.5*fs).toFixed(1)}" font-weight="600" fill="${css.water}" ${halo}>${tagTxt}</text></g>`:""}
     <g${rvAt(nx,"boat")}>${boat}</g>
     ${labels}
     ${rv?`<g class="rv-tip" opacity="0" fill="${css.water}"><circle r="12" opacity=".14"/><circle r="6.5" opacity=".28"/><circle r="3"/><circle class="rv-core" r="1.4" fill="#FFFFFF" opacity=".95"/></g>`:""}`;
   revealChart("tide",tideSvg,{xa:X(t0),xb:X(t1),dur:clamp(2100+W*1.1,2400,2950),tail:72,color:()=>css.water});
   if(next){
     const rising=next.type==="H";
-    document.getElementById("tideNote").textContent=(rising?"rising · high\u00A0":"falling · low\u00A0")+clock(next.time);
     return{rising,next,note:(rising?"high ":"low ")+clock(next.time)};
   }
   return null;
+}
+
+/* ── the moon over the farm ─────────────────────────── */
+/* The farm's wave, in the place the coast has its tide. At the coast the moon moves the water; at
+   the farm the almanac says it moves the fish, and its fishing times are the moon's own hours:
+   overhead and underfoot (two hours each), rising and setting (one hour). So the farm draws the
+   moon's height over the same day and a half the tide chart covers, on one honest scale with the
+   horizon where zero falls, dashed while it is down, and the almanac's windows that are clear on
+   their own hours as quiet water bands, each marked when it starts. The moon rides the curve at now
+   in its own phase, the way the skiff rides the tide, and the phase is the note beside the title.
+   The title says whose theory it is; the moon times are real. */
+const moonName=m=>{const f=m.fraction,wax=m.phase<.5;
+  return f<.03?"new moon":f>.97?"full moon":Math.abs(f-.5)<.07?(wax?"first quarter":"last quarter")
+    :f<.5?(wax?"waxing crescent":"waning crescent"):(wax?"waxing gibbous":"waning gibbous")};
+const MOON_INK="#7A73AE";
+function renderMoon(css,wins){
+  const svg=document.getElementById("moonSvg");
+  const now=wallNow(),t0=now.getTime()-2.5*3.6e6,t1=now.getTime()+26*3.6e6;
+  const W=appW()-40,H=chartH(W),padX=8,fs=W<360?1.08:W<520?1.16:1;
+  const topY=26,botY=H-8,x0=padX+Math.round(26*fs);
+  const X=t=>x0+(t-t0)/(t1-t0)*(W-padX-x0);
+  const as=[];for(let t=t0;t<=t1;t+=9e5)as.push(moonPos(new Date(t)).alt*180/Math.PI);
+  const hi=Math.max(12,Math.max(...as)+8),lo=Math.min(-12,Math.min(...as)-6);
+  const Y=a=>topY+(botY-topY)*(hi-a)/(hi-lo),hz=Y(0);
+  const pts=as.map((a,i)=>[X(t0+i*9e5),Y(a)]),path=spline(pts);
+  const mono=`font-family="Spline Sans Mono,ui-monospace,monospace"`;
+  const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3.5" stroke-linejoin="round"`;
+  const nx=X(now.getTime()),na=moonPos(now).alt*180/Math.PI,ny=Y(na),m=moonPhase(now);
+  const rv=REVEAL.moon.state!=="done",rvAt=(x,k,d)=>rvTag(rv,x,k,d);
+  let bands="",labels="";const said=[],marks=[];
+  for(const w of wins){
+    const a=Math.max(t0,w.start.getTime()),b=Math.min(t1,w.end.getTime());if(b<=a)continue;
+    bands+=`<rect x="${X(a).toFixed(1)}" y="${(topY-6).toFixed(1)}" width="${(X(b)-X(a)).toFixed(1)}" height="${(botY-topY+6).toFixed(1)}" rx="3" fill="${css.water}" opacity="${w.major?.13:.08}"${rvAt(X(a),"fade")}/>`;
+    /* the band is the span, so the label is when it starts, the way the tide says its turns */
+    const txt=now>=w.start?"now":clock(w.start),cx=(X(a)+X(b))/2,hw=txt.length*10.5*fs*.3+3;
+    marks.push({major:w.major,txt,cx,x:clamp(cx,x0+hw,W-padX-hw),hw});
+    said.push(now>=w.start?"now until "+clock12(w.end):clock12(w.start)+" to "+clock12(w.end));
+  }
+  /* placed, not stamped: the majors take their places first, and a label that would touch one
+     already down gives way, so two starts four hours apart at 320 never read as one time */
+  const placed=[];
+  for(const mk of[...marks.filter(m=>m.major),...marks.filter(m=>!m.major)]){
+    if(placed.some(p=>Math.abs(p.x-mk.x)<p.hw+mk.hw))continue;placed.push(mk);
+    labels+=`<text x="${mk.x.toFixed(1)}" y="${(12*fs).toFixed(1)}" text-anchor="middle" ${mono} font-size="${(10.5*fs).toFixed(1)}" font-weight="600" fill="${css.water}" ${halo}${rvAt(mk.cx,"label")}>${mk.txt}</text>`;
+  }
+  const r=6.2,ill=clamp(m.fraction,0,1),wax=m.phase<.5,k=(1-2*ill)*r,sw=wax?(ill>.5?0:1):(ill>.5?1:0);
+  const disc=`<g transform="translate(${nx.toFixed(1)} ${ny.toFixed(1)})"><g opacity="${na<0?.5:1}">
+    <circle r="${r+2.2}" fill="${css.paper}"/><circle r="${r}" fill="${MOON_INK}" opacity=".55"/>
+    <path d="M 0 ${-r} A ${Math.max(.01,Math.abs(k)).toFixed(2)} ${r} 0 0 ${sw} 0 ${r} A ${r} ${r} 0 0 ${wax?0:1} 0 ${-r} Z" fill="#FFF6E2"/>
+    <circle r="${r}" fill="none" stroke="${MOON_INK}" stroke-width="1.1"/></g></g>`;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  svg.setAttribute("aria-label",`The moon over the next day and a half, ${moonName(m)}. The almanac's fishing times: ${said.length?said.join(", "):"none clear"}.`);
+  svg.innerHTML=`<defs>
+      <linearGradient id="moonFill" gradientUnits="userSpaceOnUse" x1="0" y1="${Y(hi).toFixed(1)}" x2="0" y2="${hz.toFixed(1)}">
+        <stop offset="0" stop-color="${MOON_INK}" stop-opacity=".26"/><stop offset="1" stop-color="${MOON_INK}" stop-opacity=".04"/></linearGradient>
+      <clipPath id="moonUp"><rect x="0" y="0" width="${W}" height="${hz.toFixed(1)}"/></clipPath>
+      <clipPath id="moonDown"><rect x="0" y="${hz.toFixed(1)}" width="${W}" height="${(H-hz).toFixed(1)}"/></clipPath>
+      <clipPath id="moonArea"><path d="${path} L ${X(t1).toFixed(1)} ${hz.toFixed(1)} L ${X(t0).toFixed(1)} ${hz.toFixed(1)} Z"/></clipPath></defs>
+    ${bands}
+    <rect x="${x0}" y="${hz.toFixed(1)}" width="${(W-padX-x0).toFixed(1)}" height="${(botY-hz).toFixed(1)}" fill="${css.ink}" opacity=".035"/>
+    <g clip-path="url(#moonArea)"><rect class="rv-fill" x="${X(t0).toFixed(1)}" y="0" width="${(X(t1)-X(t0)).toFixed(1)}" height="${hz.toFixed(1)}" fill="url(#moonFill)"/></g>
+    <g clip-path="url(#moonDown)"><path d="${path}" fill="none" stroke="${MOON_INK}" stroke-width="1.5" stroke-dasharray="2 4" stroke-linecap="round" opacity=".6"${rvAt((X(t0)+X(t1))/2,"fade")}/></g>
+    <g clip-path="url(#moonUp)">
+      ${rv?[[10,.3,.24],[6.5,.6,.2],[4.4,1,.16]].map(([w,f,o])=>`<path class="rv-tail" data-f="${f}" data-o="${o}" d="${path}" fill="none" stroke="${MOON_INK}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>`).join(""):""}
+      <path class="wline" d="${path}" fill="none" stroke="${MOON_INK}" stroke-width="2.4" stroke-linecap="round"/></g>
+    <line x1="${x0}" y1="${hz.toFixed(1)}" x2="${W-padX}" y2="${hz.toFixed(1)}" stroke="${css.line}" stroke-width="1.2"/>
+    <line x1="${nx.toFixed(1)}" y1="${(topY-6).toFixed(1)}" x2="${nx.toFixed(1)}" y2="${(ny-9).toFixed(1)}" stroke="${css.ink}" stroke-width="1" stroke-dasharray="2 4" opacity=".22"${rvAt(nx,"fade")}/>
+    <g${rvAt(nx,"pin")}>${disc}</g>
+    ${labels}
+    ${rv?`<g class="rv-tip" opacity="0" fill="${MOON_INK}"><circle r="12" opacity=".14"/><circle r="6.5" opacity=".28"/><circle r="3"/><circle class="rv-core" r="1.4" fill="#FFFFFF" opacity=".95"/></g>`:""}`;
+  document.getElementById("moonNote").textContent=moonName(m);
+  revealChart("moon",svg,{xa:X(t0),xb:X(t1),dur:clamp(2100+W*1.1,2400,2950),tail:72,color:()=>MOON_INK});
+}
+
+/* ── the year ───────────────────────────────────────── */
+/* NOAA's 1991-2020 climate normals at the airport nearest each place: Wilmington (USW00013748) for
+   Porters Neck and Beckley (USW00003872) for Shady Spring, which is why the title names the airport.
+   They change once a decade, so they live here and nothing is fetched for them. Monthly highs,
+   lows, rain and snowfall (inches) draw the year; the daily highs and lows (tenths of a degree, by
+   day of a leap year) are what this week is measured against. */
+const NORMALS={
+  mb:{place:"Wilmington",hi:[57.2,60.3,66.5,74.6,81.1,87.0,90.0,88.3,83.9,76.1,67.4,60.3],
+    lo:[36.3,38.4,44.1,52.6,61.1,69.3,73.0,71.7,66.7,55.6,44.8,39.1],
+    rain:[3.81,3.47,3.97,3.07,4.54,5.67,6.86,8.16,8.69,4.66,3.56,3.69],snow:[0.7,0.2,0,0,0,0,0,0,0,0,0,0],
+    dhi:[577,576,575,574,573,572,572,571,570,570,570,569,569,569,569,569,569,569,569,569,570,570,571,572,572,573,574,575,576,577,579,580,581,583,584,586,587,589,591,592,594,596,598,599,601,603,605,607,609,611,613,615,617,619,621,623,625,627,629,630,631,633,635,637,639,641,644,646,648,650,652,655,657,659,661,664,666,669,671,674,676,679,681,684,687,689,692,695,697,700,703,706,709,712,715,717,720,723,726,729,732,735,737,740,743,746,749,751,754,757,759,762,764,766,769,771,773,776,778,780,782,784,786,788,790,792,794,795,797,799,801,802,804,806,807,809,811,813,814,816,818,819,821,823,825,827,829,830,832,834,836,838,840,843,845,847,849,851,853,855,857,860,862,864,866,868,870,872,874,876,878,880,882,884,885,887,888,890,891,893,894,895,896,897,898,899,900,900,901,901,902,902,902,902,902,902,902,902,902,902,902,901,901,901,900,900,899,899,898,897,897,896,895,895,894,893,893,892,891,891,890,889,889,888,887,886,885,885,884,883,882,881,880,879,878,877,876,875,874,873,872,871,869,868,867,865,864,862,861,859,857,855,854,852,850,848,846,844,842,840,837,835,833,831,828,826,823,821,818,816,813,811,808,806,803,800,798,795,792,789,787,784,781,778,775,773,770,767,764,761,758,756,753,750,747,744,741,738,735,732,730,727,724,721,718,715,712,709,706,703,700,697,695,692,689,686,683,680,677,675,672,669,666,664,661,658,656,653,651,648,645,643,640,638,636,633,631,629,626,624,622,620,618,615,613,611,609,607,605,603,602,600,598,596,594,593,591,589,588,586,585,583,582,581,580,578],dlo:[370,369,368,367,366,365,364,364,363,362,362,361,361,361,360,360,360,360,360,360,360,361,361,361,362,362,363,364,364,365,366,367,368,369,370,371,372,373,374,375,377,378,379,381,382,384,385,387,388,390,391,393,395,396,398,400,402,403,405,406,407,409,411,413,415,417,419,421,423,425,428,430,432,435,437,439,442,444,447,450,452,455,458,460,463,466,469,472,474,477,480,483,486,489,492,495,498,501,504,507,510,513,516,519,522,525,528,531,534,537,540,542,545,548,551,554,556,559,562,565,567,570,573,575,578,581,584,586,589,592,594,597,600,602,605,608,611,613,616,619,622,625,627,630,633,636,639,642,645,647,650,653,656,659,662,665,667,670,673,676,679,681,684,686,689,692,694,696,699,701,703,705,707,709,711,713,715,716,718,719,721,722,723,725,726,727,727,728,729,730,730,731,731,731,732,732,732,732,732,732,732,732,732,732,732,731,731,731,730,730,729,729,728,728,727,727,726,726,725,725,724,723,723,722,721,720,720,719,718,717,716,716,715,714,713,712,711,710,708,707,706,705,703,702,700,699,697,695,694,692,690,688,686,684,681,679,677,674,671,669,666,663,660,657,654,651,648,644,641,637,634,630,626,623,619,615,611,607,603,599,594,590,586,582,577,573,569,564,560,556,551,547,543,539,534,530,526,522,518,513,509,505,502,498,494,490,487,483,480,476,473,470,466,463,460,457,455,452,449,447,444,442,439,437,435,432,430,428,426,424,422,421,419,417,415,413,412,410,409,407,405,404,402,401,399,398,396,395,393,392,390,389,388,386,385,383,382,381,379,378,377,376,374,373,372,371]},
+  sp:{place:"Beckley",hi:[40.5,44.2,52.5,64.4,71.5,77.8,80.7,79.9,74.4,64.3,53.2,43.9],
+    lo:[24.0,26.6,33.1,42.6,51.1,58.7,62.4,61.1,55.0,44.2,34.7,28.0],
+    rain:[3.13,3.12,4.03,3.58,4.68,4.30,5.00,3.68,3.20,2.73,2.80,3.29],snow:[15.5,15.2,8.9,1.5,0,0,0,0,0,1.4,2.3,11.1],
+    dhi:[409,408,407,406,405,405,404,403,403,402,402,401,401,401,401,401,401,402,402,403,403,404,405,405,406,407,409,410,411,412,414,415,417,418,420,422,424,426,427,429,431,433,436,438,440,442,444,446,449,451,453,456,458,460,463,465,468,470,473,474,476,478,481,484,487,490,493,496,499,502,505,508,512,515,519,522,526,530,533,537,541,545,549,553,558,562,566,570,575,579,583,588,592,597,601,605,610,614,618,622,626,630,634,638,642,646,649,653,656,659,663,666,669,672,674,677,679,682,684,686,688,690,692,694,696,697,699,701,702,704,705,707,708,710,711,713,714,716,717,719,720,722,724,726,728,730,732,734,736,738,740,742,745,747,749,752,754,757,759,762,764,767,769,772,774,777,779,781,783,786,788,790,792,793,795,797,798,800,801,802,803,804,805,806,807,807,808,808,808,809,809,809,809,809,809,809,808,808,808,808,807,807,807,807,806,806,806,805,805,805,805,805,804,804,804,804,804,804,804,803,803,803,803,803,803,802,802,802,801,801,800,800,799,798,798,797,796,794,793,792,791,789,787,786,784,782,780,778,775,773,770,768,765,762,760,757,754,751,748,744,741,738,735,731,728,725,721,718,714,711,708,704,701,697,694,690,687,684,680,677,674,670,667,664,660,657,654,650,647,643,640,637,633,630,626,623,619,616,612,609,605,602,598,594,591,587,583,579,576,572,568,564,560,556,552,549,545,541,537,533,529,526,522,518,514,511,507,503,500,496,493,490,486,483,480,477,473,470,467,464,462,459,456,453,451,448,446,443,441,439,437,434,432,430,428,426,424,423,421,419,418,416,415,413,412,411],dlo:[251,250,248,247,246,245,243,242,241,240,239,238,238,237,237,236,236,236,236,235,236,236,236,236,237,238,238,239,240,241,242,243,244,246,247,248,250,252,253,255,257,258,260,262,264,266,268,270,272,274,276,278,280,282,284,286,288,290,293,294,295,297,299,301,303,306,308,310,312,315,317,319,322,324,327,329,332,334,337,340,343,345,348,351,354,357,361,364,367,370,373,377,380,384,387,390,394,397,401,404,408,411,415,418,422,425,429,432,435,439,442,445,448,452,455,458,461,463,466,469,472,475,477,480,482,485,487,490,492,495,497,499,502,504,506,509,511,513,515,518,520,523,525,527,530,532,535,537,540,542,545,548,550,553,556,558,561,564,567,569,572,575,577,580,583,585,588,590,593,595,597,599,602,604,606,608,609,611,613,614,616,617,618,619,621,621,622,623,624,624,625,625,626,626,626,626,626,626,626,626,626,626,625,625,625,625,624,624,624,623,623,622,622,621,621,621,620,620,619,619,618,618,617,616,616,615,614,614,613,612,611,610,609,608,607,606,605,603,602,600,599,597,595,593,591,589,587,585,582,580,577,575,572,569,566,563,560,557,554,551,547,544,541,537,534,530,526,523,519,515,512,508,504,500,497,493,489,485,482,478,474,470,467,463,459,456,452,448,445,441,438,434,431,427,424,420,417,413,410,407,403,400,397,394,391,387,384,381,378,375,372,369,366,363,361,358,355,352,350,347,344,342,339,337,334,332,329,327,325,322,320,318,316,314,311,309,307,305,303,301,299,297,295,293,291,289,287,285,283,281,279,278,276,274,272,270,268,267,265,263,261,260,258,256,255,253]}};
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DOY=[0,31,60,91,121,152,182,213,244,274,305,335],doyOf=s=>DOY[+s.slice(5,7)-1]+ +s.slice(8,10)-1;
+/* This week against normal: the forecast's own days, each against NOAA's normal for that day, on the
+   day's middle temperature, the way the Weather Service says above or below normal. Under 3° is a
+   normal week. The size is rounded apart from its sign, so 2.5° warm and 2.5° cool read alike. */
+function yearCompare(N,dy){
+  const k=Math.min(7,dy?.time?.length||0),fin=v=>v!=null&&Number.isFinite(+v);
+  if(!N||!k)return null;
+  const days=dy.time.slice(0,k).map((t,i)=>({t,hi:dy.temperature_2m_max[i],lo:dy.temperature_2m_min[i]})).filter(d=>fin(d.hi)&&fin(d.lo));
+  if(!days.length)return null;
+  const wkHi=days.reduce((s,d)=>s+ +d.hi,0)/days.length,wkLo=days.reduce((s,d)=>s+ +d.lo,0)/days.length;
+  const nm=days.reduce((s,d)=>s+(N.dhi[doyOf(d.t)]+N.dlo[doyOf(d.t)])/20,0)/days.length;
+  const dep=(wkHi+wkLo)/2-nm,dd=Math.round(Math.abs(dep));
+  return{wkHi,wkLo,dep,note:dd<3?"a normal week":`${dd}° ${dep>0?"warmer":"cooler"} this week`};
+}
+/* The year, drawn the way the week is: the normal highs as a line in the temperature's colours,
+   the lows fainter, the range washed between, the warmest month ringed and the coldest low named.
+   The year wraps, December running on into January at both ends. One scale serves both places, so
+   Beckley's July is drawn lower than Wilmington's, and it widens only for a week that runs past it.
+   This week is the Sun card's pin at today, with its own high and low, and the months' key numbers
+   give way to it where they meet. Rain and snow each have a strip on their own ground and their own
+   scale, with only the tallest month named, noun first. */
+function renderYear(N,dy,css){
+  const svg=document.getElementById("yearSvg"),cmp=yearCompare(N,dy);
+  const W=appW()-40,col=W/12,X=m=>(m+.5)*col,snowy=N.snow.some(s=>s>=1);
+  const TH=138,RH=30,GAP=snowy?12:0,SH=snowy?30:0,H=TH+RH+GAP+SH;
+  const tMin=Math.min(20,cmp?cmp.wkLo-3:99),tMax=Math.max(95,cmp?cmp.wkHi+3:0);
+  const top=24,bot=TH-18,Y=t=>top+(bot-top)*(1-(t-tMin)/(tMax-tMin));
+  const mono=`text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace"`;
+  const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3" stroke-linejoin="round"`;
+  const dark=document.documentElement.getAttribute("data-theme")==="dark";
+  const now=wallNow(),m0=now.getMonth(),nx=(m0+(now.getDate()-.5)/new Date(now.getFullYear(),m0+1,0).getDate())*col;
+  const wrap=a=>[[X(-1),Y(a[11])],...a.map((t,i)=>[X(i),Y(t)]),[X(12),Y(a[0])]];
+  const yOn=a=>{const p=wrap(a);return px=>{let i=0;while(i<p.length-2&&p[i+1][0]<px)i++;
+    return p[i][1]+(p[i+1][1]-p[i][1])*(px-p[i][0])/(p[i+1][0]-p[i][0])}};
+  const yHi=yOn(N.hi),yLo=yOn(N.lo),hiI=N.hi.indexOf(Math.max(...N.hi)),loI=N.lo.indexOf(Math.min(...N.lo));
+  const rv=REVEAL.year.state!=="done",rvAt=(x,k,d)=>rvTag(rv,x,k,d);
+  const hiLine=spline(wrap(N.hi)),loLine=spline(wrap(N.lo)),band=hiLine+" "+spline([...wrap(N.lo)].reverse()).replace(/^M/,"L")+" Z";
+  const stops=a=>a.map((t,i)=>`<stop offset="${(X(i)/W*100).toFixed(1)}%" stop-color="${tempColor(t)}"/>`).join("");
+  let marks="";
+  for(let i=0;i<12;i++){
+    const x=X(i),yh=Y(N.hi[i]),yl=Y(N.lo[i]);
+    marks+=i===hiI?`<circle cx="${x.toFixed(1)}" cy="${yh.toFixed(1)}" r="3.6" fill="${css.paper}" stroke="${tempColor(N.hi[i])}" stroke-width="2.4"${rvAt(x,"dot")}/>`
+      +(rv?`<circle cx="${x.toFixed(1)}" cy="${yh.toFixed(1)}" r="15" fill="none" stroke="${tempColor(N.hi[i])}" stroke-width="1.6" opacity="0"${rvAt(x,"ring")}/>`:"")
+      :`<circle cx="${x.toFixed(1)}" cy="${yh.toFixed(1)}" r="2" fill="${tempColor(N.hi[i])}" opacity=".8"${rvAt(x,"dot")}/>`;
+    marks+=`<circle cx="${x.toFixed(1)}" cy="${yl.toFixed(1)}" r="1.6" fill="${tempColor(N.lo[i])}" opacity=".75"${rvAt(x,"dot")}/>`;
+  }
+  /* the pin's numbers take their spot first */
+  const box=(x,y,t,fs)=>{const hw=t.length*fs*.3+2;return[x-hw,y-fs,x+hw,y+3]},hit=(a,b)=>a[0]<b[2]&&b[0]<a[2]&&a[1]<b[3]&&b[1]<a[3];
+  const taken=[];let pin="";
+  if(cmp){
+    const a=Y(cmp.wkHi),b=Y(cmp.wkLo),th=Math.round(cmp.wkHi)+"°",tl=Math.round(cmp.wkLo)+"°",px=clamp(nx,16,W-16);
+    pin=`<line x1="${nx.toFixed(1)}" y1="${top-12}" x2="${nx.toFixed(1)}" y2="${(a-22).toFixed(1)}" stroke="${css.ink}" stroke-width="1" stroke-dasharray="2 4" opacity=".22"${rvAt(nx,"fade")}/>
+      <g${rvAt(nx,"pin")}><rect x="${(nx-1.75).toFixed(1)}" y="${a.toFixed(1)}" width="3.5" height="${Math.max(3.5,b-a).toFixed(1)}" rx="1.75" fill="${css.ink}" stroke="${css.paper}" stroke-width="4" paint-order="stroke" opacity=".9"/>
+      <text x="${px.toFixed(1)}" y="${(a-8).toFixed(1)}" ${mono} font-size="12" font-weight="600" fill="${css.ink}" ${halo}>${th}</text>
+      <text x="${px.toFixed(1)}" y="${(b+14).toFixed(1)}" ${mono} font-size="10.5" fill="${css.faint}" ${halo}>${tl}</text></g>`;
+    taken.push(box(px,a-8,th,12),box(px,b+14,tl,10.5),[nx-4,a,nx+4,b]);
+  }
+  const keyed=(x,y,t,fs,w,fill)=>{const hw=t.length*fs*.3+2,cx=clamp(x,hw,W-hw);
+    return taken.some(b=>hit(b,box(cx,y,t,fs)))?"":`<text x="${cx.toFixed(1)}" y="${y.toFixed(1)}" ${mono} font-size="${fs}" font-weight="${w}" fill="${fill}" ${halo}${rvAt(x,"label")}>${t}</text>`};
+  const th=Math.round(N.hi[hiI])+"°",hw=th.length*13*.3+2,tl=Math.round(N.lo[loI])+"°",wl=tl.length*10.5*.3+2;
+  marks+=keyed(X(hiI),Math.min(Y(N.hi[hiI])-11,yHi(X(hiI)-hw)-5,yHi(X(hiI)+hw)-5),th,13,600,css.ink);
+  marks+=keyed(X(loI),Math.max(Y(N.lo[loI])+14,yLo(X(loI)-wl)+12,yLo(X(loI)+wl)+12),tl,10.5,500,css.faint);
+  const strip=(vals,y0,h,paint,labelFill,word,fmt)=>{
+    const mx=Math.max(...vals),wi=vals.indexOf(mx);let s="";
+    vals.forEach((v,i)=>{if(v<.5)return;const bh=Math.max(2.5,v/mx*(h-13)),bw=Math.min(14,col*.5);
+      s+=`<rect x="${(X(i)-bw/2).toFixed(1)}" y="${(y0+h-1-bh).toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="2" ${paint(i===wi)}${rvAt(X(i),"rise")}/>`});
+    const txt=`${word} ${fmt(mx)} in`,lw=txt.length*10*.3+1;
+    s+=`<text x="${clamp(X(wi),lw,W-lw).toFixed(1)}" y="${(y0+9).toFixed(1)}" ${mono} font-size="10" font-weight="600" fill="${labelFill}" ${halo}${rvAt(X(wi),"label")}>${txt}</text>`;
+    return s+`<line x1="3" y1="${(y0+h-.5).toFixed(1)}" x2="${(W-3).toFixed(1)}" y2="${(y0+h-.5).toFixed(1)}" stroke="${css.line}" stroke-width="1"/>`;
+  };
+  const rain=strip(N.rain,TH,RH,w=>`fill="${css.water}" opacity="${w?(dark?.75:.85):(dark?.42:.5)}"`,css.water,"rain",v=>v.toFixed(1));
+  const snow=snowy?strip(N.snow,TH+RH+GAP,SH,w=>`fill="${css.ink}" opacity="${w?.3:.17}"`,css.faint,"snow",v=>Math.round(v)):"";
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  svg.setAttribute("aria-label",`Normal highs and lows by month at ${N.place}, NOAA 1991 to 2020: warmest in ${MONTHS[hiI]} at ${th}, coldest in ${MONTHS[loI]} at ${tl}.${cmp?" This week: "+cmp.note+".":""}`);
+  svg.innerHTML=`<defs>
+      <linearGradient id="yrHi" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${W}" y2="0">${stops(N.hi)}</linearGradient>
+      <linearGradient id="yrLo" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${W}" y2="0">${stops(N.lo)}</linearGradient>
+      <linearGradient id="yrBand" gradientUnits="userSpaceOnUse" x1="0" y1="${Y(Math.max(...N.hi)).toFixed(1)}" x2="0" y2="${Y(Math.min(...N.lo)).toFixed(1)}">
+        <stop offset="0" stop-color="${tempColor(Math.max(...N.hi))}" stop-opacity=".2"/><stop offset="1" stop-color="${tempColor(Math.min(...N.lo))}" stop-opacity=".04"/></linearGradient>
+      <clipPath id="yrClip"><rect x="3" y="0" width="${W-6}" height="${TH}"/></clipPath>
+      <clipPath id="yrArea"><path d="${band}"/></clipPath></defs>
+    <g clip-path="url(#yrClip)">
+      <g clip-path="url(#yrArea)"><rect class="rv-fill" x="0" y="0" width="${W}" height="${TH}" fill="url(#yrBand)"/></g>
+      <path class="rv-line2" d="${loLine}" fill="none" stroke="url(#yrLo)" stroke-width="1.5" stroke-linecap="round" opacity=".72"/>
+      ${rv?[[10,.3,.24],[6.5,.6,.2],[4.4,1,.16]].map(([w,f,o])=>`<path class="rv-tail" data-f="${f}" data-o="${o}" d="${hiLine}" fill="none" stroke="url(#yrHi)" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>`).join(""):""}
+      <path class="tline" d="${hiLine}" fill="none" stroke="url(#yrHi)" stroke-width="2.4" stroke-linecap="round"/></g>
+    ${marks}${pin}${rain}${snow}
+    ${rv?`<g class="rv-tip" opacity="0" fill="${tempColor(N.hi[0])}"><circle r="12" opacity=".12"/><circle r="6.5" opacity=".24"/><circle r="3.3"/><circle class="rv-core" r="1.5" fill="#FFF8EC" opacity=".95"/></g>`:""}`;
+  document.getElementById("yearMonths").innerHTML="JFMAMJJASOND".split("").map((c,i)=>`<span${i===m0?' class="yr-now"':""}>${c}</span>`).join("");
+  document.getElementById("yearTitle").textContent="The year · "+N.place;
+  document.getElementById("yearNote").textContent=cmp?cmp.note:"";
+  const hiAt=x=>{const f=clamp(x/col-.5,0,11),i=Math.min(10,Math.floor(f));return N.hi[i]+(N.hi[i+1]-N.hi[i])*(f-i)};
+  revealChart("year",svg,{xa:0,xb:W,dur:clamp(1400+W*.9,1700,2200),tail:50,color:x=>tempColor(hiAt(x))});
 }
 
 /* ── wind vane ──────────────────────────────────────── */
@@ -3894,7 +4084,7 @@ function waterTemp(w,now){
    preliminary, and said to the half foot from half a foot. It is a measurement, never a forecast,
    and it is hidden when the gauge is more than half an hour old (a cached page never shows an
    old surge), thin, or reads six feet off, which is a sensor, not the sea. */
-function levelGap(w,now){
+function levelFeet(w,now){
   const tOf=s=>new Date(String(s).replace(" ","T")).getTime();
   const lv=(w?.level||[]).filter(r=>r&&r.t&&known(r.v));
   if(!lv.length)return null;
@@ -3904,9 +4094,12 @@ function levelGap(w,now){
   const pairs=lv.filter(r=>tOf(r.t)>newest-18e5&&pred.has(r.t));
   if(pairs.length<3)return null;
   const gap=pairs.reduce((s,r)=>s+(+r.v-pred.get(r.t)),0)/pairs.length;
-  if(Math.abs(gap)<.5||Math.abs(gap)>=6)return null;
-  const half=Math.round(Math.abs(gap)*2)/2;
-  return`Running ${half===.5?"half a foot":half+" ft"} ${gap>0?"above":"below"} the tide table.`;
+  return Math.abs(gap)<.5||Math.abs(gap)>=6?null:Math.sign(gap)*Math.round(Math.abs(gap)*2)/2;
+}
+function levelGap(w,now){
+  /* the sentence is the tag's own number, so the chart and what it says to a screen reader agree */
+  const f=levelFeet(w,now);if(f==null)return null;const a=Math.abs(f);
+  return`Running ${a===.5?"half a foot":a+" ft"} ${f>0?"above":"below"} the tide table.`;
 }
 /* the boat's sentence, for the hours it speaks for. A warning, thunder, ice and snow come first,
    then the wind and the seas, then the rain and the cold. An unknown is never a green: a gap in
@@ -4003,22 +4196,26 @@ function waterCard(L,h,c,dy,marine,water,warning,storm,now,told){
     ...tempItem];
   return{say,line:line.length?line:null,level};
 }
-/* The almanac's bite windows, the next two that have not ended. Each is dropped on its own
+/* The almanac's bite windows that have not ended, for the moon chart. Each is dropped on its own
    hours: thunder, freezing rain or a 30 mph gust in it, a gust the run does not carry (a gap is
    never calm), or running past the end of the run, where nothing is known. The old card took
    them all away under any no go, and a gale at noon hid an evening with nothing wrong in it. */
-function fishLine(h,now){
-  const n=h.time?.length||0;if(!n)return null;
+function fishWindows(h,now){
+  const n=h.time?.length||0;if(!n)return[];
   const end=new Date(h.time[n-1]).getTime()+36e5;
   const clear=w=>w.end.getTime()<=end&&h.time.every((s,i)=>{const a=new Date(s).getTime();
     return a>=w.end.getTime()||a+36e5<=w.start.getTime()
       ||![95,96,99].includes(+h.code?.[i])&&!isIce(+h.code?.[i])&&known(h.gust?.[i])&&+h.gust[i]<30});
-  const wins=solunarWindows(now).filter(w=>w.end>now&&clear(w)).slice(0,2);
+  return solunarWindows(now).filter(w=>w.end>now&&clear(w));
+}
+function fishLine(h,now){
+  const wins=fishWindows(h,now).slice(0,2);
   return wins.length?wins.map(w=>now>=w.start?"now–"+clock(w.end):spanTxt(w.start,w.end)).join(" · "):null;
 }
-/* The farm makes no call and is never green: on an ordinary day the card is the bite line. It
-   speaks when there is something to plan around, in the words the family uses, for the hours the
-   coast's sentence speaks for. Anything that says stay in takes the bite line with it. Pure. */
+/* The farm makes no call and is never green: on an ordinary day there is no card, only the moon
+   and its fishing times. It speaks when there is something to plan around, in the words the
+   family uses, for the hours the coast's sentence speaks for. Anything that says stay in takes the
+   fishing times off the moon chart (`fish` is that gate). Pure. */
 function farmCard(L,h,c,dy,warning,storm,now,told){
   /* a storm overhead is the headline's, and a bite time under it is an invitation */
   if(storm)return{say:null,fish:null};
@@ -4094,7 +4291,13 @@ function farmCard(L,h,c,dy,warning,storm,now,told){
   }
   return{say:null,fish:L.fish&&!iceNow?fishLine(h,now):null};
 }
-const paintSay=(id,s)=>{const e=document.getElementById(id);e.hidden=!s;e.textContent=s?s.text:"";e.className="say"+(s?" "+s.cls:"")};
+/* the note beside the water's title: the water temperature and the seas, and without them the
+   tide's turn. Nothing else sits between the title and the chart. */
+function waterNote(water,tide){
+  const it=water&&water.line||[],tw=it.find(x=>x.label==="water"),sw=it.find(x=>/^seas/.test(x.label));
+  const seas=!sw?null:sw.value==="unavailable"?"seas unavailable":sw.value==="under 1 ft"?"seas under 1 ft":"seas ~"+sw.value;
+  return[tw&&tw.value,seas].filter(Boolean).join(" · ")||(tide?(tide.rising?"rising · ":"falling · ")+tide.note:"");
+}
 function dayStory(c,dy,h,now){
   /* the water only gets named while the boat is actually going out */
   if([95,96,99].includes(c.weather_code))
@@ -4604,7 +4807,8 @@ let SCENE_IN=false;
 const REVEAL_EASE=[.5,.04,.2,1];               /* a gentle start and a long, soft landing */
 /* the keys are in page order: a chart on screen with one above it that is still drawing follows it */
 const REVEAL={hourly:{state:PRM?"done":"armed",seen:false,anims:[]},week:{state:PRM?"done":"armed",seen:false,anims:[]},
-  tide:{state:PRM?"done":"armed",seen:false,anims:[]},sun:{state:PRM?"done":"armed",seen:false,anims:[]}};
+  tide:{state:PRM?"done":"armed",seen:false,anims:[]},moon:{state:PRM?"done":"armed",seen:false,anims:[]},
+  sun:{state:PRM?"done":"armed",seen:false,anims:[]},year:{state:PRM?"done":"armed",seen:false,anims:[]}};
 let REVEAL_READY=false,REVEAL_WAIT=0;
 const bezier=(a,b,c,d)=>t=>{                  /* CSS cubic-bezier(a,b,c,d) as a function of time */
   let u=t;
@@ -4629,16 +4833,15 @@ function revealTry(k,settled){
      so the tide sits on a phone's first screen, and the live paint pushes it below the fold in
      the same task that arms it. Measured once more, it waits for the scroll like it should. A chart
      this look finds off screen is looked at again a frame later, once the alerts, the nowcast
-     strip and the farm's card (painted after the charts) have moved it; that look only ever holds a
+     strip and the sentence card (painted after the charts) have moved it; that look only ever holds a
      chart back, and one that passes mid-render plays. It never clears the observer's
      word: cleared mid-render, a week that grew back on screen sat blank until a scroll crossed a
      threshold, and the observer says when a chart has really left. */
   if("IntersectionObserver" in window){const b=R.g.svg.getBoundingClientRect();
     if(!(b.height>0&&Math.min(b.bottom,innerHeight)-Math.max(b.top,0)>=b.height*.3)){if(!settled)requestAnimationFrame(()=>revealTry(k,true));return}}
   let t0=performance.now();
-  /* on screen together, they draw down the page: the week follows the hours, the tide
-     follows whichever of them is still drawing above it, and the sun bar whichever of the
-     three still is */
+  /* on screen together, they draw down the page: the week follows the hours, and the tide or
+     the moon, the sun bar and the year each follow whichever chart above them is still drawing */
   const order=Object.keys(REVEAL);
   for(const u of order.slice(0,order.indexOf(k)))if(REVEAL[u].state==="running")t0=Math.max(t0,REVEAL[u].t0+420);
   R.state="running";R.t0=t0;
@@ -4758,7 +4961,7 @@ function revealReady(){REVEAL_READY=true;clearTimeout(REVEAL_WAIT);REVEAL_WAIT=0
 if(!PRM){
   const seen=(k,on)=>{REVEAL[k].seen=on;if(on)revealTry(k)};
   /* each drawing and the key it draws under, in page order */
-  const RV_OF={hourlySvg:"hourly",weekSvg:"week",tideSvg:"tide",uvSvg:"sun"};
+  const RV_OF={hourlySvg:"hourly",weekSvg:"week",tideSvg:"tide",moonSvg:"moon",uvSvg:"sun",yearSvg:"year"};
   if("IntersectionObserver" in window){
     const io=new IntersectionObserver(es=>{for(const e of es)
       seen(RV_OF[e.target.id],e.isIntersecting&&e.intersectionRatio>=.3)},{threshold:[0,.3,.6,1]});
@@ -5245,12 +5448,15 @@ function render(d,live,savedAt=0){
   /* the water over the tide chart, assembled by waterCard and painted before the chart is drawn,
      so the chart's entrance measures it where it will stay */
   const water=LOC.tide?waterCard(LOC,h,c,dy,m,d.water,warning,storm,now,dayRead.told):null;
-  paintSay("waterSay",water&&water.say);
-  const wLine=document.getElementById("waterLine");wLine.hidden=!water||!water.line;
-  if(water&&water.line)wLine.innerHTML=water.line.map(x=>`<span${x.cls?` class="${x.cls}"`:""}>${x.label} <b>${x.value}</b></span>`).join(' <span aria-hidden="true">·</span> ');
-  const wLevel=document.getElementById("waterLevel");wLevel.hidden=!water||!water.level;wLevel.textContent=water&&water.level||"";
-  document.getElementById("waterRead").hidden=!water||!water.say&&!water.line&&!water.level;
-  if(LOC.tide)renderTides(d.tides,css,c.wind_gusts_10m,c.wind_speed_10m);
+  /* One shape for every section: a title with one short note, then the picture, then its labels,
+     and nothing between the title and the chart. The water's readings are its note, and the gauge
+     against the table is drawn on the chart, where the skiff floats at the water that is there */
+  if(LOC.tide){
+    const tide=renderTides(d.tides,css,c.wind_gusts_10m,c.wind_speed_10m,levelFeet(d.water,now));
+    /* with no tide table the chart is empty, and the note says so after whatever it can read */
+    document.getElementById("tideNote").textContent=tide?waterNote(water,tide):[waterNote(water,null),"tide data unavailable"].filter(Boolean).join(" · ");
+    document.getElementById("tideSvg").setAttribute("aria-label",tide?"Tide curve, next 27 hours"+(water&&water.level?". "+water.level:""):"Tide data unavailable");
+  }
   renderAlerts(alerts);
   renderNowcast(d.nowcast,c.weather_code,h);
   renderStorms(d.storms);
@@ -5263,11 +5469,16 @@ function render(d,live,savedAt=0){
   /* the farm's card, assembled by farmCard and painted here: hidden when it has nothing to say
      and no bite time to give, the way the sun card steps aside */
   const farm=LOC.kind==="farm"?farmCard(LOC,h,c,dy,warning,storm,now,dayRead.told):null;
-  document.getElementById("outSection").hidden=!farm||!farm.say&&!farm.fish;
-  document.getElementById("outTitle").textContent=LOC.outTitle||"";
-  paintSay("farmSay",farm&&farm.say);
-  document.getElementById("wFishWrap").hidden=!farm||!farm.fish;
-  if(farm&&farm.fish)document.getElementById("wFish").textContent=farm.fish;
+  /* the farm's picture is the moon and the almanac's fishing times, in the place the coast has its
+     tide; anything that says stay in takes the windows with it */
+  document.getElementById("moonSection").hidden=!LOC.fish;
+  if(LOC.fish)renderMoon(css,farm&&farm.fish?fishWindows(h,now):[]);
+  /* the sentences sit with the cards: the farm's when there is something to plan around, under the
+     family's word for it, and the boat's while the boat is going out */
+  const said=farm&&farm.say?{title:"Piddling",...farm.say}:water&&water.say?{title:"The boat",...water.say}:null;
+  document.getElementById("sayCard").hidden=!said;
+  if(said){document.getElementById("sayTitle").textContent=said.title;
+    const el=document.getElementById("saySay");el.textContent=said.text;el.className="lead "+said.cls}
 
   /* sun: the rest of today, off the hourly run whose first hour is the live reading. When
      nothing is left today worth a sentence the card steps aside rather than saying so, and
@@ -5297,6 +5508,10 @@ function render(d,live,savedAt=0){
   const uvBar=!!sunAdvice&&!comfort&&(uvNow>=.5||uvI>=0);
   document.getElementById("uvDetails").style.display=uvBar?"":"none";
   if(uvBar)renderUV(uvNow,uvPk,uvI,h,css);
+  /* the year at the foot: NOAA's normals for the nearest airport, and this week against them */
+  const N=NORMALS[LOC.id];
+  document.getElementById("yearSection").hidden=!N;
+  if(N)renderYear(N,dy,css);
 
   /* tonight: one useful read, rather than another row of weather instruments */
   const el=document.getElementById("eveLead");
@@ -5468,14 +5683,19 @@ function paintAddr(){
 }
 function paintLocationShell(){
   document.getElementById("tideSection").style.display=LOC.tide?"":"none";
-  /* this place's shape before any reading: the water section with the chart and nothing said
-     over it, and the farm's card with its title and the bite line waiting. No sentence until
-     there is something to say it about */
-  document.getElementById("waterRead").hidden=true;
-  document.getElementById("outSection").hidden=LOC.kind!=="farm";
-  document.getElementById("outTitle").textContent=LOC.outTitle||"";
-  paintSay("farmSay",null);
-  document.getElementById("wFishWrap").hidden=!LOC.fish;
+  /* this place's shape before any reading: the same sections in the same order, each with its
+     title and no picture yet, and no sentence card until there is something to say */
+  document.getElementById("moonSection").hidden=!LOC.fish;
+  document.getElementById("moonNote").textContent="";
+  /* and each empty picture says what it will be, not what the last place's said */
+  document.getElementById("tideSvg").setAttribute("aria-label","Tide curve, next 27 hours");
+  document.getElementById("moonSvg").setAttribute("aria-label","The moon over the next day and a half, and the almanac's fishing times");
+  document.getElementById("yearSvg").setAttribute("aria-label","Normal highs and lows by month");
+  document.getElementById("sayCard").hidden=true;
+  const N=NORMALS[LOC.id];
+  document.getElementById("yearSection").hidden=!N;
+  document.getElementById("yearTitle").textContent=N?"The year · "+N.place:"The year";
+  document.getElementById("yearNote").textContent="";document.getElementById("yearMonths").innerHTML="";
   document.getElementById("sceneSvg").setAttribute("aria-label",LOC.sceneLabel);
   const comfort=LOC.kind==="trip";
   document.getElementById("sunTitle").textContent=comfort?"What to wear":"Sun";
@@ -5495,7 +5715,7 @@ function paintLoadingState(){
   for(const id of ["feels","hiNow","loNow"])document.getElementById(id).textContent="—";
   document.getElementById("feelsRow").hidden=false;
   document.getElementById("verdict").textContent="Reading the sky…";
-  for(const id of ["chips","skyFx","rainFx","sceneSvg","hourlySvg","hrLabels","weekRows","weekSvg","goldTimes","moonTxt","uvSvg"])
+  for(const id of ["chips","skyFx","rainFx","sceneSvg","hourlySvg","hrLabels","weekRows","weekSvg","goldTimes","moonTxt","uvSvg","moonSvg","yearSvg"])
     document.getElementById(id).innerHTML="";
   document.getElementById("flash").className="flash";
   document.getElementById("rainFx").className="rainfx";
@@ -5513,7 +5733,7 @@ function paintLoadingState(){
   /* the bar is drawn only from a reading, so its scale goes with it: the words floated under an
      empty band in the loading and error shell */
   document.getElementById("uvDetails").style.display="none";
-  for(const id of ["wFish","uvLead","eveLead"])
+  for(const id of ["uvLead","eveLead"])
     document.getElementById(id).textContent="—";
   HOURLY_PEEK=null;hideHourlyPeek();TIDE_PEEK=null;hideTidePeek();LAST=null;
 }

@@ -118,21 +118,23 @@ try{
     let features=SEVERE(now);
     await page.route("**api.weather.gov/alerts**",route=>route.fulfill({json:{features}}));
     await load(page);
-    /* a warning at the farm is the family's action in red, and no bite time under it: the alert
-       strip names the event and its instruction */
-    assert.equal(await page.locator("#farmSay").innerText(),"Chores can wait.");
-    assert.equal(await page.locator("#farmSay").getAttribute("class"),"say no");
-    assert.equal(await page.locator("#wFishWrap").isVisible(),false);
+    /* a warning at the farm is the family's action in red on the Piddling card, and no fishing time
+       on the moon: the alert strip names the event and its instruction */
+    const fishing=()=>page.locator("#moonSvg").getAttribute("aria-label");
+    assert.equal(await page.locator("#sayTitle").innerText(),"PIDDLING");
+    assert.equal(await page.locator("#saySay").innerText(),"Chores can wait.");
+    assert.equal(await page.locator("#saySay").getAttribute("class"),"lead no");
+    assert.match(await fishing(),/fishing times: none clear\.$/);
     await page.locator("#alertStrip").click();
     assert.match(await page.locator(".alert-body").innerText(),/Move to an interior room/);
     assert.equal(await page.locator("#alertStrip").getAttribute("aria-expanded"),"true");
     features=features.map(f=>({properties:{...f.properties,ends:new Date(now.getTime()-60000).toISOString()}}));
     await page.evaluate(()=>refresh());
     assert.equal(await page.locator("#alertStrip").isVisible(),false);
-    /* and when it has ended an ordinary day is the bite line and nothing else, never a green go */
-    assert.equal(await page.locator("#wFishWrap").isVisible(),true);
-    assert.equal(await page.locator("#farmSay").isVisible(),false);
-    assert.equal(await page.locator("#outTitle").innerText(),"THE FARM");
+    /* and when it has ended an ordinary day is the moon and its fishing times, and no card: never a green go */
+    assert.doesNotMatch(await fishing(),/none clear/);
+    assert.equal(await page.locator("#sayCard").isVisible(),false);
+    assert.match(await page.locator("#moonSection .eyebrow b").innerText(),/^ALMANAC FISHING TIMES/);
     assert.deepEqual(errors,[]);await context.close();checks++;
   }
   {
@@ -142,18 +144,19 @@ try{
     await load(page);
     /* the headline names the thunder the run carries, so the card says only what to do about it */
     assert.match(await page.locator("#verdict").innerText(),/Thunder possible around 12 p\.m\.$/);
-    assert.equal(await page.locator("#farmSay").innerText(),"Piddle before the thunder.");
-    assert.equal(await page.locator("#farmSay").getAttribute("class"),"say caution");
+    assert.equal(await page.locator("#saySay").innerText(),"Piddle before the thunder.");
+    assert.equal(await page.locator("#saySay").getAttribute("class"),"lead caution");
     const bites=await page.evaluate(()=>{const n=new Date(),t0=new Date(n).setHours(12,0,0,0),t1=new Date(n).setHours(20,0,0,0);
-      return solunarWindows(n).filter(w=>w.end>n&&w.start.getTime()<t1&&w.end.getTime()>t0).map(w=>spanTxt(w.start,w.end))});
-    const fish=await page.locator("#wFishWrap").isVisible()?await page.locator("#wFish").innerText():"";
-    for(const b of bites)assert.ok(!fish.includes(b),`no bite time in the thunder: ${b} in "${fish}"`);
+      return solunarWindows(n).filter(w=>w.end>n&&w.start.getTime()<t1&&w.end.getTime()>t0).map(w=>clock12(w.start)+" to "+clock12(w.end))});
+    const fish=await page.locator("#moonSvg").getAttribute("aria-label");
+    for(const b of bites)assert.ok(!fish.includes(b),`no fishing time in the thunder: ${b} in "${fish}"`);
     assert.deepEqual(errors,[]);await context.close();checks++;
   }
   {
-    /* A phone that opens at the coast and taps to the farm paints the farm's cache first. The card's
-       title has to be on that paint and on the live one: render() did not paint it, and after a trip
-       to the coast the farm's card came up with no heading */
+    /* A phone that opens at the coast and taps to the farm paints the farm's cache first. The farm's
+       own sections have to be on that paint and on the live one, in the coast's places: the moon
+       where the tide was, and the year titled for the farm's airport (the farm's card once came up
+       with no heading after a trip to the coast) */
     const o={...base,code:1,popCurve:()=>5},t=new Date(now.getTime()-3.6e6);
     const {context,page,errors}=await open(390,o,"mb");
     await page.addInitScript(c=>localStorage.setItem("mbwx-sp",JSON.stringify(c)),{savedAt:t.getTime(),data:cachePayload(t,o,"sp")});
@@ -162,11 +165,13 @@ try{
     await page.route("**api.open-meteo.com**",async r=>{if(r.request().url().includes("marine-api"))return r.fallback();await gate;r.fallback()});
     await page.locator("#locBtn").click();
     await page.waitForFunction(()=>document.getElementById("stamp").textContent.startsWith("updated"));
-    assert.equal(await page.locator("#outTitle").innerText(),"THE FARM","the cached farm paint has its title");
+    assert.equal(await page.locator("#moonSection").isVisible(),true,"the cached farm paint has its moon");
+    assert.match(await page.locator("#yearTitle").innerText(),/BECKLEY/);
     assert.equal(await page.locator("#tideSection").isVisible(),false);
     release();
     await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
-    assert.equal(await page.locator("#outTitle").innerText(),"THE FARM","and so does the live one");
+    assert.equal(await page.locator("#moonSection").isVisible(),true,"and so does the live one");
+    assert.match(await page.locator("#yearTitle").innerText(),/BECKLEY/);
     assert.deepEqual(errors,[]);await context.close();checks++;
   }
   {
@@ -258,7 +263,7 @@ try{
     await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
     assert.deepEqual(errors,[]);await context.close();checks++;
   }
-  console.log(`${checks} interaction scenarios passed: matched chart heights, hourly and tide exploration, warnings, thunder coming at the farm, the farm's title after the coast, the entrance across a cache-to-live paint and below the fold, and offline recovery.`);
+  console.log(`${checks} interaction scenarios passed: matched chart heights, hourly and tide exploration, warnings, thunder coming at the farm, the farm's sections after the coast, the entrance across a cache-to-live paint and below the fold, and offline recovery.`);
 }finally{
   await browser.close();server.close();
 }

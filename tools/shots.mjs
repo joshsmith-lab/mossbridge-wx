@@ -77,7 +77,7 @@ const CASES = [
     o: { baseTemp: 72, nowTemp: 76, feels: 78, rh: 60, isDay: 1, code: 1, cloud: 24, nowWind: 8, nowDir: 40, nowGust: 13, nowUv: 3.8, uvMax: 4.2,
       windAmp: 7, gustAmp: 11, sunrise: "07:04", sunset: "18:59", surge: 1.9,
       popCurve: () => 8, dailyPop: (p) => p.fill(12) },
-    expect: { say: null, line: /^seas about 2 ft · water 77°$/, level: "Running 2 ft above the tide table.", marine: 1 } },
+    expect: { say: null, tide: /^77° · seas ~2 ft$/, level: "Running 2 ft above the tide table.", marine: 1 } },
   // the week as lines: a late-September swing from a cool snap to a warm run
   { name: "14-week-porters-neck", loc: "mb", when: "2026-09-24T17:10:00",
     o: { baseTemp: 66, nowTemp: 68, feels: 68, rh: 70, isDay: 1, code: 3, cloud: 70, nowWind: 15, nowDir: 5, nowGust: 30, nowUv: .6, uvMax: 6,
@@ -85,22 +85,22 @@ const CASES = [
       popCurve: () => 4, dailyPop: (p) => p.splice(0, 8, 20, 4, 1, 0, 1, 6, 5, 10),
       dailyTemps: (hi, lo, c) => { hi.splice(0, 8, 70, 67, 80, 82, 82, 84, 85, 83); lo.splice(0, 8, 63, 57, 53, 59, 61, 68, 72, 70); c.splice(0, 8, 61, 3, 2, 1, 2, 3, 3, 2); } },
     // with the boat season switched on: gusting 30 at five is the evening you are in, never tomorrow's
-    boat: true, expect: { say: "Too windy for the boat.", sayCls: "no", line: /^gusts to 30 · seas about 2 ft · water 77°$/ } },
+    boat: true, expect: { sayTitle: "The boat", say: "Too windy for the boat.", sayCls: "no", tide: /^77° · seas ~2 ft$/ } },
   // a wet, stormy week: three-digit heat, 100% odds, a storm and a washout next to dry days.
   // A Sunday, so it is also the eight-column week: next Saturday and Sunday are days 7 and 8
   { name: "15-wet-week-shady-spring", loc: "sp", when: "2026-08-02T12:20:00",
     o: { baseTemp: 84, nowTemp: 90, feels: 97, rh: 70, isDay: 1, code: 2, cloud: 40, nowWind: 6, nowDir: 250, nowGust: 12, nowUv: 8, uvMax: 9,
       windAmp: 6, gustAmp: 10, popCurve: () => 10, dailyPop: (p) => p.splice(0, 8, 35, 85, 100, 45, 10, 0, 65, 20),
       dailyTemps: (hi, lo, c) => { hi.splice(0, 8, 96, 101, 88, 84, 83, 86, 90, 87); lo.splice(0, 8, 74, 76, 71, 66, 64, 66, 70, 68); c.splice(0, 8, 2, 95, 63, 80, 1, 0, 81, 2); } },
-    expect: { cols: 8, weekend: ["Sat", "Sun"], farm: "The farm", say: null, fish: true } },
+    expect: { cols: 8, weekend: ["Sat", "Sun"], moon: true, say: null, fish: true } },
   // a Saturday with the boat season switched on: the weekend is today and tomorrow, so the note
   // names only Sunday, and the water is an easy day in words
   { name: "16-saturday-porters-neck", loc: "mb", when: "2026-09-26T10:30:00",
     o: { baseTemp: 74, nowTemp: 75, feels: 75, rh: 58, isDay: 1, code: 1, cloud: 18, nowWind: 7, nowDir: 60, nowGust: 12, nowUv: 4.6, uvMax: 5.8,
       windAmp: 7, gustAmp: 10, sunrise: "07:03", sunset: "19:02", popCurve: () => 6, dailyPop: (p) => p.splice(0, 7, 8, 45, 20, 10, 5, 10, 15),
       dailyTemps: (hi, lo, c) => { hi.splice(0, 7, 79, 81, 77, 75, 78, 80, 82); lo.splice(0, 7, 64, 67, 62, 58, 60, 63, 65); c.splice(0, 7, 1, 80, 3, 2, 1, 2, 2); } },
-    boat: true, expect: { cols: 7, weekend: ["Today", "Sun"], note: /^Sun \d+° 45% rain$/, say: "Easy out there.", sayCls: "go",
-      line: /^gusts to \d+ · seas about 2 ft · water 77°$/ } },
+    boat: true, expect: { cols: 7, weekend: ["Today", "Sun"], note: /^Sun \d+° 45% rain$/, sayTitle: "The boat", say: "Easy out there.", sayCls: "go",
+      tide: /^77° · seas ~2 ft$/ } },
   // a Saturday in mid-November: no boat sentence, and the seas and the water are read all the same
   { name: "17-off-season-saturday-porters-neck", loc: "mb", when: "2026-11-14T11:15:00",
     o: { baseTemp: 58, nowTemp: 61, feels: 61, rh: 55, isDay: 1, code: 2, cloud: 35, nowWind: 9, nowDir: 330, nowGust: 15, nowUv: 2.9, uvMax: 3.2,
@@ -108,7 +108,7 @@ const CASES = [
       dailyTemps: (hi, lo, c) => { hi.splice(0, 7, 62, 60, 58, 62, 65, 61, 57); lo.splice(0, 7, 46, 43, 40, 44, 49, 45, 39); } },
     // and the card says "Sunscreen if you're out a while." at 2.9: the 3.1 still to come crosses into
     // moderate, so its ring stays, or the only UV on the page read LOW under a sunscreen sentence
-    expect: { cols: 7, weekend: ["Today", "Sun"], say: null, line: /^seas about 2 ft · water 63°$/, level: null, marine: 1,
+    expect: { cols: 7, weekend: ["Today", "Sun"], say: null, tide: /^63° · seas ~2 ft$/, level: null, marine: 1,
       sun: "Sunscreen if you're out a while.", uvBar: /^UV 2\.9 now, low, peaking at 3\.1 around 12 p\.m\.$/ } },
   // a cold, clear January morning on the coast: the headline owns the cold, the water section says
   // only the water, and the sun card steps aside. The station's thermometer is down: no water at all
@@ -116,20 +116,54 @@ const CASES = [
     o: { baseTemp: 32, nowTemp: 28, feels: 20, rh: 58, isDay: 1, code: 0, cloud: 4, nowWind: 11, nowDir: 340, nowGust: 19, nowUv: 0.6, uvMax: 2.4,
       windAmp: 7, gustAmp: 10, sunrise: "07:22", sunset: "17:25", waterTemp: null, popCurve: () => 3, dailyPop: (p) => p.fill(5),
       dailyTemps: (hi, lo, c) => { hi.splice(1, 6, 44, 51, 55, 47, 40, 36); lo.splice(1, 6, 26, 33, 39, 31, 25, 21); c.splice(1, 6, 1, 2, 3, 3, 1, 0); } },
-    expect: { say: null, line: /^seas about 2 ft$/, sun: "(steps aside)", marine: 1 } },
+    expect: { say: null, tide: /^seas ~2 ft$/, sun: "(steps aside)", marine: 1 } },
   // the boat season on, with the marine run answering but carrying no seas: never green, and said once
   { name: "19-no-seas-porters-neck", loc: "mb", when: "2026-09-15T10:10:00",
     o: { baseTemp: 76, nowTemp: 77, feels: 78, rh: 62, isDay: 1, code: 1, cloud: 20, nowWind: 6, nowDir: 190, nowGust: 10, nowUv: 5.2, uvMax: 6.4,
       windAmp: 6, gustAmp: 8, sunrise: "06:56", sunset: "19:21", wave: null, popCurve: () => 6, dailyPop: (p) => p.fill(10),
       dailyTemps: (hi, lo, c) => { hi.splice(1, 6, 83, 84, 81, 79, 82, 84); lo.splice(1, 6, 68, 70, 67, 64, 66, 69); c.splice(1, 6, 1, 2, 2, 1, 1, 2); } },
-    boat: true, expect: { say: "Seas unavailable.", sayCls: "caution", line: /^gusts to \d+ · water 77°$/ } },
+    boat: true, expect: { sayTitle: "The boat", say: "Seas unavailable.", sayCls: "caution", tide: /^77°$/ } },
+  // the gauge two feet over the table half an hour before the 1:36p high: the skiff floats at the
+  // water that is there, on the chart's scale, and the high's time stays on the chart over it
+  { name: "21-surge-at-high-porters-neck", loc: "mb", when: "2026-09-27T13:05:00",
+    o: { baseTemp: 74, nowTemp: 78, feels: 78, rh: 70, isDay: 1, code: 3, cloud: 70, nowWind: 14, nowDir: 45, nowGust: 22, nowUv: 3, uvMax: 5,
+      windAmp: 9, gustAmp: 13, sunrise: "07:04", sunset: "18:59", surge: 2.1, popCurve: () => 10, dailyPop: (p) => p.fill(15) },
+    expect: { level: "Running 2 ft above the tide table.", tide: /^77° · seas ~2 ft$/ } },
+  // a winter northwester blowing the water out a foot and a half under the table at the 7:24a low:
+  // the chart deepens below the datum rather than sinking the skiff into the sand and its label
+  { name: "22-blown-out-low-porters-neck", loc: "mb", when: "2027-01-14T07:10:00",
+    o: { baseTemp: 36, nowTemp: 33, feels: 24, rh: 55, isDay: 1, code: 0, cloud: 5, nowWind: 16, nowDir: 320, nowGust: 28, nowUv: 0.2, uvMax: 2.4,
+      windAmp: 8, gustAmp: 12, sunrise: "07:22", sunset: "17:25", surge: -1.6, waterTemp: 48, popCurve: () => 3, dailyPop: (p) => p.fill(5) },
+    expect: { level: "Running 1.5 ft below the tide table.", tide: /^48° · seas ~2 ft$/ } },
   // a cold October morning at the farm: the card speaks for the morning rounds, in amber, over the bite times
   { name: "20-cold-morning-shady-spring", loc: "sp", when: "2026-10-22T07:40:00",
     o: { baseTemp: 44, nowTemp: 31, feels: 27, rh: 80, isDay: 1, code: 0, cloud: 5, nowWind: 4, nowDir: 320, nowGust: 8, nowUv: 0.2, uvMax: 3.5,
       windAmp: 5, gustAmp: 8, sunrise: "07:32", sunset: "18:40", popCurve: () => 3, dailyPop: (p) => p.fill(5),
       dailyTemps: (hi, lo, c) => { hi.splice(0, 8, 53, 58, 61, 57, 55, 60, 63, 59); lo.splice(0, 8, 29, 33, 38, 41, 35, 34, 39, 42); c.splice(0, 8, 0, 1, 2, 3, 3, 2, 1, 2); } },
-    expect: { farm: "The farm", say: "Cold one. Bundle up for the morning rounds.", sayCls: "caution", fish: true } },
+    expect: { moon: true, sayTitle: "Piddling", say: "Cold one. Bundle up for the morning rounds.", sayCls: "caution", fish: true, year: /^The year · Beckley \/ \d+° cooler this week$/ } },
 ];
+
+/* labels are placed, not stamped: on the tide, the moon and the year every word sits inside its
+   chart and clear of every other word, whatever the water or the moon is doing, and the skiff's
+   level tag rides on the water, never on the bed under it (seaY is H-34). Run at every width,
+   because an hour or a tide is a few pixels narrower at 320 and that is where they meet. */
+async function crowded(page) {
+  const out = await page.evaluate(() => ["tideSvg", "moonSvg", "yearSvg"].flatMap((id) => {
+    const svg = document.getElementById(id); if (!svg || !svg.getBoundingClientRect().height) return [];
+    const vb = svg.viewBox.baseVal, boxes = [...svg.querySelectorAll("text")].map((e) => ({ t: e.textContent, b: e.getBBox() })).filter((x) => x.t.trim());
+    const out = boxes.filter(({ b }) => b.x < -1 || b.y < -1 || b.x + b.width > vb.width + 1 || b.y + b.height > vb.height + 1).map((x) => `${id} "${x.t}" off the chart`);
+    for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+      const a = boxes[i].b, c = boxes[j].b, w = Math.min(a.x + a.width, c.x + c.width) - Math.max(a.x, c.x), h = Math.min(a.y + a.height, c.y + c.height) - Math.max(a.y, c.y);
+      if (w > 1 && h > 1) out.push(`${id} "${boxes[i].t}" runs into "${boxes[j].t}"`);
+    }
+    if (id === "tideSvg") {
+      const tag = boxes.find((x) => /^[+−][\d.]+ ft$/.test(x.t)), sea = vb.height - 34;
+      if (tag && tag.b.y + tag.b.height > sea + .5) out.push(`tideSvg "${tag.t}" sits on the bed (${(tag.b.y + tag.b.height).toFixed(1)} under ${sea})`);
+    }
+    return out;
+  }));
+  return out;
+}
 
 const cases = ONLY.length ? CASES.filter((c) => ONLY.some((q) => c.name.includes(q))) : CASES;
 if (!cases.length) { console.error(`no screenshot matched ${ONLY.join(" ")}`); process.exit(1); }
@@ -143,7 +177,7 @@ const browser = await chromium.launch(process.env.PORCH_CHROME_PATH
   : {});
 let failures = 0;
 for (const cs of cases) {
-  for (const vp of [{ w: 390, h: 1500, tag: "phone" }, { w: 900, h: 1500, tag: "wide" }]) {
+  for (const vp of [{ w: 390, h: 1500, tag: "phone" }, { w: 900, h: 1500, tag: "wide" }, { w: 320, h: 1500, tag: "narrow" }]) {
     const ctx = await browser.newContext({ viewport: { width: vp.w, height: vp.h }, deviceScaleFactor: 2, timezoneId: "America/New_York" });
     const page = await ctx.newPage();
     const now = new Date(cs.when);
@@ -168,6 +202,12 @@ for (const cs of cases) {
     await page.waitForTimeout(1400);
     // settle the charts' entrance (a one-shot sweep that waits to be on screen) before looking
     await page.evaluate(() => typeof finishReveal === "function" && finishReveal());
+    for (const m of await crowded(page)) { failures++; console.log(`!! ${cs.name} at ${vp.w}: ${m}`); }
+    /* the narrowest phone is only measured: its words are the ones that crowd */
+    if (vp.tag === "narrow") {
+      if (errs.length) { failures++; console.log(`!! ${cs.name} ${vp.tag}: ${errs.join(" | ")}`); }
+      await ctx.close(); continue;
+    }
     await page.screenshot({ path: path.join(OUT, `${cs.name}-${vp.tag}.png`), fullPage: vp.tag === "wide" });
 
     if (vp.tag === "phone") {
@@ -193,13 +233,18 @@ for (const cs of cases) {
           feels: document.getElementById("feelsRow")?.hidden ? null : T("feels"),
           chips: [...document.querySelectorAll(".chip")].map(seen),
           nowcast: document.getElementById("nowcast")?.classList.contains("on") ? T("ncText") : null,
-          // the water over the tide chart: the boat's sentence and its colour, the readings, and the
-          // gauge against the table
-          water: document.getElementById("waterRead").hidden ? null : { say: shown("waterSay"),
-            cls: document.getElementById("waterSay").className.replace("say", "").trim() || null, line: shown("waterLine"), level: shown("waterLevel") },
-          // the farm's card, when it is out: its title, its sentence and colour, and the bite line
-          farm: document.getElementById("outSection").hidden ? null : { title: T("outTitle"), say: shown("farmSay"),
-            cls: document.getElementById("farmSay").className.replace("say", "").trim() || null, fish: shown("wFishWrap") },
+          // the water: the note beside its title, and the gauge against the table, said with the chart
+          // and marked by the skiff
+          water: getComputedStyle(document.getElementById("tideSection")).display === "none" ? null : { note: T("tideNote"),
+            level: (document.getElementById("tideSvg").getAttribute("aria-label").match(/Running .+? the tide table\./) || [null])[0],
+            tag: [...document.querySelectorAll("#tideSvg text")].map((x) => x.textContent).find((s) => /^[+−]\d/.test(s)) || null },
+          // the farm's moon: its phase and the almanac's fishing times it speaks
+          moon: document.getElementById("moonSection").hidden ? null : { note: T("moonNote"), said: document.getElementById("moonSvg").getAttribute("aria-label") },
+          // the sentence card, when there is something to say: its title, its sentence and colour
+          card: document.getElementById("sayCard").hidden ? null : { title: T("sayTitle"), say: T("saySay"),
+            cls: document.getElementById("saySay").className.replace("lead", "").trim() || null },
+          // the year at the foot
+          year: document.getElementById("yearSection").hidden ? null : T("yearTitle") + " / " + T("yearNote"),
           // the sun card steps aside when nothing is left today; the bar speaks its reading
           sun: sunOff ? "(steps aside)" : T("uvLead"),
           uvBar: sunOff || document.getElementById("uvDetails")?.style.display === "none"
@@ -257,13 +302,16 @@ for (const cs of cases) {
       if (ex.weekend) { const we = days.filter((d) => d.startsWith("[")).map((d) => d.slice(1, -1));
         if (we.join() !== ex.weekend.join()) fail(`weekend banded ${we.join(" ") || "nowhere"}, expected ${ex.weekend.join(" ")}`); }
       if (ex.note && !ex.note.test(copy.weekNote || "")) fail(`week note "${copy.weekNote}"`);
-      const card = copy.water || copy.farm || {};
+      const card = copy.card || {};
       if ("say" in ex && (card.say ?? null) !== ex.say) fail(`sentence "${card.say}", expected "${ex.say}"`);
       if (ex.sayCls && card.cls !== ex.sayCls) fail(`sentence coloured ${card.cls}, expected ${ex.sayCls}`);
-      if (ex.line && !ex.line.test(copy.water?.line || "")) fail(`water line "${copy.water?.line}"`);
-      if ("level" in ex && (copy.water?.level ?? null) !== ex.level) fail(`level line "${copy.water?.level}", expected "${ex.level}"`);
-      if (ex.farm && copy.farm?.title !== ex.farm) fail(`farm card ${JSON.stringify(copy.farm)}, expected "${ex.farm}"`);
-      if ("fish" in ex && !!copy.farm?.fish !== ex.fish) fail(`bite line "${copy.farm?.fish}"`);
+      if (ex.sayTitle && card.title !== ex.sayTitle.toUpperCase() && card.title !== ex.sayTitle) fail(`sentence card titled "${card.title}", expected "${ex.sayTitle}"`);
+      if (ex.tide && !ex.tide.test(copy.water?.note || "")) fail(`water note "${copy.water?.note}"`);
+      if ("level" in ex && (copy.water?.level ?? null) !== ex.level) fail(`level "${copy.water?.level}", expected "${ex.level}"`);
+      if (ex.level && !copy.water?.tag) fail("the skiff carries no level tag");
+      if (ex.moon && !copy.moon) fail("no moon at the farm");
+      if ("fish" in ex && /none clear/.test(copy.moon?.said || "none clear") === ex.fish) fail(`fishing times "${copy.moon?.said}"`);
+      if (ex.year && !ex.year.test(copy.year || "")) fail(`year "${copy.year}"`);
       if (ex.sun && copy.sun !== ex.sun) fail(`sun card "${copy.sun}", expected "${ex.sun}"`);
       if (ex.uvBar && !ex.uvBar.test(copy.uvBar || "")) fail(`sun bar "${copy.uvBar}"`);
       if ("marine" in ex && marineAsks !== ex.marine) fail(`${marineAsks} marine requests, expected ${ex.marine}`);
@@ -288,11 +336,12 @@ for (const cs of cases) {
   const shell = await page.evaluate(() => ({
     tide: getComputedStyle(document.getElementById("tideSection")).display,
     scene: document.getElementById("sceneSvg").getAttribute("aria-label"),
-    card: document.getElementById("outSection").hidden ? null : document.getElementById("outTitle").textContent,
+    moon: !document.getElementById("moonSection").hidden,
+    year: document.getElementById("yearTitle").textContent,
     // the sun bar is drawn only from a reading, so its scale words go with it
     uvScale: getComputedStyle(document.getElementById("uvDetails")).display,
   }));
-  if (shell.tide !== "none" || !shell.scene.includes("Appalachian") || shell.card !== "The farm" || shell.uvScale !== "none") {
+  if (shell.tide !== "none" || !shell.scene.includes("Appalachian") || !shell.moon || shell.year !== "The year · Beckley" || shell.uvScale !== "none") {
     failures++; console.log(`!! location-correct loading shell: ${JSON.stringify(shell)}`);
   }
   if (errs.length) { failures++; console.log(`!! loading hourly explorer: ${errs.join(" | ")}`); }

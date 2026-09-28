@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v78/);
+  assert.match(worker, /mbwx-shell-v79/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -589,7 +589,8 @@ test("the almanac fishes the farm pond, the coast keeps sunscreen, and Denver dr
   // the farm card gets the windows, each dropped on its own hours (thunder, ice, a gale, a gust
   // the run does not carry). fishLine and farmCard are run under "the water and the farm" below
   assert.match(html, /function fishLine\(h,now\)/);
-  assert.match(html, /id="wFishWrap"/);
+  assert.match(html, /function fishWindows\(h,now\)/);
+  assert.match(html, /if\(LOC\.fish\)renderMoon\(css,farm&&farm\.fish\?fishWindows\(h,now\):\[\]\);/);
   // the ridge sun line states when, never what to wear; the kids' language stays coastal
   assert.match(html, /function ridgeSunLine\(c,dy,h,now\)/);
   assert.match(html, /comfort\?comfortAdvice\(c,h\):LOC\.scene==="ridge"\?ridgeSunLine\(c,dy,h,now\):sunProtectionAdvice\(c,dy,h,now\)/);
@@ -602,10 +603,10 @@ test("the almanac fishes the farm pond, the coast keeps sunscreen, and Denver dr
   assert.match(html, /id="uvDetails"/);
   // the pond dimples during a bite window, off the same moon the card reads
   assert.match(html, /solunarWindows\(now\)\.some\(w=>now>=w\.start&&now<=w\.end\)/);
-  // and the fish bite label says where the bite times come from (the footer used to), on screen
-  // in four words and in full to a screen reader and on hover
-  assert.match(html, /id="wFishWrap"[^>]*title="Bite windows: solunar tables, computed from the moon\."/);
-  assert.match(html, /fish bite · by the moon<span class="sr-only">\. Bite windows: solunar tables, computed from the moon\.<\/span>/);
+  // and the title says whose theory the times are (the footer used to), on screen as the almanac's,
+  // and in full to a screen reader and on hover; the chart speaks its windows
+  assert.match(html, /<b title="The almanac's solunar tables: its theory, worked out from the moon's real positions\.">Almanac fishing times<span class="sr-only">\. The almanac's solunar tables: its theory, worked out from the moon's real positions\.<\/span><\/b><span id="moonNote"><\/span>/);
+  assert.match(html, /The almanac's fishing times: \$\{said\.length\?said\.join\(", "\):"none clear"\}/);
 });
 
 test("golden hour reaches the whole page, and the two ends differ", async () => {
@@ -865,9 +866,9 @@ test("the sun card says it with the bar, and steps aside when today has nothing 
   assert.match(html, /svg\.setAttribute\("aria-label",sentence\(\[pin\?`UV \$\{shown\.toFixed\(1\)\} now, \$\{UV_BANDS\[band\]\}`:"UV today",\n\s*uvI>=0\?`peaking at \$\{\(\+h\.uv\[uvI\]\)\.toFixed\(1\)\} around \$\{spokenAt\(h\.time\[uvI\]\)\}`:null\]/);
   // the loading and error shell draw no bar, so the scale words go with it
   assert.match(html.slice(html.indexOf("function paintLoadingState("), html.indexOf("function setLoc(")), /document\.getElementById\("uvDetails"\)\.style\.display="none";/);
-  // the charts' pen draws it in: one-shot, only on screen, never under reduced motion, and last
-  // in page order, so it follows whichever chart above it is still drawing
-  assert.match(html, /sun:\{state:PRM\?"done":"armed",seen:false,anims:\[\]\}\};/);
+  // the charts' pen draws it in: one-shot, only on screen, never under reduced motion, and in page
+  // order, so it follows whichever chart above it is still drawing, and the year follows it
+  assert.match(html, /sun:\{state:PRM\?"done":"armed",seen:false,anims:\[\]\},year:\{state:PRM\?"done":"armed",seen:false,anims:\[\]\}\};/);
   assert.match(html, /revealChart\("sun",svg,\{xa:0,xb:xe,/);
   assert.match(html, /case "boat":case "pin":run\(/);
   // the lit stretch is a stroke under a still clip: the WebKit-safe wipe
@@ -1112,7 +1113,10 @@ test("tide chart reads as depth over the bottom", async () => {
   const html = await readFile(new URL("index.html", root), "utf8");
 
   // height is measured up from the chart datum, never autoscaled to the window
-  assert.match(html, /const hiV=Math\.max\(\.\.\.vs\),base=Math\.min\(0,\.\.\.vs\)/);
+  // measured up from the chart datum, and the gauge's water now is on the same scale: a skiff lifted
+  // or lowered by it is drawn at its true height, never pinned to an edge, with a label's height of
+  // sky over a lifted one, and water under the hull of a lowered one
+  assert.match(html, /const wNow=interp\(now\.getTime\(\)\)\+\(gap\|\|0\);\n  const hiV=Math\.max\(\.\.\.vs,wNow\),base=Math\.min\(0,\.\.\.vs,gap<0\?wNow-\(hiV-wNow\)\*\.12:wNow\);\n  const vTop=hiV\+Math\.max\(\.5,\(hiV-base\)\*\.2\)\+\(gap>0\?1:0\);/);
   assert.match(html, /seaY=H-34/);
   // the old top rail with a height printed beside every extreme is gone
   assert.doesNotMatch(html, /labelRailY/);
@@ -1120,14 +1124,26 @@ test("tide chart reads as depth over the bottom", async () => {
   // lows share one aligned row, and the skiff rocks with the chop
   assert.match(html, /lowY=H-9/);
   assert.match(html, /rockDeg=clamp\(2\.2\+g0\*\.13/);
-  assert.match(html, /renderTides\(d\.tides,css,c\.wind_gusts_10m,c\.wind_speed_10m\)/);
+  assert.match(html, /const tide=renderTides\(d\.tides,css,c\.wind_gusts_10m,c\.wind_speed_10m,levelFeet\(d\.water,now\)\);/);
+  // the skiff floats at the water that is there: the gauge's gap over the table, with the table
+  // marked under it and the gap said beside the boat. A passed high under a lifted skiff gives way
+  assert.match(html, /function renderTides\(preds,css,gust,wind,gap=0\)\{/);
+  assert.match(html, /nyT=Y\(interp\(now\.getTime\(\)\)\),ny=Y\(wNow\);/);
+  assert.match(html, /const tagTxt=gap\?`\$\{gap>0\?"\+":"−"\}\$\{Math\.abs\(gap\)\} ft`:""/);
+  // the tag is part of the boat for the labels, no label is set above the chart, and the gap's
+  // marks arrive with the skiff in the entrance
+  assert.match(html, /const onBoat=high&&lx<tagR&&lx\+lw>nx-23&&y-6>ny-22;/);
+  assert.match(html, /y="\$\{\(high\?Math\.max\(12\*fs,y-lift\):lowY\)\.toFixed\(1\)\}"/);
+  assert.match(html, /\$\{gap\?`<g\$\{rvAt\(nx,"fade"\)\}><line/);
+  assert.match(html, /if\(onBoat&&gap&&tm<now\.getTime\(\)\)continue;/);
   // the skiff's burgee flies on the real wind: limp in calm air, level by 15 mph, and the
   // gusts above the wind set its flutter; reduced motion holds the wind's angle, still
   assert.match(html, /const w0=Number\(wind\)\|\|0,flagDeg=-35\*\(1-clamp\(w0\/15,0,1\)\);/);
   assert.match(html, /const flutter=clamp\(1\.2\+\(g0-w0\)\*\.35,1\.2,6\)/);
   assert.match(html, /\$\{PRM\?`transform:rotate\(\$\{flagDeg\.toFixed\(1\)\}deg\)`/);
-  // the taller skiff: a high label steps over it sooner and higher
-  assert.match(html, /const onBoat=high&&lx<nx\+19&&lx\+lw>nx-23&&y-6>ny-22;/);
+  // the taller skiff: a high label steps over it sooner and higher, and over its gauge tag too
+  // (tagR is the boat's own right edge, 19px, when there is no tag)
+  assert.match(html, /tagR=gap\?nx\+24\*fs\+tagTxt\.length\*10\.5\*fs\*\.6\+2:nx\+19;/);
   assert.match(html, /const lift=onBoat\?Math\.max\(9,26-\(ny-y\)\):9;/);
   assert.match(html, /const chartH=w=>Math\.round\(152\+\(760-w\)\*\.09\)/);
   assert.match(html, /Ht=chartH\(W\)-22/);
@@ -1214,12 +1230,15 @@ test("light, motion and alerts stay tuned", async () => {
   assert.match(html, /\.gold-key\{/);
   assert.doesNotMatch(html, /Golden Hour is /);
   assert.doesNotMatch(html, /Tomorrow morning's Golden Hour runs /);
-  // the water is named for where every reading under it comes from, all year, and the farm for the
-  // farm. The parked trip has no card of its own
+  // the water is named for where every reading under it comes from, all year; the farm's wave is
+  // the almanac's, and says so; the week is this week; the year names the airport its normals are
+  // from. The parked trip has no card of its own
   assert.match(html, /<b>Water · Wrightsville Beach<\/b>/);
-  assert.doesNotMatch(html, /On the water · Mason Inlet|Tide · Wrightsville Beach/);
-  assert.match(html, /outTitle:"The farm"/);
-  assert.doesNotMatch(html.slice(html.indexOf("  den:{"), html.indexOf("const LOC_ORDER=")), /outTitle/);
+  assert.doesNotMatch(html, /On the water · Mason Inlet|Tide · Wrightsville Beach|<b>The week<\/b>/);
+  assert.match(html, /<b>This week<\/b>/);
+  assert.match(html, />Almanac fishing times<span class="sr-only">/);
+  assert.doesNotMatch(html, /fish bite · by the moon|outTitle/);
+  assert.match(html, /\{title:"Piddling",\.\.\.farm\.say\}/);
 });
 
 
@@ -1250,7 +1269,7 @@ test("the water and the farm say what is there, and nothing is scored or picked"
   const bite = [{ start: new Date("2026-08-02T15:30"), end: new Date("2026-08-02T17:30") },
     { start: new Date("2026-08-02T21:30"), end: new Date("2026-08-02T22:30") }];
   const ctx = vm.createContext({ solunarWindows: () => bite });
-  const start = html.indexOf('const known=v=>v!=null&&v!==""'), end = html.indexOf("const paintSay=");
+  const start = html.indexOf('const known=v=>v!=null&&v!==""'), end = html.indexOf("function dayStory(");
   assert.ok(start > 0 && end > start, "the water and the farm are one block");
   vm.runInContext([
     lift(/const LOCS=\{[\s\S]*?\n\};/),
@@ -1262,11 +1281,13 @@ test("the water and the farm say what is there, and nothing is scored or picked"
     lift(/const spokenAt=t=>[^\n]*;/),
     lift(/const sentence=s=>[^\n]*;/),
     html.slice(start, end),
-    "Object.assign(globalThis,{coveredHours,waterGrade,waterTemp,levelGap,waterCard,fishLine,farmCard,LOCS});",
+    html.slice(html.indexOf("const NORMALS={"), html.indexOf("function renderYear(")),
+    lift(/const moonName=m=>\{[\s\S]*?\};/),
+    "Object.assign(globalThis,{coveredHours,waterGrade,waterTemp,levelGap,levelFeet,waterCard,waterNote,fishLine,fishWindows,farmCard,LOCS,NORMALS,yearCompare,doyOf,moonName});",
   ].join("\n"), ctx);
   // what the context returns is made again on this side, so deepEqual compares values, not realms
   const own = (r) => r == null || typeof r !== "object" ? r : JSON.parse(JSON.stringify(r));
-  const W = Object.fromEntries(["coveredHours", "waterGrade", "waterTemp", "levelGap", "waterCard", "fishLine", "farmCard"].map((k) => [k, (...a) => own(ctx[k](...a))]));
+  const W = Object.fromEntries(["coveredHours", "waterGrade", "waterTemp", "levelGap", "levelFeet", "waterCard", "waterNote", "fishLine", "farmCard", "yearCompare", "moonName"].map((k) => [k, (...a) => own(ctx[k](...a))]));
   const p = (v) => String(v).padStart(2, "0");
   const key = (d) => `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:00`;
   // a run of hours from `from`, each reading a constant or a function of (index, hour)
@@ -1316,6 +1337,10 @@ test("the water and the farm say what is there, and nothing is scored or picked"
   assert.equal(W.levelGap(gauge(2, { n: 2 }), now), null, "two readings are too thin");
   assert.equal(W.levelGap(gauge(2, { noPred: true }), now), null, "no table to read it against");
   assert.equal(W.levelGap(gauge(7), now), null, "six feet off is the sensor");
+  // and the same gap as a number, for the skiff to float at, signed and to the half foot
+  assert.deepEqual([1.97, .6, -1.3, .4, 7].map((g) => W.levelFeet(gauge(g), now)), [2, .5, -1.5, null, null]);
+  assert.deepEqual([W.levelFeet(gauge(-1.25), now), W.levelGap(gauge(-1.25), now)], [-1.5, "Running 1.5 ft below the tide table."], "a tie rounds the same on the chart and in the sentence");
+  assert.equal(W.levelFeet(gauge(2, { age: 40 }), now), null);
 
   // Off season (and the boat season is off until Josh says) nothing is graded or coloured: the seas
   // are the hour now is in, the water is the station's, and whatever the wind does is the chip's.
@@ -1329,6 +1354,12 @@ test("the water and the farm say what is there, and nothing is scored or picked"
   assert.equal(W.waterCard(ctx.LOCS.mb, run("2026-08-02T13:00"), c, aug, mt((i) => i === 13 ? 3.6 : 1), null, null, false, now).line[0].value, "4 ft", "the hour now is in");
   assert.equal(W.waterCard(ctx.LOCS.mb, run("2026-08-02T13:00"), c, aug, { wave_height_max: 2.4 }, null, null, false, now).line, null, "an old cache's seas are not borrowed");
 
+  // the note beside the water's title is the water temperature and the seas; without them the turn
+  assert.equal(W.waterNote(off, null), "77° · seas ~2 ft");
+  assert.equal(W.waterNote({ line: [{ label: "seas", value: "under 1 ft" }] }, null), "seas under 1 ft");
+  assert.equal(W.waterNote({ line: [{ label: "gusts to", value: 24 }, { label: "seas", value: "unavailable" }, { label: "water", value: "61°" }] }, null), "61° · seas unavailable", "the gust is the chip's");
+  assert.equal(W.waterNote(null, { rising: true, note: "high 8:28p" }), "rising · high 8:28p");
+  assert.equal(W.waterNote(null, null), "");
   // With the season switched on, the boat's sentence speaks for the rest of today's daylight.
   const boat = { ...ctx.LOCS.mb, boatSeason: ["03-15", "10-31"] };
   const card = (o = {}, x = {}) => W.waterCard(boat, run(x.from || "2026-08-02T13:00", o), { ...c, ...x.c }, aug,
@@ -1501,21 +1532,65 @@ test("the water and the farm say what is there, and nothing is scored or picked"
   assert.deepEqual(fsay({ feels: (i, hr) => hr >= 7 && hr <= 9 ? 33 : 45 }, { from: "2026-10-22T19:00", now: "2026-10-22T19:30", dy: oct, c: { apparent_temperature: 44 } })[0],
     "Cold one tomorrow. Bundle up for the morning rounds.");
   assert.deepEqual(fsay({ feels: 30 }, { ...cold, from: "2026-10-22T13:00", now: "2026-10-22T13:20" })[0], null, "the afternoon has no morning rounds in it");
-  const farmSrc = html.slice(html.indexOf("function farmCard("), html.indexOf("const paintSay="));
+  const farmSrc = html.slice(html.indexOf("function farmCard("), html.indexOf("function waterNote("));
+  assert.ok(farmSrc.length > 500 && farmSrc.length < 9000, "the farm card is read on its own");
   assert.doesNotMatch(farmSrc, /"go"/, "the farm never says go");
 
   // render() paints what the two cards say and nothing of its own, the water before the chart is drawn,
   // and the cards hear what the headline has already named
   assert.match(html, /const water=LOC\.tide\?waterCard\(LOC,h,c,dy,m,d\.water,warning,storm,now,dayRead\.told\):null;/);
-  assert.ok(html.indexOf("const water=LOC.tide?waterCard(") < html.indexOf("if(LOC.tide)renderTides("), "the chart's entrance measures the water where it stays");
+  assert.ok(html.indexOf("const water=LOC.tide?waterCard(") < html.indexOf("const tide=renderTides("), "the note and the level are known before the chart is drawn");
   assert.match(html, /const farm=LOC\.kind==="farm"\?farmCard\(LOC,h,c,dy,warning,storm,now,dayRead\.told\):null;/);
-  // the title is painted on every render: a cached farm paint after a trip to the coast came up blank
-  assert.match(html, /document\.getElementById\("outTitle"\)\.textContent=LOC\.outTitle\|\|"";\n/);
-  assert.ok(html.indexOf('getElementById("outTitle").textContent=LOC.outTitle||""') < html.indexOf("function paintLocationShell("), "render paints it, not only the shell");
-  assert.match(html, /document\.getElementById\("outSection"\)\.hidden=!farm\|\|!farm\.say&&!farm\.fish;/);
-  assert.match(html, /document\.getElementById\("waterRead"\)\.hidden=!water\|\|!water\.say&&!water\.line&&!water\.level;/);
-  assert.match(html, /<div class="eyebrow"><b>Water · Wrightsville Beach<\/b><span id="tideNote">/);
-  assert.match(html, /outTitle:"The farm"/);
+  // one shape for every section: nothing between a title and its chart. The water's readings are
+  // its note and the level is on the chart, and said to a screen reader with it
+  assert.match(html, /<div class="eyebrow"><b>Water · Wrightsville Beach<\/b><span id="tideNote">[^<]*<\/span><\/div>\n  <div class="tide-explore"/);
+  assert.match(html, /document\.getElementById\("tideNote"\)\.textContent=tide\?waterNote\(water,tide\):\[waterNote\(water,null\),"tide data unavailable"\]\.filter\(Boolean\)\.join\(" · "\);/);
+  assert.match(html, /tide\?"Tide curve, next 27 hours"\+\(water&&water\.level\?"\. "\+water\.level:""\):"Tide data unavailable"/);
+  // the loading shell's empty pictures say what they will be, never the last place's
+  const shell = html.slice(html.indexOf("function paintLocationShell("), html.indexOf("function paintLoadingState("));
+  for (const s of ['"tideSvg").setAttribute("aria-label","Tide curve, next 27 hours")', '"moonSvg").setAttribute("aria-label","The moon over the next day and a half, and the almanac\'s fishing times")', '"yearSvg").setAttribute("aria-label","Normal highs and lows by month")'])
+    assert.ok(shell.includes(s), `the shell resets ${s}`);
+  // the moon's labels are placed, majors first, and one that would touch a label down gives way
+  assert.match(html, /for\(const mk of\[\.\.\.marks\.filter\(m=>m\.major\),\.\.\.marks\.filter\(m=>!m\.major\)\]\)\{\n    if\(placed\.some\(p=>Math\.abs\(p\.x-mk\.x\)<p\.hw\+mk\.hw\)\)continue;/);
+  assert.doesNotMatch(html, /id="waterRead"|id="waterLine"|id="waterLevel"|id="wFishWrap"/);
+  // the farm's wave is the moon, where the tide is at the coast; the sentences are one card, the
+  // farm's under the family's word and the boat's while the boat is out, painted on every render
+  assert.match(html, /<section id="moonSection" hidden>\n  <div class="eyebrow"><b[^>]*>Almanac fishing times/);
+  assert.match(html, /document\.getElementById\("moonSection"\)\.hidden=!LOC\.fish;/);
+  assert.match(html, /const said=farm&&farm\.say\?\{title:"Piddling",\.\.\.farm\.say\}:water&&water\.say\?\{title:"The boat",\.\.\.water\.say\}:null;/);
+  assert.match(html, /document\.getElementById\("sayCard"\)\.hidden=!said;/);
+  assert.match(html, /if\(said\)\{document\.getElementById\("sayTitle"\)\.textContent=said\.title;/);
+  // the moon's phase, said the way a person says it
+  assert.deepEqual([[.01, .02], [.99, .5], [.5, .25], [.5, .75], [.3, .2], [.3, .8], [.8, .4], [.8, .6]].map(([f, p]) => W.moonName({ fraction: f, phase: p })),
+    ["new moon", "full moon", "first quarter", "last quarter", "waxing crescent", "waning crescent", "waxing gibbous", "waning gibbous"]);
+
+  // The year: NOAA's 1991-2020 normals at the two airports, as published
+  const Nm = ctx.NORMALS.mb, Ns = ctx.NORMALS.sp;
+  assert.deepEqual([Nm.place, Nm.hi[6], Nm.lo[0], Nm.rain[8], Ns.place, Ns.hi[6], Ns.lo[0], Ns.snow[0]], ["Wilmington", 90, 36.3, 8.69, "Beckley", 80.7, 24, 15.5]);
+  assert.deepEqual([Nm.dhi.length, Ns.dlo.length, Nm.dhi[0], Ns.dlo[365]], [366, 366, 577, 253], "daily normals in tenths, a leap year's days");
+  assert.deepEqual(["2026-01-01", "2026-02-28", "2026-03-01", "2026-12-31"].map((s) => ctx.doyOf(s)), [0, 58, 60, 365]);
+  // this week against them: the days' middle temperatures against each day's normal
+  const wk = (hi, lo, from = "2026-09-27") => { const t0 = new Date(from + "T12:00"), time = Array.from({ length: 8 }, (_, i) => { const d = new Date(t0.getTime() + i * 864e5); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; });
+    return { time, temperature_2m_max: time.map(() => hi), temperature_2m_min: time.map(() => lo) }; };
+  const normalMid = (N, from) => { const d = wk(0, 0, from).time.slice(0, 7); return d.reduce((s, x) => s + (N.dhi[ctx.doyOf(x)] + N.dlo[ctx.doyOf(x)]) / 20, 0) / 7; };
+  const mid = normalMid(Nm, "2026-09-27");
+  assert.equal(W.yearCompare(Nm, wk(mid + 7, mid + 5)).note, "6° warmer this week");
+  assert.equal(W.yearCompare(Nm, wk(mid - 3, mid - 7)).note, "5° cooler this week");
+  assert.equal(W.yearCompare(Nm, wk(mid + 3.5, mid - 1.5)).note, "a normal week", "under 3° either way is normal");
+  assert.equal(W.yearCompare(Nm, wk(mid + 2.5, mid - 2.5)).note, "a normal week");
+  assert.equal(W.yearCompare(Nm, wk(mid + 5.5, mid - .5)).note, "3° warmer this week", "2.5 rounds up the same either way");
+  assert.equal(W.yearCompare(Nm, wk(mid - .5, mid - 5.5)).note, "3° cooler this week");
+  assert.equal(W.yearCompare(Nm, { time: [] }), null);
+  assert.equal(W.yearCompare(Nm, { time: ["2026-09-27"], temperature_2m_max: [null], temperature_2m_min: [60] }), null, "a missing reading is not a normal one");
+  // Christmas week at Beckley reads December and January's own days, not a month held flat
+  const xmas = normalMid(Ns, "2026-12-22");
+  assert.equal(W.yearCompare(Ns, wk(xmas + 1, xmas - 1, "2026-12-22")).note, "a normal week");
+  assert.ok(Math.abs(xmas - (42.2 + 26.4) / 2) < 1.5, `late December's normal mid at Beckley is about 34°, not ${xmas.toFixed(1)}`);
+  // and the year is drawn off them: one scale at both places, the wrap, the pin, the months
+  assert.match(html, /const tMin=Math\.min\(20,cmp\?cmp\.wkLo-3:99\),tMax=Math\.max\(95,cmp\?cmp\.wkHi\+3:0\);/);
+  assert.match(html, /const wrap=a=>\[\[X\(-1\),Y\(a\[11\]\)\],\.\.\.a\.map\(\(t,i\)=>\[X\(i\),Y\(t\)\]\),\[X\(12\),Y\(a\[0\]\)\]\];/);
+  assert.match(html, /const N=NORMALS\[LOC\.id\];\n  document\.getElementById\("yearSection"\)\.hidden=!N;\n  if\(N\)renderYear\(N,dy,css\);/);
+  assert.match(html, /<span\$\{i===m0\?' class="yr-now"':""\}>/);
   // the seas are asked for every day of the year, hour by hour for two days, and the station's own
   // thermometer and gauge beside the table they are read against
   assert.match(html, /L\.marine\?fetchJSON\(`https:\/\/marine-api\.open-meteo\.com\/v1\/marine\?[^`]*&hourly=wave_height&[^`]*&forecast_days=2&length_unit=imperial`/);
@@ -1596,15 +1671,18 @@ test("the page reads top down: now, today, the week, and nothing it has already 
   // The first screen is now, the next day and the week, because the weekend is what the family
   // looks for. The week moved up from the foot of the page to sit right under the hours.
   const at = (s) => { const i = html.indexOf(s); assert.ok(i > 0, `${s} should be in the markup`); return i; };
-  const order = ['<header class="sky"', "<b>Next 24 hours</b>", '<div class="week">', '<section id="outSection"', '<section id="tideSection">',
-    '<section id="stormSection"', '<div class="cards">', '<p class="foot">'].map(at);
+  // Every section is one shape (a title with one short note, the picture, its labels) and both
+  // places run in the same order: the moon at the farm sits where the tide sits at the coast, the
+  // sentences are cards, and the year is at the foot
+  const order = ['<header class="sky"', "<b>Next 24 hours</b>", '<div class="week">', '<section id="moonSection"', '<section id="tideSection">',
+    '<section id="stormSection"', '<div class="cards">', '<div class="card wide" id="sayCard"', '<div class="card" id="sunCard">', '<section id="yearSection"', '<p class="foot">'].map(at);
   assert.deepEqual([...order].sort((a, b) => a - b), order, "sections run in page order");
   assert.match(html, /\.week\{padding:28px 20px 0\}/);
   // and the charts draw in down the page in the same order: REVEAL's keys are that order, and
   // each chart follows whichever chart above it is still drawing
-  assert.match(html, /const REVEAL=\{hourly:\{[^}]*\},week:\{[^}]*\},\n  tide:\{[^}]*\},sun:\{[^}]*\}\};/);
+  assert.match(html, /const REVEAL=\{hourly:\{[^}]*\},week:\{[^}]*\},\n  tide:\{[^}]*\},moon:\{[^}]*\},\n  sun:\{[^}]*\},year:\{[^}]*\}\};/);
   assert.match(html, /const order=Object\.keys\(REVEAL\);\n  for\(const u of order\.slice\(0,order\.indexOf\(k\)\)\)if\(REVEAL\[u\]\.state==="running"\)t0=Math\.max\(t0,REVEAL\[u\]\.t0\+420\);/);
-  assert.match(html, /const RV_OF=\{hourlySvg:"hourly",weekSvg:"week",tideSvg:"tide",uvSvg:"sun"\};/);
+  assert.match(html, /const RV_OF=\{hourlySvg:"hourly",weekSvg:"week",tideSvg:"tide",moonSvg:"moon",uvSvg:"sun",yearSvg:"year"\};/);
   assert.match(html, /for\(const id in RV_OF\)io\.observe\(document\.getElementById\(id\)\)/);
   // and a chart the live paint has just pushed below the fold is measured again, not drawn to
   // nobody, once the layout has settled. The measurement never clears the observer's word: a
@@ -1612,10 +1690,8 @@ test("the page reads top down: now, today, the week, and nothing it has already 
   assert.match(html, /function revealTry\(k,settled\)\{/);
   assert.match(html, /if\(!\(b\.height>0&&Math\.min\(b\.bottom,innerHeight\)-Math\.max\(b\.top,0\)>=b\.height\*\.3\)\)\{if\(!settled\)requestAnimationFrame\(\(\)=>revealTry\(k,true\)\);return\}/);
   assert.doesNotMatch(html.slice(html.indexOf("function revealTry("), html.indexOf("function revealApply(")), /R\.seen=false/);
-  assert.ok(html.indexOf("renderWeek(wk,css,we);") > 0 && html.indexOf("renderWeek(wk,css,we);") < html.indexOf("if(LOC.tide)renderTides("),
-    "the week is armed before the tide, or the tide would not see it running");
-  assert.ok(html.indexOf("if(LOC.tide)renderTides(") < html.indexOf("if(uvBar)renderUV("),
-    "the sun bar is armed after the tide, or it would not see the tide running");
+  const armed = ["renderWeek(wk,css,we);", "const tide=renderTides(d.tides", "if(LOC.fish)renderMoon(", "if(uvBar)renderUV(", "if(N)renderYear(N,dy,css);"].map(at);
+  assert.deepEqual([...armed].sort((a, b) => a - b), armed, "each chart is armed after the ones above it, or it would not see them running");
 
   // The wind chip is the speed and an arrow into the wind; the compass point is only spoken,
   // and calm air gets no arrow at all, though gusts running 6 over it are still said (the
@@ -1818,21 +1894,29 @@ test("the copy harness keeps looking at the days the water, the farm and the wee
   assert.match(shots, /on = src\.replace\("boatSeason:null", 'boatSeason:\["03-15","10-31"\]'\)/);
   assert.match(shots, /if \(on === src\) errs\.push\("no boatSeason:null to switch on"\)/);
   // and each says what it is there to show, so the harness fails when it stops showing it
-  assert.match(shots, /expect: \{ cols: 8, weekend: \["Sat", "Sun"\], farm: "The farm", say: null, fish: true \}/);
-  assert.match(shots, /expect: \{ cols: 7, weekend: \["Today", "Sun"\], note: \/\^Sun \\d\+° 45% rain\$\/, say: "Easy out there\.", sayCls: "go"/);
-  assert.match(shots, /say: "Too windy for the boat\.", sayCls: "no"/);
-  assert.match(shots, /say: "Seas unavailable\.", sayCls: "caution", line: \/\^gusts to \\d\+ · water 77°\$\//);
-  assert.match(shots, /level: "Running 2 ft above the tide table\."/);
-  assert.match(shots, /say: null, line: \/\^seas about 2 ft · water 63°\$\/, level: null, marine: 1/);
-  assert.match(shots, /say: "Cold one\. Bundle up for the morning rounds\.", sayCls: "caution", fish: true/);
-  assert.match(shots, /say: null, line: \/\^seas about 2 ft\$\/, sun: "\(steps aside\)", marine: 1/);
+  assert.match(shots, /expect: \{ cols: 8, weekend: \["Sat", "Sun"\], moon: true, say: null, fish: true \}/);
+  assert.match(shots, /expect: \{ cols: 7, weekend: \["Today", "Sun"\], note: \/\^Sun \\d\+° 45% rain\$\/, sayTitle: "The boat", say: "Easy out there\.", sayCls: "go"/);
+  assert.match(shots, /sayTitle: "The boat", say: "Too windy for the boat\.", sayCls: "no"/);
+  assert.match(shots, /sayTitle: "The boat", say: "Seas unavailable\.", sayCls: "caution", tide: \/\^77°\$\//);
+  assert.match(shots, /tide: \/\^77° · seas ~2 ft\$\/, level: "Running 2 ft above the tide table\."/);
+  // the water blown out under the table, and every chart's words kept on the chart, off each other and off the bed
+  assert.match(shots, /surge: -1\.6, waterTemp: 48,/);
+  assert.match(shots, /level: "Running 1\.5 ft below the tide table\."/);
+  assert.match(shots, /\["tideSvg", "moonSvg", "yearSvg"\]/);
+  assert.match(shots, /\{ w: 320, h: 1500, tag: "narrow" \}/);
+  assert.match(shots, /runs into/);
+  assert.match(shots, /sits on the bed/);
+  assert.match(shots, /if \(ex\.level && !copy\.water\?\.tag\) fail\("the skiff carries no level tag"\)/);
+  assert.match(shots, /say: null, tide: \/\^63° · seas ~2 ft\$\/, level: null, marine: 1/);
+  assert.match(shots, /moon: true, sayTitle: "Piddling", say: "Cold one\. Bundle up for the morning rounds\.", sayCls: "caution", fish: true, year: /);
+  assert.match(shots, /say: null, tide: \/\^seas ~2 ft\$\/, sun: "\(steps aside\)", marine: 1/);
   // a sunscreen sentence over a LOW pin keeps the ring of the moderate peak still to come
   assert.match(shots, /sun: "Sunscreen if you're out a while\.", uvBar: \/\^UV 2\\\.9 now, low, peaking at 3\\\.1 around 12 p\\\.m\\\.\$\//);
   assert.match(shots, /if \(ex\.uvBar && !ex\.uvBar\.test\(copy\.uvBar \|\| ""\)\) fail\(/);
   assert.match(shots, /if \(r\.url\(\)\.includes\("marine-api\.open-meteo\.com"\)\) marineAsks\+\+;/);
   // the readout prints what is seen: the compass point and the bite framing are spoken only
   assert.match(shots, /k\.querySelectorAll\("\.sr-only"\)\.forEach\(\(x\) => x\.remove\(\)\)/);
-  for (const sel of ['shown("waterSay")', 'shown("waterLine")', 'shown("waterLevel")', 'shown("farmSay")', 'shown("wFishWrap")', '"sunCard"', 'T("eveLead")', 'T("weekNote")'])
+  for (const sel of ['T("tideNote")', 'getElementById("tideSvg").getAttribute("aria-label")', 'T("moonNote")', 'T("sayTitle")', 'T("saySay")', 'T("yearNote")', '"sunCard"', 'T("eveLead")', 'T("weekNote")'])
     assert.ok(shots.includes(sel), `the copy readout reads ${sel}`);
   // the fixtures serve the eight days the week needs, two days of hourly seas, and the station's
   // thermometer and gauge beside the table
