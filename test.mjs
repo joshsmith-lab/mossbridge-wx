@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v80/);
+  assert.match(worker, /mbwx-shell-v81/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 
@@ -122,7 +122,9 @@ test("loading, cached data and the hourly explorer tell the truth", async () => 
   assert.match(html, /box\.addEventListener\("pointercancel",e=>\{if\(e\.pointerId!==X\.ptr\)return;drop\(\);xpHide\(X\)\}\);/);
   assert.match(html, /<input class="xp-key" type="range" min="0" max="0" step="1" value="0" disabled aria-label="Next 24 hours, hour by hour">/);
   assert.doesNotMatch(html, /HOURLY_PEEK|TIDE_PEEK|setupHourlyPeek|setupTidePeek|PeekLive|hourly-cursor|tide-cursor/);
-  assert.match(html, /\.hourly-scroll\{margin:0;padding:0;overflow:hidden\}/);
+  // clipped sideways only (hidden where clip is not known), so the chart never scrolls across and a
+  // pill lifted clear of its ring is not cut off at the top
+  assert.match(html, /\.hourly-scroll\{margin:0;padding:0;overflow:hidden;overflow:clip visible\}/);
   assert.match(html, /\.hourly-inner\{min-width:0;width:100%/);
   assert.match(html, /viewBox="0 0 700 160"/);
   assert.match(html, /const trendTemp=h\.temp\.map/);
@@ -2026,12 +2028,43 @@ test("every line reads the same way: one machine, and readers that say only what
   assert.match(html, /Math\.abs\(dx\)>=XP_SLOP&&Math\.abs\(dx\)>Math\.abs\(dy\)/);
   assert.match(html, /const XP=\{\},XP_HOLD=140,XP_LINGER=2200,XP_SLOP=6,XP_SNAP=7,DRY_UNDER=5,WINDY_GUST=28;/);
   assert.match(html, /box\.setPointerCapture\(e\.pointerId\)/);
+  // a finger that has moved is not holding still, so a slow scroll never pops a reading, and a
+  // finger that moved and came back is not a tap
+  assert.match(html, /if\(!X\.slide&&!X\.held&&Math\.hypot\(dx,dy\)>=XP_SLOP\)\{clearTimeout\(X\.holdT\);X\.moved=true\}/);
+  // a finger that stops a gliding page is not a tap on the chart under it
+  assert.match(html, /addEventListener\("scroll",\(\)=>\{XP_SCROLLED=performance\.now\(\)\},\{passive:true\}\);/);
+  assert.match(html, /X\.fling=performance\.now\(\)-XP_SCROLLED<50;/);
+  assert.match(html, /if\(!slid&&!held&&!moved&&!X\.fling\)xpShow\(X,xpIndex\(X,e\.clientX\)\);/);
+  // a tap leaves :hover stuck on a phone, so only a mouse's hover holds a reading through a repaint
+  assert.match(html, /const held=X\.ptr!=null\|\|X\.mouse&&X\.box\.matches\(":hover"\)\|\|X\.key&&document\.activeElement===X\.key;/);
+  assert.match(html, /X\.mouse=e\.pointerType==="mouse";/);
+  // a finger that landed a moment before a repaint keeps its press
+  assert.match(html, /if\(same&&X\.ptr!=null&&!X\.shown\)\{xpRest\(X\);return\}/);
+  // the week's guard eats the click a slide left behind, and a new press spends it
+  assert.match(html, /if\(pick\)X\.end=-Infinity;/);
+  // a mouse press let go off the chart is let go here too
+  assert.match(html, /if\(X\.ptr!=null&&!\(e\.buttons&1\)\)drop\(\);/);
+  assert.match(html, /box\.addEventListener\("pointerleave",e=>\{if\(e\.pointerType!=="mouse"\)return;X\.mouse=false;if\(X\.ptr!=null&&!X\.slide\)drop\(\);if\(X\.ptr==null\)xpHide\(X\)\}\);/);
 
   // Keyboard and screen reader: a real range input is the one tab stop, and its value is the sentence
   const show = html.slice(html.indexOf("function xpShow("), html.indexOf("function xpHide("));
   assert.match(show, /X\.key\.setAttribute\("aria-valuetext",r\.said\)/);
   assert.match(show, /revealFinish\(X\.k\);/, "a chart still drawing in finishes before a ring rides it");
   assert.doesNotMatch(show, /style\.left/, "the pill moves by transform");
+  // the value and its sentence go back to the start together, and a chart not drawn has no sentence
+  assert.match(html, /const xpRest=X=>\{if\(!X\.key\|\|!X\.D\)return;X\.key\.value=X\.D\.start;X\.key\.setAttribute\("aria-valuetext",X\.D\.read\(X\.D\.start\)\.said\)\};/);
+  const hide = html.slice(html.indexOf("function xpHide("), html.indexOf("function xpPublish("));
+  assert.match(hide, /if\(document\.activeElement!==X\.key\)xpRest\(X\);/);
+  assert.match(html, /key\.addEventListener\("blur",\(\)=>\{xpHide\(X\);if\(X\.D\)xpRest\(X\)\}\);/);
+  assert.match(html, /if\(!D\)\{drop0\(X\);if\(X\.key\)\{X\.key\.value=0;X\.key\.removeAttribute\("aria-valuetext"\)\}return\}/);
+  // the pill rises clear of the point it reads, by transform, and a missing daily high has no ring
+  assert.match(show, /X\.peek\.style\.setProperty\("--xp-y",Math\.min\(0,ry-ph\)\.toFixed\(1\)\+"px"\);/);
+  assert.match(css, /\.xp-peek\{[^}]*transform:translate\(calc\(var\(--xp-x,50%\) - 50%\),var\(--xp-y,0px\)\);/);
+  assert.match(html, /y:days\.map\(\(_,i\)=>\[xpFin\(his\[i\]\)\?Y\(his\[i\]\):NaN,xpFin\(los\[i\]\)\?Y\(los\[i\]\):NaN\]\)/);
+  // the hour beside NOW gives way to it on the axis, and the now pill reads the live thunder
+  assert.match(html, /\$\{i===nowI\?"NOW":i%3===0&&Math\.abs\(i-nowI\)>1\?hh\(h\.time\[i\]\):""\}/);
+  assert.match(html, /hLive=liveHour\(h,c\.weather_code,nowI\);/);
+  assert.match(html, /read:i=>readHour\(hLive,i,nowI,gold\)/);
   for (const el of html.match(/<div class="[^"]*\bxp\b[^"]*" id="\w+Explore">[\s\S]*?\n  <\/div>/g) || [])
     assert.doesNotMatch(el, /aria-live/, "no live region inside an explorer");
 
@@ -2062,7 +2095,7 @@ test("every line reads the same way: one machine, and readers that say only what
     lift(/const clock=d=>\{[^\n]*\};/),
     html.slice(html.indexOf("const NORMALS={"), html.indexOf("const DOY=")),
     html.slice(html.indexOf("const precipKind="), html.indexOf("/* where the moon crosses the chart's own horizon")),
-    "Object.assign(globalThis,{precipKind,xpWhen,xpSaid,quarterStops,readHour,readDay,readTide,readMoon,readMonth,NORMALS});",
+    "Object.assign(globalThis,{precipKind,xpWhen,xpSaid,quarterStops,liveHour,readHour,readDay,readTide,readMoon,readMonth,NORMALS});",
   ].join("\n"), ctx);
   const own = (r) => JSON.parse(JSON.stringify(r));
   const text = (r) => r.parts.map((p) => p[0]).join(" ");
@@ -2093,6 +2126,18 @@ test("every line reads the same way: one machine, and readers that say only what
   assert.equal(hr({ gust: 31, pop: 10 }, 21).said, "11 am, 75 degrees, 10 percent chance of rain, gusts 31 miles an hour");
   assert.doesNotMatch(text(hr({ gust: 27 }, 1)), /gust/);
   assert.doesNotMatch(text(hr({ gust: null }, 1)), /gust/, "a missing gust says nothing");
+  // windy is judged on the raw gust, the way the headline judges it: 27.6 is not windy, and is not printed 28
+  assert.doesNotMatch(text(hr({ gust: 27.6 }, 1)), /gust/, "27.6 is under the headline's windy line");
+  assert.equal(text(hr({ gust: 28 }, 1)), "3p 75° dry gusts 28");
+  assert.equal(text(hr({ gust: 28.4 }, 1)), "3p 75° dry gusts 28");
+  // thunder reported now is thunder in the now pill, whatever the hour's code says, on a fresh paint only
+  const live = (o, code, nowI = 0, i = nowI) => keep(own(ctx.readHour(ctx.liveHour(hours(o), code, nowI), i, nowI)));
+  assert.equal(text(live({ pop: 78, code: 80 }, 95)), "now 75° thunder 78%");
+  assert.equal(text(live({ pop: 3, code: 3 }, 95)), "now 75° thunder 3%", "never dry under a storm overhead");
+  assert.match(live({ pop: 3, code: 3 }, 99).said, /with thunder$/);
+  assert.equal(text(live({ pop: 78, code: 80 }, 95, 0, 1)), "3p 75° rain 78%", "only the now hour takes the live code");
+  assert.equal(text(live({ pop: 78, code: 80 }, 95, 3)), "now 75° rain 78%", "a cache's live reading is hours old");
+  assert.equal(text(live({ pop: 78, code: 80 }, 61)), "now 75° rain 78%", "only thunder is carried over");
   assert.doesNotMatch(text(hr({ feels: 77 }, 1)), /feels/, "two degrees off is the same number twice");
   assert.match(text(hr({ feels: 78 }, 1)), /feels 78°/);
   assert.deepEqual(hr({ temp: null, pop: 40 }, 1).parts.slice(1), [["–", "b"], ["rain 40%", ""]]);
@@ -2150,6 +2195,11 @@ test("every line reads the same way: one machine, and readers that say only what
   assert.equal(text(moon("2026-08-02T23:40", 5)), "11:40p moonset Mon 11:32a");
   assert.equal(text(moon("2026-08-02T22:32", 0)), "10:32p moonrise");
   assert.equal(text(keep(own(ctx.readMoon(mNow, mNow, 12, wins, [])))), "now moon up");
+  // a window's edges keep now's seconds, so a quarter hour on the minute it ends is past it, and
+  // never "fishing until" the same minute
+  const edge = [{ start: new Date(at("2026-08-02T15:30") + 500), end: new Date(at("2026-08-02T17:30") + 500) }];
+  assert.doesNotMatch(text(keep(own(ctx.readMoon(at("2026-08-02T17:30"), mNow, 20, edge, cross)))), /fishing/);
+  assert.equal(text(keep(own(ctx.readMoon(at("2026-08-02T17:29"), mNow, 20, edge, cross)))), "5:29p fishing until 5:30p");
 
   // the month: snow only where the strip draws it, and one inch is an inch
   const N = ctx.NORMALS;

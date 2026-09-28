@@ -247,20 +247,30 @@ place name.
   a hairline marks the stop under the labels (their halos break it, so it never strikes through a
   number), and one pill above the finger says what the picture cannot, or puts a number on what the
   finger covers. A vertical swipe scrolls and shows nothing. A tap reads where it lands, a still
-  press reads after 140ms, and a lifted reading stays 2.2 seconds. The keys are the same everywhere:
+  press reads after 140ms, and a lifted reading stays 2.2 seconds. Still means a finger that has
+  not moved 6px, so a slow start to a scroll never pops a reading, and a finger that lands while the
+  page is gliding from a flick is stopping the page, not tapping the chart. A phone leaves `:hover`
+  stuck on what was tapped, so only a real mouse over the chart holds a reading through a repaint,
+  and a tapped reading is gone at 2.2 seconds whatever lands in between. The pill never covers what
+  it reads: over the top of a chart (the week's warmest day, July on the coast, a hot hour under a
+  two-line pill) it rises clear of the ring, by transform, and `tools/shots.mjs` checks every stop. The keys are the same everywhere:
   the arrows step, Home and End go to the ends, PageUp and PageDown jump to the points the chart
   names, Escape puts it away, and a screen reader hears the same sentence as the slider's value
   (one hidden range input per chart, never a live region). The week's days were already buttons, so
   a tap still opens a day, a slide opens the day you let go on (`weekPick`), and the arrows move and
   open. A missing value is a dash, never a number and never `dry`. The hours say thunder at any
-  odds, gusts from `WINDY_GUST` (28, the headline's windy line, one constant), and golden hour inside
-  a gold band. The water says the water that is there at now (the table plus the gauge's gap, where
+  odds (and the now hour says the thunder reported now, `liveHour`), gusts from `WINDY_GUST` (28, the
+  headline's windy line, one constant, judged on the same raw gust the headline judges), and golden
+  hour inside a gold band. The water says the water that is there at now (the table plus the gauge's gap, where
   the gauge's mark is drawn on the now line, and the ring goes on that mark when it is drawn and
   nowhere at now when the skiff covers it) and `by the table` everywhere else while the gauge runs off
-  it. The moon says when a fishing time ends, or when the moon rises or sets, and never names a
-  window it dropped. A day is named only where a clock time could mean two moments. The Sun bar has
+  it. The moon says when a fishing time ends, to the minute it prints, or when the moon rises or
+  sets, and never names a window it dropped. A day is named only where a clock time could mean two moments. The Sun bar has
   none, because it is a scale and not a day. A chart still drawing in finishes first, a repaint
-  under a finger keeps the moment, and the explorer adds no animation. `xpSetup` and `xpPublish` are
+  under a finger keeps the moment (even one that landed a moment before and has not slid yet), a
+  slider's spoken value goes back to the start with its value, a chart not drawn speaks nothing, and
+  the explorer adds no animation. On a cache opened late the axis's NOW is the hour now is in, and
+  the hour beside it gives way. `xpSetup` and `xpPublish` are
   the one machine, and `readHour`, `readDay`, `readTide`, `readMoon` and `readMonth` are pure and
   test.mjs runs them.
 - Golden hour is sun elevation +6° to -4°, the convention the photo apps use.

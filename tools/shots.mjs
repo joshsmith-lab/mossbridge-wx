@@ -47,7 +47,9 @@ const CASES = [
   { name: "03-storm-porters-neck", loc: "mb", when: "2026-08-02T16:45:00",
     o: { baseTemp: 84, nowTemp: 81, feels: 88, rh: 88, isDay: 1, code: 95, cloud: 96, nowWind: 17, nowDir: 250, nowGust: 34, nowUv: 1.2, uvMax: 8, windAmp: 14, gustAmp: 26, nowcast: true,
       popCurve: (i, hr) => (hr >= 14 && hr <= 21 ? 78 : 20),
-      dailyPop: (p) => { p[0] = 85; p[1] = 65; p[2] = 45; } } },
+      dailyPop: (p) => { p[0] = 85; p[1] = 65; p[2] = 45; } },
+    // thunder reported now is thunder in the now pill
+    expect: { xp: { hourly: /^now 81° feels 88° thunder \d+%/ } } },
   { name: "04-morning-shady-spring", loc: "sp", when: "2026-08-02T09:05:00",
     o: { baseTemp: 70, nowTemp: 71, feels: 71, rh: 72, isDay: 1, code: 2, cloud: 55, nowWind: 7, nowDir: 305, nowGust: 12, nowUv: 4.1, uvMax: 7, windAmp: 7, gustAmp: 11,
       popCurve: (i, hr) => (hr >= 15 && hr <= 19 ? 30 : 8),
@@ -164,7 +166,28 @@ async function crowded(page) {
     }
     return out;
   }));
-  return out;
+  /* the hourly axis is words in a row too: the hour beside NOW gives way to it */
+  const hr = await page.evaluate(() => { const b = [...document.querySelectorAll("#hrLabels span")].filter((e) => e.textContent).map((e) => ({ t: e.textContent, r: e.getBoundingClientRect() }));
+    return b.slice(1).flatMap((x, i) => x.r.left < b[i].r.right - .5 ? [`hourly axis "${b[i].t}" runs into "${x.t}"`] : []); });
+  return [...out, ...hr];
+}
+
+/* a reading never covers what it reads: at every stop of every chart the pill stays clear of the
+   stop's rings (it rises over the top of a chart, the week's warmest day, July on the coast, a hot
+   hour under a two-line pill) and clear of the section's title above it */
+async function pillClear(page) {
+  return page.evaluate(() => Object.values(XP).filter((X) => X.D).flatMap((X) => {
+    const out = [], eb = X.box.closest("section,.week").querySelector(".eyebrow").getBoundingClientRect();
+    for (let i = 0; i < X.D.x.length; i++) {
+      xpShow(X, i); const p = X.peek.getBoundingClientRect();
+      for (const c of X.D.svg.querySelectorAll(".xp-cursor circle")) {
+        const b = c.getBoundingClientRect(), w = Math.min(b.right, p.right) - Math.max(b.left, p.left), h = Math.min(b.bottom, p.bottom) - Math.max(b.top, p.top);
+        if (w > 1 && h > 1) { out.push(`${X.k} pill "${X.peek.textContent}" covers its ring`); break; }
+      }
+      if (p.top < eb.bottom - 1) out.push(`${X.k} pill "${X.peek.textContent}" runs into the title`);
+    }
+    xpHide(X); return out.slice(0, 3);
+  }));
 }
 
 const cases = ONLY.length ? CASES.filter((c) => ONLY.some((q) => c.name.includes(q))) : CASES;
@@ -204,7 +227,7 @@ for (const cs of cases) {
     await page.waitForTimeout(1400);
     // settle the charts' entrance (a one-shot sweep that waits to be on screen) before looking
     await page.evaluate(() => typeof finishReveal === "function" && finishReveal());
-    for (const m of await crowded(page)) { failures++; console.log(`!! ${cs.name} at ${vp.w}: ${m}`); }
+    for (const m of [...await crowded(page), ...await pillClear(page)]) { failures++; console.log(`!! ${cs.name} at ${vp.w}: ${m}`); }
     /* the narrowest phone is only measured: its words are the ones that crowd */
     if (vp.tag === "narrow") {
       if (errs.length) { failures++; console.log(`!! ${cs.name} ${vp.tag}: ${errs.join(" | ")}`); }

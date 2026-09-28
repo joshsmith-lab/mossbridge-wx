@@ -557,23 +557,26 @@ try{
     await cdp.send("Input.dispatchTouchEvent",{type:"touchEnd",touchPoints:[]});
     assert.deepEqual(errors,[]);await context.close();checks++;
   }
-  {
-    /* a cache opened three hours after it was written: the hours start at the hour now is in, and
-       say now there; the first hour is its clock; the axis's NOW sits at the same hour */
-    const t=new Date(now.getTime()-3*3.6e6),o={...base,code:1,popCurve:()=>5};
-    const {context,page,errors}=await open(390,o,"mb");
+  for(const [age,width] of [[1,320],[2,390],[3,390],[4,320],[5,390]]){
+    /* a cache opened hours after it was written: the hours start at the hour now is in, and say
+       now there; the first hour is its clock; the axis's NOW sits at the same hour, and the hour
+       beside it gives way, so no two words on the axis touch at 320 or 390 */
+    const t=new Date(now.getTime()-age*3.6e6),o={...base,code:1,popCurve:()=>5};
+    const {context,page,errors}=await open(width,o,"mb");
     await page.addInitScript(c=>localStorage.setItem("mbwx-mb",JSON.stringify(c)),{savedAt:t.getTime(),data:cachePayload(t,o,"mb")});
     await page.route("**api.open-meteo.com**",r=>r.request().url().includes("marine-api")?r.fallback():r.abort());
     await page.goto(`http://localhost:${PORT}/`);
     await page.waitForFunction(()=>/updated/.test(document.getElementById("stamp").textContent));
     await page.locator("#hourlyExplore .xp-key").focus();
     const s=await xpState(page,"hourly");
-    assert.equal(s.start,3,"the hour now is in");
+    assert.equal(s.start,age,"the hour now is in");
     assert.match(s.text,/^now /);
-    const nowLabel=await page.evaluate(()=>[...document.querySelectorAll("#hrLabels span")].findIndex(e=>e.textContent==="NOW"));
-    assert.equal(nowLabel,3,"the axis's NOW is at the same hour");
+    const axis=await page.evaluate(()=>[...document.querySelectorAll("#hrLabels span")].map(e=>({t:e.textContent,r:e.getBoundingClientRect()})));
+    assert.equal(axis.findIndex(e=>e.t==="NOW"),age,"the axis's NOW is at the same hour");
+    const words=axis.filter(e=>e.t);
+    words.slice(1).forEach((e,j)=>assert.ok(e.r.left>=words[j].r.right-.5,`${age}h at ${width}: "${words[j].t}" and "${e.t}" do not touch on the axis`));
     await page.keyboard.press("Home");
-    assert.match((await xpState(page,"hourly")).text,/^7a /,"an hour before now is its clock");
+    assert.match((await xpState(page,"hourly")).text,new RegExp("^"+(10-age)+"a "),"an hour before now is its clock");
     assert.deepEqual(errors,[]);await context.close();checks++;
   }
   {
@@ -595,6 +598,156 @@ try{
     const after=await page.evaluate(()=>document.getAnimations().length);
     assert.ok(during<=before&&after===before,`the explorer adds no animations: ${before} before, ${during} during, ${after} after`);
     assert.deepEqual(errors,[]);await context.close();checks++;
+  }
+  {
+    /* a tapped reading lingers 2.2s and goes, even when a repaint lands inside the linger: a tap
+       leaves :hover stuck on a phone, and that is no finger, mouse or key holding the chart. The
+       slider's spoken value goes back to the start with its value */
+    const {context,page,errors,cdp}=await phone(390,coast,"mb");
+    await load(page);
+    for(const k of ["hourly","tide","year"]){
+      const b=await inView(page,`#${k}Explore`);
+      await touch(cdp,page,[[b.x+b.width*.6,b.y+b.height*.55]],{hold:40});
+      await page.waitForTimeout(300);
+      assert.equal((await xpState(page,k)).shown,true,`${k}: the tap reads`);
+      await page.evaluate(()=>render(LAST.d,true));
+      await page.waitForTimeout(2300);
+      const s=await xpState(page,k),v=await page.evaluate(k=>{const X=XP[k];return{value:+X.key.value,said:X.D.read(+X.key.value).said,start:X.D.start}},k);
+      assert.equal(s.shown,false,`${k}: a repaint in the linger does not keep a tapped reading up`);
+      assert.equal(v.value,v.start,`${k}: the slider is back at its start`);
+      assert.equal(s.valuetext,v.said,`${k}: and its spoken value is the start's sentence`);
+    }
+    /* a lifted slide: the value and its sentence go back together */
+    const t=await inView(page,"#tideExplore");
+    await touch(cdp,page,across(t,t.y+t.height*.55,40,200,8));
+    await page.waitForTimeout(2600);
+    const ts=await xpState(page,"tide"),tv=await page.evaluate(()=>XP.tide.D.read(+XP.tide.key.value).said);
+    assert.ok(!ts.shown&&ts.valuetext===tv,"after a slide's linger the spoken value is the start's: "+ts.valuetext);
+    /* the keys: blur puts the sentence back with the value */
+    await page.locator("#hourlyExplore .xp-key").focus();
+    for(let j=0;j<7;j++)await page.keyboard.press("ArrowRight");
+    await page.locator("#hourlyExplore .xp-key").blur();
+    const hs=await xpState(page,"hourly"),hv=await page.evaluate(()=>XP.hourly.D.read(+XP.hourly.key.value).said);
+    assert.equal(hs.valuetext,hv,"after blur the spoken value is the start's");
+    /* a slow start to a vertical scroll is a scroll: a finger that has moved is not holding still */
+    for(const k of ["hourly","tide","year"]){
+      for(const pts of [(x,y)=>Array.from({length:41},(_,j)=>[x,y-j*2]),(x,y)=>[...Array.from({length:6},(_,j)=>[x,y-j*2]),...Array.from({length:12},(_,j)=>[x,y-10-(j+1)*16])]]){
+        const b=await inView(page,`#${k}Explore`);let mid=false;
+        await touch(cdp,page,pts(b.x+b.width/2,b.y+b.height/2),{each:async()=>{if((await xpState(page,k)).shown)mid=true}});
+        await page.waitForTimeout(300);
+        assert.ok(!mid&&!(await xpState(page,k)).shown,`${k}: a slow vertical scroll shows nothing`);
+      }
+    }
+    /* a finger that stops a gliding page is stopping the page, and is not a tap on the chart. The
+       finger has to land on the water while the page is still moving, so the flick is tried again
+       if it glides past */
+    await page.evaluate(()=>document.getElementById("tideExplore").addEventListener("pointerdown",()=>{window.__onTide=true},true));
+    let landed=false;
+    for(let tries=0;tries<4&&!landed;tries++){
+      await page.evaluate(()=>{const e=document.getElementById("tideExplore"),b=e.getBoundingClientRect();scrollTo(0,scrollY+b.top-innerHeight-60);window.__onTide=false});
+      await page.waitForTimeout(200);
+      const fl=[];for(let j=0;j<=5;j++)fl.push([200,700-j*80]);
+      await touch(cdp,page,fl,{dt:8});
+      for(let j=0;j<40;j++){
+        const g=await page.evaluate(async()=>{const a=scrollY;await new Promise(r=>requestAnimationFrame(r));
+          const b=document.getElementById("tideExplore").getBoundingClientRect(),y=b.top+b.height/2;
+          return scrollY!==a&&y>b.height&&y<innerHeight-b.height?{x:b.left+b.width/2,y}:null});
+        if(!g)continue;
+        await touch(cdp,page,[[g.x,g.y]],{hold:50});
+        landed=await page.evaluate(()=>window.__onTide);break;
+      }
+      await page.waitForTimeout(80);
+      if(landed)assert.equal((await xpState(page,"tide")).shown,false,"a tap that stops the glide reads nothing");
+      else await page.waitForTimeout(2600);
+    }
+    assert.ok(landed,"the finger landed on the water while the page glided");
+    await page.waitForTimeout(300);
+    const still=await page.locator("#tideExplore").boundingBox();
+    await touch(cdp,page,[[still.x+still.width/2,still.y+still.height/2]],{hold:50});
+    await page.waitForTimeout(40);
+    assert.equal((await xpState(page,"tide")).shown,true,"and a tap on a still page does");
+    await page.waitForTimeout(2600);
+    /* a repaint a moment after a finger lands keeps its press: the slide still reads, and in the
+       week it still opens the day it ends on */
+    for(const k of ["hourly","tide","week"]){
+      const b=await inView(page,`#${k}Explore`),y=b.y+b.height*.55;
+      await page.evaluate(()=>weekPick(0));
+      await cdp.send("Input.dispatchTouchEvent",{type:"touchStart",touchPoints:[{x:b.x+40,y}]});
+      await page.waitForTimeout(30);
+      await page.evaluate(()=>render(LAST.d,true));
+      let last=-1,seen=0;
+      for(let j=1;j<=20;j++){await page.waitForTimeout(16);await cdp.send("Input.dispatchTouchEvent",{type:"touchMove",touchPoints:[{x:b.x+40+j*9,y}]});
+        const s=await xpState(page,k);if(s.shown){seen++;assert.ok(s.i>=last,`${k}: the reading follows the finger`);last=s.i}}
+      assert.ok(seen>=15,`${k}: a repaint as the finger lands does not lose the slide (${seen} of 20 moves read)`);
+      await cdp.send("Input.dispatchTouchEvent",{type:"touchEnd",touchPoints:[]});
+      await page.waitForTimeout(60);
+      if(k==="week")assert.ok(await page.evaluate(()=>XP.week.i>1&&document.querySelectorAll("#weekRows .wk-day")[XP.week.i].getAttribute("aria-expanded")==="true"),"and the week opens the day it ended on");
+      await page.waitForTimeout(2600);
+    }
+    assert.deepEqual(errors,[]);await context.close();checks++;
+  }
+  {
+    /* the week: a tap just after a slide is a tap, and the click a short slide leaves behind is
+       still the slide's; a missing daily high is a dash with no ring */
+    const {context,page,errors,cdp}=await phone(320,{...wetSunday,dailyTemps:(hi,lo,c)=>{wetSunday.dailyTemps(hi,lo,c);hi[3]=null}},"sp",{when:sunday});
+    await load(page);
+    const b=await inView(page,"#weekExplore"),n=await page.locator("#weekRows .wk-day").count(),cx=i=>b.x+(i+.5)*b.width/n,y=b.y+b.height*.55;
+    const openDay=()=>page.evaluate(()=>[...document.querySelectorAll("#weekRows .wk-day")].findIndex(d=>d.getAttribute("aria-expanded")==="true"));
+    const pts=[];for(let x=cx(1);x<=cx(2);x+=4)pts.push([x,y]);pts.push([cx(2),y]);
+    await touch(cdp,page,pts);await page.waitForTimeout(250);
+    assert.equal(await openDay(),2,"the slide opens its day");
+    await touch(cdp,page,[[cx(4),y]],{hold:50});await page.waitForTimeout(80);
+    assert.equal(await openDay(),4,"a tap 250ms after a slide opens the day it lands on");
+    await page.waitForTimeout(700);
+    await touch(cdp,page,[[cx(2)-6,y],[cx(2),y],[cx(2)+6,y]]);await page.waitForTimeout(250);
+    assert.equal(await openDay(),2,"a short slide opens its day, and the click it leaves behind does not close it");
+    await page.evaluate(()=>xpShow(XP.week,3));
+    const s=await xpState(page,"week");
+    assert.match(s.text,/^Wed 8\/5 – \//,"a missing high is a dash");
+    assert.equal(s.rings.length,1,"and has no ring, only the low's");
+    assert.deepEqual(errors,[]);await context.close();
+    /* with a mouse: a press dragged off the week and let go outside is let go, so the pill does not
+       stay up once the mouse leaves */
+    for(const width of [390,900]){
+      const m=await open(width,wetSunday,"sp",sunday);await load(m.page);
+      const mb=await inView(m.page,"#weekExplore"),mcx=i=>mb.x+(i+.5)*mb.width/8,my=mb.y+mb.height*.55;
+      await m.page.mouse.move(mcx(3),my);await m.page.mouse.down();
+      for(let j=1;j<=6;j++)await m.page.mouse.move(mcx(3),my+j*(mb.height*.45+80)/6);
+      await m.page.mouse.up();
+      assert.equal(await m.page.evaluate(()=>XP.week.ptr),null,`${width}: the press let go outside is let go`);
+      for(let x=mcx(1);x<=mcx(6);x+=10)await m.page.mouse.move(x,my);
+      assert.equal(await m.page.evaluate(()=>XP.week.box.classList.contains("xp-drag")),false,"a hover is not a drag");
+      await m.page.mouse.move(mb.x+mb.width+Math.min(20,(width-mb.width)/2-2),my);await m.page.mouse.move(mb.x+mb.width/2,mb.y-60);
+      await m.page.waitForTimeout(60);
+      assert.equal((await xpState(m.page,"week")).shown,false,`${width}: the pill goes when the mouse leaves`);
+      assert.deepEqual(m.errors,[]);await m.context.close();
+    }
+    checks++;
+  }
+  {
+    /* a chart that is not drawn has no spoken value: the loading shell, the farm's unavailable shell
+       after the coast, and the water with no tide table */
+    const {context,page,errors}=await open(390,coast,"mb");
+    let release;const gate=new Promise(r=>release=r);
+    await page.route("**api.open-meteo.com**",async r=>{if(r.request().url().includes("marine-api"))return r.fallback();await gate;r.fallback()});
+    await page.goto(`http://localhost:${PORT}/`,{waitUntil:"domcontentloaded"});
+    const off=()=>page.evaluate(()=>[...document.querySelectorAll(".xp-key")].filter(k=>k.disabled).map(k=>k.getAttribute("aria-valuetext")));
+    assert.deepEqual(await off(),[null,null,null,null],"the loading shell speaks no reading");
+    release();
+    await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
+    await page.unroute("**api.open-meteo.com**");
+    await page.route("**api.open-meteo.com**",r=>r.request().url().includes("marine-api")?r.fallback():r.abort());
+    await page.evaluate(()=>{localStorage.removeItem("mbwx-sp");document.getElementById("locBtn").click()});
+    await page.waitForFunction(()=>/unavailable/i.test(document.body.innerText));
+    const shell=await off();
+    assert.ok(shell.length>=3&&shell.every(v=>v==null),"the farm's unavailable shell speaks none of the coast's readings: "+JSON.stringify(shell));
+    assert.deepEqual(errors,[]);await context.close();
+    const t=await open(390,coast,"mb");
+    await t.page.route("**tidesandcurrents.noaa.gov**",r=>r.request().url().includes("interval=hilo")?r.abort():r.fallback());
+    await load(t.page);
+    await t.page.waitForFunction(()=>/tide data unavailable/.test(document.getElementById("tideNote").textContent));
+    assert.deepEqual(await t.page.evaluate(()=>{const k=document.querySelector("#tideExplore .xp-key");return[k.disabled,k.getAttribute("aria-valuetext")]}),[true,null],"no tide table, no spoken tide");
+    assert.deepEqual(t.errors,[]);await t.context.close();checks++;
   }
   console.log(`${checks} interaction scenarios passed: matched chart heights, hourly and tide exploration, warnings, thunder coming at the farm, the farm's sections after the coast, the entrance across a cache-to-live paint and below the fold, offline recovery, and every line read by a real finger, the keys and a screen reader.`);
 }finally{
