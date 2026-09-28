@@ -434,28 +434,33 @@ section{padding:28px 20px 0}
 
 .hourly-scroll{margin:0;padding:0;overflow:hidden}
 .hourly-inner{min-width:0;width:100%;position:relative;outline:none}
-.hourly-inner:focus-visible{outline:2px solid var(--water);outline-offset:-2px;border-radius:8px}
 .hourly-inner svg{display:block;width:100%;height:auto}
-.hourly-peek,.tide-peek{position:absolute;z-index:3;top:2px;left:var(--peek-label-x,50%);transform:translateX(-50%);
-  width:max-content;
-  display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:6px;white-space:nowrap;pointer-events:none;
-  padding:5px 9px;border:1px solid var(--line);border-radius:999px;background:var(--paper);
+/* Every line reads the same way (xpSetup): slide a finger along it and a ring rides the line, a
+   hairline marks the stop under the labels, and one pill above the finger says what the picture
+   cannot. The page still scrolls on a vertical swipe, and nothing here moves by itself: the pill,
+   the hairline and the ring appear and go in place */
+.xp{position:relative;touch-action:pan-y;touch-action:pan-y pinch-zoom;-webkit-user-select:none;user-select:none;
+  -webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+.xp:has(.xp-key:focus-visible){outline:2px solid var(--water);outline-offset:-2px;border-radius:8px}
+.xp-key{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;pointer-events:none}
+.xp-peek{position:absolute;z-index:3;top:2px;left:0;transform:translateX(calc(var(--xp-x,50%) - 50%));
+  width:max-content;display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:0 6px;white-space:nowrap;
+  pointer-events:none;padding:5px 9px;border:1px solid var(--line);border-radius:999px;background:var(--paper);
   box-shadow:0 5px 18px rgba(9,34,43,.09);font-family:var(--mono);font-size:10.5px;color:var(--ink-soft)}
-.hourly-peek b,.tide-peek b{font-size:12px;color:var(--ink);font-weight:650}
-.hourly-peek .feels.warm{color:var(--heat)}.hourly-peek .feels.cold{color:var(--water)}
-.hourly-cursor,.tide-cursor{position:absolute;z-index:2;left:var(--peek-x,16px);top:18px;height:calc(100% - 34px);
-  border-left:1px solid var(--ink-soft);opacity:.7;pointer-events:none}
-.hourly-cursor::after,.tide-cursor::after{content:"";position:absolute;left:-4px;top:calc(var(--peek-y,60px) - 22px);
-  width:7px;height:7px;border-radius:50%;background:var(--paper);border:1.8px solid var(--ink)}
-.hourly-peek[hidden],.hourly-cursor[hidden],.tide-peek[hidden],.tide-cursor[hidden]{display:none}
+.xp-peek .b{font-size:12px;color:var(--ink);font-weight:650}
+.xp-peek .faint{color:var(--ink-faint)}.xp-peek .warm{color:var(--heat)}.xp-peek .cold{color:var(--water)}
+.xp-peek .gold{color:#8F631D}html[data-theme=dark] .xp-peek .gold{color:#E8BC69}
+.xp-peek[hidden]{display:none}
+.xp-cursor{pointer-events:none}
+.xp-cursor line{stroke:var(--ink-soft);stroke-width:1;opacity:.7}
+.xp-cursor circle{fill:var(--paper);stroke:var(--ink);stroke-width:1.8}
+.wk-day.xp-on:not(.today) .wk-name,.yr-months span.xp-on:not(.yr-now){color:var(--ink);font-weight:600}
+#weekExplore.xp-drag button.wk-day:active:not([aria-expanded=true])::before{opacity:0}
 .hr-labels{position:relative;min-width:0;height:13px;line-height:13px;font-family:var(--mono);
   font-size:10px;color:var(--ink-faint);margin-top:3px}
 .hr-labels span{position:absolute;transform:translateX(-50%);text-align:center}
 .hr-labels .mark{color:var(--marker);font-weight:600}
 .tide-svg{display:block;width:100%;height:auto}
-.tide-svg{touch-action:pan-y;user-select:none}
-.tide-explore{position:relative;outline:none}
-.tide-explore:focus-visible{outline:2px solid var(--water);outline-offset:-2px;border-radius:8px}
 @keyframes bob{from{transform:rotate(calc(var(--rock,2.6deg) * -1)) translateY(.6px)}to{transform:rotate(var(--rock,2.6deg)) translateY(-.6px)}}
 /* the skiff leans the way the water is going: inland on a rising tide, seaward on a falling one */
 @keyframes setDrift{from{transform:translateX(0)}to{transform:translateX(var(--dx,0px))}}
@@ -603,7 +608,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
 #sceneSvg .owl-eyes,#sceneSvg .frog-throat,#sceneSvg .hen-peck,#sceneSvg .hen-tip,#sceneSvg .hen-look,
 #sceneSvg .hen-scratch,#sceneSvg .wildlife.cardinal .perch-head,#sceneSvg .fox-head,#sceneSvg .fox-tail{transform-box:view-box;transform-origin:0 0}
 @media(prefers-reduced-motion:reduce){
-  *,*::after{animation:none!important;transition:none!important}
+  *,*::before,*::after{animation:none!important;transition:none!important}
 }
 </style>
 </head>
@@ -639,13 +644,12 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
 <section>
   <div class="eyebrow"><b>Next 24 hours</b><span id="hourlyNote"></span></div>
   <div class="hourly-scroll">
-    <div class="hourly-inner" id="hourlyExplore" role="group" tabindex="0" aria-label="24-hour forecast. Use left and right arrow keys to explore each hour.">
+    <div class="hourly-inner xp" id="hourlyExplore">
       <svg id="hourlySvg" viewBox="0 0 700 160" xmlns="http://www.w3.org/2000/svg" aria-label="Hourly temperature and precipitation chance"></svg>
-      <div class="hourly-cursor" id="hourlyCursor" hidden></div>
-      <div class="hourly-peek" id="hourlyPeek" hidden><span id="peekTime"></span><b id="peekTemp"></b><span class="feels" id="peekFeels"></span><span id="peekRain"></span></div>
+      <input class="xp-key" type="range" min="0" max="0" step="1" value="0" disabled aria-label="Next 24 hours, hour by hour">
+      <div class="xp-peek" aria-hidden="true" hidden></div>
     </div>
     <div class="hr-labels" id="hrLabels"></div>
-    <span class="sr-only" id="hourlyPeekLive" aria-live="polite"></span>
   </div>
 </section>
 
@@ -665,12 +669,11 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
 
 <section id="tideSection">
   <div class="eyebrow"><b>Water · Wrightsville Beach</b><span id="tideNote">loading…</span></div>
-  <div class="tide-explore" id="tideExplore" role="group" tabindex="0" aria-label="Tide forecast. Use left and right arrow keys to explore in 15-minute steps.">
+  <div class="tide-explore xp" id="tideExplore">
     <svg id="tideSvg" class="tide-svg" viewBox="0 0 760 158" xmlns="http://www.w3.org/2000/svg" aria-label="Tide curve, next 27 hours"></svg>
-    <div class="tide-cursor" id="tideCursor" hidden></div>
-    <div class="tide-peek" id="tidePeek" hidden><span id="tidePeekTime"></span><b id="tidePeekDepth"></b><span id="tidePeekDirection"></span></div>
+    <input class="xp-key" type="range" min="0" max="0" step="1" value="0" disabled aria-label="Water, 15 minutes a step">
+    <div class="xp-peek" aria-hidden="true" hidden></div>
   </div>
-  <span class="sr-only" id="tidePeekLive" aria-live="polite"></span>
 </section>
 
 <section id="stormSection" style="display:none">
@@ -813,6 +816,12 @@ const distMi=(la1,lo1,la2,lo2)=>{const dLa=toRad(la2-la1),dLo=toRad(lo2-lo1);
   const a=Math.sin(dLa/2)**2+Math.cos(toRad(la1))*Math.cos(toRad(la2))*Math.sin(dLo/2)**2;
   return 2*3959*Math.asin(Math.sqrt(a))};
 const PRM=matchMedia("(prefers-reduced-motion: reduce)").matches;
+/* reading a chart (xpSetup): a still press shows after XP_HOLD, a lifted finger's reading stays
+   XP_LINGER, a slide starts XP_SLOP pixels across, and a finger XP_SNAP pixels from a point the chart
+   names lands on it. Under DRY_UNDER percent an hour is dry, which is under the rain bars' floor, so
+   the pill never says dry over a drawn bar. WINDY_GUST is the headline's windy line, and the hourly
+   pill says the gusts from it too */
+const XP={},XP_HOLD=140,XP_LINGER=2200,XP_SLOP=6,XP_SNAP=7,DRY_UNDER=5,WINDY_GUST=28;
 
 /* ── colour helpers ─────────────────────────────────── */
 const hex2rgb=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
@@ -3681,7 +3690,7 @@ async function fetchStorms(){
 /* ── tide ───────────────────────────────────────────── */
 function renderTides(preds,css,gust,wind,gap=0){
   if(!preds||preds.length<2){
-    TIDE_PEEK=null;hideTidePeek();
+    xpPublish("tide",null);
     document.getElementById("tideSvg").innerHTML="";
     document.getElementById("tideNote").textContent="tide data unavailable";return null;
   }
@@ -3707,14 +3716,6 @@ function renderTides(preds,css,gust,wind,gap=0){
   const vTop=hiV+Math.max(.5,(hiV-base)*.2)+(gap>0?1:0);
   const X=t=>x0+(t-t0)/(t1-t0)*(W-padX-x0);
   const Y=v=>seaY-(v-base)/(vTop-base)*(seaY-topY);
-  const samples=[];
-  for(let t=t0;t<=t1;t+=9e5){
-    const next=P.find(p=>p.time.getTime()>t);
-    samples.push({time:t,depth:interp(t),direction:next?.type==="H"?"rising":next?.type==="L"?"falling":""});
-  }
-  TIDE_PEEK={samples,x:samples.map(s=>X(s.time)),y:samples.map(s=>Y(s.depth)),W,x0,padX};
-  TIDE_I=clamp(Math.round((now.getTime()-t0)/9e5),0,samples.length-1);
-  hideTidePeek();
   const pts=[];for(let t=t0;t<=t1;t+=9e5)pts.push([X(t),Y(interp(t))]);
   const path=spline(pts);
   const area=path+` L ${X(t1).toFixed(1)} ${seaY} L ${X(t0).toFixed(1)} ${seaY} Z`;
@@ -3807,12 +3808,25 @@ function renderTides(preds,css,gust,wind,gap=0){
     ${rv?`<ellipse cx="${nx.toFixed(1)}" cy="${(ny+3).toFixed(1)}" rx="17" ry="3.6" fill="none" stroke="${css.water}" stroke-width="1.3" opacity="0"${rvAt(nx,"ring",160)}/>`:""}
     ${gap?`<g${rvAt(nx,"fade")}>${seen&&(gap>0?gy+3<ny-21:gy-3>ny+9)?`<line x1="${nx.toFixed(1)}" y1="${(gap>0?gy+3:ny+5).toFixed(1)}" x2="${nx.toFixed(1)}" y2="${(gap>0?ny-17:gy-3).toFixed(1)}" stroke="${css.water}" stroke-width="1.2" stroke-dasharray="1.5 2.5"/>`:""}
       ${seen?`<path d="M ${(nx-5).toFixed(1)} ${gy.toFixed(1)} H ${(nx+5).toFixed(1)}" stroke="${css.paper}" stroke-width="5.4" stroke-linecap="round"/>
-      <path d="M ${(nx-5).toFixed(1)} ${gy.toFixed(1)} H ${(nx+5).toFixed(1)}" stroke="${css.water}" stroke-width="2.4" stroke-linecap="round"/>`:""}
-      <text x="${tagX.toFixed(1)}" y="${Math.min(gy+4,seaY-4).toFixed(1)}" text-anchor="start" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(10.5*fs).toFixed(1)}" font-weight="600" fill="${css.wink}" ${halo}>${tagTxt}</text></g>`:""}
+      <path d="M ${(nx-5).toFixed(1)} ${gy.toFixed(1)} H ${(nx+5).toFixed(1)}" stroke="${css.water}" stroke-width="2.4" stroke-linecap="round"/>`:""}</g>`:""}
+    <g class="xp-cursor"></g>
+    ${gap?`<g${rvAt(nx,"fade")}><text x="${tagX.toFixed(1)}" y="${Math.min(gy+4,seaY-4).toFixed(1)}" text-anchor="start" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(10.5*fs).toFixed(1)}" font-weight="600" fill="${css.wink}" ${halo}>${tagTxt}</text></g>`:""}
     <g${rvAt(nx,"boat")}>${boat}</g>
     ${labels}
     ${rv?`<g class="rv-tip" opacity="0" fill="${css.water}"><circle r="12" opacity=".14"/><circle r="6.5" opacity=".28"/><circle r="3"/><circle class="rv-core" r="1.4" fill="#FFFFFF" opacity=".95"/></g>`:""}`;
   revealChart("tide",tideSvg,{xa:X(t0),xb:X(t1),dur:clamp(2100+W*1.1,2400,2950),tail:72,color:()=>css.water});
+  /* the quarter hours, now and each turn at its own minute. At now the reading is the water that is
+     there (wNow, the table plus the gauge's gap); the skiff is the mark there, and when the gauge's
+     own mark is drawn over or under it the ring goes on that mark */
+  const nt=now.getTime(),turns=P.filter(p=>p.time.getTime()>=t0&&p.time.getTime()<=t1);
+  const stops=quarterStops(t0,t1,nt,turns.map(p=>p.time.getTime())).map(t=>{
+    const p=turns.find(q=>q.time.getTime()===t),nextT=P.find(q=>q.time.getTime()>t);
+    return{t,depth:t===nt?wNow:p?p.v:interp(t),turn:p&&t!==nt?p.type:null,now:t===nt,
+      dir:nextT?.type==="H"?"rising":nextT?.type==="L"?"falling":""};
+  });
+  const ni=stops.findIndex(s=>s.now),marks=stops.map((s,i)=>s.now||s.turn?i:-1).filter(i=>i>=0);
+  xpPublish("tide",{svg:tideSvg,W,x:stops.map(s=>X(s.t)),y:stops.map(s=>[s.now?(seen?gy:NaN):Y(s.depth)]),t:stops.map(s=>s.t),
+    band:[topY-10,seaY],start:ni,marks,snap:marks,noRing:seen?[]:[ni],read:i=>readTide(stops[i],nt,gap)});
   if(next){
     const rising=next.type==="H";
     return{rising,next,note:(rising?"high ":"low ")+clock(next.time)};
@@ -4347,7 +4361,7 @@ function dayStory(c,dy,h,now){
   const maxPop=Number(h.pop[peak(h.pop)])||0,wetI=win.find(i=>(Number(h.pop[i])||0)>=40);
   /* the first windy hour, not the windiest: with gusts of 30 now and 34 at four, "windy by 4
      p.m." sat under a chip that already said 30 */
-  const gustI=win.find(i=>(Number(h.gust?.[i])||0)>=28);
+  const gustI=win.find(i=>(Number(h.gust?.[i])||0)>=WINDY_GUST);
   /* no odds in the run is not a dry run: the headline says what it knows (the wind) or that the
      odds are missing, the way the cards under it do, and never "Should stay dry." */
   const popKnown=win.some(i=>h.pop[i]!=null&&Number.isFinite(+h.pop[i]));
@@ -4494,15 +4508,16 @@ function comfortAdvice(c,h){
   return{text,cls};
 }
 function dailyBrief(dy,i){
-  const high=Math.round(dy.temperature_2m_max[i]);
   /* a missing sky or chance is left unsaid: it used to fall through to "clear skies" and an
-     easy day, which is a forecast nobody made */
+     easy day, which is a forecast nobody made. A missing high leaves the feel word out, where it
+     used to fall through the ladder to "Cold." */
   const known=v=>v!=null&&Number.isFinite(+v);
+  const high=known(dy.temperature_2m_max[i])?Math.round(+dy.temperature_2m_max[i]):null;
   const hasSky=known(dy.weather_code[i]),hasPop=known(dy.precipitation_probability_max[i]);
   const code=hasSky?+dy.weather_code[i]:0;
   const pop=hasPop?+dy.precipitation_probability_max[i]:0;
   const wind=Number(dy.wind_speed_10m_max?.[i])||0;
-  const feel=high>=92?"Hot":high>=82?"Warm":high>=68?"Mild":high>=52?"Cool":high>=40?"Chilly":"Cold";
+  const feel=high==null?"":high>=92?"Hot":high>=82?"Warm":high>=68?"Mild":high>=52?"Cool":high>=40?"Chilly":"Cold";
   /* snow and ice are checked first: their codes sit above 61, so the old ladder called a
      heavy snow day "periods of rain" */
   const sky=code>=95?"storms possible":isIce(code)?"freezing rain":
@@ -4521,7 +4536,8 @@ function dailyBrief(dy,i){
   else if(pop>=WEEK_WET)note="Maybe a passing shower.";
   else if(wind>=20)note="Could get windy.";
   else if(high>=92)note="Keep the middle of the day short.";
-  return `${feel}${hasSky?`, ${sky}`:""}.${note?" "+note:""}`;
+  const head=[feel,hasSky?sky:""].filter(Boolean).join(", ");
+  return [head&&head[0].toUpperCase()+head.slice(1)+".",note].filter(Boolean).join(" ");
 }
 
 /* ── the week ───────────────────────────────────────── */
@@ -4977,170 +4993,247 @@ if(!PRM){
     for(const id in RV_OF)io.observe(document.getElementById(id));
   }else{for(const k in REVEAL)REVEAL[k].seen=true}
 }
-let HOURLY_PEEK=null,PEEK_I=0,PEEK_TOUCH_X=null,PEEK_HIDE=0;
-let TIDE_PEEK=null,TIDE_I=0,TIDE_TOUCH_X=null,TIDE_HIDE=0;
-function hideTidePeek(delay=0){
-  clearTimeout(TIDE_HIDE);
-  const hide=()=>{
-    document.getElementById("tidePeek").hidden=true;
-    document.getElementById("tideCursor").hidden=true;
-  };
-  if(delay)TIDE_HIDE=setTimeout(hide,delay);else hide();
+/* ── reading a chart ───────────────────────────────── */
+/* Josh asked for the slider to do something helpful on every line. So every chart reads the same
+   way: slide a finger along it and a ring rides the line, a hairline marks the stop under the
+   labels, and one pill above the finger says what the picture cannot, or puts a number on what the
+   finger covers. A vertical swipe scrolls the page and shows nothing, a tap reads where it lands,
+   and a lifted finger's reading stays a moment. The keys are the same everywhere, and a screen
+   reader hears the pill's sentence as the slider's value. The Sun bar has none: it is a scale, not
+   a day, and its two readings are already printed on it. The readers below are pure (test.mjs runs
+   them); xpSetup and xpPublish are the one machine that shows them. */
+const precipKind=code=>isIce(code)?"freezing rain":isSnow(code)?"snow":"rain";
+const xpFin=v=>v!=null&&v!==""&&Number.isFinite(+v);
+/* "6:15p" and "2a" on the pill, "6:15 pm" and "2 pm" said */
+const xpClock=d=>clock(d).replace(":00","");
+const xpSpoken=d=>{let h=d.getHours(),m=d.getMinutes();const ap=h<12?"am":"pm";h=h%12||12;return h+(m?":"+String(m).padStart(2,"0"):"")+" "+ap};
+/* A day is named only where a clock time could mean two moments: the water and the moon cover a
+   day and a half, so tomorrow's 2:15a is "Mon 2:15a". The stop at now is "now". */
+const xpOtherDay=(t,ref)=>new Date(t).toDateString()!==new Date(ref).toDateString();
+const xpWhen=(t,now,ref=now)=>t===now?"now":(xpOtherDay(t,ref)?new Date(t).toLocaleDateString("en-US",{weekday:"short"})+" ":"")+xpClock(new Date(t));
+const xpSaid=(t,now,ref=now)=>t===now?"Now":(xpOtherDay(t,ref)?new Date(t).toLocaleDateString("en-US",{weekday:"long"})+" ":"")+xpSpoken(new Date(t));
+/* the stops along a day and a half: every quarter hour on the wall clock, now to the minute, and the
+   points the chart names (a high or low, a fishing time's start, the moon on the horizon) at their
+   own minute. A quarter hour within five minutes of one of those gives way to it */
+function quarterStops(t0,t1,now,extra=[]){
+  const keep=[now,...extra].filter(t=>t>=t0&&t<=t1),out=[];
+  for(let t=Math.ceil(t0/9e5)*9e5;t<=t1;t+=9e5)if(!keep.some(k=>Math.abs(k-t)<=3e5))out.push(t);
+  return[...new Set([...out,...keep])].sort((a,b)=>a-b);
 }
-function tidePeekIndex(clientX){
-  if(!TIDE_PEEK)return 0;
-  const r=document.getElementById("tideSvg").getBoundingClientRect();
-  const vx=(clientX-r.left)/Math.max(1,r.width)*TIDE_PEEK.W;
-  let best=0,dist=Infinity;
-  TIDE_PEEK.x.forEach((x,i)=>{const d=Math.abs(x-vx);if(d<dist){dist=d;best=i}});
-  return best;
+/* One hour of the run: its temperature, feels-like when it is 3° or more off the air (the rule the
+   header uses), and the rain the way the bars draw it. Thunder is thunder at any odds, never dry,
+   and a missing chance is a dash, never dry. Gusts are said from the headline's windy line, last, so
+   on a narrow phone they are the part that wraps. Golden hour is said inside the gold band, which
+   the note over the chart names only for the next one. The run never repeats an hour, so no hour
+   carries a day. */
+function readHour(h,i,nowI,gold=[]){
+  const t=h.time[i],ms=new Date(t).getTime(),now=i===nowI;
+  const T=xpFin(h.temp?.[i])?Math.round(+h.temp[i]):null,F=xpFin(h.feels?.[i])?Math.round(+h.feels[i]):null;
+  const showFeels=T!=null&&F!=null&&Math.abs(F-T)>=3;
+  const code=+h.code?.[i],ts=[95,96,99].includes(code),kind=precipKind(code);
+  const pop=xpFin(h.pop?.[i])?Math.round(+h.pop[i]):null,g=xpFin(h.gust?.[i])?Math.round(+h.gust[i]):null;
+  const parts=[[now?"now":hh(t),""],[T==null?"–":T+"°","b"]],said=[now?"Now":xpSpoken(new Date(ms)),T==null?"temperature unavailable":`${T} degrees`];
+  if(showFeels){parts.push([`feels ${F}°`,F>T?"warm":"cold"]);said.push(`feels like ${F}`)}
+  if(ts){parts.push([`thunder ${pop==null?"–":pop+"%"}`,""]);said.push(pop==null?"rain chance unavailable, with thunder":`${pop} percent chance of rain, with thunder`)}
+  else if(pop==null){parts.push(["rain –",""]);said.push("rain chance unavailable")}
+  else if(pop>=DRY_UNDER){parts.push([`${kind} ${pop}%`,""]);said.push(`${pop} percent chance of ${kind}`)}
+  else{parts.push(["dry",""]);said.push("dry")}
+  if(gold.some(([a,b])=>a<ms+18e5&&b>ms-18e5)){parts.push(["golden hour","gold"]);said.push("golden hour")}
+  if(g!=null&&g>=WINDY_GUST){parts.push([`gusts ${g}`,""]);said.push(`gusts ${g} miles an hour`)}
+  return{parts,said:said.join(", ")};
 }
-function showTidePeek(i,announce=false){
-  if(!TIDE_PEEK)return;
-  clearTimeout(TIDE_HIDE);
-  TIDE_I=clamp(i,0,TIDE_PEEK.samples.length-1);
-  const sample=TIDE_PEEK.samples[TIDE_I],date=new Date(sample.time);
-  const time=date.toLocaleDateString("en-US",{weekday:"short"})+" "+clock(date);
-  document.getElementById("tidePeekTime").textContent=time;
-  /* NOAA supplies highs and lows; values between them follow the drawn curve. */
-  document.getElementById("tidePeekDepth").textContent="~"+sample.depth.toFixed(1)+" ft";
-  document.getElementById("tidePeekDirection").textContent=sample.direction;
-  document.getElementById("tidePeek").hidden=false;
-  document.getElementById("tideCursor").hidden=false;
-  positionTidePeek();
-  if(announce)document.getElementById("tidePeekLive").textContent=
-    `${time}, about ${sample.depth.toFixed(1)} feet${sample.direction?`, ${sample.direction}`:""}`;
+/* One day of the week, over the finger that covers its numbers. The odds are always a number when
+   they are known, never dry, because a daily chance five days out is not a promise, and a missing
+   one is the column's dash. The sentence is the day's button label, so the two say the same. */
+function readDay(wk,i){
+  const t=wk.time[i],hi=xpFin(wk.temperature_2m_max?.[i])?Math.round(+wk.temperature_2m_max[i]):null;
+  const lo=xpFin(wk.temperature_2m_min?.[i])?Math.round(+wk.temperature_2m_min[i]):null;
+  const sky=xpFin(wk.weather_code?.[i]),code=sky?+wk.weather_code[i]:null;
+  const pop=xpFin(wk.precipitation_probability_max?.[i])?Math.round(+wk.precipitation_probability_max[i]):null;
+  const word=sky&&code>=95?"thunder":sky&&isIce(code)?"freezing rain":sky&&isSnow(code)?"snow":"rain";
+  const wet=sky&&isSnow(code)?"snow":sky&&isIce(code)?"freezing rain":"rain";
+  const full=new Date(t+"T12:00").toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
+  return{parts:[[i===0?"Today":dayName(t)+" "+mmdd(t),""],[hi==null?"–":hi+"°","b"],["/ "+(lo==null?"–":lo+"°"),"faint"],[`${word} ${pop==null?"–":pop+"%"}`,""]],
+    said:`${i===0?"Today, ":""}${full}. ${sky&&WMO[code]?WMO[code]+". ":""}High ${hi??"unavailable"}, low ${lo??"unavailable"}. ${pop!=null?`${pop} percent chance of ${wet}`:"Rain chance unavailable"}.`};
 }
-function positionTidePeek(){
-  if(!TIDE_PEEK||document.getElementById("tidePeek").hidden)return;
-  const peek=document.getElementById("tidePeek"),cursor=document.getElementById("tideCursor");
-  const chart=document.getElementById("tideExplore").getBoundingClientRect();
-  const scale=chart.width/TIDE_PEEK.W,px=TIDE_PEEK.x[TIDE_I]*scale;
-  peek.style.maxWidth=Math.max(0,chart.width-16)+"px";
-  const half=peek.offsetWidth/2;
-  peek.style.setProperty("--peek-label-x",clamp(px,8+half,chart.width-8-half).toFixed(1)+"px");
-  cursor.style.setProperty("--peek-x",px.toFixed(1)+"px");
-  cursor.style.setProperty("--peek-y",(TIDE_PEEK.y[TIDE_I]*scale).toFixed(1)+"px");
+/* One stop on the water. A high or a low is the table's own number, and the rest are the curve's,
+   about. At now it is the water that is there, the table plus the gauge's gap (the height the
+   skiff's mark sits at), and while the gauge runs off the table every other stop is said to be
+   the table's, because the gap is a measurement and never a forecast. The chart already shows
+   rising and falling, so only the sentence says it. */
+function readTide(s,now,gap){
+  const ft=v=>(v<-.049?"−":"")+Math.abs(v).toFixed(1),live=!!gap,by=live&&!s.now;
+  const when=xpWhen(s.t,now),said=xpSaid(s.t,now);
+  const parts=[[when,""],[(s.turn?"":"~")+ft(s.depth)+" ft","b"]];
+  if(by)parts.push(["by the table","faint"]);
+  const feet=`${s.turn?"":"about "}${ft(s.depth).replace("−","minus ")} feet${by?" by the tide table":""}`;
+  const off=s.now&&live?`, running ${Math.abs(gap)===.5?"half a foot":Math.abs(gap)+" ft"} ${gap>0?"above":"below"} the tide table`:"";
+  return{parts,said:s.turn?`${s.turn==="H"?"High":"Low"} tide at ${said.replace(/^Now$/,"now")}, ${feet}`:`${said}, ${feet}${off}${s.dir?", "+s.dir:""}`};
 }
-function setupTidePeek(){
-  const svg=document.getElementById("tideSvg"),explore=document.getElementById("tideExplore");
-  svg.addEventListener("pointerdown",e=>{
-    if(e.pointerType!=="mouse")TIDE_TOUCH_X=e.clientX;
-    showTidePeek(tidePeekIndex(e.clientX));
+/* One stop on the moon. Inside a fishing time the pill says when it ends, because the band shows
+   where it starts and its end is printed nowhere; outside one, when the moon next rises or sets.
+   It only ever sees the windows the chart drew, so it never names one the weather took away, and
+   major and minor stay the band's shade. */
+function readMoon(t,now,alt,wins,cross){
+  const when=xpWhen(t,now),said=xpSaid(t,now),up=alt>=0,w=wins.find(w=>t>=w.start.getTime()&&t<w.end.getTime());
+  const at=x=>xpWhen(x,NaN,t),sayAt=x=>xpSaid(x,NaN,t);
+  if(w)return{parts:[[when,""],[`fishing until ${at(w.end.getTime())}`,"b"]],said:`${said}, moon ${up?"up":"down"}, an almanac fishing time until ${sayAt(w.end.getTime())}`};
+  const on=cross.find(c=>Math.abs(c.t-t)<6e4);
+  if(on)return{parts:[[when,""],[on.rise?"moonrise":"moonset","b"]],said:`${said}, the moon ${on.rise?"rises":"sets"}`};
+  const next=cross.find(c=>c.t>t&&c.rise===!up);
+  if(!next)return{parts:[[when,""],[up?"moon up":"moon down","b"]],said:`${said}, moon ${up?"up":"down"}`};
+  return{parts:[[when,""],[`${up?"moonset":"moonrise"} ${at(next.t)}`,"b"]],said:`${said}, moon ${up?"up, sets":"down, rises"} at ${sayAt(next.t)}`};
+}
+/* One month of NOAA's normals: the high and low, the rain, and the snow only where the snow strip is
+   drawn, in the strips' own formats */
+function readMonth(N,m){
+  const hi=Math.round(N.hi[m]),lo=Math.round(N.lo[m]),r=String(+N.rain[m].toFixed(1)),snowy=N.snow.some(s=>s>=1)&&N.snow[m]>=.5,sn=Math.round(N.snow[m]);
+  const inch=v=>`${v} inch${+v===1?"":"es"}`;
+  const parts=[[MONTHS[m].slice(0,3),""],[hi+"°","b"],["/ "+lo+"°","faint"],[`rain ${r} in`,""]];
+  if(snowy)parts.push([`snow ${sn} in`,""]);
+  return{parts,said:`${MONTHS[m]}, normal high ${hi}, low ${lo}, ${inch(r)} of rain${snowy?`, ${inch(sn)} of snow`:""}`};
+}
+/* where the moon crosses the chart's own horizon, alt 0: a quarter-hour scan, then bisection, so
+   the time agrees with where the curve crosses the line */
+function moonCross(a,b){
+  const alt=t=>moonPos(new Date(t)).alt,out=[];
+  let pt=a,pa=alt(a);
+  for(let t=a+9e5;t<=b;t+=9e5){
+    const v=alt(t);
+    if((pa<0)!==(v<0)){let lo=pt,hi=t;for(let k=0;k<20;k++){const m=(lo+hi)/2;if((alt(m)<0)===(pa<0))lo=m;else hi=m}
+      out.push({t:Math.round((lo+hi)/2),rise:pa<0})}
+    pt=t;pa=v;
+  }
+  return out;
+}
+/* The one machine. Each chart publishes what it drew on every paint (xpPublish): its stops in the
+   chart's own units, which are screen pixels, the line's height at each, the band the hairline
+   runs, where the reading starts, the points PageUp and PageDown jump between and a finger snaps
+   to, and its reader. Nothing is shown until a finger slides, holds or lifts, the mouse hovers, or
+   a key is used, and nothing animates: the pill and the cursor move by transform, in place. */
+function xpSetup(k,{view=null,pick=false,release=null}={}){
+  const box=document.getElementById(k+"Explore");
+  const X=XP[k]={k,box,view,pick,release,peek:box.querySelector(".xp-peek"),key:box.querySelector(".xp-key"),
+    D:null,i:-1,shown:false,hideT:0,holdT:0,ptr:null,x0:0,y0:0,slide:false,held:false,end:0,loc:null};
+  const drop=()=>{clearTimeout(X.holdT);X.ptr=null;X.slide=false;X.held=false;box.classList.remove("xp-drag")};
+  box.addEventListener("pointerdown",e=>{
+    if(!X.D||!e.isPrimary)return;                        /* the first finger only */
+    if(e.pointerType==="mouse"&&(!pick||e.button!==0))return;
+    X.ptr=e.pointerId;X.x0=e.clientX;X.y0=e.clientY;X.slide=false;X.held=false;
+    if(e.pointerType==="mouse")return;
+    clearTimeout(X.hideT);                              /* a new touch keeps a lingering reading */
+    /* a still press reads where it rests; in the week a press is a tap until it slides */
+    if(!pick)X.holdT=setTimeout(()=>{if(X.ptr===e.pointerId&&!X.slide){X.held=true;xpShow(X,xpIndex(X,X.x0))}},XP_HOLD);
   });
-  svg.addEventListener("pointermove",e=>{
-    if(e.pointerType==="mouse"||TIDE_TOUCH_X!==null){
-      if(e.pointerType!=="mouse")TIDE_TOUCH_X=e.clientX;
-      showTidePeek(tidePeekIndex(e.clientX));
+  box.addEventListener("pointermove",e=>{
+    if(!X.D)return;
+    if(e.pointerType==="mouse"&&X.ptr==null){xpShow(X,xpIndex(X,e.clientX));return}   /* hover follows */
+    if(e.pointerId!==X.ptr)return;
+    const dx=e.clientX-X.x0,dy=e.clientY-X.y0;
+    /* sideways, and more across than down: a slide, and this box keeps the finger even when a
+       repaint replaces what is under it. Anything else is the page's to scroll */
+    if(!X.slide&&Math.abs(dx)>=XP_SLOP&&Math.abs(dx)>Math.abs(dy)){
+      X.slide=true;clearTimeout(X.holdT);
+      try{box.setPointerCapture(e.pointerId)}catch(err){}
+      if(pick)box.classList.add("xp-drag");
     }
+    if(X.slide||X.held)xpShow(X,xpIndex(X,e.clientX));
   });
-  svg.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse")hideTidePeek()});
-  svg.addEventListener("pointerup",e=>{
-    if(e.pointerType!=="mouse"){TIDE_TOUCH_X=null;hideTidePeek(1400)}
+  box.addEventListener("pointerup",e=>{
+    if(e.pointerId!==X.ptr)return;
+    const slid=X.slide,held=X.held,mouse=e.pointerType==="mouse";drop();
+    if(pick){
+      /* the week: the day you let go on opens, the same as a tap on it */
+      if(slid){X.end=performance.now();release&&release(X.i);xpHide(X)}
+      return;
+    }
+    if(mouse)return;
+    if(!slid&&!held)xpShow(X,xpIndex(X,e.clientX));    /* a tap reads where it landed */
+    xpHide(X,XP_LINGER);
   });
-  svg.addEventListener("pointercancel",()=>{TIDE_TOUCH_X=null;hideTidePeek(1000)});
-  explore.addEventListener("keydown",e=>{
-    if(!TIDE_PEEK)return;
-    if(e.key==="Escape"){e.preventDefault();hideTidePeek();return}
-    let next=TIDE_I;
-    if(e.key==="ArrowRight")next++;
-    else if(e.key==="ArrowLeft")next--;
-    else if(e.key==="Home")next=0;
-    else if(e.key==="End")next=TIDE_PEEK.samples.length-1;
-    else return;
-    e.preventDefault();showTidePeek(clamp(next,0,TIDE_PEEK.samples.length-1),true);
-  });
-  explore.addEventListener("blur",()=>hideTidePeek());
-}
-function hideHourlyPeek(delay=0){
-  clearTimeout(PEEK_HIDE);
-  const hide=()=>{
-    document.getElementById("hourlyPeek").hidden=true;
-    document.getElementById("hourlyCursor").hidden=true;
-  };
-  if(delay)PEEK_HIDE=setTimeout(hide,delay);else hide();
-}
-function hourlyPeekIndex(clientX){
-  if(!HOURLY_PEEK)return 0;
-  const svg=document.getElementById("hourlySvg"),r=svg.getBoundingClientRect();
-  const vx=(clientX-r.left)/Math.max(1,r.width)*HOURLY_PEEK.W;
-  let best=0,dist=Infinity;
-  HOURLY_PEEK.x.forEach((x,i)=>{const d=Math.abs(x-vx);if(d<dist){dist=d;best=i}});
-  return best;
-}
-function showHourlyPeek(i,announce=false){
-  if(!HOURLY_PEEK)return;
-  clearTimeout(PEEK_HIDE);
-  const {h}=HOURLY_PEEK,n=h.time.length;
-  PEEK_I=clamp(i,0,n-1);
-  const temp=Math.round(Number(h.temp[PEEK_I]));
-  const rawFeel=h.feels?.[PEEK_I];
-  const apparent=rawFeel==null?NaN:Number(rawFeel);
-  const feels=Number.isFinite(apparent)?Math.round(apparent):temp;
-  const showFeels=Math.abs(feels-temp)>=3;
-  const pop=Math.round(Number(h.pop[PEEK_I])||0),kind=precipKind(h.code?.[PEEK_I]);
-  const time=PEEK_I===0?"now":hh(h.time[PEEK_I]);
-  const peek=document.getElementById("hourlyPeek"),cursor=document.getElementById("hourlyCursor");
-  document.getElementById("peekTime").textContent=time;
-  document.getElementById("peekTemp").textContent=temp+"°";
-  const feelEl=document.getElementById("peekFeels");
-  feelEl.hidden=!showFeels;feelEl.textContent=showFeels?"feels "+feels+"°":"";
-  feelEl.className="feels "+(feels>=temp?"warm":"cold");
-  document.getElementById("peekRain").textContent=pop>=5?kind+" "+pop+"%":"dry";
-  peek.hidden=false;cursor.hidden=false;
-  positionHourlyPeek();
-  if(announce){
-    const spokenTime=PEEK_I===0?"Now":clock12(new Date(h.time[PEEK_I]));
-    document.getElementById("hourlyPeekLive").textContent=
-      `${spokenTime}, ${temp} degrees${showFeels?`, feels like ${feels}`:""}, ${pop>=5?`${pop} percent chance of ${kind}`:"dry"}`;
+  /* the page took the gesture for a scroll: nothing is left behind */
+  box.addEventListener("pointercancel",e=>{if(e.pointerId!==X.ptr)return;drop();xpHide(X)});
+  box.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse"&&X.ptr==null)xpHide(X)});
+  const key=X.key;
+  if(key){
+    key.addEventListener("input",()=>xpShow(X,+key.value));
+    key.addEventListener("keydown",e=>{
+      if(!X.D)return;
+      if(e.key==="Escape"){e.preventDefault();xpHide(X);return}
+      if(e.key!=="PageUp"&&e.key!=="PageDown")return;
+      e.preventDefault();
+      const m=[...new Set(X.D.marks)].sort((a,b)=>a-b),cur=X.shown?X.i:+key.value;
+      const to=e.key==="PageDown"?m.find(v=>v>cur):[...m].reverse().find(v=>v<cur);
+      xpShow(X,to??cur);
+    });
+    key.addEventListener("focus",()=>{if(X.D)xpShow(X,+key.value)});
+    key.addEventListener("blur",()=>{xpHide(X);if(X.D)key.value=X.D.start});
   }
 }
-const precipKind=code=>isIce(code)?"freezing rain":isSnow(code)?"snow":"rain";
-function positionHourlyPeek(){
-  if(!HOURLY_PEEK||document.getElementById("hourlyPeek").hidden)return;
-  const peek=document.getElementById("hourlyPeek"),cursor=document.getElementById("hourlyCursor");
-  const chart=document.getElementById("hourlyExplore").getBoundingClientRect();
-  const view=document.querySelector(".hourly-scroll").getBoundingClientRect();
-  const left=Math.max(0,view.left-chart.left)+8,right=Math.min(chart.width,view.right-chart.left)-8;
-  const scale=chart.width/HOURLY_PEEK.W,px=HOURLY_PEEK.x[PEEK_I]*scale;
-  peek.style.maxWidth=Math.max(0,right-left)+"px";
-  const half=peek.offsetWidth/2;
-  peek.style.setProperty("--peek-label-x",clamp(px,left+half,right-half).toFixed(1)+"px");
-  cursor.style.setProperty("--peek-x",px.toFixed(1)+"px");
-  cursor.style.setProperty("--peek-y",(HOURLY_PEEK.y[PEEK_I]*scale).toFixed(1)+"px");
+function xpIndex(X,clientX){
+  const D=X.D,r=D.svg.getBoundingClientRect(),vx=(clientX-r.left)/Math.max(1,r.width)*D.W;
+  let best=0,dist=Infinity;
+  D.x.forEach((x,i)=>{const d=Math.abs(x-vx);if(d<dist){dist=d;best=i}});
+  /* at 320 a quarter hour is two pixels, so the points the chart names catch the finger */
+  let sn=-1,sd=XP_SNAP;
+  for(const i of D.snap||[]){const d=Math.abs(D.x[i]-vx);if(d<=sd){sd=d;sn=i}}
+  return sn>=0?sn:best;
 }
-function setupHourlyPeek(){
-  const svg=document.getElementById("hourlySvg"),explore=document.getElementById("hourlyExplore");
-  svg.addEventListener("pointerdown",e=>{
-    if(e.pointerType!=="mouse")PEEK_TOUCH_X=e.clientX;
-    showHourlyPeek(hourlyPeekIndex(e.clientX));
-  });
-  svg.addEventListener("pointermove",e=>{
-    if(e.pointerType==="mouse"||PEEK_TOUCH_X!==null){
-      if(e.pointerType!=="mouse")PEEK_TOUCH_X=e.clientX;
-      showHourlyPeek(hourlyPeekIndex(e.clientX));
-    }
-  });
-  svg.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse")hideHourlyPeek()});
-  svg.addEventListener("pointerup",e=>{
-    if(e.pointerType!=="mouse"){PEEK_TOUCH_X=null;hideHourlyPeek(1400)}
-  });
-  svg.addEventListener("pointercancel",()=>{PEEK_TOUCH_X=null;hideHourlyPeek(1000)});
-  explore.addEventListener("keydown",e=>{
-    if(!HOURLY_PEEK)return;
-    if(e.key==="Escape"){e.preventDefault();hideHourlyPeek();return}
-    let next=PEEK_I;
-    if(e.key==="ArrowRight")next++;
-    else if(e.key==="ArrowLeft")next--;
-    else if(e.key==="Home")next=0;
-    else if(e.key==="End")next=(HOURLY_PEEK?.h.time.length||1)-1;
-    else return;
-    e.preventDefault();
-    next=clamp(next,0,HOURLY_PEEK.h.time.length-1);
-    showHourlyPeek(next,true);
-  });
-  explore.addEventListener("blur",()=>hideHourlyPeek());
+function xpShow(X,i){
+  const D=X.D;if(!D)return;
+  i=clamp(Math.round(i)||0,0,D.x.length-1);
+  for(const k in XP)if(XP[k]!==X&&XP[k].shown)xpHide(XP[k]);   /* one reading at a time */
+  revealFinish(X.k);                                           /* never a ring on a line still drawing in */
+  clearTimeout(X.hideT);
+  const slot=D.svg.querySelector(".xp-cursor");
+  if(X.shown&&X.i===i&&slot&&slot.firstChild)return;
+  X.i=i;X.shown=true;
+  const r=D.read(i);
+  X.peek.innerHTML=r.parts.map(([t,c])=>`<span${c?` class="${c}"`:""}>${esc(t)}</span>`).join("");
+  X.peek.hidden=false;
+  if(X.key){X.key.value=i;X.key.setAttribute("aria-valuetext",r.said)}
+  /* drawn inside the chart, over the line and under the labels, whose paper halos break it */
+  if(slot){
+    slot.setAttribute("transform",`translate(${D.x[i].toFixed(1)} 0)`);
+    slot.innerHTML=`<line x1="0" x2="0" y1="${D.band[0]}" y2="${(+D.band[1]).toFixed(1)}"/>`+
+      ((D.noRing||[]).includes(i)?"":D.y[i].filter(Number.isFinite).map(y=>`<circle r="3.5" cy="${y.toFixed(1)}"/>`).join(""));
+  }
+  if(D.on){for(const el of X.box.querySelectorAll(".xp-on"))el.classList.remove("xp-on");D.on(i)?.classList.add("xp-on")}
+  /* the pill sits over the stop, kept 8px inside what can be seen of the chart */
+  const b=X.box.getBoundingClientRect(),v=X.view?document.querySelector(X.view).getBoundingClientRect():b,s=D.svg.getBoundingClientRect();
+  const px=s.left-b.left+D.x[i]/D.W*s.width,lo=Math.max(0,v.left-b.left)+8,hi=Math.min(b.width,v.right-b.left)-8;
+  X.peek.style.maxWidth=Math.max(0,hi-lo)+"px";
+  const w=X.peek.offsetWidth;
+  X.peek.style.setProperty("--xp-x",clamp(px,lo+w/2,hi-w/2).toFixed(1)+"px");
 }
+function xpHide(X,delay=0){
+  clearTimeout(X.hideT);
+  const go=()=>{X.shown=false;X.peek.hidden=true;
+    const slot=X.D&&X.D.svg.querySelector(".xp-cursor");if(slot)slot.innerHTML="";
+    /* a finger's reading is not the keys': the next Tab starts where the chart starts */
+    if(X.key&&X.D&&document.activeElement!==X.key)X.key.value=X.D.start;
+    for(const el of X.box.querySelectorAll(".xp-on"))el.classList.remove("xp-on")};
+  if(delay)X.hideT=setTimeout(go,delay);else go();
+}
+/* Every paint hands each chart's explorer what it drew, or null for a chart it did not draw. A
+   repaint while a finger is down, the mouse is over the chart or a key has it (the live forecast
+   landing, a resize) keeps the moment: the stop nearest the same time, on the new data. Otherwise,
+   and always on a new place, it goes back to its start, hidden. */
+function xpPublish(k,D){
+  const X=XP[k];if(!X)return;
+  const was=X.D,held=X.ptr!=null||X.box.matches(":hover")||X.key&&document.activeElement===X.key;
+  const keep=D&&was&&X.shown&&X.i>=0&&X.loc===LOC.id&&held,t=keep?was.t[X.i]:null;
+  if(was&&!keep){const slot=was.svg.querySelector(".xp-cursor");if(slot)slot.innerHTML=""}
+  X.D=D;X.loc=LOC.id;
+  if(X.key){X.key.disabled=!D;X.key.max=D?D.x.length-1:0}
+  if(!D){drop0(X);return}
+  if(keep){let best=D.start,dd=Infinity;D.t.forEach((v,i)=>{const d=Math.abs(v-t);if(d<dd){dd=d;best=i}});X.shown=false;xpShow(X,best);return}
+  drop0(X);
+  if(X.key){X.key.value=D.start;X.key.setAttribute("aria-valuetext",D.read(D.start).said)}
+}
+const drop0=X=>{clearTimeout(X.hideT);clearTimeout(X.holdT);X.ptr=null;X.slide=false;X.held=false;X.box.classList.remove("xp-drag");
+  X.shown=false;X.i=-1;X.peek.hidden=true;for(const el of X.box.querySelectorAll(".xp-on"))el.classList.remove("xp-on")};
+function xpReset(){for(const k in XP)xpPublish(k,null)}
 function cacheAgeText(savedAt){
   const mins=Math.max(0,Math.round((Date.now()-savedAt)/6e4));
   if(mins<2)return"updated just now";
@@ -5266,9 +5359,9 @@ function render(d,live,savedAt=0){
   const X=i=>pad+i*(W-2*pad)/(n-1);
   const Y=t=>20+(base-34)*(1-(t-tMin)/(tMax-tMin));
   const pts=trendTemp.map((t,i)=>[X(i),Y(t)]);
-  HOURLY_PEEK={h,W,x:h.temp.map((_,i)=>X(i)),y:trendTemp.map(t=>Y(t))};
-  PEEK_I=0;
-  hideHourlyPeek();
+  /* the hour now is in on the wall clock: the first hour on a fresh load, and later on a cache
+     opened late, so the axis's NOW, the now dot and the reading all agree about when now is */
+  const nowHr0=new Date(now).setMinutes(0,0,0),nowF=h.time.findIndex(t=>new Date(t).getTime()>=nowHr0),nowI=nowF<0?n-1:nowF;
   const line=spline(pts);
   const area=line+` L ${X(n-1).toFixed(1)} ${base} L ${X(0).toFixed(1)} ${base} Z`;
   /* the entrance tags what it animates; once it has played, a render carries no tags */
@@ -5336,7 +5429,7 @@ function render(d,live,savedAt=0){
        the band it sits in instead of running off the right side of the night */
     if(x1-x0>30)nightTags.push([x0,x1]);
   }
-  let bars="",dots="",labels="";
+  let bars="",odds="",dots="",labels="";
   const hiI=h.temp.indexOf(Math.max(...h.temp)),loI=h.temp.indexOf(Math.min(...h.temp));
   const oddsAt=[];
   for(let i=0;i<n;i++){
@@ -5360,9 +5453,9 @@ function render(d,live,savedAt=0){
       if(h.pop[i]>=40&&i%4===2&&i!==hiI&&i!==loI)
         oddsAt.push([i,base-bh-5]);
     }
-    labels+=`<span class="${i===0?"mark":""}" style="left:${(X(i)/W*100).toFixed(3)}%">${i===0?"NOW":i%3===0?hh(h.time[i]):""}</span>`;
+    labels+=`<span class="${i===nowI?"mark":""}" style="left:${(X(i)/W*100).toFixed(3)}%">${i===nowI?"NOW":i%3===0?hh(h.time[i]):""}</span>`;
   }
-  const keys=[...new Set([hiI,0,loI])];
+  const keys=[...new Set([hiI,nowI,loI])];
   for(const i of keys){const x=X(i),y=Y(trendTemp[i]);taken.push([x-6,y-6,x+6,y+6])}
   for(const i of keys){
     const x=X(i),y=Y(trendTemp[i]),t=Math.round(h.temp[i])+"°",c=tempColor(h.temp[i]);
@@ -5396,7 +5489,7 @@ function render(d,live,savedAt=0){
     /* the bar already says the odds, so a number the line would strike through is dropped */
     if(hit(b)||Math.min(...ys)<b[3]+3&&Math.max(...ys)>b[1]-3)continue;
     taken.push(b);
-    bars+=`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="10" fill="${css.wink}" ${halo}${rvAt(x,"label",240)}>${h.pop[i]}%</text>`;
+    odds+=`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="10" fill="${css.wink}" ${halo}${rvAt(x,"label",240)}>${h.pop[i]}%</text>`;
   }
   for(const [x0,x1] of nightTags){
     /* The band and the moon already say it is dark, so the words went and the moon stays. It
@@ -5438,6 +5531,8 @@ function render(d,live,savedAt=0){
     ${bars}
     ${rv?[[10,.3,.24],[6.5,.6,.2],[4.4,1,.16]].map(([w,f,o])=>`<path class="rv-tail" data-f="${f}" data-o="${o}" d="${line}" fill="none" stroke="url(#tline)" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>`).join(""):""}
     <path class="tline" d="${line}" fill="none" stroke="url(#tline)" stroke-width="2.4" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/>
+    <g class="xp-cursor"></g>
+    ${odds}
     ${dots}
     ${rv?`<g class="rv-tip" opacity="0" fill="${tempColor(h.temp[0])}"><circle r="12" opacity=".12"/><circle r="6.5" opacity=".24"/><circle r="3.3"/><circle class="rv-core" r="1.5" fill="#FFF8EC" opacity=".95"/></g>`:""}
     <line x1="${pad}" y1="${base}" x2="${W-pad}" y2="${base}" stroke="${css.line}" stroke-width="1"/>`;
@@ -5446,6 +5541,11 @@ function render(d,live,savedAt=0){
     return h.temp[i]+(h.temp[i+1]-h.temp[i])*(f-i)};
   revealChart("hourly",hourlySvg,{xa:X(0),xb:X(n-1),dur:clamp(1900+W*1.1,2200,2700),tail:60,
     color:x=>tempColor(hourAt(x))});
+  /* each hour of the run, starting at the hour now is in; the now dot is the mark there */
+  const gold=goldWindows.map(g=>[g.a.getTime(),g.b.getTime()]);
+  xpPublish("hourly",{svg:hourlySvg,W,x:h.time.map((_,i)=>X(i)),y:trendTemp.map((t,i)=>[known(h.temp[i])?Y(t):NaN]),
+    t:h.time.map(s=>new Date(s).getTime()),band:[12,base],start:nowI,marks:[nowI,hiI,loI],noRing:[nowI],
+    read:i=>readHour(h,i,nowI,gold)});
   document.getElementById("hrLabels").innerHTML=labels;
 
   /* week: drawn before the tide because it sits above it, so its entrance is armed first */
@@ -5466,7 +5566,7 @@ function render(d,live,savedAt=0){
     /* with no tide table the chart is empty, and the note says so after whatever it can read */
     document.getElementById("tideNote").textContent=tide?waterNote(water,tide):[waterNote(water,null),"tide data unavailable"].filter(Boolean).join(" · ");
     document.getElementById("tideSvg").setAttribute("aria-label",tide?"Tide curve, next 27 hours"+(water&&water.level?". "+water.level:""):"Tide data unavailable");
-  }
+  }else xpPublish("tide",null);
   renderAlerts(alerts);
   renderNowcast(d.nowcast,c.weather_code,h);
   renderStorms(d.storms);
@@ -5735,7 +5835,7 @@ function paintLoadingState(){
   document.getElementById("uvDetails").style.display="none";
   for(const id of ["uvLead","eveLead"])
     document.getElementById(id).textContent="—";
-  HOURLY_PEEK=null;hideHourlyPeek();TIDE_PEEK=null;hideTidePeek();LAST=null;
+  xpReset();LAST=null;
 }
 function setLoc(id){
   if(!LOC_ORDER.includes(id)||LOC.id===id)return;
@@ -5750,8 +5850,9 @@ function setLoc(id){
 }
 paintAddr();
 paintLocationShell();
-setupHourlyPeek();
-setupTidePeek();
+/* one explorer per chart, in page order */
+xpSetup("hourly",{view:".hourly-scroll"});
+xpSetup("tide");
 const initialCached=readCache(LOC.id);
 if(initialCached)render(initialCached.data,false,initialCached.savedAt);
 else paintLoadingState();
