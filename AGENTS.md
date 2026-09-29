@@ -256,11 +256,16 @@ place name.
   number), and one pill above the finger says what the picture cannot, or puts a number on what the
   finger covers. A vertical swipe scrolls and shows nothing. A tap reads where it lands, a still
   press reads after 140ms, and a lifted reading stays 2.2 seconds. Still means a finger that has
-  not moved 6px, and has not crept 2px since the wait began (each creep starts the 140ms again), so
+  not moved 10px (`XP_TAP`, about the browser's own tap slop and iOS's 10pt; at 6px a firm thumb
+  whose pad rolled 7px read nothing while the week opened its day for the same press, and 6px,
+  `XP_SLOP`, still decides a slide), and has not crept 2px since the wait began (each creep starts the 140ms again), so
   a slow start to a scroll never pops a reading, and never finishes the entrance of a chart still
   waiting to draw in under it. A finger that lands while the page is gliding from a flick is
   stopping the page, not tapping the chart, however long it rests there: it never holds, and it can
-  still slide to read. A phone leaves `:hover` stuck on what was tapped, so only a real mouse over
+  still slide to read. A press ends wherever the finger comes up (`pointerup` and `pointercancel` on
+  the document): until a slide captures it a press has only the browser's hold on the node pressed,
+  a repaint replaces that node, and a lift a few pixels off the chart once left the reading up for
+  good. A phone leaves `:hover` stuck on what was tapped, so only a real mouse over
   the chart holds a reading through a repaint, and a tapped reading keeps the rest of its 2.2 seconds
   through one (the live data landing a moment after the cache on every open), re-placed on the new
   data, and is gone at 2.2 seconds whatever lands in between. The pill never covers what it reads:
@@ -281,13 +286,17 @@ place name.
   and say nothing, and a band still to come that holds no whole hour goes to the one hour nearest
   its middle. A live paint drawn after the top of the hour (a rotation between fetches) asks for the
   new hour's run, once an hour, so NOW and the now pill land back on the live reading. A missing
-  hourly temperature is not a zero: the line runs through it between its known neighbours and only
-  known hours are marked. The water says the water that is there at now (the table plus the gauge's gap, where
+  hourly temperature is not a zero: the line runs through it between its known neighbours, stops at
+  the first and last known hour (with no neighbour past them, a line held flat drew a temperature the
+  run does not carry), and only known hours are marked. The Tonight card reads the same run and
+  leaves a missing hour out of the night (it once said `Low 0° tonight.`), and the week does the same
+  with a missing day (`knownRun`), which once dove its line off the chart and printed `0°`. The water says the water that is there at now (the table plus the gauge's gap, where
   the gauge's mark is drawn on the now line, and the ring goes on that mark when it is drawn and
   nowhere at now when the skiff covers it) and `by the table` everywhere else while the gauge runs off
   it. The moon says when a fishing time ends, to the minute it prints, or when the moon rises or
   sets, and never names a window it dropped. A day is named only where a clock time could mean two moments. The Sun bar has
-  none, because it is a scale and not a day. A chart still drawing in finishes first, a repaint
+  no explorer, because it is a scale and not a day, and its two readings are already printed on it.
+  A chart still drawing in finishes first, a repaint
   under a finger keeps the moment (even one that landed a moment before and has not slid yet), a
   slider's spoken value goes back to the start with its value, a chart not drawn speaks nothing, and
   the explorer adds no animation. On a cache opened late the axis's NOW is the hour now is in, and
@@ -487,11 +496,11 @@ TZ=America/New_York node tools/scene.mjs fog storm  # just the scenes you are wo
 node tools/rig.mjs heron                          # one animal, close up and at phone size
 ```
 
-`tools/shots.mjs` renders twenty-two scenarios (day, night, after midnight, storm, dusk,
+`tools/shots.mjs` renders twenty-four scenarios (day, night, after midnight, storm, dusk,
 both family locations, a fine farm afternoon, a washout, a shoulder-season moderate-UV day with
 the water running two feet over the tide table, and two shaped weeks: a cool snap into a warm run
 on a Thursday, gusting 30 at five with the boat season switched on, and a stormy Sunday week with
-100% odds and a 101° high, which is also the eight-column week), then seven for the water, the
+100% odds and a 101° high, which is also the eight-column week), then twelve for the water, the
 farm and the weekend: a Saturday at the coast with the boat season switched on, where the weekend
 is today and tomorrow and the water is `Easy out there.`; a mid-November Saturday, with the seas
 and the water and no sentence; a cold January morning on the coast with the station's thermometer
@@ -500,8 +509,9 @@ unavailable.` and never green; the water two feet over the table half an hour be
 where the skiff rides the curve under the gauge's mark and the high's time steps over both, and a
 winter northwester blowing it out a foot and a half under the table at the low, where the mark and
 its tag stay off the bed; the water two feet over at a low and a foot under at a high, where the
-tag once sat on the tide line; a wet weekend of 40% and 100% with three-digit highs, whose note
-stays beside its title at 320; and a cold October morning at the farm, `Cold one. Bundle up for
+tag once sat on the tide line; the water half a foot under an hour before a low, where the tag once
+sat on the gauge's own mark; a wet weekend of 40% and 100% with three-digit highs, and a farm
+weekend of rain then snow, whose notes stay beside their title at 320; and a cold October morning at the farm, `Cold one. Bundle up for
 the morning rounds.` on the `Piddling` card over the moon. A scenario marked `boat: true` is served with
 `boatSeason:null` switched back on, and fails if there is nothing to switch. It writes screenshots
 to `tools/shots/` and prints the generated copy (the headline, the chips as they are seen, the
@@ -515,7 +525,8 @@ card, the sun bar's spoken label, how many times the seas were asked for, and it
 loading-shell check at the end also holds the sun scale hidden and every slider off while there is no
 bar or reading, and the farm's moon and its year's title (and its hover text's airport) in place before any forecast lands. Every scenario
 also fails when a word on the tide, the moon or the year runs off its chart or into another word,
-when the skiff's level tag sits on the bed or within 2px of the tide line, or when the water's
+when the skiff's level tag sits on the bed, within 2px of the tide line or on the gauge's mark
+(its halo against the mark's ink), or when the water's
 pill at now covers the skiff, measured at 390 and 900 and once more at 320, the width where they
 meet, where it also fails any section title whose note drops under it. It exits non-zero when one does not show what it
 is there for.
@@ -843,9 +854,10 @@ lines over bars. They change once a decade, so they live in `NORMALS` and nothin
   tinted with everything else and never box. It fades in as the pen reaches Saturday. No WEEKEND
   tag: SAT and SUN are printed under it. The note beside the eyebrow is the weekend in numbers,
   `Sat 84° · Sun 82° 60% rain`, odds from `WEEK_WET`, no adjectives and never "dry weekend",
-  and two wet days of one kind say the noun once (`Sat 84° 40% · Sun 82° 100% rain`), so the note
-  stays on its title's line at 320,
-  which five to seven days out is a claim without its odds. An old seven-day cache on a Sunday
+  which five to seven days out is a claim without its odds. Two wet days of one kind say the noun
+  once (`Sat 84° 40% · Sun 82° 100% rain`), and under 340 the note is half a point smaller, so a
+  weekend of two kinds (`Sat 44° 60% rain · Sun 34° 100% snow`) also stays on its title's line at
+  320. An old seven-day cache on a Sunday
   bands the Saturday it has and invents no Sunday. Eight columns on a 320 phone are 35px, so the
   day names tighten their tracking there. Check a Sunday at 320 with three-digit highs.
 
@@ -906,7 +918,7 @@ order, hourly, week, tide, moon, sun, year, and so is `RV_OF`, the observer's ma
   or pops takes its transform origin from its own geometry in user space, not a fill-box
   percentage.
 
-`tools/interactions.mjs` runs thirty-one scenarios: every pill kept inside its chart at both edges
+`tools/interactions.mjs` runs thirty-five scenarios: every pill kept inside its chart at both edges
 at 320, 390 and 900, keyboard navigation, location switching, snow/ice labels, a warning at the farm that is `Chores can
 wait.` in red and takes the fishing times until it expires, source instructions, a farm day with
 thunder in the run from noon and nothing warned (the headline `Thunder possible around noon.`,
@@ -924,7 +936,10 @@ keys, Tab order and spoken values, with the sliders off in the loading shell; th
 the water two feet over the table; the farm's snowy January and the clamped ends of the year; a
 finger held through a repaint; a tapped reading kept through a repaint for the rest of its linger;
 a thumb creeping into a scroll on the real clock, and one that stops a glide and rests 200ms,
-both reading nothing; a tap on the hourly's hour labels; a cache opened three hours late; and, with
+both reading nothing; a tap on the hourly's hour labels; a press on an hour label or a month that a
+repaint replaces, lifted just under the chart, which lets go, and a press that settles 7px or a tap
+that drifts 8px, which reads, at the coast at 390 and the farm at 320; a missing night hour, a run
+whose last hours carry no temperature, and a missing daily high, none of them drawn or said as 0°; a cache opened three hours late; and, with
 motion on, a slide during the entrance, the animation count across a slide, and a creeping scroll
 from a chart still waiting to draw in that leaves its entrance to play. The entrance checks run with motion
 on; everything else runs under reduced motion. Run it with the same font and browser settings as

@@ -619,6 +619,34 @@ try{
     assert.ok(r.marks.every(i=>i>=0),"no mark at -1: "+r.marks);
     assert.ok(r.labels.includes(r.low+"°"),`the real low ${r.low}° keeps its label: ${r.labels}`);
     assert.match(r.said,/temperature unavailable/);
+    /* and the Tonight card reads the same run: a missing night hour drops out of the night, and the
+       card says the real low. Number(null) is 0, which once printed "Low 0° tonight." */
+    const eve=await page.evaluate(()=>{const d=structuredClone(LAST.d),h=d.hourly,set=new Date(d.daily.sunset[0]),rise=new Date(d.daily.sunrise[1]);
+      const night=h.time.map((t,i)=>i).filter(i=>new Date(h.time[i])>=set&&new Date(h.time[i])<=rise);
+      h.temp[night[2]]=null;render(d,false,LAST.savedAt);
+      const low=Math.round(Math.min(...night.filter(i=>h.temp[i]!=null).map(i=>+h.temp[i])));
+      return{n:night.length,low,text:document.getElementById("eveLead").textContent}});
+    assert.ok(eve.n>3,"the run reaches into the night");
+    assert.doesNotMatch(eve.text,/Low\u00A00°/,"a missing night hour is not a zero: "+eve.text);
+    assert.ok(eve.text.includes(`Low\u00A0${eve.low}°`),`the card says the real low ${eve.low}°: ${eve.text}`);
+    /* past the last known hour there is no neighbour: the line and its fill stop there rather than
+       holding flat a temperature the run does not carry, and with one known hour there is no line */
+    const tail=await page.evaluate(()=>{const d=structuredClone(LAST.d),h=d.hourly,n=h.temp.length;h.temp=h.temp.map((t,i)=>i>=n-8?null:t);
+      render(d,false,LAST.savedAt);const xs=el=>(el.getAttribute("d").match(/-?\d+(?:\.\d+)?/g)||[]).map(Number).filter((_,j)=>j%2===0);
+      const svg=document.getElementById("hourlySvg"),last=XP.hourly.D.x[n-9];
+      const r={last,line:Math.max(...xs(svg.querySelector(".tline"))),clip:Math.max(...xs(svg.querySelector("#hourlyArea path"))),nan:/NaN/.test(svg.innerHTML)};
+      h.temp=h.temp.map((t,i)=>i===0?t:null);render(d,false,LAST.savedAt);
+      r.one=svg.querySelector(".tline").getAttribute("d");return r});
+    assert.equal(tail.nan,false,"nothing is drawn at NaN past the run's temperatures");
+    assert.ok(tail.line<=tail.last+.5&&tail.clip<=tail.last+.5,`the line (${tail.line}) and its fill (${tail.clip}) stop at the last known hour (${tail.last})`);
+    assert.equal(tail.one,"","one known hour draws no line");
+    /* the week too: a missing high runs its line between the known days and prints no "0°" */
+    const wk=await page.evaluate(()=>{const d=structuredClone(LAST.d);d.daily.temperature_2m_max[3]=null;render(d,false,LAST.savedAt);
+      const svg=document.getElementById("weekSvg"),H=svg.viewBox.baseVal.height,ys=(svg.querySelector(".tline").getAttribute("d").match(/-?\d+(?:\.\d+)?/g)||[]).map(Number).filter((_,j)=>j%2);
+      return{labels:[...svg.querySelectorAll("text")].map(e=>e.textContent),nan:/NaN/.test(svg.innerHTML),lo:Math.max(...ys),H}});
+    assert.equal(wk.nan,false,"nothing in the week is drawn at NaN");
+    assert.ok(!wk.labels.includes("0°"),"a missing high is not 0°: "+wk.labels);
+    assert.ok(wk.lo<wk.H-12,`the high line stays on the chart (${wk.lo} under ${wk.H-12})`);
     assert.deepEqual(errors,[]);await context.close();checks++;
   }
   {
@@ -773,6 +801,45 @@ try{
       await page.waitForTimeout(2600);
     }
     assert.deepEqual(errors,[]);await context.close();checks++;
+  }
+  {
+    /* a press ends wherever the finger comes up. Until a slide captures it a press has only the
+       browser's hold on the node pressed, and a repaint replaces that node (an hour label, a month
+       letter), so a lift a few pixels under the chart never reached it and the reading stayed up
+       for good. And a tap may settle as far as the browser's own tap does: a firm press whose pad
+       rolls 7px and rests reads on the hold and at the lift, as the week opens its day for it */
+    for(const [loc,width] of [["mb",390],["sp",320]]){
+      const {context,page,errors,cdp}=await phone(width,coast,loc);
+      await load(page);
+      for(const [k,sel] of [["hourly","#hrLabels span:nth-child(4)"],["year","#yearMonths span:nth-child(6)"]]){
+        const b=await inView(page,`#${k}Explore`),l=await page.locator(sel).boundingBox(),x=l.x+l.width/2;
+        await cdp.send("Input.dispatchTouchEvent",{type:"touchStart",touchPoints:[{x,y:l.y+l.height/2}]});
+        await page.waitForTimeout(30);
+        await page.evaluate(()=>render(LAST.d,LAST.live,LAST.savedAt));
+        await page.waitForTimeout(16);
+        await cdp.send("Input.dispatchTouchEvent",{type:"touchMove",touchPoints:[{x,y:b.y+b.height+3}]});
+        await cdp.send("Input.dispatchTouchEvent",{type:"touchEnd",touchPoints:[]});
+        await page.waitForTimeout(2800);
+        await page.evaluate(()=>render(LAST.d,LAST.live,LAST.savedAt));
+        const s=await xpState(page,k),ptr=await page.evaluate(k=>XP[k].ptr,k);
+        assert.ok(ptr==null&&!s.shown,`${k} at ${width}: a press whose node a repaint replaced ends at a lift off the chart (ptr ${ptr}, pill ${s.text})`);
+      }
+      for(const k of loc==="mb"?["hourly","tide"]:["moon","year"]){
+        const b=await inView(page,`#${k}Explore`),x=b.x+b.width*.5,y=b.y+b.height*.45;
+        let held=false;
+        await touch(cdp,page,[[x,y],[x,y+2.8],[x,y+5.6],[x,y+7]],{end:false});
+        await page.waitForTimeout(600);held=(await xpState(page,k)).shown;
+        await cdp.send("Input.dispatchTouchEvent",{type:"touchEnd",touchPoints:[]});
+        await page.waitForTimeout(60);
+        assert.ok(held&&(await xpState(page,k)).shown,`${k} at ${width}: a press that settles 7px reads on the hold and at the lift`);
+        await page.waitForTimeout(2600);
+        await touch(cdp,page,[[x,y],[x,y+3],[x,y+6],[x,y+8]],{dt:30});
+        await page.waitForTimeout(60);
+        assert.equal((await xpState(page,k)).shown,true,`${k} at ${width}: a quick tap that drifts 8px reads`);
+        await page.waitForTimeout(2600);
+      }
+      assert.deepEqual(errors,[]);await context.close();checks++;
+    }
   }
   {
     /* the week: a tap just after a slide is a tap, and the click a short slide leaves behind is

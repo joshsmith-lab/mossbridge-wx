@@ -150,6 +150,11 @@ const CASES = [
     o: { baseTemp: 70, nowTemp: 72, feels: 72, rh: 60, isDay: 1, code: 2, cloud: 40, nowWind: 16, nowDir: 330, nowGust: 26, nowUv: 3.5, uvMax: 5,
       windAmp: 9, gustAmp: 13, sunrise: "07:04", sunset: "18:59", surge: -1, popCurve: () => 4, dailyPop: (p) => p.fill(5) },
     expect: { level: "Running 1 ft below the tide table." } },
+  // the water half a foot under the table an hour before the 7:48p low: the mark sits close to the
+  // bed, and the tag goes beside it, never on it
+  { name: "27-under-the-table-near-low-porters-neck", loc: "mb", when: "2026-09-27T18:46:00",
+    o: { baseTemp: 76, nowTemp: 74, feels: 74, rh: 70, isDay: 1, code: 2, cloud: 35, nowWind: 12, nowDir: 330, nowGust: 20, nowUv: 0.3, uvMax: 6,
+      windAmp: 6, gustAmp: 9, sunrise: "07:03", sunset: "19:07", surge: -0.5, waterTemp: 76, popCurve: () => 5, dailyPop: (p) => p.fill(10) } },
   // a wet weekend of one kind, 40% and 100%: the noun is said once, so at 320 the note stays on the
   // title's line
   { name: "26-wet-weekend-porters-neck", loc: "mb", when: "2026-08-06T14:20:00",
@@ -158,6 +163,14 @@ const CASES = [
       dailyPop: (p, c) => { p.fill(10); p[2] = 40; p[3] = 100; c[2] = 80; c[3] = 63; },
       dailyTemps: (hi) => { hi.splice(2, 2, 100, 101); } },
     expect: { note: /^Sat 100° 40% · Sun 101° 100% rain$/ } },
+  // a wet weekend of two kinds at the farm, rain then snow: both nouns are said, and at 320 the
+  // note still stays on the title's line
+  { name: "28-rain-then-snow-weekend-shady-spring", loc: "sp", when: "2027-01-15T12:20:00",
+    o: { baseTemp: 38, nowTemp: 41, feels: 36, rh: 70, isDay: 1, code: 3, cloud: 80, nowWind: 8, nowDir: 250, nowGust: 14, nowUv: 1.5, uvMax: 2,
+      windAmp: 5, gustAmp: 8, sunrise: "07:30", sunset: "17:25", popCurve: () => 10,
+      dailyPop: (p, c) => { p.fill(10); p[1] = 60; p[2] = 100; c[1] = 63; c[2] = 73; },
+      dailyTemps: (hi, lo) => { hi.splice(1, 2, 44, 34); lo.splice(1, 2, 33, 24); } },
+    expect: { note: /^Sat 44° 60% rain · Sun 34° 100% snow$/ } },
   // a cold October morning at the farm: the card speaks for the morning rounds, in amber, over the bite times
   { name: "20-cold-morning-shady-spring", loc: "sp", when: "2026-10-22T07:40:00",
     o: { baseTemp: 44, nowTemp: 31, feels: 27, rh: 80, isDay: 1, code: 0, cloud: 5, nowWind: 4, nowDir: 320, nowGust: 8, nowUv: 0.2, uvMax: 3.5,
@@ -191,6 +204,14 @@ async function crowded(page) {
         const L = line.getTotalLength();
         for (let d = 0; d <= L; d += 1) { const q = line.getPointAtLength(d);
           if (q.x > b.x - pad && q.x < b.x + b.width + pad && q.y > top - pad && q.y < base + pad) { out.push(`tideSvg "${el.textContent}" sits on the tide line at ${q.x.toFixed(0)},${q.y.toFixed(0)}`); break; } }
+        /* and never on the gauge's own mark, the one thing the tag is there to name: under the table
+           near a low the spot under the mark was held off the bed and came up onto it, and its halo
+           ate the waterline ("−0.‘5’ ft"). The mark is the water-blue stroke, 1.2 round it with its caps,
+           and the tag's paper halo is 1.75 round its ink */
+        const mark = [...svg.querySelectorAll('path[stroke-width="2.4"]')].map((e) => e.getAttribute("d").match(/^M ([\d.]+) ([\d.]+) H ([\d.]+)$/)).find(Boolean);
+        if (mark) { const [mx0, my, mx1] = [+mark[1], +mark[2], +mark[3]];
+          const hp = 1.75 + 1.2;
+          if (b.x - hp < mx1 && b.x + b.width + hp > mx0 && top - hp < my && base + hp > my) out.push(`tideSvg "${el.textContent}" sits on the gauge's mark at ${my.toFixed(1)}`); }
       }
     }
     return out;

@@ -119,7 +119,7 @@ test("loading, cached data and the hourly explorer tell the truth", async () => 
   assert.match(html, /if\(e\.key!=="PageUp"&&e\.key!=="PageDown"\)return;/);
   assert.match(html, /xpPublish\("hourly",\{svg:hourlySvg,/);
   assert.match(html, /else if\(pop>=DRY_UNDER\|\|isWet\(code\)\)\{parts\.push\(\[`\$\{kind\} \$\{pop\}%`,""\]\);said\.push\(`\$\{pop\} percent chance of \$\{kind\}`\)\}/);
-  assert.match(html, /box\.addEventListener\("pointercancel",e=>\{if\(e\.pointerId!==X\.ptr\)return;drop\(\);xpHide\(X\)\}\);/);
+  assert.match(html, /document\.addEventListener\("pointercancel",e=>\{if\(e\.pointerId!==X\.ptr\)return;drop\(\);xpHide\(X\)\}\);/);
   assert.match(html, /<input class="xp-key" type="range" min="0" max="0" step="1" value="0" disabled aria-label="Next 24 hours, hour by hour">/);
   assert.doesNotMatch(html, /HOURLY_PEEK|TIDE_PEEK|setupHourlyPeek|setupTidePeek|PeekLive|hourly-cursor|tide-cursor/);
   // clipped sideways only (hidden where clip is not known), so the chart never scrolls across and a
@@ -132,6 +132,14 @@ test("loading, cached data and the hourly explorer tell the truth", async () => 
   // marks are the known hours only, so no dot is drawn at NaN and the real low keeps its mark
   assert.match(html, /const hiI=kt\.length\?kn\.indexOf\(Math\.max\(\.\.\.kt\)\):-1,loI=kt\.length\?kn\.indexOf\(Math\.min\(\.\.\.kt\)\):-1;/);
   assert.match(html, /marks:\[nowI,hiI,loI\]\.filter\(i=>i>=0\)/);
+  // and past the first or last known hour there is no neighbour, so the line and its fill stop at
+  // the known hours rather than holding flat a temperature the run does not carry
+  assert.match(html, /const line=drawn\?spline\(pts\.slice\(kf,kl\+1\)\):"",xa=drawn\?X\(kf\):X\(0\),xb=drawn\?X\(kl\):X\(0\);/);
+  assert.match(html, /revealChart\("hourly",hourlySvg,\{xa,xb,/);
+  // the Tonight card reads the same run, and a missing night hour drops out of the night rather
+  // than being read as 0 ("Low 0° tonight." under a pill that said the hour was unavailable)
+  assert.match(html, /const nightHours=h\.time\.map\(\(t,i\)=>\(\{time:new Date\(t\),temp:known\(h\.temp\[i\]\)\?\+h\.temp\[i\]:NaN,/);
+  assert.doesNotMatch(html, /temp:Number\(h\.temp\[i\]\)/);
   assert.match(html, /class="tline"[^>]*vector-effect="non-scaling-stroke"/);
 
   // The two tiny-looking masthead controls remain full touch targets and keyboard operable.
@@ -244,7 +252,8 @@ test("the page agrees with itself", async () => {
   // golden hour is said once, as the legend of the hourly chart's gold bands: the Tonight card
   // no longer repeats it, and the low stays with its words
   assert.doesNotMatch(html, /id="goldTimes"|goldBits|\.gold-bit\{/);
-  assert.match(html, /const lowTxt=`Low\\u00A0\$\{nightLow\}°`;/);
+  // (and a low the run does not carry is said unavailable, never 0°)
+  assert.match(html, /const lowTxt=Number\.isFinite\(nightLow\)\?`Low\\u00A0\$\{nightLow\}°`:"Low unavailable";/);
   assert.match(html, /`\$\{lowTxt\} \$\{nightWhen\}\.`;/);
   // under 35% the night says nothing about rain, the way the week does
   assert.doesNotMatch(html, /mostly dry \$\{nightWhen\}/i);
@@ -1162,8 +1171,12 @@ test("tide chart reads as depth over the bottom", async () => {
   assert.match(html, /const nx=X\(now\.getTime\(\)\),ny=Y\(interp\(now\.getTime\(\)\)\),gy=Y\(wNow\);/);
   assert.match(html, /const seen=gap>0\?gy<=ny-22:gap<0&&gy>=ny\+7\.5;/);
   // the tag is placed against the curve, not stamped: beside the bow, behind the stern, then over
-  // (or under) the mark, at the first spot the tide line does not cross
-  assert.match(html, /tag=named\.find\(c=>c\.ok&&!c\.hits\);/);
+  // (or under) the mark, at the first spot the tide line does not cross and that does not sit on
+  // the mark itself (under the table near a low, the spot under the mark was held off the bed and
+  // came up onto it, and its halo ate the waterline: "−0.‘5’ ft")
+  assert.match(html, /const offMark=c=>!\(seen&&c\.x0<nx\+9&&c\.x1>nx-9&&c\.t<gy\+4&&c\.b>gy-4\);/);
+  assert.match(html, /tag=named\.find\(c=>c\.ok&&!c\.hits&&offMark\(c\)\);/);
+  assert.match(html, /tag=best\|\|ok\.find\(offMark\)\|\|ok\[0\]\|\|named\[0\];/);
   assert.match(html, /if\(c\.ok&&!c\.hits&&off\(c\)&&\(!best\|\|d\(c\)<d\(best\)\)\)best=c;/);
   // the low's tick goes under the mark, the tag and the boat, and the now line stops over the mark
   // only where the mark is drawn
@@ -1621,6 +1634,10 @@ test("the water and the farm say what is there, and nothing is scored or picked"
   // text never keeps the last place's airport while the new place loads
   assert.equal((html.match(/yearTitle\(N\);/g) || []).length, 2);
   assert.match(html, /normals at the \$\{N\.place\} airport/);
+  // the spoken label ends on the note as a sentence ("5° warmer this week."), and says "this week"
+  // once: "This week: 5° warmer this week." said it twice
+  assert.match(html, /\$\{cmp\?" "\+cmp\.note\[0\]\.toUpperCase\(\)\+cmp\.note\.slice\(1\)\+"\.":""\}`\);/);
+  assert.doesNotMatch(html, /" This week: "\+cmp\.note/);
   assert.doesNotMatch(html, /"The year · "\+N\.place/);
   assert.deepEqual([Nm.dhi.length, Ns.dlo.length, Nm.dhi[0], Ns.dlo[365]], [366, 366, 577, 253], "daily normals in tenths, a leap year's days");
   assert.deepEqual(["2026-01-01", "2026-02-28", "2026-03-01", "2026-12-31"].map((s) => ctx.doyOf(s)), [0, 58, 60, 365]);
@@ -2013,7 +2030,15 @@ test("every line reads the same way: one machine, and readers that say only what
   assert.match(html, /const to=e\.key==="ArrowRight"\?j\+1:/);
   assert.doesNotMatch(html.slice(html.indexOf("function renderWeek("), html.indexOf("function weekBrief(")), /tabindex="-1"/);
   assert.match(html, /const said=readDay\(dy,i\)\.said;/, "the button speaks the pill's sentence");
-  assert.match(html, /if\(n<2\)\{svg\.innerHTML="";xpPublish\("week",null\);return\}/);
+  // a missing day is not a zero: the week's lines run between known days and stop at the known
+  // ends, the marks are the known days only, and a series with under two known days is no chart
+  assert.match(html, /if\(n<2\|\|!HI\.ok\|\|!LO\.ok\)\{svg\.innerHTML="";xpPublish\("week",null\);return\}/);
+  assert.match(html, /const hiLine=spline\(hiP\.slice\(HI\.f,HI\.l\+1\)\),loLine=spline\(loP\.slice\(LO\.f,LO\.l\+1\)\);/);
+  assert.match(html, /if\(!hk\)continue;/);
+  { const knownRun = vm.runInNewContext(html.match(/function knownRun\(a\)\{[\s\S]*?\n\}/)[0] + ";knownRun"), R = knownRun([70, null, 74, 75, null]);
+    assert.deepEqual([...R.k], [70, null, 74, 75, null]);
+    assert.deepEqual([R.v[1], R.f, R.l, R.ok], [72, 0, 3, true], "a gap runs between its neighbours, and the ends are the known days");
+    assert.equal(knownRun([null, 60, ""]).ok, false, "one known day is no line"); }
   // the moon's reader is handed only the windows renderMoon drew, and the crossings of its own horizon
   assert.match(html, /const nt=now\.getTime\(\),drawn=wins\.filter\(/);
   assert.match(html, /read:i=>readMoon\(ts\[i\],nt,alts\[i\],drawn,cross\)/);
@@ -2048,13 +2073,19 @@ test("every line reads the same way: one machine, and readers that say only what
   const xpRule = css.match(/\.xp\{[^}]*\}/)?.[0] || "";
   for (const d of ["touch-action:pan-y;", "touch-action:pan-y pinch-zoom;", "-webkit-user-select:none;", "-webkit-touch-callout:none;"])
     assert.ok(xpRule.includes(d), `.xp carries ${d}`);
-  assert.match(html, /box\.addEventListener\("pointercancel",e=>\{if\(e\.pointerId!==X\.ptr\)return;drop\(\);xpHide\(X\)\}\);/);
+  // a press ends wherever the finger comes up: a repaint replaces the node a tap is pressed on, and a
+  // lift just off the chart never came back to the box and left the reading up for good
+  assert.match(html, /document\.addEventListener\("pointerup",e=>\{\n\s*if\(e\.pointerId!==X\.ptr\)return;/);
+  assert.doesNotMatch(html, /box\.addEventListener\("pointer(up|cancel)"/);
+  assert.match(html, /document\.addEventListener\("pointercancel",e=>\{if\(e\.pointerId!==X\.ptr\)return;drop\(\);xpHide\(X\)\}\);/);
   assert.match(html, /Math\.abs\(dx\)>=XP_SLOP&&Math\.abs\(dx\)>Math\.abs\(dy\)/);
-  assert.match(html, /const XP=\{\},XP_HOLD=140,XP_LINGER=2200,XP_SLOP=6,XP_SNAP=7,DRY_UNDER=5,WINDY_GUST=28;/);
+  assert.match(html, /const XP=\{\},XP_HOLD=140,XP_LINGER=2200,XP_SLOP=6,XP_TAP=10,XP_SNAP=7,DRY_UNDER=5,WINDY_GUST=28;/);
   assert.match(html, /box\.setPointerCapture\(e\.pointerId\)/);
-  // a finger that has moved is not holding still, so a slow scroll never pops a reading, and a
-  // finger that moved and came back is not a tap
-  assert.match(html, /if\(!X\.slide&&!X\.held&&Math\.hypot\(dx,dy\)>=XP_SLOP\)\{clearTimeout\(X\.holdT\);X\.moved=true\}/);
+  // a finger that has moved past a tap's own settle (XP_TAP, the browser's and the phones' tap
+  // tolerance, while XP_SLOP still decides a slide) is not holding still, so a slow scroll never
+  // pops a reading, and a finger that moved and came back is not a tap. A firm press that rolls
+  // 7px is still a tap: at 6px it read nothing while the week opened its day for the same press
+  assert.match(html, /if\(!X\.slide&&!X\.held&&Math\.hypot\(dx,dy\)>=XP_TAP\)\{clearTimeout\(X\.holdT\);X\.moved=true\}/);
   // a finger that stops a gliding page is not a tap on the chart under it
   assert.match(html, /addEventListener\("scroll",\(\)=>\{XP_SCROLLED=performance\.now\(\)\},\{passive:true\}\);/);
   assert.match(html, /X\.fling=performance\.now\(\)-XP_SCROLLED<50;/);

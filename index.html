@@ -601,6 +601,9 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
 /* a 320 phone keeps every title and its note on one line: "Water · Wrightsville Beach" and
    "The year · Shady Spring" beside a note ran 3 to 4px past the column at the phone tracking */
 @media (max-width:359px){.eyebrow,.card h3{letter-spacing:.06em}.eyebrow{column-gap:8px}.eyebrow span{letter-spacing:0}}
+/* and under 340 the weekend's note is a half point smaller, because a wet weekend of two kinds
+   ("Sat 44° 60% rain · Sun 34° 100% snow") says both nouns and ran past the 320 column */
+@media (max-width:339px){#weekNote{font-size:9.5px}}
 /* Storybook ink rigs pivot on the real joint. Each moving group sits inside a wrapper whose own
    origin is the joint (joint() in the script), so its origin is simply 0 0 in its own units and
    redrawing a part can never walk the pivot off the shoulder the way a fill-box percentage does */
@@ -833,7 +836,7 @@ const PRM=matchMedia("(prefers-reduced-motion: reduce)").matches;
    names lands on it. Under DRY_UNDER percent an hour is dry, which is under the rain bars' floor, so
    the pill never says dry over a drawn bar. WINDY_GUST is the headline's windy line, and the hourly
    pill says the gusts from it too */
-const XP={},XP_HOLD=140,XP_LINGER=2200,XP_SLOP=6,XP_SNAP=7,DRY_UNDER=5,WINDY_GUST=28;
+const XP={},XP_HOLD=140,XP_LINGER=2200,XP_SLOP=6,XP_TAP=10,XP_SNAP=7,DRY_UNDER=5,WINDY_GUST=28;
 
 /* ── colour helpers ─────────────────────────────────── */
 const hex2rgb=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
@@ -3756,17 +3759,22 @@ function renderTides(preds,css,gust,wind,gap=0){
       c.hits=curve.filter(([px,py])=>px>c.x0-4.5&&px<c.x1+4.5&&py>c.t-4.5&&py<c.b+4.5).length;return c};
     const named=[{x:nx+side,a:"start",b:tb},{x:nx-(seen?10:26)*fs,a:"end",b:tb},
       gap>0?{x:nx,a:"middle",b:(seen?gy:ny-22)-5}:{x:nx,a:"middle",b:Math.min(seaY-4,(seen?gy+5:ny+8)+cap)}].map(box);
-    tag=named.find(c=>c.ok&&!c.hits);
+    /* no spot may sit on the mark itself: under the table near a low the mark is close to the bed,
+       and the spot under it, held off the bed, came up onto it and its halo ate the waterline. The
+       mark runs 6.2 each side of now with its caps, the tag's halo 1.75, so a pixel of paper shows */
+    const offMark=c=>!(seen&&c.x0<nx+9&&c.x1>nx-9&&c.t<gy+4&&c.b>gy-4);
+    tag=named.find(c=>c.ok&&!c.hits&&offMark(c));
     if(!tag){
       /* the nearest clear spot to the mark, off the boat and off the mark itself */
-      const off=c=>!(c.x0<nx+21&&c.x1>nx-25&&c.t<ny+6&&c.b>ny-24)&&!(seen&&c.x0<nx+8&&c.x1>nx-8&&c.t<gy+3&&c.b>gy-3);
+      const off=c=>!(c.x0<nx+21&&c.x1>nx-25&&c.t<ny+6&&c.b>ny-24)&&offMark(c);
       const d=c=>Math.hypot(Math.max(0,c.x0-nx,nx-c.x1),Math.max(0,c.t-gy,gy-c.b));
       let best=null;
       for(let dy=-27;dy<=27;dy+=3)for(let dx=-70;dx<=70;dx+=3){
         const c=box({x:nx+dx,a:"start",b:tb+dy});
         if(c.ok&&!c.hits&&off(c)&&(!best||d(c)<d(best)))best=c;
       }
-      tag=best||named.filter(c=>c.ok).sort((a,b)=>a.hits-b.hits)[0]||named[0];
+      const ok=named.filter(c=>c.ok).sort((a,b)=>a.hits-b.hits);
+      tag=best||ok.find(offMark)||ok[0]||named[0];
     }
   }
   /* the labels treat the mark and its tag as part of the boat, and a tag under the boat is not in
@@ -4072,7 +4080,7 @@ function renderYear(N,dy,css){
   const rain=strip(N.rain,TH,RH,w=>`fill="${css.water}" opacity="${w?(dark?.75:.85):(dark?.42:.5)}"`,css.wink,"rain",v=>String(+v.toFixed(1)));
   const snow=snowy?strip(N.snow,TH+RH+GAP,SH,w=>`fill="${css.ink}" opacity="${w?.3:.17}"`,css.faint,"snow",v=>Math.round(v)):"";
   svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
-  svg.setAttribute("aria-label",`Normal highs and lows by month for ${LOC.addrShort}, from NOAA's 1991 to 2020 normals at the ${N.place} airport: warmest in ${MONTHS[hiI]} at ${th}, coldest in ${MONTHS[loI]} at ${tl}.${cmp?" This week: "+cmp.note+".":""}`);
+  svg.setAttribute("aria-label",`Normal highs and lows by month for ${LOC.addrShort}, from NOAA's 1991 to 2020 normals at the ${N.place} airport: warmest in ${MONTHS[hiI]} at ${th}, coldest in ${MONTHS[loI]} at ${tl}.${cmp?" "+cmp.note[0].toUpperCase()+cmp.note.slice(1)+".":""}`);
   svg.innerHTML=`<defs>
       <linearGradient id="yrHi" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${W}" y2="0">${stops(N.hi)}</linearGradient>
       <linearGradient id="yrLo" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${W}" y2="0">${stops(N.lo)}</linearGradient>
@@ -4568,7 +4576,7 @@ function sunProtectionAdvice(c,dy,h,now){
    walking around. One short base layer, plus only the weather-specific thing that matters. */
 function comfortAdvice(c,h){
   const feels=Math.round(Number(c.apparent_temperature)||Number(c.temperature_2m)||60);
-  const next=Math.min(12,h.temp.length),later=h.temp.slice(0,next).map(Number).filter(Number.isFinite);
+  const next=Math.min(12,h.temp.length),later=h.temp.slice(0,next).filter(known).map(Number);
   const low=later.length?Math.min(...later):feels;
   const rainNow=isWet(c.weather_code),rainSoon=Math.max(0,...h.pop.slice(0,Math.min(6,h.pop.length)).map(Number))>=45;
   const gust=Math.round(Number(c.wind_gusts_10m)||0);
@@ -4671,6 +4679,17 @@ function weekendNote(wk,we){
   const once=days.length===2&&days[0].noun&&days[0].noun===days[1].noun;
   return days.map((x,j)=>x.d+(x.odds?" "+x.odds+(once&&!j?"":" "+x.noun):"")).join(" · ");
 }
+/* A missing day is not a zero: Math.min read a null high as 0, so the week's line dove off the
+   chart and printed "0°" under a pill that said the high was unavailable. The line runs through a
+   missing day between its known neighbours and stops at the first and last known day (f to l),
+   the marks and labels are only the known days, and a series with fewer than two known days is
+   no chart. k is the known readings (null where missing), v the line's heights */
+function knownRun(a){
+  const k=a.map(x=>x!=null&&x!==""&&Number.isFinite(+x)?+x:null),f=k.findIndex(x=>x!=null),l=k.length-1-[...k].reverse().findIndex(x=>x!=null);
+  const v=k.map((x,i)=>{if(x!=null)return x;let p=i-1,q=i+1;while(p>=0&&k[p]==null)p--;while(q<k.length&&k[q]==null)q++;
+    return p<0?k[q]:q>=k.length?k[p]:k[p]+(k[q]-k[p])*(i-p)/(q-p)});
+  return{k,v,f,l,ok:k.filter(x=>x!=null).length>=2};
+}
 function renderWeek(dy,css,we=[]){
   const wrap=document.getElementById("weekRows"),svg=document.getElementById("weekSvg");
   const n=dy.time.length,his=dy.temperature_2m_max,los=dy.temperature_2m_min;
@@ -4705,37 +4724,41 @@ function renderWeek(dy,css,we=[]){
   /* the chart: a column is a screen pixel wide per unit, the same as the other two charts */
   const W=appW()-40,col=W/Math.max(1,n),X=i=>(i+.5)*col;
   svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
-  if(n<2){svg.innerHTML="";xpPublish("week",null);return}
-  let tMin=Math.min(...los),tMax=Math.max(...his);
+  const HI=knownRun(his),LO=knownRun(los),hv=HI.v,lv=LO.v;
+  if(n<2||!HI.ok||!LO.ok){svg.innerHTML="";xpPublish("week",null);return}
+  let tMin=Math.min(...lv),tMax=Math.max(...hv);
   if(tMax-tMin<10){const m=(tMax+tMin)/2;tMin=m-5;tMax=m+5}
   const top=24,bot=H-21,Y=t=>top+(bot-top)*(1-(t-tMin)/(tMax-tMin));
-  const hiP=his.map((t,i)=>[X(i),Y(t)]),loP=los.map((t,i)=>[X(i),Y(t)]);
-  const hiLine=spline(hiP),loLine=spline(loP);
-  const band=hiLine+" "+spline([...loP].reverse()).replace(/^M/,"L")+" Z";
+  const hiP=hv.map((t,i)=>[X(i),Y(t)]),loP=lv.map((t,i)=>[X(i),Y(t)]);
+  const hiLine=spline(hiP.slice(HI.f,HI.l+1)),loLine=spline(loP.slice(LO.f,LO.l+1));
+  /* the range is washed only where both lines run */
+  const bf=Math.max(HI.f,LO.f),bl=Math.min(HI.l,LO.l);
+  const band=bl>bf?spline(hiP.slice(bf,bl+1))+" "+spline(loP.slice(bf,bl+1).reverse()).replace(/^M/,"L")+" Z":"";
   /* where each line runs under a label's two ends, so a steep day beside it cannot strike
      through the number (the hourly chart learned this one on a phone) */
   const yOn=a=>px=>{const f=clamp(px/col-.5,0,n-1),i=Math.min(n-2,Math.floor(f));return Y(a[i]+(a[i+1]-a[i])*(f-i))};
-  const yHi=yOn(his),yLo=yOn(los);
+  const yHi=yOn(hv),yLo=yOn(lv);
   /* the warmest day is the key point; a tie is every day that reaches it, or one 93° reads
      as warmer than the next, and the ring plays once, on the first */
-  const peak=Math.max(...his.map(Math.round)),hiI=his.findIndex(t=>Math.round(t)===peak);
+  const kh=HI.k.filter(t=>t!=null),peak=Math.max(...kh.map(Math.round)),hiI=HI.k.findIndex(t=>t!=null&&Math.round(t)===peak);
   /* a warm plateau has no warmest day: past three ties nothing is keyed, rather than a row of rings */
-  const keyed=his.filter(t=>Math.round(t)===peak).length<=3;
+  const keyed=kh.filter(t=>Math.round(t)===peak).length<=3;
   const rv=REVEAL.week.state!=="done",rvAt=(x,k,d)=>rvTag(rv,x,k,d);
   const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3" stroke-linejoin="round"`;
   const mono=`text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace"`;
   let marks="";
   for(let i=0;i<n;i++){
-    const x=X(i),yh=Y(his[i]),yl=Y(los[i]),th=Math.round(his[i])+"°",tl=Math.round(los[i])+"°",key=keyed&&Math.round(his[i])===peak;
+    const x=X(i),yh=Y(hv[i]),yl=Y(lv[i]),th=Math.round(hv[i])+"°",tl=Math.round(lv[i])+"°",hk=HI.k[i]!=null,key=hk&&keyed&&Math.round(hv[i])===peak;
     const fh=key?13:12,wh=th.length*fh*.3+2,wl=tl.length*10.5*.3+2;
     const ly=Math.min(yh-(key?11:9),yHi(x-wh)-7,yHi(x+wh)-7);
     const lyl=Math.min(H-6,Math.max(yl+14,yLo(x-wl)+14,yLo(x+wl)+14));
-    marks+=`<circle cx="${x.toFixed(1)}" cy="${yl.toFixed(1)}" r="1.6" fill="${tempColor(los[i])}" opacity=".75"${rvAt(x,"dot")}/>
+    if(LO.k[i]!=null)marks+=`<circle cx="${x.toFixed(1)}" cy="${yl.toFixed(1)}" r="1.6" fill="${tempColor(lv[i])}" opacity=".75"${rvAt(x,"dot")}/>
       <text x="${x.toFixed(1)}" y="${lyl.toFixed(1)}" ${mono} font-size="10.5" fill="${css.faint}" ${halo}${rvAt(x,"label")}>${tl}</text>`;
+    if(!hk)continue;
     if(key){
-      if(rv&&i===hiI)marks+=`<circle cx="${x.toFixed(1)}" cy="${yh.toFixed(1)}" r="15" fill="none" stroke="${tempColor(his[i])}" stroke-width="1.6" opacity="0"${rvAt(x,"ring")}/>`;
-      marks+=`<circle cx="${x.toFixed(1)}" cy="${yh.toFixed(1)}" r="3.6" fill="${css.paper}" stroke="${tempColor(his[i])}" stroke-width="2.4"${rvAt(x,"dot")}/>`;
-    }else marks+=`<circle cx="${x.toFixed(1)}" cy="${yh.toFixed(1)}" r="2" fill="${tempColor(his[i])}" opacity=".8"${rvAt(x,"dot")}/>`;
+      if(rv&&i===hiI)marks+=`<circle cx="${x.toFixed(1)}" cy="${yh.toFixed(1)}" r="15" fill="none" stroke="${tempColor(hv[i])}" stroke-width="1.6" opacity="0"${rvAt(x,"ring")}/>`;
+      marks+=`<circle cx="${x.toFixed(1)}" cy="${yh.toFixed(1)}" r="3.6" fill="${css.paper}" stroke="${tempColor(hv[i])}" stroke-width="2.4"${rvAt(x,"dot")}/>`;
+    }else marks+=`<circle cx="${x.toFixed(1)}" cy="${yh.toFixed(1)}" r="2" fill="${tempColor(hv[i])}" opacity=".8"${rvAt(x,"dot")}/>`;
     marks+=`<text x="${x.toFixed(1)}" y="${ly.toFixed(1)}" ${mono} font-size="${fh}" font-weight="${key?600:500}" fill="${css.ink}" ${halo}${rvAt(x,"label")}>${th}</text>`;
   }
   const stops=a=>a.map((t,i)=>`<stop offset="${(i/(n-1)*100).toFixed(1)}%" stop-color="${tempColor(t)}"/>`).join("");
@@ -4750,11 +4773,11 @@ function renderWeek(dy,css,we=[]){
   const weBand=we.length?`<path class="wk-we" d="M${wx0.toFixed(1)} ${H} V${2+wr} Q${wx0.toFixed(1)} 2 ${(wx0+wr).toFixed(1)} 2 H${(wx1-wr).toFixed(1)} Q${wx1.toFixed(1)} 2 ${wx1.toFixed(1)} ${2+wr} V${H} Z" fill="${css.ink}" opacity=".05"${rvAt(wx0,"fade")}/>`:"";
   svg.innerHTML=`
     <defs>
-      <linearGradient id="wkHi" gradientUnits="userSpaceOnUse" x1="${xa.toFixed(1)}" y1="0" x2="${xb.toFixed(1)}" y2="0">${stops(his)}</linearGradient>
-      <linearGradient id="wkLo" gradientUnits="userSpaceOnUse" x1="${xa.toFixed(1)}" y1="0" x2="${xb.toFixed(1)}" y2="0">${stops(los)}</linearGradient>
+      <linearGradient id="wkHi" gradientUnits="userSpaceOnUse" x1="${xa.toFixed(1)}" y1="0" x2="${xb.toFixed(1)}" y2="0">${stops(hv)}</linearGradient>
+      <linearGradient id="wkLo" gradientUnits="userSpaceOnUse" x1="${xa.toFixed(1)}" y1="0" x2="${xb.toFixed(1)}" y2="0">${stops(lv)}</linearGradient>
       <linearGradient id="wkBand" gradientUnits="userSpaceOnUse" x1="0" y1="${Y(tMax).toFixed(1)}" x2="0" y2="${Y(tMin).toFixed(1)}">
-        <stop offset="0" stop-color="${tempColor(Math.max(...his))}" stop-opacity=".2"/>
-        <stop offset="1" stop-color="${tempColor(Math.min(...los))}" stop-opacity=".04"/></linearGradient>
+        <stop offset="0" stop-color="${tempColor(Math.max(...hv))}" stop-opacity=".2"/>
+        <stop offset="1" stop-color="${tempColor(Math.min(...lv))}" stop-opacity=".04"/></linearGradient>
       <clipPath id="wkArea"><path d="${band}"/></clipPath>
     </defs>
     <g clip-path="url(#wkArea)"><rect class="rv-fill" x="${xa.toFixed(1)}" y="0" width="${(xb-xa).toFixed(1)}" height="${H}" fill="url(#wkBand)"/></g>
@@ -4764,9 +4787,9 @@ function renderWeek(dy,css,we=[]){
     <g class="xp-cursor"></g>
     ${marks}
     ${weBand}
-    ${rv?`<g class="rv-tip" opacity="0" fill="${tempColor(his[0])}"><circle r="12" opacity=".12"/><circle r="6.5" opacity=".24"/><circle r="3.3"/><circle class="rv-core" r="1.5" fill="#FFF8EC" opacity=".95"/></g>`:""}
+    ${rv?`<g class="rv-tip" opacity="0" fill="${tempColor(hv[0])}"><circle r="12" opacity=".12"/><circle r="6.5" opacity=".24"/><circle r="3.3"/><circle class="rv-core" r="1.5" fill="#FFF8EC" opacity=".95"/></g>`:""}
     <line x1="3" y1="${H-.5}" x2="${(W-3).toFixed(1)}" y2="${H-.5}" stroke="${css.line}" stroke-width="1"/>`;
-  const hiAt=x=>{const f=clamp(x/col-.5,0,n-1),i=Math.min(n-2,Math.floor(f));return his[i]+(his[i+1]-his[i])*(f-i)};
+  const hiAt=x=>{const f=clamp(x/col-.5,0,n-1),i=Math.min(n-2,Math.floor(f));return hv[i]+(hv[i+1]-hv[i])*(f-i)};
   revealChart("week",svg,{xa,xb,dur:clamp(1300+W*.9,1600,2100),tail:50,color:x=>tempColor(hiAt(x))});
   /* one stop a column, found by the nearest centre, so a 320 Sunday's 35px columns all work. The
      days were already buttons, so the week has no key of its own: a slide shows the pill and opens
@@ -5280,8 +5303,11 @@ function xpSetup(k,{view=null,pick=false,release=null}={}){
     }
     if(e.pointerId!==X.ptr)return;
     const dx=e.clientX-X.x0,dy=e.clientY-X.y0;
-    /* a finger that has moved is not holding still, whichever way it went */
-    if(!X.slide&&!X.held&&Math.hypot(dx,dy)>=XP_SLOP){clearTimeout(X.holdT);X.moved=true}
+    /* a finger that has moved is not holding still, whichever way it went. A tap may settle as far
+       as the browser's own tap does (about 10px, iOS's 10pt and Android's 8dp): at 6px a firm thumb
+       whose pad rolled 7px read nothing, while the week opened its day for the same press. A slow
+       scroll is kept off by the creep restart below, and a real one gets pointercancel */
+    if(!X.slide&&!X.held&&Math.hypot(dx,dy)>=XP_TAP){clearTimeout(X.holdT);X.moved=true}
     /* and still means still for the whole wait: a thumb creeping into a scroll (0, 1, 2, 4px a
        frame) never reached 6px inside 140ms, read as a hold, and flashed a reading until the page
        took the scroll. Each creep of 2px starts the wait again */
@@ -5296,7 +5322,11 @@ function xpSetup(k,{view=null,pick=false,release=null}={}){
     }
     if(X.slide||X.held)xpShow(X,xpIndex(X,e.clientX));
   });
-  box.addEventListener("pointerup",e=>{
+  /* a press ends wherever the finger comes up: until a slide captures it, a press has only the
+     browser's hold on the node pressed, and a repaint replaces that node (an hour label, a month, a
+     shape), so a lift a few pixels off the chart, or a chart the repaint moved from under a still
+     finger, never came back here and left the reading up for good */
+  document.addEventListener("pointerup",e=>{
     if(e.pointerId!==X.ptr)return;
     const slid=X.slide,held=X.held,moved=X.moved,mouse=e.pointerType==="mouse";drop();
     if(pick){
@@ -5310,7 +5340,7 @@ function xpSetup(k,{view=null,pick=false,release=null}={}){
     xpHide(X,XP_LINGER);
   });
   /* the page took the gesture for a scroll: nothing is left behind */
-  box.addEventListener("pointercancel",e=>{if(e.pointerId!==X.ptr)return;drop();xpHide(X)});
+  document.addEventListener("pointercancel",e=>{if(e.pointerId!==X.ptr)return;drop();xpHide(X)});
   /* the mouse left: a press that never slid is let go, and the reading goes */
   box.addEventListener("pointerleave",e=>{if(e.pointerType!=="mouse")return;X.mouse=false;if(X.ptr!=null&&!X.slide)drop();if(X.ptr==null)xpHide(X)});
   const key=X.key;
@@ -5532,11 +5562,15 @@ function render(d,live,savedAt=0){
   /* A missing hour is not a zero: Math.min read a null as 0, so the line plunged to the bottom of
      the chart at the gap, the real low went unmarked and a dot was drawn at NaN. The drawing runs
      through a missing hour straight between its known neighbours, the marks and labels are only
-     the known hours, and the reader says the hour is unavailable */
+     the known hours, and the reader says the hour is unavailable. Past the first or the last known
+     hour there is no neighbour, and a line held flat there drew a temperature the run does not
+     carry, so the line and its fill stop at the known hours (kf to kl), and with fewer than two
+     there is no line at all, only the rain bars, which are readings of their own */
   const kn=h.temp.map(t=>known(t)?+t:null),kt=kn.filter(v=>v!=null),fillT=kn.map((v,i)=>{if(v!=null)return v;
     let a=i-1,b=i+1;while(a>=0&&kn[a]==null)a--;while(b<kn.length&&kn[b]==null)b++;
     return a<0&&b>=kn.length?60:a<0?kn[b]:b>=kn.length?kn[a]:kn[a]+(kn[b]-kn[a])*(i-a)/(b-a)});
-  const trendTemp=fillT.map((t,i)=>i===0||i===fillT.length-1?t:(fillT[i-1]+2*t+fillT[i+1])/4);
+  const kf=kn.findIndex(v=>v!=null),kl=kn.length-1-[...kn].reverse().findIndex(v=>v!=null),drawn=kt.length>=2;
+  const trendTemp=fillT.map((t,i)=>i<=kf||i>=kl?t:(fillT[i-1]+2*t+fillT[i+1])/4);
   const tMin=Math.min(...trendTemp)-4,tMax=Math.max(...trendTemp)+4;
   const X=i=>pad+i*(W-2*pad)/(n-1);
   const Y=t=>20+(base-34)*(1-(t-tMin)/(tMax-tMin));
@@ -5549,8 +5583,8 @@ function render(d,live,savedAt=0){
      live reading, its thunder and its number. It asks for the new hour's run, once an hour, so NOW,
      the now dot, the pill and the headline land back on the reading together */
   if(live&&nowI>0&&ROLL_ASKED!==nowHr0){ROLL_ASKED=nowHr0;setTimeout(refresh,0)}
-  const line=spline(pts);
-  const area=line+` L ${X(n-1).toFixed(1)} ${base} L ${X(0).toFixed(1)} ${base} Z`;
+  const line=drawn?spline(pts.slice(kf,kl+1)):"",xa=drawn?X(kf):X(0),xb=drawn?X(kl):X(0);
+  const area=drawn?line+` L ${xb.toFixed(1)} ${base} L ${xa.toFixed(1)} ${base} Z`:"";
   /* the entrance tags what it animates; once it has played, a render carries no tags */
   const rv=REVEAL.hourly.state!=="done",rvAt=(x,k,d)=>rvTag(rv,x,k,d);
 
@@ -5691,8 +5725,9 @@ function render(d,live,savedAt=0){
     bands+=`<g transform="translate(${cx.toFixed(1)},16)" fill="${css.faint}" opacity=".85">
       <path d="M 4.6 0 a 4.6 4.6 0 1 1-4.6-4.6 A 3.6 3.6 0 0 0 4.6 0 Z"/></g>`;
   }
-  const areaTop=Math.min(...pts.map(p=>p[1]));
-  const gstops=fillT.map((t,i)=>`<stop offset="${(i/(n-1)*100).toFixed(1)}%" stop-color="${tempColor(t)}"/>`).join("");
+  /* the line's gradient runs across the line's own box, which is the known hours */
+  const areaTop=drawn?Math.min(...pts.slice(kf,kl+1).map(p=>p[1])):base;
+  const gstops=drawn?fillT.slice(kf,kl+1).map((t,j)=>`<stop offset="${(j/(kl-kf)*100).toFixed(1)}%" stop-color="${tempColor(t)}"/>`).join(""):"";
   const hourlySvg=document.getElementById("hourlySvg");
   hourlySvg.innerHTML=`
     <defs>
@@ -5715,19 +5750,19 @@ function render(d,live,savedAt=0){
     </defs>
     ${bands}
     ${goldenBands}
-    <g clip-path="url(#hourlyArea)"><rect class="rv-fill" x="${X(0).toFixed(1)}" y="0" width="${(X(n-1)-X(0)).toFixed(1)}" height="${base}" fill="url(#tfill)"/></g>
+    <g clip-path="url(#hourlyArea)"><rect class="rv-fill" x="${xa.toFixed(1)}" y="0" width="${(xb-xa).toFixed(1)}" height="${base}" fill="url(#tfill)"/></g>
     ${bars}
     ${rv?[[10,.3,.24],[6.5,.6,.2],[4.4,1,.16]].map(([w,f,o])=>`<path class="rv-tail" data-f="${f}" data-o="${o}" d="${line}" fill="none" stroke="url(#tline)" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>`).join(""):""}
     <path class="tline" d="${line}" fill="none" stroke="url(#tline)" stroke-width="2.4" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/>
     <g class="xp-cursor"></g>
     ${odds}
     ${dots}
-    ${rv?`<g class="rv-tip" opacity="0" fill="${tempColor(fillT[0])}"><circle r="12" opacity=".12"/><circle r="6.5" opacity=".24"/><circle r="3.3"/><circle class="rv-core" r="1.5" fill="#FFF8EC" opacity=".95"/></g>`:""}
+    ${rv?`<g class="rv-tip" opacity="0" fill="${tempColor(fillT[Math.max(0,kf)])}"><circle r="12" opacity=".12"/><circle r="6.5" opacity=".24"/><circle r="3.3"/><circle class="rv-core" r="1.5" fill="#FFF8EC" opacity=".95"/></g>`:""}
     <line x1="${pad}" y1="${base}" x2="${W-pad}" y2="${base}" stroke="${css.line}" stroke-width="1"/>`;
   /* the pen's light takes the colour of the hour it is passing */
   const hourAt=x=>{const f=clamp((x-pad)/((W-2*pad)/(n-1)),0,n-1),i=Math.min(n-2,Math.floor(f));
     return fillT[i]+(fillT[i+1]-fillT[i])*(f-i)};
-  revealChart("hourly",hourlySvg,{xa:X(0),xb:X(n-1),dur:clamp(1900+W*1.1,2200,2700),tail:60,
+  revealChart("hourly",hourlySvg,{xa,xb,dur:clamp(1900+W*1.1,2200,2700),tail:60,
     color:x=>tempColor(hourAt(x))});
   /* each hour of the run, starting at the hour now is in; the now dot is the mark there */
   const gold=goldStops(h.time,nowI,now,goldWindows.map(g=>[g.a.getTime(),g.b.getTime()])),hLive=liveHour(h,c.weather_code,nowI);
@@ -5817,17 +5852,19 @@ function render(d,live,savedAt=0){
   const beforeSunrise=now<sunrise;
   const nightStart=beforeSunrise?now:(now<sunset?sunset:now);
   const nightEnd=beforeSunrise?sunrise:tomorrowRise;
-  const nightHours=h.time.map((t,i)=>({time:new Date(t),temp:Number(h.temp[i]),pop:Number(h.pop[i])||0,code:Number(h.code?.[i])||0}))
+  /* a missing hour is not a zero: Number(null) is 0, which once printed "Low 0° tonight." under a
+     pill that said the hour was unavailable, so an unknown hour drops out of the night */
+  const nightHours=h.time.map((t,i)=>({time:new Date(t),temp:known(h.temp[i])?+h.temp[i]:NaN,pop:Number(h.pop[i])||0,code:Number(h.code?.[i])||0}))
     .filter(hour=>hour.time>=nightStart&&hour.time<=nightEnd&&Number.isFinite(hour.temp));
   const fallbackDay=beforeSunrise?0:Math.min(1,dy.temperature_2m_min.length-1);
-  const fallbackLow=Number(dy.temperature_2m_min[fallbackDay]);
+  const fallbackLow=known(dy.temperature_2m_min[fallbackDay])?+dy.temperature_2m_min[fallbackDay]:NaN;
   const nightLow=Math.round(nightHours.length?Math.min(...nightHours.map(hour=>hour.temp)):fallbackLow);
   const nightPop=nightHours.length?Math.max(...nightHours.map(hour=>hour.pop)):Number(dy.precipitation_probability_max[fallbackDay])||0;
   const nightSnow=nightHours.some(hour=>isSnow(hour.code)),nightIce=nightHours.some(hour=>isIce(hour.code));
   const nightWhen=beforeSunrise?"before morning":"tonight";
   /* under 35% the night says nothing about rain, the way the week does, and the odds word
      follows the odds: 35% snow or ice is possible, and 60% is likely */
-  const lowTxt=`Low\u00A0${nightLow}°`;
+  const lowTxt=Number.isFinite(nightLow)?`Low\u00A0${nightLow}°`:"Low unavailable";
   let tonightText=nightPop>=35&&nightIce?`Freezing rain ${nightPop>=60?"likely":"possible"} ${nightWhen}. ${lowTxt}.`:
     nightPop>=35&&nightSnow?`Snow ${nightPop>=60?"likely":"possible"} ${nightWhen}. ${lowTxt}.`:
     nightPop>=60?`Rain likely at times ${nightWhen}. ${lowTxt}.`:
