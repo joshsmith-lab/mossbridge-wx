@@ -34,7 +34,11 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v81/);
+  assert.match(worker, /mbwx-shell-v82/);
+  // the clouds end in their own scallops: Josh loves the clouds and not the curly tail
+  const cloud = html.match(/const propCloud=seed=>\[[\s\S]*?\];/);
+  assert.ok(cloud, "propCloud should be extractable");
+  assert.doesNotMatch(cloud[0], /curlT|pTaper/);
   assert.match(worker, /caches\.match\(e\.request,\{ignoreSearch:true\}\)\|\|fetch\(e\.request\)/);
 });
 

@@ -1461,9 +1461,11 @@ const propHardwood=(seed,bare)=>{
 /* the dock: deck at y=0, three pilings running down into the water */
 const propDock=()=>[...[[-25,-3.8,17],[-6,-4.8,18.5],[14,-3.8,20]].map(([x,t,b])=>part(`M ${x-1.5} ${b} L ${x-1.5} ${t+1.2} Q ${x} ${t-.6} ${x+1.5} ${t+1.2} L ${x+1.5} ${b} Z`,"piling")),
   part("M -32 -1.4 L 22 -1.4 L 22 1.4 L -32 1.4 Z","wood"),part("M -32 3.4 L 22 3.4 L 22 4.6 L -32 4.6 Z","wood",{op:.8})];
-/* a curled storybook cumulus: a flat-bottomed scalloped body, a second tier, and a curl */
+/* a storybook cumulus: a flat-bottomed scalloped body and a second tier. It had a tail at its right
+   end that swept up into a curl; Josh loves the clouds and not the curly tail (September 29 2026),
+   so the cloud ends in its own scallops */
 const propCloud=seed=>[part(scallop(0,0,36,7.5,15,seed,{flat:.78,bulge:.64}),"body"),part(scallop(-6,-6.4,17,6.4,9,seed+5,{flat:.55}),"body"),
-  part(scallop(12,-4.6,10,4.6,7,seed+8,{flat:.55}),"body"),pTaper([[30,3.6,5.6],[38,1.6,4.6],[44,-2.6,3.2],[45,-7,2.4]],"body"),part(curlT(41.6,-7.2,3.6,1.05,-1,0,2.6,.5),"body")];
+  part(scallop(12,-4.6,10,4.6,7,seed+8,{flat:.55}),"body")];
 /* Barn with a broken gambrel roof, a cupola and a mast for the vane. Ground at y=0, about 36
    wide, centred on x=18. The door is braced in an X and the loft sits under the peak */
 /* the loft window: x, y of its top left, width and height. For Halloween it is wider and taller,
