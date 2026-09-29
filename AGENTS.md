@@ -347,8 +347,10 @@ and always will be: no maskable variants, no adaptive-icon work.
 
 In September 2026 Josh chose the scene's art direction: the storybook look of Prince of
 Persia (2008). Hand-inked outlines that run heavier on the shadow side, flat colour per part,
-a hard form-shadow crescent and a warm lit edge, paper grain, curled clouds. Fun, but crafted:
-never clip-art, and never a deer that reads as a bean. The approved mockup put the heron,
+a hard form-shadow crescent and a warm lit edge, paper grain, scalloped clouds. Fun, but crafted:
+never clip-art, and never a deer that reads as a bean. The clouds had a tail that swept up into a
+curl at their right end until September 29 2026, when Josh said he loves the clouds and not the
+curly tail, so they end in their own scallops (the oak's limb tips and the wavelets keep theirs). The approved mockup put the heron,
 buck, raccoon and oystercatcher at close range next to the phone-size scene; hold every new
 drawing to both views.
 
