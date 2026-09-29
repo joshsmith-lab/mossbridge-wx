@@ -138,16 +138,17 @@ place name.
   is the water temperature and the seas (`77° · seas ~2 ft`, from `waterNote`), and without them
   the tide's turn (`rising · high 8:28p`); the chart already shows rising or falling and the next
   high, so those words are only the fallback. The skiff rides the table's curve, where Josh wants
-  it (September 28 2026, after a day of it floating at the gauge), and the level is on the chart:
-  when the station's gauge runs off the table, the water that is there is a short waterline on the
-  now line at the gauge's own height, with a dotted riser down or up to the boat and `+1.5 ft`
-  beside the mark. The mark is drawn only where the boat does not stand in front of it, and behind
-  the boat the tag says it alone. The tag is placed, not stamped: beside the bow, behind the stern,
-  then over the mark (under it when the water is under the table), then the nearest spot to the
-  mark the tide line does not cross, because stamped beside the bow it sat on the rising flank at a
-  low two feet over and its paper halo cut the water at now. The now line runs into the boat and
-  stops over the mark only where the mark is drawn. A low's tick goes under the mark, the tag and
-  the boat. A high label steps over the mark and its tag.
+  it (September 28 2026, after a day of it floating at the gauge), and the level is said beside it:
+  when the station's gauge runs off the table, `+1.5 ft` or `−1 ft` rides beside the boat. Josh saw
+  three ways drawn (this tag alone, a short waterline at the gauge's height with a dotted riser to
+  the boat, and the gauge's own last hours as a second line) and chose the tag, the least ink that
+  still says it, so the scale is the table's own and nothing is drawn at the gauge's height. The tag
+  is placed, not stamped: beside the bow at the waterline, behind the stern, then over the boat
+  (under it when the water is under the table), then the nearest spot to the boat the tide line
+  does not cross, off the boat, because stamped beside the bow it sat on the rising flank at a low
+  two feet over and its paper halo cut the water at now. The now line runs into the boat, and stops
+  over the tag when the tag sits on it. A low's tick goes under the tag and the boat. A high label
+  steps over the boat and its tag.
   The sentence (`Running 1.5 ft above the tide table.`) is said to screen readers with the chart.
   The boat's sentence, while the boat is going out, is a card, `The boat`. Nothing is
   graded or coloured off season: the seas are the hour now is in, the water temperature is now,
@@ -290,10 +291,9 @@ place name.
   the first and last known hour (with no neighbour past them, a line held flat drew a temperature the
   run does not carry), and only known hours are marked. The Tonight card reads the same run and
   leaves a missing hour out of the night (it once said `Low 0° tonight.`), and the week does the same
-  with a missing day (`knownRun`), which once dove its line off the chart and printed `0°`. The water says the water that is there at now (the table plus the gauge's gap, where
-  the gauge's mark is drawn on the now line, and the ring goes on that mark when it is drawn and
-  nowhere at now when the skiff covers it) and `by the table` everywhere else while the gauge runs off
-  it. The moon says when a fishing time ends, to the minute it prints, or when the moon rises or
+  with a missing day (`knownRun`), which once dove its line off the chart and printed `0°`. The water says the water that is there at now (the table plus the gauge's gap, which
+  the tag beside the boat reconciles with the curve it rides; the skiff is the mark there, so no
+  ring) and `by the table` everywhere else while the gauge runs off it. The moon says when a fishing time ends, to the minute it prints, or when the moon rises or
   sets, and never names a window it dropped. A day is named only where a clock time could mean two moments. The Sun bar has
   no explorer, because it is a scale and not a day, and its two readings are already printed on it.
   A chart still drawing in finishes first, a repaint
@@ -506,11 +506,11 @@ is today and tomorrow and the water is `Easy out there.`; a mid-November Saturda
 and the water and no sentence; a cold January morning on the coast with the station's thermometer
 down and the sun card stepped aside; a boat day whose marine run carries no seas, which is `Seas
 unavailable.` and never green; the water two feet over the table half an hour before a high,
-where the skiff rides the curve under the gauge's mark and the high's time steps over both, and a
-winter northwester blowing it out a foot and a half under the table at the low, where the mark and
-its tag stay off the bed; the water two feet over at a low and a foot under at a high, where the
-tag once sat on the tide line; the water half a foot under an hour before a low, where the tag once
-sat on the gauge's own mark; a wet weekend of 40% and 100% with three-digit highs, and a farm
+where the skiff rides the curve with `+2 ft` beside it and the high's time steps over both, and a
+winter northwester blowing it out a foot and a half under the table at the low, where the tag stays
+off the bed; the water two feet over at a low and a foot under at a high, where the tag once sat on
+the tide line; the water half a foot under an hour before a low, where the boat sits close to the
+bed and the tag goes beside it; a wet weekend of 40% and 100% with three-digit highs, and a farm
 weekend of rain then snow, whose notes stay beside their title at 320; and a cold October morning at the farm, `Cold one. Bundle up for
 the morning rounds.` on the `Piddling` card over the moon. A scenario marked `boat: true` is served with
 `boatSeason:null` switched back on, and fails if there is nothing to switch. It writes screenshots
@@ -525,8 +525,8 @@ card, the sun bar's spoken label, how many times the seas were asked for, and it
 loading-shell check at the end also holds the sun scale hidden and every slider off while there is no
 bar or reading, and the farm's moon and its year's title (and its hover text's airport) in place before any forecast lands. Every scenario
 also fails when a word on the tide, the moon or the year runs off its chart or into another word,
-when the skiff's level tag sits on the bed, within 2px of the tide line or on the gauge's mark
-(its halo against the mark's ink), or when the water's
+when the skiff's level tag sits on the bed, within 2px of the tide line or on the boat, or when
+the water's
 pill at now covers the skiff, measured at 390 and 900 and once more at 320, the width where they
 meet, where it also fails any section title whose note drops under it. It exits non-zero when one does not show what it
 is there for.
@@ -767,11 +767,10 @@ its windows (`The almanac's fishing times: 6:58 pm to 7:58 pm, ...`). It is draw
 
 At the foot, above the credit: NOAA's 1991-2020 climate normals at the airport nearest each place,
 Wilmington (USW00013748) for Porters Neck and Beckley (USW00003872) for Shady Spring. The titles are
-`The year · Porters Neck` and `The year · Shady Spring`, the place in the masthead (Josh, September 28
-2026: "Change Beckley to Shady Spring", and the coast followed so both read alike). The airport is
-said with the source, in the chart's spoken label and the title's hover text (`NORMALS.*.place`), and
-the water keeps `Wrightsville Beach` because tide times and water temperature there really differ
-from the creek at home, where airport normals seven miles off do not. Josh asked for monthly
+`The year · Wilmington` and `The year · Shady Spring` (`NORMALS.*.name`). Josh asked for "Change
+Beckley to Shady Spring" (September 28 2026), was offered "Porters Neck" at the coast for symmetry,
+and kept Wilmington, which is home as much as Porters Neck is. The airport is said with the source,
+in the chart's spoken label and the title's hover text (`NORMALS.*.place`). Josh asked for monthly
 averages like Carrot's, "but better, and in our design language" (September 27 2026), and picked
 lines over bars. They change once a decade, so they live in `NORMALS` and nothing is fetched.
 

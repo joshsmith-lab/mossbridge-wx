@@ -126,14 +126,14 @@ const CASES = [
       windAmp: 6, gustAmp: 8, sunrise: "06:56", sunset: "19:21", wave: null, popCurve: () => 6, dailyPop: (p) => p.fill(10),
       dailyTemps: (hi, lo, c) => { hi.splice(1, 6, 83, 84, 81, 79, 82, 84); lo.splice(1, 6, 68, 70, 67, 64, 66, 69); c.splice(1, 6, 1, 2, 2, 1, 1, 2); } },
     boat: true, expect: { sayTitle: "The boat", say: "Seas unavailable.", sayCls: "caution", tide: /^77°$/ } },
-  // the gauge two feet over the table half an hour before the 1:36p high: the skiff rides the curve,
-  // the water that is there is marked on the now line over it, and the high's time steps over both
+  // the gauge two feet over the table half an hour before the 1:36p high: the skiff rides the curve
+  // with "+2 ft" beside it, and the high's time steps over both
   { name: "21-surge-at-high-porters-neck", loc: "mb", when: "2026-09-27T13:05:00",
     o: { baseTemp: 74, nowTemp: 78, feels: 78, rh: 70, isDay: 1, code: 3, cloud: 70, nowWind: 14, nowDir: 45, nowGust: 22, nowUv: 3, uvMax: 5,
       windAmp: 9, gustAmp: 13, sunrise: "07:04", sunset: "18:59", surge: 2.1, popCurve: () => 10, dailyPop: (p) => p.fill(15) },
     expect: { level: "Running 2 ft above the tide table.", tide: /^77° · seas ~2 ft$/, xp: { tide: /^now ~\d+\.\d ft$/, tideHour: / by the table$/ } } },
   // a winter northwester blowing the water out a foot and a half under the table at the 7:24a low:
-  // the chart deepens below the datum rather than sinking the gauge's mark into the sand with its tag
+  // the skiff stays on the curve at the low and "−1.5 ft" keeps off the bed and the line
   { name: "22-blown-out-low-porters-neck", loc: "mb", when: "2027-01-14T07:10:00",
     o: { baseTemp: 36, nowTemp: 33, feels: 24, rh: 55, isDay: 1, code: 0, cloud: 5, nowWind: 16, nowDir: 320, nowGust: 28, nowUv: 0.2, uvMax: 2.4,
       windAmp: 8, gustAmp: 12, sunrise: "07:22", sunset: "17:25", surge: -1.6, waterTemp: 48, popCurve: () => 3, dailyPop: (p) => p.fill(5) },
@@ -150,8 +150,8 @@ const CASES = [
     o: { baseTemp: 70, nowTemp: 72, feels: 72, rh: 60, isDay: 1, code: 2, cloud: 40, nowWind: 16, nowDir: 330, nowGust: 26, nowUv: 3.5, uvMax: 5,
       windAmp: 9, gustAmp: 13, sunrise: "07:04", sunset: "18:59", surge: -1, popCurve: () => 4, dailyPop: (p) => p.fill(5) },
     expect: { level: "Running 1 ft below the tide table." } },
-  // the water half a foot under the table an hour before the 7:48p low: the mark sits close to the
-  // bed, and the tag goes beside it, never on it
+  // the water half a foot under the table an hour before the 7:48p low: the boat sits close to the
+  // bed, and the tag goes beside it, never on it or on the line
   { name: "27-under-the-table-near-low-porters-neck", loc: "mb", when: "2026-09-27T18:46:00",
     o: { baseTemp: 76, nowTemp: 74, feels: 74, rh: 70, isDay: 1, code: 2, cloud: 35, nowWind: 12, nowDir: 330, nowGust: 20, nowUv: 0.3, uvMax: 6,
       windAmp: 6, gustAmp: 9, sunrise: "07:03", sunset: "19:07", surge: -0.5, waterTemp: 76, popCurve: () => 5, dailyPop: (p) => p.fill(10) } },
@@ -204,14 +204,12 @@ async function crowded(page) {
         const L = line.getTotalLength();
         for (let d = 0; d <= L; d += 1) { const q = line.getPointAtLength(d);
           if (q.x > b.x - pad && q.x < b.x + b.width + pad && q.y > top - pad && q.y < base + pad) { out.push(`tideSvg "${el.textContent}" sits on the tide line at ${q.x.toFixed(0)},${q.y.toFixed(0)}`); break; } }
-        /* and never on the gauge's own mark, the one thing the tag is there to name: under the table
-           near a low the spot under the mark was held off the bed and came up onto it, and its halo
-           ate the waterline ("−0.‘5’ ft"). The mark is the water-blue stroke, 1.2 round it with its caps,
-           and the tag's paper halo is 1.75 round its ink */
-        const mark = [...svg.querySelectorAll('path[stroke-width="2.4"]')].map((e) => e.getAttribute("d").match(/^M ([\d.]+) ([\d.]+) H ([\d.]+)$/)).find(Boolean);
-        if (mark) { const [mx0, my, mx1] = [+mark[1], +mark[2], +mark[3]];
-          const hp = 1.75 + 1.2;
-          if (b.x - hp < mx1 && b.x + b.width + hp > mx0 && top - hp < my && base + hp > my) out.push(`tideSvg "${el.textContent}" sits on the gauge's mark at ${my.toFixed(1)}`); }
+        /* and never on the boat it is about: the skiff rides the curve and the tag rides beside it
+           (Josh's pick, September 28 2026), so the two are measured on the screen, where the boat's
+           scale and roll are already applied */
+        const boat = [...svg.querySelectorAll("g[transform]")].find((g) => /scale\(1\.15\)/.test(g.getAttribute("transform")));
+        if (boat) { const tb = el.getBoundingClientRect(), bb = boat.getBoundingClientRect();
+          if (tb.left < bb.right && tb.right > bb.left && tb.top < bb.bottom && tb.bottom > bb.top) out.push(`tideSvg "${el.textContent}" sits on the boat`); }
       }
     }
     return out;

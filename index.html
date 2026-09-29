@@ -3723,64 +3723,55 @@ function renderTides(preds,css,gust,wind,gap=0){
   const topY=22,seaY=H-34,bedY=seaY+6,lowY=H-9,axisW=Math.round(26*fs),x0=padX+axisW;
   const vs=[];for(let t=t0;t<=t1;t+=9e5)vs.push(interp(t));
   /* measured up from the chart datum, so the height of the water on screen is the water there */
-  /* the gauge's water now is on the scale too, so its mark is drawn at its true height and never
-     pinned to an edge, a mark over the table keeps a label's height of sky over it, and one under
-     it keeps its tag off the bed */
+  const hiV=Math.max(...vs),base=Math.min(0,...vs);
+  const vTop=hiV+Math.max(.5,(hiV-base)*.2);
+  /* the water that is there now, the table plus the gauge's gap, for the slider's reading at now */
   const wNow=interp(now.getTime())+(gap||0);
-  const hiV=Math.max(...vs,wNow),base=Math.min(0,...vs,gap<0?wNow-(hiV-wNow)*.12:wNow);
-  const vTop=hiV+Math.max(.5,(hiV-base)*.2)+(gap>0?1:0);
   const X=t=>x0+(t-t0)/(t1-t0)*(W-padX-x0);
   const Y=v=>seaY-(v-base)/(vTop-base)*(seaY-topY);
   const pts=[];for(let t=t0;t<=t1;t+=9e5)pts.push([X(t),Y(interp(t))]);
   const path=spline(pts);
   const area=path+` L ${X(t1).toFixed(1)} ${seaY} L ${X(t0).toFixed(1)} ${seaY} Z`;
   const sand=mix(css.faint,"#C2A268",.55);
-  /* the skiff rides the table's curve at now. When the station's gauge runs off the table, the water
-     that is there is a short waterline on the now line at its own height, a dotted riser down or up
-     to the boat, and the gap beside the mark, at the mark's height. The mark is drawn only where the
-     boat does not stand in front of it, over the burgee or under the keel. Behind the boat, the tag
-     steps clear of the bow and says it alone */
-  const nx=X(now.getTime()),ny=Y(interp(now.getTime())),gy=Y(wNow);
-  const seen=gap>0?gy<=ny-22:gap<0&&gy>=ny+7.5;
-  /* The tag is placed, not stamped: stamped beside the now line it sat on the rising flank at a
-     low with the water two feet over, and on the falling flank at a high with it blown out, and
-     its paper halo cut the tide line right at now. So it goes down at the first spot clear of the
-     curve: beside the bow, behind the stern, then over the mark (or the boat) when the water is
-     over the table and under it when it is under, then stepping out along its own row past where
-     the line crosses it. A spot none of them clears takes the one the curve crosses least. Boxes
-     are the tag's ink, in chart units, which are screen pixels */
+  /* the skiff rides the table's curve at now. When the station's gauge runs off the table the gap
+     rides beside the boat as a tag, "+2 ft" or "−1.5 ft": the boat is the table, the tag is what the
+     water is doing. Josh chose it (September 28 2026) over a mark drawn at the real water and over
+     the gauge's own line, as the least ink that still says it */
+  const nx=X(now.getTime()),ny=Y(interp(now.getTime()));
+  /* The tag is placed, not stamped: stamped beside the bow it sat on the rising flank at a low with
+     the water two feet over, and on the falling flank at a high with it blown out, and its paper
+     halo cut the tide line right at now. So it goes down at the first spot clear of the curve:
+     beside the bow at the waterline, behind the stern, then over the boat when the water is over the
+     table and under it when it is under, then the nearest clear spot to the boat, off the boat. A
+     spot none of them clears takes the one the curve crosses least. Boxes are the tag's ink, in
+     chart units, which are screen pixels */
   const tagTxt=gap?`${gap>0?"+":"−"}${Math.abs(gap)} ft`:"";
   let tag=null;
   if(gap){
-    const tw=tagTxt.length*10.5*fs*.6,cap=7.6*fs,side=(seen?10:24)*fs,tb=Math.min(gy+4,seaY-4);
+    const tw=tagTxt.length*10.5*fs*.6,cap=7.6*fs,tb=Math.min(ny+4,seaY-4);
     const curve=[];for(let t=t0;t<=t1;t+=18e4)curve.push([X(t),Y(interp(t))]);
     const box=c=>{c.x0=c.a==="start"?c.x:c.a==="end"?c.x-tw:c.x-tw/2;c.x1=c.x0+tw;c.t=c.b-cap;
       c.ok=c.x0>=x0&&c.x1<=W-padX&&c.t>=4&&c.b<=seaY-4;
       c.hits=curve.filter(([px,py])=>px>c.x0-4.5&&px<c.x1+4.5&&py>c.t-4.5&&py<c.b+4.5).length;return c};
-    const named=[{x:nx+side,a:"start",b:tb},{x:nx-(seen?10:26)*fs,a:"end",b:tb},
-      gap>0?{x:nx,a:"middle",b:(seen?gy:ny-22)-5}:{x:nx,a:"middle",b:Math.min(seaY-4,(seen?gy+5:ny+8)+cap)}].map(box);
-    /* no spot may sit on the mark itself: under the table near a low the mark is close to the bed,
-       and the spot under it, held off the bed, came up onto it and its halo ate the waterline. The
-       mark runs 6.2 each side of now with its caps, the tag's halo 1.75, so a pixel of paper shows */
-    const offMark=c=>!(seen&&c.x0<nx+9&&c.x1>nx-9&&c.t<gy+4&&c.b>gy-4);
-    tag=named.find(c=>c.ok&&!c.hits&&offMark(c));
+    const named=[{x:nx+24*fs,a:"start",b:tb},{x:nx-26*fs,a:"end",b:tb},
+      gap>0?{x:nx,a:"middle",b:ny-27}:{x:nx,a:"middle",b:Math.min(seaY-4,ny+8+cap)}].map(box);
+    /* the boat's box: 25 behind now, 21 ahead, 24 up to the burgee and 6 under the keel */
+    const offBoat=c=>!(c.x0<nx+21&&c.x1>nx-25&&c.t<ny+6&&c.b>ny-24);
+    tag=named.find(c=>c.ok&&!c.hits&&offBoat(c));
     if(!tag){
-      /* the nearest clear spot to the mark, off the boat and off the mark itself */
-      const off=c=>!(c.x0<nx+21&&c.x1>nx-25&&c.t<ny+6&&c.b>ny-24)&&offMark(c);
-      const d=c=>Math.hypot(Math.max(0,c.x0-nx,nx-c.x1),Math.max(0,c.t-gy,gy-c.b));
+      const d=c=>Math.hypot(Math.max(0,c.x0-nx,nx-c.x1),Math.max(0,c.t-ny,ny-c.b));
       let best=null;
       for(let dy=-27;dy<=27;dy+=3)for(let dx=-70;dx<=70;dx+=3){
         const c=box({x:nx+dx,a:"start",b:tb+dy});
-        if(c.ok&&!c.hits&&off(c)&&(!best||d(c)<d(best)))best=c;
+        if(c.ok&&!c.hits&&offBoat(c)&&(!best||d(c)<d(best)))best=c;
       }
       const ok=named.filter(c=>c.ok).sort((a,b)=>a.hits-b.hits);
-      tag=best||ok.find(offMark)||ok[0]||named[0];
+      tag=best||ok.find(offBoat)||ok[0]||named[0];
     }
   }
-  /* the labels treat the mark and its tag as part of the boat, and a tag under the boat is not in
-     their way */
+  /* the labels treat the tag as part of the boat, and a tag under the boat is not in their way */
   const tagUp=tag&&tag.t<ny+4,tagL=tagUp?Math.min(nx-23,tag.x0-2):nx-23,tagR=tagUp?Math.max(nx+19,tag.x1+2):nx+19;
-  const boatTop=Math.min(ny-22,seen&&gap>0?gy-10:Infinity,tagUp?tag.t-3:Infinity);
+  const boatTop=Math.min(ny-22,tagUp?tag.t-3:Infinity);
   const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3.5" stroke-linejoin="round"`;
   const rv=REVEAL.tide.state!=="done",rvAt=(x,k,d)=>rvTag(rv,x,k,d);
 
@@ -3808,7 +3799,7 @@ function renderTides(preds,css,gust,wind,gap=0){
     /* and the now-line stops under any high label it would cross, lifted or not */
     if(high&&nx>lx-2&&nx<lx+lw+2)nowTop=Math.max(nowTop,y-lift+5);
     labels+=`<text x="${x.toFixed(1)}" y="${(high?Math.max(12*fs,y-lift):lowY).toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(11*fs).toFixed(1)}" font-weight="600" fill="${high?css.ink:css.soft}" ${halo}${rvAt(anchor==="start"?x+20*fs:anchor==="end"?x-20*fs:x,"label")}>${clock(p.time)}</text>`;
-    /* the low's tick is drawn under the gauge's mark, its tag and the boat, whose halos break it */
+    /* the low's tick is drawn under the tag and the boat, whose halos break it */
     if(!high)ticks+=`<line x1="${x.toFixed(1)}" y1="${(y+1).toFixed(1)}" x2="${x.toFixed(1)}" y2="${(bedY+2).toFixed(1)}" stroke="${css.line}" stroke-width="1"${rvAt(x,"fade")}/>`;
   }
 
@@ -3844,9 +3835,8 @@ function renderTides(preds,css,gust,wind,gap=0){
     <path d="M -6.5 -10.85 L 7.9 -11.05" fill="none" stroke="${css.ink}" stroke-width="1.25" stroke-linecap="round"/>
     <path d="M -15.5 1.1 Q -17.4 .1 -19.3 .9 M 10.9 .8 Q 13.3 -.5 15.7 .5" fill="none" stroke="${css.water}" stroke-width="1" stroke-linecap="round"/></g></g></g>`;
 
-  /* the now line runs down into the boat, stops over the gauge's mark only where the mark is drawn,
-     and over the tag when the tag sits on it */
-  let nowY2=gap>0&&seen?Math.min(ny-6,gy-5):ny-6;
+  /* the now line runs down into the boat, and stops over the tag when the tag sits on it */
+  let nowY2=ny-6;
   if(tagUp&&tag.x0<nx+1&&tag.x1>nx-1)nowY2=Math.min(nowY2,tag.t-3);
   const tideSvg=document.getElementById("tideSvg"),waterTop=Math.min(...pts.map(p=>p[1]));
   tideSvg.setAttribute("viewBox",`0 0 ${W} ${H}`);
@@ -3863,9 +3853,6 @@ function renderTides(preds,css,gust,wind,gap=0){
     ${ticks}
     ${nowY2>nowTop+2?`<line x1="${nx.toFixed(1)}" y1="${nowTop.toFixed(1)}" x2="${nx.toFixed(1)}" y2="${nowY2.toFixed(1)}" stroke="${css.ink}" stroke-width="1" stroke-dasharray="2 4" opacity=".22"${rvAt(nx,"fade")}/>`:""}
     ${rv?`<ellipse cx="${nx.toFixed(1)}" cy="${(ny+3).toFixed(1)}" rx="17" ry="3.6" fill="none" stroke="${css.water}" stroke-width="1.3" opacity="0"${rvAt(nx,"ring",160)}/>`:""}
-    ${gap?`<g${rvAt(nx,"fade")}>${seen&&(gap>0?gy+3<ny-21:gy-3>ny+9)?`<line x1="${nx.toFixed(1)}" y1="${(gap>0?gy+3:ny+5).toFixed(1)}" x2="${nx.toFixed(1)}" y2="${(gap>0?ny-17:gy-3).toFixed(1)}" stroke="${css.water}" stroke-width="1.2" stroke-dasharray="1.5 2.5"/>`:""}
-      ${seen?`<path d="M ${(nx-5).toFixed(1)} ${gy.toFixed(1)} H ${(nx+5).toFixed(1)}" stroke="${css.paper}" stroke-width="5.4" stroke-linecap="round"/>
-      <path d="M ${(nx-5).toFixed(1)} ${gy.toFixed(1)} H ${(nx+5).toFixed(1)}" stroke="${css.water}" stroke-width="2.4" stroke-linecap="round"/>`:""}</g>`:""}
     <g class="xp-cursor"></g>
     ${tag?`<g${rvAt(nx,"fade")}><text x="${tag.x.toFixed(1)}" y="${tag.b.toFixed(1)}" text-anchor="${tag.a}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(10.5*fs).toFixed(1)}" font-weight="600" fill="${css.wink}" ${halo}>${tagTxt}</text></g>`:""}
     <g${rvAt(nx,"boat")}>${boat}</g>
@@ -3873,8 +3860,8 @@ function renderTides(preds,css,gust,wind,gap=0){
     ${rv?`<g class="rv-tip" opacity="0" fill="${css.water}"><circle r="12" opacity=".14"/><circle r="6.5" opacity=".28"/><circle r="3"/><circle class="rv-core" r="1.4" fill="#FFFFFF" opacity=".95"/></g>`:""}`;
   revealChart("tide",tideSvg,{xa:X(t0),xb:X(t1),dur:clamp(2100+W*1.1,2400,2950),tail:72,color:()=>css.water});
   /* the quarter hours, now and each turn at its own minute. At now the reading is the water that is
-     there (wNow, the table plus the gauge's gap); the skiff is the mark there, and when the gauge's
-     own mark is drawn over or under it the ring goes on that mark */
+     there (wNow, the table plus the gauge's gap), which the tag beside the boat reconciles with the
+     curve it rides; the skiff is the mark there, so no ring is drawn at now */
   const nt=now.getTime(),turns=P.filter(p=>p.time.getTime()>=t0&&p.time.getTime()<=t1);
   const stops=quarterStops(t0,t1,nt,turns.map(p=>p.time.getTime())).map(t=>{
     const p=turns.find(q=>q.time.getTime()===t),nextT=P.find(q=>q.time.getTime()>t);
@@ -3882,10 +3869,10 @@ function renderTides(preds,css,gust,wind,gap=0){
       dir:nextT?.type==="H"?"rising":nextT?.type==="L"?"falling":""};
   });
   const ni=stops.findIndex(s=>s.now),marks=stops.map((s,i)=>s.now||s.turn?i:-1).filter(i=>i>=0);
-  /* the skiff is the mark at now, so the pill rises clear of it (over) without a ring on it */
-  const skiffTop=Math.min(ny-22,seen&&gap>0?gy-10:Infinity)+5;
-  xpPublish("tide",{svg:tideSvg,W,x:stops.map(s=>X(s.t)),y:stops.map(s=>[s.now?(seen?gy:NaN):Y(s.depth)]),over:stops.map(s=>s.now?skiffTop:NaN),t:stops.map(s=>s.t),
-    band:[topY-10,seaY],start:ni,marks,snap:marks,noRing:seen?[]:[ni],read:i=>readTide(stops[i],nt,gap)});
+  /* the skiff is the mark at now, so the pill rises clear of it and its tag (over) without a ring */
+  const skiffTop=boatTop+5;
+  xpPublish("tide",{svg:tideSvg,W,x:stops.map(s=>X(s.t)),y:stops.map(s=>[s.now?NaN:Y(s.depth)]),over:stops.map(s=>s.now?skiffTop:NaN),t:stops.map(s=>s.t),
+    band:[topY-10,seaY],start:ni,marks,snap:marks,noRing:[ni],read:i=>readTide(stops[i],nt,gap)});
   if(next){
     const rising=next.type==="H";
     return{rising,next,note:(rising?"high ":"low ")+clock(next.time)};
@@ -3981,23 +3968,24 @@ function renderMoon(css,wins){
    together, so the loading shell of a new place never keeps the last place's airport */
 function yearTitle(N){
   const el=document.getElementById("yearTitle");
-  el.textContent=N?"The year · "+LOC.addrShort:"The year";
+  el.textContent=N?"The year · "+N.name:"The year";
   if(N)el.title=`NOAA's 1991–2020 normals at the ${N.place} airport, the nearest station`;else el.removeAttribute("title");
 }
 /* ── the year ───────────────────────────────────────── */
 /* NOAA's 1991-2020 climate normals at the airport nearest each place: Wilmington (USW00013748) for
-   Porters Neck and Beckley (USW00003872) for Shady Spring. The title names the place, as the
-   masthead does (Josh, September 28 2026), and the airport is said with the source, in the chart's
-   label and the title's hover text (`place`).
+   Porters Neck and Beckley (USW00003872) for Shady Spring. The title is `name`: Josh asked for
+   "Shady Spring" in place of Beckley and kept "Wilmington" at the coast (September 28 2026), which
+   is home as much as Porters Neck is. The airport is said with the source, in the chart's label and
+   the title's hover text (`place`).
    They change once a decade, so they live here and nothing is fetched for them. Monthly highs,
    lows, rain and snowfall (inches) draw the year; the daily highs and lows (tenths of a degree, by
    day of a leap year) are what this week is measured against. */
 const NORMALS={
-  mb:{place:"Wilmington",hi:[57.2,60.3,66.5,74.6,81.1,87.0,90.0,88.3,83.9,76.1,67.4,60.3],
+  mb:{place:"Wilmington",name:"Wilmington",hi:[57.2,60.3,66.5,74.6,81.1,87.0,90.0,88.3,83.9,76.1,67.4,60.3],
     lo:[36.3,38.4,44.1,52.6,61.1,69.3,73.0,71.7,66.7,55.6,44.8,39.1],
     rain:[3.81,3.47,3.97,3.07,4.54,5.67,6.86,8.16,8.69,4.66,3.56,3.69],snow:[0.7,0.2,0,0,0,0,0,0,0,0,0,0],
     dhi:[577,576,575,574,573,572,572,571,570,570,570,569,569,569,569,569,569,569,569,569,570,570,571,572,572,573,574,575,576,577,579,580,581,583,584,586,587,589,591,592,594,596,598,599,601,603,605,607,609,611,613,615,617,619,621,623,625,627,629,630,631,633,635,637,639,641,644,646,648,650,652,655,657,659,661,664,666,669,671,674,676,679,681,684,687,689,692,695,697,700,703,706,709,712,715,717,720,723,726,729,732,735,737,740,743,746,749,751,754,757,759,762,764,766,769,771,773,776,778,780,782,784,786,788,790,792,794,795,797,799,801,802,804,806,807,809,811,813,814,816,818,819,821,823,825,827,829,830,832,834,836,838,840,843,845,847,849,851,853,855,857,860,862,864,866,868,870,872,874,876,878,880,882,884,885,887,888,890,891,893,894,895,896,897,898,899,900,900,901,901,902,902,902,902,902,902,902,902,902,902,902,901,901,901,900,900,899,899,898,897,897,896,895,895,894,893,893,892,891,891,890,889,889,888,887,886,885,885,884,883,882,881,880,879,878,877,876,875,874,873,872,871,869,868,867,865,864,862,861,859,857,855,854,852,850,848,846,844,842,840,837,835,833,831,828,826,823,821,818,816,813,811,808,806,803,800,798,795,792,789,787,784,781,778,775,773,770,767,764,761,758,756,753,750,747,744,741,738,735,732,730,727,724,721,718,715,712,709,706,703,700,697,695,692,689,686,683,680,677,675,672,669,666,664,661,658,656,653,651,648,645,643,640,638,636,633,631,629,626,624,622,620,618,615,613,611,609,607,605,603,602,600,598,596,594,593,591,589,588,586,585,583,582,581,580,578],dlo:[370,369,368,367,366,365,364,364,363,362,362,361,361,361,360,360,360,360,360,360,360,361,361,361,362,362,363,364,364,365,366,367,368,369,370,371,372,373,374,375,377,378,379,381,382,384,385,387,388,390,391,393,395,396,398,400,402,403,405,406,407,409,411,413,415,417,419,421,423,425,428,430,432,435,437,439,442,444,447,450,452,455,458,460,463,466,469,472,474,477,480,483,486,489,492,495,498,501,504,507,510,513,516,519,522,525,528,531,534,537,540,542,545,548,551,554,556,559,562,565,567,570,573,575,578,581,584,586,589,592,594,597,600,602,605,608,611,613,616,619,622,625,627,630,633,636,639,642,645,647,650,653,656,659,662,665,667,670,673,676,679,681,684,686,689,692,694,696,699,701,703,705,707,709,711,713,715,716,718,719,721,722,723,725,726,727,727,728,729,730,730,731,731,731,732,732,732,732,732,732,732,732,732,732,732,731,731,731,730,730,729,729,728,728,727,727,726,726,725,725,724,723,723,722,721,720,720,719,718,717,716,716,715,714,713,712,711,710,708,707,706,705,703,702,700,699,697,695,694,692,690,688,686,684,681,679,677,674,671,669,666,663,660,657,654,651,648,644,641,637,634,630,626,623,619,615,611,607,603,599,594,590,586,582,577,573,569,564,560,556,551,547,543,539,534,530,526,522,518,513,509,505,502,498,494,490,487,483,480,476,473,470,466,463,460,457,455,452,449,447,444,442,439,437,435,432,430,428,426,424,422,421,419,417,415,413,412,410,409,407,405,404,402,401,399,398,396,395,393,392,390,389,388,386,385,383,382,381,379,378,377,376,374,373,372,371]},
-  sp:{place:"Beckley",hi:[40.5,44.2,52.5,64.4,71.5,77.8,80.7,79.9,74.4,64.3,53.2,43.9],
+  sp:{place:"Beckley",name:"Shady Spring",hi:[40.5,44.2,52.5,64.4,71.5,77.8,80.7,79.9,74.4,64.3,53.2,43.9],
     lo:[24.0,26.6,33.1,42.6,51.1,58.7,62.4,61.1,55.0,44.2,34.7,28.0],
     rain:[3.13,3.12,4.03,3.58,4.68,4.30,5.00,3.68,3.20,2.73,2.80,3.29],snow:[15.5,15.2,8.9,1.5,0,0,0,0,0,1.4,2.3,11.1],
     dhi:[409,408,407,406,405,405,404,403,403,402,402,401,401,401,401,401,401,402,402,403,403,404,405,405,406,407,409,410,411,412,414,415,417,418,420,422,424,426,427,429,431,433,436,438,440,442,444,446,449,451,453,456,458,460,463,465,468,470,473,474,476,478,481,484,487,490,493,496,499,502,505,508,512,515,519,522,526,530,533,537,541,545,549,553,558,562,566,570,575,579,583,588,592,597,601,605,610,614,618,622,626,630,634,638,642,646,649,653,656,659,663,666,669,672,674,677,679,682,684,686,688,690,692,694,696,697,699,701,702,704,705,707,708,710,711,713,714,716,717,719,720,722,724,726,728,730,732,734,736,738,740,742,745,747,749,752,754,757,759,762,764,767,769,772,774,777,779,781,783,786,788,790,792,793,795,797,798,800,801,802,803,804,805,806,807,807,808,808,808,809,809,809,809,809,809,809,808,808,808,808,807,807,807,807,806,806,806,805,805,805,805,805,804,804,804,804,804,804,804,803,803,803,803,803,803,802,802,802,801,801,800,800,799,798,798,797,796,794,793,792,791,789,787,786,784,782,780,778,775,773,770,768,765,762,760,757,754,751,748,744,741,738,735,731,728,725,721,718,714,711,708,704,701,697,694,690,687,684,680,677,674,670,667,664,660,657,654,650,647,643,640,637,633,630,626,623,619,616,612,609,605,602,598,594,591,587,583,579,576,572,568,564,560,556,552,549,545,541,537,533,529,526,522,518,514,511,507,503,500,496,493,490,486,483,480,477,473,470,467,464,462,459,456,453,451,448,446,443,441,439,437,434,432,430,428,426,424,423,421,419,418,416,415,413,412,411],dlo:[251,250,248,247,246,245,243,242,241,240,239,238,238,237,237,236,236,236,236,235,236,236,236,236,237,238,238,239,240,241,242,243,244,246,247,248,250,252,253,255,257,258,260,262,264,266,268,270,272,274,276,278,280,282,284,286,288,290,293,294,295,297,299,301,303,306,308,310,312,315,317,319,322,324,327,329,332,334,337,340,343,345,348,351,354,357,361,364,367,370,373,377,380,384,387,390,394,397,401,404,408,411,415,418,422,425,429,432,435,439,442,445,448,452,455,458,461,463,466,469,472,475,477,480,482,485,487,490,492,495,497,499,502,504,506,509,511,513,515,518,520,523,525,527,530,532,535,537,540,542,545,548,550,553,556,558,561,564,567,569,572,575,577,580,583,585,588,590,593,595,597,599,602,604,606,608,609,611,613,614,616,617,618,619,621,621,622,623,624,624,625,625,626,626,626,626,626,626,626,626,626,626,625,625,625,625,624,624,624,623,623,622,622,621,621,621,620,620,619,619,618,618,617,616,616,615,614,614,613,612,611,610,609,608,607,606,605,603,602,600,599,597,595,593,591,589,587,585,582,580,577,575,572,569,566,563,560,557,554,551,547,544,541,537,534,530,526,523,519,515,512,508,504,500,497,493,489,485,482,478,474,470,467,463,459,456,452,448,445,441,438,434,431,427,424,420,417,413,410,407,403,400,397,394,391,387,384,381,378,375,372,369,366,363,361,358,355,352,350,347,344,342,339,337,334,332,329,327,325,322,320,318,316,314,311,309,307,305,303,301,299,297,295,293,291,289,287,285,283,281,279,278,276,274,272,270,268,267,265,263,261,260,258,256,255,253]}};

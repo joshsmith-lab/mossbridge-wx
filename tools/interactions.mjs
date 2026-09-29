@@ -507,8 +507,8 @@ try{
     assert.deepEqual(m.errors,[]);await m.context.close();checks++;
   }
   {
-    /* the water two feet over the table: at now the pill is the table plus the gap, the ring is on
-       the gauge's mark when it is drawn and nowhere at now when it is not, and an hour on is the table's */
+    /* the water two feet over the table: at now the pill is the table plus the gap, the skiff on the
+       curve is the mark there with "+2 ft" beside it and no ring, and an hour on is the table's */
     const {context,page,errors}=await open(390,surgeO,"mb",surgeAt);
     await load(page);
     await page.locator("#tideExplore .xp-key").focus();
@@ -522,8 +522,8 @@ try{
     assert.equal(exp.gap,2);
     assert.equal(s.text,`now ~${(exp.table+exp.gap).toFixed(1)} ft`,"now is the water that is there");
     assert.match(s.said,/running 2 ft above the tide table/);
-    if(exp.markY==null)assert.equal(s.rings.length,0,"the skiff is the mark at now");
-    else{assert.equal(s.rings.length,1);assert.ok(Math.abs(s.rings[0][1]-exp.markY)<=1,"the ring sits on the gauge's mark")}
+    assert.equal(exp.markY,null,"no mark is drawn at the real water: the tag says the gap");
+    assert.equal(s.rings.length,0,"the skiff is the mark at now");
     await page.keyboard.press("ArrowRight");
     assert.match((await xpState(page,"tide")).text,/ by the table$/,"everything else is the table's");
     assert.deepEqual(errors,[]);await context.close();checks++;

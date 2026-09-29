@@ -1150,11 +1150,10 @@ test("a pumpkin still reads as one at seven pixels, and no two are cut alike", a
 test("tide chart reads as depth over the bottom", async () => {
   const html = await readFile(new URL("index.html", root), "utf8");
 
-  // height is measured up from the chart datum, never autoscaled to the window
-  // measured up from the chart datum, and the gauge's water now is on the same scale: its mark is
-  // drawn at its true height, never pinned to an edge, with a label's height of sky over a mark
-  // above the table, and its tag kept off the bed under one below it
-  assert.match(html, /const wNow=interp\(now\.getTime\(\)\)\+\(gap\|\|0\);\n  const hiV=Math\.max\(\.\.\.vs,wNow\),base=Math\.min\(0,\.\.\.vs,gap<0\?wNow-\(hiV-wNow\)\*\.12:wNow\);\n  const vTop=hiV\+Math\.max\(\.5,\(hiV-base\)\*\.2\)\+\(gap>0\?1:0\);/);
+  // height is measured up from the chart datum, never autoscaled to the window, and the scale is
+  // the table's own: the gauge is said beside the boat, not drawn, so it is not on the scale
+  assert.match(html, /const hiV=Math\.max\(\.\.\.vs\),base=Math\.min\(0,\.\.\.vs\);\n  const vTop=hiV\+Math\.max\(\.5,\(hiV-base\)\*\.2\);/);
+  assert.match(html, /const wNow=interp\(now\.getTime\(\)\)\+\(gap\|\|0\);/);
   assert.match(html, /seaY=H-34/);
   // the old top rail with a height printed beside every extreme is gone
   assert.doesNotMatch(html, /labelRailY/);
@@ -1164,34 +1163,30 @@ test("tide chart reads as depth over the bottom", async () => {
   assert.match(html, /rockDeg=clamp\(2\.2\+g0\*\.13/);
   assert.match(html, /const tide=renderTides\(d\.tides,css,c\.wind_gusts_10m,c\.wind_speed_10m,levelFeet\(d\.water,now\)\);/);
   // the skiff rides the table's curve (Josh, September 28 2026: "I preferred the boat actually on
-  // the tide line"), and the water that is there is a short waterline on the now line at the
-  // gauge's height, with a dotted riser to the boat and the gap beside the mark. The mark is drawn
-  // only where the boat does not stand in front of it; behind the boat the tag says it alone
+  // the tide line"), and when the gauge runs off the table the gap rides beside it as a tag. He
+  // chose that over a mark at the real water and over the gauge's own line, so neither is drawn
   assert.match(html, /function renderTides\(preds,css,gust,wind,gap=0\)\{/);
-  assert.match(html, /const nx=X\(now\.getTime\(\)\),ny=Y\(interp\(now\.getTime\(\)\)\),gy=Y\(wNow\);/);
-  assert.match(html, /const seen=gap>0\?gy<=ny-22:gap<0&&gy>=ny\+7\.5;/);
+  assert.match(html, /const nx=X\(now\.getTime\(\)\),ny=Y\(interp\(now\.getTime\(\)\)\);/);
+  assert.doesNotMatch(html, /gy=Y\(wNow\)|const seen=gap|offMark|stroke-dasharray="1\.5 2\.5"/);
   // the tag is placed against the curve, not stamped: beside the bow, behind the stern, then over
-  // (or under) the mark, at the first spot the tide line does not cross and that does not sit on
-  // the mark itself (under the table near a low, the spot under the mark was held off the bed and
-  // came up onto it, and its halo ate the waterline: "−0.‘5’ ft")
-  assert.match(html, /const offMark=c=>!\(seen&&c\.x0<nx\+9&&c\.x1>nx-9&&c\.t<gy\+4&&c\.b>gy-4\);/);
-  assert.match(html, /tag=named\.find\(c=>c\.ok&&!c\.hits&&offMark\(c\)\);/);
-  assert.match(html, /tag=best\|\|ok\.find\(offMark\)\|\|ok\[0\]\|\|named\[0\];/);
-  assert.match(html, /if\(c\.ok&&!c\.hits&&off\(c\)&&\(!best\|\|d\(c\)<d\(best\)\)\)best=c;/);
-  // the low's tick goes under the mark, the tag and the boat, and the now line stops over the mark
-  // only where the mark is drawn
+  // (or under) the boat, at the first spot the tide line does not cross and off the boat
+  assert.match(html, /const offBoat=c=>!\(c\.x0<nx\+21&&c\.x1>nx-25&&c\.t<ny\+6&&c\.b>ny-24\);/);
+  assert.match(html, /tag=named\.find\(c=>c\.ok&&!c\.hits&&offBoat\(c\)\);/);
+  assert.match(html, /tag=best\|\|ok\.find\(offBoat\)\|\|ok\[0\]\|\|named\[0\];/);
+  assert.match(html, /if\(c\.ok&&!c\.hits&&offBoat\(c\)&&\(!best\|\|d\(c\)<d\(best\)\)\)best=c;/);
+  // the low's tick goes under the tag and the boat, and the now line runs into the boat
   assert.match(html, /\$\{ticks\}\n\s*\$\{nowY2>nowTop\+2\?/);
-  assert.match(html, /let nowY2=gap>0&&seen\?Math\.min\(ny-6,gy-5\):ny-6;/);
+  assert.match(html, /let nowY2=ny-6;/);
   // and the pill rises clear of the skiff at now, which has no ring
   assert.match(html, /over:stops\.map\(s=>s\.now\?skiffTop:NaN\)/);
   assert.match(html, /const ys=\[\.\.\.D\.y\[i\],D\.over\?\.\[i\]\]\.filter\(Number\.isFinite\)/);
   assert.match(html, /const tagTxt=gap\?`\$\{gap>0\?"\+":"−"\}\$\{Math\.abs\(gap\)\} ft`:""/);
-  // the mark and its tag are part of the boat for the labels, so a high steps over them rather than
-  // giving way, no label is set above the chart, and the gap's marks arrive with the skiff
-  assert.match(html, /const boatTop=Math\.min\(ny-22,seen&&gap>0\?gy-10:Infinity,tagUp\?tag\.t-3:Infinity\);/);
+  // the tag is part of the boat for the labels, so a high steps over it rather than giving way, no
+  // label is set above the chart, and the tag arrives with the skiff
+  assert.match(html, /const boatTop=Math\.min\(ny-22,tagUp\?tag\.t-3:Infinity\);/);
   assert.match(html, /const onBoat=high&&lx<tagR&&lx\+lw>tagL&&y-6>boatTop;/);
   assert.match(html, /y="\$\{\(high\?Math\.max\(12\*fs,y-lift\):lowY\)\.toFixed\(1\)\}"/);
-  assert.match(html, /\$\{gap\?`<g\$\{rvAt\(nx,"fade"\)\}>\$\{seen&&/);
+  assert.match(html, /\$\{tag\?`<g\$\{rvAt\(nx,"fade"\)\}><text/);
   assert.doesNotMatch(html, /if\(onBoat&&gap&&tm<now\.getTime\(\)\)continue;/);
   assert.doesNotMatch(html, /ny=Y\(wNow\)/);
   // the skiff's burgee flies on the real wind: limp in calm air, level by 15 mph, and the
@@ -1199,8 +1194,7 @@ test("tide chart reads as depth over the bottom", async () => {
   assert.match(html, /const w0=Number\(wind\)\|\|0,flagDeg=-35\*\(1-clamp\(w0\/15,0,1\)\);/);
   assert.match(html, /const flutter=clamp\(1\.2\+\(g0-w0\)\*\.35,1\.2,6\)/);
   assert.match(html, /\$\{PRM\?`transform:rotate\(\$\{flagDeg\.toFixed\(1\)\}deg\)`/);
-  // the taller skiff: a high label steps over it sooner and higher, and over its gauge mark and tag
-  // too (tagR is the boat's own right edge, 19px, when there is no tag)
+  // the taller skiff: a high label steps over it sooner and higher, and over its tag too (tagR is the boat's own right edge, 19px, when there is no tag)
   assert.match(html, /tagR=tagUp\?Math\.max\(nx\+19,tag\.x1\+2\):nx\+19;/);
   assert.match(html, /const lift=onBoat\?Math\.max\(9,y-boatTop\+4\):9;/);
   assert.match(html, /const chartH=w=>Math\.round\(152\+\(760-w\)\*\.09\)/);
@@ -1628,8 +1622,11 @@ test("the water and the farm say what is there, and nothing is scored or picked"
   // The year: NOAA's 1991-2020 normals at the two airports, as published
   const Nm = ctx.NORMALS.mb, Ns = ctx.NORMALS.sp;
   assert.deepEqual([Nm.place, Nm.hi[6], Nm.lo[0], Nm.rain[8], Ns.place, Ns.hi[6], Ns.lo[0], Ns.snow[0]], ["Wilmington", 90, 36.3, 8.69, "Beckley", 80.7, 24, 15.5]);
-  // the title names the place, the way the masthead does, and the airport is said with the source
-  assert.match(html, /el\.textContent=N\?"The year · "\+LOC\.addrShort:"The year";/);
+  // the title is the place's own name: "Shady Spring" for the farm (Josh: "Change Beckley to Shady
+  // Spring") and "Wilmington" kept at the coast, where he said no to Porters Neck; the airport is
+  // said with the source
+  assert.deepEqual([Nm.name, Ns.name], ["Wilmington", "Shady Spring"]);
+  assert.match(html, /el\.textContent=N\?"The year · "\+N\.name:"The year";/);
   // set together, by one helper, in the render and in a new place's loading shell, so the hover
   // text never keeps the last place's airport while the new place loads
   assert.equal((html.match(/yearTitle\(N\);/g) || []).length, 2);
