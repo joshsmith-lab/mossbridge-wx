@@ -47,7 +47,9 @@ const CASES = [
   { name: "03-storm-porters-neck", loc: "mb", when: "2026-08-02T16:45:00",
     o: { baseTemp: 84, nowTemp: 81, feels: 88, rh: 88, isDay: 1, code: 95, cloud: 96, nowWind: 17, nowDir: 250, nowGust: 34, nowUv: 1.2, uvMax: 8, windAmp: 14, gustAmp: 26, nowcast: true,
       popCurve: (i, hr) => (hr >= 14 && hr <= 21 ? 78 : 20),
-      dailyPop: (p) => { p[0] = 85; p[1] = 65; p[2] = 45; } } },
+      dailyPop: (p) => { p[0] = 85; p[1] = 65; p[2] = 45; } },
+    // thunder reported now is thunder in the now pill
+    expect: { xp: { hourly: /^now 81° feels 88° thunder \d+%/ } } },
   { name: "04-morning-shady-spring", loc: "sp", when: "2026-08-02T09:05:00",
     o: { baseTemp: 70, nowTemp: 71, feels: 71, rh: 72, isDay: 1, code: 2, cloud: 55, nowWind: 7, nowDir: 305, nowGust: 12, nowUv: 4.1, uvMax: 7, windAmp: 7, gustAmp: 11,
       popCurve: (i, hr) => (hr >= 15 && hr <= 19 ? 30 : 8),
@@ -77,7 +79,8 @@ const CASES = [
     o: { baseTemp: 72, nowTemp: 76, feels: 78, rh: 60, isDay: 1, code: 1, cloud: 24, nowWind: 8, nowDir: 40, nowGust: 13, nowUv: 3.8, uvMax: 4.2,
       windAmp: 7, gustAmp: 11, sunrise: "07:04", sunset: "18:59", surge: 1.9,
       popCurve: () => 8, dailyPop: (p) => p.fill(12) },
-    expect: { say: null, tide: /^77° · seas ~2 ft$/, level: "Running 2 ft above the tide table.", marine: 1 } },
+    expect: { say: null, tide: /^77° · seas ~2 ft$/, level: "Running 2 ft above the tide table.", marine: 1,
+      xp: { tide: /^now ~\d+\.\d ft$/, tideHour: / by the table$/ } } },
   // the week as lines: a late-September swing from a cool snap to a warm run
   { name: "14-week-porters-neck", loc: "mb", when: "2026-09-24T17:10:00",
     o: { baseTemp: 66, nowTemp: 68, feels: 68, rh: 70, isDay: 1, code: 3, cloud: 70, nowWind: 15, nowDir: 5, nowGust: 30, nowUv: .6, uvMax: 6,
@@ -92,7 +95,7 @@ const CASES = [
     o: { baseTemp: 84, nowTemp: 90, feels: 97, rh: 70, isDay: 1, code: 2, cloud: 40, nowWind: 6, nowDir: 250, nowGust: 12, nowUv: 8, uvMax: 9,
       windAmp: 6, gustAmp: 10, popCurve: () => 10, dailyPop: (p) => p.splice(0, 8, 35, 85, 100, 45, 10, 0, 65, 20),
       dailyTemps: (hi, lo, c) => { hi.splice(0, 8, 96, 101, 88, 84, 83, 86, 90, 87); lo.splice(0, 8, 74, 76, 71, 66, 64, 66, 70, 68); c.splice(0, 8, 2, 95, 63, 80, 1, 0, 81, 2); } },
-    expect: { cols: 8, weekend: ["Sat", "Sun"], moon: true, say: null, fish: true } },
+    expect: { cols: 8, weekend: ["Sat", "Sun"], moon: true, say: null, fish: true, xp: { week: /^Mon 8\/3 101° \/ 76° thunder 85%$/ } } },
   // a Saturday with the boat season switched on: the weekend is today and tomorrow, so the note
   // names only Sunday, and the water is an easy day in words
   { name: "16-saturday-porters-neck", loc: "mb", when: "2026-09-26T10:30:00",
@@ -109,38 +112,93 @@ const CASES = [
     // and the card says "Sunscreen if you're out a while." at 2.9: the 3.1 still to come crosses into
     // moderate, so its ring stays, or the only UV on the page read LOW under a sunscreen sentence
     expect: { cols: 7, weekend: ["Today", "Sun"], say: null, tide: /^63° · seas ~2 ft$/, level: null, marine: 1,
-      sun: "Sunscreen if you're out a while.", uvBar: /^UV 2\.9 now, low, peaking at 3\.1 around 12 p\.m\.$/ } },
+      sun: "Sunscreen if you're out a while.", uvBar: /^UV 2\.9 now, low, peaking at 3\.1 around noon\.$/ } },
   // a cold, clear January morning on the coast: the headline owns the cold, the water section says
   // only the water, and the sun card steps aside. The station's thermometer is down: no water at all
   { name: "18-january-porters-neck", loc: "mb", when: "2027-01-14T08:40:00",
     o: { baseTemp: 32, nowTemp: 28, feels: 20, rh: 58, isDay: 1, code: 0, cloud: 4, nowWind: 11, nowDir: 340, nowGust: 19, nowUv: 0.6, uvMax: 2.4,
       windAmp: 7, gustAmp: 10, sunrise: "07:22", sunset: "17:25", waterTemp: null, popCurve: () => 3, dailyPop: (p) => p.fill(5),
       dailyTemps: (hi, lo, c) => { hi.splice(1, 6, 44, 51, 55, 47, 40, 36); lo.splice(1, 6, 26, 33, 39, 31, 25, 21); c.splice(1, 6, 1, 2, 3, 3, 1, 0); } },
-    expect: { say: null, tide: /^seas ~2 ft$/, sun: "(steps aside)", marine: 1 } },
+    expect: { say: null, tide: /^seas ~2 ft$/, sun: "(steps aside)", marine: 1, xp: { year: /^Jan 57° \/ 36° rain 3\.8 in$/ } } },
   // the boat season on, with the marine run answering but carrying no seas: never green, and said once
   { name: "19-no-seas-porters-neck", loc: "mb", when: "2026-09-15T10:10:00",
     o: { baseTemp: 76, nowTemp: 77, feels: 78, rh: 62, isDay: 1, code: 1, cloud: 20, nowWind: 6, nowDir: 190, nowGust: 10, nowUv: 5.2, uvMax: 6.4,
       windAmp: 6, gustAmp: 8, sunrise: "06:56", sunset: "19:21", wave: null, popCurve: () => 6, dailyPop: (p) => p.fill(10),
       dailyTemps: (hi, lo, c) => { hi.splice(1, 6, 83, 84, 81, 79, 82, 84); lo.splice(1, 6, 68, 70, 67, 64, 66, 69); c.splice(1, 6, 1, 2, 2, 1, 1, 2); } },
     boat: true, expect: { sayTitle: "The boat", say: "Seas unavailable.", sayCls: "caution", tide: /^77°$/ } },
-  // the gauge two feet over the table half an hour before the 1:36p high: the skiff floats at the
-  // water that is there, on the chart's scale, and the high's time stays on the chart over it
+  // the gauge two feet over the table half an hour before the 1:36p high: the skiff rides the curve
+  // with "+2 ft" beside it, and the high's time steps over both
   { name: "21-surge-at-high-porters-neck", loc: "mb", when: "2026-09-27T13:05:00",
     o: { baseTemp: 74, nowTemp: 78, feels: 78, rh: 70, isDay: 1, code: 3, cloud: 70, nowWind: 14, nowDir: 45, nowGust: 22, nowUv: 3, uvMax: 5,
       windAmp: 9, gustAmp: 13, sunrise: "07:04", sunset: "18:59", surge: 2.1, popCurve: () => 10, dailyPop: (p) => p.fill(15) },
-    expect: { level: "Running 2 ft above the tide table.", tide: /^77° · seas ~2 ft$/ } },
+    expect: { level: "Running 2 ft above the tide table.", tide: /^77° · seas ~2 ft$/, xp: { tide: /^now ~\d+\.\d ft$/, tideHour: / by the table$/ } } },
   // a winter northwester blowing the water out a foot and a half under the table at the 7:24a low:
-  // the chart deepens below the datum rather than sinking the skiff into the sand and its label
+  // the skiff stays on the curve at the low and "−1.5 ft" keeps off the bed and the line
   { name: "22-blown-out-low-porters-neck", loc: "mb", when: "2027-01-14T07:10:00",
     o: { baseTemp: 36, nowTemp: 33, feels: 24, rh: 55, isDay: 1, code: 0, cloud: 5, nowWind: 16, nowDir: 320, nowGust: 28, nowUv: 0.2, uvMax: 2.4,
       windAmp: 8, gustAmp: 12, sunrise: "07:22", sunset: "17:25", surge: -1.6, waterTemp: 48, popCurve: () => 3, dailyPop: (p) => p.fill(5) },
-    expect: { level: "Running 1.5 ft below the tide table.", tide: /^48° · seas ~2 ft$/ } },
+    expect: { level: "Running 1.5 ft below the tide table.", tide: /^48° · seas ~2 ft$/, xp: { tide: /^now ~−?\d+\.\d ft$/, tideHour: / by the table$/ } } },
+  // the water two feet over the table at the 7:24a low, the September 27 case the level exists for:
+  // stamped beside the bow the tag sat on the rising flank, so it is placed where the line is not
+  { name: "23-surge-at-low-porters-neck", loc: "mb", when: "2027-01-14T07:24:00",
+    o: { baseTemp: 44, nowTemp: 46, feels: 41, rh: 80, isDay: 1, code: 3, cloud: 80, nowWind: 18, nowDir: 60, nowGust: 26, nowUv: 0.2, uvMax: 2.4,
+      windAmp: 8, gustAmp: 12, sunrise: "07:22", sunset: "17:25", surge: 2.1, waterTemp: 50, popCurve: () => 12, dailyPop: (p) => p.fill(15) },
+    expect: { level: "Running 2 ft above the tide table." } },
+  // a northeaster blowing the water out a foot under the table at the 1:36p high, where the tag sat
+  // on the falling flank
+  { name: "25-blown-out-high-porters-neck", loc: "mb", when: "2026-09-27T13:36:00",
+    o: { baseTemp: 70, nowTemp: 72, feels: 72, rh: 60, isDay: 1, code: 2, cloud: 40, nowWind: 16, nowDir: 330, nowGust: 26, nowUv: 3.5, uvMax: 5,
+      windAmp: 9, gustAmp: 13, sunrise: "07:04", sunset: "18:59", surge: -1, popCurve: () => 4, dailyPop: (p) => p.fill(5) },
+    expect: { level: "Running 1 ft below the tide table." } },
+  // the water half a foot under the table an hour before the 7:48p low: the boat sits close to the
+  // bed, and the tag goes beside it, never on it or on the line
+  { name: "27-under-the-table-near-low-porters-neck", loc: "mb", when: "2026-09-27T18:46:00",
+    o: { baseTemp: 76, nowTemp: 74, feels: 74, rh: 70, isDay: 1, code: 2, cloud: 35, nowWind: 12, nowDir: 330, nowGust: 20, nowUv: 0.3, uvMax: 6,
+      windAmp: 6, gustAmp: 9, sunrise: "07:03", sunset: "19:07", surge: -0.5, waterTemp: 76, popCurve: () => 5, dailyPop: (p) => p.fill(10) } },
+  // the water two feet over the table on the 1:36p high, and 54 minutes before it: the tag over the
+  // boat sat right under the chart's top, so the high's time was printed on it and the explorer's
+  // pill rose into the title. No tag goes higher than a high's time needs over it
+  { name: "91-over-the-table-at-the-high-porters-neck", loc: "mb", when: "2026-09-27T13:36:00",
+    o: { baseTemp: 74, nowTemp: 78, feels: 78, rh: 70, isDay: 1, code: 3, cloud: 70, nowWind: 14, nowDir: 45, nowGust: 22, nowUv: 3, uvMax: 5,
+      windAmp: 9, gustAmp: 13, sunrise: "07:04", sunset: "18:59", popCurve: () => 10, dailyPop: (p) => p.fill(15), surge: 2.1 },
+    expect: { level: "Running 2 ft above the tide table." } },
+  { name: "92-over-the-table-before-the-high-porters-neck", loc: "mb", when: "2026-09-27T12:42:00",
+    o: { baseTemp: 74, nowTemp: 78, feels: 78, rh: 70, isDay: 1, code: 3, cloud: 70, nowWind: 14, nowDir: 45, nowGust: 22, nowUv: 3, uvMax: 5,
+      windAmp: 9, gustAmp: 13, sunrise: "07:04", sunset: "18:59", popCurve: () => 10, dailyPop: (p) => p.fill(15), surge: 2.1 },
+    expect: { level: "Running 2 ft above the tide table." } },
+  // two and a half hours past the high, a seven-character tag (+0.5 ft, −2.5 ft) at 320: every row
+  // beside and under the boat is crossed by one flank or the other, so the search reaches rows over it
+  { name: "93-half-over-falling-porters-neck", loc: "mb", when: "2026-09-27T16:06:00",
+    o: { baseTemp: 74, nowTemp: 78, feels: 78, rh: 70, isDay: 1, code: 3, cloud: 70, nowWind: 14, nowDir: 45, nowGust: 22, nowUv: 3, uvMax: 5,
+      windAmp: 9, gustAmp: 13, sunrise: "07:04", sunset: "18:59", popCurve: () => 10, dailyPop: (p) => p.fill(15), surge: 0.6 },
+    expect: { level: "Running half a foot above the tide table." } },
+  { name: "94-blown-out-falling-porters-neck", loc: "mb", when: "2026-09-27T16:06:00",
+    o: { baseTemp: 74, nowTemp: 78, feels: 78, rh: 70, isDay: 1, code: 3, cloud: 70, nowWind: 14, nowDir: 45, nowGust: 22, nowUv: 3, uvMax: 5,
+      windAmp: 9, gustAmp: 13, sunrise: "07:04", sunset: "18:59", popCurve: () => 10, dailyPop: (p) => p.fill(15), surge: -2.6 },
+    expect: { level: "Running 2.5 ft below the tide table." } },
+  // a wet weekend of one kind, 40% and 100%: the noun is said once, so at 320 the note stays on the
+  // title's line
+  { name: "26-wet-weekend-porters-neck", loc: "mb", when: "2026-08-06T14:20:00",
+    o: { baseTemp: 84, nowTemp: 88, feels: 95, rh: 70, isDay: 1, code: 2, cloud: 40, nowWind: 9, nowDir: 200, nowGust: 16, nowUv: 7, uvMax: 9,
+      windAmp: 6, gustAmp: 9, sunrise: "06:25", sunset: "20:08", popCurve: () => 10,
+      dailyPop: (p, c) => { p.fill(10); p[2] = 40; p[3] = 100; c[2] = 80; c[3] = 63; },
+      dailyTemps: (hi) => { hi.splice(2, 2, 100, 101); } },
+    expect: { note: /^Sat 100° 40% · Sun 101° 100% rain$/ } },
+  // a wet weekend of two kinds at the farm, rain then snow: both nouns are said, and at 320 the
+  // note still stays on the title's line
+  { name: "28-rain-then-snow-weekend-shady-spring", loc: "sp", when: "2027-01-15T12:20:00",
+    o: { baseTemp: 38, nowTemp: 41, feels: 36, rh: 70, isDay: 1, code: 3, cloud: 80, nowWind: 8, nowDir: 250, nowGust: 14, nowUv: 1.5, uvMax: 2,
+      windAmp: 5, gustAmp: 8, sunrise: "07:30", sunset: "17:25", popCurve: () => 10,
+      dailyPop: (p, c) => { p.fill(10); p[1] = 60; p[2] = 100; c[1] = 63; c[2] = 73; },
+      dailyTemps: (hi, lo) => { hi.splice(1, 2, 44, 34); lo.splice(1, 2, 33, 24); } },
+    expect: { note: /^Sat 44° 60% rain · Sun 34° 100% snow$/ } },
   // a cold October morning at the farm: the card speaks for the morning rounds, in amber, over the bite times
   { name: "20-cold-morning-shady-spring", loc: "sp", when: "2026-10-22T07:40:00",
     o: { baseTemp: 44, nowTemp: 31, feels: 27, rh: 80, isDay: 1, code: 0, cloud: 5, nowWind: 4, nowDir: 320, nowGust: 8, nowUv: 0.2, uvMax: 3.5,
       windAmp: 5, gustAmp: 8, sunrise: "07:32", sunset: "18:40", popCurve: () => 3, dailyPop: (p) => p.fill(5),
       dailyTemps: (hi, lo, c) => { hi.splice(0, 8, 53, 58, 61, 57, 55, 60, 63, 59); lo.splice(0, 8, 29, 33, 38, 41, 35, 34, 39, 42); c.splice(0, 8, 0, 1, 2, 3, 3, 2, 1, 2); } },
-    expect: { moon: true, sayTitle: "Piddling", say: "Cold one. Bundle up for the morning rounds.", sayCls: "caution", fish: true, year: /^The year · Beckley \/ \d+° cooler this week$/ } },
+    expect: { moon: true, sayTitle: "Piddling", say: "Cold one. Bundle up for the morning rounds.", sayCls: "caution", fish: true, year: /^The year · Shady Spring \/ \d+° cooler this week$/,
+      xp: { year: /^Oct 64° \/ 44° rain 2\.7 in snow 1 in$/ } } },
 ];
 
 /* labels are placed, not stamped: on the tide, the moon and the year every word sits inside its
@@ -159,10 +217,50 @@ async function crowded(page) {
     if (id === "tideSvg") {
       const tag = boxes.find((x) => /^[+−][\d.]+ ft$/.test(x.t)), sea = vb.height - 34;
       if (tag && tag.b.y + tag.b.height > sea + .5) out.push(`tideSvg "${tag.t}" sits on the bed (${(tag.b.y + tag.b.height).toFixed(1)} under ${sea})`);
+      /* and never on the tide line: its paper halo cut the water at now. The tag's ink runs from its
+         baseline up its cap height (no descenders), and the line's own edge is 1.2 off its path */
+      const el = [...svg.querySelectorAll("text")].find((e) => /^[+−][\d.]+ ft$/.test(e.textContent)), line = svg.querySelector(".wline");
+      if (el && line) {
+        const fs = parseFloat(el.getAttribute("font-size")), base = +el.getAttribute("y"), b = el.getBBox(), top = base - .72 * fs, pad = 2 + 1.2;
+        const L = line.getTotalLength();
+        for (let d = 0; d <= L; d += 1) { const q = line.getPointAtLength(d);
+          if (q.x > b.x - pad && q.x < b.x + b.width + pad && q.y > top - pad && q.y < base + pad) { out.push(`tideSvg "${el.textContent}" sits on the tide line at ${q.x.toFixed(0)},${q.y.toFixed(0)}`); break; } }
+        /* and never on the boat it is about: the skiff rides the curve and the tag rides beside it
+           (Josh's pick, September 28 2026), so the two are measured on the screen, where the boat's
+           scale and roll are already applied */
+        const boat = [...svg.querySelectorAll("g[transform]")].find((g) => /scale\(1\.15\)/.test(g.getAttribute("transform")));
+        if (boat) { const tb = el.getBoundingClientRect(), bb = boat.getBoundingClientRect();
+          if (tb.left < bb.right && tb.right > bb.left && tb.top < bb.bottom && tb.bottom > bb.top) out.push(`tideSvg "${el.textContent}" sits on the boat`); }
+      }
     }
     return out;
   }));
-  return out;
+  /* the hourly axis is words in a row too: the hour beside NOW gives way to it */
+  const hr = await page.evaluate(() => { const b = [...document.querySelectorAll("#hrLabels span")].filter((e) => e.textContent).map((e) => ({ t: e.textContent, r: e.getBoundingClientRect() }));
+    return b.slice(1).flatMap((x, i) => x.r.left < b[i].r.right - .5 ? [`hourly axis "${b[i].t}" runs into "${x.t}"`] : []); });
+  return [...out, ...hr];
+}
+
+/* a reading never covers what it reads: at every stop of every chart the pill stays clear of the
+   stop's rings (it rises over the top of a chart, the week's warmest day, July on the coast, a hot
+   hour under a two-line pill) and clear of the section's title above it */
+async function pillClear(page) {
+  return page.evaluate(() => Object.values(XP).filter((X) => X.D).flatMap((X) => {
+    const out = [], eb = X.box.closest("section,.week").querySelector(".eyebrow").getBoundingClientRect();
+    for (let i = 0; i < X.D.x.length; i++) {
+      xpShow(X, i); const p = X.peek.getBoundingClientRect();
+      for (const c of X.D.svg.querySelectorAll(".xp-cursor circle")) {
+        const b = c.getBoundingClientRect(), w = Math.min(b.right, p.right) - Math.max(b.left, p.left), h = Math.min(b.bottom, p.bottom) - Math.max(b.top, p.top);
+        if (w > 1 && h > 1) { out.push(`${X.k} pill "${X.peek.textContent}" covers its ring`); break; }
+      }
+      if (p.top < eb.bottom - 1) out.push(`${X.k} pill "${X.peek.textContent}" runs into the title`);
+      /* at the water's now the skiff is the mark, and it has no ring: the pill clears its box */
+      const skiff = X.k === "tide" && i === X.D.start && X.D.svg.querySelector(".boat-flag")?.closest('g[transform*="scale(1.15)"]');
+      if (skiff) { const b = skiff.getBoundingClientRect(), w = Math.min(b.right, p.right) - Math.max(b.left, p.left), h = Math.min(b.bottom, p.bottom) - Math.max(b.top, p.top);
+        if (w > 1 && h > 1) out.push(`tide pill "${X.peek.textContent}" covers the skiff by ${h.toFixed(1)}px`); }
+    }
+    xpHide(X); return out.slice(0, 3);
+  }));
 }
 
 const cases = ONLY.length ? CASES.filter((c) => ONLY.some((q) => c.name.includes(q))) : CASES;
@@ -202,9 +300,15 @@ for (const cs of cases) {
     await page.waitForTimeout(1400);
     // settle the charts' entrance (a one-shot sweep that waits to be on screen) before looking
     await page.evaluate(() => typeof finishReveal === "function" && finishReveal());
-    for (const m of await crowded(page)) { failures++; console.log(`!! ${cs.name} at ${vp.w}: ${m}`); }
-    /* the narrowest phone is only measured: its words are the ones that crowd */
+    for (const m of [...await crowded(page), ...await pillClear(page)]) { failures++; console.log(`!! ${cs.name} at ${vp.w}: ${m}`); }
+    /* the narrowest phone is only measured: its words are the ones that crowd, and every title keeps
+       its note on its own line */
     if (vp.tag === "narrow") {
+      const wrapped = await page.evaluate(() => [...document.querySelectorAll(".eyebrow")].filter((e) => e.offsetParent && !e.closest("[hidden]")).flatMap((e) => {
+        const b = e.querySelector("b"), sp = e.querySelector("span"); if (!b || !sp || !sp.textContent.trim()) return [];
+        return Math.abs(sp.getBoundingClientRect().top - b.getBoundingClientRect().top) > 4 ? [`"${b.textContent}" note "${sp.textContent}" drops under its title`] : [];
+      }));
+      for (const m of wrapped) { failures++; console.log(`!! ${cs.name} at 320: ${m}`); }
       if (errs.length) { failures++; console.log(`!! ${cs.name} ${vp.tag}: ${errs.join(" | ")}`); }
       await ctx.close(); continue;
     }
@@ -254,6 +358,13 @@ for (const cs of cases) {
           hourlyNote: T("hourlyNote"), weekNote: T("weekNote"),
           // the week's days, with the weekend's banded columns in brackets
           week: [...document.querySelectorAll("#weekRows .wk-day")].map((d) => { const n = d.querySelector(".wk-name").textContent; return d.classList.contains("we") ? `[${n}]` : n; }).join(" "),
+          /* each chart's pill where it starts (the hours and the water and the moon at now, the week
+             tomorrow, the year this month), and the water an hour on, as the finger would read them */
+          xp: Object.fromEntries(Object.entries(XP).filter(([, X]) => X.D).flatMap(([k, X]) => {
+            const say = (i) => X.D.read(i).parts.map((q) => q[0]).join(" "), out = [[k, say(k === "week" ? 1 : X.D.start)]];
+            if (k === "tide") { const t = X.D.t[X.D.start] + 36e5, i = X.D.t.findIndex((v) => v >= t); if (i >= 0) out.push(["tideHour", say(i)]); }
+            return out;
+          })),
         };
       });
       console.log(`\n### ${cs.name}`);
@@ -264,33 +375,35 @@ for (const cs of cases) {
         if (!box) { failures++; console.log("!! hourly explorer: chart has no box"); }
         else {
           const target = await page.evaluate(() => {
-            const {h,x,W}=HOURLY_PEEK;
-            const i=h.temp.findIndex((t,i)=>Math.abs(Math.round(h.feels?.[i])-Math.round(t))>=3);
-            return {i,share:i<0?0:x[i]/W};
+            const { D } = XP.hourly, h = LAST.d.hourly;
+            const i = h.temp.findIndex((t, i) => i > 0 && Math.abs(Math.round(h.feels?.[i]) - Math.round(t)) >= 3);
+            return { i, share: i < 0 ? 0 : D.x[i] / D.W };
           });
-          if(target.i<0){failures++;console.log("!! hourly explorer: fixture has no meaningful feels-like difference");}
-          await page.mouse.move(box.x + target.share*box.width, box.y + box.height/2);
-          const peek = page.locator("#hourlyPeek:not([hidden])");
+          if (target.i < 0) { failures++; console.log("!! hourly explorer: fixture has no meaningful feels-like difference"); }
+          await page.mouse.move(box.x + target.share * box.width, box.y + box.height / 2);
+          const peek = page.locator("#hourlyExplore .xp-peek:not([hidden])");
           const peekText = await peek.count() ? await peek.innerText() : "";
           if (!/feels \d+°/.test(peekText)) { failures++; console.log(`!! hourly explorer: missing meaningful feels-like readout (${peekText || "hidden"})`); }
           await page.locator("#hourlyExplore").screenshot({ path: path.join(OUT, `${cs.name}-peek.png`) });
-          await page.locator("#hourlyExplore").focus();
-          await page.evaluate(() => { HOURLY_PEEK.h.pop[1] = 3; PEEK_I = 0; });
+          await page.mouse.move(5, 5);
+          await page.locator("#hourlyExplore .xp-key").focus();
+          await page.evaluate(() => { XP.hourly.D.read = ((read, h) => (i) => { h.pop[1] = 3; return read(i); })(XP.hourly.D.read, LAST.d.hourly); });
           await page.keyboard.press("ArrowRight");
-          const spoken = await page.locator("#hourlyPeekLive").textContent();
-          if (!/degrees/.test(spoken || "")) { failures++; console.log("!! hourly explorer: arrow key did not announce an hour"); }
-          const visibleRain = await page.locator("#peekRain").textContent();
+          const spoken = await page.locator("#hourlyExplore .xp-key").getAttribute("aria-valuetext");
+          if (!/degrees/.test(spoken || "")) { failures++; console.log("!! hourly explorer: arrow key did not speak an hour"); }
+          const visibleRain = await page.locator("#hourlyExplore .xp-peek span:last-child").textContent();
           if (visibleRain !== "dry" || !/dry$/.test(spoken || "")) {
             failures++; console.log(`!! hourly explorer: 3% mismatch (${visibleRain} / ${spoken})`);
           }
         }
-        const tideBox=await page.locator("#tideSvg").boundingBox();
-        await page.mouse.move(tideBox.x+tideBox.width*.58,tideBox.y+tideBox.height/2);
-        const tidePeek=page.locator("#tidePeek:not([hidden])");
-        if(!await tidePeek.count()||!/ft/.test(await tidePeek.innerText())){
-          failures++;console.log("!! tide explorer: missing depth readout");
+        await page.locator("#tideExplore .xp-key").blur();
+        const tideBox = await page.locator("#tideSvg").boundingBox();
+        await page.mouse.move(tideBox.x + tideBox.width * .58, tideBox.y + tideBox.height / 2);
+        const tidePeek = page.locator("#tideExplore .xp-peek:not([hidden])");
+        if (!await tidePeek.count() || !/ft/.test(await tidePeek.innerText())) {
+          failures++; console.log("!! tide explorer: missing depth readout");
         }
-        await page.locator("#tideExplore").screenshot({path:path.join(OUT,`${cs.name}-tide-peek.png`)});
+        await page.locator("#tideExplore").screenshot({ path: path.join(OUT, `${cs.name}-tide-peek.png`) });
       }
       if (cs.name === "09-after-midnight-porters-neck" && !/before morning/.test(copy.tonight || "")) {
         failures++; console.log(`!! after-midnight Tonight card describes the wrong night (${copy.tonight})`);
@@ -315,6 +428,7 @@ for (const cs of cases) {
       if (ex.sun && copy.sun !== ex.sun) fail(`sun card "${copy.sun}", expected "${ex.sun}"`);
       if (ex.uvBar && !ex.uvBar.test(copy.uvBar || "")) fail(`sun bar "${copy.uvBar}"`);
       if ("marine" in ex && marineAsks !== ex.marine) fail(`${marineAsks} marine requests, expected ${ex.marine}`);
+      for (const [k, re] of Object.entries(ex.xp || {})) if (!re.test(copy.xp[k] || "")) fail(`${k} pill "${copy.xp[k]}"`);
     }
     if (errs.length) { failures++; console.log(`!! ${cs.name} ${vp.tag}: ${errs.join(" | ")}`); }
     await ctx.close();
@@ -331,17 +445,19 @@ for (const cs of cases) {
   await page.addInitScript(() => localStorage.setItem("mbwx-loc", "sp"));
   await page.route("**api.open-meteo.com**", (r) => r.abort());
   await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: "domcontentloaded" });
-  await page.locator("#hourlyExplore").focus();
-  await page.keyboard.press("ArrowRight");
   const shell = await page.evaluate(() => ({
+    // no reading, no slider: every chart's is off and out of the Tab order
+    keys: [...document.querySelectorAll(".xp-key")].every((k) => k.disabled),
     tide: getComputedStyle(document.getElementById("tideSection")).display,
     scene: document.getElementById("sceneSvg").getAttribute("aria-label"),
     moon: !document.getElementById("moonSection").hidden,
     year: document.getElementById("yearTitle").textContent,
+    // and its hover text names the farm's airport, never the last place's
+    yearSrc: document.getElementById("yearTitle").title,
     // the sun bar is drawn only from a reading, so its scale words go with it
     uvScale: getComputedStyle(document.getElementById("uvDetails")).display,
   }));
-  if (shell.tide !== "none" || !shell.scene.includes("Appalachian") || !shell.moon || shell.year !== "The year · Beckley" || shell.uvScale !== "none") {
+  if (!shell.keys || shell.tide !== "none" || !shell.scene.includes("Appalachian") || !shell.moon || shell.year !== "The year · Shady Spring" || !/Beckley airport/.test(shell.yearSrc) || shell.uvScale !== "none") {
     failures++; console.log(`!! location-correct loading shell: ${JSON.stringify(shell)}`);
   }
   if (errs.length) { failures++; console.log(`!! loading hourly explorer: ${errs.join(" | ")}`); }
