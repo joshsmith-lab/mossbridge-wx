@@ -1174,6 +1174,14 @@ test("tide chart reads as depth over the bottom", async () => {
   assert.match(html, /tag=named\.find\(c=>c\.ok&&!c\.hits&&offBoat\(c\)\);/);
   assert.match(html, /tag=best\|\|ok\.find\(offBoat\)\|\|ok\[0\]\|\|named\[0\];/);
   assert.match(html, /if\(c\.ok&&!c\.hits&&offBoat\(c\)&&\(!best\|\|d\(c\)<d\(best\)\)\)best=c;/);
+  // no spot sits higher than a high's time needs over it, or the high's time is printed on the tag
+  // and the explorer's pill rises into the title, and the search reaches rows over the boat's box,
+  // because at 320 past a high every row beside and under it is crossed by a flank
+  assert.match(html, /c\.ok=c\.x0>=x0&&c\.x1<=W-padX&&c\.t>=12\*fs\+7&&c\.b<=seaY-4;/);
+  assert.match(html, /for\(let dy=-57;dy<=27;dy\+=3\)for\(let dx=-70;dx<=70;dx\+=3\)\{/);
+  const shots = await readFile(new URL("tools/shots.mjs", root), "utf8");
+  assert.match(shots, /name: "91-over-the-table-at-the-high-porters-neck"/);
+  assert.match(shots, /name: "93-half-over-falling-porters-neck"/);
   // the low's tick goes under the tag and the boat, and the now line runs into the boat
   assert.match(html, /\$\{ticks\}\n\s*\$\{nowY2>nowTop\+2\?/);
   assert.match(html, /let nowY2=ny-6;/);

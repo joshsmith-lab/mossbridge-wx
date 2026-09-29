@@ -169,7 +169,7 @@ export function marine(now, o, tz) {
  * NOAA CO-OPS answers for the tide station: the hi/lo table the chart draws, and the water that
  * is there (the latest water temperature, the last hour of the six-minute gauge and the table's
  * six-minute marks it is read against). `waterTemp` null is a station with no thermometer
- * reading, and `surge` is how far the gauge runs off the table (0 draws no level line).
+ * reading, and `surge` is how far the gauge runs off the table (0 puts no tag beside the boat).
  */
 export function coops(url, now, o, tidePhase = 0) {
   const q = new URL(url).searchParams, product = q.get("product");

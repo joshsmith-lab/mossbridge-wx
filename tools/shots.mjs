@@ -155,6 +155,27 @@ const CASES = [
   { name: "27-under-the-table-near-low-porters-neck", loc: "mb", when: "2026-09-27T18:46:00",
     o: { baseTemp: 76, nowTemp: 74, feels: 74, rh: 70, isDay: 1, code: 2, cloud: 35, nowWind: 12, nowDir: 330, nowGust: 20, nowUv: 0.3, uvMax: 6,
       windAmp: 6, gustAmp: 9, sunrise: "07:03", sunset: "19:07", surge: -0.5, waterTemp: 76, popCurve: () => 5, dailyPop: (p) => p.fill(10) } },
+  // the water two feet over the table on the 1:36p high, and 54 minutes before it: the tag over the
+  // boat sat right under the chart's top, so the high's time was printed on it and the explorer's
+  // pill rose into the title. No tag goes higher than a high's time needs over it
+  { name: "91-over-the-table-at-the-high-porters-neck", loc: "mb", when: "2026-09-27T13:36:00",
+    o: { baseTemp: 74, nowTemp: 78, feels: 78, rh: 70, isDay: 1, code: 3, cloud: 70, nowWind: 14, nowDir: 45, nowGust: 22, nowUv: 3, uvMax: 5,
+      windAmp: 9, gustAmp: 13, sunrise: "07:04", sunset: "18:59", popCurve: () => 10, dailyPop: (p) => p.fill(15), surge: 2.1 },
+    expect: { level: "Running 2 ft above the tide table." } },
+  { name: "92-over-the-table-before-the-high-porters-neck", loc: "mb", when: "2026-09-27T12:42:00",
+    o: { baseTemp: 74, nowTemp: 78, feels: 78, rh: 70, isDay: 1, code: 3, cloud: 70, nowWind: 14, nowDir: 45, nowGust: 22, nowUv: 3, uvMax: 5,
+      windAmp: 9, gustAmp: 13, sunrise: "07:04", sunset: "18:59", popCurve: () => 10, dailyPop: (p) => p.fill(15), surge: 2.1 },
+    expect: { level: "Running 2 ft above the tide table." } },
+  // two and a half hours past the high, a seven-character tag (+0.5 ft, −2.5 ft) at 320: every row
+  // beside and under the boat is crossed by one flank or the other, so the search reaches rows over it
+  { name: "93-half-over-falling-porters-neck", loc: "mb", when: "2026-09-27T16:06:00",
+    o: { baseTemp: 74, nowTemp: 78, feels: 78, rh: 70, isDay: 1, code: 3, cloud: 70, nowWind: 14, nowDir: 45, nowGust: 22, nowUv: 3, uvMax: 5,
+      windAmp: 9, gustAmp: 13, sunrise: "07:04", sunset: "18:59", popCurve: () => 10, dailyPop: (p) => p.fill(15), surge: 0.6 },
+    expect: { level: "Running half a foot above the tide table." } },
+  { name: "94-blown-out-falling-porters-neck", loc: "mb", when: "2026-09-27T16:06:00",
+    o: { baseTemp: 74, nowTemp: 78, feels: 78, rh: 70, isDay: 1, code: 3, cloud: 70, nowWind: 14, nowDir: 45, nowGust: 22, nowUv: 3, uvMax: 5,
+      windAmp: 9, gustAmp: 13, sunrise: "07:04", sunset: "18:59", popCurve: () => 10, dailyPop: (p) => p.fill(15), surge: -2.6 },
+    expect: { level: "Running 2.5 ft below the tide table." } },
   // a wet weekend of one kind, 40% and 100%: the noun is said once, so at 320 the note stays on the
   // title's line
   { name: "26-wet-weekend-porters-neck", loc: "mb", when: "2026-08-06T14:20:00",

@@ -3742,16 +3742,18 @@ function renderTides(preds,css,gust,wind,gap=0){
      the water two feet over, and on the falling flank at a high with it blown out, and its paper
      halo cut the tide line right at now. So it goes down at the first spot clear of the curve:
      beside the bow at the waterline, behind the stern, then over the boat when the water is over the
-     table and under it when it is under, then the nearest clear spot to the boat, off the boat. A
-     spot none of them clears takes the one the curve crosses least. Boxes are the tag's ink, in
-     chart units, which are screen pixels */
+     table and under it when it is under, then the nearest clear spot to the boat, off the boat, from
+     rows above the boat's box to rows under it. A spot none of them clears takes the one the curve
+     crosses least. No spot is higher than a high's time needs over it (12*fs+7), because a high
+     steps over the tag, and a tag set higher had the high's time printed on it and the explorer's
+     pill pushed up into the title. Boxes are the tag's ink, in chart units, which are screen pixels */
   const tagTxt=gap?`${gap>0?"+":"−"}${Math.abs(gap)} ft`:"";
   let tag=null;
   if(gap){
     const tw=tagTxt.length*10.5*fs*.6,cap=7.6*fs,tb=Math.min(ny+4,seaY-4);
     const curve=[];for(let t=t0;t<=t1;t+=18e4)curve.push([X(t),Y(interp(t))]);
     const box=c=>{c.x0=c.a==="start"?c.x:c.a==="end"?c.x-tw:c.x-tw/2;c.x1=c.x0+tw;c.t=c.b-cap;
-      c.ok=c.x0>=x0&&c.x1<=W-padX&&c.t>=4&&c.b<=seaY-4;
+      c.ok=c.x0>=x0&&c.x1<=W-padX&&c.t>=12*fs+7&&c.b<=seaY-4;
       c.hits=curve.filter(([px,py])=>px>c.x0-4.5&&px<c.x1+4.5&&py>c.t-4.5&&py<c.b+4.5).length;return c};
     const named=[{x:nx+24*fs,a:"start",b:tb},{x:nx-26*fs,a:"end",b:tb},
       gap>0?{x:nx,a:"middle",b:ny-27}:{x:nx,a:"middle",b:Math.min(seaY-4,ny+8+cap)}].map(box);
@@ -3761,7 +3763,7 @@ function renderTides(preds,css,gust,wind,gap=0){
     if(!tag){
       const d=c=>Math.hypot(Math.max(0,c.x0-nx,nx-c.x1),Math.max(0,c.t-ny,ny-c.b));
       let best=null;
-      for(let dy=-27;dy<=27;dy+=3)for(let dx=-70;dx<=70;dx+=3){
+      for(let dy=-57;dy<=27;dy+=3)for(let dx=-70;dx<=70;dx+=3){
         const c=box({x:nx+dx,a:"start",b:tb+dy});
         if(c.ok&&!c.hits&&offBoat(c)&&(!best||d(c)<d(best)))best=c;
       }
@@ -5203,8 +5205,8 @@ function readDay(wk,i){
     said:`${i===0?"Today, ":""}${full}. ${sky&&WMO[code]?WMO[code]+". ":""}High ${hi??"unavailable"}, low ${lo??"unavailable"}. ${pop!=null?`${pop} percent chance of ${wet}`:"Rain chance unavailable"}.`};
 }
 /* One stop on the water. A high or a low is the table's own number, and the rest are the curve's,
-   about. At now it is the water that is there, the table plus the gauge's gap (the height the
-   skiff's mark sits at), and while the gauge runs off the table every other stop is said to be
+   about. At now it is the water that is there, the table plus the gauge's gap (the tag beside
+   the skiff says the gap), and while the gauge runs off the table every other stop is said to be
    the table's, because the gap is a measurement and never a forecast. The chart already shows
    rising and falling, so only the sentence says it. */
 function readTide(s,now,gap){
@@ -5770,8 +5772,8 @@ function render(d,live,savedAt=0){
   const water=LOC.tide?waterCard(LOC,h,c,dy,m,d.water,warning,storm,now,dayRead.told):null;
   /* One shape for every section: a title with one short note, then the picture, then its labels,
      and nothing between the title and the chart. The water's readings are its note, and the gauge
-     against the table is drawn on the chart: the skiff rides the table's curve, and the water that is
-     there is marked on the now line */
+     against the table is said on the chart: the skiff rides the table's curve, with the gap beside it
+     as a tag */
   if(LOC.tide){
     const tide=renderTides(d.tides,css,c.wind_gusts_10m,c.wind_speed_10m,levelFeet(d.water,now));
     /* with no tide table the chart is empty, and the note says so after whatever it can read */
