@@ -496,11 +496,11 @@ TZ=America/New_York node tools/scene.mjs fog storm  # just the scenes you are wo
 node tools/rig.mjs heron                          # one animal, close up and at phone size
 ```
 
-`tools/shots.mjs` renders twenty-four scenarios (day, night, after midnight, storm, dusk,
+`tools/shots.mjs` renders twenty-eight scenarios (day, night, after midnight, storm, dusk,
 both family locations, a fine farm afternoon, a washout, a shoulder-season moderate-UV day with
 the water running two feet over the tide table, and two shaped weeks: a cool snap into a warm run
 on a Thursday, gusting 30 at five with the boat season switched on, and a stormy Sunday week with
-100% odds and a 101° high, which is also the eight-column week), then twelve for the water, the
+100% odds and a 101° high, which is also the eight-column week), then sixteen for the water, the
 farm and the weekend: a Saturday at the coast with the boat season switched on, where the weekend
 is today and tomorrow and the water is `Easy out there.`; a mid-November Saturday, with the seas
 and the water and no sentence; a cold January morning on the coast with the station's thermometer
@@ -511,7 +511,10 @@ winter northwester blowing it out a foot and a half under the table at the low, 
 off the bed; the water two feet over at a low and a foot under at a high, where the tag once sat on
 the tide line; the water half a foot under an hour before a low, where the boat sits close to the
 bed and the tag goes beside it; a wet weekend of 40% and 100% with three-digit highs, and a farm
-weekend of rain then snow, whose notes stay beside their title at 320; and a cold October morning at the farm, `Cold one. Bundle up for
+weekend of rain then snow, whose notes stay beside their title at 320; the water two feet over at a high and
+an hour before one, where the tag keeps below the high's time and the pill at now stays under the title;
+half a foot over and two and a half under on the falling tide, where at 320 the tag finds a spot
+off both flanks; and a cold October morning at the farm, `Cold one. Bundle up for
 the morning rounds.` on the `Piddling` card over the moon. A scenario marked `boat: true` is served with
 `boatSeason:null` switched back on, and fails if there is nothing to switch. It writes screenshots
 to `tools/shots/` and prints the generated copy (the headline, the chips as they are seen, the
