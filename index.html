@@ -1735,6 +1735,36 @@ const propLoftHead=()=>{
     P.push(B([[i0,cy-.16],[ex,cy-.26],[o0,cy-.2],[o0+o*.02,cy-.02],[ex,cy+.1],[i0,cy-.02]],"eye"))}
   P.push(S([[.06,cy+.08,.1],[.11,cy+.36,.16],[.03,cy+.43,.06]],"detail"),S([[-.26,cy+.66,.09],[.24,cy+.64,.09]],"detail"));
   return P};
+/* Ghostface, peering out of the live oak's fork at Porters Neck for October. Three units, back to
+   front: the black robe, the hood, then the mask, so the hood rounds off against the shoulders and
+   the mask carries its own crescent and lit edge inside the cloth. The face is the one from the
+   Scream painting: a long white mask, wide and domed at the brow and narrowing through the jaw to a
+   long chin, two big black eyes that droop outward, and a long open mouth. Drawn at ten units to the
+   screen pixel with y=0 at the middle of the mask, tipped about it the way he cocks his head, and
+   scaled down by the scene. z is the storybook's licence. True to the oak a face would be under two
+   pixels, and true to the heron and the raccoon about nine wide and twelve tall, more than the fork
+   holds. So the mask is about six wide and nine tall, what the eyes and the mouth need to survive on
+   a phone, and it still sits in the fork with only the edge of one cheek behind the limb */
+/* where his face is, in the live oak's own units (propOak): just right of the middle limb, so its
+   edge takes a sliver off his hood and his left cheek and never his eye, above the fork */
+const GF_AT=[4.7,-29.3];
+const propGhostface=(tip=.28,z=1.22)=>{
+  const F=10*z,ca=Math.cos(tip),sa=Math.sin(tip);
+  const T=([x,y])=>[(x*ca-y*sa)*F,(x*sa+y*ca)*F];
+  const B=(pts,role,x)=>pBlob(pts.map(T),role,x),M=pts=>[...pts,...pts.slice(1,-1).reverse().map(([x,y])=>[-x,y])];
+  /* the robe across the shoulders, leaning out with him so the far shoulder stays behind the
+     trunk and the near one rounds off under the limb */
+  const robe=[B([[-4.2,7],[-4,4.8],[-3,3.8],[0,4.2],[2.4,3.8],[4.2,4],[5.5,4.8],[6.2,6],[6.3,7.4],[1,7.9]],"robe")];
+  /* the hood over the head, a little peaked at the crown and drawn in under the long chin, so
+     the head reads as an oval in its cowl and not as a rounded square */
+  const hood=[B([[.15,-4.95],[1.25,-4.75],[2.4,-4.1],[3.2,-3],[3.55,-1.5],[3.6,.3],[3.4,2],[2.95,3.5],[2.2,4.7],[0,5.15],[-2.2,4.7],[-2.95,3.5],[-3.4,2],[-3.6,.3],[-3.55,-1.5],[-3.18,-3],[-2.3,-4.1],[-1.05,-4.75]],"hood")];
+  /* the mask, wide and domed at the brow and long through a narrow jaw, and in it the eyes and the mouth */
+  const face=[B(M([[0,-3.5],[1.3,-3.35],[2.15,-2.8],[2.5,-1.8],[2.45,-.5],[2.1,.95],[1.6,2.2],[1.02,3.25],[.45,3.95],[0,4.08]]),"mask")];
+  /* each eye narrow and high at its inner corner, falling outward to a full round end, so the
+     two make a tent over the mouth, the Scream's anguish, whichever way the head is tipped */
+  for(const o of[1,-1])face.push(B([[.36,-1.5],[.9,-1.55],[1.5,-1.28],[1.92,-.82],[2.02,-.36],[1.78,-.02],[1.3,-.05],[.85,-.38],[.5,-.88],[.34,-1.22]].map(([x,y])=>[o*x,y]),"eye"));
+  face.push(B(M([[0,.75],[.3,.9],[.5,1.6],[.54,2.5],[.35,3.08],[0,3.26]]),"eye"));
+  return[{parts:robe},{parts:hood},{parts:face}]};
 /* the meadow and the marsh grass keep the same calendar: tip, middle and root per month */
 const SEASON_BLADE=[["#E4CFA0","#B8A070","#7A6446"],["#E4CFA0","#B8A070","#7A6446"],["#DCCB94","#A9A064","#6E6842"],
   ["#C8D878","#86A84A","#4E6A30"],["#D9CF6A","#8DAA4A","#4E6A30"],["#D9CF6A","#8DAA4A","#4E6A30"],["#D9CF6A","#8DAA4A","#4E6A30"],
@@ -2301,6 +2331,9 @@ const INK={
      reads as a mask and not as skin, and loftLamp is that loft's light, a shade deeper amber than
      the barn's other lamps so the white stands out of it */
   myers:{coverall:"#3A4760",hair:"#3A2A20",mask:"#E9E7E0",maskLamp:"#F4F4EF",eye:"#0B090E",detail:"#ABA69B",ink:"#2A1B33",shade:"#3A2350",lit:"#FFE6B0",litOp:0.4,loftLamp:"#F2B259"},
+  /* the face behind the live oak: the robe and its hood a soft black, so the mask is the one
+     clean white in the crown, and the eyes and the mouth a deeper black than the cloth */
+  ghostface:{robe:"#1A1820",hood:"#26232D",mask:"#F5F3EE",eye:"#07060A",ink:"#2A1B33",shade:"#3A2350",lit:"#FFE6B0",litOp:0.45},
   bale:{straw:"#CFAA5A",flake:"#D3AE5E",top:"#EFD896",end:"#E0C070",endLt:"#EFD999",endDk:"#CFAF62",seam:"#C2A052",stub:"#BA9A4E",stubLt:"#E4C880",band:"#A47C48",ink:"#2A1B33",shade:"#5A4450",lit:"#FFF0C4",litOp:0.5},
 };
 
@@ -3309,7 +3342,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       const clear=11+mr()*5,L=Math.min(len*(.95+mr()*.3),Math.max(8,-my-clear));
       const amt=swayAmt*(1.7+mr()*1.1);
       const st=PRM?"":` style="--sway:${amt.toFixed(2)}deg;--sway-neg:${(-amt).toFixed(2)}deg;--md:${(swayDur*(.72+mr()*.5)).toFixed(1)}s;animation-delay:-${(mr()*9).toFixed(1)}s"`;
-      moss+=`<g class="moss"${st}><path d="${taper([[mx-.8,my,1.5],[mx-.5,my+L*.45,1.1],[mx+.2,my+L*.8,.5],[mx,my+L,.1]])} ${taper([[mx+.9,my+.2,1.1],[mx+1.3,my+L*.4,.8],[mx+1,my+L*.62,.1]])} ${taper([[mx-1.8,my+.2,.9],[mx-2.2,my+L*.3,.6],[mx-2,my+L*.5,.1]])}"/></g>`;
+      /* in October the one wisp that would hang across Ghostface's face is left out whole. It
+         still makes its draws, so no other moss moves */
+      const overFace=halloween&&mx+1.3>GF_AT[0]-3.4&&mx-2.2<GF_AT[0]+3.4&&my<GF_AT[1]+3.4&&my+L>GF_AT[1]-4.4;
+      if(!overFace)moss+=`<g class="moss"${st}><path d="${taper([[mx-.8,my,1.5],[mx-.5,my+L*.45,1.1],[mx+.2,my+L*.8,.5],[mx,my+L,.1]])} ${taper([[mx+.9,my+.2,1.1],[mx+1.3,my+L*.4,.8],[mx+1,my+L*.62,.1]])} ${taper([[mx-1.8,my+.2,.9],[mx-2.2,my+L*.3,.6],[mx-2,my+L*.5,.1]])}"/></g>`;
     }
     const pal={wood:"#6A4E40",leaf:"url(#oakLeaf)"};
     const o={wood:air(pal.wood,oakD),leaf:pal.leaf,ink:inkAir(oakD),shade:shadeC,lit:litC,litOp:.6*litK,shadeOp:.34*shadeK};
@@ -3317,6 +3353,13 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       +`<g fill="${air("#CACBB2",oakD)}" stroke="${inkAir(oakD+.2)}" stroke-width=".32" stroke-linejoin="round" opacity=".92">${moss}</g>`)}</g>`;
   };
   const oak=liveOak();
+  /* Halloween behind the live oak: Ghostface (propGhostface) peers out of the fork, in the V the
+     middle limb and the upper right one make above it, so the limbs and the trunk hide his
+     shoulders and the rest of him, and the middle limb's edge crosses his cheek: a peek, not a
+     portrait. He stands behind the tree, outside its sway, and never moves. He is at the oak's own
+     distance and lit by its sky */
+  const gfX=oakX+GF_AT[0]*oakS,gfY=base+2+GF_AT[1]*oakS;
+  const ghostface=halloween?`<g class="decor" data-decor="ghostface"><g transform="translate(${f1(gfX)} ${f1(gfY)}) scale(.1)">${inkRig(propGhostface(),decorPal(INK.ghostface,oakD),{s:.1,line:.5,heavy:.25,shade:.7,lit:.45,light:lightAt(gfX,gfY)})}</g></g>`:"";
 
   /* spartina: tapered filled blades, clustered tufts with real gaps. Each band is inked as a
      whole, so a clump reads as one clump rather than as a comb of outlines */
@@ -3533,7 +3576,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     ${sceneClouds}
     <path d="${tl}" fill="${farC}" stroke="${farLine}" stroke-width=".7" stroke-linejoin="round"/>
     ${tex?`<path d="${tl}" fill="${tex}" opacity="${(.8*paperK).toFixed(2)}"/>`:""}
-    ${oak}
+    ${ghostface}${oak}
     ${pines}
     ${fog?`<rect x="0" y="${(base-44).toFixed(1)}" width="${W}" height="52" fill="url(#fogveil)"/>`:""}
     ${mist}

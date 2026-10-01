@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v82/);
+  assert.match(worker, /mbwx-shell-v83/);
   // the clouds end in their own scallops: Josh loves the clouds and not the curly tail
   const cloud = html.match(/const propCloud=seed=>\[[\s\S]*?\];/);
   assert.ok(cloud, "propCloud should be extractable");
@@ -1089,6 +1089,55 @@ test("the scenes dress for the holidays and take it all down when they pass", as
   for (const name of ["27-marsh-halloween-night", "28-marsh-halloween-cold-morning", "29-marsh-halloween-rain-night", "31-ridge-halloween-night", "32-ridge-november-morning", "35-marsh-november-small-hours"])
     assert.match(scene, new RegExp(`name: "${name}"`));
   assert.match(scene, /decorations are \[/);
+});
+
+test("Ghostface peeks out of the live oak for October, and never moves", async () => {
+  const [html, scene, rig] = await Promise.all([
+    readFile(new URL("index.html", root), "utf8"),
+    readFile(new URL("tools/scene.mjs", root), "utf8"),
+    readFile(new URL("tools/rig.mjs", root), "utf8"),
+  ]);
+  // Josh, October 1 2026: a Scream Ghost Face peeking from behind the live oak at Porters Neck.
+  // He is Halloween's, a decoration like the pumpkins, and is built only while it is out
+  assert.match(html, /const ghostface=halloween\?`<g class="decor" data-decor="ghostface"><g transform="translate\(\$\{f1\(gfX\)\} \$\{f1\(gfY\)\}\) scale\(\.1\)">\$\{inkRig\(propGhostface\(\),decorPal\(INK\.ghostface,oakD\),/);
+  // placed off the oak's own units, at the oak's distance, lit by its sky
+  assert.match(html, /const gfX=oakX\+GF_AT\[0\]\*oakS,gfY=base\+2\+GF_AT\[1\]\*oakS;/);
+  assert.match(html, /light:lightAt\(gfX,gfY\)\}\)\}<\/g><\/g>`:"";/);
+  // behind the tree, so its limbs hide his shoulders, and outside its sway group, so he never
+  // moves with it. Nothing of his carries a class, a style or an animation
+  assert.ok(html.includes("${ghostface}${oak}"), "Ghostface is painted directly behind the oak");
+  assert.ok(html.indexOf("const ghostface=") > html.indexOf("const oak=liveOak();"), "he is not drawn inside the oak's sway group");
+  const line = html.match(/const ghostface=halloween\?[^\n]*/)[0];
+  assert.doesNotMatch(line.replace('class="decor"', ""), /class=|style=|animation/);
+  const prop = html.slice(html.indexOf("const propGhostface="), html.indexOf("/* the meadow and the marsh grass"));
+  assert.doesNotMatch(prop, /class=|style=|Math\.random|animation/);
+  // in October the one moss wisp over his face is left out whole, and it still makes its draws,
+  // so no other wisp moves
+  const moss = html.slice(html.indexOf("const clear=11+mr()*5"), html.indexOf("if(!overFace)moss+="));
+  assert.ok(moss.includes("mr()*1.1") && moss.includes("mr()*9"), "every draw happens before the gate");
+  assert.match(moss, /const overFace=halloween&&/);
+  // drawn from parts with the kit: the robe, the hood, then the mask, with the eyes and the open
+  // mouth in the eye role, so they are painted last, in black, and never outlined
+  const kit = html.slice(html.indexOf("/* ── Storybook ink: the drawing kit"), html.indexOf("/* ── the scene: arc, sun / moon"));
+  const ctx = vm.createContext({});
+  vm.runInContext(`${html.match(/function mulberry\(a\)\{[\s\S]*?\}\}/)[0]}\n${kit}\nglobalThis.gf=propGhostface;globalThis.box=pathBox;globalThis.INK=INK;`, ctx);
+  const units = ctx.gf();
+  assert.equal(units.map((u) => u.parts.map((p) => p.role).join(",")).join(" | "), "robe | hood | mask,eye,eye,eye");
+  for (const role of ["robe", "hood", "mask", "eye"]) assert.ok(ctx.INK.ghostface[role], role);
+  // the mask is the one bright thing in the crown: white over a soft black robe and hood
+  assert.match(html, /ghostface:\{robe:"#1A1820",hood:"#26232D",mask:"#F5F3EE",eye:"#07060A",/);
+  // the storybook's licence: a mask about six pixels wide and nine tall, drawn at ten units to
+  // the pixel, tipped the way he cocks his head
+  const [, , w, h] = ctx.box([ctx.gf(0)[2].parts[0].d]);
+  assert.ok(w / 10 > 5.6 && w / 10 < 6.6 && h / 10 > 8.6 && h / 10 < 9.8, `mask ${w / 10} x ${h / 10}`);
+  assert.match(html, /const propGhostface=\(tip=\.28,z=1\.22\)=>/);
+  assert.match(html, /const GF_AT=\[4\.7,-29\.3\];/);
+  // the harnesses look at him: close up in the rig, and in every October marsh scene
+  assert.match(rig, /ghostface: \["ghostface", \(c\) => c\.propGhostface\(\)/);
+  assert.match(rig, /lumina \| cornshock \| bale \| loft-head \| ghostface/);
+  for (const name of ["26-marsh-october-afternoon", "27-marsh-halloween-night", "28-marsh-halloween-cold-morning", "29-marsh-halloween-rain-night", "36-marsh-october-golden-evening", "37-marsh-october-fog-morning"])
+    assert.match(scene, new RegExp(`name: "${name}"[^\\n]*decor: \\["ghostface"`));
+  assert.match(scene, /name: "35-marsh-november-small-hours"[^\n]*decor: \[\]/);
 });
 
 test("a pumpkin still reads as one at seven pixels, and no two are cut alike", async () => {

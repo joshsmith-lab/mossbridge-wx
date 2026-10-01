@@ -406,8 +406,8 @@ decorations coming down once each holiday passes. Halloween is the first.
   in the rain. They are what the family would set out: on the coast a pumpkin at each end of
   the dock, at the farm a corn shock at the barn's corner with a bale at its foot and a small
   white pumpkin on it, and a big pumpkin either side of the door. `node tools/rig.mjs pumpkin`
-  (or `lantern`, `lantern-lit`, `lumina`, `cornshock`, `bale`) shows each one close up and at
-  phone size.
+  (or `lantern`, `lantern-lit`, `lumina`, `cornshock`, `bale`, `loft-head`, `ghostface`) shows
+  each one close up and at phone size.
 - **They keep a pumpkin's own calendar.** Plain until the 24th, then the big ones are carved,
   because a carved pumpkin in coastal humidity is soft inside a week. The carved face is its
   own role, `carve`, and not `face`: the heron already has a face, and it keeps its outline.
@@ -435,6 +435,32 @@ decorations coming down once each holiday passes. Halloween is the first.
   At night he is drawn over the loft lamp's glow, never under it, and the loft's light is a shade
   deeper amber than the barn's other lamps, with the mask still whiter than it, so it reads as a
   mask and not as skin. He never moves. `node tools/rig.mjs loft-head` shows him close up.
+- **The face behind the live oak is Ghostface, and he only peeks.** Josh asked for it on October 1
+  2026: "need a Scream Ghost Face peeking from behind the live oak" at Porters Neck. He is in the
+  oak's fork (`propGhostface`, placed at `GF_AT`, in the oak's own units), in the V the middle limb
+  and the upper right one make above it, so the limbs and the trunk hide his shoulders and the rest
+  of him. The middle limb's edge takes a sliver off his hood and the edge of his left cheek and
+  never his eye, and his head is cocked about 16° the way he cocks it: a face partly hidden by an
+  edge is what says peeking, and a whole one is a portrait. What has to survive on a phone is the
+  face from the Scream painting: the long white mask, wide and domed at the brow and long through a
+  narrow jaw, the two black eyes that droop outward into a tent over the mouth, and the long open
+  mouth, framed by the black hood. The eyes and the mouth are the `eye` role, so they are painted
+  last, in black, with no outline. He is three units, the robe, the hood a shade lighter so it rounds
+  off against the shoulders, and the mask with its own crescent and lit edge. He is drawn at ten units
+  to the pixel and scaled down, as the head in the loft is. True to the oak a face would be under two
+  pixels and nothing would read. True to the heron and the raccoon a mask would be about nine wide and
+  twelve tall, which the fork cannot hold. So `z=1.22` is the storybook's licence: the mask is about
+  six pixels wide and nine tall, about 0.7 of a person's scale beside the animals, about four times
+  true to the tree, and about 1.7 times the width of the Myers mask in the loft. There is no knife and
+  no gloved hand. A pale blade is a second bright shape against the mask, and a glove was tried on the
+  upper right limb and at phone size read as a dark knot on the bark. He stands behind the oak and
+  outside its sway (`${ghostface}${oak}`), so the limbs move a fraction of a pixel over his hood in a
+  blow and he never moves. He is at the oak's distance and lit by its sky (`decorPal(INK.ghostface,
+  oakD)`, `lightAt`): clean white by day, cream at golden hour, grey in the rain and fog, and
+  blue-grey at night, when the mask is still the palest thing in the crown and the hood shows against
+  the sky. In October the one moss wisp that would hang across his face is left out whole, and still
+  makes its draws, so no other wisp moves. That is why the October marsh scenes run 15 moss sways and
+  not 16. `node tools/rig.mjs ghostface` shows him close up and at phone size.
 - **The corn shock is tied high**, and its crown is broken stalk tops and dry leaves standing
   up and out, so at phone size it is a sheaf and never a figure in a dress. Only the leaves
   that break the silhouette take ink. The bale sits level on the ground, with its long side to
@@ -541,9 +567,10 @@ and weather that are hard to wait for: calm noon, a hard blow, golden hour, a wa
 clear night, a storm, a fog morning, drizzle against a downpour, freezing rain on
 the coast, a night of rain over the marsh, and the ridge by day, by evening with
 the buck out, in warm rain, on a snow day, on a cold January night and in a night
-downpour. Ten more are Halloween: the coast on an October afternoon, on Halloween
-night, on a cold morning in the carved week with the cormorant on its piling, on a rainy
-night in it and at half past midnight on November 1 2026, the night the clocks go back,
+downpour. Twelve more are Halloween: the coast on an October afternoon, at golden hour
+and on a fog morning in October, on Halloween night, on a cold morning in the carved week
+with the cormorant on its piling, on a rainy night in it and at half past midnight on
+November 1 2026, the night the clocks go back,
 and the farm on an October afternoon, on an October night before the carving, on
 Halloween night, on a rainy night in the carved week and on the morning of November 1.
 On both November ones everything has to be gone. Each one with decorations out writes a
