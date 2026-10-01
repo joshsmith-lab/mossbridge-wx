@@ -14,7 +14,7 @@
  *
  * The holidays' props are drawn with the same kit and can be looked at the same way:
  *
- *   node tools/rig.mjs pumpkin | lantern | lantern-lit | lumina | cornshock | bale | loft-head
+ *   node tools/rig.mjs pumpkin | lantern | lantern-lit | lumina | cornshock | bale | loft-head | ghostface
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -45,6 +45,9 @@ const PROPS = {
   bale: ["bale", (c) => c.propBale()],
   /* the head in the loft window is drawn at ten times the October loft's units, so it gets that frame */
   "loft-head": ["myers", (c) => c.propLoftHead(), {}, [66, 58, 33, 58]],
+  /* Ghostface in the live oak is drawn at ten units to the screen pixel and is three units (the
+     robe, the hood, then the mask), so the phone panel draws him at a tenth, with the scene's lines */
+  ghostface: ["ghostface", (c) => c.propGhostface(), {}, [170, 190, 85, 75], { phone: 0.1, o: { line: 0.5, heavy: 0.25, shade: 0.7, lit: 0.45 } }],
 };
 const prop = PROPS[name.toLowerCase()];
 const key = prop ? name : Object.keys(cast.rigs).find((k) => k.toLowerCase() === "rig" + name.toLowerCase() || k.toLowerCase().startsWith("rig" + name.toLowerCase().slice(0, 4)));
@@ -52,15 +55,17 @@ const palKey = prop ? prop[0] : Object.keys(cast.INK).find((k) => k.toLowerCase(
 if (!key || !palKey) { console.error(`no rig for "${name}". Rigs: ${Object.keys(cast.rigs).join(", ")}; props: ${Object.keys(PROPS).join(", ")}`); process.exit(1); }
 const pal = { ...cast.INK[palKey], ink: "#2A2130", shade: "#3A2350", lit: "#FFE6B0" };
 for (const [role, from] of Object.entries(prop?.[2] || {})) pal[role] = pal[from];
-const rig = () => prop ? [{ parts: prop[1](cast.props) }] : cast.rigs[key]((p) => "");
-const draw = (s) => cast.inkAt(0, 0, s, 1, cast.inkRig(rig(), pal, { s, light: [1, -.5] }));
+/* a prop that is already layers ({parts}) is painted as it comes, unit by unit */
+const rig = () => prop ? ((r) => r[0]?.parts ? r : [{ parts: r }])(prop[1](cast.props)) : cast.rigs[key]((p) => "");
+const draw = (s, o = {}) => cast.inkAt(0, 0, s, 1, cast.inkRig(rig(), pal, { s, light: [1, -.5], ...o }));
+const phone = prop?.[4] || {};
 const css = `svg g[class]{transform-box:view-box;transform-origin:0 0}` +
   poses.map((p) => { const [sel, t] = p.split("="); return `.pose ${sel}{transform:${t}}`; }).join("");
 const fig = (inner, w, h, ox, oy, bg, label) => `<figure><svg width="${w}" height="${h}" viewBox="${-ox} ${-oy} ${w} ${h}" style="background:${bg}">${inner}</svg><figcaption>${label}</figcaption></figure>`;
 const page = `<!doctype html><meta charset="utf-8"><style>body{margin:0;padding:12px;background:#2a2a2a;color:#ddd;font:12px monospace;display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}figure{margin:0}${css}</style>
 ${prop ? fig(`<g class="pose">${draw(big)}</g>`, ...(prop[3] || [40, 34, 20, 29]).map((v) => v * big), "#E8DCC4", `${key} ×${big}`)
   : fig(`<g class="pose">${draw(big)}</g>`, 100 * big, 96 * big, 50 * big, 84 * big, "#E8DCC4", `${key} ×${big}${poses.length ? " " + poses.join(" ") : ""}`)}
-${fig(`<rect x="-200" y="0" width="400" height="30" fill="#6d8b4a"/><g class="pose">${draw(1)}</g>`, 160, 100, 80, 80, "linear-gradient(#A9CADB,#E6E2CE)", "phone scale ×1")}`;
+${fig(`<rect x="-200" y="0" width="400" height="30" fill="#6d8b4a"/><g class="pose">${draw(phone.phone ?? 1, phone.o)}</g>`, 160, 100, 80, 80, "linear-gradient(#A9CADB,#E6E2CE)", "phone scale ×1")}`;
 const out = path.join(HERE, "shots");
 mkdirSync(out, { recursive: true });
 writeFileSync(path.join(out, `rig-${name}.html`), page);

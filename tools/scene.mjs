@@ -134,22 +134,30 @@ const CASES = [
   // `decor` is what has to be set out (and nothing else), `candles` how many are lit. Each one
   // with decorations out also writes a close-up of them, because a pumpkin is seven pixels
   // across on a phone and has to hold up at both sizes.
-  { name: "26-marsh-october-afternoon", loc: "mb", when: "2026-10-10T15:30:00", decor: ["pumpkin"], candles: 0,
-    note: "Halloween is up: two pumpkins on the dock, nothing carved yet, the oystercatcher on the rake",
+  { name: "26-marsh-october-afternoon", loc: "mb", when: "2026-10-10T15:30:00", decor: ["ghostface", "pumpkin"], candles: 0,
+    note: "Halloween is up: two pumpkins on the dock, nothing carved yet, Ghostface in the oak's fork, the oystercatcher on the rake",
     o: { baseTemp: 71, nowTemp: 75, feels: 75, rh: 55, isDay: 1, code: 1, cloud: 18, nowWind: 9, nowDir: 40, nowGust: 15, nowUv: 3.4, uvMax: 5, windAmp: 6, gustAmp: 10,
       sunrise: "07:13", sunset: "18:44", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
-  { name: "27-marsh-halloween-night", loc: "mb", when: "2026-10-31T20:40:00", decor: ["jack-o-lantern", "pumpkin"], candles: 1,
+  { name: "27-marsh-halloween-night", loc: "mb", when: "2026-10-31T20:40:00", decor: ["ghostface", "jack-o-lantern", "pumpkin"], candles: 1,
     note: "Halloween night: the carved one lit, its light on the water, the candle guttering in a light breeze",
     o: { baseTemp: 63, nowTemp: 61, feels: 61, rh: 80, isDay: 0, code: 0, cloud: 8, nowWind: 7, nowDir: 30, nowGust: 12, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
       sunrise: "07:32", sunset: "18:18", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
-  { name: "28-marsh-halloween-cold-morning", loc: "mb", when: "2026-10-27T08:40:00", decor: ["jack-o-lantern", "pumpkin"], candles: 0,
+  { name: "28-marsh-halloween-cold-morning", loc: "mb", when: "2026-10-27T08:40:00", decor: ["ghostface", "jack-o-lantern", "pumpkin"], candles: 0,
     note: "a cold snap in the carved week: the cormorant on the middle piling beside the pumpkins, and no candle by day",
     o: { baseTemp: 50, nowTemp: 45, feels: 41, rh: 70, isDay: 1, code: 1, cloud: 22, nowWind: 12, nowDir: 350, nowGust: 20, nowUv: 1.2, uvMax: 4, windAmp: 8, gustAmp: 12,
       sunrise: "07:28", sunset: "18:23", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
-  { name: "29-marsh-halloween-rain-night", loc: "mb", when: "2026-10-29T21:00:00", decor: ["jack-o-lantern", "pumpkin"], candles: 0,
+  { name: "29-marsh-halloween-rain-night", loc: "mb", when: "2026-10-29T21:00:00", decor: ["ghostface", "jack-o-lantern", "pumpkin"], candles: 0,
     note: "rain in the carved week: the pumpkins stay out and the candle is not lit",
     o: { baseTemp: 64, nowTemp: 63, feels: 63, rh: 95, isDay: 0, code: 63, cloud: 96, nowWind: 11, nowDir: 60, nowGust: 19, nowUv: 0, uvMax: 3, windAmp: 8, gustAmp: 14,
       sunrise: "07:30", sunset: "18:20", popCurve: () => 85, dailyPop: (p) => p.fill(85) } },
+  { name: "36-marsh-october-golden-evening", loc: "mb", when: "2026-10-10T18:25:00", decor: ["ghostface", "pumpkin"], candles: 0,
+    note: "golden hour in October: Ghostface's mask and the pumpkins warm with the oak, and nothing is lit yet",
+    o: { baseTemp: 71, nowTemp: 72, feels: 72, rh: 60, isDay: 1, code: 1, cloud: 18, nowWind: 8, nowDir: 40, nowGust: 13, nowUv: 0.2, uvMax: 5, windAmp: 6, gustAmp: 10,
+      sunrise: "07:13", sunset: "18:44", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "37-marsh-october-fog-morning", loc: "mb", when: "2026-10-14T09:40:00", decor: ["ghostface", "pumpkin"], candles: 0,
+    note: "code 45 in October: the fog takes the oak back and Ghostface greys with it, the mask still the palest thing in the crown",
+    o: { baseTemp: 62, nowTemp: 61, feels: 61, rh: 99, isDay: 1, code: 45, cloud: 100, nowWind: 2, nowDir: 60, nowGust: 4, nowUv: 0.8, uvMax: 4, windAmp: 1, gustAmp: 2,
+      sunrise: "07:17", sunset: "18:38", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
   { name: "30-ridge-october-afternoon", loc: "sp", when: "2026-10-10T13:30:00", decor: ["corn-shock", "straw-bale", "pumpkin", "white-pumpkin", "michael-myers"], candles: 0,
     note: "Halloween at the barn door: corn shock, bale, pumpkins, the hens working the yard beside it",
     o: { baseTemp: 55, nowTemp: 57, feels: 57, rh: 60, isDay: 1, code: 1, cloud: 20, nowWind: 7, nowDir: 280, nowGust: 13, nowUv: 3.1, uvMax: 4, windAmp: 6, gustAmp: 10,
@@ -318,6 +326,53 @@ for (const cs of cases) {
     const top = Object.entries(anim.by).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k}:${v}`).join(" ");
     console.log(`    ${anim.running} running of ${anim.total}  ${top}`);
     if (anim.running > 120) problems.push(`${cs.name}: ${anim.running} animations still running`);
+
+    // ── Ghostface keeps his eyes through the oak's sway ─────────────────
+    // He stands still and the oak sways about a pixel either way over him, so at the far ends of
+    // the sway a limb crosses the edge of an eye. Each eye is sampled on its own fill at both ends
+    // of the sway, in this scene's wind and again at the oak's full throw in a gale (1.4°), and the
+    // scene fails if the oak hides 40% of either. The oak is put back running as it was.
+    if (cs.decor?.includes("ghostface")) {
+      const gf = await page.evaluate(() => {
+        const g = document.querySelector('#sceneSvg [data-decor="ghostface"]');
+        const oak = [...document.querySelectorAll('#sceneSvg g[style*="swayTree"]')].find((n) => n.querySelector(".moss"));
+        const a = oak?.getAnimations().find((x) => x.animationName === "swayTree");
+        if (!g || !a) return null;
+        g.scrollIntoView({ block: "center" });
+        const feats = [...g.querySelectorAll("path")].slice(-3).sort((p, q) => p.getBoundingClientRect().top - q.getBoundingClientRect().top).slice(0, 2)
+          .sort((p, q) => p.getBoundingClientRect().left - q.getBoundingClientRect().left);
+        const hidden = (p) => {
+          const b = p.getBoundingClientRect(), pt = p.ownerSVGElement.createSVGPoint(), m = p.getScreenCTM().inverse();
+          let tot = 0, hid = 0;
+          for (let i = 0; i < 24; i++) for (let j = 0; j < 24; j++) {
+            pt.x = b.left + (i + .5) / 24 * b.width; pt.y = b.top + (j + .5) / 24 * b.height;
+            if (!p.isPointInFill(pt.matrixTransform(m))) continue;
+            // only the oak counts as covering him: rain, fog and the sky's own layers are weather
+            const top = document.elementsFromPoint(pt.x, pt.y).find((el) => g.contains(el) || oak.contains(el));
+            if (!top) continue;
+            tot++; if (oak.contains(top)) hid++;
+          }
+          return tot ? Math.round(hid / tot * 100) : 100;
+        };
+        const was = a.currentTime, { duration: D, delay: dl = 0 } = a.effect.getTiming();
+        const ends = () => [2 * D + dl, D + dl - 1].map((t) => { a.currentTime = t; return feats.map(hidden); });
+        a.pause();
+        const wind = ends();
+        const tw = [oak.style.getPropertyValue("--tsway"), oak.style.getPropertyValue("--tsway-neg")];
+        oak.style.setProperty("--tsway", "1.4deg"); oak.style.setProperty("--tsway-neg", "-1.4deg");
+        const gale = ends();
+        oak.style.setProperty("--tsway", tw[0]); oak.style.setProperty("--tsway-neg", tw[1]);
+        a.currentTime = was; a.play();
+        return { tsway: tw[0], wind, gale };
+      });
+      if (!gf) problems.push(`${cs.name}: no swaying oak or no Ghostface to measure`);
+      else {
+        const say = (r) => r.map(([l, rr]) => `${l}%/${rr}%`).join(" ");
+        console.log(`    ghostface eyes hidden (left/right, each end of the sway): ${say(gf.wind)} at ${gf.tsway}, ${say(gf.gale)} at 1.4deg`);
+        for (const [label, r] of [["this wind", gf.wind], ["a gale", gf.gale]])
+          if (r.flat().some((v) => v >= 40)) problems.push(`${cs.name}: the oak hides 40% or more of a Ghostface eye in ${label} (${say(r)})`);
+      }
+    }
 
     // ── nothing may be standing in the pond ────────────────────────────
     // Residents are positioned as fractions of the frame width, and the ridge pond
