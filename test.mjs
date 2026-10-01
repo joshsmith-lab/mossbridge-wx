@@ -1131,13 +1131,23 @@ test("Ghostface peeks out of the live oak for October, and never moves", async (
   const [, , w, h] = ctx.box([ctx.gf(0)[2].parts[0].d]);
   assert.ok(w / 10 > 5.6 && w / 10 < 6.6 && h / 10 > 8.6 && h / 10 < 9.8, `mask ${w / 10} x ${h / 10}`);
   assert.match(html, /const propGhostface=\(tip=\.28,z=1\.22\)=>/);
-  assert.match(html, /const GF_AT=\[4\.7,-29\.3\];/);
+  assert.match(html, /const GF_AT=\[5\.65,-28\.2\];/);
   // the harnesses look at him: close up in the rig, and in every October marsh scene
   assert.match(rig, /ghostface: \["ghostface", \(c\) => c\.propGhostface\(\)/);
   assert.match(rig, /lumina \| cornshock \| bale \| loft-head \| ghostface/);
   for (const name of ["26-marsh-october-afternoon", "27-marsh-halloween-night", "28-marsh-halloween-cold-morning", "29-marsh-halloween-rain-night", "36-marsh-october-golden-evening", "37-marsh-october-fog-morning"])
     assert.match(scene, new RegExp(`name: "${name}"[^\\n]*decor: \\["ghostface"`));
   assert.match(scene, /name: "35-marsh-november-small-hours"[^\n]*decor: \[\]/);
+  // he stands still and the oak sways over him, so the scene harness samples both eyes at both
+  // ends of the sway, in the scene's wind and in a gale, and fails 40% of either hidden
+  assert.match(scene, /if \(cs\.decor\?\.includes\("ghostface"\)\)/);
+  assert.match(scene, /oak\.style\.setProperty\("--tsway", "1\.4deg"\)/);
+  assert.match(scene, /r\.flat\(\)\.some\(\(v\) => v >= 40\)/);
+  // and the notes count the scenes it runs
+  const agents = await readFile(new URL("AGENTS.md", root), "utf8");
+  const words = ["twenty-nine", "thirty", "thirty-one", "thirty-two", "thirty-three"];
+  const said = agents.match(/`tools\/scene\.mjs` is for anything that moves\. (\S+) scenes/)[1].toLowerCase();
+  assert.equal(29 + words.indexOf(said), (scene.match(/^  \{ name: "/gm) || []).length, `AGENTS.md says ${said} scenes`);
 });
 
 test("a pumpkin still reads as one at seven pixels, and no two are cut alike", async () => {

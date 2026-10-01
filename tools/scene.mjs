@@ -327,6 +327,53 @@ for (const cs of cases) {
     console.log(`    ${anim.running} running of ${anim.total}  ${top}`);
     if (anim.running > 120) problems.push(`${cs.name}: ${anim.running} animations still running`);
 
+    // ── Ghostface keeps his eyes through the oak's sway ─────────────────
+    // He stands still and the oak sways about a pixel either way over him, so at the far ends of
+    // the sway a limb crosses the edge of an eye. Each eye is sampled on its own fill at both ends
+    // of the sway, in this scene's wind and again at the oak's full throw in a gale (1.4°), and the
+    // scene fails if the oak hides 40% of either. The oak is put back running as it was.
+    if (cs.decor?.includes("ghostface")) {
+      const gf = await page.evaluate(() => {
+        const g = document.querySelector('#sceneSvg [data-decor="ghostface"]');
+        const oak = [...document.querySelectorAll('#sceneSvg g[style*="swayTree"]')].find((n) => n.querySelector(".moss"));
+        const a = oak?.getAnimations().find((x) => x.animationName === "swayTree");
+        if (!g || !a) return null;
+        g.scrollIntoView({ block: "center" });
+        const feats = [...g.querySelectorAll("path")].slice(-3).sort((p, q) => p.getBoundingClientRect().top - q.getBoundingClientRect().top).slice(0, 2)
+          .sort((p, q) => p.getBoundingClientRect().left - q.getBoundingClientRect().left);
+        const hidden = (p) => {
+          const b = p.getBoundingClientRect(), pt = p.ownerSVGElement.createSVGPoint(), m = p.getScreenCTM().inverse();
+          let tot = 0, hid = 0;
+          for (let i = 0; i < 24; i++) for (let j = 0; j < 24; j++) {
+            pt.x = b.left + (i + .5) / 24 * b.width; pt.y = b.top + (j + .5) / 24 * b.height;
+            if (!p.isPointInFill(pt.matrixTransform(m))) continue;
+            // only the oak counts as covering him: rain, fog and the sky's own layers are weather
+            const top = document.elementsFromPoint(pt.x, pt.y).find((el) => g.contains(el) || oak.contains(el));
+            if (!top) continue;
+            tot++; if (oak.contains(top)) hid++;
+          }
+          return tot ? Math.round(hid / tot * 100) : 100;
+        };
+        const was = a.currentTime, { duration: D, delay: dl = 0 } = a.effect.getTiming();
+        const ends = () => [2 * D + dl, D + dl - 1].map((t) => { a.currentTime = t; return feats.map(hidden); });
+        a.pause();
+        const wind = ends();
+        const tw = [oak.style.getPropertyValue("--tsway"), oak.style.getPropertyValue("--tsway-neg")];
+        oak.style.setProperty("--tsway", "1.4deg"); oak.style.setProperty("--tsway-neg", "-1.4deg");
+        const gale = ends();
+        oak.style.setProperty("--tsway", tw[0]); oak.style.setProperty("--tsway-neg", tw[1]);
+        a.currentTime = was; a.play();
+        return { tsway: tw[0], wind, gale };
+      });
+      if (!gf) problems.push(`${cs.name}: no swaying oak or no Ghostface to measure`);
+      else {
+        const say = (r) => r.map(([l, rr]) => `${l}%/${rr}%`).join(" ");
+        console.log(`    ghostface eyes hidden (left/right, each end of the sway): ${say(gf.wind)} at ${gf.tsway}, ${say(gf.gale)} at 1.4deg`);
+        for (const [label, r] of [["this wind", gf.wind], ["a gale", gf.gale]])
+          if (r.flat().some((v) => v >= 40)) problems.push(`${cs.name}: the oak hides 40% or more of a Ghostface eye in ${label} (${say(r)})`);
+      }
+    }
+
     // ── nothing may be standing in the pond ────────────────────────────
     // Residents are positioned as fractions of the frame width, and the ridge pond
     // spans .13W to .73W, so an eyeballed fraction puts a rabbit in the water. The

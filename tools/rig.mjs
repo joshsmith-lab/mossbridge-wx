@@ -45,9 +45,9 @@ const PROPS = {
   bale: ["bale", (c) => c.propBale()],
   /* the head in the loft window is drawn at ten times the October loft's units, so it gets that frame */
   "loft-head": ["myers", (c) => c.propLoftHead(), {}, [66, 58, 33, 58]],
-  /* Ghostface in the live oak is drawn at ten units to the screen pixel and is two units (the
-     robe and hood, then the mask), so the phone panel draws him at a tenth, with the scene's lines */
-  ghostface: ["ghostface", (c) => c.propGhostface(), {}, [170, 175, 85, 75], { phone: 0.1, o: { line: 0.5, heavy: 0.25, shade: 0.7, lit: 0.45 } }],
+  /* Ghostface in the live oak is drawn at ten units to the screen pixel and is three units (the
+     robe, the hood, then the mask), so the phone panel draws him at a tenth, with the scene's lines */
+  ghostface: ["ghostface", (c) => c.propGhostface(), {}, [170, 190, 85, 75], { phone: 0.1, o: { line: 0.5, heavy: 0.25, shade: 0.7, lit: 0.45 } }],
 };
 const prop = PROPS[name.toLowerCase()];
 const key = prop ? name : Object.keys(cast.rigs).find((k) => k.toLowerCase() === "rig" + name.toLowerCase() || k.toLowerCase().startsWith("rig" + name.toLowerCase().slice(0, 4)));

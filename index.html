@@ -1745,9 +1745,14 @@ const propLoftHead=()=>{
    pixels, and true to the heron and the raccoon about nine wide and twelve tall, more than the fork
    holds. So the mask is about six wide and nine tall, what the eyes and the mouth need to survive on
    a phone, and it still sits in the fork with only the edge of one cheek behind the limb */
-/* where his face is, in the live oak's own units (propOak): just right of the middle limb, so its
-   edge takes a sliver off his hood and his left cheek and never his eye, above the fork */
-const GF_AT=[4.7,-29.3];
+/* where his face is, in the live oak's own units (propOak): in the V above the fork, the middle
+   limb beside his hood and the upper right limb across the corner of his jaw, so at rest both eyes
+   and the mouth are clear. He stands still and the oak sways about a pixel either way over him,
+   and the fork is narrower than his face plus that throw, so at the far ends of the sway a limb
+   crosses the edge of an eye or the mouth: about a tenth of one at 12 mph gusting 20, up to about
+   a third in a gale. Set low in the V, because the sway's throw grows with height up the tree.
+   tools/scene.mjs measures it */
+const GF_AT=[5.65,-28.2];
 const propGhostface=(tip=.28,z=1.22)=>{
   const F=10*z,ca=Math.cos(tip),sa=Math.sin(tip);
   const T=([x,y])=>[(x*ca-y*sa)*F,(x*sa+y*ca)*F];
@@ -3355,8 +3360,8 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const oak=liveOak();
   /* Halloween behind the live oak: Ghostface (propGhostface) peers out of the fork, in the V the
      middle limb and the upper right one make above it, so the limbs and the trunk hide his
-     shoulders and the rest of him, and the middle limb's edge crosses his cheek: a peek, not a
-     portrait. He stands behind the tree, outside its sway, and never moves. He is at the oak's own
+     shoulders and the rest of him, and the upper right limb cuts the corner of his jaw: a peek,
+     not a portrait. He stands behind the tree, outside its sway, and never moves. He is at the oak's own
      distance and lit by its sky */
   const gfX=oakX+GF_AT[0]*oakS,gfY=base+2+GF_AT[1]*oakS;
   const ghostface=halloween?`<g class="decor" data-decor="ghostface"><g transform="translate(${f1(gfX)} ${f1(gfY)}) scale(.1)">${inkRig(propGhostface(),decorPal(INK.ghostface,oakD),{s:.1,line:.5,heavy:.25,shade:.7,lit:.45,light:lightAt(gfX,gfY)})}</g></g>`:"";

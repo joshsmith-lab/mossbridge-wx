@@ -439,9 +439,9 @@ decorations coming down once each holiday passes. Halloween is the first.
   2026: "need a Scream Ghost Face peeking from behind the live oak" at Porters Neck. He is in the
   oak's fork (`propGhostface`, placed at `GF_AT`, in the oak's own units), in the V the middle limb
   and the upper right one make above it, so the limbs and the trunk hide his shoulders and the rest
-  of him. The middle limb's edge takes a sliver off his hood and the edge of his left cheek and
-  never his eye, and his head is cocked about 16° the way he cocks it: a face partly hidden by an
-  edge is what says peeking, and a whole one is a portrait. What has to survive on a phone is the
+  of him. At rest the middle limb runs beside his hood and the upper right limb cuts the corner of
+  his jaw, with both eyes and the mouth clear. His head is cocked about 16° the way he cocks it: a
+  face partly hidden by an edge is what says peeking, and a whole one is a portrait. What has to survive on a phone is the
   face from the Scream painting: the long white mask, wide and domed at the brow and long through a
   narrow jaw, the two black eyes that droop outward into a tent over the mouth, and the long open
   mouth, framed by the black hood. The eyes and the mouth are the `eye` role, so they are painted
@@ -454,9 +454,14 @@ decorations coming down once each holiday passes. Halloween is the first.
   true to the tree, and about 1.7 times the width of the Myers mask in the loft. There is no knife and
   no gloved hand. A pale blade is a second bright shape against the mask, and a glove was tried on the
   upper right limb and at phone size read as a dark knot on the bark. He stands behind the oak and
-  outside its sway (`${ghostface}${oak}`), so the limbs move a fraction of a pixel over his hood in a
-  blow and he never moves. He is at the oak's distance and lit by its sky (`decorPal(INK.ghostface,
-  oakD)`, `lightAt`): clean white by day, cream at golden hour, grey in the rain and fog, and
+  outside its sway (`${ghostface}${oak}`), and he never moves. The oak sways about a pixel either
+  way over him in a blow, and the fork is narrower than his face plus that throw, so at the far ends
+  of the sway a limb crosses the edge of an eye or the mouth: about a tenth of one at 12 mph gusting
+  20, up to about a third in a gale. He sits low in the V because the throw grows with height up the
+  tree. `tools/scene.mjs` samples each eye at both ends of the sway, in the scene's wind and at the
+  oak's full 1.4° in a gale, and fails an October marsh scene where the oak hides 40% of either.
+  He is at the oak's distance and lit by its sky (`decorPal(INK.ghostface, oakD)`, `lightAt`):
+  clean white by day, cream at golden hour, grey in the rain and fog, and
   blue-grey at night, when the mask is still the palest thing in the crown and the hood shows against
   the sky. In October the one moss wisp that would hang across his face is left out whole, and still
   makes its draws, so no other wisp moves. That is why the October marsh scenes run 15 moss sways and
@@ -562,7 +567,7 @@ pill at now covers the skiff, measured at 390 and 900 and once more at 320, the 
 meet, where it also fails any section title whose note drops under it. It exits non-zero when one does not show what it
 is there for.
 
-`tools/scene.mjs` is for anything that moves. Twenty-nine scenes force the light
+`tools/scene.mjs` is for anything that moves. Thirty-one scenes force the light
 and weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
 clear night, a storm, a fog morning, drizzle against a downpour, freezing rain on
 the coast, a night of rain over the marsh, and the ridge by day, by evening with
