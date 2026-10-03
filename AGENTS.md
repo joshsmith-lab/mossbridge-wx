@@ -490,7 +490,10 @@ Each is a transform or nothing, and each holds perfectly still under reduced mot
   a shade off the membrane, a scalloped tail membrane) each turn at the real shoulder through four
   uneven strokes a beat (`batFlap`). That is three animations a bat. Every draw is seeded
   (`mulberry(4110+i*97)`) and made before any gate, so a bat that gives way never moves the others,
-  and the loops take their phase off the wall clock. They are pulled toward the scene's own ink,
+  and the loops take their phase off the wall clock. Each bat's home is one of seven fixed patches
+  of sky (`HOME`, dealt out so two or three bats still spread across it), never a share of the
+  colony, because the cached paint and the live one a second later can call for a different
+  count, and a share moved every bat 20 to 50px when it did. They are pulled toward the scene's own ink,
   never the night's blue, so a bat is always darker than the sky it crosses, and the further ones
   take a little of the air. They keep to open sky (`batColony`): over the far ridge at the farm,
   over the far treeline and the oak, the pines and the heron on the coast (`skyTops`), inside the
@@ -509,11 +512,14 @@ Each is a transform or nothing, and each holds perfectly still under reduced mot
   taken in five-mile steps, so the live paint landing a moment after the cache does not move her.
   When the moon is up and a straight line can cross it in open sky, her line runs through it with
   her seat 3px under its middle, so the moon frames her and the broom and the cat run out past
-  it: a gentle climb the way she flies, steeper out of a low moon. The line keeps clear of the
+  it: a gentle climb the way she flies, steeper out of a low moon. Both ends of that line stay
+  inside her band: a moon under it is left alone, because a climb through it once started in the
+  farm's barnyard and ran out through the owl. The line keeps clear of the
   sunrise and sunset times and above anything standing up into her sky (on the coast the oak, the
   pines and the heron, the same `skyTops` the bats keep over), and when no line can do all of that
   she leaves the moon alone and climbs across the open sky. That is honest rather than clever: a
-  moon low beside the sunrise time is not crossed. She is drawn with the kit (`propWitch`), side
+  moon low beside the sunrise time is not crossed. A moon she leaves alone she passes well clear
+  of, her boots 8px over its top or her hat 2px under its foot, never along its rim. She is drawn with the kit (`propWitch`), side
   on, about 34px long (`WS` .2): the pointed hat with its crooked tip, the handle and the fan of
   twigs, the cape's three tatters with the plum lining along their undersides, and her black cat
   on the twigs with its ears up, its yellow eyes and its tail in a hook. That silhouette is what
@@ -531,14 +537,17 @@ Each is a transform or nothing, and each holds perfectly still under reduced mot
   turns her round on screen. She is three animations, all transforms (`witchCross`, `witchBob`,
   `witchCape`). She flies behind the far treeline on the coast, and in front of the folds and
   behind the barn and the trees at the farm, and in front of the bats, which she flies among.
-  Under reduced motion she holds still beside the moon, her nearest reach 3px off its disc so its
-  real phase still shows, or high in the sky without one. `tools/scene.mjs` walks her crossing on
+  Under reduced motion she holds still beside the moon, her nearest reach just off its disc so its
+  real phase still shows, or in open sky without one, and wherever she holds her box keeps 3px off
+  the sunrise and sunset times and the disc and over what stands up into her sky. She is worked out
+  (`witchPlan`) before the bats are placed, so the still bats keep off her too (`batKeep`). `tools/scene.mjs` walks her crossing on
   her own clock at 320, 390 and 430 in every scene she is out in (`witch: true`) and fails one
   where she is out when she should not be or missing when she should be there, starts or ends
   inside the frame, has her hat cut by the frame's top, touches an animal or a decoration, passes
   behind a sunrise or sunset time, has more than 15% of her hidden by a tree or the treeline, or
   misses the moon her line was routed across (`data-across`), where her clock and the animation
-  disagree, and where under reduced motion she holds still over the disc. `node tools/rig.mjs
+  disagree, passes along the rim of a moon she does not cross, and where under reduced motion she
+  holds still over the disc, on a time, a bat, an animal or a decoration, or behind the scenery. `node tools/rig.mjs
   witch` shows her close up, at phone size, and on a moonlit night with the scene's darkening.
 - **The corn shock is tied high**, and its crown is broken stalk tops and dry leaves standing
   up and out, so at phone size it is a sheaf and never a figure in a dress. Only the leaves
@@ -665,21 +674,26 @@ pill at now covers the skiff, measured at 390 and 900 and once more at 320, the 
 meet, where it also fails any section title whose note drops under it. It exits non-zero when one does not show what it
 is there for.
 
-`tools/scene.mjs` is for anything that moves. Thirty-five scenes force the light
+`tools/scene.mjs` is for anything that moves. Thirty-nine scenes force the light
 and weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
 clear night, a storm, a fog morning, drizzle against a downpour, freezing rain on
 the coast, a night of rain over the marsh, and the ridge by day, by evening with
 the buck out, in warm rain, on a snow day, on a cold January night and in a night
-downpour. Sixteen more are Halloween: the coast on an October afternoon, at golden hour,
+downpour. Twenty more are Halloween: the coast on an October afternoon, at golden hour,
 at dusk with the first bats out, and on a fog morning in October, on Halloween night with no
 moon, on a cold morning in the carved week with the cormorant on its piling, on a rainy night
 in it (bats and witch down), under the moon a night short of full in it with the witch crossing
 it, and at half past midnight on November 1 2026, the night the clocks go back, and the farm on
 an October afternoon, at dusk, on an October night before the carving, on Halloween night, on a
-rainy night in the carved week, under the same moon, and on the morning of November 1. On both
+rainy night in the carved week, under the same moon, and on the morning of November 1. Four
+more are the nights the witch once went wrong: two early October evenings at the farm with a
+westerly and the moon under her band (walked at 900 too), where a climb through it started in
+the barnyard and ran through the owl and past the loft; Halloween's full moon low in the east on
+the coast with a westerly, where her still pose sat on the sunrise time; and a moon at the height
+of the coast's sunrise time, which she cannot cross and once flew along the rim of. On both
 November ones everything has to be gone, the moon's colour, the bats and the witch too: every
 scene fails whose moon is not Halloween's in October or not the ordinary one any other night,
-and the two moon scenes fail if it is not up. Each one with decorations out writes a
+and the moon scenes fail if it is not up. Each one with decorations out writes a
 close-up of them at 320 and at phone width. The Denver scenes (and the skyline check)
 went out with the trip; they are in git history before the commit that parked `den`, if the next trip wants a model.
 The ridge night downpour is there on purpose: dark theme, code 82, two rain layers

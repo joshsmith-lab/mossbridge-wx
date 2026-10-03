@@ -2904,15 +2904,18 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
      miles an hour wide, so the live paint landing a moment after the cache does not move her.
      When the moon is up and her line can cross it in open sky, the line runs through it with her
      seat a little under its middle, so the moon frames her and the broom and the cat run out past
-     it; a low moon gives her a steeper climb away. Otherwise she climbs across the open sky. yTop
-     and yLow are the band of sky her seat may cross, moonOk whether the moon is clear of what
-     stands in front of it, and tops what stands up into her sky, as [x0, x1, top], which she
-     keeps above. Under reduced motion she holds still beside the moon,
-     off its disc so its real phase still shows, or high in the sky without one. Her clock is
+     it; a low moon gives her a steeper climb away. Both ends of that line stay inside her band.
+     Otherwise she climbs across the open sky, well over the moon or well under it and never along
+     its rim. yTop and yLow are the band of sky her seat may cross, moonOk whether the moon is
+     clear of what stands in front of it, and tops what stands up into her sky, as [x0, x1, top],
+     which she keeps above. witchPlan works her out before the bats are placed, because under
+     reduced motion she holds still and the bats keep off her (box): beside the moon, off its disc
+     so its real phase still shows, or in open sky, and never on a sunrise or sunset time, on the
+     disc or on anything standing up into her sky. witchFly draws the plan. Her clock is
      WITCH_RUN */
   const WS=.2,WEX=[WITCH_BOX[0]*WS,WITCH_BOX[2]*WS];   /* her reach behind and ahead of her seat */
-  const witchFly=(yTop,yLow,moonOk,tops=[])=>{
-    if(!halloween||sunAltDeg>=-6||storm||fog||THUNDER>1||rainK>=.65||[66,67,75,86].includes(code))return"";
+  const witchPlan=(yTop,yLow,moonOk,tops=[])=>{
+    if(!halloween||sunAltDeg>=-6||storm||fog||THUNDER>1||rainK>=.65||[66,67,75,86].includes(code))return null;
     const g=Math.round(clamp(gust,0,45)/5)*5,edge=Math.max(-WEX[0],WEX[1])+10,now=Date.now();
     /* her cycle: the crossing is the first 22% of it, at 30px a second in a calm and up to about 66
        in a gale, so a cycle is about a minute in a calm and shorter in a blow */
@@ -2928,11 +2931,12 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     const d=R.d,C=R.C,x0=d>0?-edge:W+edge,x1=d>0?W+edge:-edge,yMid=(yTop+yLow)/2;
     const yAt=(y0,y1,x)=>y0+(y1-y0)*(x-x0)/(x1-x0);
     /* the sunrise and sunset times are the only numbers written on the sky, so her line keeps clear
-       of them, from her hat (14px over her seat) to her boots, over each label's width and her
-       own length either side; and it keeps above anything standing up into her band */
+       of them, from her hat (14px over her seat) to her boots, with room for her lean and her bob,
+       over each label's width and her own length either side; and it keeps above anything
+       standing up into her band */
     const labs=[.17,.83].map(f=>{const lx=px(f)+(f<.5?-16:16),ly=py(f)-9;return f<.5?[lx-30,lx,ly]:[lx,lx+30,ly]});
     const under=(y0,y1,a,b,top)=>[a-23,b+23].every(x=>yAt(y0,y1,x)<top);
-    const clear=(y0,y1)=>labs.every(([a,b,ly])=>{const ya=yAt(y0,y1,a-22),yb=yAt(y0,y1,b+22);return Math.min(ya,yb)>ly+19||Math.max(ya,yb)<ly-16})
+    const clear=(y0,y1)=>labs.every(([a,b,ly])=>{const ya=yAt(y0,y1,a-22),yb=yAt(y0,y1,b+22);return Math.min(ya,yb)>ly+21||Math.max(ya,yb)<ly-19})
       &&tops.every(([a,b,t])=>under(y0,y1,a,b,t-6));
     let y0,y1,moon=null;
     if(moonXY&&moonOk(...moonXY)){
@@ -2941,14 +2945,45 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
          never off the top. If that line runs behind a label or into a tree she takes the nearest
          climb, or a shallow dive, that clears it, and if none does she leaves the moon alone */
       const c0=Math.max(Math.min(my>yMid?Math.max(.07,(my-yMid)/far):.07,(my-yTop)/far,.3),0),line=c=>[my+c*near,my-c*far];
-      const hit=my>=yTop?[c0,.04,.1,.02,.13,0,-.03,.17,-.06,.22,-.1,.28,-.15,.34].map(line).find(([a,b])=>a>=yTop&&b>=yTop&&b<=yLow&&clear(a,b)):null;
+      const hit=my>=yTop?[c0,.04,.1,.02,.13,0,-.03,.17,-.06,.22,-.1,.28,-.15,.34].map(line).find(([a,b])=>Math.min(a,b)>=yTop&&Math.max(a,b)<=yLow&&clear(a,b)):null;
       if(hit){[y0,y1]=hit;moon=[mx,my]}
     }
     if(!moon){
+      /* a moon she leaves alone she passes well clear of: her boots and the twigs 8px over its top,
+         or her hat 2px under its foot, at the moon and her own length either side of it */
+      const offMoon=(a,b)=>{if(!moonXY)return true;const[mx,my]=moonXY,reach=Math.max(-WEX[0],WEX[1]);
+        const ys=[mx-moonR-reach,mx,mx+moonR+reach].map(x=>yAt(a,b,x));return ys.every(y=>y<my-moonR-8)||ys.every(y=>y>my+moonR+16)};
       const line=([dy,c])=>[clamp(yMid+dy+c*W/2,yTop,yLow),clamp(yMid+dy-c*W/2,yTop,yLow)];
-      [y0,y1]=[[0,.07],[-8,.07],[8,.07],[-14,.05],[14,.05],[0,.02],[-20,.03],[-26,.02]].map(line).find(([a,b])=>clear(a,b))||line([-26,.02]);
+      const ls=[[0,.07],[-8,.07],[8,.07],[-14,.05],[14,.05],[0,.02],[-20,.03],[-26,.02],[-32,.02],[-38,0]].map(line);
+      [y0,y1]=ls.find(([a,b])=>clear(a,b)&&offMoon(a,b))||ls.find(([a,b])=>clear(a,b))||ls[7];
     }
     const k=(y1-y0)/(x1-x0),tilt=Math.atan(k)*180/Math.PI+d*(2+g*.2);
+    /* her box with her seat at x, y, as she is drawn there: turned the way she flies, and tilted */
+    const boxAt=(x,y)=>{const t=tilt*Math.PI/180,c=Math.cos(t),s=Math.sin(t),[u0,v0,u1,v1]=WITCH_BOX;
+      const p=[[u0,v0],[u1,v0],[u0,v1],[u1,v1]].map(([u,v])=>[x+u*d*WS*c-v*WS*s,y+u*d*WS*s+v*WS*c]);
+      return[Math.min(...p.map(q=>q[0])),Math.min(...p.map(q=>q[1])),Math.max(...p.map(q=>q[0])),Math.max(...p.map(q=>q[1]))]};
+    let rest=null,box=null;
+    if(PRM){
+      /* still, beside the moon, her nearest reach just off its disc: ahead of it the way she flies,
+         or behind it; or else in open sky. Wherever she holds, her box keeps inside the frame and
+         her band, 3px off the sunrise and sunset times and the moon's disc, and over what stands up
+         into her sky */
+      const ok=([x,y])=>{const[l,t,r,b]=boxAt(x,y);
+        return l>4&&r<W-4&&t>2&&y>=yTop&&y<=yLow&&timeBoxes.every(([a0,b0,a1,b1])=>r<a0-3||l>a1+3||b<b0-3||t>b1+3)
+          &&tops.every(([a,c,top])=>r<a||l>c||b<top-2)&&(!moonXY||Math.hypot(clamp(moonXY[0],l,r)-moonXY[0],clamp(moonXY[1],t,b)-moonXY[1])>=moonR+3)};
+      const spots=[];
+      if(moonXY&&moonOk(...moonXY)){const[mx,my]=moonXY,gap=moonR+5;
+        const ahead=mx+d*(gap-WEX[0]),behind=mx-d*(gap+WEX[1]);
+        spots.push([ahead,my+3],[behind,my+3])}
+      for(const y of[yMid-4,yTop+14,yMid+8])for(const f of[.62,.38,.75,.25,.5])spots.push([W*(d>0?f:1-f),y]);
+      rest=spots.find(ok)||[W*(d>0?.62:.38),yMid-4];
+      box=boxAt(...rest).map((v,i)=>v+(i<2?-2:2));
+    }
+    return{d,C,g,x0,x1,y0,y1,yMid,yAt,moon,tilt,now,rest,box};
+  };
+  const witchFly=p=>{
+    if(!p)return"";
+    const{d,C,g,x0,x1,y0,y1,yMid,yAt,moon,tilt,now,rest}=p;
     /* the night takes her colours down toward black rather than toward the sky's blue, which
        would lift her into the sky she has to stand out of; her eye and the cat's keep their shine.
        She is lit from where the moon really is, seen from just before she reaches it, so crossing
@@ -2958,16 +2993,8 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     const lx=moon?moon[0]-d*25:W/2,ly=moon?yAt(y0,y1,lx):yMid;
     const art=`<g transform="rotate(${tilt.toFixed(1)}) scale(${(d*WS).toFixed(3)} ${WS})">${inkRig(propWitch(),pal,{s:WS,flip:d,line:.75,heavy:.35,shade:.6,lit:.45,light:lightAt(lx,ly)})}</g>`;
     const tag=`data-decor="witch" data-fly="witch"${moon?` data-across="${f1(moon[0])} ${f1(moon[1]-3)}"`:""}`;
-    if(PRM){
-      /* still, beside the moon, her nearest reach 3px off its disc: ahead of it the way she flies,
-         or behind it when that is off the frame, and high in the sky without one */
-      let at=[W*(d>0?.62:.38),yMid-4];
-      if(moonXY&&moonOk(...moonXY)){const[mx,my]=moonXY,gap=moonR+3,ok=x=>x+WEX[0]*d>4&&x+WEX[1]*d>4&&x+WEX[0]*d<W-4&&x+WEX[1]*d<W-4;
-        const ahead=mx+d*(gap-WEX[0]),behind=mx-d*(gap+WEX[1]);
-        const sx=ok(ahead)?ahead:ok(behind)?behind:null;if(sx!=null&&my+3>=yTop)at=[sx,my+3]}
-      return `<g class="witch" ${tag} transform="translate(${f1(at[0])} ${f1(at[1])})">${art}</g>`;
-    }
-    const at=(((now-R.t0)/1e3)%C+C)%C;
+    if(PRM)return `<g class="witch" ${tag} transform="translate(${f1(rest[0])} ${f1(rest[1])})">${art}</g>`;
+    const at=(((now-WITCH_RUN.t0)/1e3)%C+C)%C;
     return `<g class="witch witch-cross" ${tag} style="--wd:${C.toFixed(2)}s;animation-delay:-${at.toFixed(2)}s;--wx0:${f1(x0)}px;--wy0:${f1(y0)}px;--wx1:${f1(x1)}px;--wy1:${f1(y1)}px">`
       +`<g class="witch-bob" style="--wbd:${clamp(3.2-g*.05,1.4,3.2).toFixed(2)}s;--wba:${(.8+g*.05).toFixed(2)}px;--wbr:${(1+g*.07).toFixed(2)}deg;--wcd:${clamp(1.15-g*.016,.42,1.15).toFixed(2)}s;--wc:${(2+g*.16).toFixed(1)}deg">${art}</g></g>`;
   };
@@ -3085,9 +3112,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
      night, two or three on a raw one. The wind also moves them. Each one hunts a jinking loop
      round its own patch of sky (rigBat, and batHunt in the CSS), banked into its turns, carried
      downwind across it as far as the wind says and beating back, and leaning with the wind.
-     Every draw is seeded, so a refresh puts each bat back on its own patch, and the loops take
-     their phase off the wall clock. They keep to open sky: above the treeline and anything
-     standing on it, inside the frame, off the sun and the moon and the two times on the arc. */
+     Every draw is seeded and each patch is fixed, so a refresh puts each bat back on its own patch
+     whatever the colony, and the loops take their phase off the wall clock. They keep to open
+     sky: above the treeline and anything standing on it, inside the frame, off the sun and the moon and the two times on the arc. */
   const batN=(()=>{
     if(!halloween||sunAltDeg>=-.83||(rising&&sunAltDeg>=-6)||storm||rainK>=.65||snowing||isIce(code)||temp<=34)return 0;
     const n=7-(wind>=7)-(gust>=15)-(gust>=22)-2*(gust>=30)-(cloud>75)-(temp<50)-(temp<42)-(rainK>0?3:0)-(fog?1:0);
@@ -3108,12 +3135,14 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     const palAt=d=>{const o={},c=v=>{const t=mix(mix(tone(v),lineC,.4+nightK*.25),hazeC,d);return fog?mix(t,fogC,.32):t};
       for(const[k,v]of Object.entries(INK.bat))o[k]=typeof v==="string"&&v[0]==="#"?c(v):v;
       return Object.assign(o,{ink:mix(lineC,hazeC,d),shade:shadeC,lit:litC,litOp:Math.max(INK.bat.litOp*litK,.3*nightK),shadeOp:.3*shadeK})};
-    const slot=(W-24)/batN;let out=`<g class="bats" data-decor="bat" data-colony="${batN}">`;
+    /* seven fixed patches of sky, dealt out in this order, so a colony that grows or thins between
+       two paints only adds or takes away bats and never moves the rest */
+    const slot=(W-24)/7,HOME=[1,5,3,0,6,2,4];let out=`<g class="bats" data-decor="bat" data-colony="${batN}">`;
     for(let i=0;i<batN;i++){
       /* every draw before any gate, so a bat that has to give way never moves the others */
       const q=Array.from({length:9},mulberry(4110+i*97));
       const s=.46+q[0]*.34,ex=14.6*s,ey=11.8*s,sx=q[1]<.5?-1:1;
-      const cx=12+slot*(i+.5)+(q[1]-.5)*slot*.6;let rx,ry,at=null;
+      const cx=12+slot*(HOME[i]+.5)+(q[1]-.5)*slot*.6;let rx,ry,at=null;
       /* where it would like to fly, then where it gives way to: the other end of its height, the
          top or the bottom of the sky, a tighter loop, a little to one side */
       for(const[v,k,dx]of[[q[4],1,0],[1-q[4],1,0],[0,1,0],[1,1,0],[0,.7,0],[1,.7,0],[q[4],.7,-.4],[q[4],.7,.4],[0,.5,0],[1,.5,0]]){
@@ -3137,6 +3166,8 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   };
   /* the two times written on the arc, as boxes a bat stays out of */
   const timeBoxes=[.17,.83].map(f=>{const x=px(f)+(f<.5?-16:16),y=py(f)-9;return f<.5?[x-40,y-10,x+2,y+3]:[x-2,y-10,x+40,y+3]});
+  /* and, under reduced motion, the witch where she holds still (witchPlan) */
+  const batKeep=wp=>wp&&wp.box?[...timeBoxes,wp.box]:timeBoxes;
 
   /* Denver's wildlife is drawn for recognition at phone size: the magpie gets its long
      stepped tail and white shoulder, the mule deer gets its large ears, and the cottontail
@@ -3601,7 +3632,8 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     const soarer=!wet&&!storm&&!dark&&!batN?`<g class="gull-cross" style="--gx:${(W*.62).toFixed(0)}px;--gy:-12px;--gd:134s;${phase(134)}">${flightBird("hawk",W*.16,base-rTop-34,.44,.2,-6.8,15)}</g>`:"";
     /* the bats (batColony) keep to the sky over the farthest ridge, so a dark bat is never lost
        against a dark fold. The vulture goes to roost when they come out */
-    const bats=batColony(8,(x0,x1)=>{let m=1e9;for(let x=x0;x<=x1+3;x+=6)m=Math.min(m,crestY(0,Math.min(x,x1)));return m-4},timeBoxes);
+    const witch=witchPlan(17,base-rTop-11,(x,y)=>y<crestY(0,x)-13);
+    const bats=batColony(8,(x0,x1)=>{let m=1e9;for(let x=x0;x<=x1+3;x+=6)m=Math.min(m,crestY(0,Math.min(x,x1)));return m-4},batKeep(witch));
     const owl=!wet&&!storm&&dark&&!showFlies?owlAt(rightTreeX-15,base-16,.74,1):"";
     /* The resident, same rule as the marsh: always there, almost never moves. The cardinal
        turns up when it is cold, which is exactly when it is the only red in the field
@@ -3678,7 +3710,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       ${ridgeFolds.slice(2).join("")}
       ${fog?`<rect x="0" y="${(base-rTop*.72).toFixed(1)}" width="${W}" height="${(rTop*.72+8).toFixed(1)}" fill="url(#fogveil)"/>`:""}
       ${hawk}${soarer}
-      ${witchFly(17,base-rTop-11,(x,y)=>y<crestY(0,x)-13)}
+      ${witchFly(witch)}
       ${pond}
       ${castShadow(propBarn(halloween?LOFT_WIDE:LOFT),barnX-21,base+.86,1.18,1)}
       ${barn}
@@ -3910,7 +3942,8 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     if(showHeron){const[bx,by,bw]=pathBox(flatParts(rigHeron(phase)).map(p=>p.d));tops.push([hx+bx*hs-4,hx+(bx+bw)*hs+4,hy+by*hs-4])}
     return tops;
   })():[];
-  const bats=batN?batColony(8,(x0,x1)=>Math.min(base-22,...skyTops.filter(([a,b])=>x1>a&&x0<b).map(t=>t[2])),timeBoxes):"";
+  const witch=witchPlan(17,GY-63,(x,y)=>y<GY-26&&skyTops.every(([a,b,t])=>x+moonR<a||x-moonR>b||y+moonR<t),skyTops);
+  const bats=batN?batColony(8,(x0,x1)=>Math.min(base-22,...skyTops.filter(([a,b])=>x1>a&&x0<b).map(t=>t[2])),batKeep(witch)):"";
   /* Three gulls, on three different errands. One crosses the frame low over about seventy
      seconds, one holds its place higher up, and a third works back the other way much
      higher, smaller and fainter, on a slower clock. Gulls do not fly in formation and the
@@ -3992,7 +4025,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     ${body}
     ${sceneClouds}
     ${bats}
-    ${witchFly(17,GY-63,(x,y)=>y<GY-26&&skyTops.every(([a,b,t])=>x+moonR<a||x-moonR>b||y+moonR<t),skyTops)}
+    ${witchFly(witch)}
     <path d="${tl}" fill="${farC}" stroke="${farLine}" stroke-width=".7" stroke-linejoin="round"/>
     ${tex?`<path d="${tl}" fill="${tex}" opacity="${(.8*paperK).toFixed(2)}"/>`:""}
     ${ghostface}${oak}

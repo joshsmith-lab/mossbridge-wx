@@ -182,6 +182,26 @@ const CASES = [
     note: "the same moon over the ridge in the carved week: Halloween's moon clear of the crest, its light on the pond in its own colour, and the witch crossing it",
     o: { baseTemp: 46, nowTemp: 43, feels: 40, rh: 72, isDay: 0, code: 0, cloud: 8, nowWind: 6, nowDir: 300, nowGust: 10, nowUv: 0, uvMax: 3, windAmp: 5, gustAmp: 8,
       sunrise: "07:43", sunset: "18:33", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  // nights where the moon sits where the witch once went wrong: under her band at the farm, so a
+  // climb through it started in the barnyard and ran through the owl (and at 900 out of the barn,
+  // past the loft); a full moon low in the east on the coast with a westerly; and a moon over the
+  // coast's sunrise time that she cannot cross, where she once flew along its rim
+  { name: "42-ridge-october-evening-westerly", loc: "sp", when: "2026-10-20T19:30:00", decor: ["corn-shock", "straw-bale", "pumpkin", "white-pumpkin", "michael-myers", "bat", "witch", "blood-moon"], candles: 0, moon: true, bats: 7, witch: true, witchWidths: [900],
+    note: "an early October evening at the farm with a westerly, the moon low under her band: she leaves it alone and climbs across open sky, never out of the barnyard",
+    o: { baseTemp: 54, nowTemp: 52, feels: 52, rh: 70, isDay: 0, code: 0, cloud: 6, nowWind: 6, nowDir: 250, nowGust: 10, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
+      sunrise: "07:38", sunset: "18:40", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "43-ridge-october-moonrise-westerly", loc: "sp", when: "2026-10-22T20:00:00", decor: ["corn-shock", "straw-bale", "pumpkin", "white-pumpkin", "michael-myers", "bat", "witch", "blood-moon"], candles: 0, moon: true, bats: 7, witch: true, witchWidths: [900],
+    note: "two nights on, a little later and a wind from due west: the moon still under her band, and nothing in the yard",
+    o: { baseTemp: 54, nowTemp: 52, feels: 52, rh: 70, isDay: 0, code: 0, cloud: 6, nowWind: 6, nowDir: 270, nowGust: 10, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
+      sunrise: "07:40", sunset: "18:37", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "44-marsh-full-moon-westerly", loc: "mb", when: "2026-10-26T21:30:00", decor: ["ghostface", "jack-o-lantern", "pumpkin", "bat", "witch", "blood-moon"], candles: 1, moon: true, bats: 7, witch: true,
+    note: "Halloween's full moon low in the east with a westerly: under reduced motion she holds still clear of the sunrise time, the disc and the bats",
+    o: { baseTemp: 64, nowTemp: 62, feels: 62, rh: 75, isDay: 0, code: 0, cloud: 6, nowWind: 6, nowDir: 250, nowGust: 10, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
+      sunrise: "07:27", sunset: "18:23", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "45-marsh-october-moon-by-the-time", loc: "mb", when: "2026-10-20T21:00:00", decor: ["ghostface", "pumpkin", "bat", "witch", "blood-moon"], candles: 0, moon: true, bats: 7, witch: true,
+    note: "the moon at the height of the sunrise time, where no straight line crosses it clear of the time: she leaves it alone, well over it, never on its rim",
+    o: { baseTemp: 64, nowTemp: 62, feels: 62, rh: 75, isDay: 0, code: 0, cloud: 6, nowWind: 6, nowDir: 30, nowGust: 10, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
+      sunrise: "07:22", sunset: "18:30", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
   // October dusk at each place, the sun a few degrees under: the bats are coming out, a couple at
   // first and more as it darkens, and the witch is not up yet, because she waits for the dark
   { name: "40-marsh-october-dusk", loc: "mb", when: "2026-10-10T19:02:00", decor: ["ghostface", "pumpkin", "bat"], candles: 0, bats: 7,
@@ -283,6 +303,9 @@ async function walkWitch(page) {
       && !el.classList.contains("ff") && !/^(bat|witch|(blood|harvest)-moon)$/.test(el.dataset.decor || ""));
     const mp = w.dataset.across ? w.dataset.across.split(" ").map(Number) : null, M = svg.getScreenCTM();
     const moon = mp ? [M.a * mp[0] + M.e, M.d * mp[1] + M.f] : null;
+    // a moon she leaves alone she passes well clear of, never along its rim
+    const md = !mp && svg.querySelector("[data-disc]"), disc = md ? (([x, y, r]) => [M.a * x + M.e, M.d * y + M.f, r * M.a])(md.dataset.disc.split(" ").map(Number)) : null;
+    let rim = 0;
     const was = a.currentTime; a.pause();
     const labels = [...svg.querySelectorAll("text.suntime")].map((t) => t.getBoundingClientRect());
     const mine = (e) => w.contains(e);
@@ -295,6 +318,7 @@ async function walkWitch(page) {
       if (i === 0 || i === 80) ends.push(b.right <= F.left + 1 || b.left >= F.right - 1);
       if (b.right > F.left && b.left < F.right && b.top < F.top - 1) topCut++;
       if (labels.some((L) => L.right > b.left && L.left < b.right && L.bottom > b.top && L.top < b.bottom)) onLabel++;
+      if (disc && Math.hypot(Math.min(Math.max(disc[0], b.left), b.right) - disc[0], Math.min(Math.max(disc[1], b.top), b.bottom) - disc[1]) < disc[2] + 1) rim++;
       for (const g of ground) {
         const A = g.getBoundingClientRect();
         const ov = Math.max(0, Math.min(A.right, b.right) - Math.max(A.left, b.left)) * Math.max(0, Math.min(A.bottom, b.bottom) - Math.max(A.top, b.top));
@@ -318,7 +342,7 @@ async function walkWitch(page) {
       }
     }
     a.currentTime = was; a.play();
-    return { cycle: D / 1000, drift: Math.min(drift, D - drift) / 1000, lead: (run.t0 - run.open) / 1000, ends, topCut, onLabel,
+    return { cycle: D / 1000, drift: Math.min(drift, D - drift) / 1000, lead: (run.t0 - run.open) / 1000, ends, topCut, onLabel, rim,
       hidden: Math.round(hidden * 100), hits: [...new Set(hits)], moon: !!moon, best };
   });
 }
@@ -331,6 +355,7 @@ function reportWitch(cs, width, witch) {
   if (witch.topCut) problems.push(`${at}: the frame's top cuts the witch at ${witch.topCut} steps of her crossing`);
   if (witch.hits.length) problems.push(`${at}: the witch flies into ${witch.hits.join(", ")}`);
   if (witch.onLabel) problems.push(`${at}: the witch flies behind a sunrise or sunset time at ${witch.onLabel} steps of her crossing`);
+  if (witch.rim) problems.push(`${at}: the witch passes along the rim of a moon she does not cross, at ${witch.rim} steps of her crossing`);
   if (witch.hidden > 15) problems.push(`${at}: a tree or the treeline hides ${witch.hidden}% of the witch`);
   if (witch.moon && !(witch.best.inside && witch.best.dist < 8)) problems.push(`${at}: the witch's path misses the moon (${witch.best.dist.toFixed(1)}px)`);
   if (witch.drift > .4 || Math.abs(witch.lead) > .05) problems.push(`${at}: the witch's crossing is off her clock (${witch.drift.toFixed(2)}s), so the first one is not 2.4s after opening`);
@@ -723,7 +748,7 @@ for (const cs of cases) {
   }
 
   // ── the witch's crossing at the phone widths the main run does not look at ──
-  if (cs.witch) for (const width of [320, 390].filter((w) => w !== PHONE_WIDTH)) {
+  if (cs.witch) for (const width of [320, 390, ...(cs.witchWidths || [])].filter((w) => w !== PHONE_WIDTH)) {
     const { ctx, page, errs } = await open(cs, { width });
     const witch = await walkWitch(page);
     if (!witch) problems.push(`${cs.name} ${width}: the witch is not out`);
@@ -752,6 +777,31 @@ for (const cs of cases) {
     });
     if (rest) console.log(`    reduced motion: the witch holds still ${rest.gap.toFixed(1)}px off the moon's ${rest.r.toFixed(1)}px disc`);
     if (rest && rest.gap < rest.r) problems.push(`${cs.name}: under reduced motion the witch holds still over the moon's disc and hides its phase`);
+    // and wherever she holds, she is not on a sunrise or sunset time, a bat, an animal, a decoration
+    // or behind the scenery
+    const held = await page.evaluate(() => {
+      const svg = document.getElementById("sceneSvg"), w = svg.querySelector('[data-fly="witch"]');
+      if (!w) return null;
+      const b = w.getBoundingClientRect(), on = [];
+      const meet = (A) => Math.max(0, Math.min(A.right, b.right) - Math.max(A.left, b.left)) * Math.max(0, Math.min(A.bottom, b.bottom) - Math.max(A.top, b.top));
+      for (const t of svg.querySelectorAll("text.suntime")) if (meet(t.getBoundingClientRect()) > 0) on.push(`the time ${t.textContent}`);
+      for (const e of svg.querySelectorAll(".bat")) if (meet(e.getBoundingClientRect()) > 0) on.push("a bat");
+      for (const e of svg.querySelectorAll("[data-species],[data-decor]")) {
+        if (e.classList.contains("bat") || ["gull", "hawk"].includes(e.dataset.species) || e.classList.contains("ff") || /^(bat|witch|(blood|harvest)-moon)$/.test(e.dataset.decor || "")) continue;
+        if (meet(e.getBoundingClientRect()) > 2) on.push(e.dataset.species || e.dataset.decor);
+      }
+      const weather = (e) => /url\(#(fogveil|mist)\)/.test(e.getAttribute("fill") || "") || !!e.closest(".nearrain,.splash,[class*=rain]");
+      let n = 0, hid = 0;
+      for (let u = 0; u < 12; u++) for (let v = 0; v < 6; v++) {
+        const st = document.elementsFromPoint(b.left + (u + .5) / 12 * b.width, b.top + (v + .5) / 6 * b.height).filter((e) => svg.contains(e) && e !== svg && !weather(e));
+        const k = st.findIndex((e) => w.contains(e));
+        if (k < 0) continue; n++; if (k > 0) hid++;
+      }
+      return { on: [...new Set(on)], hidden: n ? Math.round(100 * hid / n) : 0 };
+    });
+    if (held) console.log(`    reduced motion: the witch holds still ${held.on.length ? "on " + held.on.join(", ") : "clear of the times, the bats and the scenery"}, ${held.hidden}% of her behind it`);
+    if (held?.on.length) problems.push(`${cs.name}: under reduced motion the witch holds still on ${held.on.join(", ")}`);
+    if (held && held.hidden > 15) problems.push(`${cs.name}: under reduced motion the scenery hides ${held.hidden}% of the still witch`);
     const one = await page.locator(".sky").screenshot({ path: path.join(OUT, `${cs.name}-prm.png`) });
     await page.waitForTimeout(1400);
     const two = await page.locator(".sky").screenshot();
