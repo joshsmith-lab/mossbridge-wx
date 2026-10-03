@@ -392,6 +392,17 @@ drawing to both views.
 In September 2026 Josh asked for the scenes to be decorated for the holidays, with the
 decorations coming down once each holiday passes. Halloween is the first.
 
+On October 3 2026 he asked for more of it: "I want bats, fluttering around - more movement,
+both scenes. I want the moon to be a creepy blood moon. I want a witch to fly through the night
+sky... can you do these things? Yes, it's a weather app - it's also fun for my family....", then
+"or harvest moon - I dunno, but you get my drift. I want MORE halloween." So the bats, the witch
+and Halloween's moon are the holiday's two deliberate exceptions to the house rules: things
+that move because movement is fun, against "nothing moves because movement is nice", and a red
+moon, against "the picture makes no claims", when a red moon would claim an eclipse. The
+exceptions are fenced as tightly as the pumpkins are: October only, on the place's own calendar,
+at both scenes, gone the morning of November 1, and the weather still shapes every one of them.
+Each is a transform or nothing, and each holds perfectly still under reduced motion.
+
 - **A calendar, not a switch.** `HOLIDAYS` is a table of windows in month-days on the
   location's own calendar, read with `inSeason` the way the boat season is, and
   `holidayOn` is pure and tested. It is handed `locToday()`, the place's own date string, and
@@ -406,7 +417,7 @@ decorations coming down once each holiday passes. Halloween is the first.
   in the rain. They are what the family would set out: on the coast a pumpkin at each end of
   the dock, at the farm a corn shock at the barn's corner with a bale at its foot and a small
   white pumpkin on it, and a big pumpkin either side of the door. `node tools/rig.mjs pumpkin`
-  (or `lantern`, `lantern-lit`, `lumina`, `cornshock`, `bale`, `loft-head`, `ghostface`) shows
+  (or `lantern`, `lantern-lit`, `lumina`, `cornshock`, `bale`, `loft-head`, `ghostface`, `bat`, `witch`) shows
   each one close up and at phone size.
 - **They keep a pumpkin's own calendar.** Plain until the 24th, then the big ones are carved,
   because a carved pumpkin in coastal humidity is soft inside a week. The carved face is its
@@ -466,12 +477,75 @@ decorations coming down once each holiday passes. Halloween is the first.
   the sky. In October the one moss wisp that would hang across his face is left out whole, and still
   makes its draws, so no other wisp moves. That is why the October marsh scenes run 15 moss sways and
   not 16. `node tools/rig.mjs ghostface` shows him close up and at phone size.
+- **Bats come out over both scenes in October, from sunset to dawn.** They keep a bat's hours: a
+  couple at sunset (the sun under -0.83°), the whole colony a few degrees on, thinning before dawn
+  and back in by civil dawn (-6° on the way up), so there are none by day and none at golden hour.
+  A storm, rain from `rainK` .65 up, snow, ice and a night at 34° or under keep them in. Wind,
+  overcast, light rain, fog and cold under 50° and 42° each take some away (`batN`): seven on a
+  calm clear night, four on a raw Halloween night at the farm, one or two in a gale. The wind
+  moves them too. Each one hunts a jinking loop round its own patch of sky (`batHuntA`, `B`, `C`),
+  banked into its turns, carried downwind across it (`--dr`, up to 26px) and beating back, and
+  leaning with the wind (`--ln`). The wings (`rigBat`, a bat seen from below: two short ears, the
+  leading edge to the wrist and its thumb, three scallops between the finger tips, the finger bones
+  a shade off the membrane, a scalloped tail membrane) each turn at the real shoulder through four
+  uneven strokes a beat (`batFlap`). That is three animations a bat. Every draw is seeded
+  (`mulberry(4110+i*97)`) and made before any gate, so a bat that gives way never moves the others,
+  and the loops take their phase off the wall clock. They are pulled toward the scene's own ink,
+  never the night's blue, so a bat is always darker than the sky it crosses, and the further ones
+  take a little of the air. They keep to open sky (`batColony`): over the far ridge at the farm,
+  over the far treeline and the oak, the pines and the heron on the coast (`skyTops`), inside the
+  frame, and off the sun, the moon (whatever size it is drawn, `moonR`) and the two times on the
+  arc. The turkey vulture goes to roost while they are out. Under reduced motion each one holds
+  still at its home spot. `tools/scene.mjs` walks every bat through its whole loop with its wings
+  at every stage of the stroke and fails one that leaves the frame, crosses a disc or a time, meets
+  an animal or a decoration, or goes behind the scenery, and a scene whose colony (`bats`) is not
+  the one the hour and the weather call for. `node tools/rig.mjs bat` shows one close up and at
+  phone size against an October dusk and an October night.
+- **A witch flies over both scenes on October nights.** She waits for the dark (the sun 6° under,
+  where dusk ends), and stays down in a storm, under thunder overhead, in anything heavier than
+  light rain (`rainK` .65 and up), freezing rain, heavy snow and fog. She rides the wind: she
+  flies downwind, at 30px a second in a calm and up to about 66 in a gale, leaning further over
+  the handle the harder it gusts, and she bobs and her cape flutters on the gusts. The gust is
+  taken in five-mile steps, so the live paint landing a moment after the cache does not move her.
+  When the moon is up and a straight line can cross it in open sky, her line runs through it with
+  her seat 3px under its middle, so the moon frames her and the broom and the cat run out past
+  it: a gentle climb the way she flies, steeper out of a low moon. The line keeps clear of the
+  sunrise and sunset times and above anything standing up into her sky (on the coast the oak, the
+  pines and the heron, the same `skyTops` the bats keep over), and when no line can do all of that
+  she leaves the moon alone and climbs across the open sky. That is honest rather than clever: a
+  moon low beside the sunrise time is not crossed. She is drawn with the kit (`propWitch`), side
+  on, about 34px long (`WS` .2): the pointed hat with its crooked tip, the handle and the fan of
+  twigs, the cape's three tatters with the plum lining along their undersides, and her black cat
+  on the twigs with its ears up, its yellow eyes and its tail in a hook. That silhouette is what
+  carries on a phone. The rest is for the close-up: the hooked nose and chin, the grin, her eye,
+  the hat band and belt, the cord round the twigs. The night takes her colours toward black,
+  never toward the sky's blue, which lifted her into the sky she has to stand out of, and she is
+  lit from where the moon really is (`lightAt`), so crossing it her lit edge is the moon's side.
+  She crosses once in each cycle, in its first 22%, and waits the rest just off the frame's edge,
+  so a cycle is about a minute in a calm and shorter in a blow. Her clock is the one in the scene
+  that is not the wall clock, on purpose: a crossing a minute taken off the wall clock would find
+  her off the frame more often than not when someone opens the app. Her first crossing starts
+  2.4s after the app is opened or comes back to the front (`WITCH_RUN`, retimed on
+  `visibilitychange` without a repaint), a re-render picks her up where she was, and while she is
+  crossing her direction and her cycle are held, so a wind that flips between refreshes never
+  turns her round on screen. She is three animations, all transforms (`witchCross`, `witchBob`,
+  `witchCape`). She flies behind the far treeline on the coast, and in front of the folds and
+  behind the barn and the trees at the farm, and in front of the bats, which she flies among.
+  Under reduced motion she holds still beside the moon, her nearest reach 3px off its disc so its
+  real phase still shows, or high in the sky without one. `tools/scene.mjs` walks her crossing on
+  her own clock at 320, 390 and 430 in every scene she is out in (`witch: true`) and fails one
+  where she is out when she should not be or missing when she should be there, starts or ends
+  inside the frame, has her hat cut by the frame's top, touches an animal or a decoration, passes
+  behind a sunrise or sunset time, has more than 15% of her hidden by a tree or the treeline, or
+  misses the moon her line was routed across (`data-across`), where her clock and the animation
+  disagree, and where under reduced motion she holds still over the disc. `node tools/rig.mjs
+  witch` shows her close up, at phone size, and on a moonlit night with the scene's darkening.
 - **The corn shock is tied high**, and its crown is broken stalk tops and dry leaves standing
   up and out, so at phone size it is a sheaf and never a figure in a dress. Only the leaves
   that break the silhouette take ink. The bale sits level on the ground, with its long side to
   us.
 - **The candle is lit when the barn lamps are** (the sun below -0.83°), and not in the rain or
-  a storm. Its flicker is the only thing Halloween adds that moves, and it moves with the air:
+  a storm. Its flicker is the only thing Halloween adds that moves on the ground (the bats and the witch are in the sky), and it moves with the air:
   steady under 3 mph of gust, guttering deeper and quicker up to 27 (`candleK`), and no
   animation at all in a calm or under PRM. Everything the candle lights is in one group, so it
   all flickers together. That is one animation per lit pumpkin: one on the coast, two at the
@@ -502,6 +576,30 @@ decorations coming down once each holiday passes. Halloween is the first.
   built only while they are out. `tools/scene.mjs` fails a scene whose
   decorations are not exactly the ones the date calls for, whose candles are lit when they
   should not be, or where a decoration runs off the frame or into an animal.
+- **The moon is Halloween's too, and it keeps its place and its phase.** Josh asked for "a creepy
+  blood moon ... or harvest moon" on October 3 2026, so both are drawn and one constant,
+  `HALLOWEEN_MOON` (`"blood"` or `"harvest"`, `null` for the ordinary moon all year), picks.
+  It is the exception the picture makes no claims for: a red moon would claim an eclipse, so it
+  is October's alone, read off the place's own calendar like the decorations, and everything
+  true about the moon stays true. It rides where `moonPos` puts it, the terminator is its real
+  phase, and only its colour, its glow and the harvest moon's size change. `halloweenMoon()` is
+  pure and test.mjs runs it. Both are drawn the Storybook way: a flat face, a hard shadow
+  crescent on the limb away from the sun and a warm edge on the limb toward it, inside the
+  phase, and the ink heavier on the shadow side. The blood moon is the rust red of a moon in
+  the earth's shadow, a dark maroon where it is unlit, inside a dark red haze. The harvest moon
+  is deep orange in a gold glow, a fifth again the ordinary disc high up and half again low over
+  the skyline, measured from the ridge's crest (about 22° up) at the farm, because that is the
+  moon illusion. After dark it is the whole colour, from just after sunset to the end of dusk. By
+  day it is a pale tint of it, the face only, because a red moon in a blue sky is just odd and a
+  shaded one reads as dirty. The glow follows the phase, so a crescent does not throw a full
+  moon's light. The ordinary moon is not veiled after dark, but a red or orange one shining
+  through a sky gone over is a claim, so above 60% cloud its glow goes first and then the disc
+  dims. Its light on the water and the lit edges of the scene warm toward its colour, a little
+  (`moonLight`). The Tonight card's moon and the farm's moon chart stay ordinary, because they
+  are readings. It adds no animation. It is `HALLOWEEN_MOON="blood"` until Josh says otherwise,
+  and the harvest moon is kept drawn and tested beside it, a one-word change away. In the scene it
+  is a decoration (`data-decor`, `blood-moon` or `harvest-moon`), and its disc (`data-disc`, with
+  `moonR`) is what the bats keep off and the witch crosses.
 
 ## Deploying
 
@@ -567,18 +665,21 @@ pill at now covers the skiff, measured at 390 and 900 and once more at 320, the 
 meet, where it also fails any section title whose note drops under it. It exits non-zero when one does not show what it
 is there for.
 
-`tools/scene.mjs` is for anything that moves. Thirty-one scenes force the light
+`tools/scene.mjs` is for anything that moves. Thirty-five scenes force the light
 and weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
 clear night, a storm, a fog morning, drizzle against a downpour, freezing rain on
 the coast, a night of rain over the marsh, and the ridge by day, by evening with
 the buck out, in warm rain, on a snow day, on a cold January night and in a night
-downpour. Twelve more are Halloween: the coast on an October afternoon, at golden hour
-and on a fog morning in October, on Halloween night, on a cold morning in the carved week
-with the cormorant on its piling, on a rainy night in it and at half past midnight on
-November 1 2026, the night the clocks go back,
-and the farm on an October afternoon, on an October night before the carving, on
-Halloween night, on a rainy night in the carved week and on the morning of November 1.
-On both November ones everything has to be gone. Each one with decorations out writes a
+downpour. Sixteen more are Halloween: the coast on an October afternoon, at golden hour,
+at dusk with the first bats out, and on a fog morning in October, on Halloween night with no
+moon, on a cold morning in the carved week with the cormorant on its piling, on a rainy night
+in it (bats and witch down), under the moon a night short of full in it with the witch crossing
+it, and at half past midnight on November 1 2026, the night the clocks go back, and the farm on
+an October afternoon, at dusk, on an October night before the carving, on Halloween night, on a
+rainy night in the carved week, under the same moon, and on the morning of November 1. On both
+November ones everything has to be gone, the moon's colour, the bats and the witch too: every
+scene fails whose moon is not Halloween's in October or not the ordinary one any other night,
+and the two moon scenes fail if it is not up. Each one with decorations out writes a
 close-up of them at 320 and at phone width. The Denver scenes (and the skyline check)
 went out with the trip; they are in git history before the commit that parked `den`, if the next trip wants a model.
 The ridge night downpour is there on purpose: dark theme, code 82, two rain layers
@@ -597,7 +698,10 @@ used to be).
 
 Two numbers worth knowing before you change motion: every scene idles at **0-2
 layouts per 6 seconds**, and the busiest scene runs **115 animations**. If either
-jumps, you have added something that is not a `transform` or an `opacity`.
+jumps, you have added something that is not a `transform` or an `opacity`. Halloween's nights
+are the other busy ones, legitimately: three animations a bat and three for the witch, so the
+coast under the moon with seven bats and the witch out runs about 105 and Halloween night
+there about 99 (the harness fails anything over 120).
 
 ## Time and place
 

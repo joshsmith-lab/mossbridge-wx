@@ -244,6 +244,63 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .hawk-circle{animation:circleDrift var(--hd,150s) ease-in-out infinite}
 @keyframes circleDrift{0%,100%{transform:translate(0,0)}25%{transform:translate(var(--cx,30px),var(--cy,-8px))}
   50%{transform:translate(0,var(--cy2,-15px))}75%{transform:translate(calc(var(--cx,30px) * -1),var(--cy,-8px))}}
+/* Halloween's bats (October only). A bat's wing never rests: each one turns at its own shoulder
+   through quick uneven strokes, folding a little on the way up the way a bat's hand does, with a
+   half-beat now and then as it turns. The outer group hunts a jinking loop round its own patch of
+   sky, banked into its turns, carried downwind across it (--dr, off the real wind) and beating
+   back, and leaning with the wind (--ln). Three loops, so the colony never flies in step. */
+#sceneSvg .bat-wing,#sceneSvg .bat-fly{transform-box:view-box;transform-origin:0 0}
+#sceneSvg .bat-wing{animation:batFlap .6s ease-in-out infinite}
+@keyframes batFlap{0%,100%{transform:rotate(calc(var(--wd)*-34deg)) scaleX(.74)}13%{transform:rotate(calc(var(--wd)*30deg)) scaleX(1)}
+  27%{transform:rotate(calc(var(--wd)*-30deg)) scaleX(.78)}41%{transform:rotate(calc(var(--wd)*36deg)) scaleX(1)}
+  55%{transform:rotate(calc(var(--wd)*-24deg)) scaleX(.82)}67%{transform:rotate(calc(var(--wd)*20deg)) scaleX(1)}
+  80%{transform:rotate(calc(var(--wd)*-8deg)) scaleX(.95)}89%{transform:rotate(calc(var(--wd)*12deg)) scaleX(1)}}
+#sceneSvg .bat-a{animation:batHuntA var(--bd,4.6s) linear infinite}
+#sceneSvg .bat-b{animation:batHuntB var(--bd,4.6s) linear infinite}
+#sceneSvg .bat-c{animation:batHuntC var(--bd,4.6s) linear infinite}
+@keyframes batHuntA{0%,100%{transform:translate(0px,0px) rotate(var(--ln))}
+  9%{transform:translate(calc(var(--rx)*.45 + var(--dr)*.1),calc(var(--ry)*-.6)) rotate(calc(var(--ln) + var(--sx)*-12deg))}
+  17%{transform:translate(calc(var(--rx)*.9 + var(--dr)*.2),calc(var(--ry)*-.45)) rotate(calc(var(--ln) + var(--sx)*8deg))}
+  22%{transform:translate(calc(var(--rx)*1 + var(--dr)*.27),calc(var(--ry)*.15)) rotate(calc(var(--ln) + var(--sx)*18deg))}
+  26%{transform:translate(calc(var(--rx)*.7 + var(--dr)*.33),calc(var(--ry)*.55)) rotate(calc(var(--ln) + var(--sx)*-14deg))}
+  35%{transform:translate(calc(var(--rx)*.2 + var(--dr)*.45),calc(var(--ry)*.3)) rotate(calc(var(--ln) + var(--sx)*-6deg))}
+  44%{transform:translate(calc(var(--rx)*-.35 + var(--dr)*.58),calc(var(--ry)*.75)) rotate(calc(var(--ln) + var(--sx)*10deg))}
+  52%{transform:translate(calc(var(--rx)*-.8 + var(--dr)*.7),calc(var(--ry)*.5)) rotate(calc(var(--ln) + var(--sx)*16deg))}
+  57%{transform:translate(calc(var(--rx)*-1 + var(--dr)*.78),calc(var(--ry)*-.1)) rotate(calc(var(--ln) + var(--sx)*-8deg))}
+  63%{transform:translate(calc(var(--rx)*-.65 + var(--dr)*.9),calc(var(--ry)*-.75)) rotate(calc(var(--ln) + var(--sx)*-16deg))}
+  71%{transform:translate(calc(var(--rx)*-.15 + var(--dr)*1),calc(var(--ry)*-1)) rotate(calc(var(--ln) + var(--sx)*4deg))}
+  78%{transform:translate(calc(var(--rx)*.25 + var(--dr)*.8),calc(var(--ry)*-.55)) rotate(calc(var(--ln) + var(--sx)*14deg))}
+  84%{transform:translate(calc(var(--rx)*.05 + var(--dr)*.55),calc(var(--ry)*.05)) rotate(calc(var(--ln) + var(--sx)*-10deg))}
+  92%{transform:translate(calc(var(--rx)*-.2 + var(--dr)*.25),calc(var(--ry)*-.3)) rotate(calc(var(--ln) + var(--sx)*6deg))}}
+@keyframes batHuntB{0%,100%{transform:translate(0px,0px) rotate(var(--ln))}
+  8%{transform:translate(calc(var(--rx)*.55 + var(--dr)*.12),calc(var(--ry)*-.35)) rotate(calc(var(--ln) + var(--sx)*10deg))}
+  14%{transform:translate(calc(var(--rx)*.95 + var(--dr)*.2),calc(var(--ry)*-.8)) rotate(calc(var(--ln) + var(--sx)*18deg))}
+  19%{transform:translate(calc(var(--rx)*.75 + var(--dr)*.26),calc(var(--ry)*-.2)) rotate(calc(var(--ln) + var(--sx)*-20deg))}
+  24%{transform:translate(calc(var(--rx)*.9 + var(--dr)*.33),calc(var(--ry)*.5)) rotate(calc(var(--ln) + var(--sx)*-6deg))}
+  33%{transform:translate(calc(var(--rx)*.35 + var(--dr)*.45),calc(var(--ry)*.8)) rotate(calc(var(--ln) + var(--sx)*12deg))}
+  40%{transform:translate(calc(var(--rx)*-.25 + var(--dr)*.55),calc(var(--ry)*.35)) rotate(calc(var(--ln) + var(--sx)*-10deg))}
+  46%{transform:translate(calc(var(--rx)*-.7 + var(--dr)*.64),calc(var(--ry)*.85)) rotate(calc(var(--ln) + var(--sx)*-18deg))}
+  51%{transform:translate(calc(var(--rx)*-1 + var(--dr)*.72),calc(var(--ry)*.2)) rotate(calc(var(--ln) + var(--sx)*14deg))}
+  58%{transform:translate(calc(var(--rx)*-.75 + var(--dr)*.82),calc(var(--ry)*-.5)) rotate(calc(var(--ln) + var(--sx)*20deg))}
+  65%{transform:translate(calc(var(--rx)*-.3 + var(--dr)*.92),calc(var(--ry)*-.95)) rotate(calc(var(--ln) + var(--sx)*-6deg))}
+  72%{transform:translate(calc(var(--rx)*.1 + var(--dr)*1),calc(var(--ry)*-.4)) rotate(calc(var(--ln) + var(--sx)*-16deg))}
+  80%{transform:translate(calc(var(--rx)*.5 + var(--dr)*.75),calc(var(--ry)*-.1)) rotate(calc(var(--ln) + var(--sx)*8deg))}
+  87%{transform:translate(calc(var(--rx)*.2 + var(--dr)*.45),calc(var(--ry)*.45)) rotate(calc(var(--ln) + var(--sx)*-12deg))}
+  94%{transform:translate(calc(var(--rx)*-.15 + var(--dr)*.2),calc(var(--ry)*.2)) rotate(calc(var(--ln) + var(--sx)*6deg))}}
+@keyframes batHuntC{0%,100%{transform:translate(0px,0px) rotate(var(--ln))}
+  10%{transform:translate(calc(var(--rx)*.5 + var(--dr)*.12),calc(var(--ry)*-.7)) rotate(calc(var(--ln) + var(--sx)*-14deg))}
+  18%{transform:translate(calc(var(--rx)*1 + var(--dr)*.22),calc(var(--ry)*-.3)) rotate(calc(var(--ln) + var(--sx)*10deg))}
+  25%{transform:translate(calc(var(--rx)*.65 + var(--dr)*.31),calc(var(--ry)*.4)) rotate(calc(var(--ln) + var(--sx)*18deg))}
+  31%{transform:translate(calc(var(--dr)*.4),0px) rotate(calc(var(--ln) + var(--sx)*-4deg))}
+  38%{transform:translate(calc(var(--rx)*-.5 + var(--dr)*.5),calc(var(--ry)*-.65)) rotate(calc(var(--ln) + var(--sx)*-16deg))}
+  46%{transform:translate(calc(var(--rx)*-1 + var(--dr)*.6),calc(var(--ry)*-.25)) rotate(calc(var(--ln) + var(--sx)*8deg))}
+  53%{transform:translate(calc(var(--rx)*-.75 + var(--dr)*.7),calc(var(--ry)*.55)) rotate(calc(var(--ln) + var(--sx)*16deg))}
+  58%{transform:translate(calc(var(--rx)*-.35 + var(--dr)*.78),calc(var(--ry)*.8)) rotate(calc(var(--ln) + var(--sx)*-10deg))}
+  64%{transform:translate(calc(var(--rx)*.1 + var(--dr)*.88),calc(var(--ry)*.3)) rotate(calc(var(--ln) + var(--sx)*-18deg))}
+  70%{transform:translate(calc(var(--rx)*.45 + var(--dr)*.97),calc(var(--ry)*.9)) rotate(calc(var(--ln) + var(--sx)*6deg))}
+  76%{transform:translate(calc(var(--rx)*.8 + var(--dr)*1),calc(var(--ry)*.35)) rotate(calc(var(--ln) + var(--sx)*14deg))}
+  83%{transform:translate(calc(var(--rx)*.35 + var(--dr)*.7),calc(var(--ry)*-.25)) rotate(calc(var(--ln) + var(--sx)*-8deg))}
+  91%{transform:translate(calc(var(--rx)*-.1 + var(--dr)*.35),calc(var(--ry)*-.4)) rotate(calc(var(--ln) + var(--sx)*10deg))}}
 /* a tail is the first thing that moves on a deer that has not decided to leave */
 .deer-tail{transform-box:fill-box;transform-origin:90% 6%;animation:tailFlick 14.5s ease-in-out infinite}
 @keyframes tailFlick{0%,62%,100%{transform:rotate(0)}65%{transform:rotate(16deg)}68%{transform:rotate(-9deg)}
@@ -287,6 +344,16 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
    the first (--c0, then --c2), among smaller flutters (--c1) */
 #sceneSvg .candle.flicker{animation:candle 2.4s ease-in-out infinite}
 @keyframes candle{0%,100%{opacity:1}7%{opacity:var(--c1,.9)}12%{opacity:.98}27%{opacity:var(--c1,.9)}31%{opacity:var(--c0,.8)}44%{opacity:1}60%{opacity:.97}66%{opacity:var(--c1,.9)}74%{opacity:var(--c2,.85)}79%{opacity:var(--c1,.9)}90%{opacity:1}}
+/* the witch crosses once in each cycle, in the first 22% of it, and spends the rest of it off the
+   frame's edge; the bob and the cape's flutter come off the gusts (see witchFly in the script).
+   They pivot on her middle and on her shoulders, so their origin is the joint's own 0 0 */
+#sceneSvg .witch-cross{animation:witchCross var(--wd,60s) linear infinite}
+@keyframes witchCross{0%{transform:translate(var(--wx0,-40px),var(--wy0,60px))}22%,100%{transform:translate(var(--wx1,440px),var(--wy1,50px))}}
+#sceneSvg .witch-bob,#sceneSvg .witch-cape{transform-box:view-box;transform-origin:0 0}
+#sceneSvg .witch-bob{animation:witchBob var(--wbd,3s) ease-in-out infinite alternate}
+@keyframes witchBob{from{transform:translateY(var(--wba,1px)) rotate(var(--wbr,1deg))}to{transform:translateY(calc(var(--wba,1px) * -1)) rotate(calc(var(--wbr,1deg) * -1))}}
+#sceneSvg .witch-cape{animation:witchCape var(--wcd,1s) ease-in-out infinite alternate}
+@keyframes witchCape{from{transform:rotate(var(--wc,2deg))}to{transform:rotate(calc(var(--wc,2deg) * -.7))}}
 .city-beacon{opacity:.15;animation:cityBeacon var(--beacon-d,7s) ease-in-out infinite}
 @keyframes cityBeacon{0%,78%,100%{opacity:.12}82%,87%{opacity:.82}91%{opacity:.12}}
 .fox-head{animation:foxSniff 31s ease-in-out infinite}
@@ -760,6 +827,40 @@ const inSeason=(d,r)=>{if(!r)return false;const md=mdOf(d);return r[0]<=r[1]?md>
    is soft inside a week. */
 const HOLIDAYS=[{id:"halloween",window:["10-01","10-31"],carved:"10-24"}];
 const holidayOn=d=>HOLIDAYS.find(h=>inSeason(d,h.window))||null;
+/* Halloween's moon, Josh's pick (October 3 2026: "a creepy blood moon ... or harvest moon"). For
+   the October window the scene's moon is "blood", the rust red of a moon in the earth's shadow,
+   or "harvest", the big orange moon low over the field. Either way it keeps its real place and its
+   real phase, and only its colour, its glow and (for the harvest moon) its size change. null is the
+   ordinary moon all year. It is a picture, not a claim: there is no eclipse in it. */
+const HALLOWEEN_MOON="blood";
+/* Each kind at full strength, after dark. The face is flat colour, with a hard shadow crescent on
+   the limb away from the sun and a warm edge on the limb toward it, the Storybook way. */
+const HMOON={
+  blood:{lit:"#A63E28",litLow:"#9A3522",shade:"#4E1712",edge:"#F0905E",unlit:"#3A0F0D",unlitOp:.6,crater:"#3E0F0C",craterOp:.42,off:.26,
+    glow:["#C23A26","#7A1A12"],glowOp:[.6,.26],glowR:3.3,haze:["#8E1F15",.24,6.5],ring:"#C9604A",glint:"#D9705A",light:"#E39784",grow:0,growLow:0},
+  harvest:{lit:"#EE9A3A",litLow:"#E0732A",shade:"#B85A20",edge:"#FFD88E",unlit:"#2C2232",unlitOp:.55,crater:"#A04E18",craterOp:.3,off:.2,
+    glow:["#FFC350","#F29632"],glowOp:[.56,.2],glowR:2.8,haze:["#F0A040",.12,5.5],ring:"#FFD68C",glint:"#FFC46E",light:"#F6C886",grow:.2,growLow:.36},
+};
+/* the ordinary moon in the same terms, which a Halloween moon is mixed from by day */
+const MOON_DAY={lit:"#F6F1DE",litLow:"#F6F1DE",shade:"#E2DAC2",edge:"#FFFFFF",unlit:"#FFFFFF",unlitOp:.28,crater:"#14313F",craterOp:.13,
+  glow:["#EAF2FF","#EAF2FF"],glowR:2.36,ring:"#DDE8FF",glint:"#E8F1FA",light:"#B9CCEE"};
+/* How a Halloween moon looks at this moment. After dark it is the whole colour, from just after
+   sunset (.6) to the end of dusk (1). By day it is a pale tint of it (.25), because a red moon in a
+   blue sky is just odd. The harvest moon is larger than the ordinary disc and largest low over the
+   skyline (the moon illusion), so it is measured from where the scene's horizon is, the ridge's
+   crest standing about 22° up. Pure, and test.mjs runs it. */
+function halloweenMoon(kind,{altDeg,sunAltDeg,up,skyAlt=0}){
+  const H=HMOON[kind];if(!H)return null;
+  const k=up?.25:clamp(.6+(-sunAltDeg)/6*.4,.6,1),low=clamp(1-(altDeg-skyAlt)/30,0,1);
+  /* the face takes the tint by day, and the shading only after dark, or the pale day moon reads as
+     a dirty one */
+  const kk=k*k,m=(key,t=k)=>mix(MOON_DAY[key],H[key],t);
+  return{kind,k,low,r:+(11*(1+k*(H.grow+H.growLow*low))).toFixed(2),
+    lit:mix(m("lit"),mix(MOON_DAY.lit,H.litLow,k),low),shade:mix(m("lit"),m("shade",kk),kk),edge:m("edge",kk),unlit:m("unlit",kk),
+    unlitOp:MOON_DAY.unlitOp+(H.unlitOp-MOON_DAY.unlitOp)*kk,crater:m("crater",kk),craterOp:MOON_DAY.craterOp+(H.craterOp-MOON_DAY.craterOp)*kk,
+    glow:[mix(MOON_DAY.glow[0],H.glow[0],k),mix(MOON_DAY.glow[1],H.glow[1],k)],glowOp:H.glowOp,glowR:MOON_DAY.glowR+(H.glowR-MOON_DAY.glowR)*k,
+    off:H.off,haze:[H.haze[0],H.haze[1]*k*k,H.haze[2]],ring:m("ring"),glint:m("glint"),light:mix(MOON_DAY.light,H.light,.5*k)};
+}
 let LOC;try{const saved=localStorage.getItem("mbwx-loc");LOC=LOC_ORDER.includes(saved)?LOCS[saved]:LOCS.mb}catch(e){LOC=LOCS.mb}
 let LAT=LOC.lat, LON=LOC.lon;
 
@@ -1125,6 +1226,20 @@ function paintBolts(){
 /* 0 no thunder, 1 thunder in the area, 2 thunder overhead. Set in render() from three
    readings and read by both the sky effects and the scene. */
 let THUNDER=0;
+/* The witch's clock (witchFly in renderScene). It is not the wall clock: a crossing every minute or
+   so taken off the wall clock would find her off the frame more often than not when someone opens
+   the app at night. So her first crossing starts 2.4s after the app is opened or comes back to the
+   front (t0), and a re-render in between (the live forecast landing on the cache, a resize) picks
+   her up where she was. While she is crossing, her direction and her cycle (d, C) are held, so a
+   wind that flips or steps up between refreshes never turns her round or jumps her on screen */
+let WITCH_RUN=null;
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden||!WITCH_RUN)return;
+  WITCH_RUN.t0=WITCH_RUN.open=Date.now()+2400;
+  /* back to the front: set her going again from where she waits, with no repaint needed */
+  const a=document.querySelector("#sceneSvg .witch-cross")?.getAnimations().find(x=>x.animationName==="witchCross");
+  if(a){const D=WITCH_RUN.C*1e3;a.currentTime=((D-2400+(a.effect.getTiming().delay||0))%D+D)%D}
+});
 
 /* ── Storybook ink: the drawing kit ─────────────────────────────────────────────
    Every object in both scenes is drawn once, as a list of closed parts that each carry a
@@ -1774,6 +1889,71 @@ const propGhostface=(tip=.28,z=1.22)=>{
 const SEASON_BLADE=[["#E4CFA0","#B8A070","#7A6446"],["#E4CFA0","#B8A070","#7A6446"],["#DCCB94","#A9A064","#6E6842"],
   ["#C8D878","#86A84A","#4E6A30"],["#D9CF6A","#8DAA4A","#4E6A30"],["#D9CF6A","#8DAA4A","#4E6A30"],["#D9CF6A","#8DAA4A","#4E6A30"],
   ["#D9CF6A","#8DAA4A","#4E6A30"],["#D9CF6A","#8DAA4A","#4E6A30"],["#E6C36A","#AE9A48","#6A5A30"],["#E4C890","#B09A60","#76603C"],["#E4CFA0","#B8A070","#7A6446"]];
+/* The witch on her broom, for October nights. Side on and flying toward +x, drawn at five units
+   to the screen pixel with y=0 along the top of the broom handle and x=0 where she sits. What has
+   to survive on a phone is the silhouette: the pointed hat with its crooked tip, the long handle
+   and the fan of twigs, the cape streaming back, and the cat's two ears at the back of the broom.
+   Close up she has the rest: the hooked nose and the chin, a cackle-wide grin, an eye that
+   catches the moon, a hat band, the cord round the twigs and the cat's yellow eyes. The cape is
+   its own joint at her shoulders (witch-cape), so it flutters in the air she flies through. */
+const propWitch=()=>{
+  const r=mulberry(1031),noSil={noSil:true};
+  /* the far boot hangs a step behind the near one */
+  const far=[pTaper([[9,8,3],[11.5,13.6,2.7],[16.5,15.4,2],[21,14.2,.3]],"bootFar")];
+  /* a crooked handle, a knob at its head, and the twigs fanning out behind her, bound twice */
+  const broom=[pTaper([[-46,1.8,3.8],[-20,1.4,3.5],[8,.9,3.3],[36,.2,3],[60,-.6,2.7],[70,-1.6,2.9]],"wood"),pDot(71,-1.9,2.3,"wood"),
+    pBlob([[33.4,-2.6],[36.4,-3],[38.2,-1.2],[37.4,1.4],[34.4,1.6],[32.8,-.2]],"skinFar"),
+    pBlob([[-38,-3.4],[-52,-5.8],[-66,-7.6],[-76,-6.4],[-79,3.4],[-70,10.8],[-54,9],[-38,5.8]],"straw")];
+  for(let i=0;i<9;i++){const u=i/8,y0=-2.8+u*8.2,y1=-12.5+u*28+(r()-.5)*2.6,x1=-89-r()*8+Math.abs(u-.5)*7;
+    broom.push(pTaper([[-42,y0,3.4],[-64,(y0+y1)/2+(r()-.5)*1.4,2.8],[x1,y1,.35]],"straw"))}
+  for(const[x,w]of[[-41.5,2.4],[-47,1.9]])broom.push(pTaper([[x,-4.2-(x+41.5)*.12,w],[x+.4,1,w],[x+.8,6.2+(-41.5-x)*.25,w]],"cord",{},noSil));
+  for(let i=0;i<4;i++){const y=-1.5+i*2.6;broom.push(pTaper([[-50,y,.5],[-64,y*1.35,.6],[-76,y*1.7,.3]],"detail"))}
+  /* the cat rides the twigs, facing us: a round head, two tall ears, and its tail up in a hook */
+  const cat=[pBlob([[-64.5,-5.4],[-66,-10.6],[-64,-16.4],[-59.8,-19.4],[-55.6,-18.8],[-53.4,-13.6],[-53,-8.2],[-54,-5.4]],"cat"),
+    pBlob([[-62.4,-22.6],[-61.4,-26.2],[-57.6,-27.6],[-53.8,-26.2],[-52.8,-22.6],[-54.2,-19.4],[-57.6,-18.4],[-61,-19.4]],"cat"),
+    pTaper([[-60.6,-25,4.4],[-61.3,-28.4,2.4],[-61.8,-31.8,.25]],"cat"),pTaper([[-54.6,-25,4.4],[-53.9,-28.4,2.4],[-53.4,-31.8,.25]],"cat"),
+    pTaper([[-64,-7.4,2.8],[-69.4,-9.6,2.3],[-72,-15.6,1.9],[-70.4,-21.6,1.4],[-67,-23.6,.9],[-65.6,-21.4,.3]],"cat"),
+    pDot(-59.4,-22.6,1.5,"eye"),pDot(-55.8,-22.6,1.5,"eye")];
+  /* the cape off her shoulders, three tatters at its trailing edge, a plum lining showing under it */
+  const cape=[pBlob([[2,-30.6],[-6,-32.2],[-16,-31.8],[-26,-30],[-33,-27.8],[-30,-23.4],[-26,-19],[-21.5,-14.6],[-15,-11.2],[-8,-11.4],[-3,-16.4]],"cape"),
+    pTaper([[-24,-28,5.6],[-33,-27.4,3],[-42,-27,.3]],"cape"),pTaper([[-23,-21.6,5.2],[-31,-19,3],[-39,-16.6,.3]],"cape"),
+    pTaper([[-18.5,-14.4,4.4],[-26,-11.8,2.4],[-32.5,-9.6,.3]],"cape"),
+    pTaper([[-4,-15.6,1.6],[-14,-12.6,2.4],[-22,-15.4,1.6],[-28,-19.6,.4]],"lining",{},noSil),
+    /* the lining shows along the underside of each tatter as it streams, so the cape's plum still
+       reads at phone size on a night with no moon */
+    pTaper([[-22,-19.8,1.8],[-30,-17.6,1.3],[-37,-16.4,.2]],"lining",{},noSil),pTaper([[-18,-13,1.6],[-25,-10.8,1.1],[-31,-9.8,.2]],"lining",{},noSil),
+    pTaper([[-24,-26.4,1.6],[-32,-26.2,1],[-39,-26.6,.2]],"lining",{},noSil)];
+  /* her skirt over the broom, her back bent over the handle, an arm out to it with the sleeve's
+     point hanging under the wrist, and the near boot with its toe curled up */
+  const body=[pBlob([[-13,-8],[2,-8.6],[12,-6],[17,-1],[17.6,6],[13,9.6],[6,10.6],[-2,11.6],[-10,11.4],[-17,9],[-14,3]],"robe"),
+    pTaper([[-8,9,5],[-16,10.6,2.6],[-24.5,11.4,.3]],"robe"),
+    pBlob([[-11,-6],[-10,-15],[-5.6,-25],[0,-30.6],[6.6,-30],[10.6,-24.6],[11,-16],[8,-7]],"robe"),
+    pTaper([[15.4,6.6,3.8],[18.4,11.6,3.3],[24,13.8,2.4],[28.2,12.8,1.2],[29.4,10.6,.3]],"boot"),
+    pTaper([[5,-26,6.6],[13.6,-18,5.1],[22,-8.6,4.3],[27,-3.6,3.6]],"robe"),
+    pTaper([[22.4,-6.6,3.8],[21.2,-2.8,2.4],[19.6,.8,.3]],"robe"),
+    pBlob([[26,-3.8],[29.6,-4.2],[31.8,-2.2],[31.2,.8],[28,1.8],[25.8,0]],"skin"),
+    pTaper([[-10.4,-9.6,2.4],[-1,-9.8,2.8],[8.6,-8.4,2.4]],"band"),
+    pTaper([[3,-5.6,.5],[6.4,1,.9],[7.2,8.8,.4]],"fold",{},noSil),pTaper([[-5,-5.8,.5],[-6.6,2,.9],[-9.6,9.6,.4]],"fold",{},noSil),
+    pTaper([[2,-27.6,.4],[-2.6,-20,.8],[-6.4,-12,.4]],"fold",{},noSil),pTaper([[12,-21.6,.4],[17,-14.6,.7],[21.4,-9,.3]],"fold",{},noSil)];
+  /* her head: straggling hair streaming back, the hooked nose, the chin, the grin and the eye,
+     and the hat, its brim curved and its crown bent back in the wind of her going */
+  const hs=pts=>pts.map(([x,y,w])=>[12.6+(x-12.6)*1.12,-42.2+(y+42.2)*1.12,w*1.12]);
+  const head=[pTaper([[8,-38.4,3.2],[1,-38.4,2.6],[-6,-35.6,1.8],[-11,-36.2,1.1],[-16.5,-34.4,.3]],"hair"),
+    pTaper([[7,-35,3],[0,-32.6,2.2],[-4.6,-29.6,1.4],[-9.6,-29.8,.3]],"hair"),pTaper([[9,-40,2.6],[2,-41.6,1.9],[-3.4,-40.6,1.2],[-8.6,-42.4,.3]],"hair"),
+    pTaper([[6.6,-32.6,2.2],[2.6,-27.6,1.5],[-1.6,-25.4,.3]],"hair"),
+    pBlob([[7,-37],[9.6,-40.6],[14,-41.6],[18,-39.6],[19.6,-36],[19.6,-32.6],[18.6,-29],[15.6,-27],[11,-27.6],[7.6,-31]],"skin"),
+    pTaper([[17.4,-36.6,3.6],[22.2,-34,2.3],[27.4,-30.8,.3]],"skin"),pTaper([[16,-29.2,4.2],[19.6,-27.2,2.5],[23,-24.8,.3]],"skin"),
+    pTaper(hs([[-4.4,-38.4,1.2],[4,-41,3.5],[12.6,-42.2,4.3],[21,-41.4,3.5],[28.8,-38.4,1.1]]),"hat"),
+    pTaper(hs([[12.6,-43,13.8],[10,-51,10.2],[7,-58,6.6],[1,-63.6,3.9],[-6,-66.2,2.1],[-12.4,-64.6,.35]]),"hat"),
+    pTaper(hs([[6.2,-45.4,2.7],[12.6,-46,2.9],[18.8,-45,2.7]]),"band"),
+    pTaper(hs([[9.4,-55,.4],[6.6,-59.4,.8],[2.6,-62.2,.3]]),"fold",{},noSil),
+    pTaper([[12.8,-32.6,.5],[14.8,-30.4,1.2],[17.2,-29.4,1.5],[19.8,-30.6,.4]],"mark"),
+    pTaper([[13.2,-37.8,.45],[15.8,-38.6,.95],[18,-37.6,.3]],"detail"),
+    pDot(15.8,-35.6,1.15,"eye")];
+  return[{parts:far},{parts:broom},{parts:cat},{open:`<g class="witch-cape">`,pivot:[1,-28],layers:[{parts:cape}]},{parts:body},{parts:head}]};
+/* her extent in her own units, measured from her seat on the handle (0 0), so the scene can keep
+   her whole hat and twigs off the frame's edge before she comes in */
+const WITCH_BOX=[-94,-71,76,17];
 /* Great horned owl on its own branch, frontal; y=0 is the top of the branch it grips. Ear
    tufts, a rust facial disc with a dark rim, big yellow eyes, a white bib, a barred breast.
    The eyes are their own joint so the blink closes them onto the eye line */
@@ -2309,6 +2489,40 @@ const rigCardinal=()=>[
     pTaper([[3.2,-17.6,0.3],[6.8,-15.2,0.4],[9.8,-11.9,0.2]],"detail"),
     pTaper([[-1.6,-13.8,0.4],[2.4,-12.8,0.5],[6.6,-11,0.3]],"detail"),
     pTaper([[6.8,-10,0.4],[10,-8.6,0.4],[12.6,-7.2,0.18]],"detail")]}];
+/* Halloween's bat, seen from below with its wings spread, the way you see one over the yard at
+   dusk. It is a silhouette first, because in the sky it is about fifteen pixels across: the two
+   little ears, and the wing that makes it a bat and not a bird, its leading edge running up to
+   the wrist and its trailing edge cut into three scallops between the finger tips and back to the
+   ankle. The finger bones run out from the wrist inside the membrane, a shade off it. Each wing
+   turns at its own shoulder, so the flap pivots on the real joint. Local units: the middle of the
+   chest is 0 0, the wingspan about 25. beat(side) is the wing's timing, side 1 the right wing and
+   -1 the left */
+const rigBat=(beat=()=>"")=>{const open=side=>`<g class="bat-wing bat-w${side<0?"l":"r"}"${beat(side)?` style="${beat(side)}"`:""}>`;
+  /* the wrist, where the finger bones start; a scallop (Qs) is the membrane between two finger
+     tips, sagging in toward it */
+  const W=[5.7,-3.7];
+  const S=[1.2,-1.3],T3=[12.6,-1.5],T4=[10.6,2.1],T5=[7,3.4],A=[2.1,3.3];
+  /* one wing, drawn for the right side; the left is the same wing with its x's turned over */
+  const wingParts=sx=>{const X=([x,y,w])=>w==null?[x*sx,y]:[x*sx,y,w],P=q=>P2(X(q)),
+    Qs=(a,b,k)=>{const m=[(a[0]+b[0])/2,(a[1]+b[1])/2],d=Math.hypot(b[0]-a[0],b[1]-a[1]),v=[W[0]-m[0],W[1]-m[1]],l=Math.hypot(...v);
+      return `Q ${P([m[0]+v[0]/l*d*k,m[1]+v[1]/l*d*k])} ${P(b)}`};
+    return [
+      part(`M ${P(S)} Q ${P([3.2,-3.4])} ${P(W)} L ${P([5.9,-4.6])} L ${P([6.6,-3.8])} Q ${P([9.8,-3.6])} ${P(T3)} ${Qs(T3,T4,.44)} ${Qs(T4,T5,.5)} ${Qs(T5,A,.34)} L ${P([1.3,2.3])} Q ${P([1.6,.4])} ${P(S)} Z`,"wing"),
+      pTaper([[...W,.42],[9.4,-2.7,.32],[T3[0]-.5,T3[1]+.1,.12]].map(X),"detail"),
+      pTaper([[...W,.4],[8.5,-.6,.3],[T4[0]-.3,T4[1]-.3,.12]].map(X),"detail"),
+      pTaper([[...W,.38],[6.6,.2,.28],[T5[0]-.1,T5[1]-.4,.12]].map(X),"detail")]};
+  return [
+    {open:open(-1),pivot:[-S[0],S[1]],layers:[{parts:wingParts(-1)}]},
+    {open:open(1),pivot:S,layers:[{parts:wingParts(1)}]},
+    {parts:[
+      /* the tail membrane between the feet, scalloped like the wings, then the body, the head
+         and the short pointed ears, which stand up and a little out */
+      part(`M -2.3 3.1 Q -1.3 3.5 -.9 4.6 Q -.4 4.2 0 4.9 Q .4 4.2 .9 4.6 Q 1.3 3.5 2.3 3.1 Q 1.2 2.4 0 2.6 Q -1.2 2.4 -2.3 3.1 Z`,"wing"),
+      pBlob([[0,-2],[1.25,-1.5],[1.6,0],[1.35,1.7],[.7,2.9],[0,3.3],[-.7,2.9],[-1.35,1.7],[-1.6,0],[-1.25,-1.5]],"body"),
+      pBlob([[0,-4.2],[1.1,-3.9],[1.5,-2.9],[1.1,-1.9],[0,-1.6],[-1.1,-1.9],[-1.5,-2.9],[-1.1,-3.9]],"body"),
+      pTaper([[-.55,-3.6,1.5],[-1.05,-4.6,.9],[-1.55,-5.6,.1]],"body"),
+      pTaper([[.55,-3.6,1.5],[1.05,-4.6,.9],[1.55,-5.6,.1]],"body")]}];
+};
 /* palettes: day colours per role. The scene sets ink, shade and lit from its own light */
 const INK={
   deer:{body:"#B87A4A",far:"#8A5636",tail:"#FBF3E4",detail:"#8A5636",mark:"#FBF3E4",antler:"#EAD6AC",antlerFar:"#B9A077",eye:"#1B1420",eyeRing:"#FBF3E4",nose:"#241A26",hoof:"#2A1B33",ink:"#2A1B33",shade:"#3A2350",lit:"#FFE2A8",litOp:0.6},
@@ -2339,6 +2553,15 @@ const INK={
   /* the face behind the live oak: the robe and its hood a soft black, so the mask is the one
      clean white in the crown, and the eyes and the mouth a deeper black than the cloth */
   ghostface:{robe:"#1A1820",hood:"#26232D",mask:"#F5F3EE",eye:"#07060A",ink:"#2A1B33",shade:"#3A2350",lit:"#FFE6B0",litOp:0.45},
+  /* Halloween's bats: brown fur and a near-black membrane, with the finger bones a shade off it.
+     The scene keeps them darker than any night sky they cross */
+  bat:{body:"#4A3833",wing:"#2C2228",detail:"#4C3D44",ink:"#1A1216",shade:"#0E0A12",lit:"#E2CFE6",litOp:0.4},
+  /* the witch flies against the night, so she is near-black all over and the moon gives her
+     her edge (litOp is high for that). Only close up do the colours inside the silhouette tell:
+     the green of her face, the plum of the cape's lining and the hat band, the straw and the
+     cord, the grin, and her eye and the cat's, which keep their shine at night */
+  witch:{robe:"#25202E",cape:"#2E2142",lining:"#74305F",hat:"#231C30",band:"#6E3E86",skin:"#4A6440",skinFar:"#3A5034",hair:"#3A3F4C",fold:"#2F2A3A",mark:"#EFE3B8",detail:"#4E3E22",
+    wood:"#3E2C20",straw:"#5E4C2E",cord:"#7E3C2A",boot:"#17121C",bootFar:"#100C14",cat:"#15121A",eye:"#F4E27A",ink:"#2A1B33",shade:"#3A2350",lit:"#FFE6B0",litOp:0.9},
   bale:{straw:"#CFAA5A",flake:"#D3AE5E",top:"#EFD896",end:"#E0C070",endLt:"#EFD999",endDk:"#CFAF62",seam:"#C2A052",stub:"#BA9A4E",stubLt:"#E4C880",band:"#A47C48",ink:"#2A1B33",shade:"#5A4450",lit:"#FFF0C4",litOp:0.5},
 };
 
@@ -2442,7 +2665,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const dayFrac=(now-sunrise)/(sunset-sunrise);
   const up=dayFrac>0&&dayFrac<1;
   const veil=clamp(cloud/100,0,1);               /* cloud hides the disc */
-  let body="",moonBody="",glintX=null,glintCol="#FFD98F",glintOp=0,sunXY=null,moonXY=null;
+  let body="",moonBody="",glintX=null,glintCol="#FFD98F",glintOp=0,sunXY=null,moonXY=null,moonR=11,moonLight="#B9CCEE";
   if(up){
     const f=clamp(dayFrac,0,1), x=px(f), y=py(f);
     const low=Math.sin(Math.PI*f)<.28;
@@ -2473,14 +2696,47 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     const az=(mp.az*180/Math.PI+180+360)%360;           /* 0=N, 90=E */
     const f=clamp((az-60)/240,.02,.98);
     const x=px(f), y=GY-Math.sin(clamp(mp.alt,0,Math.PI/2))*(GY-arcTop)*1.05;
-    const r=11, ill=mph.fraction, ph=mph.phase;
+    /* in October the moon is Halloween's (HALLOWEEN_MOON), in its own place and phase */
+    const hm=HALLOWEEN_MOON&&holidayOn(locToday())?.id==="halloween"?halloweenMoon(HALLOWEEN_MOON,{altDeg:mp.alt*180/Math.PI,sunAltDeg,up,skyAlt:LOC.scene==="ridge"?22:0}):null;
+    const r=hm?hm.r:11, ill=mph.fraction, ph=mph.phase;
     const k=(1-2*ill)*r, waxing=ph<.5;
     const sweep=waxing?(ill>.5?0:1):(ill>.5?1:0);
     const term=`M ${x} ${y-r} A ${Math.abs(k).toFixed(2)} ${r} 0 0 ${sweep} ${x} ${y+r} A ${r} ${r} 0 0 ${waxing?0:1} ${x} ${y-r} Z`;
     const mOp=(up?clamp(.44-sp.alt*180/Math.PI*.016,.14,.44)*(1-veil*.85):1)*(storm?.3:1);
-    if(glintX==null&&!up){glintX=x;glintCol="#E8F1FA";glintOp=.8*(1-veil*.7)}
-    moonXY=[x,y];
-    moonBody=`<g opacity="${mOp.toFixed(2)}">
+    if(glintX==null&&!up){glintX=x;glintCol=hm?hm.glint:"#E8F1FA";glintOp=.8*(1-veil*.7)}
+    moonXY=[x,y];moonR=r;
+    if(hm){
+      /* The Halloween moon is drawn the Storybook way: one flat colour for the face, a hard shadow
+         crescent on the limb away from the sun and a warm edge on the limb toward it, both inside
+         the real phase, and ink that runs heavier on the shadow side. The glow is the moon's own
+         colour, and so is its light on the water and on the lit edges, a little. */
+      moonLight=hm.light;
+      const X=x.toFixed(1),Y=y.toFixed(1),cc=`cx="${X}" cy="${Y}"`,id=`hm${++inkUid}`,s=r/11;
+      const th=Math.atan2(-.38,waxing?.92:-.92),off=r*hm.off;
+      const arcAt=(rad,a0,a1)=>{const p=a=>[(x+Math.cos(a)*rad).toFixed(2),(y+Math.sin(a)*rad).toFixed(2)];const[a,b]=[p(a0),p(a1)];
+        return `M ${a[0]} ${a[1]} A ${rad.toFixed(2)} ${rad.toFixed(2)} 0 0 1 ${b[0]} ${b[1]}`};
+      const crater=(dx,dy,cr,o)=>`<circle cx="${(x+dx*s).toFixed(1)}" cy="${(y+dy*s).toFixed(1)}" r="${(cr*s).toFixed(2)}" fill="${hm.crater}" opacity="${(hm.craterOp*o).toFixed(2)}"/>`;
+      /* the ordinary moon is not veiled after dark, but a red or orange one shining through a sky
+         gone over is a claim, so overcast takes its glow first and then dims the disc */
+      const over=up?0:clamp((cloud-60)/40,0,1),glowK=(.5+.5*ill)*(1-.8*over);
+      moonBody=`<g data-moon="${hm.kind}" data-decor="${hm.kind}-moon" data-disc="${X} ${Y} ${r}" opacity="${(mOp*(1-.55*over)).toFixed(2)}">
+      <defs><radialGradient id="${id}g"><stop offset="0" stop-color="${hm.glow[0]}" stop-opacity="${hm.glowOp[0]}"/><stop offset=".45" stop-color="${hm.glow[1]}" stop-opacity="${hm.glowOp[1]}"/><stop offset="1" stop-color="${hm.glow[1]}" stop-opacity="0"/></radialGradient>
+        <radialGradient id="${id}h"><stop offset="0" stop-color="${hm.haze[0]}" stop-opacity="${hm.haze[1].toFixed(3)}"/><stop offset="1" stop-color="${hm.haze[0]}" stop-opacity="0"/></radialGradient>
+        <clipPath id="${id}c"><path d="${term}"/></clipPath></defs>
+      ${hm.haze[1]*ill*(1-over)>.01?`<circle ${cc} r="${(r*hm.haze[2]).toFixed(1)}" fill="url(#${id}h)" opacity="${(ill*(1-over)).toFixed(2)}"/>`:""}
+      <circle ${cc} r="${(r*hm.glowR).toFixed(1)}" fill="url(#${id}g)" opacity="${glowK.toFixed(2)}"/>
+      <circle ${cc} r="${r}" fill="${hm.unlit}" opacity="${hm.unlitOp.toFixed(2)}"/>
+      <g clip-path="url(#${id}c)">
+        <circle ${cc} r="${r}" fill="${hm.shade}"/>
+        <circle cx="${(x+Math.cos(th)*off).toFixed(2)}" cy="${(y+Math.sin(th)*off).toFixed(2)}" r="${(r*.96).toFixed(2)}" fill="${hm.lit}"/>
+        ${crater(-3,-3,2.1,1)}${crater(3.4,2.6,1.5,.85)}${crater(-1,4.4,1.1,.75)}
+        <path d="${arcAt(r-1.1*s,th-.95,th+.95)}" fill="none" stroke="${hm.edge}" stroke-width="${(1.3*Math.sqrt(s)).toFixed(2)}" stroke-linecap="round" opacity="${(.4+.5*hm.k).toFixed(2)}"/>
+      </g>
+      ${up?"":`<circle ${cc} r="${r}" fill="none" stroke="${lineC}" stroke-width="1" opacity=".7"/>
+      <path d="${arcAt(r,th+Math.PI-1.15,th+Math.PI+1.15)}" fill="none" stroke="${lineC}" stroke-width="1.9" stroke-linecap="round" opacity=".7"/>`}
+      ${!up&&!storm?`<circle ${cc} r="${(r+3*Math.sqrt(s)).toFixed(2)}" fill="none" stroke="${hm.ring}" stroke-width=".8" stroke-dasharray="1 3.2" opacity=".45"/>`:""}
+    </g>`;
+    }else moonBody=`<g data-moon="ordinary" data-disc="${x.toFixed(1)} ${y.toFixed(1)} ${r}" opacity="${mOp.toFixed(2)}">
       <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="26" fill="url(#moonglow)"/>
       <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="${dark?'rgba(255,255,255,.10)':'rgba(255,255,255,.28)'}"/>
       ${!up&&ill<.5?`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="#CBDCE8" opacity="${(.02+(1-ill/.5)*.045).toFixed(3)}"/>`:""}
@@ -2497,7 +2753,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
      overhead when neither is up; each thing is lit from its own side of it */
   const lightXY=sunXY||moonXY||[W/2,-300];
   const lightAt=(x,y)=>[lightXY[0]-x,lightXY[1]-y-24];
-  const litC=sunXY?mix("#FFF1CC",rising?"#FFD6C8":"#FFCF8C",goldK):moonXY?"#B9CCEE":"#8FA3C2";
+  const litC=sunXY?mix("#FFF1CC",rising?"#FFD6C8":"#FFCF8C",goldK):moonXY?moonLight:"#8FA3C2";
   const litK=clamp((sunXY?1-veil*.65:moonXY?.25+mph.fraction*.4:.1)*(1-gloom*1.4),.05,1);
   const shadeK=clamp(1-gloom*1.1,.4,1);
   /* a species palette lit by this sky: every role colour toned, the scene's own ink, shadow
@@ -2637,6 +2893,84 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const gust=Math.max(wind,Number(weather.wind_gusts_10m)||0);
   const windFrom=((Number(weather.wind_direction_10m)||0)%360+360)%360;
   const downwind=windFrom>180?-1:1;
+  /* ── the witch ─────────────────────────────────────────────────────────────────────
+     Halloween's one performer in the night sky (propWitch), and like the bats a deliberate
+     exception to "nothing moves because movement is nice", so it is October's alone and the
+     weather still runs it. On an October night she crosses the frame on her broom, once in each
+     cycle. She is out once the sky is dark (the sun 6° under) and stays down in a storm, under
+     thunder overhead, in anything heavier than light rain, freezing rain, heavy snow and fog. She
+     rides the wind: she flies downwind, quicker and leaning further over the handle the harder it
+     gusts, and she bobs and her cape flutters in the rough air. The gust is taken in steps five
+     miles an hour wide, so the live paint landing a moment after the cache does not move her.
+     When the moon is up and her line can cross it in open sky, the line runs through it with her
+     seat a little under its middle, so the moon frames her and the broom and the cat run out past
+     it; a low moon gives her a steeper climb away. Otherwise she climbs across the open sky. yTop
+     and yLow are the band of sky her seat may cross, moonOk whether the moon is clear of what
+     stands in front of it, and tops what stands up into her sky, as [x0, x1, top], which she
+     keeps above. Under reduced motion she holds still beside the moon,
+     off its disc so its real phase still shows, or high in the sky without one. Her clock is
+     WITCH_RUN */
+  const WS=.2,WEX=[WITCH_BOX[0]*WS,WITCH_BOX[2]*WS];   /* her reach behind and ahead of her seat */
+  const witchFly=(yTop,yLow,moonOk,tops=[])=>{
+    if(!halloween||sunAltDeg>=-6||storm||fog||THUNDER>1||rainK>=.65||[66,67,75,86].includes(code))return"";
+    const g=Math.round(clamp(gust,0,45)/5)*5,edge=Math.max(-WEX[0],WEX[1])+10,now=Date.now();
+    /* her cycle: the crossing is the first 22% of it, at 30px a second in a calm and up to about 66
+       in a gale, so a cycle is about a minute in a calm and shorter in a blow */
+    const cyc=Math.abs(W+2*edge)/(30+g*.8)/.22;
+    let R=WITCH_RUN;
+    const atOf=r=>(((now-r.t0)/1e3)%r.C+r.C)%r.C;
+    if(!R)R=WITCH_RUN={d:downwind,C:cyc,t0:now+2400,open:now+2400};
+    else if(atOf(R)>=.22*R.C&&(R.d!==downwind||Math.abs(R.C-cyc)>.01)){
+      /* off the frame between crossings she takes up the new wind, keeping her next crossing's
+         time, or bringing it sooner when the new cycle is shorter */
+      const left=R.C-atOf(R);R.d=downwind;R.C=cyc;R.t0=now+Math.min(left,.78*cyc)*1e3;
+    }
+    const d=R.d,C=R.C,x0=d>0?-edge:W+edge,x1=d>0?W+edge:-edge,yMid=(yTop+yLow)/2;
+    const yAt=(y0,y1,x)=>y0+(y1-y0)*(x-x0)/(x1-x0);
+    /* the sunrise and sunset times are the only numbers written on the sky, so her line keeps clear
+       of them, from her hat (14px over her seat) to her boots, over each label's width and her
+       own length either side; and it keeps above anything standing up into her band */
+    const labs=[.17,.83].map(f=>{const lx=px(f)+(f<.5?-16:16),ly=py(f)-9;return f<.5?[lx-30,lx,ly]:[lx,lx+30,ly]});
+    const under=(y0,y1,a,b,top)=>[a-23,b+23].every(x=>yAt(y0,y1,x)<top);
+    const clear=(y0,y1)=>labs.every(([a,b,ly])=>{const ya=yAt(y0,y1,a-22),yb=yAt(y0,y1,b+22);return Math.min(ya,yb)>ly+19||Math.max(ya,yb)<ly-16})
+      &&tops.every(([a,b,t])=>under(y0,y1,a,b,t-6));
+    let y0,y1,moon=null;
+    if(moonXY&&moonOk(...moonXY)){
+      const[mx,my]=[moonXY[0],moonXY[1]+3],near=Math.abs(mx-x0),far=Math.abs(x1-mx);
+      /* a gentle climb through the disc, steeper out of a low moon so she rises into open sky, and
+         never off the top. If that line runs behind a label or into a tree she takes the nearest
+         climb, or a shallow dive, that clears it, and if none does she leaves the moon alone */
+      const c0=Math.max(Math.min(my>yMid?Math.max(.07,(my-yMid)/far):.07,(my-yTop)/far,.3),0),line=c=>[my+c*near,my-c*far];
+      const hit=my>=yTop?[c0,.04,.1,.02,.13,0,-.03,.17,-.06,.22,-.1,.28,-.15,.34].map(line).find(([a,b])=>a>=yTop&&b>=yTop&&b<=yLow&&clear(a,b)):null;
+      if(hit){[y0,y1]=hit;moon=[mx,my]}
+    }
+    if(!moon){
+      const line=([dy,c])=>[clamp(yMid+dy+c*W/2,yTop,yLow),clamp(yMid+dy-c*W/2,yTop,yLow)];
+      [y0,y1]=[[0,.07],[-8,.07],[8,.07],[-14,.05],[14,.05],[0,.02],[-20,.03],[-26,.02]].map(line).find(([a,b])=>clear(a,b))||line([-26,.02]);
+    }
+    const k=(y1-y0)/(x1-x0),tilt=Math.atan(k)*180/Math.PI+d*(2+g*.2);
+    /* the night takes her colours down toward black rather than toward the sky's blue, which
+       would lift her into the sky she has to stand out of; her eye and the cat's keep their shine.
+       She is lit from where the moon really is, seen from just before she reaches it, so crossing
+       the disc her lit edge is the moon's side of her */
+    const pal={};for(const[r,v]of Object.entries(INK.witch))pal[r]=typeof v==="string"&&v[0]==="#"?mix(v,"#090B14",nightK*.45):v;
+    Object.assign(pal,{eye:INK.witch.eye,ink:lineC,shade:shadeC,shadeOp:.3,lit:moonXY?litC:"#9DB0CE",litOp:moonXY?.85*Math.max(litK,.6):.5});
+    const lx=moon?moon[0]-d*25:W/2,ly=moon?yAt(y0,y1,lx):yMid;
+    const art=`<g transform="rotate(${tilt.toFixed(1)}) scale(${(d*WS).toFixed(3)} ${WS})">${inkRig(propWitch(),pal,{s:WS,flip:d,line:.75,heavy:.35,shade:.6,lit:.45,light:lightAt(lx,ly)})}</g>`;
+    const tag=`data-decor="witch" data-fly="witch"${moon?` data-across="${f1(moon[0])} ${f1(moon[1]-3)}"`:""}`;
+    if(PRM){
+      /* still, beside the moon, her nearest reach 3px off its disc: ahead of it the way she flies,
+         or behind it when that is off the frame, and high in the sky without one */
+      let at=[W*(d>0?.62:.38),yMid-4];
+      if(moonXY&&moonOk(...moonXY)){const[mx,my]=moonXY,gap=moonR+3,ok=x=>x+WEX[0]*d>4&&x+WEX[1]*d>4&&x+WEX[0]*d<W-4&&x+WEX[1]*d<W-4;
+        const ahead=mx+d*(gap-WEX[0]),behind=mx-d*(gap+WEX[1]);
+        const sx=ok(ahead)?ahead:ok(behind)?behind:null;if(sx!=null&&my+3>=yTop)at=[sx,my+3]}
+      return `<g class="witch" ${tag} transform="translate(${f1(at[0])} ${f1(at[1])})">${art}</g>`;
+    }
+    const at=(((now-R.t0)/1e3)%C+C)%C;
+    return `<g class="witch witch-cross" ${tag} style="--wd:${C.toFixed(2)}s;animation-delay:-${at.toFixed(2)}s;--wx0:${f1(x0)}px;--wy0:${f1(y0)}px;--wx1:${f1(x1)}px;--wy1:${f1(y1)}px">`
+      +`<g class="witch-bob" style="--wbd:${clamp(3.2-g*.05,1.4,3.2).toFixed(2)}s;--wba:${(.8+g*.05).toFixed(2)}px;--wbr:${(1+g*.07).toFixed(2)}deg;--wcd:${clamp(1.15-g*.016,.42,1.15).toFixed(2)}s;--wc:${(2+g*.16).toFixed(1)}deg">${art}</g></g>`;
+  };
   const BANDS=6, wr=mulberry(60731);
   /* seeded, so a clump keeps its own amplitude and its own slop in the wave across renders */
   const bandAmp=Array.from({length:BANDS},()=>.82+wr()*.36);
@@ -2740,6 +3074,69 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     return `<g class="wildlife ${species}" data-species="${species}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${tone(hawk?"#8C5E3F":"#F4F1EA")}" stroke="${lineC}" stroke-width="${(.8/s).toFixed(2)}" stroke-linejoin="round" paint-order="stroke" opacity="${Math.min(1,o*2.2).toFixed(2)}">${body}
       <path class="flight-wing wing-l" ${st} d="M ${wing} Z"/><path class="flight-wing wing-r" ${st} d="M ${flip(wing)} Z"/></g>`;
   };
+
+  /* ── Halloween's bats ──────────────────────────────────────────────────────────────────
+     October only, gone with the rest of Halloween on the morning of November 1, at both places.
+     They are the Halloween exception to "nothing moves because movement is nice" (Josh asked for
+     bats fluttering round both scenes, October 3 2026), so the exception is kept tight and the
+     weather still runs it. They come out at sunset, a couple first and the colony by full dusk,
+     and are back in the roost before dawn, the way real bats are. A storm, heavy rain, snow and
+     ice keep them in, and light rain, cold, wind and fog thin them out: seven on a calm clear
+     night, two or three on a raw one. The wind also moves them. Each one hunts a jinking loop
+     round its own patch of sky (rigBat, and batHunt in the CSS), banked into its turns, carried
+     downwind across it as far as the wind says and beating back, and leaning with the wind.
+     Every draw is seeded, so a refresh puts each bat back on its own patch, and the loops take
+     their phase off the wall clock. They keep to open sky: above the treeline and anything
+     standing on it, inside the frame, off the sun and the moon and the two times on the arc. */
+  const batN=(()=>{
+    if(!halloween||sunAltDeg>=-.83||(rising&&sunAltDeg>=-6)||storm||rainK>=.65||snowing||isIce(code)||temp<=34)return 0;
+    const n=7-(wind>=7)-(gust>=15)-(gust>=22)-2*(gust>=30)-(cloud>75)-(temp<50)-(temp<42)-(rainK>0?3:0)-(fog?1:0);
+    /* how far into the night: a few at sunset, all of them a few degrees on, thinning before dawn */
+    const k=clamp(.35+(rising?-6-sunAltDeg:-.83-sunAltDeg)/4,.35,1);
+    return Math.round(clamp(n,0,7)*k);
+  })();
+  /* top is the highest a bat flies, floorAt(x0,x1) the lowest over that stretch of sky, and keep
+     the boxes it must stay out of (the times on the arc) */
+  const batColony=(top,floorAt,keep=[])=>{
+    if(!batN)return"";
+    const lean=downwind*clamp(wind*.7,0,14),drift=downwind*clamp(wind*1.3,0,26);
+    const discs=[sunXY&&[...sunXY,16],moonXY&&[...moonXY,moonR+3]].filter(Boolean);
+    /* darker than any sky it crosses: a bat against the sky is a silhouette, so it is pulled
+       toward the scene's own ink, the further the darker it gets, rather than toward the night's
+       blue, and the sky's glow catches its upper edges. A smaller bat is a further one, and a
+       little of the sky's air comes between */
+    const palAt=d=>{const o={},c=v=>{const t=mix(mix(tone(v),lineC,.4+nightK*.25),hazeC,d);return fog?mix(t,fogC,.32):t};
+      for(const[k,v]of Object.entries(INK.bat))o[k]=typeof v==="string"&&v[0]==="#"?c(v):v;
+      return Object.assign(o,{ink:mix(lineC,hazeC,d),shade:shadeC,lit:litC,litOp:Math.max(INK.bat.litOp*litK,.3*nightK),shadeOp:.3*shadeK})};
+    const slot=(W-24)/batN;let out=`<g class="bats" data-decor="bat" data-colony="${batN}">`;
+    for(let i=0;i<batN;i++){
+      /* every draw before any gate, so a bat that has to give way never moves the others */
+      const q=Array.from({length:9},mulberry(4110+i*97));
+      const s=.46+q[0]*.34,ex=14.6*s,ey=11.8*s,sx=q[1]<.5?-1:1;
+      const cx=12+slot*(i+.5)+(q[1]-.5)*slot*.6;let rx,ry,at=null;
+      /* where it would like to fly, then where it gives way to: the other end of its height, the
+         top or the bottom of the sky, a tighter loop, a little to one side */
+      for(const[v,k,dx]of[[q[4],1,0],[1-q[4],1,0],[0,1,0],[1,1,0],[0,.7,0],[1,.7,0],[q[4],.7,-.4],[q[4],.7,.4],[0,.5,0],[1,.5,0]]){
+        rx=(16+q[2]*20)*k;ry=(6+q[3]*8)*k;
+        /* the box it flies in, round its home: the loop, the drift and its own wings */
+        const lo=-rx-ex+Math.min(0,drift),hi=rx+ex+Math.max(0,drift),hx=clamp(cx+dx*slot,4-lo,W-4-hi),x0=hx+lo,x1=hx+hi;
+        const room=floorAt(x0,x1)-top-2*(ry+ey);
+        if(room<0)continue;
+        const hy=top+ry+ey+v*room,b=[x0,hy-ry-ey,x1,hy+ry+ey];
+        if(keep.some(([a0,b0,a1,b1])=>b[0]<a1&&b[2]>a0&&b[1]<b1&&b[3]>b0)
+          ||discs.some(([dx,dy,dr])=>Math.hypot(clamp(dx,b[0],b[2])-dx,clamp(dy,b[1],b[3])-dy)<dr))continue;
+        at=[hx,hy];break;
+      }
+      if(!at)continue;
+      const dur=4.4+q[5]*3,flap=.52+q[6]*.18,kind="abc"[Math.floor(q[7]*3)];
+      const beat=PRM?()=>"":side=>`--wd:${side};animation-duration:${flap.toFixed(2)}s;animation-delay:-${(q[8]*flap).toFixed(2)}s`;
+      out+=`<g class="wildlife bat" data-species="bat" transform="translate(${f1(at[0])} ${f1(at[1])})"><g class="bat-fly bat-${kind}" style="--rx:${f1(rx*sx)}px;--ry:${f1(ry)}px;--dr:${f1(drift)}px;--sx:${sx};--ln:${f1(lean)}deg;--bd:${dur.toFixed(2)}s;${phase(dur)}">`
+        +inkAt(0,0,s,1,inkRig(rigBat(beat),palAt(clamp((.68-s)/.22,0,1)*.22),{s,light:lightAt(...at),line:.8,heavy:.3,shade:0,lit:.6}))+`</g></g>`;
+    }
+    return out+`</g>`;
+  };
+  /* the two times written on the arc, as boxes a bat stays out of */
+  const timeBoxes=[.17,.83].map(f=>{const x=px(f)+(f<.5?-16:16),y=py(f)-9;return f<.5?[x-40,y-10,x+2,y+3]:[x-2,y-10,x+40,y+3]});
 
   /* Denver's wildlife is drawn for recognition at phone size: the magpie gets its long
      stepped tail and white shoulder, the mule deer gets its large ears, and the cottontail
@@ -3201,7 +3598,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     const hawk=!wet&&!storm&&!dark&&!deer?`<g class="hawk-circle" style="--cx:${(W*.075).toFixed(0)}px;--cy:-8px;--cy2:-15px;${phase(150)}">${flightBird("hawk",hwx,hwy,.82,.38,-4.2,18)}</g>`:"";
     /* a second bird working the ridge line on a much longer clock, small and faint enough
        to read as distance. Turkey vultures are never not up there in these hills. */
-    const soarer=!wet&&!storm&&!dark?`<g class="gull-cross" style="--gx:${(W*.62).toFixed(0)}px;--gy:-12px;--gd:134s;${phase(134)}">${flightBird("hawk",W*.16,base-rTop-34,.44,.2,-6.8,15)}</g>`:"";
+    const soarer=!wet&&!storm&&!dark&&!batN?`<g class="gull-cross" style="--gx:${(W*.62).toFixed(0)}px;--gy:-12px;--gd:134s;${phase(134)}">${flightBird("hawk",W*.16,base-rTop-34,.44,.2,-6.8,15)}</g>`:"";
+    /* the bats (batColony) keep to the sky over the farthest ridge, so a dark bat is never lost
+       against a dark fold. The vulture goes to roost when they come out */
+    const bats=batColony(8,(x0,x1)=>{let m=1e9;for(let x=x0;x<=x1+3;x+=6)m=Math.min(m,crestY(0,Math.min(x,x1)));return m-4},timeBoxes);
     const owl=!wet&&!storm&&dark&&!showFlies?owlAt(rightTreeX-15,base-16,.74,1):"";
     /* The resident, same rule as the marsh: always there, almost never moves. The cardinal
        turns up when it is cold, which is exactly when it is the only red in the field
@@ -3274,9 +3674,11 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       ${ridgeFolds.slice(0,2).join("")}
       ${sunBody}
       ${sceneClouds}
+      ${bats}
       ${ridgeFolds.slice(2).join("")}
       ${fog?`<rect x="0" y="${(base-rTop*.72).toFixed(1)}" width="${W}" height="${(rTop*.72+8).toFixed(1)}" fill="url(#fogveil)"/>`:""}
       ${hawk}${soarer}
+      ${witchFly(17,base-rTop-11,(x,y)=>y<crestY(0,x)-13)}
       ${pond}
       ${castShadow(propBarn(halloween?LOFT_WIDE:LOFT),barnX-21,base+.86,1.18,1)}
       ${barn}
@@ -3499,6 +3901,16 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const rake=`<g transform="translate(${(W*.645).toFixed(1)} ${(base+14.8).toFixed(1)})">${inkUnit([part(scallop(0,1.2,15,2.8,11,41,{flat:.9,bulge:.7}),"body")],
     {body:tone("#8C7A6A"),ink:lineC,shade:shadeC,lit:litC,litOp:.5*litK,shadeOp:.3*shadeK},{light:lightAt(W*.645,base+12)})}
     <g fill="${tone("#EDE3CF")}" opacity=".75">${[-9,-4.5,.5,5,9.5].map((x,i)=>`<ellipse cx="${x}" cy="${(-.6-(i%2)*.5).toFixed(1)}" rx="1.3" ry=".55" transform="rotate(${i%2?18:-14} ${x} -.6)"/>`).join("")}</g></g>`;
+  /* Halloween's night sky keeps above the treeline and what stands on it: the oak, the pines and
+     the heron, measured off their own drawings, as [x0, x1, top]. The bats (batColony) and the
+     witch (witchFly) both keep over them */
+  const skyTops=halloween&&sunAltDeg< -.83?(()=>{
+    const tops=[[propOak(),oakX,oakS],[propLoblolly(4),W*.07,.95],[propLoblolly(6),W*.135,.6],[propLoblolly(9),W*.885,.8]]
+      .map(([ps,x,k])=>{const[bx,by,bw]=pathBox(ps.map(p=>p.d));return[x+bx*k-4,x+(bx+bw)*k+4,base+2+by*k-4]});
+    if(showHeron){const[bx,by,bw]=pathBox(flatParts(rigHeron(phase)).map(p=>p.d));tops.push([hx+bx*hs-4,hx+(bx+bw)*hs+4,hy+by*hs-4])}
+    return tops;
+  })():[];
+  const bats=batN?batColony(8,(x0,x1)=>Math.min(base-22,...skyTops.filter(([a,b])=>x1>a&&x0<b).map(t=>t[2])),timeBoxes):"";
   /* Three gulls, on three different errands. One crosses the frame low over about seventy
      seconds, one holds its place higher up, and a third works back the other way much
      higher, smaller and fainter, on a slower clock. Gulls do not fly in formation and the
@@ -3579,6 +3991,8 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     ${gulls}
     ${body}
     ${sceneClouds}
+    ${bats}
+    ${witchFly(17,GY-63,(x,y)=>y<GY-26&&skyTops.every(([a,b,t])=>x+moonR<a||x-moonR>b||y+moonR<t),skyTops)}
     <path d="${tl}" fill="${farC}" stroke="${farLine}" stroke-width=".7" stroke-linejoin="round"/>
     ${tex?`<path d="${tl}" fill="${tex}" opacity="${(.8*paperK).toFixed(2)}"/>`:""}
     ${ghostface}${oak}

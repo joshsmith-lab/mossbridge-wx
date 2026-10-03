@@ -14,7 +14,13 @@
  *
  * The holidays' props are drawn with the same kit and can be looked at the same way:
  *
- *   node tools/rig.mjs pumpkin | lantern | lantern-lit | lumina | cornshock | bale | loft-head | ghostface
+ *   node tools/rig.mjs pumpkin | lantern | lantern-lit | lumina | cornshock | bale | loft-head | ghostface | witch
+ *
+ * and so can the bat that flies over both scenes in October, in the air rather than on the grass,
+ * at phone size against the dusk and the night it flies in:
+ *
+ *   node tools/rig.mjs bat
+ *   node tools/rig.mjs bat ".bat-wl=rotate(34deg) scaleX(.74)" ".bat-wr=rotate(-34deg) scaleX(.74)"   # the top of a stroke
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -27,7 +33,7 @@ const to = html.indexOf("/* ── the scene: arc, sun / moon");
 if (from < 0 || to < 0) { console.error("could not find the kit and cast sections in index.html"); process.exit(1); }
 const [name, ...rest] = process.argv.slice(2);
 if (!name) { console.error("usage: node tools/rig.mjs <deer|heron|raccoon|oystercatcher|...> [\".class=transform\" ...] [--scale n]"); process.exit(1); }
-const scaleArg = rest.indexOf("--scale"), big = scaleArg >= 0 ? +rest[scaleArg + 1] : /^loft/i.test(name) ? 9 : /^(pumpkin|lantern|lumina|cornshock|bale)/i.test(name) ? 14 : 5;
+const scaleArg = rest.indexOf("--scale"), big = scaleArg >= 0 ? +rest[scaleArg + 1] : /^loft/i.test(name) ? 9 : /^(pumpkin|lantern|lumina|cornshock|bale|bat)/i.test(name) ? 14 : 5;
 const poses = rest.filter((a, i) => a.includes("=") && (scaleArg < 0 || i !== scaleArg + 1));
 
 const src = html.slice(from, to);
@@ -48,6 +54,15 @@ const PROPS = {
   /* Ghostface in the live oak is drawn at ten units to the screen pixel and is three units (the
      robe, the hood, then the mask), so the phone panel draws him at a tenth, with the scene's lines */
   ghostface: ["ghostface", (c) => c.propGhostface(), {}, [170, 190, 85, 75], { phone: 0.1, o: { line: 0.5, heavy: 0.25, shade: 0.7, lit: 0.45 } }],
+  /* the bat is a rig (its wings turn at the shoulders), drawn in the sky at the size the scene
+     draws its nearer bats, with the scene's lines, over an October dusk and an October night */
+  bat: ["bat", (c) => c.rigBat(), {}, [30, 14, 15, 7], { phone: 0.66, o: { line: 0.8, heavy: 0.3, shade: 0, lit: 0.6 },
+    skies: ["linear-gradient(#4E4A78,#B9708A 70%,#E8A070)", "linear-gradient(#0F1A2C,#1E3042)"] }],
+  /* the witch on her broom is drawn at five units to the screen pixel, so the phone panel draws her
+     at a fifth, with the lines the scene gives her. The night panel takes her colours down toward
+     black the way the scene does after dark (night), and lights her from the moon */
+  witch: ["witch", (c) => c.propWitch(), {}, [180, 92, 100, 72], { phone: 0.2, o: { line: 0.75, heavy: 0.35, shade: 0.6, lit: 0.45 },
+    night: { ink: "#0A1020", shade: "#050A18", lit: "#B9CCEE", litOp: 0.75, dark: ["#090B14", 0.45] } }],
 };
 const prop = PROPS[name.toLowerCase()];
 const key = prop ? name : Object.keys(cast.rigs).find((k) => k.toLowerCase() === "rig" + name.toLowerCase() || k.toLowerCase().startsWith("rig" + name.toLowerCase().slice(0, 4)));
@@ -56,16 +71,24 @@ if (!key || !palKey) { console.error(`no rig for "${name}". Rigs: ${Object.keys(
 const pal = { ...cast.INK[palKey], ink: "#2A2130", shade: "#3A2350", lit: "#FFE6B0" };
 for (const [role, from] of Object.entries(prop?.[2] || {})) pal[role] = pal[from];
 /* a prop that is already layers ({parts}) is painted as it comes, unit by unit */
-const rig = () => prop ? ((r) => r[0]?.parts ? r : [{ parts: r }])(prop[1](cast.props)) : cast.rigs[key]((p) => "");
+const rig = () => prop ? ((r) => r[0]?.parts || r[0]?.layers ? r : [{ parts: r }])(prop[1]({ ...cast.props, ...cast.rigs })) : cast.rigs[key]((p) => "");
 const draw = (s, o = {}) => cast.inkAt(0, 0, s, 1, cast.inkRig(rig(), pal, { s, light: [1, -.5], ...o }));
 const phone = prop?.[4] || {};
+/* a night palette: every colour taken down toward the night's black the way the scene does it,
+   with the eyes keeping their shine, then the moonlit ink and edge */
+const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const mixHex = (a, b, t) => "#" + hex(a).map((v, i) => Math.round(v + (hex(b)[i] - v) * t).toString(16).padStart(2, "0")).join("");
+const nightPal = ({ dark, ...n }) => ({ ...Object.fromEntries(Object.entries(pal).map(([k, v]) =>
+  [k, dark && k !== "eye" && typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v) ? mixHex(v, dark[0], dark[1]) : v])), ...n });
 const css = `svg g[class]{transform-box:view-box;transform-origin:0 0}` +
   poses.map((p) => { const [sel, t] = p.split("="); return `.pose ${sel}{transform:${t}}`; }).join("");
 const fig = (inner, w, h, ox, oy, bg, label) => `<figure><svg width="${w}" height="${h}" viewBox="${-ox} ${-oy} ${w} ${h}" style="background:${bg}">${inner}</svg><figcaption>${label}</figcaption></figure>`;
 const page = `<!doctype html><meta charset="utf-8"><style>body{margin:0;padding:12px;background:#2a2a2a;color:#ddd;font:12px monospace;display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}figure{margin:0}${css}</style>
 ${prop ? fig(`<g class="pose">${draw(big)}</g>`, ...(prop[3] || [40, 34, 20, 29]).map((v) => v * big), "#E8DCC4", `${key} ×${big}`)
   : fig(`<g class="pose">${draw(big)}</g>`, 100 * big, 96 * big, 50 * big, 84 * big, "#E8DCC4", `${key} ×${big}${poses.length ? " " + poses.join(" ") : ""}`)}
-${fig(`<rect x="-200" y="0" width="400" height="30" fill="#6d8b4a"/><g class="pose">${draw(phone.phone ?? 1, phone.o)}</g>`, 160, 100, 80, 80, "linear-gradient(#A9CADB,#E6E2CE)", "phone scale ×1")}`;
+${phone.skies ? phone.skies.map((bg, i) => fig(`<g class="pose">${draw(phone.phone, phone.o)}</g>`, 40, 20, 20, 10, bg, i ? "night, phone size" : "dusk, phone size")).join("")
+  : fig(`${phone.night ? "" : `<rect x="-200" y="0" width="400" height="30" fill="#6d8b4a"/>`}<g class="pose">${draw(phone.phone ?? 1, phone.o)}</g>`, 160, 100, 80, 80, "linear-gradient(#A9CADB,#E6E2CE)", "phone scale ×1")}
+${phone.night ? fig(`<g class="pose">${cast.inkAt(0, 0, phone.phone, 1, cast.inkRig(rig(), nightPal(phone.night), { s: phone.phone, light: [0, -1], ...phone.o }))}</g>`, 160, 100, 80, 60, "linear-gradient(#0E1A2C,#1F3346)", "phone scale ×1, a moonlit night") : ""}`;
 const out = path.join(HERE, "shots");
 mkdirSync(out, { recursive: true });
 writeFileSync(path.join(out, `rig-${name}.html`), page);

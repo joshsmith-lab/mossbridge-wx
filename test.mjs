@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v83/);
+  assert.match(worker, /mbwx-shell-v84/);
   // the clouds end in their own scallops: Josh loves the clouds and not the curly tail
   const cloud = html.match(/const propCloud=seed=>\[[\s\S]*?\];/);
   assert.ok(cloud, "propCloud should be extractable");
@@ -1091,6 +1091,55 @@ test("the scenes dress for the holidays and take it all down when they pass", as
   assert.match(scene, /decorations are \[/);
 });
 
+test("Halloween's moon keeps its place and its phase, and only changes colour", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const lift = (re) => { const m = html.match(re); assert.ok(m, `${re} should be extractable`); return m[0]; };
+  const ctx = vm.createContext({});
+  vm.runInContext([
+    lift(/const clamp=[^\n]*/),
+    lift(/const hex2rgb=[^\n]*\nconst rgb2hex=[^\n]*\nconst mix=[^\n]*/),
+    html.slice(html.indexOf("const HMOON={"), html.indexOf("let LOC;try{")),
+    "globalThis.halloweenMoon=halloweenMoon;globalThis.HMOON=HMOON;",
+  ].join("\n"), ctx);
+  // Josh's pick, one constant, and the ordinary moon when it is null
+  assert.match(html, /const HALLOWEEN_MOON="blood";/);
+  assert.deepEqual(Object.keys(ctx.HMOON).sort(), ["blood", "harvest"]);
+  assert.equal(ctx.halloweenMoon(null, { altDeg: 20, sunAltDeg: -12, up: false }), null);
+  // it is October's alone, read off the place's own calendar like the decorations
+  assert.match(html, /const hm=HALLOWEEN_MOON&&holidayOn\(locToday\(\)\)\?\.id==="halloween"\?halloweenMoon\(HALLOWEEN_MOON,/);
+  // the real phase and the real place: the terminator is the ordinary one, drawn at the moon's own r
+  assert.match(html, /const r=hm\?hm\.r:11, ill=mph\.fraction, ph=mph\.phase;/);
+  const night = (kind, altDeg, skyAlt = 0) => ctx.halloweenMoon(kind, { altDeg, sunAltDeg: -14, up: false, skyAlt });
+  // after dark the colour is whole; by day it is a pale tint, because a red moon in a blue sky is odd
+  assert.equal(night("blood", 30).k, 1);
+  const day = ctx.halloweenMoon("blood", { altDeg: 50, sunAltDeg: 30, up: true });
+  assert.equal(day.k, 0.25);
+  const red = (h) => parseInt(h.slice(1, 3), 16) - parseInt(h.slice(5, 7), 16);
+  assert.ok(red(night("blood", 30).lit) > 90, "a blood moon is red after dark");
+  assert.ok(red(day.lit) < 50, "and only tinted by day");
+  // the blood moon is the ordinary size; the harvest moon is bigger, and biggest low over the skyline
+  assert.equal(night("blood", 5).r, 11);
+  assert.ok(night("harvest", 60).r > 12.5 && night("harvest", 60).r < 14);
+  assert.ok(night("harvest", 3).r > 16.5);
+  assert.ok(night("harvest", 25, 22).r > night("harvest", 25, 0).r, "at the ridge, low is low over the crest");
+  assert.ok(day.r < 11.1 && ctx.halloweenMoon("harvest", { altDeg: 50, sunAltDeg: 30, up: true }).r < 12);
+  // overcast takes its glow and dims it, because the ordinary moon is not veiled after dark
+  assert.match(html, /const over=up\?0:clamp\(\(cloud-60\)\/40,0,1\),glowK=\(\.5\+\.5\*ill\)\*\(1-\.8\*over\);/);
+  // its light on the water and on the lit edges is its own colour, a little
+  assert.match(html, /glintCol=hm\?hm\.glint:"#E8F1FA"/);
+  assert.match(html, /moonXY\?moonLight:"#8FA3C2"/);
+  // in the scene it is a decoration, its disc is what the bats keep off and the witch crosses, and
+  // the harness checks it in October and the ordinary moon after
+  assert.match(html, /moonBody=`<g data-moon="\$\{hm\.kind\}" data-decor="\$\{hm\.kind\}-moon" data-disc=/);
+  assert.match(html, /moonXY=\[x,y\];moonR=r;/);
+  const scene = await readFile(new URL("tools/scene.mjs", root), "utf8");
+  for (const name of ["38-marsh-october-moon", "39-ridge-october-moon"]) assert.match(scene, new RegExp(`name: "${name}"[^\\n]*"blood-moon"[^\\n]*moon: true`));
+  assert.match(scene, /const want = cs\.when\.slice\(5, 7\) === "10" && moon\.pick \? moon\.pick : "ordinary";/);
+  // and it adds no motion
+  const body = html.slice(html.indexOf("if(hm){"), html.indexOf("}else moonBody="));
+  assert.doesNotMatch(body, /animation|class="/);
+});
+
 test("Ghostface peeks out of the live oak for October, and never moves", async () => {
   const [html, scene, rig] = await Promise.all([
     readFile(new URL("index.html", root), "utf8"),
@@ -1145,9 +1194,127 @@ test("Ghostface peeks out of the live oak for October, and never moves", async (
   assert.match(scene, /r\.flat\(\)\.some\(\(v\) => v >= 40\)/);
   // and the notes count the scenes it runs
   const agents = await readFile(new URL("AGENTS.md", root), "utf8");
-  const words = ["twenty-nine", "thirty", "thirty-one", "thirty-two", "thirty-three"];
+  const words = ["twenty-nine", "thirty", "thirty-one", "thirty-two", "thirty-three", "thirty-four", "thirty-five"];
   const said = agents.match(/`tools\/scene\.mjs` is for anything that moves\. (\S+) scenes/)[1].toLowerCase();
   assert.equal(29 + words.indexOf(said), (scene.match(/^  \{ name: "/gm) || []).length, `AGENTS.md says ${said} scenes`);
+});
+
+test("bats come out over both scenes on October nights, from sunset to dawn, and the weather keeps them in", async () => {
+  const [html, scene, rig] = await Promise.all([
+    readFile(new URL("index.html", root), "utf8"),
+    readFile(new URL("tools/scene.mjs", root), "utf8"),
+    readFile(new URL("tools/rig.mjs", root), "utf8"),
+  ]);
+  // Josh, October 3 2026: "I want bats, fluttering around - more movement, both scenes". They are
+  // Halloween's, so October only, and they keep a bat's hours: out from sunset (the sun under
+  // -0.83°) and in by civil dawn (-6° on the way up). A storm, heavy rain, snow, ice and a cold night
+  // keep them in, and wind, overcast, light rain, fog and cold thin the colony out
+  assert.match(html, /if\(!halloween\|\|sunAltDeg>=-\.83\|\|\(rising&&sunAltDeg>=-6\)\|\|storm\|\|rainK>=\.65\|\|snowing\|\|isIce\(code\)\|\|temp<=34\)return 0;/);
+  assert.match(html, /const n=7-\(wind>=7\)-\(gust>=15\)-\(gust>=22\)-2\*\(gust>=30\)-\(cloud>75\)-\(temp<50\)-\(temp<42\)-\(rainK>0\?3:0\)-\(fog\?1:0\);/);
+  // a couple at sunset, the whole colony a few degrees on, thinning before dawn
+  assert.match(html, /const k=clamp\(\.35\+\(rising\?-6-sunAltDeg:-\.83-sunAltDeg\)\/4,\.35,1\);/);
+  // the wind moves them: each one is carried downwind across its loop and leans with it
+  assert.match(html, /const lean=downwind\*clamp\(wind\*\.7,0,14\),drift=downwind\*clamp\(wind\*1\.3,0,26\);/);
+  // at both scenes, in the sky: over the far ridge at the farm, over the treeline and what stands
+  // on it on the coast, and off the sun and the moon, whatever size the moon is drawn
+  assert.ok(html.includes("${sceneClouds}\n      ${bats}\n      ${ridgeFolds.slice(2)"), "the farm's bats fly over the far ridge");
+  assert.ok(html.includes("${sceneClouds}\n    ${bats}\n    ${witchFly("), "the coast's bats fly over the far treeline");
+  assert.match(html, /moonXY&&\[\.\.\.moonXY,moonR\+3\]/);
+  // every draw is seeded and made before any gate, and the loops take their phase off the wall clock
+  assert.match(html, /const q=Array\.from\(\{length:9\},mulberry\(4110\+i\*97\)\);/);
+  assert.match(html, /--bd:\$\{dur\.toFixed\(2\)\}s;\$\{phase\(dur\)\}/);
+  // transforms only, and under reduced motion the wings carry no timing (the page's own rule
+  // stops every animation), so each bat holds still at its home spot
+  for (const k of ["batFlap", "batHuntA", "batHuntB", "batHuntC"]) {
+    const body = html.match(new RegExp(`@keyframes ${k}\\{([\\s\\S]*?)\\}\\}`))[1];
+    for (const prop of body.match(/[a-z-]+(?=:)/g)) assert.equal(prop, "transform", `${k} animates ${prop}`);
+  }
+  assert.match(html, /const beat=PRM\?\(\)=>"":side=>/);
+  // the vulture goes to roost when they come out
+  assert.match(html, /const soarer=!wet&&!storm&&!dark&&!batN\?/);
+  // drawn from parts with the kit, each wing its own joint at the shoulder
+  assert.match(html, /const rigBat=\(beat=\(\)=>""\)=>\{const open=side=>`<g class="bat-wing bat-w/);
+  assert.match(html, /\{open:open\(-1\),pivot:\[-S\[0\],S\[1\]\],layers:\[\{parts:wingParts\(-1\)\}\]\}/);
+  assert.match(html, /bat:\{body:"#4A3833",wing:"#2C2228"/);
+  // the harnesses look at them: close up in the rig, and walked through their loops in every scene
+  assert.match(rig, /bat: \["bat", \(c\) => c\.rigBat\(\)/);
+  for (const [name, n] of [["27-marsh-halloween-night", 6], ["31-ridge-halloween-night", 4], ["33-ridge-october-night", 6], ["38-marsh-october-moon", 7], ["39-ridge-october-moon", 6], ["40-marsh-october-dusk", 7], ["41-ridge-october-dusk", 7]])
+    assert.match(scene, new RegExp(`name: "${name}"[^\\n]*"bat"[^\\n]*bats: ${n},`));
+  for (const name of ["26-marsh-october-afternoon", "29-marsh-halloween-rain-night", "30-ridge-october-afternoon", "34-ridge-halloween-rain-night", "32-ridge-november-morning", "35-marsh-november-small-hours"])
+    assert.doesNotMatch(scene, new RegExp(`name: "${name}"[^\\n]*bats:`));
+  assert.match(scene, /if \(bat\.colony !== want\)/);
+  assert.match(scene, /why\.add\("goes behind the scenery"\)/);
+});
+
+test("a witch flies over both scenes on October nights, on the wind, across the moon, and holds still under reduced motion", async () => {
+  const [html, scene, rig] = await Promise.all([
+    readFile(new URL("index.html", root), "utf8"),
+    readFile(new URL("tools/scene.mjs", root), "utf8"),
+    readFile(new URL("tools/rig.mjs", root), "utf8"),
+  ]);
+  // Josh, October 3 2026: "I want a witch to fly through the night sky". She is Halloween's, out only
+  // once the sky is dark on its nights, and the weather still grounds her: a storm, thunder overhead,
+  // anything heavier than light rain, freezing rain, heavy snow and fog
+  assert.match(html, /const witchFly=\(yTop,yLow,moonOk,tops=\[\]\)=>\{\n    if\(!halloween\|\|sunAltDeg>=-6\|\|storm\|\|fog\|\|THUNDER>1\|\|rainK>=\.65\|\|\[66,67,75,86\]\.includes\(code\)\)return"";/);
+  // at both scenes: behind the far treeline on the coast and above the oak, the pines and the heron,
+  // in front of the folds at the farm, and the moon only counts when it is in open sky
+  assert.ok(html.includes("${witchFly(17,GY-63,(x,y)=>y<GY-26&&skyTops.every(([a,b,t])=>x+moonR<a||x-moonR>b||y+moonR<t),skyTops)}\n    <path d=\"${tl}\""), "the coast's witch flies behind the far treeline");
+  assert.ok(html.includes("${hawk}${soarer}\n      ${witchFly(17,base-rTop-11,(x,y)=>y<crestY(0,x)-13)}"), "the farm's witch flies in front of the folds");
+  assert.match(html, /&&tops\.every\(\(\[a,b,t\]\)=>under\(y0,y1,a,b,t-6\)\)/);
+  // she rides the wind, taken in five-mile steps so the live paint does not move her: downwind,
+  // quicker in a blow, leaning further over the handle
+  assert.match(html, /const g=Math\.round\(clamp\(gust,0,45\)\/5\)\*5/);
+  assert.match(html, /const cyc=Math\.abs\(W\+2\*edge\)\/\(30\+g\*\.8\)\/\.22;/);
+  assert.match(html, /tilt=Math\.atan\(k\)\*180\/Math\.PI\+d\*\(2\+g\*\.2\)/);
+  // across the moon: a straight line through it with her seat a little under its middle, clear of
+  // the sunrise and sunset times, the only numbers written on the sky
+  assert.match(html, /const\[mx,my\]=\[moonXY\[0\],moonXY\[1\]\+3\]/);
+  assert.match(html, /line=c=>\[my\+c\*near,my-c\*far\]/);
+  assert.match(html, /const clear=\(y0,y1\)=>labs\.every\(/);
+  // lit from where the moon really is
+  assert.match(html, /light:lightAt\(lx,ly\)/);
+  // her clock: the first crossing 2.4s after the app opens or comes back to the front, and while she
+  // is crossing her direction and her cycle are held, so a wind that flips cannot turn her round
+  assert.match(html, /let WITCH_RUN=null;\ndocument\.addEventListener\("visibilitychange",\(\)=>\{/);
+  assert.match(html, /WITCH_RUN\.t0=WITCH_RUN\.open=Date\.now\(\)\+2400;/);
+  assert.match(html, /if\(!R\)R=WITCH_RUN=\{d:downwind,C:cyc,t0:now\+2400,open:now\+2400\};\n    else if\(atOf\(R\)>=\.22\*R\.C&&/);
+  // transforms only, and under reduced motion she is drawn still beside the moon, off its disc, so
+  // its real phase still shows
+  for (const k of ["witchCross", "witchBob", "witchCape"]) {
+    const body = html.match(new RegExp(`@keyframes ${k}\\{([^\\n]*)\\}`))[1];
+    for (const prop of body.match(/[a-z-]+(?=:)/g)) assert.equal(prop, "transform", `${k} animates ${prop}`);
+  }
+  assert.match(html, /const ahead=mx\+d\*\(gap-WEX\[0\]\),behind=mx-d\*\(gap\+WEX\[1\]\);/);
+  assert.match(html, /return `<g class="witch" \$\{tag\} transform=/);
+  // drawn from parts with the kit: the far boot, the broom, the cat, the cape on its one joint at her
+  // shoulders, her body, her head and hat; and her box is the one the scene keeps off the frame
+  const kit = html.slice(html.indexOf("/* ── Storybook ink: the drawing kit"), html.indexOf("/* ── the scene: arc, sun / moon"));
+  const ctx = vm.createContext({});
+  vm.runInContext(`${html.match(/function mulberry\(a\)\{[\s\S]*?\}\}/)[0]}\n${kit}\nglobalThis.pw=propWitch;globalThis.box=pathBox;globalThis.B=WITCH_BOX;globalThis.INK=INK;`, ctx);
+  const units = ctx.pw(), flat = (l) => (l.parts ? l.parts : l.layers.flatMap(flat)), parts = units.flatMap(flat);
+  assert.equal(units.length, 6);
+  assert.equal(units.filter((u) => u.open).map((u) => u.open).join(), '<g class="witch-cape">');
+  for (const role of ["hat", "wood", "straw", "cat", "cape", "lining", "robe", "skin", "eye", "mark"]) {
+    assert.ok(parts.some((p) => p.role === role), `she has a ${role}`);
+    assert.ok(ctx.INK.witch[role], `INK.witch.${role}`);
+  }
+  const [x, y, w, h] = ctx.box(parts.filter((p) => !p.noSil).map((p) => p.d));
+  assert.ok(Math.abs(x - ctx.B[0]) < 2 && Math.abs(y - ctx.B[1]) < 2 && Math.abs(x + w - ctx.B[2]) < 2 && Math.abs(y + h - ctx.B[3]) < 2, `box ${[x, y, x + w, y + h].map(Math.round)}`);
+  // and nothing of the drawing animates on its own: the scene moves her
+  const prop = html.slice(html.indexOf("const propWitch="), html.indexOf("const WITCH_BOX="));
+  assert.doesNotMatch(prop.replace('class="witch-cape"', ""), /class=|style=|Math\.random|animation/);
+  // the harnesses look at her: close up in the rig, and walked across at 320, 390 and 430 in every
+  // scene she is out in, never behind a tree, and held off the disc under reduced motion
+  assert.match(rig, /witch: \["witch", \(c\) => c\.propWitch\(\)/);
+  for (const name of ["27-marsh-halloween-night", "31-ridge-halloween-night", "33-ridge-october-night", "38-marsh-october-moon", "39-ridge-october-moon"])
+    assert.match(scene, new RegExp(`name: "${name}"[^\\n]*witch: true`));
+  for (const name of ["29-marsh-halloween-rain-night", "34-ridge-halloween-rain-night", "35-marsh-november-small-hours", "36-marsh-october-golden-evening", "40-marsh-october-dusk", "41-ridge-october-dusk"])
+    assert.doesNotMatch(scene, new RegExp(`name: "${name}"[^\\n]*witch: true`));
+  assert.match(scene, /if \(!!witch !== !!cs\.witch\)/);
+  assert.match(scene, /the witch's path misses the moon/);
+  assert.match(scene, /a tree or the treeline hides \$\{witch\.hidden\}% of the witch/);
+  assert.match(scene, /for \(const width of \[320, 390\]\.filter\(\(w\) => w !== PHONE_WIDTH\)\)/);
+  assert.match(scene, /under reduced motion the witch holds still over the moon's disc and hides its phase/);
 });
 
 test("a pumpkin still reads as one at seven pixels, and no two are cut alike", async () => {
