@@ -84,7 +84,7 @@ const PROPS = {
      the unit the scene places them in, so each phone panel draws them at the scale the scene does,
      with its lines. The cat's night panel is the eyeshine it has from sunset, the ghost's is the
      night it hangs in, and the scarecrow carries its crow, as it does by day */
-  cat: ["blackCat", (c) => c.propBlackCat(), {}, [120, 200, 50, 128], { phone: 0.072, o: { line: 0.65, heavy: 0.3, shade: 0.8, lit: 0.5 },
+  cat: ["blackCat", (c) => c.propBlackCat(), {}, [140, 200, 50, 128], { phone: 0.072, o: { line: 0.65, heavy: 0.3, shade: 0.8, lit: 0.5 },
     night: { ink: "#0A1020", shade: "#050A18", lit: "#B9CCEE", litOp: 0.5, eye: "#B8F25A", eyeRing: "#B8F25A", dark: ["#15223D", 0.5] } }],
   "sheet-ghost": ["cheesecloth", (c) => c.propCheeseclothGhost(), {}, [110, 175, 55, 12], { phone: 0.078, o: { line: 0.6, heavy: 0.3, shade: 0.8, lit: 0.5 },
     night: { ink: "#0A1020", shade: "#050A18", lit: "#B9CCEE", litOp: 0.4, dark: ["#15223D", 0.55] } }],

@@ -1105,7 +1105,7 @@ test("a trick-or-treater comes on Halloween night, from sunset, and stays in whe
     lift(/const SNOW=[^\n]*\nconst isSnow=[^\n]*\nconst WETC=[^\n]*\nconst isWet=[^\n]*/),
     "globalThis.holidayOn=holidayOn;globalThis.tot=trickOrTreating;",
   ].join("\n"), ctx);
-  const out = (d, alt, code = 0) => ctx.tot(ctx.holidayOn(d), d, alt, code);
+  const out = (d, alt, code = 0, hour = 20) => ctx.tot(ctx.holidayOn(d), d, alt, code, hour);
   // the night itself, on the place's own calendar, from sunset, when the barn lamps and the candles are lit
   assert.equal(ctx.holidayOn("2026-10-31").trickOrTreat, "10-31");
   assert.equal(out("2026-10-31", -14), true);
@@ -1114,12 +1114,16 @@ test("a trick-or-treater comes on Halloween night, from sunset, and stays in whe
   assert.equal(out("2026-10-31", 20), false);
   for (const d of ["2026-10-30", "2026-10-24", "2026-11-01", "2026-09-30"]) assert.equal(out(d, -14), false, d);
   assert.equal(out("2027-10-31", -14), true);
+  // the small hours of the 31st are still the 30th's night: no kid at 3 or 5 a.m., one at 9 p.m.
+  assert.equal(out("2026-10-31", -40, 0, 3), false);
+  assert.equal(out("2026-10-31", -14, 0, 5), false);
+  assert.equal(out("2026-10-31", -14, 0, 21), true);
   // a drizzle does not keep a kid in, and fog and cloud do not either. Rain does, and anything
   // heavier, and snow, ice and a storm
   for (const c of [0, 1, 2, 3, 45, 48, 51, 53, 55]) assert.equal(out("2026-10-31", -14, c), true, `code ${c}`);
   for (const c of [56, 57, 61, 63, 65, 66, 67, 71, 73, 75, 77, 80, 81, 82, 85, 86, 95, 96, 99]) assert.equal(out("2026-10-31", -14, c), false, `code ${c}`);
   // it reads the same date string the rest of Halloween does
-  assert.match(html, /const trickOrTreat=trickOrTreating\(hol,today,sunAltDeg,code\);/);
+  assert.match(html, /const trickOrTreat=trickOrTreating\(hol,today,sunAltDeg,code,localHour\);/);
   // the kid is a decoration like the pumpkins, drawn at ten units to the pixel and lit by the sky
   assert.match(html, /svg:`<g class="decor" data-decor="trick-or-treater">\$\{inkAt\(x,y,s,1,\n\s*inkRig\(layers,decorPal\(INK\.trickOrTreater,\.04\),\{s,line:\.7,heavy:\.3,shade:\.9,lit:\.5,light:lightAt\(x,y-6\)\}\)\)\}<\/g>`/);
   // at the farm at the door between the two big ones, drawn before them so both lanterns light the
@@ -1283,6 +1287,9 @@ test("a cheesecloth ghost hangs in the farm's big hardwood and swings with the g
   // landing after the cache does not move it, and hangs still in a calm
   assert.match(html, /const gq=Math\.round\(gust\/5\)\*5,amt=gq<5\?0:clamp\(1\.2\+gq\*\.28,1\.2,10\),dur=clamp\(3\.4-gq\*\.05,1\.8,3\.4\);/);
   assert.match(html, /const st=PRM\|\|!amt\?"":` style="--gs:/);
+  // in a calm it hangs still: the swing's class goes on only when there is a swing, or the CSS
+  // runs ghostSwing on its own defaults
+  assert.match(html, /<g\$\{amt\?' class="ghost-swing"':""\}\$\{st\}>/);
   assert.deepEqual(keyframes("ghostSwing"), ["transform"]);
   // drawn with the kit: two eye holes and an O of a mouth in the eye role, a hem torn into tatters
   const parts = ctx.ghost()[0].parts;
@@ -1305,8 +1312,11 @@ test("will-o'-the-wisps drift low over the marsh on dry still October nights, an
   assert.match(html, /animation-delay:-\$\{\(\(Date\.now\(\)\/1000\+i\*5\.3\)%dur\)\.toFixed\(1\)\}s/);
   assert.equal((coast.match(/\[wispX[^\]]*\]/g) || []).length, 3);
   assert.deepEqual(keyframes("wisp").sort(), ["opacity", "transform"]);
-  // they keep between the raccoon and the dock, a short reach apart
-  assert.match(coast, /const wispX=residentX\+48,wispSpan=Math\.min\(dkX-66-wispX,118\);/);
+  // they keep between the raccoon and the dock, a short reach apart, and the last one ends short of
+  // the oyster rake, measured off its own drawing, so its light falls on the water and not the shells
+  assert.match(coast, /const rakeX=W\*\.645,rakeD=scallop\(0,1\.2,15,2\.8,11,41,\{flat:\.9,bulge:\.7\}\),\[rakeBx\]=pathBox\(\[rakeD\]\);/);
+  assert.match(coast, /<g data-prop="rake" transform="translate\(\$\{rakeX\.toFixed\(1\)\}/);
+  assert.match(coast, /const wispX=residentX\+48,wispSpan=Math\.min\(Math\.min\(dkX-66,rakeX\+rakeBx-9\)-wispX,118\);/);
   for (const n of ["27-marsh-halloween-night", "38-marsh-october-moon"]) assert.match(decorOf(n), /"wisps"/, n);
   for (const n of ["29-marsh-halloween-rain-night", "40-marsh-october-dusk", "31-ridge-halloween-night", "35-marsh-november-small-hours"]) assert.doesNotMatch(decorOf(n), /"wisps"/, n);
   // and the scene harness walks every one of the new things through its own motion and keeps it in
@@ -1620,7 +1630,7 @@ test("Halloween's cobweb is strung across the corner of the app itself, clear of
   assert.ok(clearOf(open, meta, 4.5), "no thread within 5px of the type");
   // the spider's whole swing and her drop keep off the type too: a long headline under the web pulls
   // her up her dragline rather than letting her hang into it
-  const spiderBox = (p) => { const s = p.spider, L = s.D + s.d + ctx.WEB.sl, half = ctx.WEB.sw + L * Math.sin(ctx.WEB.swing * Math.PI / 180);
+  const spiderBox = (p) => { const s = p.spider, L = s.D + s.d * ctx.WEB.over + ctx.WEB.sl, half = ctx.WEB.sw + L * Math.sin(ctx.WEB.swing * Math.PI / 180);
     return { l: s.x - half, r: s.x + half, t: s.y + s.D - 1, b: s.y + L }; };
   const meets = (a, b, pad) => a.r > b.l - pad && a.l < b.r + pad && a.b > b.t - pad && a.t < b.b + pad;
   const longHead = [...meta, { l: 20, t: 152, r: 372, b: 176 }];
@@ -1657,6 +1667,10 @@ test("Halloween's cobweb is strung across the corner of the app itself, clear of
   assert.match(html, /inkAt\(0,0,WEB\.sp,1,inkUnit\(propSpider\(\),pal,\{s:WEB\.sp,light:\[-\.55,-1\]/);
   // her reach is her drawing's: half her span and her length, at her size
   assert.ok(Math.abs(ctx.WEB.sw - 60 * ctx.WEB.sp) < .05 && Math.abs(ctx.WEB.sl - 131 * ctx.WEB.sp) < .05);
+  // the spider's planned room budgets the bounce at the bottom of her drop, the same share the drop takes
+  assert.match(html, /L=D\+d\*WEB\.over\+WEB\.sl/);
+  assert.match(html, /--yo:\$\{f1\(sp\.d\*WEB\.over\)\}px/);
+  assert.match(html, /ro=\(sp\.D\+sp\.d\*WEB\.over\)\/sp\.D/);
   // she sways and now and then lets herself down and climbs back: transforms only, the dragline
   // reeled out on the same clock as her drop, phased off the wall clock, and still under reduced motion
   for (const k of ["webSwing", "webReel", "webDrop"]) {

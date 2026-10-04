@@ -422,6 +422,25 @@ async function decorCheck(page) {
         if (Math.min(k.right, b.right) - Math.max(k.left, b.left) > -1 && Math.min(k.bottom, b.bottom) - Math.max(k.top, b.top) > -1)
           out.hits.push(`${el.dataset.decor} runs into ${o.dataset.decor}`);
       }
+    // the marsh lights hang over the water, so each flame and the light it lays on the water keeps a
+    // pixel off the oyster rake through all of its drift. The glow round it is light, not a thing
+    const rake = svg.querySelector('[data-prop="rake"]');
+    if (rake) {
+      const R = rake.getBoundingClientRect();
+      for (const w of svg.querySelectorAll(".wisp")) {
+        const an = w.getAnimations(), was = an.map((a) => [a, a.currentTime, a.playState]);
+        for (let i = 0; i < (an.length ? 24 : 1); i++) {
+          for (const a of an) { a.pause(); a.currentTime = (a.effect.getTiming().delay || 0) + a.effect.getComputedTiming().duration * (i + .5) / 24; }
+          for (const c of w.children) {
+            if (c.tagName === "circle") continue;
+            const b = c.getBoundingClientRect();
+            if (Math.min(R.right, b.right) - Math.max(R.left, b.left) > -1 && Math.min(R.bottom, b.bottom) - Math.max(R.top, b.top) > -1)
+              out.hits.push(`a marsh light ${c.tagName === "ellipse" ? "lays its light on" : "runs into"} the oyster rake`);
+          }
+        }
+        for (const [a, t, st] of was) { a.currentTime = t; if (st === "running") a.play(); }
+      }
+    }
     out.hits = [...new Set(out.hits)];
     return out;
   }, MORE.source);
@@ -472,7 +491,10 @@ async function webCheck(page) {
     let spider = null;
     if (sp) {
       const an = el.getAnimations({ subtree: true }), was = an.map((a) => [a, a.currentTime, a.playState]);
-      const at = (name, f) => an.filter((a) => a.animationName === name).forEach((a) => { a.pause(); a.currentTime = f * a.effect.getComputedTiming().duration; });
+      // each from its own active time: past its wall-clock delay and a few whole cycles on, so f is
+      // where in the cycle she is whatever the clock says (an even count keeps the swing's alternate
+      // direction, so 0 and 1 are its two ends, and .76 is the bottom of her drop)
+      const at = (name, f) => an.filter((a) => a.animationName === name).forEach((a) => { a.pause(); a.currentTime = (a.effect.getTiming().delay || 0) + a.effect.getComputedTiming().duration * (4 + f); });
       const reach = [];
       for (const sw of [0, 1]) for (const dr of [0, .76]) {
         at("webSwing", sw); at("webReel", dr); at("webDrop", dr);
@@ -484,6 +506,8 @@ async function webCheck(page) {
       }
       for (const [a, t, st] of was) { a.currentTime = t; if (st === "running") a.play(); }
       spider = { animations: an.map((a) => a.animationName).sort().join(" "), drop: +(Math.max(...reach.map((r) => r.top)) - Math.min(...reach.map((r) => r.top))).toFixed(1) };
+      // a walk that never lets her down has not checked the pose that matters most
+      if (an.length && spider.drop < 1) hits.add("the spider was never let down");
     }
     const at0 = svg.getBoundingClientRect();
     scrollTo({ top: sy, behavior: "instant" });

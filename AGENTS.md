@@ -589,14 +589,18 @@ Each is a transform or nothing, and each holds perfectly still under reduced mot
   goes (`propCheeseclothGhost`, `ghostIn`): a round head under the gauze, a pinch at the neck, a hem
   torn into long uneven tatters with a thread or two trailing off them, two eye holes and an O of a
   mouth. It swings from its knot as far as the gusts say (`ghostSwing`), taken in five-mile steps
-  so the live paint landing after the cache does not move it, and in a calm it hangs still. Not at
+  so the live paint landing after the cache does not move it, and in a calm it hangs still: under 5
+  mph of gust it has no `ghost-swing` at all, because the class alone runs the CSS defaults. Not at
   the coast: the oak there already has Ghostface. `node tools/rig.mjs sheet-ghost` shows it close up.
 - **Will-o'-the-wisps on the marsh.** Three small pale green-white lights low over the bank and the
   water, between the raccoon and the dock and never more than a short reach apart (`wispsAt`), only
   on a dry still October night: the sun 6° under, no rain, no storm, the wind under 9 and the gusts
   under 15. Each drifts a few pixels and dims on its own slow clock (`wisp`, 13 to 20 seconds,
-  seeded, phased off the wall clock), and the two over the water lay a faint light on it. The coast
-  only: a marsh light belongs to a marsh.
+  seeded, phased off the wall clock), and the two over the water lay a faint light on it. The last
+  one ends short of the oyster rake, measured off the rake's own drawing (9px for the flame, its
+  light on the water and its drift), because on a phone it once stood on the shells, and the rake is
+  painted after it. `tools/scene.mjs` walks each light's drift against the rake (`data-prop="rake"`).
+  The coast only: a marsh light belongs to a marsh.
 - **A cobweb is strung across the corner of the app itself in October.** Josh, October 3 2026:
   "maybe cobwebs a corner of the app that breaks the fourth wall". It is on the glass, not in the
   scene: over the sky in the header's top right corner and in front of the rain, as if a spider had
@@ -629,10 +633,13 @@ Each is a transform or nothing, and each holds perfectly still under reduced mot
   fun, and it is three animations, transforms only, phased off the wall clock, and still under
   reduced motion. Her whole swing and her drop keep off the type the way the web does, and her drop
   is the charm, so a long headline under her moves her along the frame or shortens her line before
-  it takes her drop. She is on the glass, so the wind does not move her. `tools/scene.mjs` walks every
-  thread and puts her at both ends of her swing, hanging and let down, at 320, 430 and 760, and fails
+  it takes her drop, and her room is planned to the bottom of her bounce (`WEB.over`, the 12% her drop
+  overshoots before it settles). She is on the glass, so the wind does not move her. `tools/scene.mjs` walks every
+  thread and puts her at both ends of her swing, hanging and let down, at 320, 390, 430 and 760, each
+  animation walked from its own active time past its wall-clock delay (set straight to a fraction of
+  its duration, her pose hung on the time of day and the drop was often never checked), and fails
   a scene where any of it comes within 3px of a word, a number, a chip or the strip, where she is off
-  the end of her line, where a thread takes a tap or the place switch or the stamp stops answering,
+  the end of her line, where the walk never lets her down, where a thread takes a tap or the place switch or the stamp stops answering,
   or where the web is up outside October or missing in it. Each October scene writes a close-up of
   it at 320 and at phone width. `node tools/rig.mjs spider` shows her close up and at phone size by
   day and by night.
@@ -673,7 +680,8 @@ Each is a transform or nothing, and each holds perfectly still under reduced mot
   decorations are not exactly the ones the date calls for, whose candles are lit when they
   should not be, or where a decoration runs off the frame or into an animal.
 - **On Halloween night a trick-or-treater comes.** October 31 only, from sunset (the sun under
-  -0.83°, when the barn lamps and the candles are lit), until everything comes down at midnight: a
+  -0.83°, when the barn lamps and the candles are lit, and the place's clock past noon, because the
+  small hours before dawn on the 31st are the 30th's night), until everything comes down at midnight: a
   little kid under a bed sheet with two eye holes cut in it, holding out an orange plastic pumpkin
   pail (`propTrickOrTreater`). The night is the `trickOrTreat` day on Halloween's row in `HOLIDAYS`,
   read off the place's own date like the rest of the holiday, and `trickOrTreating` is pure and

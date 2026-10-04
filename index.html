@@ -854,11 +854,12 @@ const inSeason=(d,r)=>{if(!r)return false;const md=mdOf(d);return r[0]<=r[1]?md>
    location's own calendar, read the way the boat season is. Halloween's pumpkins go out on the
    first of October and are carved for the last week, because a carved pumpkin on the coast
    is soft inside a week. On the night itself a trick-or-treater comes, from sunset, when the barn
-   lamps and the candles are lit, and stays in when it rains: a drizzle does not keep a kid in,
+   lamps and the candles are lit (the small hours before dawn on the 31st are the 30th's night, so
+   the place's own clock has to be past noon), and stays in when it rains: a drizzle does not keep a kid in,
    rain and anything heavier does, and so do snow, ice and a storm. */
 const HOLIDAYS=[{id:"halloween",window:["10-01","10-31"],carved:"10-24",trickOrTreat:"10-31"}];
 const holidayOn=d=>HOLIDAYS.find(h=>inSeason(d,h.window))||null;
-const trickOrTreating=(hol,d,sunAlt,code)=>!!hol?.trickOrTreat&&mdOf(d)===hol.trickOrTreat&&sunAlt< -.83&&(!isWet(code)||[51,53,55].includes(code));
+const trickOrTreating=(hol,d,sunAlt,code,hour)=>!!hol?.trickOrTreat&&mdOf(d)===hol.trickOrTreat&&hour>=12&&sunAlt< -.83&&(!isWet(code)||[51,53,55].includes(code));
 /* Halloween's moon, Josh's pick (October 3 2026: "a creepy blood moon ... or harvest moon"). For
    the October window the scene's moon is "blood", the rust red of a moon in the earth's shadow,
    or "harvest", the big orange moon low over the field. Either way it keeps its real place and its
@@ -2999,7 +3000,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const today=locToday(),hol=holidayOn(today),halloween=hol?.id==="halloween";
   const carved=halloween&&mdOf(today)>=hol.carved;
   const candles=carved&&sunAltDeg< -.83&&!wet&&!storm;
-  const trickOrTreat=trickOrTreating(hol,today,sunAltDeg,code);
+  const trickOrTreat=trickOrTreating(hol,today,sunAltDeg,code,localHour);
   const decorPal=(p,d,lit=false)=>{const o={};for(const[k,v]of Object.entries(p))o[k]=typeof v==="string"&&v[0]==="#"?air(v,d):v;
     if(p.carve)o.carve=lit?p.candleLit:air(p.carve,d);
     if(lit&&p.rindLit)o.eyeRing=p.rindLit;
@@ -3137,7 +3138,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const ghostIn=(hx,hy,z,treeS,d,lx,ly)=>{const gq=Math.round(gust/5)*5,amt=gq<5?0:clamp(1.2+gq*.28,1.2,10),dur=clamp(3.4-gq*.05,1.8,3.4);
     const st=PRM||!amt?"":` style="--gs:${amt.toFixed(1)}deg;--gd:${dur.toFixed(1)}s;animation-delay:-${(Date.now()/1000%(dur*2)).toFixed(1)}s"`;
     const s=treeS*z/10;
-    return `<g class="decor" data-decor="sheet-ghost" transform="translate(${f1(hx)} ${f1(hy)})"><g class="ghost-swing"${st}><g transform="scale(${f1(z*10)/100})">`
+    return `<g class="decor" data-decor="sheet-ghost" transform="translate(${f1(hx)} ${f1(hy)})"><g${amt?' class="ghost-swing"':""}${st}><g transform="scale(${f1(z*10)/100})">`
       +`${inkRig(propCheeseclothGhost(),decorPal(INK.cheesecloth,d),{s,line:.6,heavy:.3,shade:.8,lit:.5,light:lightAt(lx,ly)})}</g></g></g>`};
   /* the defs the cat's eyeshine, the eyes and the marsh lights are drawn with */
   const hallowDefs=halloween?`<radialGradient id="catshine"><stop offset="0" stop-color="#D2F57A" stop-opacity=".5"/><stop offset=".45" stop-color="#C2F05E" stop-opacity=".14"/><stop offset="1" stop-color="#C2F05E" stop-opacity="0"/></radialGradient>`
@@ -4236,8 +4237,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     :storm?"":oysterCatcher(residentX,base+14.6,.92,1);
   /* an oyster rake: a low clump of shell at the waterline where the oystercatcher works. It is
      part of the creek, so it is there in every weather and every hour */
-  const rake=`<g transform="translate(${(W*.645).toFixed(1)} ${(base+14.8).toFixed(1)})">${inkUnit([part(scallop(0,1.2,15,2.8,11,41,{flat:.9,bulge:.7}),"body")],
-    {body:tone("#8C7A6A"),ink:lineC,shade:shadeC,lit:litC,litOp:.5*litK,shadeOp:.3*shadeK},{light:lightAt(W*.645,base+12)})}
+  const rakeX=W*.645,rakeD=scallop(0,1.2,15,2.8,11,41,{flat:.9,bulge:.7}),[rakeBx]=pathBox([rakeD]);
+  const rake=`<g data-prop="rake" transform="translate(${rakeX.toFixed(1)} ${(base+14.8).toFixed(1)})">${inkUnit([part(rakeD,"body")],
+    {body:tone("#8C7A6A"),ink:lineC,shade:shadeC,lit:litC,litOp:.5*litK,shadeOp:.3*shadeK},{light:lightAt(rakeX,base+12)})}
     <g fill="${tone("#EDE3CF")}" opacity=".75">${[-9,-4.5,.5,5,9.5].map((x,i)=>`<ellipse cx="${x}" cy="${(-.6-(i%2)*.5).toFixed(1)}" rx="1.3" ry=".55" transform="rotate(${i%2?18:-14} ${x} -.6)"/>`).join("")}</g></g>`;
   /* Halloween's night sky keeps above the treeline and what stands on it: the oak, the pines and
      the heron, measured off their own drawings, as [x0, x1, top]. The bats (batColony) and the
@@ -4251,9 +4253,11 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   /* Eyes in the dark in the spartina: a gold pair at the far left of the bank and a green pair
      just short of the dock, in the grass under the oak's right hand, clear of the heron and the
      raccoon. The marsh lights hang low between the raccoon and the dock, over the bank and the
-     water, never more than a short reach apart */
+     water, never more than a short reach apart, and the last one ends short of the oyster rake,
+     measured off its own drawing, so its light falls on open water and not on the shells: 9px
+     covers the flame's half width, its light on the water and the farthest it drifts */
   const marshEyes=nightEyes?darkEyes([[Math.max(10,W*.035),base-8.5,"gold",2.6,23,0],[dkX-40,base-8,"green",2.4,31,13]]):"";
-  const wispX=residentX+48,wispSpan=Math.min(dkX-66-wispX,118);
+  const wispX=residentX+48,wispSpan=Math.min(Math.min(dkX-66,rakeX+rakeBx-9)-wispX,118);
   const wisps=halloween&&sunAltDeg< -6&&!wet&&!storm&&wind<9&&gust<15
     ?wispsAt([[wispX,base+5,1.25,true],[wispX+wispSpan*.5,base-4,1.1,false],[wispX+wispSpan,base+10,1,true]]):"";
   const witch=witchPlan(17,GY-63,(x,y)=>y<GY-26&&skyTops.every(([a,b,t])=>x+moonR<a||x-moonR>b||y+moonR<t),skyTops);
@@ -6734,7 +6738,9 @@ document.fonts&&document.fonts.ready.then(()=>{starsClearOfType();paintCobweb()}
 const WEB={th:[6,20,35,50,66],len:[.95,1,1.03,.97,.86],rung:[.17,.31,.46,.61,.77,.93],seed:3110,Rmin:44,
   /* the spider's size (she is drawn at ten units to the pixel, so .11 is eleven), and her reach from
      the end of her dragline in px at that size: half her span, and her length */
-  sp:.11,sw:6.6,sl:14.4,swing:4};
+  sp:.11,sw:6.6,sl:14.4,swing:4,
+  /* how far past her line she bounces at the bottom of her drop, as a share of it */
+  over:1.12};
 function webPlan(boxes,{W,top,Rmax,m=5}){
   const r=mulberry(WEB.seed),j=a=>(r()-.5)*2*a,N=WEB.th.length;
   const th=WEB.th.map(t=>(t+j(3))*Math.PI/180),len=WEB.len.map(l=>l*(1+j(.05)));
@@ -6780,7 +6786,7 @@ function webPlan(boxes,{W,top,Rmax,m=5}){
   const spiderAt=g=>{
     for(const[D,d]of LINE)for(const i of[1,0,2,3]){
       const q=g.rungs.find(q=>q.outer&&q.i===i);if(!q)continue;
-      const H=quad(q.a,q.c,q.b,.5),L=D+d+WEB.sl,half=WEB.sw+L*Math.sin(sa)+1;
+      const H=quad(q.a,q.c,q.b,.5),L=D+d*WEB.over+WEB.sl,half=WEB.sw+L*Math.sin(sa)+1;
       if(H[0]+half>W-3)continue;
       /* her dragline, then the whole box she can swing and drop through, edges included */
       let ok=true;const y0=H[1]+D*Math.cos(sa)-2,y1=H[1]+L,ny=Math.ceil((y1-y0)/2),nx=Math.ceil(half);
@@ -6839,10 +6845,10 @@ function paintCobweb(){
     /* by day a warm edge toward the light; at night a wider, cool one, the way the witch takes the
        moon's, or a black spider goes out against a night sky */
     const pal={...INK.spider,...(day?{}:{lit:"#C9D6F2",litOp:.95,glint:"#DCE6FA"})};
-    const drag=`M0 0V${sp.D}`,ry=(sp.D+sp.d)/sp.D,ro=(sp.D+sp.d*1.12)/sp.D;
+    const drag=`M0 0V${sp.D}`,ry=(sp.D+sp.d)/sp.D,ro=(sp.D+sp.d*WEB.over)/sp.D;
     out+=`<g transform="translate(${f1(sp.x)} ${f1(sp.y)})"><g class="web-swing" style="--sa:${WEB.swing}deg;${ph(6.4*2)}">`
       +`<g class="web-reel" style="--ry:${ry.toFixed(3)};--ro:${ro.toFixed(3)};${ph(dd)}"><g fill="none" stroke-linecap="round">${thread(drag,.6,.85)}</g></g>`
-      +`<g class="web-drop" style="--yd:${sp.d}px;--yo:${f1(sp.d*1.12)}px;${ph(dd)}"><g transform="translate(0 ${sp.D})">`
+      +`<g class="web-drop" style="--yd:${sp.d}px;--yo:${f1(sp.d*WEB.over)}px;${ph(dd)}"><g transform="translate(0 ${sp.D})">`
       +inkAt(0,0,WEB.sp,1,inkUnit(propSpider(),pal,{s:WEB.sp,light:[-.55,-1],line:.55,heavy:.3,shade:.8,lit:day?.6:1.1}))+`</g></g></g></g>`;
   }
   el.innerHTML=`<svg width="${W-x0}" height="${H}" viewBox="${x0} 0 ${W-x0} ${H}" data-web="${f1(plan.R)}"${sp?` data-spider="${f1(sp.x)} ${f1(sp.y)} ${sp.D} ${sp.d}"`:""}>${out}</svg>`;
