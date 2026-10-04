@@ -76,7 +76,21 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
   transition:background 1.2s var(--ease)}
 .sky-fx{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
 .sky-fx svg{position:absolute;inset:0;width:100%;height:100%}
-.sky>*:not(.sky-fx):not(.flash):not(.rainfx){position:relative;z-index:2}
+.sky>*:not(.sky-fx):not(.flash):not(.rainfx):not(.cobweb){position:relative;z-index:2}
+/* Halloween's cobweb is on the glass, so it is over everything in the sky, the rain included, and
+   it is out of the flow and takes no tap: nothing under it moves and every tap goes through it */
+.cobweb{position:absolute;top:0;right:0;width:0;height:0;z-index:3;pointer-events:none}
+.cobweb svg{position:absolute;top:0;right:0;display:block;overflow:hidden;pointer-events:none}
+.cobweb .web-swing,.cobweb .web-reel,.cobweb .web-drop{transform-box:view-box;transform-origin:0 0}
+/* the spider sways on her dragline the way a spider on silk does, and now and then lets herself
+   down a little and climbs back: the dragline is reeled out (web-reel) exactly as far as she drops
+   (web-drop), on one clock, so she never leaves the end of it */
+.cobweb .web-swing{animation:webSwing var(--sw,6.4s) ease-in-out infinite alternate}
+@keyframes webSwing{from{transform:rotate(var(--sa,3.5deg))}to{transform:rotate(calc(var(--sa,3.5deg) * -1))}}
+.cobweb .web-reel{animation:webReel var(--dd,29s) ease-in-out infinite}
+@keyframes webReel{0%,73%,100%{transform:none}76%{transform:scaleY(var(--ro,1.3))}78.5%,87%{transform:scaleY(var(--ry,1.25))}}
+.cobweb .web-drop{animation:webDrop var(--dd,29s) ease-in-out infinite}
+@keyframes webDrop{0%,73%,100%{transform:none}76%{transform:translateY(var(--yo,4px))}78.5%,87%{transform:translateY(var(--yd,3px))}}
 /* Lightning runs on one clock for the whole sky, so a bolt and the wash that goes with
    it are the same event rather than two animations that happen to be on at once. The old
    pair could not have been: the wash cycled every 7s and the bolt every 37s, so the sky
@@ -354,6 +368,20 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes witchBob{from{transform:translateY(var(--wba,1px)) rotate(var(--wbr,1deg))}to{transform:translateY(calc(var(--wba,1px) * -1)) rotate(calc(var(--wbr,1deg) * -1))}}
 #sceneSvg .witch-cape{animation:witchCape var(--wcd,1s) ease-in-out infinite alternate}
 @keyframes witchCape{from{transform:rotate(var(--wc,2deg))}to{transform:rotate(calc(var(--wc,2deg) * -.7))}}
+/* More Halloween (October only). The black cat's tail is its own joint at the root and flicks now and
+   then: a long sit, then two quick flicks and a settle. The cheesecloth ghost hangs from its knot and
+   swings as far as the gusts say, inside the hardwood's own sway. The eyes in the dark open, look,
+   blink once and go, each pair on its own clock. The marsh lights drift and dim, slowly. All of
+   them pivot on their own joint's 0 0, and all of them are transforms and opacity */
+#sceneSvg .cat-tail,#sceneSvg .ghost-swing,#sceneSvg .dark-eyes{transform-box:view-box;transform-origin:0 0}
+#sceneSvg .cat-tail{animation:catTail 23s ease-in-out infinite}
+@keyframes catTail{0%,70%,100%{transform:rotate(0)}73.5%{transform:rotate(-17deg)}77%{transform:rotate(4deg)}80.5%{transform:rotate(-11deg)}85%{transform:rotate(0)}}
+#sceneSvg .ghost-swing{animation:ghostSwing var(--gd,3s) ease-in-out infinite alternate}
+@keyframes ghostSwing{from{transform:rotate(var(--gs,3deg))}to{transform:rotate(calc(var(--gs,3deg) * -.8))}}
+#sceneSvg .dark-eyes{animation:darkEyes var(--ed,29s) ease-in-out infinite}
+@keyframes darkEyes{0%,9%{opacity:0;transform:scaleY(1)}15%{opacity:1}43%{transform:scaleY(1)}44.5%{transform:scaleY(.08)}46%{transform:scaleY(1)}61%{opacity:1}68%,100%{opacity:0;transform:scaleY(1)}}
+#sceneSvg .wisp{opacity:.7;animation:wisp var(--wd,13s) ease-in-out infinite}
+@keyframes wisp{0%,100%{transform:translate(0,0);opacity:.35}28%{transform:translate(var(--wx1,4px),var(--wy1,-1px));opacity:.9}52%{opacity:.5}74%{transform:translate(var(--wx2,-3px),var(--wy2,1px));opacity:.85}}
 .city-beacon{opacity:.15;animation:cityBeacon var(--beacon-d,7s) ease-in-out infinite}
 @keyframes cityBeacon{0%,78%,100%{opacity:.12}82%,87%{opacity:.82}91%{opacity:.12}}
 .fox-head{animation:foxSniff 31s ease-in-out infinite}
@@ -712,6 +740,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   <div class="chips" id="chips"></div>
   <div class="nowcast" id="nowcast"><span id="ncText"></span><span class="nc-bars" id="ncBars"></span></div>
   <div class="scene"><svg id="sceneSvg" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-label="Sun and moon over the marsh horizon"></svg></div>
+  <div class="cobweb" id="cobweb" aria-hidden="true" hidden></div>
 </header>
 
 <section>
@@ -824,9 +853,12 @@ const inSeason=(d,r)=>{if(!r)return false;const md=mdOf(d);return r[0]<=r[1]?md>
    and come down the morning after the holiday passes. A window is a pair of month-days on the
    location's own calendar, read the way the boat season is. Halloween's pumpkins go out on the
    first of October and are carved for the last week, because a carved pumpkin on the coast
-   is soft inside a week. */
-const HOLIDAYS=[{id:"halloween",window:["10-01","10-31"],carved:"10-24"}];
+   is soft inside a week. On the night itself a trick-or-treater comes, from sunset, when the barn
+   lamps and the candles are lit, and stays in when it rains: a drizzle does not keep a kid in,
+   rain and anything heavier does, and so do snow, ice and a storm. */
+const HOLIDAYS=[{id:"halloween",window:["10-01","10-31"],carved:"10-24",trickOrTreat:"10-31"}];
 const holidayOn=d=>HOLIDAYS.find(h=>inSeason(d,h.window))||null;
+const trickOrTreating=(hol,d,sunAlt,code)=>!!hol?.trickOrTreat&&mdOf(d)===hol.trickOrTreat&&sunAlt< -.83&&(!isWet(code)||[51,53,55].includes(code));
 /* Halloween's moon, Josh's pick (October 3 2026: "a creepy blood moon ... or harvest moon"). For
    the October window the scene's moon is "blood", the rust red of a moon in the earth's shadow,
    or "harvest", the big orange moon low over the field. Either way it keeps its real place and its
@@ -1954,6 +1986,174 @@ const propWitch=()=>{
 /* her extent in her own units, measured from her seat on the handle (0 0), so the scene can keep
    her whole hat and twigs off the frame's edge before she comes in */
 const WITCH_BOX=[-94,-71,76,17];
+/* The spider in Halloween's cobweb is a black widow, the cobweb weaver of both places (the southern
+   one on the coast, the northern one at the farm), hanging head down on her dragline belly to us, the
+   way she hangs in her web: a round glossy abdomen with the red hourglass on it, a small head, and
+   eight long thin legs, the front pair the longest. At phone size that is a black bead with a fleck
+   of red and its legs out, which is what reads; her shine, her eyes and the waist of the hourglass
+   are for the close-up. Drawn at ten units to the pixel (the cobweb shows her at eleven, WEB.sp), with
+   the dragline meeting her at 0 0. */
+const propSpider=()=>{
+  /* each leg is two strokes, the femur out to the knee and the rest of it on to the tip, so the
+     knee is a joint and not a curve: a smooth leg read as a claw. [x, y, width] for the right side,
+     turned over for the left. I reaches down past her head, II out and down, III, the shortest, out
+     and back, and IV back up beside her abdomen */
+  const L=[[[9,77,4.4],[27,90,3.8]],[[27,90,3.6],[35,110,2.4],[40,128,.6]],
+    [[12,71,4.4],[33,68,3.8]],[[33,68,3.6],[46,83,2.4],[56,100,.6]],
+    [[12.5,65,4.2],[28,53,3.6]],[[28,53,3.4],[40,55,2.3],[50,62,.6]],
+    [[11,60,4.4],[31,43,3.8]],[[31,43,3.6],[38,24,2.4],[42,5,.6]]];
+  const legs=[];for(const sx of[-1,1])for(const l of L)legs.push(pTaper(l.map(([x,y,w])=>[x*sx,y,w]),"leg"));
+  return[...legs,
+    pBlob([[0,2],[13,5.5],[21.5,15],[24.5,29],[21.5,43],[12.5,52.5],[0,56.5],[-12.5,52.5],[-21.5,43],[-24.5,29],[-21.5,15],[-13,5.5]],"body"),
+    pBlob([[0,53],[9.5,56],[13.5,64],[12.5,73],[7.5,80],[0,82.5],[-7.5,80],[-12.5,73],[-13.5,64],[-9.5,56]],"body"),
+    /* the hourglass, two triangles with their sides drawn in, meeting at a narrow waist */
+    part("M -6 19 Q 0 20 6 19 Q 3.4 25.5 1.3 30 Q 3.4 34.5 6 41 Q 0 40 -6 41 Q -3.4 34.5 -1.3 30 Q -3.4 25.5 -6 19 Z","mark"),
+    /* the gloss a black widow has, a soft crescent toward the light */
+    pBlob([[-17.5,15],[-13,9],[-6.5,6.6],[-11,10.6],[-15,17]],"glint",{op:.6}),
+    pDot(-3.4,77.2,2,"eye"),pDot(3.4,77.2,2,"eye")];
+};
+/* Halloween night's trick-or-treater: a little kid under a bed sheet with two eye holes cut in it,
+   holding out an orange plastic pumpkin pail. Facing us, drawn at ten units to the screen pixel with
+   y=0 on the ground under the sneakers and x=0 at the middle of the sheet, and scaled down by the
+   scene, as the faces in the oak and the loft are. What has to survive on a phone is a pale bell
+   with a round head, two black eye holes, two dark sneakers under the hem and an orange ball held
+   out at its side, because the feet are what say a kid in a sheet and not a ghost. The rest is for
+   the close-up: the head tipped toward the pail, the folds the sheet falls in and its uneven hem,
+   the hand out from under it on the handle, and the pail's ribs, its face and the candy at its rim.
+   side is the hand the pail is in (1 is our right). Three units back to front: the sneakers, the
+   sheet, then the hand and the pail on its handle */
+const propTrickOrTreater=(side=1,tip=.1)=>{
+  const ca=Math.cos(tip),sa=Math.sin(tip),X=([x,y])=>[x*side,y];
+  /* the head is tipped about the neck toward the pail */
+  const H=([x,y])=>{const dy=y+66;return X([x*ca-dy*sa,-66+x*sa+dy*ca])};
+  const B=(pts,role,x)=>pBlob(pts.map(X),role,x),S=(pts,role,x)=>pTaper(pts.map(([a,b,w])=>[...X([a,b]),w]),role,{},x);
+  const oval=(cx,cy,rx,ry)=>Array.from({length:10},(_,i)=>{const a=i/10*Math.PI*2;return[cx+Math.cos(a)*rx,cy+Math.sin(a)*ry]});
+  const noSil={noSil:true};
+  /* two sneakers, their toes turned out a little, a white sole under each */
+  const feet=[B([[-26,-1.5],[-26.5,-7],[-22,-14],[-13,-16],[-6,-13],[-5,-4],[-8.5,0],[-21.5,0]],"shoe"),
+    B([[5,-4],[6,-13],[13,-16],[22,-14],[26.5,-7],[26,-1.5],[21.5,0],[8.5,0]],"shoe"),
+    S([[-23.5,-1.3,2],[-8,-1.2,2]],"sole",noSil),S([[8,-1.2,2],[23.5,-1.3,2]],"sole",noSil)];
+  /* the sheet: the round head, a little give under the chin, the far arm down inside it and the
+     near one out to the pail, so the cloth tents from the shoulder to the wrist and falls from there
+     to the hem. The hem dips where the cloth folds */
+  const dome=[150,180,210,240,270,300,330,360,390].map(a=>{const r=a*Math.PI/180;return H([Math.cos(r)*25,-90+Math.sin(r)*25.5])});
+  const sheet=[pBlob([X([-41,-15]),X([-37,-31]),X([-32.5,-47]),X([-28,-59]),X([-21.5,-69]),...dome,X([22,-69]),X([30,-63.5]),X([39,-63]),
+    X([46.5,-63.5]),X([48,-57]),X([45,-45]),X([44,-29]),X([45,-15]),X([35,-12]),X([25,-15.5]),X([14,-12]),X([3,-15]),X([-8,-11.5]),X([-19,-15]),X([-30,-12])],"sheet")];
+  for(const f of[[[-8,-70,.4],[-11,-45,2.4],[-15,-15,.6]],[[8,-69,.4],[11.5,-44,2],[15,-14,.5]],[[33,-58,.4],[36,-36,2.2],[35,-14,.4]],[[-24,-58,.4],[-28,-36,1.8],[-31,-15,.4]]])
+    sheet.push(S(f,"fold",noSil));
+  /* two eye holes, cut by hand, so not quite a pair */
+  sheet.push(pBlob(oval(-9.8,-93.5,6.2,8.2).map(H),"eye"),pBlob(oval(9.4,-94.5,5.8,7.8).map(H),"eye"));
+  /* the pail, a plastic jack-o'-lantern: ribs, a face, its dark opening and two wrapped candies at
+     the rim, on a thin handle. The hand comes out from under the cloth at the wrist and the handle
+     runs across its fingers */
+  const pail=[B([[46,-61.6],[49.5,-63.6],[53.5,-62.4],[54.6,-58.8],[52.4,-56],[48.4,-56.2],[46,-58.4]],"skin"),
+    S([[37,-45,2.4],[39,-55,2.4],[45,-60,2.4],[51,-60.6,2.4],[57,-60,2.4],[63,-55,2.4],[65,-45,2.4]],"handle"),
+    B([[44,-50.5],[47.5,-54],[50.5,-51.5],[54,-55],[57.5,-51.5],[55,-48],[46,-48]],"candy"),
+    B([[34,-46],[40,-49.5],[51,-50.5],[62,-49.5],[68,-46],[70,-38],[68,-29],[62,-23.5],[51,-21.5],[40,-23.5],[34,-29],[32,-38]],"pail"),
+    B([[37,-47.2],[51,-49.4],[65,-47.2],[51,-45.4]],"rim",noSil),
+    S([[42,-46.5,.4],[39.5,-36,2.2],[42,-25,.4]],"rib",noSil),S([[60,-46.5,.4],[62.5,-36,2.2],[60,-25,.4]],"rib",noSil),
+    B([[42,-37.5],[45,-42],[47.8,-38]],"mark"),B([[54.2,-38],[57,-42],[60,-37.5]],"mark"),
+    B([[41.5,-33],[46,-31.6],[51,-31.2],[56,-31.6],[60.5,-33],[58.4,-29],[51,-27.2],[43.6,-29]],"mark")];
+  return[{parts:feet},{parts:sheet},{parts:pail}]};
+/* ── More Halloween: the black cat, the cheesecloth ghost and the scarecrow ─────────────────────
+   Each is drawn at z units to the unit below (ten, so the kit's rounding never steps an edge) and
+   scaled down by the scene, as the faces in the oak and the loft are. */
+/* The black cat sits on y=0 (a plank, a rail) facing -x with its head turned to us, so both eyes
+   show: amber with a slit by day, and at night the scene paints them its eyeshine. A curved chest
+   over straight front legs, the back running down in one line to a big round haunch, two pointed
+   ears. What has to survive on a phone is a black sitting cat with two ears and two eyes; the
+   inner ears, the haunch line and the whiskers are for the close-up. Its tail hangs off the back
+   edge and is its own joint at the root, so it can flick now and then (catTail, phased off the
+   wall clock). About 8 across and 12 tall to the ear tips */
+const propBlackCat=(tail="",z=10)=>{
+  const Z=pts=>pts.map(([x,y,w])=>w==null?[x*z,y*z]:[x*z,y*z,w*z]);
+  const B=(pts,role,x)=>pBlob(Z(pts),role,x),T=(pts,role,x)=>pTaper(Z(pts),role,{},x),noSil={noSil:true};
+  const tri=(pts,role)=>part(`M ${Z(pts).map(([x,y])=>`${f1(x)} ${f1(y)}`).join(" L ")} Z`,role);
+  return[{open:`<g class="cat-tail"${tail?` style="${tail}"`:""}>`,pivot:[3.7*z,-.5*z],layers:[{parts:[
+      T([[3.4,-.7,1.5],[5,-.2,1.35],[5.7,1.8,1.2],[5.5,4.2,1],[4.6,5.9,.85],[3.7,6.3,.45]],"body")]}]},
+    {parts:[
+      T([[-1.7,-3.4,1.1],[-1.8,-.2,1.05]],"far"),
+      B([[-3.1,0],[-3.05,-1.6],[-3.25,-3.6],[-3.05,-5.4],[-2.4,-6.6],[0,-7],[1.2,-6],[2.2,-4.6],[3.4,-3.4],[4.3,-1.9],[4.2,-.5],[3.4,.05],[.5,.1],[-1.8,.05]],"body"),
+      T([[-2.6,-3.6,1.25],[-2.75,-.2,1.3]],"body"),
+      /* the haunch, a soft line inside the silhouette */
+      T([[3.7,-2.7,.3],[2.4,-2.3,.34],[1.4,-.9,.3],[1.3,-.15,.2]],"detail"),
+      B([[-4,-8.1],[-3.6,-9.7],[-2.4,-10.5],[-.6,-10.5],[.6,-9.7],[1,-8.1],[.5,-6.95],[-.6,-6.4],[-1.5,-6.3],[-2.4,-6.4],[-3.5,-6.95]],"body"),
+      tri([[-3.7,-9.2],[-3.75,-12.2],[-1.9,-10.4]],"body"),tri([[-1.1,-10.4],[.75,-12.2],[.95,-9.2]],"body"),
+      tri([[-3.42,-9.75],[-3.45,-11.3],[-2.45,-10.35]],"mark"),tri([[-.55,-10.35],[.45,-11.3],[.62,-9.75]],"mark"),
+      /* big storybook eyes, almond and a little tilted, with the slit an amber eye has by day */
+      B([[-3.05,-8.3],[-2.45,-8.95],[-1.75,-8.5],[-2.35,-7.85]],"eye"),B([[-.95,-8.5],[-.25,-8.95],[.35,-8.3],[-.35,-7.85]],"eye"),
+      T([[-2.4,-8.82,.26],[-2.4,-7.98,.26]],"eyeRing"),T([[-.3,-8.82,.26],[-.3,-7.98,.26]],"eyeRing"),
+      tri([[-1.62,-7.55],[-1.08,-7.55],[-1.35,-7.18]],"nose"),
+      /* whiskers, out past the cheeks, for the close-up */
+      ...[[-1,1],[-1,-1],[1,1],[1,-1]].map(([o,u])=>T([[-1.35+o*.6,-7.3+u*.12,.1],[-1.35+o*2.9,-7.55+u*.55,.05]],"whisker",noSil))]}]};
+/* A cheesecloth ghost hung from a limb. (0, 0) is the knot it hangs from, and it falls about thirteen
+   units: a round head under the cloth, a pinch at the neck, then the gauze flaring out to a hem torn
+   into long uneven tatters, a thread or two trailing off them. Two eye holes and an O of a mouth, in
+   the eye role, so they are painted last in black with no outline. At phone size it is a small pale
+   ghost with a ragged hem, and the folds and the threads are for the close-up */
+const propCheeseclothGhost=(z=10)=>{
+  const Z=pts=>pts.map(([x,y,w])=>w==null?[x*z,y*z]:[x*z,y*z,w*z]);
+  const B=(pts,role,x)=>pBlob(Z(pts),role,x),T=(pts,role,x)=>pTaper(Z(pts),role,{},x),noSil={noSil:true};
+  return[{parts:[
+    T([[0,-.2,.28],[.05,1.2,.26],[0,2.3,.24]],"string",noSil),
+    B([[0,1.9],[1.6,2.3],[2.4,3.3],[2.6,4.8],[2.25,5.9],[2.95,7.4],[3.7,9.2],[4.65,11.9],[3.85,10.6],[3.25,13.3],[2.5,10.85],[1.55,12.35],[.65,10.75],[-.5,13.7],[-1.3,10.95],[-2.25,12.7],[-3.05,10.65],[-4.35,12.3],[-3.85,9.3],[-3.05,7.4],[-2.3,5.9],[-2.6,4.8],[-2.4,3.3],[-1.6,2.3]],"sheet"),
+    /* the knot gathers the cloth at the crown */
+    B([[-.55,1.75],[0,1.45],[.55,1.75],[.4,2.5],[-.4,2.5]],"knot"),
+    /* the folds the gauze falls in, and the threads that trail off its tatters */
+    T([[.9,6.3,.1],[1.65,9,.36],[2.15,11,.1]],"fold",noSil),T([[-1.05,6.25,.1],[-1.5,9.2,.32],[-1.05,11.9,.1]],"fold",noSil),T([[-.1,6.6,.08],[0,8.6,.24],[.25,10.6,.08]],"fold",noSil),
+    T([[3.25,13.1,.16],[3.4,14.3,.09],[3.2,15.2,.04]],"thread",noSil),T([[-.5,13.5,.16],[-.65,14.7,.08],[-.4,15.5,.04]],"thread",noSil),T([[-4.3,12.1,.14],[-4.55,13.2,.04]],"thread",noSil),
+    B([[-1.55,3.55],[-.95,3.25],[-.45,3.75],[-.55,4.75],[-1,5.05],[-1.5,4.6]],"eye"),
+    B([[1.55,3.55],[.95,3.25],[.45,3.75],[.55,4.75],[1,5.05],[1.5,4.6]],"eye"),
+    B([[0,5.55],[.46,5.9],[.48,6.7],[0,7.05],[-.48,6.7],[-.46,5.9]],"eye")]}]};
+/* A scarecrow on its post in the field, y=0 at the foot of the post: bib overalls with a patch on
+   them over a red flannel shirt, arms out along the crossbar with straw at the cuffs and the ankles,
+   a burlap sack of a head with a stitched face, and a floppy straw hat. About 26 tall and 23 across
+   the arms. A crow sits on its left arm by day, because a scarecrow with a crow on it is the joke,
+   and at phone size the crow is a black bird with a bill on a red arm. The scarecrow never moves */
+const propScarecrow=(crow=false,z=10)=>{
+  const Z=pts=>pts.map(([x,y,w])=>w==null?[x*z,y*z]:[x*z,y*z,w*z]);
+  const M=pts=>pts.map(([x,y,w])=>w==null?[-x,y]:[-x,y,w]);
+  const B=(pts,role,x)=>pBlob(Z(pts),role,x),T=(pts,role,x)=>pTaper(Z(pts),role,{},x),noSil={noSil:true};
+  const wisp=(from,tips)=>tips.map(([x,y])=>T([[...from,.62],[x,y,.12]],"straw"));
+  const L=[{parts:[
+    T([[0,0,1.35],[0,-10,1.2],[0,-23.4,1]],"post"),
+    /* the legs hang off the post, the straw out of the ankles */
+    T([[-1,-9.6,2.1],[-1.25,-4.3,1.8]],"denim"),T([[1,-9.6,2.1],[1.35,-4.5,1.8]],"denim"),
+    ...wisp([-1.45,-4.6],[[-2.4,-2.7],[-1.45,-2.2],[-.6,-2.8]]),...wisp([1.55,-4.8],[[2.5,-2.9],[1.6,-2.4],[.75,-3]]),
+    /* the arms out along the crossbar, drooping a little at the cuffs */
+    T([[-2.6,-16.5,2.6],[-6,-16.15,2.25],[-9.3,-15.55,2.05]],"shirt"),T(M([[-2.6,-16.5,2.6],[-6,-16.15,2.25],[-9.3,-15.55,2.05]]),"shirt"),
+    ...wisp([-9.4,-15.55],[[-11.2,-16.7],[-11.6,-15.4],[-11,-14.1]]),...wisp([9.4,-15.55],[[11.2,-16.7],[11.6,-15.4],[11,-14.1]]),
+    B([[-3.35,-17.1],[-3.6,-15],[-2.75,-10.8],[-2.15,-9.15],[2.15,-9.15],[2.75,-10.8],[3.6,-15],[3.35,-17.1],[1.2,-17.7],[-1.2,-17.7]],"shirt"),
+    /* the flannel's check, a couple of dark bands across the arms */
+    T([[-5.4,-17.2,.3],[-5.6,-15.1,.3]],"band"),T([[5.4,-17.2,.3],[5.6,-15.1,.3]],"band"),T([[-8.2,-16.8,.28],[-8.3,-14.6,.28]],"band"),T([[8.2,-16.8,.28],[8.3,-14.6,.28]],"band"),
+    /* the bib and its straps, and a patch sewn on */
+    B([[-2.35,-13.3],[2.35,-13.3],[2.6,-9.35],[-2.6,-9.35]],"denim"),
+    T([[-1.9,-13.2,.55],[-2.55,-17,.5]],"denim"),T([[1.9,-13.2,.55],[2.55,-17,.5]],"denim"),
+    part(`M ${f1(.35*z)} ${f1(-12.4*z)} L ${f1(1.75*z)} ${f1(-12.6*z)} L ${f1(1.85*z)} ${f1(-10.9*z)} L ${f1(.45*z)} ${f1(-10.75*z)} Z`,"mark"),
+    /* straw out of the collar */
+    T([[-1.6,-17.8,.6],[-2.9,-16.9,.12]],"straw"),T([[1.6,-17.8,.6],[2.95,-17,.12]],"straw"),
+    /* the sack of a head, tied at the neck */
+    B([[-2.5,-20.5],[-2.25,-22.35],[-1,-23],[1,-23],[2.25,-22.35],[2.5,-20.5],[2.1,-18.65],[1,-17.85],[-1,-17.85],[-2.1,-18.65]],"sack"),
+    T([[-1.7,-18.1,.6],[1.7,-18.1,.6]],"band"),
+    /* the hat: a wide floppy brim, the crown, its band */
+    B([[-2.15,-22.3],[-1.95,-24.6],[-.8,-25.45],[.8,-25.45],[1.95,-24.6],[2.15,-22.3]],"hat"),
+    T([[-4.6,-21.75,.95],[-2.4,-22.35,1.25],[0,-22.5,1.3],[2.4,-22.35,1.25],[4.6,-21.75,.95]],"hat"),
+    T([[-2.05,-23.05,.65],[2.05,-23.05,.65]],"band"),
+    /* the stitched face: two button eyes and a grin with its stitches across it */
+    pDot(-.95*z,-20.7*z,.6*z,"eye"),pDot(.95*z,-20.7*z,.6*z,"eye"),
+    T([[-1.3,-19.35,.32],[0,-19,.36],[1.3,-19.35,.32]],"eye"),
+    ...[-.85,0,.85].map(x=>T([[x,-19.75,.14],[x,-18.65,.14]],"stitch",noSil))]}];
+  /* the crow: the tail a wedge angled down off the arm, the body a fat teardrop with its wing laid
+     along it, a round head and a heavy bill, its feet round the arm. It looks at the scarecrow */
+  if(crow)L.push({parts:[
+    B([[-7.4,-18.6],[-9.6,-18.25],[-11.3,-17.45],[-11.45,-16.85],[-9.4,-17.1],[-7.2,-17.6]],"body"),
+    T([[-6.7,-17.75,.22],[-6.85,-17.05,.18]],"foot"),T([[-5.8,-17.7,.22],[-5.75,-17,.18]],"foot"),
+    B([[-8.2,-17.6],[-7.6,-18.9],[-6.4,-19.65],[-5.2,-19.55],[-4.6,-18.7],[-4.9,-17.8],[-6.1,-17.5]],"body"),
+    B([[-5.9,-19.8],[-5.4,-20.85],[-4.4,-21.1],[-3.7,-20.55],[-3.75,-19.6],[-4.5,-19.1],[-5.5,-19.15]],"body"),
+    T([[-3.95,-20.45,.85],[-2.35,-20.05,.15]],"beak"),
+    T([[-5.4,-19.05,.5],[-6.6,-18.6,.62],[-8.1,-18.15,.3]],"wing",noSil),
+    pDot(-4.3*z,-20.4*z,.3*z,"crowEye",noSil)]});
+  return L};
 /* Great horned owl on its own branch, frontal; y=0 is the top of the branch it grips. Ear
    tufts, a rust facial disc with a dark rim, big yellow eyes, a white bib, a barred breast.
    The eyes are their own joint so the blink closes them onto the eye line */
@@ -2562,6 +2762,27 @@ const INK={
      cord, the grin, and her eye and the cat's, which keep their shine at night */
   witch:{robe:"#25202E",cape:"#2E2142",lining:"#74305F",hat:"#231C30",band:"#6E3E86",skin:"#4A6440",skinFar:"#3A5034",hair:"#3A3F4C",fold:"#2F2A3A",mark:"#EFE3B8",detail:"#4E3E22",
     wood:"#3E2C20",straw:"#5E4C2E",cord:"#7E3C2A",boot:"#17121C",bootFar:"#100C14",cat:"#15121A",eye:"#F4E27A",ink:"#2A1B33",shade:"#3A2350",lit:"#FFE6B0",litOp:0.9},
+  /* the black widow in the cobweb: glossy black, the red hourglass, and dark red eyes. She is on the
+     glass, not in the scene, so the sky does not light her: the day gives her a warm edge, the night a
+     cool one, which is what keeps a black spider from going out against a night sky */
+  spider:{body:"#17111A",leg:"#17111A",mark:"#C9302A",glint:"#F4EEF6",eye:"#5A1A1E",ink:"#060407",shade:"#000000",shadeOp:0.4,lit:"#E9DCCB",litOp:0.5},
+  /* the trick-or-treater: a cotton sheet a touch warm of white, its eye holes the dark inside it,
+     dark sneakers, and a pail in the bright orange of the plastic ones, a shade hotter than the
+     pumpkins so the two never read as one */
+  trickOrTreater:{sheet:"#F3F0E8",fold:"#D6D0C4",eye:"#120D16",shoe:"#3B3247",sole:"#E6E0D4",skin:"#E8B48C",pail:"#F57A18",rib:"#C65A12",mark:"#2A160E",
+    rim:"#6E3010",handle:"#2A2430",candy:"#D8344E",ink:"#2A1B33",shade:"#3A2350",lit:"#FFE6B0",litOp:0.5},
+  /* the black cat: a soft black, the far leg and the inner ears a shade deeper, amber eyes with a
+     slit by day, and the green eyeshine the scene gives it from sunset (eyeNight, never lit by the
+     sky, because it is the sky's own light coming back) */
+  blackCat:{body:"#2A2430",far:"#1A1520",detail:"#463E4E",mark:"#4A3440",eye:"#E8B43A",eyeNight:"#B8F25A",eyeRing:"#1A1214",nose:"#7A4A55",whisker:"#9A92A2",ink:"#120E16",shade:"#0C0912",lit:"#FFE6B0",litOp:0.6},
+  /* the cheesecloth ghost: gauze a touch warm of white, its folds and threads greyer, the knot and
+     the string a dull twine */
+  cheesecloth:{sheet:"#EFECE2",fold:"#CFC9BB",thread:"#DCD7CA",knot:"#D8D2C2",string:"#7A7064",eye:"#141018",ink:"#2A1B33",shade:"#3A2350",lit:"#FFF2CC",litOp:0.45},
+  /* the scarecrow: a red flannel shirt with a dark check, faded denim with a tan patch, a burlap
+     sack, straw and a straw hat with a dark band, a weathered post; and the crow on its arm, a
+     blue-black with a lighter wing and a pale eye */
+  scarecrow:{post:"#7A5C40",shirt:"#A8432E",band:"#5E2A22",denim:"#4C6286",mark:"#B98A4A",sack:"#C9A56C",straw:"#E2C675",hat:"#D8B866",stitch:"#5E3A24",eye:"#1E1416",
+    body:"#22202A",wing:"#3A3850",beak:"#2E2C34",foot:"#2E2C34",crowEye:"#B9A270",ink:"#2A1B33",shade:"#3A2350",lit:"#FFE6B0",litOp:0.5},
   bale:{straw:"#CFAA5A",flake:"#D3AE5E",top:"#EFD896",end:"#E0C070",endLt:"#EFD999",endDk:"#CFAF62",seam:"#C2A052",stub:"#BA9A4E",stubLt:"#E4C880",band:"#A47C48",ink:"#2A1B33",shade:"#5A4450",lit:"#FFF0C4",litOp:0.5},
 };
 
@@ -2778,6 +2999,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const today=locToday(),hol=holidayOn(today),halloween=hol?.id==="halloween";
   const carved=halloween&&mdOf(today)>=hol.carved;
   const candles=carved&&sunAltDeg< -.83&&!wet&&!storm;
+  const trickOrTreat=trickOrTreating(hol,today,sunAltDeg,code);
   const decorPal=(p,d,lit=false)=>{const o={};for(const[k,v]of Object.entries(p))o[k]=typeof v==="string"&&v[0]==="#"?air(v,d):v;
     if(p.carve)o.carve=lit?p.candleLit:air(p.carve,d);
     if(lit&&p.rindLit)o.eyeRing=p.rindLit;
@@ -2873,6 +3095,56 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     }
     return `<g class="decor" data-decor="${cv?"jack-o-lantern":white?"white-pumpkin":"pumpkin"}">${paint}${flame}</g>`;
   };
+  /* Halloween night's trick-or-treater (propTrickOrTreater), at ten units to the pixel the way the
+     faces in the oak and the loft are drawn, lit by the sky like every decoration, and by a lantern
+     that names the kid in its `lights`, which is why the kid is drawn before the lanterns */
+  const kidAt=(x,y,side=1)=>{const layers=propTrickOrTreater(side),s=.1;
+    return{parts:layers.flatMap(l=>l.parts),x,y,s,svg:`<g class="decor" data-decor="trick-or-treater">${inkAt(x,y,s,1,
+      inkRig(layers,decorPal(INK.trickOrTreater,.04),{s,line:.7,heavy:.3,shade:.9,lit:.5,light:lightAt(x,y-6)}))}</g>`}};
+  /* ── More Halloween in the scene: the black cat, the eyes in the dark, the marsh lights, the
+     cheesecloth ghost and the scarecrow. Josh, October 3 2026: "I want MORE halloween." Each is a
+     decoration, lit by the sky it stands under, and each is built only while it is out. */
+  /* the black cat (propBlackCat) on a plank or a rail. Its eyes catch the light from sunset, the
+     hour the barn lamps come on, and then they are the green eyeshine and a soft glow round it.
+     `parts` is its body, for a lantern beside it to light */
+  const eyeshine=sunAltDeg< -.83;
+  const catAt=(x,y,s=.072)=>{const p=decorPal(INK.blackCat,.04),layers=propBlackCat(phase(23));
+    if(eyeshine){p.eye=INK.blackCat.eyeNight;p.eyeRing=INK.blackCat.eyeNight}
+    const glow=eyeshine?`<ellipse cx="-13.5" cy="-84" rx="52" ry="30" fill="url(#catshine)"/>`:"";
+    return{parts:layers[1].parts,x,y,s,svg:`<g class="decor" data-decor="black-cat">${inkAt(x,y,s,1,
+      inkRig(layers,p,{s,line:.65,heavy:.3,shade:.8,lit:.5,light:lightAt(x,y-6)})+glow)}</g>`}};
+  /* Eyes in the dark (night only): a pair that opens, looks, blinks once and goes, on its own
+     clock off the wall clock, one pair gold and one green. They are light, so the sky does not
+     tone them. Each is [x, y, colour, the eyes' spacing, the cycle, its offset] */
+  const darkEyes=pairs=>pairs.map(([x,y,c,sp,dur,off])=>{
+    const st=PRM?"":` style="--ed:${dur}s;animation-delay:-${((Date.now()/1000+off)%dur).toFixed(1)}s"`;
+    const eye=o=>{const ex=o*sp/2;return `<path d="M ${f1(ex-.85)} 0 Q ${f1(ex)} -.78 ${f1(ex+.85)} 0 Q ${f1(ex)} .5 ${f1(ex-.85)} 0 Z" transform="rotate(${o*-13} ${f1(ex)} 0)" fill="${c==="gold"?"#F6C64E":"#C2F45C"}"/>`};
+    return `<g class="decor" data-decor="eyes" data-eyes="${c}"><g transform="translate(${f1(x)} ${f1(y)})"><g class="dark-eyes"${st}><ellipse rx="${f1(sp+2.6)}" ry="3.2" fill="url(#eye${c})"/>${eye(-1)}${eye(1)}</g></g></g>`}).join("");
+  /* Will-o'-the-wisps: three small pale lights low over the marsh and the water, only on a dry
+     still night, each drifting a few pixels and dimming on its own slow clock. One over the water
+     lays a faint light on it. Each is [x, y, size, over the water] */
+  const wispsAt=pts=>`<g class="decor" data-decor="wisps"><g>${pts.map(([x,y,k,onWater],i)=>{const r=mulberry(911+i*37),dur=13+r()*7;
+    const st=PRM?"":` style="--wd:${dur.toFixed(1)}s;--wx1:${(2.5+r()*3.5).toFixed(1)}px;--wy1:${(-.6-r()*1.4).toFixed(1)}px;--wx2:${(-2-r()*3.5).toFixed(1)}px;--wy2:${(.3+r()*.9).toFixed(1)}px;animation-delay:-${((Date.now()/1000+i*5.3)%dur).toFixed(1)}s"`;
+    const P=(a,b)=>`${f1(x+a*k)} ${f1(y+b*k)}`;
+    return `<g class="wisp"${st}>${onWater?`<ellipse cx="${f1(x)}" cy="${f1(y+6*k)}" rx="${f1(2.6*k)}" ry="${f1(.55*k)}" fill="#C8F7E4" opacity=".28"/>`:""}<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(9*k)}" fill="url(#wispglow)"/>`
+      +`<path d="M ${P(.15,-2.9)} C ${P(-.2,-1.9)} ${P(1.3,-1)} ${P(1.05,.2)} A ${f1(1.08*k)} ${f1(1.08*k)} 0 0 1 ${P(-1.1,.2)} C ${P(-1.2,-.85)} ${P(-.2,-1.5)} ${P(.15,-2.9)} Z" fill="#E4FBF0"/>`
+      +`<path d="M ${P(.05,-.7)} C ${P(.5,-.25)} ${P(.55,.35)} ${P(0,.65)} C ${P(-.55,.35)} ${P(-.4,-.25)} ${P(.05,-.7)} Z" fill="#FFFFFF"/></g>`}).join("")}</g></g>`;
+  /* The cheesecloth ghost (propCheeseclothGhost) hangs from a limb at (hx, hy) in the tree's own
+     units, inside the tree's sway. It swings from its knot as far as the gusts say, and hangs
+     still in a calm. The gust is taken in steps five miles an hour wide, so the live paint landing
+     a moment after the cache does not move it. treeS is the tree's scale and z the ghost's size in
+     the tree's units */
+  const ghostIn=(hx,hy,z,treeS,d,lx,ly)=>{const gq=Math.round(gust/5)*5,amt=gq<5?0:clamp(1.2+gq*.28,1.2,10),dur=clamp(3.4-gq*.05,1.8,3.4);
+    const st=PRM||!amt?"":` style="--gs:${amt.toFixed(1)}deg;--gd:${dur.toFixed(1)}s;animation-delay:-${(Date.now()/1000%(dur*2)).toFixed(1)}s"`;
+    const s=treeS*z/10;
+    return `<g class="decor" data-decor="sheet-ghost" transform="translate(${f1(hx)} ${f1(hy)})"><g class="ghost-swing"${st}><g transform="scale(${f1(z*10)/100})">`
+      +`${inkRig(propCheeseclothGhost(),decorPal(INK.cheesecloth,d),{s,line:.6,heavy:.3,shade:.8,lit:.5,light:lightAt(lx,ly)})}</g></g></g>`};
+  /* the defs the cat's eyeshine, the eyes and the marsh lights are drawn with */
+  const hallowDefs=halloween?`<radialGradient id="catshine"><stop offset="0" stop-color="#D2F57A" stop-opacity=".5"/><stop offset=".45" stop-color="#C2F05E" stop-opacity=".14"/><stop offset="1" stop-color="#C2F05E" stop-opacity="0"/></radialGradient>`
+    +`<radialGradient id="eyegold"><stop offset="0" stop-color="#F6C64E" stop-opacity=".42"/><stop offset=".5" stop-color="#F0B840" stop-opacity=".12"/><stop offset="1" stop-color="#F0B840" stop-opacity="0"/></radialGradient>`
+    +`<radialGradient id="eyegreen"><stop offset="0" stop-color="#C8F466" stop-opacity=".42"/><stop offset=".5" stop-color="#B8EE58" stop-opacity=".12"/><stop offset="1" stop-color="#B8EE58" stop-opacity="0"/></radialGradient>`
+    +`<radialGradient id="wispglow"><stop offset="0" stop-color="#D6FFF0" stop-opacity=".85"/><stop offset=".25" stop-color="#A8F2DA" stop-opacity=".36"/><stop offset=".7" stop-color="#8AE6CF" stop-opacity=".06"/><stop offset="1" stop-color="#8AE6CF" stop-opacity="0"/></radialGradient>`:"";
+  const nightEyes=halloween&&sunAltDeg< -6&&!wet&&!storm;
   /* the glow falls off the way light does, fast and then a long way: a core about the size of
      the pumpkin and a faint warmth in the air round it, never an even disc */
   const candleDefs=`<radialGradient id="candleglow"><stop offset="0" stop-color="#FFB443" stop-opacity=".34"/><stop offset=".2" stop-color="#FFA83E" stop-opacity=".2"/><stop offset=".45" stop-color="#FF9E38" stop-opacity=".08"/><stop offset=".75" stop-color="#FF9A33" stop-opacity=".025"/><stop offset="1" stop-color="#FF9A33" stop-opacity="0"/></radialGradient>`
@@ -3411,7 +3683,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     const propAt=(parts,pal,x,y,s,d,keep=[])=>{const o={};for(const[k,v]of Object.entries(pal))o[k]=keep.includes(k)?v:air(v,d);
       Object.assign(o,{ink:inkAir(d),shade:shadeC,lit:litC,litOp:.5*litK,shadeOp:.32*shadeK});
       return inkAt(x,y,s,1,inkUnit(parts,o,{s,light:lightAt(x,y-30*s)}))};
-    const tree=(x,s,d,seed)=>`<g${treeAt(x)}>${propAt(propHardwood(seed,winter),{wood:"#5C4234",leaf:"#6E8F4A"},x,base+2,s,d)}</g>`;
+    const tree=(x,s,d,seed,extra="")=>`<g${treeAt(x)}>${propAt(propHardwood(seed,winter),{wood:"#5C4234",leaf:"#6E8F4A"},x,base+2,s,d)}${extra}</g>`;
+    /* In October a cheesecloth ghost hangs from the big left hardwood, from under its left-hand
+       leaves beside the trunk, inside the tree's sway (ghostIn) */
+    const farmGhost=halloween?inkAt(W*.055,base+2,1.3,1,ghostIn(-6.6,-12.6,.6,1.3,.08,W*.055-8.6,base-12)):"";
 
     /* the pond sits left of the barn; the barn and everything grounded stand right of it */
     const pcx=W*.335,prx=W*.235,pry=H-base+2;
@@ -3464,6 +3739,18 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       if(x>pondL+6&&x<pondR-6)continue;              /* fence stops at the pond */
       fpts.push([x,base+2-g()*2.5]);
     }
+    /* The scarecrow stands in the field across the pond, a little right of its middle, with a crow on
+       its arm by day when it is dry. It never moves */
+    const scX=pcx+prx*.05,scS=.076,crow=!dark&&!wet&&!storm;
+    const scarecrow=halloween?`<g class="decor" data-decor="scarecrow">${inkAt(scX,base+1.2,scS,1,inkRig(propScarecrow(crow),decorPal(INK.scarecrow,.1),
+      {s:scS,line:.6,heavy:.3,shade:.8,lit:.5,light:lightAt(scX,base-16)}))}</g>`:"";
+    /* The black cat sits on the top rail just right of the barn, measured off the barn and set inside
+       a span the rail runs along. It is in when it rains */
+    let fenceCat="";
+    if(halloween&&!wet&&!storm){
+      const want=barnX+27.5,i=fpts.findIndex(([x],j)=>j&&x>=want&&x-fpts[j-1][0]<48);
+      if(i>0){const[qx,qy]=fpts[i-1],[rx,ry]=fpts[i],cx=clamp(want,qx+4,rx-5),t=(cx-qx)/(rx-qx);
+        fenceCat=catAt(cx,qy+(ry-qy)*t-7.2-.75).svg}}
     for(let i=0;i<fpts.length;i++){
       const [px_,py_]=fpts[i];
       fp+=`M ${px_.toFixed(1)} ${py_.toFixed(1)} L ${px_.toFixed(1)} ${(py_-9).toFixed(1)} `;
@@ -3483,6 +3770,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       const shock={parts:propCornShock(5),x:barnX-21.5,y:barnFoot,s:.74},bale={parts:propBale(),x:baleX,y:barnFoot,s:.92};
       const whiteOne={parts:propPumpkin(6,4.4,{seed:9}),x:baleX-.7,y:barnFoot-5.4,s:.84};
       const bigL={w:9.2,h:6.8,s:.9},bigR={w:8.6,h:7.4,s:.8};
+      /* on Halloween night the trick-or-treater stands at the door between the two big ones, clear of
+         both, and both light the sheet from either side */
+      const kid=trickOrTreat?kidAt(barnX-.4,barnFoot+.4):null,kidLit=kid?[{...kid,face:true,edge:.8}]:[];
       /* the grass leaves the doorstep to them, from the shock's splayed foot to the right one's side */
       const[sx0]=pathBox(silOf(shock.parts).map(p=>p.d));
       keepClear=[[shock.x+sx0*shock.s-.4,lanR+bigR.w*bigR.s/2+.4]];
@@ -3496,11 +3786,12 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       barnDecor=`<g class="decor" data-decor="corn-shock">${decorAt(shock.parts,INK.cornShock,shock.x,shock.y,shock.s)}</g>`
         +baleShade+`<g class="decor" data-decor="straw-bale">${decorAt(bale.parts,INK.bale,bale.x,bale.y,bale.s)}</g>`
         +pumpkinAt(whiteOne.x,whiteOne.y,whiteOne.s,{w:6,h:4.4,seed:9,white:true})
-        +pumpkinAt(lanL,barnFoot+.8,bigL.s,{w:bigL.w,h:bigL.h,carved,seed:4,lights:[
+        +(kid?kid.svg:"")
+        +pumpkinAt(lanL,barnFoot+.8,bigL.s,{w:bigL.w,h:bigL.h,carved,seed:4,lights:[...kidLit,
           {...whiteOne,face:true,edge:.9},
           {...bale,face:true,roles:["end"]},
           {...shock,face:true,edge:1,k:.85,shade:[bale,whiteOne]},doorstep]})
-        +pumpkinAt(lanR,barnFoot,bigR.s,{w:bigR.w,h:bigR.h,carved,seed:6,lights:[doorstep]});
+        +pumpkinAt(lanR,barnFoot,bigR.s,{w:bigR.w,h:bigR.h,carved,seed:6,lights:[...kidLit,doorstep]});
     }
     /* split rails: inked, then the weathered wood laid over the ink */
     const fence=`<path d="${fp}${fr}" stroke="${lineC}" stroke-width="2.1" fill="none" stroke-linecap="round" opacity=".85"/><path d="${fp}${fr}" stroke="${air("#B99A76",.04)}" stroke-width="1.05" fill="none" stroke-linecap="round"/>`;
@@ -3635,6 +3926,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     const witch=witchPlan(17,base-rTop-11,(x,y)=>y<crestY(0,x)-13);
     const bats=batColony(8,(x0,x1)=>{let m=1e9;for(let x=x0;x<=x1+3;x+=6)m=Math.min(m,crestY(0,Math.min(x,x1)));return m-4},batKeep(witch));
     const owl=!wet&&!storm&&dark&&!showFlies?owlAt(rightTreeX-15,base-16,.74,1):"";
+    /* Eyes in the dark at the edge of the woods: a gold pair on the far bank behind the pond, left of
+       the scarecrow, and a green pair up the wooded fold between the cat on the rail and the right
+       hardwood, over the fox and short of the owl */
+    const farmEyes=nightEyes?darkEyes([[W*.2,base-6.5,"gold",2.6,27,4],[(barnX+29+rightTreeX-22)/2,base-17,"green",2.4,34,19]]):"";
     /* The resident, same rule as the marsh: always there, almost never moves. The cardinal
        turns up when it is cold, which is exactly when it is the only red in the field
        besides the barn.
@@ -3689,7 +3984,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
         <linearGradient id="cloudInk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${tone(mix("#FFFFFF",skyS[1],.25))}"/><stop offset=".6" stop-color="${tone(mix("#FFF4E6",skyS[2],.35))}"/><stop offset="1" stop-color="${mix(tone("#FFF4E6"),litC,.5*litK)}"/></linearGradient>
         <radialGradient id="bloom"><stop offset="0" stop-color="${litC}" stop-opacity=".55"/><stop offset=".5" stop-color="${litC}" stop-opacity=".16"/><stop offset="1" stop-color="${litC}" stop-opacity="0"/></radialGradient>
         <radialGradient id="lampglow"><stop offset="0" stop-color="#FFD27A" stop-opacity=".55"/><stop offset="1" stop-color="#FFD27A" stop-opacity="0"/></radialGradient>
-        ${candles?candleDefs:""}
+        ${candles?candleDefs:""}${hallowDefs}
         <radialGradient id="flyglow"><stop offset="0" stop-color="#F8F7B0" stop-opacity=".7"/><stop offset=".45" stop-color="#F8F7B0" stop-opacity=".18"/><stop offset="1" stop-color="#F8F7B0" stop-opacity="0"/></radialGradient>
         ${texOn?`<pattern id="paper" width="160" height="160" patternUnits="userSpaceOnUse"><image href="${paperTex()}" width="160" height="160"/></pattern>`:""}
         ${nearRain?`<linearGradient id="ridgerainfade" gradientUnits="userSpaceOnUse" x1="0" y1="${nrTop.toFixed(1)}" x2="0" y2="${nrLand.toFixed(1)}">
@@ -3712,15 +4007,17 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       ${hawk}${soarer}
       ${witchFly(witch)}
       ${pond}
+      ${farmEyes}
+      ${scarecrow}
       ${castShadow(propBarn(halloween?LOFT_WIDE:LOFT),barnX-21,base+.86,1.18,1)}
       ${barn}
-      ${fence}${barnDecor}
+      ${fence}${barnDecor}${fenceCat}
       ${cloudShadows(base-rTop*.85,rTop*.85+8)}
       ${sparkle}${glint}${pondFx}
       ${nearRain}
       ${tufts.map((d,i)=>d?`<g${bandAt(i)}><path d="${d}" fill="${grassLine}" stroke="${grassLine}" stroke-width=".8" stroke-linejoin="round"/><path d="${d}" fill="url(#blade)"/></g>`:"").join("")}
       ${catsL}${catsR}
-      ${tree(W*.055,1.3,.08,3)}${tree(W*.105,.72,.16,8)}${(owl||temp<48)?tree(rightTreeX,1.4,.04,5):""}
+      ${tree(W*.055,1.3,.08,3,farmGhost)}${tree(W*.105,.72,.16,8)}${(owl||temp<48)?tree(rightTreeX,1.4,.04,5):""}
       ${ridgeResident}
       ${deer}
       ${owl}${rainyFrog}
@@ -3846,8 +4143,17 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
      stands in front of them, so they are cut there and show either side of the post */
   const deckY=base-6.1;
   const dockLit={lights:[{parts:propDock(),x:dx,y:base-5,s:1,rims:[[dx-32,dx+22,base-6.4,.8],[dx-32,dx+22,base-1.6,.5]]}],refl:{top:base+4.2,bottom:base+11.6,gaps:[[dx+12.2,dx+15.8,base+15.4]]}};
-  const dockDecor=halloween?pumpkinAt(dx+15.8,deckY,1,{w:9.6,h:7.2,carved,seed:3,...dockLit})
-    +pumpkinAt(dx-26.8,deckY+.1,1,{w:6.6,h:4.9,seed:8}):"";
+  /* On Halloween night the trick-or-treater comes down the dock and stands at its landward end, the
+     shallow one, beside the little pumpkin and between the end piling and the middle one, clear of
+     both. The cormorant has the middle piling on a cold evening until dark, so the kid waits for it */
+  /* The black cat sits on the planks between the middle piling and the lit end, facing the land, its
+     tail down over the edge, and the lantern beside it warms its side. It is in when it rains, and
+     on a cold morning it gives the dock to the cormorant, who has the middle piling */
+  const dockCat=halloween&&!wet&&!storm&&!(temp<48&&!dark)?catAt(dx+2.5,deckY+.25):null;
+  if(dockCat)dockLit.lights.push({...dockCat,face:true,edge:.7,k:.3});
+  const dockDecor=halloween?(dockCat?dockCat.svg:"")+pumpkinAt(dx+15.8,deckY,1,{w:9.6,h:7.2,carved,seed:3,...dockLit})
+    +pumpkinAt(dx-26.8,deckY+.1,1,{w:6.6,h:4.9,seed:8})
+    +(trickOrTreat&&(dark||temp>=48)?kidAt(dx-17,deckY).svg:""):"";
 
   /* great blue heron in the shallows (rigHeron). He stands in the channel with his legs in
      the water; at the bottom of the strike his bill tip lands 27 units ahead of his feet */
@@ -3942,6 +4248,14 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     if(showHeron){const[bx,by,bw]=pathBox(flatParts(rigHeron(phase)).map(p=>p.d));tops.push([hx+bx*hs-4,hx+(bx+bw)*hs+4,hy+by*hs-4])}
     return tops;
   })():[];
+  /* Eyes in the dark in the spartina: a gold pair at the far left of the bank and a green pair
+     just short of the dock, in the grass under the oak's right hand, clear of the heron and the
+     raccoon. The marsh lights hang low between the raccoon and the dock, over the bank and the
+     water, never more than a short reach apart */
+  const marshEyes=nightEyes?darkEyes([[Math.max(10,W*.035),base-8.5,"gold",2.6,23,0],[dkX-40,base-8,"green",2.4,31,13]]):"";
+  const wispX=residentX+48,wispSpan=Math.min(dkX-66-wispX,118);
+  const wisps=halloween&&sunAltDeg< -6&&!wet&&!storm&&wind<9&&gust<15
+    ?wispsAt([[wispX,base+5,1.25,true],[wispX+wispSpan*.5,base-4,1.1,false],[wispX+wispSpan,base+10,1,true]]):"";
   const witch=witchPlan(17,GY-63,(x,y)=>y<GY-26&&skyTops.every(([a,b,t])=>x+moonR<a||x-moonR>b||y+moonR<t),skyTops);
   const bats=batN?batColony(8,(x0,x1)=>Math.min(base-22,...skyTops.filter(([a,b])=>x1>a&&x0<b).map(t=>t[2])),batKeep(witch)):"";
   /* Three gulls, on three different errands. One crosses the frame low over about seventy
@@ -4016,7 +4330,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       <radialGradient id="bloom"><stop offset="0" stop-color="${litC}" stop-opacity=".55"/><stop offset=".5" stop-color="${litC}" stop-opacity=".16"/><stop offset="1" stop-color="${litC}" stop-opacity="0"/></radialGradient>
       <radialGradient id="flyglow"><stop offset="0" stop-color="#F8F7B0" stop-opacity=".7"/><stop offset=".45" stop-color="#F8F7B0" stop-opacity=".18"/><stop offset="1" stop-color="#F8F7B0" stop-opacity="0"/></radialGradient>
       <clipPath id="marshwater"><rect x="0" y="${GY+8}" width="${W}" height="${H-GY-8}"/></clipPath>
-      ${candles?candleDefs:""}
+      ${candles?candleDefs:""}${hallowDefs}
       ${tex?`<pattern id="paper" width="160" height="160" patternUnits="userSpaceOnUse"><image href="${paperTex()}" width="160" height="160"/></pattern>`:""}
     </defs>
     <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
@@ -4040,6 +4354,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     <path d="M -5 ${base} L ${W+5} ${base}" stroke="${grassLine}" stroke-width="1.4" stroke-linecap="round" opacity=".7"/>
     ${snowing?`<path d="M -5 ${(base-1.5).toFixed(1)} L ${W+5} ${(base-1.5).toFixed(1)}" stroke="#F2F8FA" stroke-width="2.4" stroke-linecap="round" opacity=".45"/>`:""}
     ${tufts.map((d,i)=>d?`<g${bandAt(i)}><path d="${d}" fill="${grassLine}" stroke="${grassLine}" stroke-width=".95" stroke-linejoin="round"/><path d="${d}" fill="${grassInk}"/></g>`:"").join("")}
+    ${marshEyes}${wisps}
     ${cloudShadows(base-26,34)}
     ${heat}
     ${dock}${dockDecor}
@@ -4129,6 +4444,8 @@ function toggleAlert(){
   el.classList.toggle("open",open);
   el.dataset.open=open?"1":"0";
   el.setAttribute("aria-expanded",open?"true":"false");
+  /* the strip opening moves everything under it, so the cobweb is placed again */
+  paintCobweb();
 }
 function renderNowcast(mins,code,h){
   const el=document.getElementById("nowcast");
@@ -6368,6 +6685,19 @@ function render(d,live,savedAt=0){
   paintBolts();
   starsClearOfType();
   LAST={d,live,savedAt};LASTW=appW();
+  paintCobweb();
+}
+/* The line boxes of the type in the header, which the stars and Halloween's cobweb keep off. Text
+   nodes, not elements: a Range over an element also returns every child's border box, which is the
+   44px tap targets and the whole meta column */
+function typeBoxes(sel){
+  const rg=document.createRange(),lines=[];
+  for(const el of document.querySelectorAll(sel)){
+    const tw=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);
+    for(let t;(t=tw.nextNode());)if(t.data.trim()){rg.selectNodeContents(t);lines.push(...rg.getClientRects())}
+    for(const g of el.querySelectorAll("svg,.live-dot"))lines.push(g.getBoundingClientRect());
+  }
+  return lines;
 }
 /* A star that lands on a line of type reads as punctuation: one in the colon of the
    timestamp, one doubling the dot in "H 80° · L 71°". Those few are left out. Line boxes,
@@ -6376,14 +6706,7 @@ function render(d,live,savedAt=0){
 function starsClearOfType(){
   const svg=document.querySelector("#skyFx svg"),dots=svg?svg.querySelectorAll("circle"):[];
   if(!dots.length)return;
-  /* text nodes, not elements: a Range over an element also returns every child's border
-     box, which is the 44px tap targets and the whole meta column */
-  const rg=document.createRange(),lines=[];
-  for(const el of document.querySelectorAll(".masthead,.now,#verdict,#chips")){
-    const tw=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);
-    for(let t;(t=tw.nextNode());)if(t.data.trim()){rg.selectNodeContents(t);lines.push(...rg.getClientRects())}
-    for(const g of el.querySelectorAll("svg,.live-dot"))lines.push(g.getBoundingClientRect());
-  }
+  const lines=typeBoxes(".masthead,.now,#verdict,#chips");
   /* a star this has hidden has no box, so each is placed from its own percentages; otherwise
      the next call (the fonts landing a moment after the data) brought every one of them back */
   const f=svg.getBoundingClientRect();
@@ -6392,7 +6715,139 @@ function starsClearOfType(){
     st.style.display=lines.some(r=>x>r.left-8&&x<r.right+8&&y>r.top-4&&y<r.bottom+4)?"none":"";
   }
 }
-document.fonts&&document.fonts.ready.then(starsClearOfType);
+document.fonts&&document.fonts.ready.then(()=>{starsClearOfType();paintCobweb()});
+
+/* ── Halloween's cobweb, on the glass ───────────────────────────────────────────────────
+   Josh, October 3 2026: "maybe cobwebs a corner of the app that breaks the fourth wall". So for the
+   Halloween window, read off the place's own calendar the way the decorations are, a cobweb is
+   strung across the top right corner of the app itself, outside the scene, as if a spider had set
+   up on the phone. Its radials come in off the edge of the screen, two mooring threads run up the
+   gutter beside the live stamp into the corner, and a black widow hangs on her dragline under it.
+   That corner is the one with room: the place switch and the reading fill the left, and under the
+   live stamp, right of the reading, is open sky at every width.
+   It is placed, not stamped. The type in the header (the line boxes the stars keep off, the chips,
+   the rain strip and the alert strip) is measured, and the web is drawn as large as it can be, up
+   to its size for the width (Rmax), with no thread and no part of the spider's swing or her drop
+   within 5px of any of it. One with no room is not drawn, and a spider with no room under the web
+   is left off it. Every draw is made before any fitting, so a web that has to be smaller keeps its
+   shape. Pure, and test.mjs runs it. */
+const WEB={th:[6,20,35,50,66],len:[.95,1,1.03,.97,.86],rung:[.17,.31,.46,.61,.77,.93],seed:3110,Rmin:44,
+  /* the spider's size (she is drawn at ten units to the pixel, so .11 is eleven), and her reach from
+     the end of her dragline in px at that size: half her span, and her length */
+  sp:.11,sw:6.6,sl:14.4,swing:4};
+function webPlan(boxes,{W,top,Rmax,m=5}){
+  const r=mulberry(WEB.seed),j=a=>(r()-.5)*2*a,N=WEB.th.length;
+  const th=WEB.th.map(t=>(t+j(3))*Math.PI/180),len=WEB.len.map(l=>l*(1+j(.05)));
+  /* hand strung: the rungs are not evenly spaced, each span is drawn in toward the corner by its own
+     amount and droops a little under its own weight, and some of them carry dew */
+  const kk=WEB.rung.map(k=>WEB.th.map(()=>k+j(.03))),bead=WEB.rung.map(()=>WEB.th.map(()=>[r(),r(),r()]));
+  const pull=WEB.rung.map(()=>WEB.th.map(()=>[.13+j(.07),.04+r()*.07]));
+  /* two spans are broken, and their loose ends hang */
+  const brk=[[2,3,4],[3,1,8]];
+  const A=[W+2,top+m];
+  const clear=(x,y)=>boxes.every(b=>x<b.l-m||x>b.r+m||y<b.t-m||y>b.b+m);
+  const P=(R,i,k)=>[A[0]-Math.sin(th[i])*len[i]*R*k,A[1]+Math.cos(th[i])*len[i]*R*k];
+  const quad=(a,c,b,t)=>[(1-t)*(1-t)*a[0]+2*t*(1-t)*c[0]+t*t*b[0],(1-t)*(1-t)*a[1]+2*t*(1-t)*c[1]+t*t*b[1]];
+  const build=R=>{
+    const radials=th.map((_,i)=>[A,P(R,i,1)]),rungs=[];
+    kk.forEach((ks,jj)=>{
+      const outer=jj===kk.length-1;
+      for(let i=0;i<N-1;i++){
+        if(brk.some(([bi,bj])=>bi===i&&bj===jj))continue;
+        const a=P(R,i,ks[i]),b=P(R,i+1,ks[i+1]),mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2,dx=A[0]-mx,dy=A[1]-my,dl=Math.hypot(dx,dy)||1;
+        /* a rung is drawn in toward the corner by the radials either side of it, the frame less */
+        const ch=Math.hypot(b[0]-a[0],b[1]-a[1]),[k,drop]=pull[jj][i],sag=(outer?.6:1)*k*ch;
+        rungs.push({a,c:[mx+dx/dl*sag,my+dy/dl*sag+drop*ch],b,outer,i,jj});
+      }
+      /* and from the first radial onto the edge of the screen */
+      const a=P(R,0,ks[0]);rungs.push({a,c:[(a[0]+A[0])/2,a[1]+1.4],b:[A[0],a[1]+1.8],outer,i:-1,jj});
+    });
+    const loose=brk.map(([i,jj,h])=>{const a=P(R,i,kk[jj][i]);return{a,c:[a[0]-h*.3,a[1]+h*.5],b:[a[0]-h*.2,a[1]+h]}});
+    return{R,radials,rungs,loose};
+  };
+  const samples=g=>{const out=[];
+    for(const[a,b]of g.radials){const n=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/2);for(let t=0;t<=n;t++)out.push([a[0]+(b[0]-a[0])*t/n,a[1]+(b[1]-a[1])*t/n])}
+    for(const q of[...g.rungs,...g.loose]){const n=Math.ceil(Math.hypot(q.b[0]-q.a[0],q.b[1]-q.a[1])/2)+1;for(let t=0;t<=n;t++)out.push(quad(q.a,q.c,q.b,t/n))}
+    return out};
+  const fits=R=>samples(build(R)).every(([x,y])=>clear(x,y));
+  if(!(Rmax>=WEB.Rmin)||!fits(WEB.Rmin))return null;
+  let lo=WEB.Rmin,hi=Rmax;
+  if(fits(hi))lo=hi;else for(let n=0;n<16;n++){const mid=(lo+hi)/2;if(fits(mid))lo=mid;else hi=mid}
+  /* the spider: from the middle of one of the frame's lowest spans, with her whole swing and her drop
+     clear of the type and of the screen's edge. Her drop is the charm, so a tight spot moves her along
+     the frame or shortens her line before it takes her drop */
+  const sa=WEB.swing*Math.PI/180,LINE=[[17,8],[14,8],[11,8],[17,5],[14,5],[11,5],[17,0],[14,0],[11,0],[8,5],[8,0]];
+  const spiderAt=g=>{
+    for(const[D,d]of LINE)for(const i of[1,0,2,3]){
+      const q=g.rungs.find(q=>q.outer&&q.i===i);if(!q)continue;
+      const H=quad(q.a,q.c,q.b,.5),L=D+d+WEB.sl,half=WEB.sw+L*Math.sin(sa)+1;
+      if(H[0]+half>W-3)continue;
+      /* her dragline, then the whole box she can swing and drop through, edges included */
+      let ok=true;const y0=H[1]+D*Math.cos(sa)-2,y1=H[1]+L,ny=Math.ceil((y1-y0)/2),nx=Math.ceil(half);
+      for(let y=H[1]+2;y<y0&&ok;y+=2)ok=clear(H[0],y);
+      for(let a=0;a<=ny&&ok;a++)for(let b=0;b<=nx&&ok;b++)ok=clear(H[0]-half+2*half*b/nx,y0+(y1-y0)*a/ny);
+      if(ok)return{x:H[0],y:H[1],D,d};
+    }
+    return null};
+  let g=build(lo),spider=spiderAt(g);
+  for(let R=lo*.9;!spider&&R>=WEB.Rmin;R*=.9){const h=build(R),s=spiderAt(h);if(s){g=h;spider=s}}
+  /* the mooring threads run up the gutter into the corner, past the live stamp, and only where
+     they keep clear of it */
+  const moor=[[A,[W-8,-2]],[P(g.R,0,.38),[W-13,-2]]].filter(([a,b])=>{const n=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/2);
+    for(let t=0;t<=n;t++)if(!clear(a[0]+(b[0]-a[0])*t/n,a[1]+(b[1]-a[1])*t/n))return false;return true});
+  /* dew: a bead or two on some of the rungs, drawn off the same draws every time */
+  const beads=[];
+  for(const q of g.rungs){if(q.i<0)continue;const[u,v,w]=bead[q.jj][q.i];
+    if(u<.5)beads.push([...quad(q.a,q.c,q.b,.2+v*.6),.45+w*.45]);
+    if(q.outer&&w>.55)beads.push([...quad(q.a,q.c,q.b,.15+u*.3),.4+v*.35])}
+  return{...g,A,moor,beads,spider};
+}
+function paintCobweb(){
+  const el=document.getElementById("cobweb");
+  const off=()=>{el.hidden=true;el.innerHTML=""};
+  if(holidayOn(locToday())?.id!=="halloween"||!LAST)return off();
+  const S=document.getElementById("sky").getBoundingClientRect();
+  if(!S.width)return off();
+  const rel=b=>({l:b.left-S.left,t:b.top-S.top,r:b.right-S.left,b:b.bottom-S.top});
+  const mast=typeBoxes(".masthead").map(rel);
+  const boxes=[...typeBoxes(".masthead,.now,#verdict,#chips,#nowcast"),
+    ...[...document.querySelectorAll("#chips .chip,#nowcast.on,#alertStrip.on")].map(e=>e.getBoundingClientRect())]
+    .filter(b=>b.width&&b.height).map(rel);
+  const W=S.width,plan=webPlan(boxes,{W,top:Math.max(0,...mast.map(b=>b.b)),Rmax:clamp(W*.27,72,128)});
+  if(!plan)return off();
+  /* the silk is the sky's own two inks: on a bright sky a pale thread with the sky's dark ink along
+     its shadow side, the inked line; on a dark one (night, and a dusk or a dawn dark enough for the
+     pale ink) the thread is that ink and catches the light softly. Dew beads it while the sun is up */
+  const cs=getComputedStyle(document.documentElement),on=cs.getPropertyValue("--on-sky").trim()||"#0F2B36",
+    offSky=cs.getPropertyValue("--off-sky").trim()||"#F7F4EA",day=lum(on)<lum(offSky),
+    dew=document.documentElement.getAttribute("data-theme")!=="dark";
+  const silk=day?offSky:on,ink=day?on:offSky;
+  const P=p=>`${f1(p[0])} ${f1(p[1])}`,Q=q=>`M${P(q.a)}Q${P(q.c)} ${P(q.b)}`,Lp=([a,b])=>`M${P(a)}L${P(b)}`;
+  const frame=[...plan.radials.map(Lp),...plan.rungs.filter(q=>q.outer).map(Q)].join(""),
+    rungs=[...plan.rungs.filter(q=>!q.outer),...plan.loose].map(Q).join(""),moor=plan.moor.map(Lp).join("");
+  const sp=plan.spider,x0=Math.floor(Math.min(...plan.radials.map(([,b])=>b[0]),sp?sp.x-WEB.sw-6:W)-4);
+  const H=Math.ceil(Math.max(...plan.radials.map(([,b])=>b[1]),sp?sp.y+sp.D+sp.d+WEB.sl+2:0)+6);
+  const thread=(d,w,op)=>day
+    ?`<path d="${d}" stroke="${ink}" stroke-width="${w}" opacity="${f1(op*.62*100)/100}" transform="translate(.45 .5)"/><path d="${d}" stroke="${silk}" stroke-width="${f1(w*.8*100)/100}" opacity="${op}"/>`
+    :`<path d="${d}" stroke="${silk}" stroke-width="${f1(w*3.4*100)/100}" opacity="${f1(op*.09*100)/100}"/><path d="${d}" stroke="${silk}" stroke-width="${f1(w*.8*100)/100}" opacity="${f1(op*.62*100)/100}"/>`;
+  let out=`<g fill="none" stroke-linecap="round" stroke-linejoin="round">${thread(moor,.7,.8)}${thread(rungs,.62,.78)}${thread(frame,.9,.9)}</g>`;
+  if(dew)out+=`<g fill="${silk}" stroke="${ink}" stroke-width=".3" stroke-opacity=".45" opacity=".9">${plan.beads.map(([x,y,r])=>`<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(r*100)/100}"/>`).join("")}</g>`;
+  if(sp){
+    /* the swing and the drop take their phase off the wall clock, so a repaint picks her up
+       where she was */
+    const ph=p=>PRM?"":`animation-delay:-${(Date.now()/1000%p).toFixed(1)}s;`,dd=29;
+    /* by day a warm edge toward the light; at night a wider, cool one, the way the witch takes the
+       moon's, or a black spider goes out against a night sky */
+    const pal={...INK.spider,...(day?{}:{lit:"#C9D6F2",litOp:.95,glint:"#DCE6FA"})};
+    const drag=`M0 0V${sp.D}`,ry=(sp.D+sp.d)/sp.D,ro=(sp.D+sp.d*1.12)/sp.D;
+    out+=`<g transform="translate(${f1(sp.x)} ${f1(sp.y)})"><g class="web-swing" style="--sa:${WEB.swing}deg;${ph(6.4*2)}">`
+      +`<g class="web-reel" style="--ry:${ry.toFixed(3)};--ro:${ro.toFixed(3)};${ph(dd)}"><g fill="none" stroke-linecap="round">${thread(drag,.6,.85)}</g></g>`
+      +`<g class="web-drop" style="--yd:${sp.d}px;--yo:${f1(sp.d*1.12)}px;${ph(dd)}"><g transform="translate(0 ${sp.D})">`
+      +inkAt(0,0,WEB.sp,1,inkUnit(propSpider(),pal,{s:WEB.sp,light:[-.55,-1],line:.55,heavy:.3,shade:.8,lit:day?.6:1.1}))+`</g></g></g></g>`;
+  }
+  el.innerHTML=`<svg width="${W-x0}" height="${H}" viewBox="${x0} 0 ${W-x0} ${H}" data-web="${f1(plan.R)}"${sp?` data-spider="${f1(sp.x)} ${f1(sp.y)} ${sp.D} ${sp.d}"`:""}>${out}</svg>`;
+  el.hidden=false;
+}
 let LAST=null,LASTW=0,rzT;
 addEventListener("resize",()=>{clearTimeout(rzT);rzT=setTimeout(()=>{
   if(LAST&&Math.abs(appW()-LASTW)>16)render(LAST.d,LAST.live,LAST.savedAt);
@@ -6548,6 +7003,7 @@ function paintLoadingState(){
   for(const id of ["uvLead","eveLead"])
     document.getElementById(id).textContent="—";
   xpReset();LAST=null;
+  paintCobweb();
 }
 function setLoc(id){
   if(!LOC_ORDER.includes(id)||LOC.id===id)return;

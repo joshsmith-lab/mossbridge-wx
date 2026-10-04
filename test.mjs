@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v84/);
+  assert.match(worker, /mbwx-shell-v85/);
   // the clouds end in their own scallops: Josh loves the clouds and not the curly tail
   const cloud = html.match(/const propCloud=seed=>\[[\s\S]*?\];/);
   assert.ok(cloud, "propCloud should be extractable");
@@ -1091,6 +1091,232 @@ test("the scenes dress for the holidays and take it all down when they pass", as
   assert.match(scene, /decorations are \[/);
 });
 
+test("a trick-or-treater comes on Halloween night, from sunset, and stays in when it rains", async () => {
+  const [html, scene, rig] = await Promise.all([
+    readFile(new URL("index.html", root), "utf8"),
+    readFile(new URL("tools/scene.mjs", root), "utf8"),
+    readFile(new URL("tools/rig.mjs", root), "utf8"),
+  ]);
+  const lift = (re) => { const m = html.match(re); assert.ok(m, `${re} should be extractable`); return m[0]; };
+  const ctx = vm.createContext({});
+  vm.runInContext([
+    lift(/const mdOf=[^\n]*\nconst inSeason=[^\n]*/),
+    lift(/const HOLIDAYS=[^\n]*\nconst holidayOn=[^\n]*\nconst trickOrTreating=[^\n]*/),
+    lift(/const SNOW=[^\n]*\nconst isSnow=[^\n]*\nconst WETC=[^\n]*\nconst isWet=[^\n]*/),
+    "globalThis.holidayOn=holidayOn;globalThis.tot=trickOrTreating;",
+  ].join("\n"), ctx);
+  const out = (d, alt, code = 0) => ctx.tot(ctx.holidayOn(d), d, alt, code);
+  // the night itself, on the place's own calendar, from sunset, when the barn lamps and the candles are lit
+  assert.equal(ctx.holidayOn("2026-10-31").trickOrTreat, "10-31");
+  assert.equal(out("2026-10-31", -14), true);
+  assert.equal(out("2026-10-31", -1), true);
+  assert.equal(out("2026-10-31", -.5), false);
+  assert.equal(out("2026-10-31", 20), false);
+  for (const d of ["2026-10-30", "2026-10-24", "2026-11-01", "2026-09-30"]) assert.equal(out(d, -14), false, d);
+  assert.equal(out("2027-10-31", -14), true);
+  // a drizzle does not keep a kid in, and fog and cloud do not either. Rain does, and anything
+  // heavier, and snow, ice and a storm
+  for (const c of [0, 1, 2, 3, 45, 48, 51, 53, 55]) assert.equal(out("2026-10-31", -14, c), true, `code ${c}`);
+  for (const c of [56, 57, 61, 63, 65, 66, 67, 71, 73, 75, 77, 80, 81, 82, 85, 86, 95, 96, 99]) assert.equal(out("2026-10-31", -14, c), false, `code ${c}`);
+  // it reads the same date string the rest of Halloween does
+  assert.match(html, /const trickOrTreat=trickOrTreating\(hol,today,sunAltDeg,code\);/);
+  // the kid is a decoration like the pumpkins, drawn at ten units to the pixel and lit by the sky
+  assert.match(html, /svg:`<g class="decor" data-decor="trick-or-treater">\$\{inkAt\(x,y,s,1,\n\s*inkRig\(layers,decorPal\(INK\.trickOrTreater,\.04\),\{s,line:\.7,heavy:\.3,shade:\.9,lit:\.5,light:lightAt\(x,y-6\)\}\)\)\}<\/g>`/);
+  // at the farm at the door between the two big ones, drawn before them so both lanterns light the
+  // sheet, and the doorstep's pool goes under the kid's feet rather than over them
+  assert.match(html, /const kid=trickOrTreat\?kidAt\(barnX-\.4,barnFoot\+\.4\):null,kidLit=kid\?\[\{\.\.\.kid,face:true,edge:\.8\}\]:\[\];/);
+  assert.ok(html.indexOf('+(kid?kid.svg:"")') < html.indexOf("+pumpkinAt(lanL,barnFoot+.8"), "the kid is drawn before the lanterns that light it");
+  assert.match(html, /pumpkinAt\(lanL,barnFoot\+\.8,bigL\.s,\{w:bigL\.w,h:bigL\.h,carved,seed:4,lights:\[\.\.\.kidLit,/);
+  assert.match(html, /pumpkinAt\(lanR,barnFoot,bigR\.s,\{w:bigR\.w,h:bigR\.h,carved,seed:6,lights:\[\.\.\.kidLit,doorstep\]\}\)/);
+  // on the coast at the dock's landward end, kept off it while the cormorant has the middle piling
+  assert.match(html, /\+\(trickOrTreat&&\(dark\|\|temp>=48\)\?kidAt\(dx-17,deckY\)\.svg:""\):"";/);
+  assert.match(html, /const marshResident=dark\?raccoon\(residentX,base\+2\.5,\.95,1\)\n\s*:temp<48\?cormorant\(/);
+  // drawn from parts with the kit: the sneakers, the sheet with its two eye holes painted last in
+  // black, then the hand and the pail. It never moves
+  const kit = html.slice(html.indexOf("/* ── Storybook ink: the drawing kit"), html.indexOf("/* ── the scene: arc, sun / moon"));
+  const kctx = vm.createContext({});
+  vm.runInContext(`${html.match(/function mulberry\(a\)\{[\s\S]*?\}\}/)[0]}\n${kit}\nglobalThis.kid=propTrickOrTreater;globalThis.box=pathBox;globalThis.INK=INK;`, kctx);
+  const units = kctx.kid();
+  const roles = units.map((u) => [...new Set(u.parts.map((p) => p.role))].join(",")).join(" | ");
+  assert.equal(roles, "shoe,sole | sheet,fold,eye | skin,handle,candy,pail,rim,rib,mark");
+  assert.equal(units[1].parts.filter((p) => p.role === "eye").length, 2, "two eye holes");
+  assert.equal(units[0].parts.filter((p) => p.role === "shoe").length, 2, "two sneakers");
+  for (const u of units) for (const p of u.parts) assert.ok(kctx.INK.trickOrTreater[p.role], p.role);
+  const prop = html.slice(html.indexOf("const propTrickOrTreater="), html.indexOf("/* ── More Halloween: the black cat"));
+  assert.doesNotMatch(prop, /class=|style=|Math\.random|animation/);
+  // kid scale with the storybook's licence: about eleven and a half pixels tall, under the barn
+  // door's nearly fourteen and twice a jack-o'-lantern, with eye holes of more than a pixel each,
+  // the sneakers showing under the hem and the pail held out past the sheet
+  const sil = (u) => u.parts.filter((p) => !p.noSil).map((p) => p.d);
+  const [x0, y0, w, h] = kctx.box(units.flatMap(sil));
+  assert.ok(h / 10 > 11 && h / 10 < 12.5 && w / 10 > 10 && w / 10 < 11.6, `the kid is ${w / 10} x ${h / 10}`);
+  for (const p of units[1].parts.filter((q) => q.role === "eye")) { const [, , ew, eh] = kctx.box([p.d]); assert.ok(ew / 10 >= 1.1 && eh / 10 >= 1.5, `eye ${ew / 10} x ${eh / 10}`); }
+  const [, sy0, , sh] = kctx.box([units[1].parts[0].d]), [, , , fh] = kctx.box(sil(units[0]));
+  assert.ok(sy0 + sh < -10 && fh > 14, "the sneakers show under the hem");
+  const [px0] = kctx.box(sil(units[2]));
+  assert.ok(px0 > 30 && x0 + w > 65, "the pail is held out at the side");
+  // and mirrored, the pail is in the other hand
+  const [mx0, , mw] = kctx.box(kctx.kid(-1).flatMap(sil));
+  assert.ok(Math.abs(mx0 + mw + x0) < 1, "side -1 mirrors the kid");
+  assert.match(html, /trickOrTreater:\{sheet:"#F3F0E8",[^}]*pail:"#F57A18",/);
+  // the harnesses look at the kid: close up in the rig, out on Halloween night at both places and
+  // in a drizzle, in for the night in the rain, and kept off the dock while the cormorant has it
+  assert.match(rig, /"trick-or-treater": \["trickOrTreater", \(c\) => c\.propTrickOrTreater\(\)/);
+  assert.match(rig, /ghostface \| witch \| trick-or-treater/);
+  for (const name of ["27-marsh-halloween-night", "31-ridge-halloween-night", "46-marsh-halloween-drizzle-night"])
+    assert.match(scene, new RegExp(`name: "${name}"[^\\n]*decor: \\[[^\\]]*"trick-or-treater"`));
+  for (const name of ["47-ridge-halloween-rain-night", "48-marsh-halloween-cold-dusk", "29-marsh-halloween-rain-night", "38-marsh-october-moon"])
+    assert.doesNotMatch(scene.match(new RegExp(`name: "${name}"[^\\n]*`))[0], /trick-or-treater/);
+  assert.match(scene, /const MORE = \/\^\([^)]*\btrick-or-treater\b[^)]*\)\$\/;/);
+  assert.match(scene, /out\.hits\.push\(`\$\{el\.dataset\.decor\} runs into \$\{o\.dataset\.decor\}`\)/);
+});
+
+// More Halloween, Josh, October 3 2026: "I want MORE halloween." Each of these is Halloween's, a
+// decoration like the pumpkins, built only while it is out, drawn with the kit and lit by the sky
+const moreHalloween = async () => {
+  const [html, scene, rig, agents] = await Promise.all([
+    readFile(new URL("index.html", root), "utf8"),
+    readFile(new URL("tools/scene.mjs", root), "utf8"),
+    readFile(new URL("tools/rig.mjs", root), "utf8"),
+    readFile(new URL("AGENTS.md", root), "utf8"),
+  ]);
+  const kit = html.slice(html.indexOf("/* ── Storybook ink: the drawing kit"), html.indexOf("/* ── the scene: arc, sun / moon"));
+  const ctx = vm.createContext({});
+  vm.runInContext(`${html.match(/function mulberry\(a\)\{[\s\S]*?\}\}/)[0]}\n${kit}\nglobalThis.cat=propBlackCat;globalThis.ghost=propCheeseclothGhost;globalThis.scarecrow=propScarecrow;globalThis.box=pathBox;globalThis.INK=INK;globalThis.INNER=INK_INNER;`, ctx);
+  const sil = (parts) => parts.filter((p) => !p.noSil && !ctx.INNER.has(p.role)).map((p) => p.d);
+  const decorOf = (name) => { const m = scene.match(new RegExp(`name: "${name}"[^\\n]*decor: \\[([^\\]]*)\\]`)); assert.ok(m, name); return m[1]; };
+  const farm = html.slice(html.indexOf("const pcx=W*.335"), html.indexOf("/* marsh: hazy maritime treeline"));
+  const coast = html.slice(html.indexOf("/* marsh: hazy maritime treeline"), html.indexOf("/* ── smooth path through points"));
+  const keyframes = (k) => { const body = html.match(new RegExp(`@keyframes ${k}\\{([\\s\\S]*?)\\}\\}`))[1]; return [...new Set(body.match(/[a-z-]+(?=:)/g))]; };
+  return { html, scene, rig, agents, ctx, sil, decorOf, farm, coast, keyframes };
+};
+
+test("a black cat sits on the dock and on the farm's top rail in October, and goes in when it rains", async () => {
+  const { html, scene, rig, agents, ctx, sil, decorOf, farm, coast, keyframes } = await moreHalloween();
+  // both places, October only, in when it rains, and on a cold morning it gives the dock to the
+  // cormorant, who has the middle piling
+  assert.ok(coast.includes("const dockCat=halloween&&!wet&&!storm&&!(temp<48&&!dark)?catAt(dx+2.5,deckY+.25):null;"));
+  assert.ok(farm.includes("if(halloween&&!wet&&!storm){\n      const want=barnX+27.5,"), "on the top rail, measured off the barn");
+  assert.ok(farm.includes("fenceCat=catAt(cx,qy+(ry-qy)*t-7.2-.75).svg"), "sitting on the top rail");
+  // amber slit eyes by day, the green eyeshine from sunset (the barn lamps' hour), never toned by the sky
+  assert.match(html, /const eyeshine=sunAltDeg< -\.83;/);
+  assert.match(html, /if\(eyeshine\)\{p\.eye=INK\.blackCat\.eyeNight;p\.eyeRing=INK\.blackCat\.eyeNight\}/);
+  assert.match(html, /blackCat:\{body:"#2A2430",[^}]*eye:"#E8B43A",eyeNight:"#B8F25A",eyeRing:"#1A1214",/);
+  // on the dock the lit lantern beside it warms its side, gently, so it is still a black cat
+  assert.ok(coast.includes("if(dockCat)dockLit.lights.push({...dockCat,face:true,edge:.7,k:.3});"));
+  // a tail flick now and then, off the wall clock, a transform at the tail's own root
+  assert.match(html, /layers=propBlackCat\(phase\(23\)\)/);
+  assert.deepEqual(keyframes("catTail"), ["transform"]);
+  assert.match(html, /#sceneSvg \.cat-tail\{animation:catTail 23s ease-in-out infinite\}/);
+  // drawn with the kit: the tail its own joint, then the body with two ears, two eyes and their
+  // slits; about eight across and twelve tall, drawn at ten units to the unit
+  const units = ctx.cat();
+  assert.equal(units[0].open, '<g class="cat-tail">');
+  const body = units[1].parts;
+  assert.equal(body.filter((p) => p.role === "eye").length, 2);
+  assert.equal(body.filter((p) => p.role === "eyeRing").length, 2);
+  const [, , w, h] = ctx.box([...sil(body), ...sil(units[0].layers[0].parts)]);
+  assert.ok(w / 10 > 7.5 && w / 10 < 10.5 && h / 10 > 17 && h / 10 < 19.5, `the cat is ${w / 10} x ${h / 10} with its tail`);
+  const prop = html.slice(html.indexOf("const propBlackCat="), html.indexOf("const propCheeseclothGhost="));
+  assert.doesNotMatch(prop.replace('${tail?` style="${tail}"`:""}', ""), /style=|Math\.random|animation/);
+  // the harnesses look at it: close up in the rig, by day and with its eyeshine, out on every dry
+  // October scene, in in the rain, off the dock on the cold morning, and gone in November
+  assert.match(rig, /cat: \["blackCat", \(c\) => c\.propBlackCat\(\)/);
+  for (const n of ["26-marsh-october-afternoon", "27-marsh-halloween-night", "37-marsh-october-fog-morning", "30-ridge-october-afternoon", "31-ridge-halloween-night", "41-ridge-october-dusk"])
+    assert.match(decorOf(n), /"black-cat"/, n);
+  for (const n of ["28-marsh-halloween-cold-morning", "29-marsh-halloween-rain-night", "34-ridge-halloween-rain-night", "46-marsh-halloween-drizzle-night", "48-marsh-halloween-cold-dusk", "32-ridge-november-morning", "35-marsh-november-small-hours"])
+    assert.doesNotMatch(decorOf(n), /"black-cat"/, n);
+  assert.match(agents, /\*\*A black cat sits out in October\.\*\*/);
+});
+
+test("eyes open in the dark at both places on October nights, blink once and go", async () => {
+  const { html, scene, rig, agents, decorOf, farm, coast, keyframes } = await moreHalloween();
+  // night only (the sun 6° under), and not in the rain or a storm
+  assert.match(html, /const nightEyes=halloween&&sunAltDeg< -6&&!wet&&!storm;/);
+  // one gold pair and one green pair at each place: in the coast's spartina, at the farm's woods' edge
+  assert.match(coast, /const marshEyes=nightEyes\?darkEyes\(\[\[[^\]]*"gold"[^\]]*\],\[[^\]]*"green"[^\]]*\]\]\):"";/);
+  assert.match(farm, /const farmEyes=nightEyes\?darkEyes\(\[\[[^\]]*"gold"[^\]]*\],\[[^\]]*"green"[^\]]*\]\]\):"";/);
+  // each on its own clock off the wall clock: they fade in, blink once (a scale) and fade out,
+  // which is transform and opacity and nothing else
+  assert.match(html, /--ed:\$\{dur\}s;animation-delay:-\$\{\(\(Date\.now\(\)\/1000\+off\)%dur\)\.toFixed\(1\)\}s/);
+  assert.deepEqual(keyframes("darkEyes").sort(), ["opacity", "transform"]);
+  // they are light, so the sky does not tone them
+  assert.match(html, /fill="\$\{c==="gold"\?"#F6C64E":"#C2F45C"\}"/);
+  for (const n of ["27-marsh-halloween-night", "38-marsh-october-moon", "31-ridge-halloween-night", "33-ridge-october-night", "39-ridge-october-moon"])
+    assert.match(decorOf(n), /"eyes"/, n);
+  // not at dusk, when the first bats are out against the last of the light, nor in the rain
+  for (const n of ["40-marsh-october-dusk", "41-ridge-october-dusk", "48-marsh-halloween-cold-dusk", "26-marsh-october-afternoon", "29-marsh-halloween-rain-night", "34-ridge-halloween-rain-night", "35-marsh-november-small-hours"])
+    assert.doesNotMatch(decorOf(n), /"eyes"/, n);
+  assert.match(agents, /\*\*Eyes in the dark\.\*\*/);
+});
+
+test("a scarecrow stands across the farm pond in October with a crow on its arm by day, and never moves", async () => {
+  const { html, scene, rig, agents, ctx, decorOf, farm, coast } = await moreHalloween();
+  // the farm only, in the field across the pond, a little right of its middle
+  assert.ok(farm.includes("const scX=pcx+prx*.05,scS=.076,crow=!dark&&!wet&&!storm;"), "the crow is gone at night and in the rain");
+  assert.ok(farm.includes("${scarecrow}") && !coast.includes("scarecrow"), "the farm only");
+  // nothing of it moves: no class, style or animation but the decoration's own tag
+  const line = farm.slice(farm.indexOf("const scarecrow=halloween?"), farm.indexOf("/* The black cat sits on the top rail"));
+  assert.doesNotMatch(line.replace('class="decor"', ""), /class=|style=|animation/);
+  const prop = html.slice(html.indexOf("const propScarecrow="), html.indexOf("/* Great horned owl"));
+  assert.doesNotMatch(prop, /class=|style=|Math\.random|animation/);
+  // drawn with the kit, the crow its own unit, only when it is there
+  assert.equal(ctx.scarecrow(false).length, 1);
+  assert.equal(ctx.scarecrow(true).length, 2);
+  const roles = new Set(ctx.scarecrow(true)[1].parts.map((p) => p.role));
+  for (const r of ["body", "beak", "wing", "foot", "crowEye"]) assert.ok(roles.has(r), r);
+  for (const u of ctx.scarecrow(true)) for (const p of u.parts) assert.ok(ctx.INK.scarecrow[p.role], p.role);
+  assert.match(rig, /scarecrow: \["scarecrow", \(c\) => c\.propScarecrow\(true\)/);
+  for (const n of ["30-ridge-october-afternoon", "31-ridge-halloween-night", "34-ridge-halloween-rain-night", "47-ridge-halloween-rain-night", "41-ridge-october-dusk"])
+    assert.match(decorOf(n), /"scarecrow"/, n);
+  for (const n of ["26-marsh-october-afternoon", "27-marsh-halloween-night", "32-ridge-november-morning"]) assert.doesNotMatch(decorOf(n), /"scarecrow"/, n);
+  assert.match(agents, /\*\*A scarecrow stands across the pond at the farm\.\*\*/);
+});
+
+test("a cheesecloth ghost hangs in the farm's big hardwood and swings with the gusts inside its sway", async () => {
+  const { html, scene, rig, agents, ctx, decorOf, farm, coast, keyframes } = await moreHalloween();
+  // from the big left hardwood, inside its sway group, at the farm only (the oak has Ghostface)
+  assert.ok(farm.includes("${tree(W*.055,1.3,.08,3,farmGhost)}"));
+  assert.ok(html.includes("const tree=(x,s,d,seed,extra=\"\")=>`<g${treeAt(x)}>${propAt(propHardwood(seed,winter)"), "drawn inside the tree's own group");
+  assert.ok(!coast.includes("ghostIn("), "never at the coast");
+  // it swings from its knot as far as the gusts say, in five mile an hour steps so the live paint
+  // landing after the cache does not move it, and hangs still in a calm
+  assert.match(html, /const gq=Math\.round\(gust\/5\)\*5,amt=gq<5\?0:clamp\(1\.2\+gq\*\.28,1\.2,10\),dur=clamp\(3\.4-gq\*\.05,1\.8,3\.4\);/);
+  assert.match(html, /const st=PRM\|\|!amt\?"":` style="--gs:/);
+  assert.deepEqual(keyframes("ghostSwing"), ["transform"]);
+  // drawn with the kit: two eye holes and an O of a mouth in the eye role, a hem torn into tatters
+  const parts = ctx.ghost()[0].parts;
+  assert.equal(parts.filter((p) => p.role === "eye").length, 3);
+  assert.ok(parts.filter((p) => p.role === "thread").length >= 2, "threads trail off the tatters");
+  const prop = html.slice(html.indexOf("const propCheeseclothGhost="), html.indexOf("const propScarecrow="));
+  assert.doesNotMatch(prop, /class=|style=|Math\.random|animation/);
+  assert.match(rig, /"sheet-ghost": \["cheesecloth", \(c\) => c\.propCheeseclothGhost\(\)/);
+  for (const n of ["30-ridge-october-afternoon", "31-ridge-halloween-night", "34-ridge-halloween-rain-night"]) assert.match(decorOf(n), /"sheet-ghost"/, n);
+  for (const n of ["26-marsh-october-afternoon", "27-marsh-halloween-night", "32-ridge-november-morning"]) assert.doesNotMatch(decorOf(n), /"sheet-ghost"/, n);
+  assert.match(agents, /\*\*A cheesecloth ghost hangs in the big hardwood at the farm\.\*\*/);
+});
+
+test("will-o'-the-wisps drift low over the marsh on dry still October nights, and nowhere else", async () => {
+  const { html, scene, rig, agents, decorOf, farm, coast, keyframes } = await moreHalloween();
+  assert.ok(coast.includes("const wisps=halloween&&sunAltDeg< -6&&!wet&&!storm&&wind<9&&gust<15"));
+  assert.ok(!farm.includes("wispsAt("), "the coast only");
+  // three, seeded, each on its own slow clock off the wall clock, drifting and dimming
+  assert.match(html, /const r=mulberry\(911\+i\*37\),dur=13\+r\(\)\*7;/);
+  assert.match(html, /animation-delay:-\$\{\(\(Date\.now\(\)\/1000\+i\*5\.3\)%dur\)\.toFixed\(1\)\}s/);
+  assert.equal((coast.match(/\[wispX[^\]]*\]/g) || []).length, 3);
+  assert.deepEqual(keyframes("wisp").sort(), ["opacity", "transform"]);
+  // they keep between the raccoon and the dock, a short reach apart
+  assert.match(coast, /const wispX=residentX\+48,wispSpan=Math\.min\(dkX-66-wispX,118\);/);
+  for (const n of ["27-marsh-halloween-night", "38-marsh-october-moon"]) assert.match(decorOf(n), /"wisps"/, n);
+  for (const n of ["29-marsh-halloween-rain-night", "40-marsh-october-dusk", "31-ridge-halloween-night", "35-marsh-november-small-hours"]) assert.doesNotMatch(decorOf(n), /"wisps"/, n);
+  // and the scene harness walks every one of the new things through its own motion and keeps it in
+  // the frame, off every animal and a pixel clear of every other decoration, at 320, 390, 430 and 760
+  assert.match(scene, /const MORE = \/\^\(black-cat\|eyes\|wisps\|scarecrow\|sheet-ghost\|trick-or-treater\)\$\/;/);
+  assert.match(scene, /for \(const width of \[320, 390, PHONE_WIDTH\]/);
+  assert.match(scene, /if \(cs\.decor\?\.length\) reportDecor\(cs, 760, await decorCheck\(page\)\);/);
+  assert.match(agents, /\*\*Will-o'-the-wisps on the marsh\.\*\*/);
+});
+
 test("Halloween's moon keeps its place and its phase, and only changes colour", async () => {
   const html = await readFile(new URL("index.html", root), "utf8");
   const lift = (re) => { const m = html.match(re); assert.ok(m, `${re} should be extractable`); return m[0]; };
@@ -1194,7 +1420,8 @@ test("Ghostface peeks out of the live oak for October, and never moves", async (
   assert.match(scene, /r\.flat\(\)\.some\(\(v\) => v >= 40\)/);
   // and the notes count the scenes it runs
   const agents = await readFile(new URL("AGENTS.md", root), "utf8");
-  const words = ["twenty-nine", "thirty", "thirty-one", "thirty-two", "thirty-three", "thirty-four", "thirty-five", "thirty-six", "thirty-seven", "thirty-eight", "thirty-nine"];
+  const words = ["twenty-nine", "thirty", "thirty-one", "thirty-two", "thirty-three", "thirty-four", "thirty-five", "thirty-six", "thirty-seven", "thirty-eight", "thirty-nine",
+    "forty", "forty-one", "forty-two", "forty-three", "forty-four", "forty-five", "forty-six", "forty-seven", "forty-eight", "forty-nine"];
   const said = agents.match(/`tools\/scene\.mjs` is for anything that moves\. (\S+) scenes/)[1].toLowerCase();
   assert.equal(29 + words.indexOf(said), (scene.match(/^  \{ name: "/gm) || []).length, `AGENTS.md says ${said} scenes`);
 });
@@ -1344,6 +1571,107 @@ test("a witch flies over both scenes on October nights, on the wind, across the 
   // the farm on an early October evening with a westerly, where a moon under her band once sent
   // her out of the barnyard through the owl, at 430 and 900
   assert.match(scene, /name: "42-ridge-october-evening-westerly"[^\n]*witch: true[^\n]*witchWidths: \[900\]/);
+});
+
+test("Halloween's cobweb is strung across the corner of the app itself, clear of every word, and takes no tap", async () => {
+  const [html, scene, rig] = await Promise.all([
+    readFile(new URL("index.html", root), "utf8"),
+    readFile(new URL("tools/scene.mjs", root), "utf8"),
+    readFile(new URL("tools/rig.mjs", root), "utf8"),
+  ]);
+  const lift = (re) => { const m = html.match(re); assert.ok(m, `${re} should be extractable`); return m[0]; };
+  const ctx = vm.createContext({});
+  vm.runInContext([
+    lift(/function mulberry\(a\)\{[^\n]*\n[^\n]*\}\}/),
+    lift(/const WEB=\{[\s\S]*?\};\n/),
+    html.slice(html.indexOf("function webPlan("), html.indexOf("function paintCobweb(")),
+    "globalThis.webPlan=webPlan;globalThis.WEB=WEB;",
+  ].join("\n"), ctx);
+  // Josh, October 3 2026: "maybe cobwebs a corner of the app that breaks the fourth wall". It is the
+  // Halloween window's, read off the place's own calendar the way the decorations are, and it is
+  // strung once there is a reading: the loading and error shell has none
+  assert.match(html, /if\(holidayOn\(locToday\(\)\)\?\.id!=="halloween"\|\|!LAST\)return off\(\);/);
+  assert.match(html, /LAST=\{d,live,savedAt\};LASTW=appW\(\);\n  paintCobweb\(\);\n\}/);
+  assert.match(html, /xpReset\(\);LAST=null;\n  paintCobweb\(\);\n\}/);
+  // placed again when the alert strip opens and moves everything under it, and when the fonts land
+  assert.match(html, /el\.setAttribute\("aria-expanded",open\?"true":"false"\);\n  \/\*[^\n]*\*\/\n  paintCobweb\(\);/);
+  assert.match(html, /document\.fonts\.ready\.then\(\(\)=>\{starsClearOfType\(\);paintCobweb\(\)\}\)/);
+  // on the glass: out of the flow, over the rain, hidden from screen readers, and every tap goes
+  // through it
+  assert.match(html, /<div class="cobweb" id="cobweb" aria-hidden="true" hidden><\/div>\n<\/header>/);
+  assert.match(html, /\.cobweb\{position:absolute;top:0;right:0;width:0;height:0;z-index:3;pointer-events:none\}/);
+  assert.match(html, /\.sky>\*:not\(\.sky-fx\):not\(\.flash\):not\(\.rainfx\):not\(\.cobweb\)\{position:relative;z-index:2\}/);
+  // the type it keeps off is the type the stars keep off, plus the chips, the rain strip and the alert
+  assert.match(html, /const boxes=\[\.\.\.typeBoxes\("\.masthead,\.now,#verdict,#chips,#nowcast"\),/);
+  assert.match(html, /const lines=typeBoxes\("\.masthead,\.now,#verdict,#chips"\);/);
+
+  // the planner is pure. In open sky the web is its full size for the width, with its spider
+  const W = 390, top = 34, Rmax = 105;
+  const meta = [{ l: 20, t: 18, r: 145, b: 32 }, { l: 231, t: 18, r: 370, b: 32 }, { l: 21, t: 56, r: 139, b: 130 },
+    { l: 153, t: 96, r: 244, b: 110 }, { l: 153, t: 118, r: 246, b: 132 }];
+  const open = ctx.webPlan([...meta, { l: 20, t: 158, r: 272, b: 182 }], { W, top, Rmax });
+  assert.equal(open.R, Rmax);
+  assert.ok(open.spider, "a spider hangs under it");
+  assert.equal(open.moor.length, 2, "both mooring threads run up the gutter into the corner");
+  const quad = (q, t) => [0, 1].map((k) => (1 - t) * (1 - t) * q.a[k] + 2 * t * (1 - t) * q.c[k] + t * t * q.b[k]);
+  const silk = (p) => [...[...p.radials, ...p.moor].flatMap(([a, b]) => Array.from({ length: 41 }, (_, i) => [a[0] + (b[0] - a[0]) * i / 40, a[1] + (b[1] - a[1]) * i / 40])),
+    ...[...p.rungs, ...p.loose].flatMap((q) => Array.from({ length: 21 }, (_, i) => quad(q, i / 20)))];
+  const clearOf = (p, boxes, pad) => silk(p).every(([x, y]) => boxes.every((b) => x < b.l - pad || x > b.r + pad || y < b.t - pad || y > b.b + pad));
+  assert.ok(clearOf(open, meta, 4.5), "no thread within 5px of the type");
+  // the spider's whole swing and her drop keep off the type too: a long headline under the web pulls
+  // her up her dragline rather than letting her hang into it
+  const spiderBox = (p) => { const s = p.spider, L = s.D + s.d + ctx.WEB.sl, half = ctx.WEB.sw + L * Math.sin(ctx.WEB.swing * Math.PI / 180);
+    return { l: s.x - half, r: s.x + half, t: s.y + s.D - 1, b: s.y + L }; };
+  const meets = (a, b, pad) => a.r > b.l - pad && a.l < b.r + pad && a.b > b.t - pad && a.t < b.b + pad;
+  const longHead = [...meta, { l: 20, t: 152, r: 372, b: 176 }];
+  const tight = ctx.webPlan(longHead, { W, top, Rmax });
+  assert.ok(tight.spider, "a long headline still leaves her room");
+  assert.ok(longHead.every((b) => !meets(spiderBox(tight), b, 4.5)), "the spider keeps off a long headline");
+  assert.ok(spiderBox(tight).b < 152 - 4.5 && spiderBox(open).b > 152, "the headline moves her up");
+  // her drop is the charm: a tight spot moves her up the web or shortens her line before it takes it
+  assert.equal(open.spider.d, 8);
+  assert.ok(tight.spider.d > 0, `line ${tight.spider.D}, drop ${tight.spider.d}`);
+  assert.ok(clearOf(tight, longHead, 4.5));
+  // with less room the web is smaller and keeps its shape: the same radials at the same angles
+  const wide = [...meta, { l: 153, t: 60, r: 330, b: 74 }];
+  const small = ctx.webPlan(wide, { W, top, Rmax });
+  assert.ok(small && small.R < Rmax && small.R >= ctx.WEB.Rmin);
+  assert.ok(clearOf(small, wide, 4.5));
+  const angle = ([a, b]) => Math.atan2(b[0] - a[0], b[1] - a[1]).toFixed(6);
+  assert.deepEqual(small.radials.map(angle), open.radials.map(angle));
+  // no room is no web, and a mooring thread that would cross the live stamp is left off
+  assert.equal(ctx.webPlan([...meta, { l: 240, t: 40, r: 400, b: 150 }], { W, top, Rmax }), null);
+  const crowded = ctx.webPlan([...meta.slice(0, 1), { l: 231, t: 18, r: 388, b: 32 }, ...meta.slice(2)], { W, top, Rmax });
+  assert.equal(crowded.moor.length, 0);
+  // the same web every time: every draw is seeded
+  assert.deepEqual(JSON.stringify(ctx.webPlan(meta, { W, top, Rmax })), JSON.stringify(ctx.webPlan(meta, { W, top, Rmax })));
+
+  // the silk is the sky's own two inks, and dew only while the sun is up
+  assert.match(html, /const silk=day\?offSky:on,ink=day\?on:offSky;/);
+  assert.match(html, /dew=document\.documentElement\.getAttribute\("data-theme"\)!=="dark";/);
+  assert.match(html, /if\(dew\)out\+=`<g fill="\$\{silk\}"/);
+  // the spider is a black widow drawn with the kit, at ten units to the pixel and a little over
+  // life size for one, with a cool edge at night
+  assert.match(html, /const propSpider=\(\)=>\{/);
+  assert.match(html, /spider:\{body:"#17111A",leg:"#17111A",mark:"#C9302A"/);
+  assert.match(html, /inkAt\(0,0,WEB\.sp,1,inkUnit\(propSpider\(\),pal,\{s:WEB\.sp,light:\[-\.55,-1\]/);
+  // her reach is her drawing's: half her span and her length, at her size
+  assert.ok(Math.abs(ctx.WEB.sw - 60 * ctx.WEB.sp) < .05 && Math.abs(ctx.WEB.sl - 131 * ctx.WEB.sp) < .05);
+  // she sways and now and then lets herself down and climbs back: transforms only, the dragline
+  // reeled out on the same clock as her drop, phased off the wall clock, and still under reduced motion
+  for (const k of ["webSwing", "webReel", "webDrop"]) {
+    const body = html.match(new RegExp(`@keyframes ${k}\\{([^\\n]*)\\}`))[1];
+    for (const prop of body.match(/[a-z-]+(?=:)/g)) assert.equal(prop, "transform", `${k} animates ${prop}`);
+  }
+  assert.match(html, /\.cobweb \.web-reel\{animation:webReel var\(--dd,29s\) ease-in-out infinite\}/);
+  assert.match(html, /\.cobweb \.web-drop\{animation:webDrop var\(--dd,29s\) ease-in-out infinite\}/);
+  assert.match(html, /const ph=p=>PRM\?"":`animation-delay:-\$\{\(Date\.now\(\)\/1000%p\)\.toFixed\(1\)\}s;`,dd=29;/);
+  // the harnesses look at it: close up in the rig, and in every scene at three widths
+  assert.match(rig, /spider: \["spider", \(c\) => c\.propSpider\(\)/);
+  assert.match(scene, /reportWeb\(cs, PHONE_WIDTH, await webCheck\(page\)\);/);
+  assert.match(scene, /the cobweb is \$\{web\.on \? "up" : "not up"\}/);
+  assert.match(scene, /a thread within 3px of/);
+  assert.match(scene, /a thread takes the tap/);
 });
 
 test("a pumpkin still reads as one at seven pixels, and no two are cut alike", async () => {

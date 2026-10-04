@@ -417,7 +417,7 @@ Each is a transform or nothing, and each holds perfectly still under reduced mot
   in the rain. They are what the family would set out: on the coast a pumpkin at each end of
   the dock, at the farm a corn shock at the barn's corner with a bale at its foot and a small
   white pumpkin on it, and a big pumpkin either side of the door. `node tools/rig.mjs pumpkin`
-  (or `lantern`, `lantern-lit`, `lumina`, `cornshock`, `bale`, `loft-head`, `ghostface`, `bat`, `witch`) shows
+  (or `lantern`, `lantern-lit`, `lumina`, `cornshock`, `bale`, `loft-head`, `ghostface`, `bat`, `witch`, `spider`, `trick-or-treater`, `cat`, `sheet-ghost`, `scarecrow`) shows
   each one close up and at phone size.
 - **They keep a pumpkin's own calendar.** Plain until the 24th, then the big ones are carved,
   because a carved pumpkin in coastal humidity is soft inside a week. The carved face is its
@@ -549,6 +549,93 @@ Each is a transform or nothing, and each holds perfectly still under reduced mot
   disagree, passes along the rim of a moon she does not cross, and where under reduced motion she
   holds still over the disc, on a time, a bat, an animal or a decoration, or behind the scenery. `node tools/rig.mjs
   witch` shows her close up, at phone size, and on a moonlit night with the scene's darkening.
+- **More Halloween, dealer's choice.** After the bats, the moon and the witch, Josh asked on October
+  3 2026: "I want MORE halloween." and "+any Halloween dealers choice touches that folks will love."
+  The five below and the trick-or-treater on Halloween night (further down) were picked for him,
+  and the cobweb on the glass (further down too) is his own idea. Each of the five is a decoration (`data-decor`), lit by the sky it stands
+  under, built only while it is out, and placed off the dock, the barn, the pond or a tree, clear of
+  every animal, every other decoration, the bats' sky and the witch's path. `tools/scene.mjs` walks
+  each one through its own motion (the flick, the blink, the drift, the swing) and fails a scene
+  where any of where it goes leaves the frame, meets an animal or comes within a pixel of another
+  decoration (`decorCheck`, `MORE`), at 320, 390, 430 and 760.
+- **A black cat sits out in October.** On the coast on the dock's planks, between the middle piling
+  and the lit end, facing the land with its tail down over the edge; at the farm on the top rail
+  just right of the barn, set inside a span the rail runs along (`propBlackCat`, `catAt`). It sits
+  with its head turned to us: amber eyes with a slit by day, and from sunset, the barn lamps' hour,
+  the green eyeshine and a soft glow round it (`eyeNight`, never toned by the sky, because it is the
+  sky's own light coming back). Now and then its tail flicks (`catTail`, a 23-second cycle phased
+  off the wall clock, two quick flicks and a settle at the tail's own root). It goes in when it
+  rains, and on a cold morning it gives the dock to the cormorant, who has the middle piling. On the
+  dock the lantern beside it warms its side (`lights`, at a third of the strength, so it is still a
+  black cat). It is drawn at ten units to the unit, about seven pixels by twelve with its tail.
+  `node tools/rig.mjs cat` shows it close up, at phone size and with its eyeshine.
+- **Eyes in the dark.** On an October night (the sun 6° under, so not at dusk, when the first bats
+  have the last of the light) and not in the rain, a pair of eyes opens in the coast's spartina and
+  another at the edge of the farm's woods, one gold pair and one green at each place (`darkEyes`).
+  Each fades in, looks, blinks once and fades out on its own clock off the wall clock (`darkEyes`,
+  23 to 34 seconds), so they are never both open on the same beat. They are light, so the sky does
+  not tone them. On the coast the gold pair is at the far left of the bank and the green one in the
+  grass short of the dock; at the farm the gold pair is on the far bank behind the pond, left of the
+  scarecrow, and the green one up the wooded fold between the cat and the right hardwood, over the
+  fox and short of the owl.
+- **A scarecrow stands across the pond at the farm.** In the field on the far bank, a little right
+  of the pond's middle (`propScarecrow`): bib overalls with a patch over a red flannel shirt, arms out
+  along the crossbar with straw at the cuffs and the ankles, a burlap sack of a head with a stitched
+  grin, a floppy straw hat. A crow sits on its arm by day, because a scarecrow with a crow on it is
+  the joke, and it is gone at night and in the rain. The scarecrow never moves. The farm only: the
+  coast has no field to stand it in. `node tools/rig.mjs scarecrow` shows it with its crow.
+- **A cheesecloth ghost hangs in the big hardwood at the farm.** From under the big left tree's
+  left-hand leaves beside the trunk, inside the tree's own sway group, so it goes where the tree
+  goes (`propCheeseclothGhost`, `ghostIn`): a round head under the gauze, a pinch at the neck, a hem
+  torn into long uneven tatters with a thread or two trailing off them, two eye holes and an O of a
+  mouth. It swings from its knot as far as the gusts say (`ghostSwing`), taken in five-mile steps
+  so the live paint landing after the cache does not move it, and in a calm it hangs still. Not at
+  the coast: the oak there already has Ghostface. `node tools/rig.mjs sheet-ghost` shows it close up.
+- **Will-o'-the-wisps on the marsh.** Three small pale green-white lights low over the bank and the
+  water, between the raccoon and the dock and never more than a short reach apart (`wispsAt`), only
+  on a dry still October night: the sun 6° under, no rain, no storm, the wind under 9 and the gusts
+  under 15. Each drifts a few pixels and dims on its own slow clock (`wisp`, 13 to 20 seconds,
+  seeded, phased off the wall clock), and the two over the water lay a faint light on it. The coast
+  only: a marsh light belongs to a marsh.
+- **A cobweb is strung across the corner of the app itself in October.** Josh, October 3 2026:
+  "maybe cobwebs a corner of the app that breaks the fourth wall". It is on the glass, not in the
+  scene: over the sky in the header's top right corner and in front of the rain, as if a spider had
+  set up on the phone. That is the corner with room. The place switch, the big number and its meta
+  fill the left, the live stamp sits in the top right, and under the stamp, right of the reading, is
+  open sky at every width from 320 to 900. Its radials come in off the screen's edge, meeting just
+  past it, two mooring threads run up the gutter beside the live stamp into the corner (and beside
+  the alert strip when there is one), and the web hangs under the stamp. It is placed, not stamped:
+  `paintCobweb` measures the type in the header (the line boxes the stars keep off, `typeBoxes`,
+  plus the chips, the rain strip and the alert strip) and `webPlan` draws it as large as it can be,
+  up to `Rmax` (27% of the sky's width, 72 to 128px), with no thread within 5px of any of it,
+  smaller and the same shape when it has to be, and not at all with no room. A mooring thread that
+  would come near the stamp is left off. It is painted last in `render()`, again when the alert strip
+  opens and when the fonts land, and never in the loading or error shell. It is absolutely placed
+  (`.cobweb`, `pointer-events:none`, `aria-hidden`), so nothing moves under it and every tap goes
+  through it. The silk is the sky's own two inks: on a bright sky a pale thread (`--off-sky`) with the
+  sky's dark ink along its shadow side, which is the inked line; on a dark one, at night and at a dusk
+  or dawn dark enough for the pale ink, the thread is that ink with a soft wide glow under it. Dew
+  beads it faintly while the sun is up (the light theme), and never at night. It is hand strung, its
+  rungs uneven and each drawn in and drooping by its own amount, two of them broken with their ends
+  hanging, and every draw is seeded (`WEB.seed`), so it is the same web every time. The spider is a
+  black widow (`propSpider`, drawn with the kit at ten units to the pixel and shown at eleven,
+  `WEB.sp`), the cobweb weaver of both places, hanging head down on her dragline belly to us: glossy
+  black, the red hourglass, each leg two strokes so the knee is a joint (a smooth leg read as a claw),
+  a warm edge by day and a wide cool one at night, because a black spider went out against the night
+  sky without it. She hangs from the middle of one of the frame's lowest spans, sways on her dragline
+  (`webSwing`, 4° either way), and every 29 seconds lets herself down a few pixels and climbs back
+  (`webDrop`), with the dragline reeled out the same distance on the same clock (`webReel`), so she
+  never leaves the end of it. That is the holiday's exception the bats and the witch are, motion for
+  fun, and it is three animations, transforms only, phased off the wall clock, and still under
+  reduced motion. Her whole swing and her drop keep off the type the way the web does, and her drop
+  is the charm, so a long headline under her moves her along the frame or shortens her line before
+  it takes her drop. She is on the glass, so the wind does not move her. `tools/scene.mjs` walks every
+  thread and puts her at both ends of her swing, hanging and let down, at 320, 430 and 760, and fails
+  a scene where any of it comes within 3px of a word, a number, a chip or the strip, where she is off
+  the end of her line, where a thread takes a tap or the place switch or the stamp stops answering,
+  or where the web is up outside October or missing in it. Each October scene writes a close-up of
+  it at 320 and at phone width. `node tools/rig.mjs spider` shows her close up and at phone size by
+  day and by night.
 - **The corn shock is tied high**, and its crown is broken stalk tops and dry leaves standing
   up and out, so at phone size it is a sheaf and never a figure in a dress. Only the leaves
   that break the silhouette take ink. The bale sits level on the ground, with its long side to
@@ -585,6 +672,33 @@ Each is a transform or nothing, and each holds perfectly still under reduced mot
   built only while they are out. `tools/scene.mjs` fails a scene whose
   decorations are not exactly the ones the date calls for, whose candles are lit when they
   should not be, or where a decoration runs off the frame or into an animal.
+- **On Halloween night a trick-or-treater comes.** October 31 only, from sunset (the sun under
+  -0.83°, when the barn lamps and the candles are lit), until everything comes down at midnight: a
+  little kid under a bed sheet with two eye holes cut in it, holding out an orange plastic pumpkin
+  pail (`propTrickOrTreater`). The night is the `trickOrTreat` day on Halloween's row in `HOLIDAYS`,
+  read off the place's own date like the rest of the holiday, and `trickOrTreating` is pure and
+  tested. A drizzle does not keep a kid in, and nor does fog. Rain and anything heavier does, and so
+  do snow, ice and a storm, and then the door and the dock are left to the pumpkins. What has to
+  survive on a phone is a pale bell with a round head, two black eye holes, two dark sneakers under
+  the hem and an orange ball held out at its side. The sneakers are what say a kid in a sheet and
+  not a ghost, so the hem stops above them. The rest is for the close-up: the head tipped toward the
+  pail, the folds and the uneven hem, the hand out from under the cloth with the handle across its
+  fingers, and the pail's ribs, its face and two candies at the rim. It is drawn at ten units to the
+  pixel, as the faces in the oak and the loft are, about eleven and a half pixels tall and eleven
+  wide with the pail: kid scale with the storybook's licence, about twice a jack-o'-lantern and
+  under the barn door. It is a decoration (`data-decor="trick-or-treater"`), lit by the sky like
+  every one, and it never moves. At the farm it stands at the door between the two big pumpkins,
+  about a pixel and a half clear of each, and both lanterns name it in their `lights`, so the sheet
+  takes their warmth from either side and the doorstep's pool goes under its feet. It is drawn
+  before them for that. On the coast it stands at the dock's landward end, the shallow one, between
+  the end piling and the middle one and beside the little pumpkin. The lit lantern is at the other
+  end, too far off for its light to reach, so there the kid is lit by the sky alone. The cormorant
+  has the middle piling on a cold evening until dark, so the kid waits for it. `tools/scene.mjs`
+  fails a scene whose kid is out when it should not be or missing when it should be there (it is in
+  the scene's `decor`), or runs into an animal or another decoration, and it runs the kid out on
+  Halloween night at both places and in a drizzle, in for the night in the rain at the farm, and kept
+  off the dock by the cormorant at a raw dusk. `node tools/rig.mjs trick-or-treater` shows the kid
+  close up and at phone size.
 - **The moon is Halloween's too, and it keeps its place and its phase.** Josh asked for "a creepy
   blood moon ... or harvest moon" on October 3 2026, so both are drawn and one constant,
   `HALLOWEEN_MOON` (`"blood"` or `"harvest"`, `null` for the ordinary moon all year), picks.
@@ -674,18 +788,19 @@ pill at now covers the skiff, measured at 390 and 900 and once more at 320, the 
 meet, where it also fails any section title whose note drops under it. It exits non-zero when one does not show what it
 is there for.
 
-`tools/scene.mjs` is for anything that moves. Thirty-nine scenes force the light
+`tools/scene.mjs` is for anything that moves. Forty-two scenes force the light
 and weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
 clear night, a storm, a fog morning, drizzle against a downpour, freezing rain on
 the coast, a night of rain over the marsh, and the ridge by day, by evening with
 the buck out, in warm rain, on a snow day, on a cold January night and in a night
-downpour. Twenty more are Halloween: the coast on an October afternoon, at golden hour,
+downpour. Twenty-three more are Halloween: the coast on an October afternoon, at golden hour,
 at dusk with the first bats out, and on a fog morning in October, on Halloween night with no
-moon, on a cold morning in the carved week with the cormorant on its piling, on a rainy night
+moon and a trick-or-treater on the dock, in a drizzle that night with the kid still out, at a raw
+dusk that evening with the cormorant on the dock and the kid not, on a cold morning in the carved week with the cormorant on its piling, on a rainy night
 in it (bats and witch down), under the moon a night short of full in it with the witch crossing
 it, and at half past midnight on November 1 2026, the night the clocks go back, and the farm on
-an October afternoon, at dusk, on an October night before the carving, on Halloween night, on a
-rainy night in the carved week, under the same moon, and on the morning of November 1. Four
+an October afternoon, at dusk, on an October night before the carving, on Halloween night with
+the kid at the door, in the rain that night with the kid in, on a rainy night in the carved week, under the same moon, and on the morning of November 1. Four
 more are the nights the witch once went wrong: two early October evenings at the farm with a
 westerly and the moon under her band (walked at 900 too), where a climb through it started in
 the barnyard and ran through the owl and past the loft; Halloween's full moon low in the east on
@@ -693,8 +808,11 @@ the coast with a westerly, where her still pose sat on the sunrise time; and a m
 of the coast's sunrise time, which she cannot cross and once flew along the rim of. On both
 November ones everything has to be gone, the moon's colour, the bats and the witch too: every
 scene fails whose moon is not Halloween's in October or not the ordinary one any other night,
-and the moon scenes fail if it is not up. Each one with decorations out writes a
-close-up of them at 320 and at phone width. The Denver scenes (and the skyline check)
+and the moon scenes fail if it is not up. Every October scene has the cobweb up and every other
+one has it down (see the cobweb under Holidays). Each one with decorations out writes a
+close-up of them, and of the cobweb, at 320 and at phone width, and walks what Josh asked for more
+of (the cat, the eyes, the marsh lights, the scarecrow, the ghost and the trick-or-treater) through
+its own motion at 320, 390, phone width and 760 (`decorCheck`). The Denver scenes (and the skyline check)
 went out with the trip; they are in git history before the commit that parked `den`, if the next trip wants a model.
 The ridge night downpour is there on purpose: dark theme, code 82, two rain layers
 and a frog, which is where the animation count goes looking for trouble. It found
@@ -713,9 +831,12 @@ used to be).
 Two numbers worth knowing before you change motion: every scene idles at **0-2
 layouts per 6 seconds**, and the busiest scene runs **115 animations**. If either
 jumps, you have added something that is not a `transform` or an `opacity`. Halloween's nights
-are the other busy ones, legitimately: three animations a bat and three for the witch, so the
-coast under the moon with seven bats and the witch out runs about 105 and Halloween night
-there about 99 (the harness fails anything over 120).
+are the other busy ones, legitimately: three animations a bat, three for the witch and three for
+the spider in the cobweb, and on an October night one for the cat's tail, one for each pair of eyes
+in the dark and one for each of the coast's three marsh lights (the farm's ghost adds one when the
+gusts reach 5). So the coast under the moon with seven bats, the witch and the marsh lights out
+runs about 111 to 114, Halloween night there about 108, and the farm's October nights 83 to 89
+(the harness fails anything over 120).
 
 ## Time and place
 
