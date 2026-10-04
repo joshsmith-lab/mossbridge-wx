@@ -727,7 +727,7 @@ Each is a transform or nothing, and each holds perfectly still under reduced mot
   through a sky gone over is a claim, so above 60% cloud its glow goes first and then the disc
   dims. Its light on the water and the lit edges of the scene warm toward its colour, a little
   (`moonLight`). The Tonight card's moon and the farm's moon chart stay ordinary, because they
-  are readings. It adds no animation. It is `HALLOWEEN_MOON="blood"` until Josh says otherwise,
+  are readings. It adds no animation. It is `HALLOWEEN_MOON="blood"`, Josh's pick on October 3 2026 when he saw both drawn ("blood moon. Looking great!"),
   and the harvest moon is kept drawn and tested beside it, a one-word change away. In the scene it
   is a decoration (`data-decor`, `blood-moon` or `harvest-moon`), and its disc (`data-disc`, with
   `moonR`) is what the bats keep off and the witch crosses.
@@ -881,10 +881,10 @@ If you add a location, give it a `tz` and a `tzLabel`. Nothing else needs to kno
 
 ## On file size
 
-`index.html` is about 480 KB of source (September 2026, with NOAA's daily normals baked in), and an early plan set
+`index.html` is about 600 KB of source (October 2026, with NOAA's daily normals and the Halloween cast baked in), and an early plan set
 160 KB as a ceiling. That number was about the source file and it is not the
 number that matters. GitHub Pages serves the file gzipped, so what a phone
-actually downloads is **about 160 KB**, once, and the service worker caches it
+actually downloads is **about 200 KB**, once, and the service worker caches it
 after that. Measure both rather than trusting this paragraph: `wc -c index.html`
 for the source and `gzip -6c index.html | wc -c` for roughly what is sent.
 
