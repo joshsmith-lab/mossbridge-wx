@@ -109,10 +109,10 @@ const CASES = [
     o: { baseTemp: 58, nowTemp: 61, feels: 61, rh: 55, isDay: 1, code: 2, cloud: 35, nowWind: 9, nowDir: 330, nowGust: 15, nowUv: 2.9, uvMax: 3.2,
       windAmp: 7, gustAmp: 10, sunrise: "06:48", sunset: "17:09", waterTemp: 63.1, popCurve: () => 5, dailyPop: (p) => p.fill(10),
       dailyTemps: (hi, lo, c) => { hi.splice(0, 7, 62, 60, 58, 62, 65, 61, 57); lo.splice(0, 7, 46, 43, 40, 44, 49, 45, 39); } },
-    // and the card says "Sunscreen if you're out a while." at 2.9: the 3.1 still to come crosses into
-    // moderate, so its ring stays, or the only UV on the page read LOW under a sunscreen sentence
+    // The sun sentence stays neutral at the coast. The 3.1 still to come crosses into moderate,
+    // so its ring stays even when the live reading is still below 3.
     expect: { cols: 7, weekend: ["Today", "Sun"], say: null, tide: /^63° · seas ~2 ft$/, level: null, marine: 1,
-      sun: "Sunscreen if you're out a while.", uvBar: /^UV 2\.9 now, low, peaking at 3\.1 around noon\.$/ } },
+      sun: "Strongest sun noon to 1 p.m.", uvBar: /^UV 2\.9 now, low, peaking at 3\.1 around noon\.$/ } },
   // a cold, clear January morning on the coast: the headline owns the cold, the water section says
   // only the water, and the sun card steps aside. The station's thermometer is down: no water at all
   { name: "18-january-porters-neck", loc: "mb", when: "2027-01-14T08:40:00",
@@ -199,6 +199,26 @@ const CASES = [
       dailyTemps: (hi, lo, c) => { hi.splice(0, 8, 53, 58, 61, 57, 55, 60, 63, 59); lo.splice(0, 8, 29, 33, 38, 41, 35, 34, 39, 42); c.splice(0, 8, 0, 1, 2, 3, 3, 2, 1, 2); } },
     expect: { moon: true, sayTitle: "Piddling", say: "Cold one. Bundle up for the morning rounds.", sayCls: "caution", fish: true, year: /^The year · Shady Spring \/ \d+° cooler this week$/,
       xp: { year: /^Oct 64° \/ 44° rain 2\.7 in snow 1 in$/ } } },
+  // October copy previews: ordinary afternoons and evenings that look ahead to a real change.
+  // The temperature callback shapes the hourly run and its daily highs together.
+  { name: "words-day-porters-neck", loc: "mb", when: "2026-10-10T14:20:00",
+    o: { baseTemp: 68, nowTemp: 76, feels: 76, rh: 52, isDay: 1, code: 1, cloud: 18,
+      nowWind: 5, nowDir: 40, nowGust: 9, nowUv: 3.4, uvMax: 4.8, windAmp: 3, gustAmp: 4,
+      sunrise: "07:13", sunset: "18:44", popCurve: () => 5, dailyPop: (p) => p.fill(5) } },
+  { name: "words-night-porters-neck", loc: "mb", when: "2026-10-10T20:40:00",
+    o: { baseTemp: 68, nowTemp: 64, feels: 64, rh: 66, isDay: 0, code: 0, cloud: 8,
+      nowWind: 4, nowDir: 40, nowGust: 8, nowUv: 0, uvMax: 4.8, windAmp: 3, gustAmp: 4,
+      sunrise: "07:13", sunset: "18:44", popCurve: () => 5, dailyPop: (p) => p.fill(5),
+      tempCurve: (i, hr, t) => t - (i >= 24 ? 7 : 0) } },
+  { name: "words-day-shady-spring", loc: "sp", when: "2026-10-10T14:20:00",
+    o: { baseTemp: 66, nowTemp: 74, feels: 74, rh: 50, isDay: 1, code: 1, cloud: 16,
+      nowWind: 5, nowDir: 285, nowGust: 9, nowUv: 3.1, uvMax: 4.4, windAmp: 3, gustAmp: 4,
+      sunrise: "07:25", sunset: "18:54", popCurve: () => 5, dailyPop: (p) => p.fill(5) } },
+  { name: "words-night-shady-spring", loc: "sp", when: "2026-10-10T20:40:00",
+    o: { baseTemp: 60, nowTemp: 56, feels: 56, rh: 65, isDay: 0, code: 0, cloud: 8,
+      nowWind: 4, nowDir: 285, nowGust: 8, nowUv: 0, uvMax: 4.4, windAmp: 3, gustAmp: 4,
+      sunrise: "07:25", sunset: "18:54", popCurve: () => 5, dailyPop: (p) => p.fill(5),
+      tempCurve: (i, hr, t) => t + (i >= 24 ? 7 : 0) } },
 ];
 
 /* labels are placed, not stamped: on the tide, the moon and the year every word sits inside its
@@ -405,7 +425,7 @@ for (const cs of cases) {
         }
         await page.locator("#tideExplore").screenshot({ path: path.join(OUT, `${cs.name}-tide-peek.png`) });
       }
-      if (cs.name === "09-after-midnight-porters-neck" && !/before morning/.test(copy.tonight || "")) {
+      if (cs.name === "09-after-midnight-porters-neck" && !/before morning|until morning/.test(copy.tonight || "")) {
         failures++; console.log(`!! after-midnight Tonight card describes the wrong night (${copy.tonight})`);
       }
       /* what a scenario is there to show: the week's columns and its banded days, the water's
