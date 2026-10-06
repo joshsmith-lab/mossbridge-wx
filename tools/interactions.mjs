@@ -619,8 +619,8 @@ try{
     assert.ok(r.marks.every(i=>i>=0),"no mark at -1: "+r.marks);
     assert.ok(r.labels.includes(r.low+"°"),`the real low ${r.low}° keeps its label: ${r.labels}`);
     assert.match(r.said,/temperature unavailable/);
-    /* and the Tonight card reads the same run: a missing night hour drops out of the night, and the
-       card says the real low. Number(null) is 0, which once printed "Low 0° tonight." */
+    /* The Tonight card reads the same run: a missing night hour is neither zero nor permission
+       to call the rest of a partial night its low. */
     const eve=await page.evaluate(()=>{const d=structuredClone(LAST.d),h=d.hourly,set=new Date(d.daily.sunset[0]),rise=new Date(d.daily.sunrise[1]);
       const night=h.time.map((t,i)=>i).filter(i=>new Date(h.time[i])>=set&&new Date(h.time[i])<=rise);
       h.temp[night[2]]=null;render(d,false,LAST.savedAt);
@@ -628,7 +628,7 @@ try{
       return{n:night.length,low,text:document.getElementById("eveLead").textContent}});
     assert.ok(eve.n>3,"the run reaches into the night");
     assert.doesNotMatch(eve.text,/Low\u00A00°/,"a missing night hour is not a zero: "+eve.text);
-    assert.ok(eve.text.includes(`Low\u00A0${eve.low}°`),`the card says the real low ${eve.low}°: ${eve.text}`);
+    assert.match(eve.text,/Low unavailable/,`the incomplete night has no claimed low: ${eve.text}`);
     /* past the last known hour there is no neighbour: the line and its fill stop there rather than
        holding flat a temperature the run does not carry, and with one known hour there is no line */
     const tail=await page.evaluate(()=>{const d=structuredClone(LAST.d),h=d.hourly,n=h.temp.length;h.temp=h.temp.map((t,i)=>i>=n-8?null:t);

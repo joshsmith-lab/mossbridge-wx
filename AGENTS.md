@@ -42,8 +42,10 @@ place name.
 - **Less text.** If the graphic already says it, delete the words. High and low
   are obvious from a tide curve. "Reapply after two hours" is nagging. Josh asked for
   addition by subtraction in September 2026, and most of what went was the page saying a
-  thing twice. The headline no longer names the sky, because the condition beside the
-  number and the scene under it already do. Feels-like gets its line only when it is 3° or
+  thing twice. In October 2026 Josh asked for a more useful summary. The headline may name
+  the sky over the remaining day or tomorrow when the hourly run supports the whole period,
+  rather than repeat the current condition beside the number. On a quiet afternoon it can be
+  one sentence: `Nice this afternoon.` Feels-like gets its line only when it is 3° or
   more off the air, the rule the hourly readout already used, because inside that it is the
   same number twice. The hourly note is the golden-hour span or nothing. It names the next band;
   a finger inside any gold band, tomorrow morning's too, reads a quiet gold `golden hour` on the pill.
@@ -63,14 +65,15 @@ place name.
   and Tonight. The coast and the farm have the same sections in the same order, the tide at one
   and the moon at the other. A new reading goes in a note, on a chart or in a card, never as a
   line of text over a chart. The week's title reads `This week`.
-- **Josh's words.** Plain, short, direct. Windy, never blustery, breezy or wind-whipped, and
-  test.mjs checks the whole file for those three. No semicolons and no em dashes in the
+- **Josh's words.** Plain, short, direct. Sunny, cloudy, windy, nice when the forecast earns it. No mild in
+  the generated descriptions, and never blustery, breezy or wind-whipped. test.mjs keeps
+  those choices in place. No semicolons and no em dashes in the
   app's sentences (an en dash in a range like 4–7p is fine), and no "not X, it's Y". The
   family's own words stay, because they are the character: piddle, soupy (earned: real
   humidity on real heat), "Feed early and keep a path open", "Cold one.
   Bundle up for the morning rounds.", "Stay off the hill until it turns over", golden hour,
   "Keep the middle of the day short", "Plan on slow going", "Reading the sky…". Noon and midnight
-  are words in a sentence (`Thunder possible around noon.`, `Sunscreen until noon.`), never
+  are words in a sentence (`Thunder possible around noon.`, `Strongest sun until noon.`), never
   `12 p.m.`; the charts keep `12p` and `12a`. A midnight belongs to the day it ends: at 1 a.m. the
   00:00 at the far end of the run is `around midnight.`, never `midnight tomorrow`, which reads as
   the end of tomorrow, a day late. The sliders' spoken sentences keep the same rule (`noon, 95
@@ -93,6 +96,23 @@ place name.
   so a gust the chip is already showing is `windy now`. The week reaches further
   because it is a chart of the run's own numbers, and the weekend note beside it stays
   numbers: a high, and the odds wherever there is rain to talk about.
+- **The summary moves with the day.** In October 2026 Josh asked for ordinary words,
+  smarter timing and no extra length. Before noon the summary can use today's known high;
+  afternoons use the temperatures still ahead so a spent high cannot make a cool afternoon
+  warm. A quiet afternoon can be `Nice this afternoon.` Nice requires every remaining daylight
+  hour to have known temperature and feels-like from 50 to under 85, known gusts under 28,
+  known rain odds under 25%, no wet weather codes, and a clear or partly cloudy sky. The
+  warmth being described must be 68 to under 82: the daily high before noon, the warmest
+  remaining afternoon hour after noon. Current discomfort cannot be hidden by it. From 5 p.m. the
+  quiet headline looks toward tomorrow: `Sunny tomorrow and 7° cooler.` A difference of at
+  least 5° between the two known daily highs earns a comparison. Smaller changes get no filler.
+  Tomorrow's sky needs the complete sunrise-to-sunset hourly run; a shortened cache can still
+  say `Tomorrow's high is 72°.` from the known daily forecast, but cannot promise its sky.
+  Missing sunrise or sunset cannot invent a daylight window. Hazards always take this space
+  first, and tomorrow is said for tomorrow. The wall clock governs the sentence even when a
+  cached reading was written hours earlier. Rain lets up only after two consecutive known
+  dry hours; missing odds never make a break. Thunder at the first wet hour keeps its name
+  instead of becoming rain, and rain falling now cannot hide thunder still to come.
 - **Scales are honest.** The tide chart is measured up from the chart datum
   (0 ft MLLW), never autoscaled to the window, so the height of the water on
   screen is the water that is there.
@@ -227,17 +247,19 @@ place name.
   standing under EXTREME. The pin's number and the lit bar carry the reading, and the bar's
   label speaks the band and the peak (`UV 4.1 now, moderate, peaking at 7.0 around 11 a.m.`). A
   peak within half a point of the pin and in its band is the pin and gets no ring. One that
-  crosses into a higher band keeps its ring, its dot nudged clear of the pin, or
-  `Sunscreen if you're out a while.` sat over a bar that showed nothing past LOW. The peak is
-  searched from the hour now is in, so a cache opened late rings nothing that has passed, and
-  the loading and error shell hide the scale with the bar. One sentence survives: the coast's
-  sunscreen clock for the kids ("Sunscreen until 4 p.m.", "Sunscreen if you're out a while."),
-  the farm's "Strongest sun until 4 p.m.". When nothing left today reaches 3, which is every
-  evening, a storm and most winter days, both sentence functions return null, `#sunCard` is
-  hidden and Tonight goes wide. A peak is never borrowed from tomorrow. The hourly run's first
-  hour carries the live UV, so the sentence and the pin read the same number. The UV chip
-  shows from 3 and only while the card does (`sunAdvice&&`), because a cache opened after the
-  strong sun still holds a 3 from an hour that has passed.
+  crosses into a higher band keeps its ring, its dot nudged clear of the pin, so a sentence
+  about strong sun never sits over a bar that shows nothing past LOW. The peak is searched
+  from the hour now is in, so a cache opened late rings nothing that has passed, and the
+  loading and error shell hide the scale with the bar. In October 2026 Josh asked for the
+  coast's sunscreen reminders to go. Both places now use the same neutral sentence:
+  `Strongest sun until 4 p.m.` or `Strongest sun 9 a.m. to 4 p.m.`, read only from today's
+  hourly UV. The Sun card gives no clothing or sunscreen advice at either family place, and no assumed 10-to-5
+  schedule when the hourly source is missing. The sentence's colour comes from the peak
+  still ahead, never a spent lunchtime peak. When no remaining hour reaches 3, both sentence
+  functions return null, `#sunCard` is hidden and Tonight goes wide. A peak is never borrowed
+  from tomorrow. The hourly run's first hour carries the live UV, so the sentence and the pin
+  read the same number. The UV chip shows from 3 and only while the card does (`sunAdvice&&`),
+  because a cache opened after the strong sun still holds a 3 from an hour that has passed.
 - **Golden hour is said once.** Josh loves it and asked whether it was weird that it popped twice
   (September 28 2026). It was: the Next 24 hours note and a gold line on the Tonight card named the
   same span, and on a cold morning they named two different mornings with nearly the same times. It
@@ -289,9 +311,15 @@ place name.
   new hour's run, once an hour, so NOW and the now pill land back on the live reading. A missing
   hourly temperature is not a zero: the line runs through it between its known neighbours, stops at
   the first and last known hour (with no neighbour past them, a line held flat drew a temperature the
-  run does not carry), and only known hours are marked. The Tonight card reads the same run and
-  leaves a missing hour out of the night (it once said `Low 0° tonight.`), and the week does the same
-  with a missing day (`knownRun`), which once dove its line off the chart and printed `0°`. The water says the water that is there at now (the table plus the gauge's gap, which
+  run does not carry), and only known hours are marked. The Tonight card reads the same run in
+  one connected sentence (`Rain likely tonight, with a low of 62°.`), and after midnight says
+  `before morning`. A low needs every remaining night hour through sunrise: a missing temperature
+  or a run ending early means `Low unavailable`, never zero or a minimum borrowed from half a
+  night. Weather is read separately, so a missing temperature cannot erase thunder, snow or ice.
+  Thunder is said at any odds; freezing rain and snow keep their names, and each gets its odds
+  word from its own hours. A day's rain odds never stand in for tonight's. Missing night odds
+  are unavailable, not dry. `tonightBrief` is pure and tested. The week leaves a missing day
+  undrawn (`knownRun`), which once dove its line off the chart and printed `0°`. The water says the water that is there at now (the table plus the gauge's gap, which
   the tag beside the boat reconciles with the curve it rides; the skiff is the mark there, so no
   ring) and `by the table` everywhere else while the gauge runs off it. The moon says when a fishing time ends, to the minute it prints, or when the moon rises or
   sets, and never names a window it dropped. A day is named only where a clock time could mean two moments. The Sun bar has
@@ -1123,6 +1151,16 @@ lines over bars. They change once a decade, so they live in `NORMALS` and nothin
   but today is a button that opens its `dailyBrief`; the open day is washed under the hairline only,
   because a wash behind the chart boxed every label it crossed. Check it at 320 with a three-digit
   high and 100% odds.
+
+- **A tapped day uses the family's words.** Josh's October 2026 wording pass replaced the
+  temperature-and-sky fragments with connected sentences: `Warm and sunny.`, `Cool and cloudy.`,
+  `Nice and mostly sunny.` Nice needs a known high from 68 to under 82, a clear or partly cloudy
+  sky, known rain odds under 25%, and known daily wind under 20 mph. Rain gets one sentence,
+  `Rain likely.` or `Showers possible.`, rather than a second sentence saying it will be wet.
+  Likely starts at 70%; thunder, snow and freezing rain keep their names and the established
+  practical follow-up. Missing sky, temperature, odds or wind never earns nice. The weekly
+  chart still carries the numerical odds. The current condition says `Sunny` or `Mostly sunny`
+  in daylight and `Clear` or `Mostly clear` after sunset, from the same sky code.
 
 - **The weekend is marked, not described.** Josh is always after the weekend (September 2026).
   With seven days the coming Sunday was missing on exactly one day of the week, Sunday itself,

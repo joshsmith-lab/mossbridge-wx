@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v85/);
+  assert.match(worker, /mbwx-shell-v86/);
   // the clouds end in their own scallops: Josh loves the clouds and not the curly tail
   const cloud = html.match(/const propCloud=seed=>\[[\s\S]*?\];/);
   assert.ok(cloud, "propCloud should be extractable");
@@ -140,9 +140,10 @@ test("loading, cached data and the hourly explorer tell the truth", async () => 
   // the known hours rather than holding flat a temperature the run does not carry
   assert.match(html, /const line=drawn\?spline\(pts\.slice\(kf,kl\+1\)\):"",xa=drawn\?X\(kf\):X\(0\),xb=drawn\?X\(kl\):X\(0\);/);
   assert.match(html, /revealChart\("hourly",hourlySvg,\{xa,xb,/);
-  // the Tonight card reads the same run, and a missing night hour drops out of the night rather
-  // than being read as 0 ("Low 0° tonight." under a pill that said the hour was unavailable)
-  assert.match(html, /const nightHours=h\.time\.map\(\(t,i\)=>\(\{time:new Date\(t\),temp:known\(h\.temp\[i\]\)\?\+h\.temp\[i\]:NaN,/);
+  // The Tonight card never reads a missing hour as zero, or calls the minimum of an incomplete
+  // run the night's low. Its weather remains independent of its temperature readings.
+  assert.match(html, /function tonightBrief\(dy,h,now\)/);
+  assert.match(html, /const low=full&&temps\.length===slots\.length\?Math\.round\(Math\.min\(\.\.\.temps\)\):null;/);
   assert.doesNotMatch(html, /temp:Number\(h\.temp\[i\]\)/);
   assert.match(html, /class="tline"[^>]*vector-effect="non-scaling-stroke"/);
 
@@ -156,10 +157,10 @@ test("loading, cached data and the hourly explorer tell the truth", async () => 
 test("overnight copy follows the night the family is actually in", async () => {
   const html = await readFile(new URL("index.html", root), "utf8");
 
-  assert.match(html, /const beforeSunrise=now<sunrise/);
-  assert.match(html, /const nightEnd=beforeSunrise\?sunrise:tomorrowRise/);
-  assert.match(html, /const fallbackDay=beforeSunrise\?0:Math\.min\(1/);
-  assert.match(html, /const nightWhen=beforeSunrise\?"before morning":"tonight"/);
+  assert.match(html, /const before=now<rise,when=before\?"before morning":"tonight"/);
+  assert.match(html, /const end=new Date\(dy\.sunrise\?\.\[before\?0:1\]\)/);
+  assert.doesNotMatch(html, /const fallbackDay=|const fallbackLow=/);
+  assert.match(html, /const start=before\|\|now>=set\?new Date\(now\):new Date\(set\)/);
   // after midnight the golden hour named is this morning's: the note takes the first gold band
   // on the chart that has not ended, and the Tonight card no longer says it a second time
   assert.match(html, /const nextLight=goldWindows\.find\(gw=>gw\.b>now\)\|\|null;/);
@@ -249,7 +250,7 @@ test("the page agrees with itself", async () => {
   assert.match(html, /second=wetI===w0\n\s*\?\(kind\?`\$\{kind\} \$\{likely\?"likely any time now\.":"could start any time\."\}`:likely\?"Rain likely any time now\.":"Showers could pop up any time\."\)/);
   // no sunscreen schedule when the rest of today's hourly UV stays under 3: the sun card steps
   // aside rather than say so, and the hour it starts from is the live reading
-  assert.match(html, /if\(h\.time\.some\(\(t,i\)=>t\.slice\(0,10\)===today&&h\.uv\?\.\[i\]!=null\)\)return null;/);
+  assert.match(html, /if\(!slots\.length\)return null;/);
   assert.match(html, /document\.getElementById\("sunCard"\)\.hidden=!sunAdvice;/);
   assert.match(html, /uv:d\.hourly\.uv&&d\.hourly\.uv\.map\(\(u,i\)=>i\?u:now0\(u,"uv_index"\)\)/);
   assert.doesNotMatch(html, /UV stays low|Sunscreen weather is over|The strong sun is done|Easy sun/);
@@ -257,13 +258,13 @@ test("the page agrees with itself", async () => {
   // no longer repeats it, and the low stays with its words
   assert.doesNotMatch(html, /id="goldTimes"|goldBits|\.gold-bit\{/);
   // (and a low the run does not carry is said unavailable, never 0°)
-  assert.match(html, /const lowTxt=Number\.isFinite\(nightLow\)\?`Low\\u00A0\$\{nightLow\}°`:"Low unavailable";/);
-  assert.match(html, /`\$\{lowTxt\} \$\{nightWhen\}\.`;/);
-  // under 35% the night says nothing about rain, the way the week does
-  assert.doesNotMatch(html, /mostly dry \$\{nightWhen\}/i);
-  // and the odds word follows the odds for ice as it does for snow: likely from 60, possible from 35
-  assert.match(html, /let tonightText=nightPop>=35&&nightIce\?`Freezing rain \$\{nightPop>=60\?"likely":"possible"\} \$\{nightWhen\}\. \$\{lowTxt\}\.`:/);
-  assert.match(html, /nightPop>=35&&nightSnow\?`Snow \$\{nightPop>=60\?"likely":"possible"\} \$\{nightWhen\}\. \$\{lowTxt\}\.`:/);
+  assert.match(html, /const lowText=low==null\?"Low unavailable":`a low of \$\{low\}°`;/);
+  assert.match(html, /`Down to \$\{low\}° \$\{when\}\.`;/);
+  // Low odds never become a promise of dry weather, and a wet code still keeps its name.
+  assert.doesNotMatch(html, /mostly dry \$\{when\}/i);
+  // Ice and snow get their odds words from their own hours: likely from 60, otherwise possible.
+  assert.match(html, /let weather=ice\.length\?`Freezing rain \$\{likely\(ice\)\?"likely":"possible"\}`:/);
+  assert.match(html, /snow\.length\?`Snow \$\{likely\(snow\)\?"likely":"possible"\}`:/);
   // inside a golden hour the note says how long it has left
   assert.match(html, /now>=nextLight\.a\?"until "\+clock\(nextLight\.b\):spanTxt\(nextLight\.a,nextLight\.b\)/);
   // the lit side of the moon is the light side on both themes
@@ -566,10 +567,11 @@ test("it snows in Shady Spring", async () => {
   assert.match(html, /@keyframes flake\{/);
   assert.match(html, /rf\.className="rainfx"\+\(snowing\?" snow":""\)/);
   // and the week's one-line brief no longer calls a heavy snow day "periods of rain"
-  assert.match(html, /isSnow\(code\)\?\(code===75\|\|code===86\?"heavy snow"/);
+  assert.match(html, /else if\(snow\)\{text=`\$\{code===75\|\|code===86\?"Heavy snow":"Snow"\}/);
   assert.match(html, /code:wj\.hourly\.weather_code\.slice\(i0,i0\+24\)/);
   // and the odds word follows the odds: 35% snow is possible, not likely
-  assert.match(html, /nightPop>=35&&nightSnow\?`Snow \$\{nightPop>=60\?"likely":"possible"\} \$\{nightWhen\}/);
+  assert.match(html, /const likely=is=>is\.some\(i=>known\(h\.pop\?\.\[i\]\)&&\+h\.pop\[i\]>=60\)/);
+  assert.match(html, /snow\.length\?`Snow \$\{likely\(snow\)\?"likely":"possible"\}`:/);
   // and the weekend note calls a snowy Saturday's odds snow
   assert.match(html, /odds:wet\?`\$\{Math\.round\(\+P\[i\]\)\}%`:"",noun:wet\?isSnow\(w\)\?"snow":isIce\(w\)\?"ice":"rain":""/);
 });
@@ -698,7 +700,7 @@ test("plain-language and living-scene refinements stay in place", async () => {
   // see the reason for) went in September 2026, and the headline says only what is coming. Its
   // sentences, the water's and the farm's say today and today only, off the hours coveredHours gives.
   assert.match(html, /function dayStory\(c,dy,h,now\)/);
-  assert.match(html, /return\{html:first\+" "\+second,told\};/);
+  assert.match(html, /return\{html:\[first,second\]\.filter\(Boolean\)\.join\(" "\),told\};/);
   assert.match(html, /const dayRead=dayStory\(c,dy,h,now\);/);
   assert.match(html, /function coveredHours\(h,dy,now\)/);
   assert.doesNotMatch(html, /Best outside stretch:|bestOutsideWindow|windowLabel|best time to piddle|best time to head out|best window/);
@@ -706,17 +708,13 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /one local wildlife cue at a time/);
   assert.match(html, /seasonalFlies/);
   assert.match(html, /function sunProtectionAdvice\(c,dy,h,now\)/);
-  assert.match(html, /Sunscreen from /);
-  assert.match(html, /Sunscreen until /);
-  assert.doesNotMatch(html, /Sunscreen weather /);
-  // the clock-and-warning sentence is reserved for 6+, WHO's "high" — measured on
-  // the sun still to come, not the day's peak: an August day that peaked at 8 over
-  // lunch is genuinely mild by late afternoon
-  assert.match(html, /const ahead=Math\.max\(Number\(c\.uv_index\)\|\|0,\.\.\.slots\.filter\(slot=>slot\.time>=now\)/);
-  // the bar already says mild, so the sentence keeps only the part for the kids
-  assert.match(html, /if\(ahead<6\)return\{text:"Sunscreen if you're out a while\.",cls:"go"\}/);
-  assert.match(html, /if\(peak>=6\)return\{text:"Sunscreen from 10 a\.m\. to 5 p\.m\."/);
-  assert.doesNotMatch(html, /Mild sun today\./);
+  // Josh removed the coast's reminders. Both places keep the measured sun hours,
+  // without inventing a 10-to-5 schedule when the hourly source is missing.
+  assert.doesNotMatch(html, /Sunscreen from |Sunscreen until |Sunscreen if/);
+  assert.match(html, /return ridgeSunLine\(c,dy,h,now\);/);
+  assert.match(html, /slot\.time\.getTime\(\)>=hour/);
+  assert.match(html, /const peak=Math\.max\(\.\.\.slots\.map\(slot=>\+slot\.uv\)\),cls=peak>=6/);
+  assert.doesNotMatch(html, /Strongest sun 10 a\.m\. to 5 p\.m\./);
   assert.doesNotMatch(html, /Wear SPF 30\+/);
   assert.doesNotMatch(html, /Reapply after two hours/);
   assert.match(html, /class="wildlife heron"/);
@@ -724,7 +722,7 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /const frogAt=/);
   assert.match(html, /const crabAt=/);
   assert.doesNotMatch(html, /marshDeer/);
-  assert.match(html, /one useful read, rather than another row of weather instruments/);
+  assert.match(html, /const night=tonightBrief\(dy,h,now\);/);
   assert.doesNotMatch(html, /id="eveWind"/);
   assert.match(html, /function dailyBrief\(dy,i\)/);
   // the week is two lines, not a stack of bars: highs and lows on one scale, the range washed
@@ -758,7 +756,7 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /return\{t,has,pop,sky,code,likely,odds:has&&\(likely\|\|sky&&isWet\(code\)\)\}/);
   // one threshold for the printed odds and the tapped brief, so the column and the sentence agree
   assert.match(html, /const WEEK_H=132,WEEK_WET=35;/);
-  assert.match(html, /else if\(pop>=WEEK_WET\)note="Maybe a passing shower\."/);
+  assert.match(html, /hasPop&&pop>=WEEK_WET\)text=/);
   // a missing sky is no glyph, never a sun; a week with no odds at all is not "mostly dry",
   // and the note never calls a weekend dry (see the weekend test)
   assert.match(html, /\$\{sky\?icon\(code,16\):""\}/);
@@ -766,9 +764,9 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.doesNotMatch(html, /"mostly dry"|looks most likely/);
   // the tapped brief says nothing it was not told: no invented sky, no easy day on missing odds,
   // and an easy day is its sky and nothing more
-  assert.match(html, /const head=\[feel,hasSky\?sky:""\]\.filter\(Boolean\)\.join\(", "\);/);
+  assert.match(html, /else if\(hasSky\)\{/);
   assert.match(html, /const feel=high==null\?"":high>=92/);
-  assert.match(html, /else if\(!hasPop\)note="Rain odds unavailable\.";/);
+  assert.match(html, /if\(!hasPop&&!note\)note="Rain odds unavailable\.";/);
   assert.doesNotMatch(html, /Most of the day should feel easy outside|It may turn breezy/);
   assert.match(html, /moonPhaseIcon/);
   assert.doesNotMatch(html, /phaseName/);
@@ -850,30 +848,37 @@ test("a tapped day says its feel and its sky, and a note only when there is some
   ].join("\n"), ctx);
   const brief = (high, code, pop, wind = 10) => ctx.dailyBrief({ temperature_2m_max: [high], weather_code: [code],
     precipitation_probability_max: [pop], wind_speed_10m_max: [wind] }, 0);
-  assert.equal(brief(85, 0, 10), "Warm, sunny.");
-  assert.equal(brief(75, 1, 10), "Mild, mostly sunny.");
-  assert.equal(brief(75, 2, 10), "Mild, partly sunny.");
-  assert.equal(brief(60, 3, 10), "Cool, mostly cloudy.");
-  assert.equal(brief(60, 45, 10), "Cool, foggy.");
-  assert.equal(brief(95, 1, 10), "Hot, mostly sunny. Keep the middle of the day short.");
-  assert.equal(brief(84, 95, 70), "Warm, storms possible. Watch for alerts.");
-  assert.equal(brief(30, 66, 70), "Cold, freezing rain. Give the roads time.");
-  assert.equal(brief(30, 75, 70), "Cold, heavy snow. Plan on slow going.");
-  assert.equal(brief(30, 77, 40), "Cold, snow grains. Plan on slow going.");
-  assert.equal(brief(30, 73, 40), "Cold, snow. Plan on slow going.");
-  assert.equal(brief(70, 63, 80), "Mild, rain at times. Expect a wet stretch.");
-  assert.equal(brief(70, 81, 50), "Mild, showers. Expect a wet stretch.");
-  assert.equal(brief(70, 53, 30), "Mild, drizzle. Expect a wet stretch.");
-  assert.equal(brief(70, 3, 60), "Mild, mostly cloudy. Expect a wet stretch.");
-  assert.equal(brief(70, 3, 40), "Mild, mostly cloudy. Maybe a passing shower.");
-  assert.equal(brief(70, 2, 10, 22), "Mild, partly sunny. Could get windy.");
-  // a missing sky or chance is left unsaid: no invented sun, no easy day on missing odds
-  assert.equal(brief(70, null, 10), "Mild.");
-  assert.equal(brief(70, 2, null), "Mild, partly sunny. Rain odds unavailable.");
-  // and a missing high leaves the feel word out, where it used to fall through the ladder to "Cold."
-  assert.equal(brief(null, 2, 10), "Partly sunny.");
-  assert.equal(brief(undefined, 63, 80), "Rain at times. Expect a wet stretch.");
+  assert.equal(brief(85, 0, 10), "Warm and sunny.");
+  assert.equal(brief(75, 1, 10), "Nice and mostly sunny.");
+  assert.equal(brief(75, 2, 10), "Nice with some clouds.");
+  assert.equal(brief(60, 3, 10), "Cool and cloudy.");
+  assert.equal(brief(60, 45, 10), "Cool and foggy.");
+  assert.equal(brief(95, 1, 10), "Hot and mostly sunny. Keep the middle of the day short.");
+  assert.equal(brief(84, 95, 70), "Thunderstorms likely. Watch for alerts.");
+  assert.equal(brief(84, 95, 10), "Thunderstorms possible. Watch for alerts.");
+  assert.equal(brief(30, 66, 70), "Freezing rain likely. Give the roads time.");
+  assert.equal(brief(30, 75, 70), "Heavy snow likely. Plan on slow going.");
+  assert.equal(brief(30, 77, 40), "Snow possible. Plan on slow going.");
+  assert.equal(brief(30, 73, 40), "Snow possible. Plan on slow going.");
+  assert.equal(brief(70, 63, 80), "Rain likely.");
+  assert.equal(brief(70, 81, 50), "Showers possible.");
+  assert.equal(brief(70, 53, 30), "Drizzle possible.");
+  assert.equal(brief(70, 3, 60), "Showers possible.");
+  assert.equal(brief(70, 3, 40), "Showers possible.");
+  assert.equal(brief(70, 2, 10, 22), "Partly cloudy and windy.");
+  // Missing sky, odds, wind or temperature never earns a nice-day claim.
+  assert.equal(brief(70, null, 10), "");
+  assert.equal(brief(70, 2, null), "Partly cloudy. Rain odds unavailable.");
+  assert.equal(brief(70, 2, 10, null), "Partly cloudy.");
+  assert.equal(brief(null, 2, 10), "Partly cloudy.");
+  assert.equal(brief(undefined, 63, 80), "Rain likely.");
   assert.equal(brief(null, null, 10), "");
+  assert.equal(brief(75, 3, 10), "Cloudy.");
+  assert.equal(brief(75, 45, 10), "Foggy.");
+  assert.equal(brief(75, 1, 30), "Mostly sunny.");
+  assert.equal(brief(75, 61, 10), "Showers possible.");
+  assert.doesNotMatch(html.slice(html.indexOf("function dailyBrief("), html.indexOf("/* ── the week")), /Mild|Expect a wet stretch|Maybe a passing shower/);
+
 });
 
 test("the sun card says it with the bar, and steps aside when today has nothing left", async () => {
@@ -938,10 +943,10 @@ test("the sun card says it with the bar, and steps aside when today has nothing 
   const at = (hm) => new Date(`${day}T${hm}`);
   const coast = (hm, uvNow, uv, max) => ctx.sunProtectionAdvice({ uv_index: uvNow }, dy(max), run(+hm.slice(0, 2), [uvNow, ...uv]), at(hm));
   const farm = (hm, uvNow, uv, max) => ctx.ridgeSunLine({ uv_index: uvNow }, dy(max), run(+hm.slice(0, 2), [uvNow, ...uv]), at(hm));
-  assert.equal(coast("14:20", 8.4, [7.2, 4.9, 2.1, .6]).text, "Sunscreen until 5 p.m.");
-  assert.equal(coast("09:05", 4.1, [5.8, 7, 7, 6.6, 5.1, 3.4, 1.8]).text, "Sunscreen until 4 p.m.", "a live 4.1 is inside the window");
-  assert.equal(coast("07:05", 1.2, [2.6, 4, 6, 7, 7, 6.6, 5.1, 3.4, 1.8]).text, "Sunscreen from 9 a.m. to 4 p.m.");
-  assert.equal(coast("14:40", 3.8, [3.6, 2.4, 1], 4.2).text, "Sunscreen if you're out a while.");
+  assert.equal(coast("14:20", 8.4, [7.2, 4.9, 2.1, .6]).text, "Strongest sun until 5 p.m.");
+  assert.equal(coast("09:05", 4.1, [5.8, 7, 7, 6.6, 5.1, 3.4, 1.8]).text, "Strongest sun until 4 p.m.", "a live 4.1 is inside the window");
+  assert.equal(coast("07:05", 1.2, [2.6, 4, 6, 7, 7, 6.6, 5.1, 3.4, 1.8]).text, "Strongest sun 9 a.m. to 4 p.m.");
+  assert.equal(coast("14:40", 3.8, [3.6, 2.4, 1], 4.2).text, "Strongest sun until 4 p.m.");
   assert.equal(farm("09:05", 4.1, [5.8, 7, 7, 6.6, 5.1, 3.4, 1.8]).text, "Strongest sun until 4 p.m.");
   assert.equal(farm("07:05", 1.2, [2.6, 4, 6, 7, 7, 6.6, 5.1, 3.4, 1.8]).text, "Strongest sun 9 a.m. to 4 p.m.");
   // evening, an overcast that took the sun, and a winter noon all have nothing to say
@@ -954,10 +959,15 @@ test("the sun card says it with the bar, and steps aside when today has nothing 
     assert.ok(coast(hm, 3, [2.4, 1, 0]), `coast ${hm}: a chip at 3 needs its card`);
     assert.ok(farm(hm, 3, [2.4, 1, 0]), `farm ${hm}: a chip at 3 needs its card`);
   }
-  // no hourly UV to read: the rule of thumb, off the daily peak, and nothing without one
+  // No hourly UV means no schedule, even with a known daily peak.
   const noHourly = (max) => ctx.sunProtectionAdvice({ uv_index: null }, { time: [day], uv_index_max: max == null ? undefined : [max] }, { time: [`${day}T11:00`] }, at("11:10"));
-  assert.equal(noHourly(7).text, "Sunscreen from 10 a.m. to 5 p.m.");
+  assert.equal(noHourly(7), null, "a daily peak cannot invent hourly timing");
   assert.equal(noHourly(null), null);
+  // A stale cache cannot borrow the UV it had earlier, or tomorrow's peak.
+  const lateRun={time:[`${day}T11:00`,`${day}T12:00`,`${day}T15:00`,"2026-08-03T12:00"],uv:[8,9,1,10]};
+  assert.equal(ctx.sunProtectionAdvice({uv_index:8},dy(9),lateRun,at("15:10")),null);
+  assert.equal(ctx.ridgeSunLine({},dy(9),{time:[`${day}T12:00`],uv:[null]},at("12:10")),null);
+  assert.equal(coast("14:40",3.8,[3.6,2.4,1],9).cls,"go","a past high peak cannot colour the remaining sun");
   // and the chip is never shown without the card
   assert.match(html, /if\(sunAdvice&&Number\(c\.uv_index\)>=3\)chipData\.push\(\[CI\.uv,/);
 });
@@ -2437,12 +2447,13 @@ test("the page reads top down: now, today, the week, and nothing it has already 
   assert.doesNotMatch(html, /footSrc|foot-note|Refreshes on open|LOC\.foot\b/);
   assert.doesNotMatch(html.slice(html.indexOf("const LOCS={"), html.indexOf("const LOC_ORDER=")), /\bfoot:/);
 
-  // The headline says what is coming, never the sky the label and the scene already show.
-  const story = html.slice(html.indexOf("function dayStory("), html.indexOf("/* The farm's sun line"));
+  // The headline describes the coming period from its own hours, not the current sky twice.
+  const story = html.slice(html.indexOf("function dayStory("), html.indexOf("/* Both places get the sun"));
   const storyCode = story.replace(/\/\*[\s\S]*?\*\//g, "");
   assert.doesNotMatch(storyCode, /breaks of sun|breaks in the sky|gray skies|plenty of sun|cloud cover|clear sky|c\.cloud_cover/);
   // and it says windy, the way the family does
-  assert.doesNotMatch(storyCode, /blustery|breezy|wind-whipped/i);
+  assert.doesNotMatch(storyCode, /mild|blustery|breezy|wind-whipped/i);
+  assert.doesNotMatch(html.replace(/\/\*[\s\S]*?\*\//g, ""), /\bmild\b/i, "the app uses the family's plain words");
   const ctx = vm.createContext({});
   vm.runInContext([
     lift(/const SNOW=\[[\s\S]*?const isWet=w=>WETC\.includes\(w\);/),
@@ -2453,11 +2464,11 @@ test("the page reads top down: now, today, the week, and nothing it has already 
     lift(/const XP=\{\},XP_HOLD=[^\n]*/),
     story,
   ].join("\n"), ctx);
-  const dy = { time: ["2026-08-02"], temperature_2m_max: [90] };
+  const dy = { time: ["2026-08-02"], temperature_2m_max: [90], sunrise: ["2026-08-02T06:00"], sunset: ["2026-08-02T20:00"] };
   const hours = (from, o = {}) => {
     const t0 = new Date(from.slice(0, 13) + ":00:00Z").getTime();
     const time = Array.from({ length: 24 }, (_, i) => new Date(t0 + i * 3.6e6).toISOString().slice(0, 16));
-    return { time, temp: time.map(() => 75), pop: time.map((_, i) => o.pop?.(i) ?? 5), gust: time.map((_, i) => o.gust?.(i) ?? 10),
+    return { time, temp: time.map(() => 75), feels: time.map(() => 75), pop: time.map((_, i) => o.pop?.(i) ?? 5), gust: time.map((_, i) => o.gust?.(i) ?? 10),
       code: time.map((_, i) => o.code?.(i) ?? 2) };
   };
   const tell = (c, o, loc = { id: "sp" }, d = dy) => {
@@ -2465,28 +2476,28 @@ test("the page reads top down: now, today, the week, and nothing it has already 
     return ctx.dayStory({ relative_humidity_2m: 50, apparent_temperature: c.temperature_2m, ...c }, d, hours(c.time, o)).html;
   };
   // after midnight the night is graded by the air it is in, not by the new day's forecast high
-  assert.equal(tell({ time: "2026-08-02T01:15", temperature_2m: 70, weather_code: 1 }), "Mild tonight. Should stay dry.");
-  assert.equal(tell({ time: "2026-08-02T19:15", temperature_2m: 84, weather_code: 1 }), "Warm this evening. Should stay dry.");
+  assert.equal(tell({ time: "2026-08-02T01:15", temperature_2m: 70, weather_code: 1 }), "Dry through the morning.");
+  assert.equal(tell({ time: "2026-08-02T19:15", temperature_2m: 84, weather_code: 1 }), "Warm this evening. Dry through the night.");
   // a night is warm from 74, where the Tonight card calls it warm, and under 40 it is cold
-  assert.equal(tell({ time: "2026-08-02T23:10", temperature_2m: 78, weather_code: 2 }), "Warm tonight. Should stay dry.");
-  assert.equal(tell({ time: "2026-08-02T19:15", temperature_2m: 35, weather_code: 1 }), "Cold this evening. Should stay dry.");
-  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 88, weather_code: 1, relative_humidity_2m: 80 }), "Warm and soupy today. Should stay dry.");
+  assert.equal(tell({ time: "2026-08-02T23:10", temperature_2m: 78, weather_code: 2 }), "Warm tonight. Dry through the night.");
+  assert.equal(tell({ time: "2026-08-02T19:15", temperature_2m: 35, weather_code: 1 }), "Cold this evening. Dry through the night.");
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 88, weather_code: 1, relative_humidity_2m: 80 }), "Warm and soupy with some sun this afternoon.");
   // a live gust in hour 0 is a windy headline; one later in the day is named by its hour
-  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 3 }, { gust: (i) => (i ? 12 : 30) }), "Warm today. Dry, but windy now.");
-  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 3 }, { gust: (i) => (i === 3 ? 31 : 12) }), "Warm today. Dry, but windy by 4 p.m.");
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 3 }, { gust: (i) => (i ? 12 : 30) }), "Windy now.");
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 3 }, { gust: (i) => (i === 3 ? 31 : 12) }), "Windy by 4 p.m.");
   // it names the first windy hour, not the windiest: gusts of 30 now are windy now, whatever comes at 4
-  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 3 }, { gust: (i) => (i === 0 ? 30 : i === 3 ? 34 : 12) }), "Warm today. Dry, but windy now.");
-  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 3 }, { gust: (i) => (i === 1 ? 29 : i === 4 ? 33 : 12) }), "Warm today. Dry, but windy by 2 p.m.");
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 3 }, { gust: (i) => (i === 0 ? 30 : i === 3 ? 34 : 12) }), "Windy now.");
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 3 }, { gust: (i) => (i === 1 ? 29 : i === 4 ? 33 : 12) }), "Windy by 2 p.m.");
   // One night is one night: after dark the small hours before morning are tonight's, and only
   // daylight tomorrow is "tomorrow". The Tonight card under it calls the same shower tonight's.
-  assert.equal(tell({ time: "2026-08-02T21:30", temperature_2m: 72, weather_code: 1 }, { pop: (i) => (i === 4 ? 45 : 5) }), "Mild tonight. Showers possible around 1 a.m.");
-  assert.equal(tell({ time: "2026-08-02T21:30", temperature_2m: 72, weather_code: 1 }, { pop: (i) => (i === 10 ? 45 : 5) }), "Mild tonight. Showers possible around 7 a.m. tomorrow.");
+  assert.equal(tell({ time: "2026-08-02T21:30", temperature_2m: 72, weather_code: 1 }, { pop: (i) => (i === 4 ? 45 : 5) }), "Showers possible around 1 a.m.");
+  assert.equal(tell({ time: "2026-08-02T21:30", temperature_2m: 72, weather_code: 1 }, { pop: (i) => (i === 10 ? 45 : 5) }), "Showers possible around 7 a.m. tomorrow.");
   assert.equal(tell({ time: "2026-08-02T19:15", temperature_2m: 76, weather_code: 63 }, { pop: (i) => (i < 7 ? 80 : 10) }), "Raining now. Should let up around 2 a.m.");
   // after midnight the midnight at the far end of the run is the one that ends today, so it is
   // plain "midnight": "midnight tomorrow" reads as the end of tomorrow, a day late
-  assert.equal(tell({ time: "2026-08-02T01:15", temperature_2m: 70, weather_code: 1 }, { pop: (i) => (i === 23 ? 45 : 5) }), "Mild tonight. Showers possible around midnight.");
-  assert.equal(tell({ time: "2026-08-02T01:15", temperature_2m: 70, weather_code: 1 }, { pop: (i) => (i === 22 ? 45 : 5) }), "Mild tonight. Showers possible around 11 p.m.");
-  assert.equal(tell({ time: "2026-08-02T21:30", temperature_2m: 72, weather_code: 1 }, { pop: (i) => (i === 3 ? 45 : 5) }), "Mild tonight. Showers possible around midnight.");
+  assert.equal(tell({ time: "2026-08-02T01:15", temperature_2m: 70, weather_code: 1 }, { pop: (i) => (i === 23 ? 45 : 5) }), "Showers possible around midnight.");
+  assert.equal(tell({ time: "2026-08-02T01:15", temperature_2m: 70, weather_code: 1 }, { pop: (i) => (i === 22 ? 45 : 5) }), "Showers possible around 11 p.m.");
+  assert.equal(tell({ time: "2026-08-02T21:30", temperature_2m: 72, weather_code: 1 }, { pop: (i) => (i === 3 ? 45 : 5) }), "Showers possible around midnight.");
   // The look-ahead names what is coming from its own hours' codes, ice first: it only knew rain,
   // and called three o'clock's snow "Rain likely around 3 p.m." over a Tonight card that said snow.
   const cold = { time: "2026-08-02T10:00", temperature_2m: 30, weather_code: 3 }, winter = { time: ["2026-08-02"], temperature_2m_max: [34] };
@@ -2501,25 +2512,25 @@ test("the page reads top down: now, today, the week, and nothing it has already 
   // two events, and the shower's hour does not carry the snow's name or the snow's odds
   assert.equal(tell(cold, { pop: (i) => (i === 3 || i === 4 ? 45 : i >= 10 && i <= 12 ? 90 : 5), code: (i) => (i >= 10 ? 71 : i >= 3 ? 61 : 3) }, undefined, winter), "Cold today. Showers possible around 1 p.m.");
   // missing odds are not dry: the headline says what it knows, or that the odds are missing
-  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 1 }, { pop: () => NaN }), "Warm today. Rain odds unavailable.");
-  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 1 }, { pop: () => NaN, gust: (i) => (i === 3 ? 31 : 12) }), "Warm today. Windy by 4 p.m.");
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 1 }, { pop: () => NaN }), "Rain odds unavailable.");
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 1 }, { pop: () => NaN, gust: (i) => (i === 3 ? 31 : 12) }), "Windy by 4 p.m.");
   assert.equal(tell(cold, { pop: () => 80, code: () => 73 }, undefined, winter), "Cold today. Snow likely any time now.");
   assert.equal(tell(cold, { pop: () => 45, code: () => 73 }, undefined, winter), "Cold today. Snow could start any time.");
   assert.equal(tell(cold, { pop: () => 45, code: () => 67 }, undefined, winter), "Cold today. Freezing rain could start any time.");
   assert.equal(tell(cold, { pop: () => 30, code: () => 71 }, undefined, winter), "Cold today. Maybe a few flurries.");
   assert.equal(tell(cold, { pop: () => 30, code: () => 56 }, undefined, winter), "Cold today. Maybe a little freezing rain.");
   assert.equal(tell(cold, { pop: () => 30 }, undefined, winter), "Cold today. Maybe a stray shower.");
-  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 1 }, { pop: (i) => (i === 2 ? 80 : 5) }), "Warm today. Rain likely around 3 p.m.");
-  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 1 }, { pop: (i) => (i === 2 ? 45 : 5) }), "Warm today. Showers possible around 3 p.m.");
-  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 1 }, { pop: () => 30 }), "Warm today. Maybe a stray shower.");
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 1 }, { pop: (i) => (i === 2 ? 80 : 5) }), "Rain likely around 3 p.m.");
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 1 }, { pop: (i) => (i === 2 ? 45 : 5) }), "Showers possible around 3 p.m.");
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 1 }, { pop: () => 30 }), "Maybe a stray shower.");
   assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 63 }, { pop: (i) => (i < 3 ? 80 : 10) }), "Raining now. Should let up around 4 p.m.");
-  assert.equal(tell({ time: "2026-08-02T15:00", temperature_2m: 70, weather_code: 45 }), "Foggy. Should stay dry.");
-  assert.equal(tell({ time: "2026-08-02T08:00", temperature_2m: 70, weather_code: 45 }), "Foggy this morning. Should stay dry.");
+  assert.equal(tell({ time: "2026-08-02T15:00", temperature_2m: 70, weather_code: 45 }), "Foggy. Dry through the afternoon.");
+  assert.equal(tell({ time: "2026-08-02T08:00", temperature_2m: 70, weather_code: 45 }), "Foggy this morning. Dry today.");
   assert.match(tell({ time: "2026-08-02T08:00", temperature_2m: 31, weather_code: 66 }, { pop: () => 90 }), /^Freezing rain\. Expect ice on anything untreated\. Give yourself extra time on the roads\./);
   // thunder the run carries on poor odds is still thunder, and never "Should stay dry."
   assert.equal(tell({ time: "2026-08-02T10:30", temperature_2m: 70, weather_code: 2 }, { code: (i) => i >= 2 && i <= 9 ? 95 : 2 }), "Warm today. Thunder possible around noon.");
   assert.equal(tell({ time: "2026-08-02T10:30", temperature_2m: 70, weather_code: 2 }, { code: (i) => i === 0 ? 95 : 2 }), "Warm today. Thunder nearby.");
-  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 1 }, { pop: (i) => (i === 2 ? 45 : 5), code: (i) => i === 5 ? 95 : 1 }), "Warm today. Showers possible around 3 p.m.", "the first wet stretch still leads");
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 1 }, { pop: (i) => (i === 2 ? 45 : 5), code: (i) => i === 5 ? 95 : 1 }), "Showers possible around 3 p.m.", "the first wet stretch still leads");
   // and says what it named, so the cards under it do not say it again
   ctx.LOC = { id: "sp" };
   const toldOf = (o) => JSON.parse(JSON.stringify(ctx.dayStory({ time: "2026-08-02T10:30", temperature_2m: 70, weather_code: 2, relative_humidity_2m: 50, apparent_temperature: 70 }, dy,
@@ -2540,6 +2551,51 @@ test("the page reads top down: now, today, the week, and nothing it has already 
   const lateCache = ctx.dayStory({ time: "2026-08-02T09:10", temperature_2m: 70, weather_code: 2, relative_humidity_2m: 50, apparent_temperature: 70 }, dy,
     hours("2026-08-02T09:10", { code: (i) => i < 2 || i === 5 ? 95 : 2 }), new Date("2026-08-02T11:40"));
   assert.equal(lateCache.html, "Warm today. Thunder possible around 2 p.m.");
+  // Quiet descriptions name a period only when every daylight hour is actually known.
+  const completeDy = { time: ["2026-08-02", "2026-08-03"], temperature_2m_max: [76, 68],
+    sunrise: ["2026-08-02T06:00", "2026-08-03T06:00"], sunset: ["2026-08-02T18:00", "2026-08-03T18:00"] };
+  const readAt = (time, options = {}) => {
+    const c = { time, temperature_2m: 75, apparent_temperature: 75, relative_humidity_2m: 50, weather_code: 1, ...options.c };
+    const h = hours(c.time, { code: () => 1, ...options.hours });
+    options.change?.(h);
+    return ctx.dayStory(c, options.dy || completeDy, h, new Date(options.now || time));
+  };
+  assert.equal(readAt("2026-08-02T14:00").html, "Nice this afternoon.");
+  assert.equal(readAt("2026-08-02T14:00", { c: { weather_code: 3 }, hours: { code: () => 3 } }).html, "Cloudy this afternoon.");
+  assert.equal(readAt("2026-08-02T19:00").html, "Sunny tomorrow and 8° cooler.");
+  assert.equal(readAt("2026-08-02T19:00", { c: { weather_code: 45 } }).html, "Foggy. Sunny tomorrow and 8° cooler.", "looking ahead cannot hide fog here now");
+  assert.equal(readAt("2026-08-02T17:00").html, "8° cooler tomorrow, with a high of 68°.", "a 24-hour run ending at four cannot promise tomorrow afternoon's sky");
+  assert.equal(readAt("2026-08-02T19:00", { dy: { ...completeDy, temperature_2m_max: [76, 79] } }).html, "Sunny tomorrow.", "a small temperature change adds no comparison");
+  assert.equal(readAt("2026-08-02T17:00", { dy: { ...completeDy, temperature_2m_max: [null, 79] } }).html, "Tomorrow's high is 79°.");
+  assert.equal(readAt("2026-08-02T19:00", { dy: { ...completeDy, temperature_2m_max: [76, null] } }).html, "Sunny tomorrow.", "no invented temperature is needed for a known sky");
+  assert.equal(readAt("2026-08-02T17:00", { dy: { ...completeDy, temperature_2m_max: [76, null] } }).html, "Warm this evening. Dry through the night.");
+  for (const change of [h => { h.pop[2] = null; }, h => { h.code[2] = null; },
+    h => { for (const k of Object.keys(h)) h[k].splice(2, 1); }, h => { for (const k of Object.keys(h)) h[k].splice(2); }]) {
+    assert.doesNotMatch(readAt("2026-08-02T14:00", { change }).html, /nice|sunny|cloudy|dry/i, "a missing hour or reading cannot certify the afternoon");
+  }
+  assert.doesNotMatch(readAt("2026-08-02T14:00", { change: h => { h.gust[2] = null; } }).html, /nice|sunny|cloudy/i, "unknown wind cannot certify a pleasant afternoon");
+  for (const feel of [98, 35, null]) assert.doesNotMatch(readAt("2026-08-02T14:00", { change: h => { h.feels[2] = feel; } }).html, /nice/i, "future apparent temperature must also support Nice");
+  assert.doesNotMatch(readAt("2026-08-02T14:00", { dy: { time: completeDy.time, temperature_2m_max: [76, 68] } }).html, /nice|sunny|cloudy|dry/i, "no daylight bounds means no promise about the whole period");
+  assert.doesNotMatch(readAt("2026-08-02T14:00", { dy: { ...completeDy, temperature_2m_max: [null, 68] }, change: h => { h.temp.fill(null); }, c: { temperature_2m: null, apparent_temperature: null } }).html, /cold|warm|hot|nice|0°/i);
+  assert.match(readAt("2026-08-02T14:00", { c: { apparent_temperature: 100 } }).html, /Keep the middle of the day short\./);
+  assert.doesNotMatch(readAt("2026-08-02T14:00", { c: { apparent_temperature: 100 } }).html, /Nice/);
+  assert.match(readAt("2026-08-02T14:00", { c: { apparent_temperature: 20 } }).html, /Bundle up\./);
+  // The wall clock changes the subject even if the cache was written before evening.
+  assert.equal(readAt("2026-08-02T13:00", { now: "2026-08-02T18:00" }).html, "8° cooler tomorrow, with a high of 68°.");
+  assert.equal(readAt("2026-08-02T10:00", { now: "2026-08-02T14:00", c: { weather_code: 95 } }).html, "Nice this afternoon.", "an old current storm is not overhead now");
+  // The current afternoon is graded from its remaining hours, never a spent high.
+  assert.equal(readAt("2026-08-02T14:00", { dy: { ...completeDy, temperature_2m_max: [95, 68] }, c: { temperature_2m: 55, apparent_temperature: 55 }, change: h => h.temp.fill(55) }).html, "Cool and sunny this afternoon.");
+  // Thunder keeps its name with high or missing rain odds, and a rain shower cannot hide it.
+  for (const pop of [80, NaN]) {
+    const r = readAt("2026-08-02T10:00", { hours: { code: i => i === 2 ? 95 : 1, pop: i => i === 2 ? pop : 5 } });
+    assert.equal(r.html, "Thunder possible around noon.");
+    assert.deepEqual(JSON.parse(JSON.stringify(r.told)), [{ kind: "Thunder", time: "2026-08-02T12:00" }]);
+  }
+  const wetThunder = readAt("2026-08-02T10:00", { c: { weather_code: 63 }, hours: { code: i => i === 2 ? 95 : 1, pop: i => i < 2 ? 80 : 5 } });
+  assert.equal(wetThunder.html, "Raining now. Thunder possible around noon.");
+  assert.deepEqual(JSON.parse(JSON.stringify(wetThunder.told)), [{ kind: "Thunder", time: "2026-08-02T12:00" }]);
+  assert.doesNotMatch(readAt("2026-08-02T10:00", { c: { weather_code: 63 }, hours: { pop: () => NaN } }).html, /let up|dry/i, "missing rain odds cannot end a shower");
+  assert.doesNotMatch(readAt("2026-08-02T10:00", { c: { weather_code: 73 }, hours: { code: () => 73 } }).html, /let up|dry/i, "low odds cannot end snow still carried by the codes");
   // storms overhead: the water is named only while the boat is going out
   const coast = { id: "mb", boatSeason: ["03-15", "10-31"] };
   assert.equal(tell({ time: "2026-08-02T16:00", temperature_2m: 80, weather_code: 95 }, {}, coast), "<em>Storms overhead.</em> Stay off the water.");
@@ -2600,8 +2656,8 @@ test("the copy harness keeps looking at the days the water, the farm and the wee
   assert.match(shots, /say: null, tide: \/\^63° · seas ~2 ft\$\/, level: null, marine: 1/);
   assert.match(shots, /moon: true, sayTitle: "Piddling", say: "Cold one\. Bundle up for the morning rounds\.", sayCls: "caution", fish: true, year: /);
   assert.match(shots, /say: null, tide: \/\^seas ~2 ft\$\/, sun: "\(steps aside\)", marine: 1/);
-  // a sunscreen sentence over a LOW pin keeps the ring of the moderate peak still to come
-  assert.match(shots, /sun: "Sunscreen if you're out a while\.", uvBar: \/\^UV 2\\\.9 now, low, peaking at 3\\\.1 around noon\\\.\$\//);
+  // A neutral sun sentence over a LOW pin keeps the moderate peak ring still to come.
+  assert.match(shots, /sun: "Strongest sun noon to 1 p\.m\.", uvBar: \/\^UV 2\\\.9 now, low, peaking at 3\\\.1 around noon\\\.\$\//);
   assert.match(shots, /if \(ex\.uvBar && !ex\.uvBar\.test\(copy\.uvBar \|\| ""\)\) fail\(/);
   assert.match(shots, /if \(r\.url\(\)\.includes\("marine-api\.open-meteo\.com"\)\) marineAsks\+\+;/);
   // the readout prints what is seen: the compass point and the bite framing are spoken only
@@ -2755,8 +2811,8 @@ test("every line reads the same way: one machine, and readers that say only what
   // Honesty: the pill can never say dry over a bar the chart drew, and the headline's windy line is one number
   const dryUnder = +html.match(/DRY_UNDER=(\d+)/)[1], barFloor = +html.match(/if\(h\.pop\[i\]>=(\d+)\)\{/)[1];
   assert.ok(dryUnder <= barFloor, `dry under ${dryUnder}% sits at or under the bar floor of ${barFloor}%`);
-  assert.match(html, /const gustI=win\.find\(i=>\(Number\(h\.gust\?\.\[i\]\)\|\|0\)>=WINDY_GUST\);/);
-  assert.doesNotMatch(html.slice(html.indexOf("function dayStory("), html.indexOf("/* The farm's sun line")), />=28\b/);
+  assert.match(html, /gustI=win\.find\(i=>has\(h\.gust\?\.\[i\]\)&&\+h\.gust\[i\]>=WINDY_GUST\)/);
+  assert.doesNotMatch(html.slice(html.indexOf("function dayStory("), html.indexOf("/* Both places get the sun")), />=28\b/);
   const readMoonSrc = html.slice(html.indexOf("function readMoon("), html.indexOf("function readMonth("));
   assert.doesNotMatch(readMoonSrc, /solunarWindows|fishWindows/, "the moon's reader sees only the windows the chart drew");
 
@@ -3010,4 +3066,58 @@ test("icon.svg is exactly what tools/icon builds", async () => {
   const grain = svg.match(/<image id="grainI" href="(data:image\/png;base64,[^"]+)"/)[1];
   const { master } = await import(new URL("tools/icon/gen.mjs", root));
   assert.equal(master(grain), svg, "rebuild with node tools/icon/build.mjs, then node tools/icon.mjs");
+});
+
+test("Tonight uses its own hours, connected words, and honest missing readings", async () => {
+  const html=await readFile(new URL("index.html",root),"utf8");
+  const ctx=vm.createContext({});
+  vm.runInContext([
+    html.match(/const SNOW=\[[\s\S]*?const isWet=w=>WETC\.includes\(w\);/)[0],
+    html.match(/const known=v=>[^;]+;/)[0],
+    html.slice(html.indexOf("function tonightBrief("),html.indexOf("function dailyBrief(")),
+    "globalThis.tonightBrief=tonightBrief;"
+  ].join("\n"),ctx);
+  const dy={sunrise:["2026-10-06T07:10","2026-10-07T07:11"],sunset:["2026-10-06T18:40"],
+    temperature_2m_min:[20,20],precipitation_probability_max:[100,100]};
+  const run=(start="2026-10-06T20:00",n=12)=>{
+    const times=Array.from({length:n},(_,i)=>{const t=new Date(start);t.setHours(t.getHours()+i);
+      return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}T${String(t.getHours()).padStart(2,"0")}:00`});
+    return{time:times,temp:times.map((_,i)=>70-i),pop:times.map(()=>5),code:times.map(()=>1)};
+  };
+  const say=h=>ctx.tonightBrief(dy,h,new Date("2026-10-06T20:30"));
+  assert.equal(say(run()).text,"Down to 59° tonight.","daily rain odds and a different daily low do not become tonight's");
+  const raining=run();raining.code[0]=61;raining.pop[0]=80;
+  assert.equal(say(raining).text,"Rain likely tonight, with a low of 59°.","the current hour still belongs to tonight at half past");
+  const thunder=run();thunder.temp[3]=null;thunder.code[3]=95;
+  assert.equal(say(thunder).text,"Thunder possible tonight. Low unavailable.","a missing temperature cannot erase thunder, even at low odds");
+  assert.equal(say(thunder).cls,"caution");
+  const frozen=run();frozen.code[2]=66;frozen.pop[2]=20;frozen.code[6]=73;frozen.pop[6]=80;
+  assert.equal(say(frozen).text,"Freezing rain possible tonight, with a low of 59°.","ice takes priority, but another event's odds cannot make the ice likely");
+  frozen.code[2]=73;frozen.code[8]=95;
+  assert.equal(say(frozen).text,"Snow likely and thunder possible tonight, with a low of 59°.","naming snow cannot silence thunder");
+  const unknown=run();unknown.pop.fill(null);
+  assert.equal(say(unknown).text,"Down to 59° tonight. Rain odds unavailable.");
+  assert.equal(say(run("2026-10-06T20:00",5)).text,"Low unavailable tonight. Rain odds unavailable.","half a night is not a whole-night minimum");
+  const gap=run();gap.time.splice(4,1);gap.temp.splice(4,1);gap.pop.splice(4,1);gap.code.splice(4,1);
+  assert.match(say(gap).text,/Low unavailable/,"a missing hour cannot be hidden by complete endpoint readings");
+  const dawn=run("2026-10-06T01:00",12);dawn.code[9]=95;dawn.pop[9]=90;
+  assert.equal(ctx.tonightBrief(dy,dawn,new Date("2026-10-06T01:30")).text,"Down to 64° before morning.","a daytime storm after sunrise is outside the remaining night");
+  assert.equal(ctx.tonightBrief({sunrise:[],sunset:[]},run(),new Date("2026-10-06T20:30")).text,"Forecast unavailable tonight.","no invented sunrise or nighttime interval");
+});
+
+
+test("condition words follow daylight and the copy previews cover both family places", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const shots = await readFile(new URL("tools/shots.mjs", root), "utf8");
+  const ctx=vm.createContext({});
+  vm.runInContext(html.match(/const WMO=\{[^\n]*/)[0]+"\n"+html.match(/const skyLabel=[^\n]*/)[0]+"\nglobalThis.label=skyLabel;",ctx);
+  assert.equal(ctx.label(0,true),"Sunny");
+  assert.equal(ctx.label(1,true),"Mostly sunny");
+  assert.equal(ctx.label(0,false),"Clear");
+  assert.equal(ctx.label(1,false),"Mostly clear");
+  assert.equal(ctx.label(3,true),"Cloudy");
+  assert.equal(ctx.label(66,true),"Freezing rain");
+  assert.equal(ctx.label(null,true),"—");
+  for(const name of ["words-day-porters-neck","words-night-porters-neck","words-day-shady-spring","words-night-shady-spring"])
+    assert.ok(shots.includes(name),name+" has a phone preview");
 });

@@ -93,7 +93,9 @@ export function forecast(now, o, tz, loc = "mb") {
     const t = new Date(start.getTime() + i * 3600e3), hr = t.getHours();
     const diurnal = Math.sin(((hr - 5) / 24) * 2 * Math.PI);
     time.push(iso(t, tz));
-    temp.push(Math.round(o.baseTemp + diurnal * 9 + lean * Math.max(0, 1 - Math.abs(i - nowI) / 6)));
+    const temperature = Math.round(o.baseTemp + diurnal * 9 + lean * Math.max(0, 1 - Math.abs(i - nowI) / 6));
+    // A shaped day keeps the hourly curve and its computed daily high/low in agreement.
+    temp.push(o.tempCurve ? o.tempCurve(i, hr, temperature) : temperature);
     /* Heat index and wind chill fade toward the gentler end of the daily cycle. The exact
        curve is less important than giving the touch explorer a plausible changing signal. */
     apparent.push(Math.round(temp[i] + feelDelta * (.3 + .7 * Math.max(0, diurnal))));

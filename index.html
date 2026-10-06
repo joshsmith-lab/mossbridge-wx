@@ -930,6 +930,7 @@ const locToday=()=>new Date().toLocaleDateString("en-CA",{timeZone:LOC.tz});
 syncClock();
 
 const WMO={0:"Clear",1:"Mostly clear",2:"Partly cloudy",3:"Cloudy",45:"Fog",48:"Fog",51:"Drizzle",53:"Drizzle",55:"Drizzle",56:"Freezing drizzle",57:"Freezing drizzle",61:"Light rain",63:"Rain",65:"Heavy rain",66:"Freezing rain",67:"Freezing rain",71:"Light snow",73:"Snow",75:"Heavy snow",77:"Snow grains",80:"Showers",81:"Showers",82:"Downpours",85:"Snow showers",86:"Snow showers",95:"Thunderstorms",96:"Storms with hail",99:"Storms, heavy hail"};
+const skyLabel=(code,day)=>day&&code===0?"Sunny":day&&code===1?"Mostly sunny":WMO[code]||"—";
 /* Shady Spring is at 2,500 feet in the Alleghenies and it snows there. Every one of these
    codes used to fall through: the label went blank, the icon said rain, and the scene drew
    a dry marsh. Freezing rain is the one that matters most, so it never gets called rain. */
@@ -5213,172 +5214,135 @@ function waterNote(water,tide){
   return[tw&&tw.value,seas].filter(Boolean).join(" · ")||(tide?(tide.rising?"rising · ":"falling · ")+tide.note:"");
 }
 function dayStory(c,dy,h,now){
-  /* the water only gets named while the boat is actually going out */
-  if([95,96,99].includes(c.weather_code))
-    return{html:LOC.boatSeason&&inSeason(c.time,LOC.boatSeason)?"<em>Storms overhead.</em> Stay off the water."
-                              :"<em>Storms overhead.</em> Head inside."};
+  const has=v=>v!=null&&v!==""&&Number.isFinite(+v),nd=new Date(now||c.time),t0=new Date(nd).setMinutes(0,0,0);
+  const date=d=>{const p=v=>String(v).padStart(2,"0");return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())};
+  const today=date(nd),next=new Date(nd);next.setDate(next.getDate()+1);
+  const tomorrow=date(next),hr=nd.getHours(),evening=hr>=17,overnight=hr>=21||hr<5;
+  const times=(h.time||[]).map(t=>new Date(t).getTime()),nowI=times.indexOf(t0),fresh=new Date(c.time).setMinutes(0,0,0)===t0;
+  /* A cached storm belongs to its hour. The hourly run, when it has this hour, says what is here now. */
+  const code=fresh?c.weather_code:h.code?.[nowI],air=fresh?c.temperature_2m:h.temp?.[nowI];
+  const feel=fresh?c.apparent_temperature:h.feels?.[nowI],feels=has(feel)?Math.round(+feel):null;
+  if(fresh&&[95,96,99].includes(+code))
+    return{html:LOC.boatSeason&&inSeason(today,LOC.boatSeason)?"<em>Storms overhead.</em> Stay off the water."
+                              :"<em>Storms overhead.</em> Head inside.",told:[]};
 
-  const hr=+c.time.slice(11,13),evening=hr>=18,overnight=hr>=21||hr<5;
-  const high=Math.round(dy.temperature_2m_max[0]),feels=Math.round(c.apparent_temperature);
-  /* after dark the day's high is spent, and after midnight it is tomorrow's: the night is
-     graded by the air it is actually in */
-  const ref=evening||overnight?c.temperature_2m:high;
-  const humid=(c.relative_humidity_2m||0)>=70&&high>=78;
-  /* "soupy" is earned, not decorative: real humidity sitting on real heat */
-  const soupy=(c.relative_humidity_2m||0)>=74&&ref>=88;
-  const damp=soupy?" and soupy":humid?" and humid":"";
-  /* a night is warm from 74, the line the Tonight card uses for a warm night, so the headline
-     and the card under it cannot call one night two things; and under 40 it is cold, not chilly */
-  const tempWord=ref>=94?"Hot":ref>=(evening||overnight?74:82)?"Warm":ref>=68?"Mild":ref>=52?"Cool":ref>=40?"Chilly":"Cold";
-  /* The sky is left out: the condition beside the number and the scene under it already say
-     it, and saying it again is how "breaks of sun" came to sit next to "Cloudy". */
+  const di=(dy.time||[]).indexOf(today),hi=dy.temperature_2m_max?.[di],high=has(hi)?Math.round(+hi):null;
+  /* In the afternoon the high may already be behind us. Read the warmth still to come. */
+  const afternoonEnd=dy.sunset?.[di]?new Date(dy.sunset[di]).getTime():new Date(today+"T17:00").getTime();
+  const ahead=times.map((t,i)=>t>=t0&&t<afternoonEnd?h.temp?.[i]:null).filter(has).map(Number);
+  if(has(air))ahead.push(+air);
+  const ref=evening||overnight?air:hr>=12?(ahead.length?Math.max(...ahead):null):high,humid=fresh&&has(c.relative_humidity_2m)&&+c.relative_humidity_2m>=70&&has(ref)&&+ref>=78;
+  /* "soupy" is earned: real humidity sitting on real heat, never a borrowed afternoon high at night. */
+  const soupy=humid&&+c.relative_humidity_2m>=74&&+ref>=88,damp=soupy?" and soupy":humid?" and humid":"";
+  const tempWord=!has(ref)?"":+ref>=94?"Hot":+ref>=(evening||overnight?74:82)?"Warm":+ref>=68?"":+ref>=50?"Cool":"Cold";
+  const period=overnight?"tonight":evening?"this evening":hr<12?"today":"this afternoon";
   let first;
-  if([45,48].includes(c.weather_code))first=hr<12?"Foggy this morning.":"Foggy.";
-  /* freezing rain gets said plainly. It is the one condition here where the wrong word
-     could put somebody on a road they should have stayed off. */
-  else if(isIce(c.weather_code))first="Freezing rain. Expect ice on anything untreated.";
-  else if(isSnow(c.weather_code))first=c.weather_code===75||c.weather_code===86?"Heavy snow.":"Snowing now.";
-  else if([51,53,55,61,63,65,80,81,82].includes(c.weather_code))first="Raining now.";
-  else if(overnight)first=`${tempWord}${damp} tonight.`;
-  else if(evening)first=`${tempWord}${damp} this evening.`;
-  else first=`${tempWord}${damp} today.`;
+  if([45,48].includes(+code))first=hr<12?"Foggy this morning.":"Foggy.";
+  else if(isIce(+code))first="Freezing rain. Expect ice on anything untreated.";
+  else if(isSnow(+code))first=+code===75||+code===86?"Heavy snow.":"Snowing now.";
+  else if([51,53,55,61,63,65,80,81,82].includes(+code))first="Raining now.";
+  else first=tempWord?`${tempWord}${damp} ${period}.`:"";
 
-  /* the hours still to come: a cache opened at 11:40 still starts at the 9a it was written in, and
-     said "Thunder nearby." about a storm two hours gone. w0 is the hour now is in */
-  const t0=now?new Date(now).setMinutes(0,0,0):-Infinity;
-  const indices=Array.from({length:h.temp.length},(_,i)=>i).filter(i=>new Date(h.time[i]).getTime()>=t0&&
-    (overnight||evening||h.time[i].slice(0,10)===dy.time[0]));
-  const win=indices.length?indices:Array.from({length:Math.min(12,h.temp.length)},(_,i)=>i),w0=win[0];
-  const peak=(arr)=>win.reduce((b,i)=>(Number(arr[i])||0)>(Number(arr[b])||0)?i:b,win[0]);
-  const maxPop=Number(h.pop[peak(h.pop)])||0,wetI=win.find(i=>(Number(h.pop[i])||0)>=40);
-  /* the first windy hour, not the windiest: with gusts of 30 now and 34 at four, "windy by 4
-     p.m." sat under a chip that already said 30 */
-  const gustI=win.find(i=>(Number(h.gust?.[i])||0)>=WINDY_GUST);
-  /* no odds in the run is not a dry run: the headline says what it knows (the wind) or that the
-     odds are missing, the way the cards under it do, and never "Should stay dry." */
-  const popKnown=win.some(i=>h.pop[i]!=null&&Number.isFinite(+h.pop[i]));
-  /* What is coming is named by its own hours' codes, ice first because it is the one where the
-     wrong word matters. The look-ahead only knew rain, and called three o'clock's snow "Rain
-     likely around 3 p.m." over a Tonight card that said snow. */
+  /* The headline keeps its hourly source and looks no further than the run. No fallback to old hours. */
+  const win=times.map((t,i)=>i).filter(i=>times[i]>=t0&&times[i]<t0+24*36e5&&(evening||overnight||h.time[i].slice(0,10)===today)),w0=win[0];
+  const pops=win.map(i=>h.pop?.[i]).filter(has).map(Number),maxPop=pops.length?Math.max(...pops):null;
+  const wetI=win.find(i=>has(h.pop?.[i])&&+h.pop[i]>=40),gustI=win.find(i=>has(h.gust?.[i])&&+h.gust[i]>=WINDY_GUST);
   const wetKind=hrs=>hrs.some(i=>isIce(+h.code?.[i]))?"Freezing rain":hrs.some(i=>isSnow(+h.code?.[i]))?"Snow":"";
-  const currentlyWet=isWet(c.weather_code)&&![95,96,99].includes(c.weather_code);
-  /* one night is one night: after dark the small hours before morning are tonight's, and it is
-     only "tomorrow" from daylight. "Showers possible around 1 a.m. tomorrow" sat over a Tonight
-     card that called the same shower tonight's. */
-  /* midnight belongs to the day it ends: at 1 a.m. the 00:00 at the far end of the run is
-     tonight's midnight, and "midnight tomorrow" read as the end of tomorrow, a day late */
+  const currentlyWet=isWet(+code)&&![95,96,99].includes(+code);
+  /* After dark the small hours are tonight's. Midnight belongs to the day it ends. */
   const dayOf=t=>{if(t.slice(11,16)!=="00:00")return t.slice(0,10);const d=new Date(Date.UTC(+t.slice(0,4),+t.slice(5,7)-1,+t.slice(8,10)-1));return d.toISOString().slice(0,10)};
-  const bare=i=>spokenAt(h.time[i])+(dayOf(h.time[i])===dy.time[0]||evening&&+h.time[i].slice(11,13)<6?"":" tomorrow");
-  /* a sentence that ends on its hour: "p.m." carries the stop, "noon" and "midnight" need one */
+  const bare=i=>spokenAt(h.time[i])+(dayOf(h.time[i])===today||evening&&+h.time[i].slice(11,13)<6?"":" tomorrow");
   const when=i=>sentence(bare(i));
-  /* what this names and when, so the cards under it do not say it a second time */
-  let second;const told=[];
-  const tsI=win.find(i=>[95,96,99].includes(+h.code?.[i]));
+  /* A description of a whole period requires every hour, with real odds and codes. A cache may
+     hold tomorrow morning but no afternoon. An unknown hour is never a dry hour. */
+  const span=(start,end)=>{const out=[];for(let t=start;t<=end;t+=36e5){const i=times.indexOf(t);if(i<0)return[];out.push(i)}return out};
+  const daylight=day=>{const k=(dy.time||[]).indexOf(day),rise=dy.sunrise?.[k],set=dy.sunset?.[k];
+    if(!rise||!set)return[];
+    const a=Math.ceil(new Date(rise).getTime()/36e5)*36e5,b=Math.floor((new Date(set).getTime()-1)/36e5)*36e5;
+    return span(Math.max(t0,a),b)};
+  const dry=ids=>ids.length>0&&ids.every(i=>has(h.pop?.[i])&&+h.pop[i]<25&&has(h.code?.[i])&&!isWet(+h.code[i]));
+  const quiet=ids=>dry(ids)&&ids.every(i=>has(h.gust?.[i])&&+h.gust[i]<WINDY_GUST);
+  const sky=ids=>ids.every(i=>+h.code[i]<=1)?"Sunny":ids.every(i=>+h.code[i]===3)?"Cloudy":ids.every(i=>+h.code[i]<=2)?"Some sun":"";
+  const nice=ids=>quiet(ids)&&ids.every(i=>has(h.temp?.[i])&&+h.temp[i]>=50&&+h.temp[i]<85&&has(h.feels?.[i])&&+h.feels[i]>=50&&+h.feels[i]<85&&+h.code[i]<=2);
+  const tomorrowLine=()=>{const k=(dy.time||[]).indexOf(tomorrow),v=dy.temperature_2m_max?.[k],n=has(v)?Math.round(+v):null;
+    const change=n!=null&&high!=null&&Math.abs(n-high)>=5?`${Math.abs(n-high)}° ${n>high?"warmer":"cooler"}`:"";
+    const ids=daylight(tomorrow),view=quiet(ids)?sky(ids):"";
+    if(view&&view!=="Some sun")return `${view} tomorrow${change?" and "+change:""}.`;
+    if(n!=null&&change)return `${change[0].toUpperCase()+change.slice(1)} tomorrow, with a high of ${n}°.`;
+    if(n!=null&&nice(ids)&&n>=68&&n<82)return "Nice tomorrow, with a high of "+n+"°.";
+    if(n!=null)return `Tomorrow's high is ${n}°.`;
+    return view?"Some sun tomorrow.":""};
+  let second;const told=[],tsI=win.find(i=>[95,96,99].includes(+h.code?.[i]));
   if(currentlyWet){
-    const dryI=win.find(i=>(Number(h.pop[i])||0)<30);
-    const frozen=isSnow(c.weather_code)||isIce(c.weather_code);
-    second=dryI==null
-      ?(frozen?"Give yourself extra time on the roads.":"Keep the rain gear close.")
+    /* A break takes two consecutive known dry hours. Missing odds or a snow code cannot end it. */
+    const dryI=win.find(i=>dry([i,i+1])&&times[i+1]-times[i]===36e5);
+    const frozen=isSnow(+code)||isIce(+code);
+    second=tsI!=null?(tsI===w0?"Thunder nearby.":`Thunder possible around ${when(tsI)}`):dryI==null?(frozen?"Give yourself extra time on the roads.":"Keep the rain gear close.")
       :dryI===w0?"Should let up soon.":`Should let up around ${when(dryI)}`;
-  /* index 0 is the hour already under way: at 1:40 "rain likely around 1 p.m." names a
-     time that has gone, so the first hour is spoken as now */
-  }else if(!popKnown){
-    second=gustI!=null?(gustI===w0?"Windy now.":`Windy by ${when(gustI)}`):"Rain odds unavailable.";
-    if(gustI!=null)told.push({kind:"Windy",time:h.time[gustI]});
-  }
-  else if(wetI!=null){
-    /* the wet stretch is the run of wet hours that starts at wetI, not every wet hour after it: a
-       rain shower at one and snow at eight are two events, and the shower's hour cannot carry the
-       snow's name. Likely comes off the stretch's own odds */
-    const stretch=[];for(const i of win){if(i<wetI)continue;if((Number(h.pop[i])||0)<40)break;stretch.push(i)}
-    const kind=wetKind(stretch),likely=Math.max(...stretch.map(i=>Number(h.pop[i])||0))>=70;
+    if(tsI!=null)told.push({kind:"Thunder",time:h.time[tsI]});
+  }else if(wetI!=null&&(tsI==null||wetI<tsI)){
+    /* The first wet stretch keeps its own name and odds, rather than borrowing a later storm. */
+    const stretch=[];for(const i of win){if(i<wetI)continue;if(!has(h.pop?.[i])||+h.pop[i]<40)break;stretch.push(i)}
+    const kind=wetKind(stretch),likely=Math.max(...stretch.map(i=>+h.pop[i]))>=70;
     told.push({kind:kind||"Rain",time:h.time[wetI]});
     second=wetI===w0
       ?(kind?`${kind} ${likely?"likely any time now.":"could start any time."}`:likely?"Rain likely any time now.":"Showers could pop up any time.")
       :kind?`${kind} ${likely?"likely":"possible"} around ${when(wetI)}`:likely?`Rain likely around ${when(wetI)}`:`Showers possible around ${when(wetI)}`;
   }else if(tsI!=null){
-    /* thunder the run carries on poor odds is still thunder: "Should stay dry." sat over a farm
-       card that said "Thunder possible around 12 p.m." */
-    /* wind that comes first is said with it, once, and on the same day the day is said once */
     const windFirst=tsI!==w0&&gustI!=null&&gustI<tsI;
     const windAt=()=>gustI===w0?"Windy now":"Windy by "+(h.time[gustI].slice(0,10)===h.time[tsI].slice(0,10)?spokenAt(h.time[gustI]):bare(gustI));
-    second=tsI===w0?"Thunder nearby."
-      :windFirst?`${windAt()}, then thunder possible around ${when(tsI)}`
-      :`Thunder possible around ${when(tsI)}`;
+    second=tsI===w0?"Thunder nearby.":windFirst?`${windAt()}, then thunder possible around ${when(tsI)}`:`Thunder possible around ${when(tsI)}`;
     if(windFirst)told.push({kind:"Windy",time:h.time[gustI]});
     told.push({kind:"Thunder",time:h.time[tsI]});
-  }else if(maxPop>=25){
-    const kind=wetKind(win.filter(i=>(Number(h.pop[i])||0)>=25));
+  }else if(maxPop!=null&&maxPop>=25){
+    const kind=wetKind(win.filter(i=>has(h.pop?.[i])&&+h.pop[i]>=25));
     second=kind==="Freezing rain"?"Maybe a little freezing rain.":kind==="Snow"?"Maybe a few flurries.":"Maybe a stray shower.";
+  }else if(gustI!=null){
+    second=gustI===w0?"Windy now.":`Windy by ${when(gustI)}`;told.push({kind:"Windy",time:h.time[gustI]});
+  }else if(evening){
+    /* By evening tomorrow earns the quiet headline. Its temperature can stand on the daily high,
+       but its sky must have a complete daylight run. A hazard above always takes this space first. */
+    second=tomorrowLine();
+    if(second&&![45,48].includes(+code)&&!(has(air)&&(+air<40||+air>=94)))first="";
+    if(!second){const end=new Date(tomorrow+"T05:00").getTime(),night=span(t0,end);second=dry(night)?"Dry through the night.":""}
+  }else if(overnight){
+    const morning=span(t0,new Date(today+"T11:00").getTime());
+    second=dry(morning)?"Dry through the morning.":"";
+  }else{
+    const ids=daylight(today),view=quiet(ids)?sky(ids):"",p=hr<12?"today":"this afternoon";
+    if(dry(ids)&&![45,48].includes(+code)){
+      if(nice(ids)&&has(ref)&&+ref>=68&&+ref<82&&!humid&&!(feels!=null&&(feels>=98||feels<=25)))return{html:`Nice ${p}.`,told};
+      if(view){
+        const lead=tempWord?tempWord+damp:"";
+        const phrase=view==="Some sun"?(lead?lead+" with some sun":"Some sun"):lead?lead+" and "+view.toLowerCase():view;
+        return{html:`${phrase} ${p}.`+(feels!=null&&feels>=98?" Keep the middle of the day short.":feels!=null&&feels<=25?" Bundle up.":""),told};
+      }
+      second=hr<12?"Dry today.":"Dry through the afternoon.";
+    }else second=dry(ids)?(hr<12?"Dry today.":"Dry through the afternoon."):"";
   }
-  /* hour 0 carries the live gust (see render), so a wind the chip is showing is a wind the
-     headline knows about */
-  else if(gustI!=null){second=gustI===w0?"Dry, but windy now.":`Dry, but windy by ${when(gustI)}`;told.push({kind:"Windy",time:h.time[gustI]})}
-  else second="Should stay dry.";
-
-  if(feels>=98&&!evening&&!overnight)second+=" Keep the middle of the day short.";
-  else if(feels<=25)second+=" Bundle up.";
-
-  return{html:first+" "+second,told};
+  if(!second&&!win.length)second="Hourly forecast unavailable.";
+  else if(!second&&win.some(i=>!has(h.pop?.[i])))second="Rain odds unavailable.";
+  /* With a thin or partly missing run, a known temperature is enough. Never fill the gap with a promise. */
+  if(!first&&!second)second="Forecast details unavailable.";
+  if(feels!=null&&feels>=98&&!evening&&!overnight)second+=(second?" ":"")+"Keep the middle of the day short.";
+  else if(feels!=null&&feels<=25)second+=(second?" ":"")+"Bundle up.";
+  return{html:[first,second].filter(Boolean).join(" "),told};
 }
-/* The farm's sun line states when, not what to wear: the sunscreen language was built
-   for the kids, and the kids are at the coast. Nothing left to say today is null, and the
-   card steps aside rather than saying so. */
+/* Both places get the sun's actual hours, without reminders about what to put on.
+   Only the hours still to come count. No hourly reading means no invented schedule. */
 function ridgeSunLine(c,dy,h,now){
-  const today=dy.time[0];
-  const slots=h.time.map((t,i)=>({time:new Date(t),uv:Number(h.uv?.[i])||0,day:t.slice(0,10)}))
-    .filter(slot=>slot.day===today&&slot.uv>=3);
-  const peak=Math.max(Number(dy.uv_index_max?.[0])||0,...slots.map(slot=>slot.uv));
-  const cls=peak>=6?"caution":"go";
-  if(!slots.length){
-    if(now.getHours()>=17&&peak>=3)return null;
-    if(h.time.some((t,i)=>t.slice(0,10)===today&&h.uv?.[i]!=null))return null;
-    return peak>=3?{text:"Strongest sun 10 a.m. to 5 p.m.",cls}:null;
-  }
+  const today=dy.time[0],hour=new Date(now).setMinutes(0,0,0);
+  const slots=(h.time||[]).map((t,i)=>({time:new Date(t),uv:h.uv?.[i],day:t.slice(0,10)}))
+    .filter(slot=>slot.day===today&&slot.time.getTime()>=hour&&slot.uv!=null&&Number.isFinite(+slot.uv)&&+slot.uv>=3);
+  if(!slots.length)return null;
+  const peak=Math.max(...slots.map(slot=>+slot.uv)),cls=peak>=6?"caution":"go";
   const start=slots[0].time,end=new Date(slots[slots.length-1].time.getTime()+3.6e6);
   if(now>=end)return null;
   return{text:sentence(now>=start?`Strongest sun until ${spokenClock(end)}`:`Strongest sun ${spokenClock(start)} to ${spokenClock(end)}`),cls};
 }
-/* The window comes off the hourly curve crossing 3, the WHO line, and that part is
-   honest. What the copy used to miss is scale: a UV-4 shoulder-season afternoon got
-   the same clock-and-warning sentence as a UV-11 July one, so the card read urgent
-   in weather that only asks for sunscreen if you are out on the water a while. The
-   sentence now matches the size of the number. Under 6 — WHO's "moderate" — there
-   is no schedule, because a mild window is not worth one; from 6 up the clock
-   earns its precision. As the season slides, the coast drifts from the windowed
-   sentence to the mild one to no card at all without anyone touching it.
-   The register keys off the sun still to come, not the day's peak. An August
-   day that peaked at 8 over lunch is genuinely mild by late afternoon, and a
-   card that keeps quoting the lunchtime number past it is answering a question
-   nobody is asking any more. Morning of a high day warns with the window;
-   once every remaining hour is under 6 it softens to the mild sentence; past
-   the window it is over. Today means today, applied to the hour.
-   The bar under the sentence already says mild, so the mild sentence keeps only the part
-   for the kids. Nothing left to say today is null, and the card steps aside. */
+/* Kept as the coast's entry point. Josh removed its sunscreen reminders in October 2026. */
 function sunProtectionAdvice(c,dy,h,now){
-  const today=dy.time[0];
-  const slots=h.time.map((t,i)=>({time:new Date(t),uv:Number(h.uv?.[i])||0,day:t.slice(0,10)}))
-    .filter(slot=>slot.day===today&&slot.uv>=3);
-  const peak=Math.max(Number(dy.uv_index_max?.[0])||0,...slots.map(slot=>slot.uv));
-  const ahead=Math.max(Number(c.uv_index)||0,...slots.filter(slot=>slot.time>=now).map(slot=>slot.uv));
-  if(!slots.length){
-    if(now.getHours()>=17&&peak>=3)return null;
-    /* the hourly run covers the rest of today and none of it reaches 3: a storm or an
-       overcast has taken the sun, whatever the clear-sky daily peak said. The 10-to-5 rule of
-       thumb is only for when there is no hourly UV to read. */
-    if(h.time.some((t,i)=>t.slice(0,10)===today&&h.uv?.[i]!=null))return null;
-    if(peak>=6)return{text:"Sunscreen from 10 a.m. to 5 p.m.",cls:"caution"};
-    if(peak>=3)return{text:"Sunscreen if you're out a while.",cls:"go"};
-    return null;
-  }
-  const start=slots[0].time;
-  const end=new Date(slots[slots.length-1].time.getTime()+3.6e6);
-  if(now>=end)return null;
-  if(ahead<6)return{text:"Sunscreen if you're out a while.",cls:"go"};
-  const timing=now>=start
-    ?`Sunscreen until ${spokenClock(end)}`
-    :`Sunscreen from ${spokenClock(start)} to ${spokenClock(end)}`;
-  return{text:sentence(timing),cls:"caution"};
+  return ridgeSunLine(c,dy,h,now);
 }
 /* Denver answers the question a visitor actually has: what will feel comfortable while
    walking around. One short base layer, plus only the weather-specific thing that matters. */
@@ -5402,37 +5366,73 @@ function comfortAdvice(c,h){
   else if(gust>=24&&feels<=70)text="Wear a windproof layer.";
   return{text,cls};
 }
+/* Tonight uses only the hours between sunset and sunrise, or those left before morning.
+   Temperature gaps cannot erase weather, and a day's rain odds cannot stand in for a night.
+   A low needs the whole remaining night: the minimum of half a run is not tonight's low. */
+function tonightBrief(dy,h,now){
+  const rise=new Date(dy.sunrise?.[0]),set=new Date(dy.sunset?.[0]);
+  const before=now<rise,when=before?"before morning":"tonight";
+  const start=before||now>=set?new Date(now):new Date(set);
+  const end=new Date(dy.sunrise?.[before?0:1]);
+  if(!Number.isFinite(+start)||!Number.isFinite(+end)||end<=start)
+    return{text:`Forecast unavailable ${when}.`,cls:"caution"};
+  /* Include the hour under way after dark; before sunset begin at the first night hour. */
+  if(!before&&now<set&&start.getMinutes())start.setHours(start.getHours()+1);
+  start.setMinutes(0,0,0);end.setMinutes(0,0,0);
+  const expected=[];
+  for(let at=new Date(start);at<=end;at.setHours(at.getHours()+1))expected.push(+at);
+  const byTime=new Map((h.time||[]).map((t,i)=>[+new Date(t),i]));
+  const slots=expected.map(t=>byTime.get(t)),hrs=slots.filter(i=>i!=null);
+  const full=slots.length>0&&slots.every(i=>i!=null);
+  const temps=hrs.filter(i=>known(h.temp?.[i])).map(i=>+h.temp[i]);
+  const low=full&&temps.length===slots.length?Math.round(Math.min(...temps)):null;
+  const odds=hrs.filter(i=>known(h.pop?.[i])).map(i=>+h.pop[i]);
+  const oddsKnown=full&&odds.length===slots.length;
+  const pop=odds.length?Math.max(...odds):null;
+  const ice=hrs.filter(i=>isIce(+h.code?.[i])),snow=hrs.filter(i=>isSnow(+h.code?.[i]));
+  const thunder=hrs.filter(i=>[95,96,99].includes(+h.code?.[i]));
+  const rain=hrs.filter(i=>isWet(+h.code?.[i]));
+  const likely=is=>is.some(i=>known(h.pop?.[i])&&+h.pop[i]>=60);
+  let weather=ice.length?`Freezing rain ${likely(ice)?"likely":"possible"}`:
+    snow.length?`Snow ${likely(snow)?"likely":"possible"}`:
+    thunder.length?`Thunder ${likely(thunder)?"likely":"possible"}`:
+    pop>=60?"Rain likely":pop>=35?"A chance of rain":rain.length?"Rain possible":"";
+  if(thunder.length&&(ice.length||snow.length))weather+=" and thunder possible";
+  const lowText=low==null?"Low unavailable":`a low of ${low}°`;
+  let text=weather?`${weather} ${when}${low==null?". Low unavailable.":`, with ${lowText}.`}`:
+    low==null?`Low unavailable ${when}.`:
+    low>=74?(before?`Staying warm until morning, with ${lowText}.`:`A warm night, with ${lowText}.`):
+    `Down to ${low}° ${when}.`;
+  if(!weather&&!oddsKnown)text+=" Rain odds unavailable.";
+  return{text,cls:weather||!oddsKnown||low==null?"caution":"go"};
+}
 function dailyBrief(dy,i){
-  /* a missing sky or chance is left unsaid: it used to fall through to "clear skies" and an
-     easy day, which is a forecast nobody made. A missing high leaves the feel word out, where it
-     used to fall through the ladder to "Cold." */
-  const known=v=>v!=null&&Number.isFinite(+v);
-  const high=known(dy.temperature_2m_max[i])?Math.round(+dy.temperature_2m_max[i]):null;
-  const hasSky=known(dy.weather_code[i]),hasPop=known(dy.precipitation_probability_max[i]);
-  const code=hasSky?+dy.weather_code[i]:0;
-  const pop=hasPop?+dy.precipitation_probability_max[i]:0;
-  const wind=Number(dy.wind_speed_10m_max?.[i])||0;
-  const feel=high==null?"":high>=92?"Hot":high>=82?"Warm":high>=68?"Mild":high>=52?"Cool":high>=40?"Chilly":"Cold";
-  /* snow and ice are checked first: their codes sit above 61, so the old ladder called a
-     heavy snow day "periods of rain" */
-  const sky=code>=95?"storms possible":isIce(code)?"freezing rain":
-    isSnow(code)?(code===75||code===86?"heavy snow":code===77?"snow grains":"snow"):
-    code>=80?"showers":code>=61?"rain at times":
-    code>=51?"drizzle":code>=45?"foggy":code===3?"mostly cloudy":
-    code===2?"partly sunny":code===1?"mostly sunny":"sunny";
-  /* a note only when the day has something to plan around: an easy day is the sky and the
-     numbers, and says nothing more */
-  let note="";
-  if(code>=95)note="Watch for alerts.";
-  else if(isIce(code))note="Give the roads time.";
-  else if(isSnow(code))note="Plan on slow going.";
-  else if(code>=51||pop>=60)note="Expect a wet stretch.";
-  else if(!hasPop)note="Rain odds unavailable.";
-  else if(pop>=WEEK_WET)note="Maybe a passing shower.";
-  else if(wind>=20)note="Could get windy.";
-  else if(high>=92)note="Keep the middle of the day short.";
-  const head=[feel,hasSky?sky:""].filter(Boolean).join(", ");
-  return [head&&head[0].toUpperCase()+head.slice(1)+".",note].filter(Boolean).join(" ");
+  const known=v=>v!=null&&v!==""&&Number.isFinite(+v);
+  const high=known(dy.temperature_2m_max?.[i])?Math.round(+dy.temperature_2m_max[i]):null;
+  const hasSky=known(dy.weather_code?.[i]),hasPop=known(dy.precipitation_probability_max?.[i]);
+  const code=hasSky?+dy.weather_code[i]:null,pop=hasPop?+dy.precipitation_probability_max[i]:null;
+  const wind=known(dy.wind_speed_10m_max?.[i])?+dy.wind_speed_10m_max[i]:null;
+  const feel=high==null?"":high>=92?"hot":high>=82?"warm":high>=68?"":high>=52?"cool":high>=40?"chilly":"cold";
+  const cap=s=>s?s[0].toUpperCase()+s.slice(1):"";
+  const chance=pop>=70?"likely":"possible";
+  const thunder=hasSky&&[95,96,99].includes(code),ice=hasSky&&isIce(code),snow=hasSky&&isSnow(code);
+  let text="",note="";
+  /* A wet forecast gets one sentence about the weather, not two ways of saying wet.
+     The probability controls likely/possible, even when the daily icon is rain. */
+  if(thunder){text=`Thunderstorms ${chance}`;note="Watch for alerts."}
+  else if(ice){text=`Freezing rain ${chance}`;note="Give the roads time."}
+  else if(snow){text=`${code===75||code===86?"Heavy snow":"Snow"} ${chance}`;note="Plan on slow going."}
+  else if(hasSky&&[51,53,55].includes(code))text="Drizzle possible";
+  else if(hasSky&&isWet(code)||hasPop&&pop>=WEEK_WET)text=`${pop>=70?"Rain likely":"Showers possible"}`;
+  else if(hasSky){
+    const sky=code===0?"sunny":code===1?"mostly sunny":code===2?"partly cloudy":code===3?"cloudy":[45,48].includes(code)?"foggy":"";
+    const nice=high!=null&&high>=68&&high<82&&code<=2&&hasPop&&pop<25&&wind!=null&&wind<20;
+    text=wind>=20?(feel?`${feel} and windy`:sky?`${sky} and windy`:"windy")
+      :nice?(code===2?"nice with some clouds":`nice and ${sky}`):feel&&sky?`${feel} and ${sky}`:sky||feel;
+  }else text=wind>=20?(feel?`${feel} and windy`:"windy"):feel;
+  if(!hasPop&&!note)note="Rain odds unavailable.";
+  else if(high>=92&&!note&&!isWet(code)&&!(hasPop&&pop>=WEEK_WET))note="Keep the middle of the day short.";
+  return [text&&cap(text)+".",note].filter(Boolean).join(" ");
 }
 
 /* ── the week ───────────────────────────────────────── */
@@ -6329,7 +6329,7 @@ function render(d,live,savedAt=0){
   document.getElementById("refreshBtn").classList.toggle("cached",!live);
   document.getElementById("refreshBtn").classList.remove("unavailable");
   paintTemperature(document.getElementById("bigTemp"),c.temperature_2m);
-  document.getElementById("condLabel").textContent=WMO[c.weather_code]||"—";
+  document.getElementById("condLabel").textContent=skyLabel(c.weather_code,altDeg>-.83);
   document.getElementById("feels").textContent=Math.round(c.apparent_temperature)+"°";
   /* feels-like earns its line the way it earns the hourly readout: only when it differs by 3° */
   document.getElementById("feelsRow").hidden=c.apparent_temperature==null||!Number.isFinite(+c.apparent_temperature)
@@ -6643,7 +6643,7 @@ function render(d,live,savedAt=0){
   const uvPk=Math.max(uvNow??0,uvI>=0?+h.uv[uvI]:0);
   /* A peak within half a point of the pin, in the pin's own band, is the pin: a ring there would
      sit on it. One that crosses into a higher band stays, nudged clear of the pin, or a card that
-     says "Sunscreen if you're out a while." showed nothing past LOW to say why. */
+     names the strong sun showed nothing past LOW to say why. */
   if(uvI>=0&&uvPk-(uvNow??0)<.5&&uvBand(uvPk)===uvBand(uvNow??0))uvI=-1;
   /* a bar with neither a pin nor a peak on it has nothing to say */
   const uvBar=!!sunAdvice&&!comfort&&(uvNow>=.5||uvI>=0);
@@ -6654,33 +6654,10 @@ function render(d,live,savedAt=0){
   document.getElementById("yearSection").hidden=!N;
   if(N)renderYear(N,dy,css);else xpPublish("year",null);
 
-  /* tonight: one useful read, rather than another row of weather instruments */
-  const el=document.getElementById("eveLead");
-  const tomorrowRise=new Date(dy.sunrise[1]||new Date(sunset.getTime()+10*3.6e6));
-  const beforeSunrise=now<sunrise;
-  const nightStart=beforeSunrise?now:(now<sunset?sunset:now);
-  const nightEnd=beforeSunrise?sunrise:tomorrowRise;
-  /* a missing hour is not a zero: Number(null) is 0, which once printed "Low 0° tonight." under a
-     pill that said the hour was unavailable, so an unknown hour drops out of the night */
-  const nightHours=h.time.map((t,i)=>({time:new Date(t),temp:known(h.temp[i])?+h.temp[i]:NaN,pop:Number(h.pop[i])||0,code:Number(h.code?.[i])||0}))
-    .filter(hour=>hour.time>=nightStart&&hour.time<=nightEnd&&Number.isFinite(hour.temp));
-  const fallbackDay=beforeSunrise?0:Math.min(1,dy.temperature_2m_min.length-1);
-  const fallbackLow=known(dy.temperature_2m_min[fallbackDay])?+dy.temperature_2m_min[fallbackDay]:NaN;
-  const nightLow=Math.round(nightHours.length?Math.min(...nightHours.map(hour=>hour.temp)):fallbackLow);
-  const nightPop=nightHours.length?Math.max(...nightHours.map(hour=>hour.pop)):Number(dy.precipitation_probability_max[fallbackDay])||0;
-  const nightSnow=nightHours.some(hour=>isSnow(hour.code)),nightIce=nightHours.some(hour=>isIce(hour.code));
-  const nightWhen=beforeSunrise?"before morning":"tonight";
-  /* under 35% the night says nothing about rain, the way the week does, and the odds word
-     follows the odds: 35% snow or ice is possible, and 60% is likely */
-  const lowTxt=Number.isFinite(nightLow)?`Low\u00A0${nightLow}°`:"Low unavailable";
-  let tonightText=nightPop>=35&&nightIce?`Freezing rain ${nightPop>=60?"likely":"possible"} ${nightWhen}. ${lowTxt}.`:
-    nightPop>=35&&nightSnow?`Snow ${nightPop>=60?"likely":"possible"} ${nightWhen}. ${lowTxt}.`:
-    nightPop>=60?`Rain likely at times ${nightWhen}. ${lowTxt}.`:
-    nightPop>=35?`Maybe a shower ${nightWhen}. ${lowTxt}.`:
-    nightLow>=74?`Warm ${nightWhen}. ${lowTxt}.`:
-    `${lowTxt} ${nightWhen}.`;
-  el.textContent=tonightText;
-  document.getElementById("eveLine").className="lead tonight-line "+(nightPop>=35?"caution":"go");
+  /* one connected sentence, from tonight's own hours */
+  const night=tonightBrief(dy,h,now);
+  document.getElementById("eveLead").textContent=night.text;
+  document.getElementById("eveLine").className="lead tonight-line "+night.cls;
   document.getElementById("moonTxt").innerHTML=moonPhaseIcon(scene.moon);
 
   /* Last, because everything above adds height to the header: the alert strip, the
