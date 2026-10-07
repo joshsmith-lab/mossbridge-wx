@@ -18,11 +18,11 @@
 <style>
 :root{
   --paper:#FAFAF6; --raised:#FFFFFF;
-  --ink:#16303B; --ink-soft:#41596A; --ink-faint:#506A77;
+  --ink:#16303B; --ink-soft:#41596A; --ink-faint:#435D69;
   --line:#E3E7E1; --wash:#EFF2ED;
-  --marker:#C7431F; --marker-soft:#F5E1DA;
-  --water:#3E7CA6; --water-soft:#BFD7E4; --water-ink:#36719A;
-  --sun:#E8B02F; --heat:#B4560F; --go:#1E6B44;
+  --marker:#AD3517; --marker-soft:#F5E1DA;
+  --water:#3E7CA6; --water-soft:#BFD7E4; --water-ink:#286184;
+  --sun:#E8B02F; --heat:#974607; --go:#1E6B44;
   --sky1:#5C9FC6; --sky2:#9ECBDC; --sky3:#EAE6D2; --on-sky:#0F2B36; --off-sky:#F7F4EA;
   --sky-scrim:rgba(250,250,246,0);
   --disp:"Bricolage Grotesque",-apple-system,system-ui,sans-serif;
@@ -235,6 +235,10 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
   40.4%{transform:translate(-.8px,2.2px) rotate(-37deg)}
   40.8%,43.6%{transform:translate(-1px,2.8px) rotate(-46deg)}
   46.2%{transform:translate(-.3px,.8px) rotate(-14deg)}}
+.heron-step-ring{transform-box:fill-box;transform-origin:center;opacity:0;animation:heronStepRingA 150s ease-out infinite}
+.heron-step-ring.far{animation-name:heronStepRingB}
+@keyframes heronStepRingA{0%,24.9%,28%,100%{opacity:0;transform:scale(.45)}25%{opacity:.32;transform:scale(.55)}27.4%{opacity:0;transform:scale(1.5)}}
+@keyframes heronStepRingB{0%,29.9%,33%,100%{opacity:0;transform:scale(.45)}30%{opacity:.32;transform:scale(.55)}32.4%{opacity:0;transform:scale(1.5)}}
 .heron-splash{transform-box:fill-box;transform-origin:center;animation:heronSplash 150s ease-out infinite;opacity:0}
 @keyframes heronSplash{0%,40.5%,46%,100%{opacity:0;transform:scale(.4)}
   40.7%{opacity:.5;transform:scale(.7)}
@@ -324,12 +328,23 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes scuttle{0%,50%{transform:translateX(0)}52%,54%{transform:translateX(3px)}
   56%,58%{transform:translateX(6px)}60%,77%{transform:translateX(9px)}
   80%,82%{transform:translateX(6px)}85%,87%{transform:translateX(3px)}90%,100%{transform:translateX(0)}}
+/* Four near legs work in alternating pairs during each short dash; the far four
+   support the crab. Each moving leg turns where it joins the shell. */
+.crab-leg{animation:crabStep 58s ease-in-out infinite}
+@keyframes crabStep{0%,50%,52%,54%,56%,58%,60%,77%,80%,82%,85%,87%,90%,100%{transform:rotate(0)}
+  51%,55%,59%,78.5%,83.5%,88.5%{transform:rotate(var(--step))}}
+.crab-ripple{transform-box:fill-box;transform-origin:center;opacity:0;animation:crabRipple 58s ease-out infinite}
+@keyframes crabRipple{0%,50%,54%,58%,77%,82%,87%,92%,100%{opacity:0;transform:scale(.65)}
+  51%,55%,59%,78.5%,83.5%,88.5%{opacity:.28;transform:scale(1)}
+  53%,57%,62%,81%,86%,91%{opacity:0;transform:scale(1.3)}}
 .owl-eyes{animation:wildlifeBlink 11s ease-in-out infinite}
 @keyframes wildlifeBlink{0%,91%,96%,100%{transform:scaleY(1)}93%,94%{transform:scaleY(.08)}}
 .owl-head{animation:owlTurn 41s ease-in-out infinite}
 @keyframes owlTurn{0%,76%,100%{transform:rotate(0)}82%,90%{transform:rotate(-5deg)}96%{transform:rotate(2deg)}}
 .frog-throat{animation:frogBreath 13s ease-in-out infinite}
 @keyframes frogBreath{0%,65%,100%{transform:scale(.88);opacity:.25}73%,79%{transform:scale(1.12);opacity:.6}86%{transform:scale(.92);opacity:.3}}
+.frog-ripple{transform-box:fill-box;transform-origin:center;opacity:0;animation:frogRipple 13s ease-out infinite}
+@keyframes frogRipple{0%,70%,93%,100%{opacity:0;transform:scale(.6)}74%{opacity:.24;transform:scale(.8)}90%{opacity:0;transform:scale(1.5)}}
 .crab-claw{animation:clawLift 21s ease-in-out infinite}
 /* the big claw sits on the -x side of its joint, so the wave is a positive rotation */
 @keyframes clawLift{0%,76%,100%{transform:rotate(0)}83%,88%{transform:rotate(8deg)}94%{transform:rotate(-2deg)}}
@@ -545,9 +560,9 @@ section{padding:28px 20px 0}
   box-shadow:0 5px 18px rgba(9,34,43,.09);font-family:var(--mono);font-size:10.5px;color:var(--ink-soft)}
 .xp-peek .b{font-size:12px;color:var(--ink);font-weight:650}
 /* small words on the pill take the inks that read on the golden-hour paper too (4.5:1 and over) */
-.xp-peek .faint{color:var(--ink-faint)}.xp-peek .warm{color:#A64F0D}.xp-peek .cold{color:var(--water-ink)}
+.xp-peek .faint{color:var(--ink-faint)}.xp-peek .warm{color:#974607}.xp-peek .cold{color:var(--water-ink)}
 html[data-theme=dark] .xp-peek .warm{color:var(--heat)}
-.xp-peek .gold{color:#8F631D}html[data-theme=dark] .xp-peek .gold{color:#E8BC69}
+.xp-peek .gold{color:#785015}html[data-theme=dark] .xp-peek .gold{color:#E8BC69}
 .xp-peek[hidden]{display:none}
 .xp-cursor{pointer-events:none}
 .xp-cursor line{stroke:var(--ink-soft);stroke-width:1;opacity:.7}
@@ -671,7 +686,7 @@ html[data-theme=dark] .moon-phase .moon-rim{display:none}
 .tonight-line .moon-phase{display:inline-block;vertical-align:-4px;margin-left:9px}
 .eyebrow .gold-key{font-size:inherit}
 .gold-key{font-family:var(--mono);font-weight:600;font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
-  color:#8F631D;white-space:nowrap}
+  color:#785015;white-space:nowrap}
 html[data-theme=dark] .gold-key{color:#E8BC69}
 
 /* one quiet credit: Open-Meteo's data is CC BY 4.0 and asks for it */
@@ -705,13 +720,38 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
 #sceneSvg .heron-lunge,#sceneSvg .heron-strike,#sceneSvg .heron-scan,#sceneSvg .heron-leg,#sceneSvg .heron-tarsus,
 #sceneSvg .wildlife.deer .deer-head,#sceneSvg .wildlife.deer .deer-nod,#sceneSvg .wildlife.deer .deer-ear,
 #sceneSvg .wildlife.deer .deer-leg,#sceneSvg .wildlife.deer .deer-tail,#sceneSvg .shore-head,#sceneSvg .corm-neck,
-#sceneSvg .corm-wing,#sceneSvg .raccoon-head,#sceneSvg .raccoon-paw,#sceneSvg .crab-claw,#sceneSvg .owl-head,
+#sceneSvg .corm-wing,#sceneSvg .raccoon-head,#sceneSvg .raccoon-paw,#sceneSvg .crab-claw,#sceneSvg .crab-leg,#sceneSvg .owl-head,
 #sceneSvg .owl-eyes,#sceneSvg .frog-throat,#sceneSvg .hen-peck,#sceneSvg .hen-tip,#sceneSvg .hen-look,
 #sceneSvg .hen-scratch,#sceneSvg .wildlife.cardinal .perch-head,#sceneSvg .fox-head,#sceneSvg .fox-tail{transform-box:view-box;transform-origin:0 0}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
-</style>
+
+ /* Josh's fuller October direction: the readings have more weight, while time axes stay quiet.
+    Temperature labels use the display face; their placement keeps the wider mono advance as
+    conservative breathing room. Sun's six-pixel bar keeps its own scale. */
+ .eyebrow b,.card h3{font-size:12.2px;font-weight:700;letter-spacing:.075em}
+ .eyebrow span{font-size:10px}
+ .hr-labels,.wk-name,.wk-rain{font-size:12.2px;line-height:15px}
+ .hr-labels{height:15px}.wk-rain{height:15px}
+ .wk-name{letter-spacing:.015em;font-weight:500}
+ .wk-icon{height:22px}.wk-icon svg{width:18px;height:18px}
+ .card .lead{font-size:18px}
+ .card{border-top-width:1.5px}
+ .day-brief{font-size:16px}
+ .uv-scale{font-size:11px;letter-spacing:.035em}
+ .yr-months span{font-size:10.5px;letter-spacing:0}
+ #hourlySvg .tline,#weekSvg .tline,#yearSvg .tline,#tideSvg .wline,#moonSvg .wline{stroke-width:4px}
+ .rv-line2{stroke-width:2.4px}
+ .big-temp{font-weight:350}
+ #hourlySvg text,#weekSvg text,#yearSvg text{font-family:var(--disp);font-weight:650}
+ #hourlySvg circle[r="3.6"],#weekSvg circle[r="3.6"],#yearSvg circle[r="3.6"]{r:4.2px;stroke-width:2.8px}
+ .scene{margin-top:8px}
+ section,.week{padding-top:23px}
+ .eyebrow{margin-bottom:16px}
+ .verdict{font-weight:600}
+ @media(max-width:359px){.eyebrow b,.card h3{font-size:10px;letter-spacing:.04em}.wk-name{font-size:10.5px}}
+ </style>
 </head>
 <body>
 <div class="grain"></div>
@@ -1532,8 +1572,8 @@ const rigHeron=phase=>[
             pTaper([[-9.6,-63.4,1.2],[-5,-64.2,0.8],[0.4,-63.6,0.15]],"crest"),
             pTaper([[-9.2,-62.6,0.9],[-5.4,-62.8,0.6],[-1.4,-61.8,0.12]],"crest"),
             pDot(-12.8,-62.2,0.55,"eye")]}]}]}]}]}];
-/* Raccoon at the waterline, facing -x: arched back, black mask under a white brow, ringed
-   tail, one paw reaching into the edge */
+/* Raccoon on the bank, facing -x: arched back, black mask under a white brow, ringed
+   tail, one paw foraging on the bank */
 const rigRaccoon=phase=>[
   {parts:[
     pTaper([[8.8,-3.2,3],[9.4,-1.2,2.2],[8.4,0.1,2.2]],"far"),
@@ -2337,7 +2377,7 @@ const rigCormorant=phase=>[
 /* A green frog at the pond edge in warm rain, facing -x; y=0 is the mud under it. The gold
    eye high on the head, the ear disc behind it, the folded hind leg and the pale throat, which
    is its own joint because it swells when he calls */
-const rigFrog=()=>[
+const rigFrog=(phase=()=>"")=>[
   {parts:[
     pTaper([[-7.8,-3.6,1.3],[-8.2,-2.1,1.1],[-9,-0.7,0.9]],"far"),
     pTaper([[-9,-0.7,0.6],[-10.4,-0.3,0.42],[-11.2,-0.05,0.34]],"far")]},
@@ -2358,7 +2398,7 @@ const rigFrog=()=>[
     pDot(-6.9,-10.2,1.6,"eyeRing"),
     pDot(-6.9,-10.2,1.4,"eye"),
     pBlob([[-8,-10.2],[-6.9,-10.62],[-5.8,-10.2],[-6.9,-9.78]],"nose")]},
-  {open:`<g class="frog-throat" style="opacity:.25;transform:scale(.88)">`,pivot:[-10.2,-5.8],layers:[
+  {open:`<g class="frog-throat" style="opacity:.25;transform:scale(.88);${phase(13)}">`,pivot:[-10.2,-5.8],layers:[
     {parts:[
       pBlob([[-7.3,-5.8],[-7,-4.9],[-7.6,-3.8],[-9.2,-3.1],[-11,-3.05],[-12.4,-3.55],[-13,-4.5],[-13.06,-5.4],[-12.4,-5.8],[-9.9,-5.8]],"sacHi")]}]},
   {parts:[
@@ -2433,18 +2473,22 @@ const rigFox=phase=>[
 /* Male Atlantic marsh fiddler crab on the flat; y=0 is the mud. The one enormous orange
    claw is on the -x side, the eyestalks stand up, and the carapace carries its blue patch */
 const rigCrab=phase=>[
-  {parts:[
-    pTaper([[12.2,-11.8,1.9],[18.5,-13.35,2.09],[23.54,-13.78,1.81],[24.8,-14,1.48],[25.19,-12.94,1.29],[26.48,-9.44,1.14],[27.6,-6.4,0.95],[28.7,-3.21,0.68],[29.6,-0.6,0.22]],"far"),
-    pTaper([[-8.2,-11.8,1.9],[-14.7,-13.05,2.09],[-19.9,-13.24,1.81],[-21.2,-13.4,1.48],[-21.73,-12.39,1.29],[-23.48,-9.08,1.14],[-25,-6.2,0.95],[-26.32,-3.12,0.68],[-27.4,-0.6,0.22]],"far")]},
-  {parts:[
-    pTaper([[13,-10.2,2.1],[17.6,-12.05,2.31],[21.28,-12.72,2],[22.2,-13,1.64],[22.51,-11.94,1.43],[23.52,-8.44,1.26],[24.4,-5.4,1.05],[24.95,-2.59,0.76],[25.4,-0.3,0.22]],"far"),
-    pTaper([[-9,-10.2,2.1],[-13.6,-11.75,2.31],[-17.28,-12.18,2],[-18.2,-12.4,1.64],[-18.62,-11.39,1.43],[-20,-8.08,1.26],[-21.2,-5.2,1.05],[-21.75,-2.5,0.76],[-22.2,-0.3,0.22]],"far")]},
-  {parts:[
-    pTaper([[12.8,-8.6,2.3],[16,-10.55,2.53],[18.56,-11.3,2.18],[19.2,-11.6,1.79],[19.37,-10.62,1.56],[19.92,-7.4,1.38],[20.4,-4.6,1.15],[20.51,-2.12,0.83],[20.6,-0.1,0.22]],"leg"),
-    pTaper([[-8.8,-8.6,2.3],[-11.9,-10.35,2.53],[-14.38,-10.94,2.18],[-15,-11.2,1.79],[-15.28,-10.28,1.56],[-16.2,-7.24,1.38],[-17,-4.6,1.15],[-16.78,-2.12,0.83],[-16.6,-0.1,0.22]],"leg")]},
-  {parts:[
-    pTaper([[11.8,-7.2,2.4],[13.8,-8.85,2.64],[15.4,-9.36,2.28],[15.8,-9.6,1.87],[15.94,-8.79,1.63],[16.4,-6.12,1.44],[16.8,-3.8,1.2],[16.47,-1.76,0.86],[16.2,-0.1,0.22]],"leg"),
-    pTaper([[-7.8,-7.2,2.4],[-9.7,-8.65,2.64],[-11.22,-9,2.28],[-11.6,-9.2,1.87],[-11.8,-8.44,1.63],[-12.44,-5.96,1.44],[-13,-3.8,1.2],[-12.56,-1.76,0.86],[-12.2,-0.1,0.22]],"leg")]},
+  {open:`<g class="crab-support">`,pivot:[12.2,-11.8],layers:[
+    {parts:[pTaper([[12.2,-11.8,1.9],[18.5,-13.35,2.09],[23.54,-13.78,1.81],[24.8,-14,1.48],[25.19,-12.94,1.29],[26.48,-9.44,1.14],[27.6,-6.4,0.95],[28.7,-3.21,0.68],[29.6,-0.6,0.22]],"far")]}]},
+  {open:`<g class="crab-support">`,pivot:[-8.2,-11.8],layers:[
+    {parts:[pTaper([[-8.2,-11.8,1.9],[-14.7,-13.05,2.09],[-19.9,-13.24,1.81],[-21.2,-13.4,1.48],[-21.73,-12.39,1.29],[-23.48,-9.08,1.14],[-25,-6.2,0.95],[-26.32,-3.12,0.68],[-27.4,-0.6,0.22]],"far")]}]},
+  {open:`<g class="crab-support">`,pivot:[13,-10.2],layers:[
+    {parts:[pTaper([[13,-10.2,2.1],[17.6,-12.05,2.31],[21.28,-12.72,2],[22.2,-13,1.64],[22.51,-11.94,1.43],[23.52,-8.44,1.26],[24.4,-5.4,1.05],[24.95,-2.59,0.76],[25.4,-0.3,0.22]],"far")]}]},
+  {open:`<g class="crab-support">`,pivot:[-9,-10.2],layers:[
+    {parts:[pTaper([[-9,-10.2,2.1],[-13.6,-11.75,2.31],[-17.28,-12.18,2],[-18.2,-12.4,1.64],[-18.62,-11.39,1.43],[-20,-8.08,1.26],[-21.2,-5.2,1.05],[-21.75,-2.5,0.76],[-22.2,-0.3,0.22]],"far")]}]},
+  {open:`<g class="crab-leg" style="--step:5deg;${phase(58)}">`,pivot:[12.8,-8.6],layers:[
+    {parts:[pTaper([[12.8,-8.6,2.3],[16,-10.55,2.53],[18.56,-11.3,2.18],[19.2,-11.6,1.79],[19.37,-10.62,1.56],[19.92,-7.4,1.38],[20.4,-4.6,1.15],[20.51,-2.12,0.83],[20.6,-0.1,0.22]],"leg")]}]},
+  {open:`<g class="crab-leg" style="--step:-5deg;${phase(58)}">`,pivot:[-8.8,-8.6],layers:[
+    {parts:[pTaper([[-8.8,-8.6,2.3],[-11.9,-10.35,2.53],[-14.38,-10.94,2.18],[-15,-11.2,1.79],[-15.28,-10.28,1.56],[-16.2,-7.24,1.38],[-17,-4.6,1.15],[-16.78,-2.12,0.83],[-16.6,-0.1,0.22]],"leg")]}]},
+  {open:`<g class="crab-leg" style="--step:-5deg;${phase(58)}">`,pivot:[11.8,-7.2],layers:[
+    {parts:[pTaper([[11.8,-7.2,2.4],[13.8,-8.85,2.64],[15.4,-9.36,2.28],[15.8,-9.6,1.87],[15.94,-8.79,1.63],[16.4,-6.12,1.44],[16.8,-3.8,1.2],[16.47,-1.76,0.86],[16.2,-0.1,0.22]],"leg")]}]},
+  {open:`<g class="crab-leg" style="--step:5deg;${phase(58)}">`,pivot:[-7.8,-7.2],layers:[
+    {parts:[pTaper([[-7.8,-7.2,2.4],[-9.7,-8.65,2.64],[-11.22,-9,2.28],[-11.6,-9.2,1.87],[-11.8,-8.44,1.63],[-12.44,-5.96,1.44],[-13,-3.8,1.2],[-12.56,-1.76,0.86],[-12.2,-0.1,0.22]],"leg")]}]},
   {open:`<g class="crab-claw" style="${phase(21)}">`,pivot:[-9.4,-7.2],layers:[
     {parts:[
       pTaper([[-8.6,-7.3,3],[-12,-6.3,3.4],[-15.8,-5.9,3.2],[-19.6,-6.2,2.8]],"arm")]}]},
@@ -2790,7 +2834,7 @@ const INK={
 
 /* ── the scene: arc, sun / moon, marsh horizon ──────── */
 const appW=()=>clamp(document.querySelector(".app").clientWidth||760,320,760);
-const chartH=w=>Math.round(152+(760-w)*.09);
+const chartH=w=>Math.round(165+(760-w)*.09);
 /* which way the water is going right now, so the light on it can lean the same way:
    1 rising, -1 falling, 0 when we have no predictions */
 function tideTrend(preds){
@@ -2808,7 +2852,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const wet=isWet(code),snowing=isSnow(code);
   const storm=[95,96,99].includes(code),fog=[45,48].includes(code),quietWeather=!wet&&!storm;
   const humid=weather.relative_humidity_2m||0,temp=weather.temperature_2m||60;
-  const W=appW(),H=Math.round((LOC.scene==="marsh"?150:168)+(760-W)*.10),GY=H-30;   /* taller frame on a phone */
+  const W=Math.max(320,appW()/1.22),H=Math.round((LOC.scene==="marsh"?150:168)+(760-W)*.10),GY=H-30;   /* taller frame on a phone */
   const sp=sunPos(now), mp=moonPos(now), mph=moonPhase(now);
   const sunAltDeg=sp.alt*180/Math.PI,localHour=now.getHours(),month=now.getMonth();
   const seasonalFlies=dark&&month>=4&&month<=8&&temp>=60&&quietWeather&&wind<18;
@@ -3314,7 +3358,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   /* the great horned owl on a branch (rigOwl); y is the top of the branch, and his eyes
      keep their shine at night */
   const owlAt=(x,y,s,opacity=.96)=>`<g class="wildlife owl" data-species="owl" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" opacity="${opacity}">${inkCreature(rigOwl(phase),INK.owl,x,y,s,1,["eye","glint"])}</g>`;
-  const frogAt=(x,y,s,opacity=.96)=>`<g class="wildlife frog" data-species="frog" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" opacity="${opacity}">${inkCreature(rigFrog(),INK.frog,x,y,s,1,["eye"])}</g>`;
+  const frogAt=(x,y,s,opacity=.96)=>`<ellipse class="frog-ripple" data-water-contact="frog" cx="${(x-3*s).toFixed(1)}" cy="${y.toFixed(1)}" rx="${8*s}" ry="${1.3*s}" fill="none" stroke="${dark?'#B7D6E1':'#183C4B'}" stroke-width=".65" style="${phase(13)}"/><g class="wildlife frog" data-species="frog" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" opacity="${opacity}">${inkCreature(rigFrog(phase),INK.frog,x,y,s,1,["eye"])}</g>`;
   /* ── the residents ───────────────────────────────────────────────────────────
      small enough to stay secondary, but large enough for posture and negative space to
      survive a phone screen. They move at joints, with long rests between gestures, so a
@@ -3324,7 +3368,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   /* cormorant drying its wings on a piling, which is what they do all winter (rigCormorant).
      y is the top of the piling under its feet */
   const cormorant=(x,y,s,o=.96)=>`<g class="wildlife cormorant" data-species="cormorant" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" opacity="${o}">${inkCreature(rigCormorant(phase),INK.cormorant,x,y,s)}</g>`;
-  /* raccoon at the waterline, hunched over whatever it just found (rigRaccoon). y is the
+  /* raccoon on the bank, hunched over whatever it just found (rigRaccoon). y is the
      ground under its feet; its eyes keep their shine in the dark */
   const raccoon=(x,y,s,o=.96)=>`<g class="wildlife raccoon" data-species="raccoon" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" opacity="${o}">${inkCreature(rigRaccoon(phase),INK.raccoon,x,y,s,1,["eye","mark"])}</g>`;
   /* Three hens in the yard, not a pile. Each is about a body-length of dirt from
@@ -3351,7 +3395,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
   const fox=(x,y,s,o=.96)=>`<g class="wildlife fox" data-species="fox" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" opacity="${o}">${inkCreature(rigFox(phase),INK.fox,x,y,s,1,["eye"])}</g>`;
   /* the scuttle rides an outer group: a CSS transform on the crab itself would throw away
      the translate that puts it on the flat (rigCrab). y is the mud under its legs */
-  const crabAt=(x,y,s,opacity=.96)=>`<g class="crab-run" style="--cd:58s;${phase(58)}"><g class="wildlife crab" data-species="fiddler-crab" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" opacity="${opacity}">${inkCreature(rigCrab(phase),INK.crab,x,y,s)}</g></g>`;
+  const crabAt=(x,y,s,opacity=.96)=>`<g class="crab-run" style="--cd:58s;${phase(58)}"><ellipse class="crab-ripple" data-water-contact="crab" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${27*s}" ry="${2.6*s}" fill="none" stroke="${dark?'#B7D6E1':'#183C4B'}" stroke-width=".65" style="${phase(58)}"/><g class="wildlife crab" data-species="fiddler-crab" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" opacity="${opacity}">${inkCreature(rigCrab(phase),INK.crab,x,y,s)}</g></g>`;
   /* A bird in the sky here is fourteen pixels across, and at that size it is a silhouette,
      not an anatomy drawing. The previous version stroked each wing as a constant-width line
      and then added two short strokes at the tip to suggest spread primaries. Splayed tips on
@@ -4161,8 +4205,12 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
      the water; at the bottom of the strike his bill tip lands 27 units ahead of his feet */
   const hx=W*.20,hy=base+9,hs=.84;
   const showHeron=!wet&&!storm&&!showFlies&&(dark||fog||localHour<12||localHour>=16);
-  const heron=showHeron?`<g class="wildlife heron" data-species="great-blue-heron" transform="translate(${hx.toFixed(1)} ${hy.toFixed(1)}) scale(${hs})">${inkRig(rigHeron(phase),inkPal(INK.heron),{s:hs,light:lightAt(hx,hy-40)})}</g>
-  <ellipse class="heron-splash" cx="${(hx-27.2*hs).toFixed(1)}" cy="${(hy-.5).toFixed(1)}" rx="8" ry="2.4" fill="none" stroke="${dark?'#B7D6E1':'#183C4B'}" stroke-width=".75" style="${phase(150)}"/>
+  /* Each landing disturbs the water at that foot, on the same 150-second clock as the
+     steps. The bill ring stays where the existing strike actually meets the surface. */
+  const heron=showHeron?`<ellipse class="heron-step-ring near" data-water-contact="heron-near" cx="${(hx-.4*hs).toFixed(1)}" cy="${(hy+3*hs).toFixed(1)}" rx="4.8" ry="1.3" fill="none" stroke="${dark?'#B7D6E1':'#183C4B'}" stroke-width=".65" style="${phase(150)}"/>
+  <ellipse class="heron-step-ring far" data-water-contact="heron-far" cx="${(hx+.4*hs).toFixed(1)}" cy="${(hy+3*hs).toFixed(1)}" rx="4.8" ry="1.3" fill="none" stroke="${dark?'#B7D6E1':'#183C4B'}" stroke-width=".65" style="${phase(150)}"/>
+  <g class="wildlife heron" data-species="great-blue-heron" transform="translate(${hx.toFixed(1)} ${hy.toFixed(1)}) scale(${hs})">${inkRig(rigHeron(phase),inkPal(INK.heron),{s:hs,light:lightAt(hx,hy-40)})}</g>
+  <ellipse class="heron-splash" data-water-contact="heron-bill" cx="${(hx-27.2*hs).toFixed(1)}" cy="${(hy-.5).toFixed(1)}" rx="8" ry="2.4" fill="none" stroke="${dark?'#B7D6E1':'#183C4B'}" stroke-width=".75" style="${phase(150)}"/>
   <ellipse cx="${(hx+3).toFixed(1)}" cy="${(hy+2).toFixed(1)}" rx="11" ry="1.3" fill="${dark?'#EAF2FF':'#FFFFFF'}" opacity=".16"/>`:"";
 
   /* light on the water. A falling tide leaves the track sitting further off the bank */
@@ -4215,13 +4263,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       waterWeather+=`<path class="wmove" d="M ${x.toFixed(1)} ${y.toFixed(1)} h ${w.toFixed(1)}" stroke="${dark?'#C9E2EB':'#153845'}" stroke-width=".7" stroke-linecap="round" opacity="${o1}"${st}/>`;
     }
   }
-  /* and a ring, now and then, where a piling meets the water, the heron is standing,
-     or the raccoon has its paws in the edge — which is the whole reason it is down
-     there, and what tells you it is standing on the bank rather than out on the water */
+  /* The tide works around the pilings. Animal rings belong to their actual contacts
+     above, on their own movement clocks; the raccoon forages on dry ground. */
   if(!PRM&&!wet&&!storm){
-    waterWeather+=ringAt(dx-25,base+7,5,29,7)+ringAt(dx+14,base+10,4,37,21)
-      +(showHeron?ringAt(hx+3,hy+1.5,5.5,23,13):"")
-      +(dark?ringAt(residentX-5,base+3.4,4,26,5):"");
+    waterWeather+=ringAt(dx-25,base+7,5,29,7)+ringAt(dx+14,base+10,4,37,21);
     /* a marsh is never glass, even at five miles an hour */
     if(wind<8)waterWeather+=ringAt(W*.42,GY+15,4.4,33,19);
   }
@@ -4230,7 +4275,11 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
      fireflies on warm summer nights, a quiet crab when the marsh turns wet. That rule is
      about the performing cue, the thing that moves and draws the eye, and it still holds.
      Underneath it sits a resident, which is always there and almost never moves. */
-  const marshResident=dark?raccoon(residentX,base+2.5,.95,1)
+  /* A low, solid rise under the raccoon's feet: even the reaching paw remains above
+     the water's top at base-2. The ground, rather than a water ring, explains its perch. */
+  const raccoonY=base-6;
+  const raccoonBank=dark?`<g data-prop="raccoon-bank"><path d="M ${(residentX-26).toFixed(1)} ${base+2} Q ${(residentX-20).toFixed(1)} ${raccoonY+.65} ${(residentX-13).toFixed(1)} ${raccoonY+.65} L ${(residentX+15).toFixed(1)} ${raccoonY+.65} Q ${(residentX+23).toFixed(1)} ${raccoonY+1} ${(residentX+32).toFixed(1)} ${base+2} Z" fill="${bankC}"/><ellipse cx="${residentX.toFixed(1)}" cy="${(raccoonY+.6).toFixed(1)}" rx="14" ry="1" fill="${grassLine}" opacity=".35"/></g>`:"";
+  const marshResident=dark?raccoon(residentX,raccoonY,.95,1)
     :temp<48?cormorant(residentX,base-10.2,.95,1)
     /* The bill used to sit on the dark bank. A few pixels into the water puts
        the whole bird against open water instead of the reeds, on the oyster rake it
@@ -4364,7 +4413,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
     ${heat}
     ${dock}${dockDecor}
     ${rake}
-    ${marshResident}
+    ${raccoonBank}${marshResident}
     ${heron}
     ${marshCrab}
     ${bloom}${motes}
@@ -4538,7 +4587,7 @@ function renderTides(preds,css,gust,wind,gap=0){
     return a.v+(b.v-a.v)*(1-Math.cos(Math.PI*f))/2;
   };
   const W=appW()-40,H=chartH(W),padX=8;
-  const fs=W<360?1.08:W<520?1.16:1;               /* labels scale up on a phone */
+  const fs=(W<360?1.08:W<520?1.16:1)*1.22;               /* labels scale up on a phone */
   const topY=22,seaY=H-34,bedY=seaY+6,lowY=H-9,axisW=Math.round(26*fs),x0=padX+axisW;
   const vs=[];for(let t=t0;t<=t1;t+=9e5)vs.push(interp(t));
   /* measured up from the chart datum, so the height of the water on screen is the water there */
@@ -4569,11 +4618,12 @@ function renderTides(preds,css,gust,wind,gap=0){
   const tagTxt=gap?`${gap>0?"+":"−"}${Math.abs(gap)} ft`:"";
   let tag=null;
   if(gap){
-    const tw=tagTxt.length*10.5*fs*.6,cap=7.6*fs,tb=Math.min(ny+4,seaY-4);
+    const tw=tagTxt.length*10.5*fs*.6,cap=8.2*fs,tb=Math.min(ny+4,seaY-4);
     const curve=[];for(let t=t0;t<=t1;t+=18e4)curve.push([X(t),Y(interp(t))]);
     const box=c=>{c.x0=c.a==="start"?c.x:c.a==="end"?c.x-tw:c.x-tw/2;c.x1=c.x0+tw;c.t=c.b-cap;
       c.ok=c.x0>=x0&&c.x1<=W-padX&&c.t>=12*fs+7&&c.b<=seaY-4;
-      c.hits=curve.filter(([px,py])=>px>c.x0-4.5&&px<c.x1+4.5&&py>c.t-4.5&&py<c.b+4.5).length;return c};
+      /* The fuller four-pixel curve, its edge and the label halo all need breathing room. */
+      c.hits=curve.filter(([px,py])=>px>c.x0-6&&px<c.x1+6&&py>c.t-6&&py<c.b+6).length;return c};
     const named=[{x:nx+24*fs,a:"start",b:tb},{x:nx-26*fs,a:"end",b:tb},
       gap>0?{x:nx,a:"middle",b:ny-27}:{x:nx,a:"middle",b:Math.min(seaY-4,ny+8+cap)}].map(box);
     /* the boat's box: 25 behind now, 21 ahead, 24 up to the burgee and 6 under the keel */
@@ -4717,7 +4767,7 @@ const MOON_INK="#7A73AE";
 function renderMoon(css,wins){
   const svg=document.getElementById("moonSvg");
   const now=wallNow(),t0=now.getTime()-2.5*3.6e6,t1=now.getTime()+26*3.6e6;
-  const W=appW()-40,H=chartH(W),padX=8,fs=W<360?1.08:W<520?1.16:1;
+  const W=appW()-40,H=chartH(W),padX=8,fs=(W<360?1.08:W<520?1.16:1)*1.22;
   const topY=26,botY=H-8,x0=padX+Math.round(26*fs);
   const X=t=>x0+(t-t0)/(t1-t0)*(W-padX-x0);
   const as=[];for(let t=t0;t<=t1;t+=9e5)as.push(moonPos(new Date(t)).alt*180/Math.PI);
@@ -4864,20 +4914,20 @@ function renderYear(N,dy,css){
     const a=Y(cmp.wkHi),b=Y(cmp.wkLo),th=Math.round(cmp.wkHi)+"°",tl=Math.round(cmp.wkLo)+"°",px=clamp(nx,16,W-16);
     /* over the normal high where it runs above the pin, and under the normal low where it runs below,
        measured under both ends of the number and clear of the months' dots, the way the week places its own */
-    const hH=th.length*12*.3+2,hL=tl.length*10.5*.3+2,near=(i,hw)=>Math.abs(X(i)-px)<hw+5;
+    const hH=th.length*14.64*.3+2,hL=tl.length*12.81*.3+2,near=(i,hw)=>Math.abs(X(i)-px)<hw+5;
     const ya=Math.min(a-8,yHi(px-hH)-7,yHi(px+hH)-7,...N.hi.map((t,i)=>near(i,hH)?Y(t)-(i===hiI?5:2)-4:Infinity));
     const yb=Math.max(b+14,yLo(px-hL)+14,yLo(px+hL)+14,...N.lo.map((t,i)=>near(i,hL)?Y(t)+1.6+12:-Infinity));
     pin=`<line x1="${nx.toFixed(1)}" y1="${top-12}" x2="${nx.toFixed(1)}" y2="${Math.min(a-22,ya-14).toFixed(1)}" stroke="${css.ink}" stroke-width="1" stroke-dasharray="2 4" opacity=".22"${rvAt(nx,"fade")}/>
       <g${rvAt(nx,"pin")}><rect x="${(nx-1.75).toFixed(1)}" y="${a.toFixed(1)}" width="3.5" height="${Math.max(3.5,b-a).toFixed(1)}" rx="1.75" fill="${css.ink}" stroke="${css.paper}" stroke-width="4" paint-order="stroke" opacity=".9"/>
-      <text x="${px.toFixed(1)}" y="${ya.toFixed(1)}" ${mono} font-size="12" font-weight="600" fill="${css.ink}" ${halo}>${th}</text>
-      <text x="${px.toFixed(1)}" y="${yb.toFixed(1)}" ${mono} font-size="10.5" fill="${css.faint}" ${halo}>${tl}</text></g>`;
-    taken.push(box(px,ya,th,12),box(px,yb,tl,10.5),[nx-4,a,nx+4,b]);
+      <text x="${px.toFixed(1)}" y="${ya.toFixed(1)}" ${mono} font-size="14.64" font-weight="600" fill="${css.ink}" ${halo}>${th}</text>
+      <text x="${px.toFixed(1)}" y="${yb.toFixed(1)}" ${mono} font-size="12.81" fill="${css.faint}" ${halo}>${tl}</text></g>`;
+    taken.push(box(px,ya,th,14.64),box(px,yb,tl,12.81),[nx-4,a,nx+4,b]);
   }
   const keyed=(x,y,t,fs,w,fill)=>{const hw=t.length*fs*.3+2,cx=clamp(x,hw,W-hw);
     return taken.some(b=>hit(b,box(cx,y,t,fs)))?"":`<text x="${cx.toFixed(1)}" y="${y.toFixed(1)}" ${mono} font-size="${fs}" font-weight="${w}" fill="${fill}" ${halo}${rvAt(x,"label")}>${t}</text>`};
-  const th=Math.round(N.hi[hiI])+"°",hw=th.length*13*.3+2,tl=Math.round(N.lo[loI])+"°",wl=tl.length*10.5*.3+2;
-  marks+=keyed(X(hiI),Math.min(Y(N.hi[hiI])-11,yHi(X(hiI)-hw)-5,yHi(X(hiI)+hw)-5),th,13,600,css.ink);
-  marks+=keyed(X(loI),Math.max(Y(N.lo[loI])+14,yLo(X(loI)-wl)+14,yLo(X(loI)+wl)+14),tl,10.5,500,css.faint);
+  const th=Math.round(N.hi[hiI])+"°",hw=th.length*15.86*.3+2,tl=Math.round(N.lo[loI])+"°",wl=tl.length*12.81*.3+2;
+  marks+=keyed(X(hiI),Math.min(Y(N.hi[hiI])-11,yHi(X(hiI)-hw)-5,yHi(X(hiI)+hw)-5),th,15.86,650,css.ink);
+  marks+=keyed(X(loI),Math.max(Y(N.lo[loI])+14,yLo(X(loI)-wl)+14,yLo(X(loI)+wl)+14),tl,12.81,500,css.faint);
   const strip=(vals,y0,h,paint,labelFill,word,fmt)=>{
     const mx=Math.max(...vals),wi=vals.indexOf(mx);let s="";
     vals.forEach((v,i)=>{if(v<.5)return;const bh=Math.max(2.5,v/mx*(h-18)),bw=Math.min(14,col*.5);
@@ -4894,7 +4944,7 @@ function renderYear(N,dy,css){
       <linearGradient id="yrHi" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${W}" y2="0">${stops(N.hi)}</linearGradient>
       <linearGradient id="yrLo" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${W}" y2="0">${stops(N.lo)}</linearGradient>
       <linearGradient id="yrBand" gradientUnits="userSpaceOnUse" x1="0" y1="${Y(Math.max(...N.hi)).toFixed(1)}" x2="0" y2="${Y(Math.min(...N.lo)).toFixed(1)}">
-        <stop offset="0" stop-color="${tempColor(Math.max(...N.hi))}" stop-opacity=".2"/><stop offset="1" stop-color="${tempColor(Math.min(...N.lo))}" stop-opacity=".04"/></linearGradient>
+        <stop offset="0" stop-color="${tempColor(Math.max(...N.hi))}" stop-opacity=".29"/><stop offset="1" stop-color="${tempColor(Math.min(...N.lo))}" stop-opacity=".07"/></linearGradient>
       <clipPath id="yrClip"><rect x="3" y="0" width="${W-6}" height="${TH}"/></clipPath>
       <clipPath id="yrArea"><path d="${band}"/></clipPath></defs>
     <g clip-path="url(#yrClip)">
@@ -5452,7 +5502,7 @@ function dailyBrief(dy,i){
    chevrons: the day name is enough, the tapped brief carries the date, and every day but
    today is a button that opens its one-line brief under the chart; today has the rest of the
    page. */
-const WEEK_H=132,WEEK_WET=35;
+const WEEK_H=146,WEEK_WET=35;
 /* The weekend is the stretch of the week everybody asks about by name, so it is marked, not
    described: the Saturday and Sunday of the first weekend that still has a day after today.
    On Saturday that is today and tomorrow. On Sunday today is the whole page above, so it is
@@ -5536,7 +5586,7 @@ function renderWeek(dy,css,we=[]){
   if(n<2||!HI.ok||!LO.ok){svg.innerHTML="";xpPublish("week",null);return}
   let tMin=Math.min(...lv),tMax=Math.max(...hv);
   if(tMax-tMin<10){const m=(tMax+tMin)/2;tMin=m-5;tMax=m+5}
-  const top=24,bot=H-21,Y=t=>top+(bot-top)*(1-(t-tMin)/(tMax-tMin));
+  const top=28,bot=H-25,Y=t=>top+(bot-top)*(1-(t-tMin)/(tMax-tMin));
   const hiP=hv.map((t,i)=>[X(i),Y(t)]),loP=lv.map((t,i)=>[X(i),Y(t)]);
   const hiLine=spline(hiP.slice(HI.f,HI.l+1)),loLine=spline(loP.slice(LO.f,LO.l+1));
   /* the range is washed only where both lines run */
@@ -5557,17 +5607,17 @@ function renderWeek(dy,css,we=[]){
   let marks="";
   for(let i=0;i<n;i++){
     const x=X(i),yh=Y(hv[i]),yl=Y(lv[i]),th=Math.round(hv[i])+"°",tl=Math.round(lv[i])+"°",hk=HI.k[i]!=null,key=hk&&keyed&&Math.round(hv[i])===peak;
-    const fh=key?13:12,wh=th.length*fh*.3+2,wl=tl.length*10.5*.3+2;
+    const fh=key?15.86:14.64,wh=th.length*fh*.3+2,wl=tl.length*12.81*.3+2;
     const ly=Math.min(yh-(key?11:9),yHi(x-wh)-7,yHi(x+wh)-7);
-    const lyl=Math.min(H-6,Math.max(yl+14,yLo(x-wl)+14,yLo(x+wl)+14));
+    const lyl=Math.min(H-6,Math.max(yl+17,yLo(x-wl)+17,yLo(x+wl)+17));
     if(LO.k[i]!=null)marks+=`<circle cx="${x.toFixed(1)}" cy="${yl.toFixed(1)}" r="1.6" fill="${tempColor(lv[i])}" opacity=".75"${rvAt(x,"dot")}/>
-      <text x="${x.toFixed(1)}" y="${lyl.toFixed(1)}" ${mono} font-size="10.5" fill="${css.faint}" ${halo}${rvAt(x,"label")}>${tl}</text>`;
+      <text x="${x.toFixed(1)}" y="${lyl.toFixed(1)}" ${mono} font-size="12.81" fill="${css.faint}" ${halo}${rvAt(x,"label")}>${tl}</text>`;
     if(!hk)continue;
     if(key){
       if(rv&&i===hiI)marks+=`<circle cx="${x.toFixed(1)}" cy="${yh.toFixed(1)}" r="15" fill="none" stroke="${tempColor(hv[i])}" stroke-width="1.6" opacity="0"${rvAt(x,"ring")}/>`;
       marks+=`<circle cx="${x.toFixed(1)}" cy="${yh.toFixed(1)}" r="3.6" fill="${css.paper}" stroke="${tempColor(hv[i])}" stroke-width="2.4"${rvAt(x,"dot")}/>`;
     }else marks+=`<circle cx="${x.toFixed(1)}" cy="${yh.toFixed(1)}" r="2" fill="${tempColor(hv[i])}" opacity=".8"${rvAt(x,"dot")}/>`;
-    marks+=`<text x="${x.toFixed(1)}" y="${ly.toFixed(1)}" ${mono} font-size="${fh}" font-weight="${key?600:500}" fill="${css.ink}" ${halo}${rvAt(x,"label")}>${th}</text>`;
+    marks+=`<text x="${x.toFixed(1)}" y="${ly.toFixed(1)}" ${mono} font-size="${fh}" font-weight="${key?650:600}" fill="${css.ink}" ${halo}${rvAt(x,"label")}>${th}</text>`;
   }
   const stops=a=>a.map((t,i)=>`<stop offset="${(i/(n-1)*100).toFixed(1)}%" stop-color="${tempColor(t)}"/>`).join("");
   const xa=X(0),xb=X(n-1);
@@ -5584,8 +5634,8 @@ function renderWeek(dy,css,we=[]){
       <linearGradient id="wkHi" gradientUnits="userSpaceOnUse" x1="${xa.toFixed(1)}" y1="0" x2="${xb.toFixed(1)}" y2="0">${stops(hv)}</linearGradient>
       <linearGradient id="wkLo" gradientUnits="userSpaceOnUse" x1="${xa.toFixed(1)}" y1="0" x2="${xb.toFixed(1)}" y2="0">${stops(lv)}</linearGradient>
       <linearGradient id="wkBand" gradientUnits="userSpaceOnUse" x1="0" y1="${Y(tMax).toFixed(1)}" x2="0" y2="${Y(tMin).toFixed(1)}">
-        <stop offset="0" stop-color="${tempColor(Math.max(...hv))}" stop-opacity=".2"/>
-        <stop offset="1" stop-color="${tempColor(Math.min(...lv))}" stop-opacity=".04"/></linearGradient>
+        <stop offset="0" stop-color="${tempColor(Math.max(...hv))}" stop-opacity=".29"/>
+        <stop offset="1" stop-color="${tempColor(Math.min(...lv))}" stop-opacity=".07"/></linearGradient>
       <clipPath id="wkArea"><path d="${band}"/></clipPath>
     </defs>
     <g clip-path="url(#wkArea)"><rect class="rv-fill" x="${xa.toFixed(1)}" y="0" width="${(xb-xa).toFixed(1)}" height="${H}" fill="url(#wkBand)"/></g>
@@ -5712,6 +5762,15 @@ const GOLD={am:{lit:"#FFDED6",dark:"#41292C"},pm:{lit:"#FFD79C",dark:"#432A17"}}
 const PAPER={lit:{paper:"#FAFAF6",wash:"#EFF2ED",line:"#E3E7E1"},
              dark:{paper:"#0C1F28",wash:"#132C36",line:"#1C3844"}};
 const hexA=(h,a)=>{const c=hex2rgb(h);return`rgba(${c[0]},${c[1]},${c[2]},${a.toFixed(3)})`};
+/* The day's paper belongs to its sky too. Keep enough light in storm-grey paper for small
+   colored readings, and fade it into the existing sunset wash instead of switching at +6°. */
+function daylightPaper(stops,scene){
+  const base=scene==="ridge"?mix(stops[1],"#A9BEA5",.20):stops[1];
+  let paper=mix(base,"#F6F7ED",.60);
+  for(let i=0;i<40&&lum(paper)<.72;i++)paper=mix(paper,"#F6F7ED",.04);
+  return{paper,wash:mix(paper,stops[0],.10),line:mix(paper,"#234553",.18)};
+}
+const daylightBlend=alt=>{const t=clamp((alt+3)/9,0,1);return t*t*(3-2*t)};
 function goldenHour(altDeg,now,dark,root){
   const gw=document.getElementById("goldWash");
   /* the same window the arc and the tonight card already use: +6° down to -4° */
@@ -6311,6 +6370,15 @@ function render(d,live,savedAt=0){
   root.setProperty("--chip-bg",bright?"rgba(11,37,48,.13)":"rgba(238,246,249,.17)");
   root.setProperty("--hl",bright?(veil>.6?"#8A2A0C":"#A93A16"):"#FFC09B");
   goldenHour(altDeg,now,dark,root);
+  if(!dark){
+    const day=daylightPaper(stops,LOC.scene),blend=daylightBlend(altDeg);
+    const lit=getComputedStyle(document.documentElement);
+    for(const key of ["paper","wash","line"]){
+      const prop="--"+key,base=lit.getPropertyValue(prop).trim();
+      root.setProperty(prop,mix(base,day[key],blend));
+    }
+  }
+
   document.getElementById("themeColor").setAttribute("content",stops[0]);
 
   renderSkyFx(altDeg,c.cloud_cover,c.wind_direction_10m,wet,storm,c.wind_speed_10m,c.weather_code);
@@ -6362,7 +6430,7 @@ function render(d,live,savedAt=0){
   else if(!REVEAL_READY&&!REVEAL_WAIT)REVEAL_WAIT=setTimeout(revealReady,900);
 
   /* hourly */
-  const W=appW()-40,Ht=chartH(W)-16,pad=16,n=h.temp.length,base=Ht-6;
+  const W=appW()-40,Ht=chartH(W)-18,pad=16,n=h.temp.length,base=Ht-6;
   document.getElementById("hourlySvg").setAttribute("viewBox",`0 0 ${W} ${Ht}`);
   /* The hourly run can step up or down a degree between adjacent model hours. Blend only
      neighboring values for the drawn trend: the actual hourly reading remains available
@@ -6474,7 +6542,7 @@ function render(d,live,savedAt=0){
          one liberty taken with the scale: under about eleven percent the true height is
          less than five units, and a trace is a trace at any of them. */
       const bh=Math.max(5,h.pop[i]*.42);
-      const barW=Math.min(15,(W-2*pad)/(n-1)*.72);
+      const barW=Math.min(15,(W-2*pad)/(n-1)*.8);
       bars+=`<rect x="${(X(i)-barW/2).toFixed(1)}" y="${(base-bh).toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="${Math.min(3,bh*.3).toFixed(1)}" fill="${css.water}" opacity="${(.48+Math.min(h.pop[i],60)/60*.36).toFixed(2)}"${rvAt(X(i),"rise")}/>`;
       taken.push([X(i)-barW/2,base-bh,X(i)+barW/2,base]);
       /* i%4 is a subset of i%2, so every fourth hour the temperature label landed on the
@@ -6489,17 +6557,17 @@ function render(d,live,savedAt=0){
   for(const i of keys){const x=X(i),y=Y(trendTemp[i]);taken.push([x-6,y-6,x+6,y+6])}
   for(const i of keys){
     const x=X(i),y=Y(trendTemp[i]),t=Math.round(h.temp[i])+"°",c=tempColor(h.temp[i]);
-    let lx=x,ly=above(x,y,13,t,12),b=box(x,ly,13,t);
-    if(hit(b)&&i!==hiI){const uy=below(x,y,13,t,22),under=box(x,uy,13,t);if(!hit(under)&&uy<base-4){ly=uy;b=under}
+    let lx=x,ly=above(x,y,15.86,t,12),b=box(x,ly,15.86,t);
+    if(hit(b)&&i!==hiI){const uy=below(x,y,15.86,t,22),under=box(x,uy,15.86,t);if(!hit(under)&&uy<base-4){ly=uy;b=under}
       else{ /* no room over or under the dot (rain bars under a low beside now): step along the row, away from what it hit */
         const o=taken.find(q=>b[0]<q[2]&&b[2]>q[0]&&b[1]<q[3]&&b[3]>q[1]),dir=o&&(o[0]+o[2])/2>x?-1:1;
-        for(let st=4;st<=40;st+=2){const sx=x+dir*st,sy=above(sx,y,13,t,12),sb=box(sx,sy,13,t);
+        for(let st=4;st<=40;st+=2){const sx=x+dir*st,sy=above(sx,y,15.86,t,12),sb=box(sx,sy,15.86,t);
           if(sb[0]>=0&&sb[2]<=W&&!hit(sb)){lx=sx;ly=sy;b=sb;break}}
       }}
     taken.push(b);
     if(i===hiI&&rv)dots+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="15" fill="none" stroke="${c}" stroke-width="1.6" opacity="0"${rvAt(x,"ring")}/>`;
     dots+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.6" fill="${css.paper}" stroke="${c}" stroke-width="2.4"${rvAt(x,"dot")}/>
-      <text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="13" font-weight="600" fill="${css.ink}" ${halo}${rvAt(x,"label")}>${t}</text>`;
+      <text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="15.86" font-weight="600" fill="${css.ink}" ${halo}${rvAt(x,"label")}>${t}</text>`;
   }
   let prev=null;                  /* the last regular hour printed, for the same repeat rule */
   for(let i=4;i<n;i+=4){
@@ -6508,18 +6576,18 @@ function render(d,live,savedAt=0){
        and so does a same-valued hour close enough to read as a repeat: within three hours
        ("75°  75°"), or within a couple of label widths on a phone ("78°  78°" four hours on) */
     if(kn[i]==null||keys.some(k=>Math.abs(k-i)<2||(Math.abs(k-i)<=3||Math.abs(X(k)-X(i))<64)&&Math.round(h.temp[k])===Math.round(h.temp[i])))continue;
-    const x=X(i),y=Y(trendTemp[i]),t=Math.round(h.temp[i])+"°",ly=above(x,y,11.5,t,10),b=box(x,ly,11.5,t),d=[x-3,y-3,x+3,y+3];
+    const x=X(i),y=Y(trendTemp[i]),t=Math.round(h.temp[i])+"°",ly=above(x,y,14.03,t,10),b=box(x,ly,14.03,t),d=[x-3,y-3,x+3,y+3];
     if(hit(b)||hit(d)||prev&&prev.t===t&&x-prev.x<64)continue;
     taken.push(b,d);prev={t,x};
     dots+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2" fill="${tempColor(h.temp[i])}" opacity=".8"${rvAt(x,"dot")}/>
-      <text x="${x.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="11.5" fill="${css.soft}" ${halo}${rvAt(x,"label")}>${t}</text>`;
+      <text x="${x.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="14.03" fill="${css.soft}" ${halo}${rvAt(x,"label")}>${t}</text>`;
   }
   for(const [i,y] of oddsAt){
-    const x=X(i),b=box(x,y,10,h.pop[i]+"%"),ys=[yAt(b[0]),yAt(x),yAt(b[2])];
+    const x=X(i),b=box(x,y,12.2,h.pop[i]+"%"),ys=[yAt(b[0]),yAt(x),yAt(b[2])];
     /* the bar already says the odds, so a number the line would strike through is dropped */
     if(hit(b)||Math.min(...ys)<b[3]+3&&Math.max(...ys)>b[1]-3)continue;
     taken.push(b);
-    odds+=`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="10" fill="${css.wink}" ${halo}${rvAt(x,"label",240)}>${h.pop[i]}%</text>`;
+    odds+=`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="12.2" fill="${css.wink}" ${halo}${rvAt(x,"label",240)}>${h.pop[i]}%</text>`;
   }
   for(const [x0,x1] of nightTags){
     /* The band and the moon already say it is dark, so the words went and the moon stays. It
@@ -6541,7 +6609,7 @@ function render(d,live,savedAt=0){
     <defs>
       <linearGradient id="tline" x1="0" y1="0" x2="1" y2="0">${gstops}</linearGradient>
       <linearGradient id="tfill" gradientUnits="userSpaceOnUse" x1="0" y1="${areaTop.toFixed(1)}" x2="0" y2="${base}">
-        <stop offset="0" stop-color="${tempColor(Math.max(...fillT))}" stop-opacity=".22"/>
+        <stop offset="0" stop-color="${tempColor(Math.max(...fillT))}" stop-opacity=".32"/>
         <stop offset="1" stop-color="${tempColor(Math.min(...fillT))}" stop-opacity="0"/></linearGradient>
       <clipPath id="hourlyArea"><path d="${area}"/></clipPath>
       <linearGradient id="nightband" x1="0" y1="0" x2="1" y2="0">

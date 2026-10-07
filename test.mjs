@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v86/);
+  assert.match(worker, /mbwx-shell-v87/);
   // the clouds end in their own scallops: Josh loves the clouds and not the curly tail
   const cloud = html.match(/const propCloud=seed=>\[[\s\S]*?\];/);
   assert.ok(cloud, "propCloud should be extractable");
@@ -221,7 +221,7 @@ test("the hourly labels step aside instead of printing through each other", asyn
   assert.match(html, /nowF=h\.time\.findIndex\(t=>new Date\(t\)\.getTime\(\)>=nowHr0\),nowI=nowF<0\?n-1:nowF;/);
   assert.match(html, /\$\{i===nowI\?"mark":""\}[^\n]*\$\{i===nowI\?"NOW":/);
   // the high always keeps the space above its dot; now and the low may take the space under theirs
-  assert.match(html, /if\(hit\(b\)&&i!==hiI\)\{const uy=below\(x,y,13,t,22\),under=box\(x,uy,13,t\)/);
+  assert.match(html, /if\(hit\(b\)&&i!==hiI\)\{const uy=below\(x,y,15\.86,t,22\),under=box\(x,uy,15\.86,t\)/);
   // and every label clears the line under both of its ends, not only its own dot
   assert.match(html, /const above=\(x,y,size,txt,gap\)=>\{const hw=txt\.length\*size\*\.3\+2;return Math\.min\(y-gap,yAt\(x-hw\)-5,yAt\(x\+hw\)-5\)\};/);
   // the hour right beside a key label would only repeat it
@@ -417,7 +417,18 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.doesNotMatch(html, /heron-face/);
   assert.doesNotMatch(html, /scaleX\(\.12\)/);
   assert.doesNotMatch(html, /rotate\(-80deg\)/);
-  assert.match(html, /class="heron-splash"/);
+  assert.match(html, /class="heron-splash" data-water-contact="heron-bill"/);
+  // Water answers the actual feet and bill, on the same wall-clock phase as the joints.
+  assert.match(html, /heronStepRingA 150s/);
+  assert.match(html, /data-water-contact="heron-near"[\s\S]*?style="\$\{phase\(150\)\}"/);
+  assert.match(html, /data-water-contact="heron-far"[\s\S]*?style="\$\{phase\(150\)\}"/);
+  assert.doesNotMatch(html, /showHeron\?ringAt/);
+  assert.match(html, /class="crab-ripple" data-water-contact="crab"[\s\S]*?style="\$\{phase\(58\)\}"/);
+  assert.match(html, /crabStep 58s/);
+  assert.equal((html.match(/class="crab-leg" style=/g) || []).length, 4);
+  assert.equal((html.match(/class="crab-support"/g) || []).length, 4);
+  assert.match(html, /class="frog-throat" style="opacity:.25;transform:scale\(\.88\);\$\{phase\(13\)\}"/);
+  assert.match(html, /class="frog-ripple" data-water-contact="frog"[\s\S]*?style="\$\{phase\(13\)\}"/);
   // one look per 97s, phased off the wall clock. Two sweeps every 31s had a bird whose
   // whole character is stillness moving forty per cent of the time
   assert.match(html, /animation:heronScan 97s/);
@@ -644,6 +655,33 @@ test("the almanac fishes the farm pond, the coast keeps sunscreen, and Denver dr
   assert.match(html, /The almanac's fishing times: \$\{said\.length\?said\.join\(", "\):"none clear"\}/);
 });
 
+test("the fuller daytime paper follows its sky, stays readable, and eases into golden hour", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const agents = await readFile(new URL("AGENTS.md", root), "utf8");
+  const ctx = vm.createContext({});
+  const colors = html.slice(html.indexOf("const hex2rgb="), html.indexOf("const tempColor="));
+  const paper = html.slice(html.indexOf("function daylightPaper("), html.indexOf("function goldenHour("));
+  vm.runInContext("const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));" + colors + paper +
+    ";this.paper=daylightPaper;this.blend=daylightBlend;this.lum=lum;this.contrast=contrast", ctx);
+  for (const sky of [["#5C9FC6","#9ECBDC","#EAE6D2"], ["#394B5B","#77898E","#A0ACAA"], ["#A2AAA7","#CDD3CF","#E5E6DC"]]) {
+    for (const place of ["marsh", "ridge"]) {
+      const p = ctx.paper(sky, place);
+      assert.ok(ctx.lum(p.paper) >= .72, `${place} ${p.paper} keeps the small readings visible`);
+      for (const ink of ["#435D69", "#286184", "#AD3517", "#974607", "#785015", "#1E6B44"])
+        assert.ok(ctx.contrast(ink, p.paper) >= 4.5, `${ink} on ${p.paper}`);
+      assert.notEqual(p.paper, "#FAFAF6", "daytime paper belongs to its sky");
+    }
+  }
+  assert.equal(ctx.blend(-3), 0); assert.equal(ctx.blend(6), 1);
+  assert.equal(ctx.blend(-20), 0); assert.equal(ctx.blend(50), 1);
+  assert.ok(1 - ctx.blend(5.99) < .00001, "no jump at the golden-hour boundary");
+  for (let alt = -3; alt < 6; alt += .1) assert.ok(ctx.blend(alt + .1) >= ctx.blend(alt));
+  assert.match(html, /#hourlySvg \.tline,#weekSvg \.tline,#yearSvg \.tline,#tideSvg \.wline,#moonSvg \.wline\{stroke-width:4px\}/);
+  assert.match(html, /#hourlySvg text,#weekSvg text,#yearSvg text\{font-family:var\(--disp\);font-weight:650\}/);
+  assert.match(html, /const W=Math\.max\(320,appW\(\)\/1\.22\),H=/);
+  assert.match(agents, /Fuller, closer, more playful/);
+});
+
 test("golden hour reaches the whole page, and the two ends differ", async () => {
   const html = await readFile(new URL("index.html", root), "utf8");
 
@@ -655,7 +693,7 @@ test("golden hour reaches the whole page, and the two ends differ", async () => 
   // morning and evening are different light, and the code carries both
   assert.match(html, /const GOLD=\{am:\{lit:"#FFDED6",dark:"#41292C"\},pm:\{lit:"#FFD79C",dark:"#432A17"\}\}/);
   assert.match(html, /const rising=sunPos\(new Date\(now\.getTime\(\)\+6e5\)\)\.alt>sunPos\(now\)\.alt/);
-  // outside the window every override is removed, so noon is the plain paper again
+  // golden-hour overrides reset outside their window; daylight then supplies the sky-tinted paper
   assert.match(html, /for\(const v of \["--paper","--wash","--line"\]\)root\.removeProperty\(v\)/);
   // the ink never moves: only the paper leans, so nothing gets harder to read
   assert.doesNotMatch(html, /root\.setProperty\("--ink"/);
@@ -755,7 +793,7 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /has=raw!=null&&Number\.isFinite\(\+raw\)/);
   assert.match(html, /return\{t,has,pop,sky,code,likely,odds:has&&\(likely\|\|sky&&isWet\(code\)\)\}/);
   // one threshold for the printed odds and the tapped brief, so the column and the sentence agree
-  assert.match(html, /const WEEK_H=132,WEEK_WET=35;/);
+  assert.match(html, /const WEEK_H=146,WEEK_WET=35;/);
   assert.match(html, /hasPop&&pop>=WEEK_WET\)text=/);
   // a missing sky is no glyph, never a sun; a week with no odds at all is not "mostly dry",
   // and the note never calls a weekend dry (see the weekend test)
@@ -788,7 +826,7 @@ test("the weekend is always in the week, and it is the one coming", async () => 
   vm.runInContext([
     lift(/const SNOW=\[[\s\S]*?const isWet=w=>WETC\.includes\(w\);/),
     lift(/const dayName=s=>[^\n]*;/),
-    lift(/const WEEK_H=132,WEEK_WET=35;/),
+    lift(/const WEEK_H=146,WEEK_WET=35;/),
     html.slice(html.indexOf("function weekSpan("), html.indexOf("function renderWeek(")),
     "globalThis.weekSpan=weekSpan;globalThis.weekendNote=weekendNote;",
   ].join("\n"), ctx);
@@ -842,7 +880,7 @@ test("a tapped day says its feel and its sky, and a note only when there is some
   const ctx = vm.createContext({});
   vm.runInContext([
     lift(/const SNOW=\[[\s\S]*?const isWet=w=>WETC\.includes\(w\);/),
-    lift(/const WEEK_H=132,WEEK_WET=35;/),
+    lift(/const WEEK_H=146,WEEK_WET=35;/),
     html.slice(html.indexOf("function dailyBrief("), html.indexOf("/* ── the week")),
     "globalThis.dailyBrief=dailyBrief;",
   ].join("\n"), ctx);
@@ -1144,7 +1182,7 @@ test("a trick-or-treater comes on Halloween night, from sunset, and stays in whe
   assert.match(html, /pumpkinAt\(lanR,barnFoot,bigR\.s,\{w:bigR\.w,h:bigR\.h,carved,seed:6,lights:\[\.\.\.kidLit,doorstep\]\}\)/);
   // on the coast at the dock's landward end, kept off it while the cormorant has the middle piling
   assert.match(html, /\+\(trickOrTreat&&\(dark\|\|temp>=48\)\?kidAt\(dx-17,deckY\)\.svg:""\):"";/);
-  assert.match(html, /const marshResident=dark\?raccoon\(residentX,base\+2\.5,\.95,1\)\n\s*:temp<48\?cormorant\(/);
+  assert.match(html, /const marshResident=dark\?raccoon\(residentX,raccoonY,\.95,1\)\n\s*:temp<48\?cormorant\(/);
   // drawn from parts with the kit: the sneakers, the sheet with its two eye holes painted last in
   // black, then the hand and the pail. It never moves
   const kit = html.slice(html.indexOf("/* ── Storybook ink: the drawing kit"), html.indexOf("/* ── the scene: arc, sun / moon"));
@@ -1783,6 +1821,8 @@ test("tide chart reads as depth over the bottom", async () => {
   // (or under) the boat, at the first spot the tide line does not cross and off the boat
   assert.match(html, /const offBoat=c=>!\(c\.x0<nx\+21&&c\.x1>nx-25&&c\.t<ny\+6&&c\.b>ny-24\);/);
   assert.match(html, /tag=named\.find\(c=>c\.ok&&!c\.hits&&offBoat\(c\)\);/);
+  assert.match(html, /cap=8\.2\*fs/);
+  assert.match(html, /c\.hits=curve\.filter\(\(\[px,py\]\)=>px>c\.x0-6&&px<c\.x1\+6&&py>c\.t-6&&py<c\.b\+6\)/);
   assert.match(html, /tag=best\|\|ok\.find\(offBoat\)\|\|ok\[0\]\|\|named\[0\];/);
   assert.match(html, /if\(c\.ok&&!c\.hits&&offBoat\(c\)&&\(!best\|\|d\(c\)<d\(best\)\)\)best=c;/);
   // no spot sits higher than a high's time needs over it, or the high's time is printed on the tag
@@ -1816,8 +1856,8 @@ test("tide chart reads as depth over the bottom", async () => {
   // the taller skiff: a high label steps over it sooner and higher, and over its tag too (tagR is the boat's own right edge, 19px, when there is no tag)
   assert.match(html, /tagR=tagUp\?Math\.max\(nx\+19,tag\.x1\+2\):nx\+19;/);
   assert.match(html, /const lift=onBoat\?Math\.max\(9,y-boatTop\+4\):9;/);
-  assert.match(html, /const chartH=w=>Math\.round\(152\+\(760-w\)\*\.09\)/);
-  assert.match(html, /Ht=chartH\(W\)-16/);
+  assert.match(html, /const chartH=w=>Math\.round\(165\+\(760-w\)\*\.09\)/);
+  assert.match(html, /Ht=chartH\(W\)-18/);
   assert.match(html, /H=chartH\(W\)/);
   assert.match(html, /class="tide-explore xp" id="tideExplore"/);
   assert.match(html, /function xpSetup\(/);
@@ -1866,10 +1906,13 @@ test("light, motion and alerts stay tuned", async () => {
   assert.match(html, /!dark&&!deerOut&&!storm\?magpieAt/);
   assert.match(html, /:\(!wet&&!storm\)\?chickens/);
   assert.match(html, /:storm\?"":oysterCatcher/);
-  // the raccoon forages at the waterline, not out in the channel: at base+7 its feet
-  // hung sixteen units below the bank with nothing under them and it read as floating.
-  // Its y is now the ground under its feet
-  assert.match(html, /raccoon\(residentX,base\+2\.5,\.95,1\)/);
+  // The raccoon now forages on a real bank rise: the reaching paw stays fully above
+  // the water, with solid ground beneath it. The old foot ring falsely read as wading.
+  assert.match(html, /const raccoonY=base-6;/);
+  assert.match(html, /data-prop="raccoon-bank"/);
+  assert.match(html, /\$\{raccoonBank\}\$\{marshResident\}/);
+  assert.doesNotMatch(html, /ringAt\(residentX/);
+  assert.match(html, /raccoon\(residentX,raccoonY,\.95,1\)/);
   assert.doesNotMatch(html, /raccoon\(residentX,base\+7/);
   assert.match(html, /@keyframes perchHop/);
   assert.match(html, /@keyframes groundHop/);
@@ -2648,7 +2691,7 @@ test("the copy harness keeps looking at the days the water, the farm and the wee
   // the water blown out under the table, and every chart's words kept on the chart, off each other and off the bed
   assert.match(shots, /surge: -1\.6, waterTemp: 48,/);
   assert.match(shots, /level: "Running 1\.5 ft below the tide table\."/);
-  assert.match(shots, /\["tideSvg", "moonSvg", "yearSvg"\]/);
+  assert.match(shots, /\["hourlySvg", "weekSvg", "tideSvg", "moonSvg", "yearSvg"\]/);
   assert.match(shots, /\{ w: 320, h: 1500, tag: "narrow" \}/);
   assert.match(shots, /runs into/);
   assert.match(shots, /sits on the bed/);
@@ -2767,7 +2810,7 @@ test("every line reads the same way: one machine, and readers that say only what
   assert.match(html, /if\(live&&nowI>0&&ROLL_ASKED!==nowHr0\)\{ROLL_ASKED=nowHr0;setTimeout\(refresh,0\)\}/);
   // the pill's small coloured words take the inks that read on the golden-hour paper
   assert.match(css, /\.xp-peek \.cold\{color:var\(--water-ink\)\}/);
-  assert.match(css, /\.xp-peek \.warm\{color:#A64F0D\}/);
+  assert.match(css, /\.xp-peek \.warm\{color:#974607\}/);
   // a tap leaves :hover stuck on a phone, so only a mouse's hover holds a reading through a repaint
   assert.match(html, /const held=X\.ptr!=null\|\|X\.mouse&&X\.box\.matches\(":hover"\)\|\|X\.key&&document\.activeElement===X\.key;/);
   assert.match(html, /X\.mouse=e\.pointerType==="mouse";/);
