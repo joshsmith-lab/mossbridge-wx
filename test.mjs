@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v89/);
+  assert.match(worker, /mbwx-shell-v90/);
   // the clouds end in their own scallops: Josh loves the clouds and not the curly tail
   const cloud = html.match(/const propCloud=seed=>\[[\s\S]*?\];/);
   assert.ok(cloud, "propCloud should be extractable");
@@ -3400,4 +3400,52 @@ test("condition words follow daylight and the copy previews cover both family pl
   assert.equal(ctx.label(null,true),"—");
   for(const name of ["words-day-porters-neck","words-night-porters-neck","words-day-shady-spring","words-night-shady-spring"])
     assert.ok(shots.includes(name),name+" has a phone preview");
+});
+
+test("the oak-egret preview stays occasional, weather-aware and attached to its branches", async () => {
+  const html=await readFile(new URL("index.html",root),"utf8");
+  const countCode=html.slice(html.indexOf("function oakEgretCount("),html.indexOf("/* Raccoon on the bank"));
+  assert.ok(countCode.startsWith("function oakEgretCount("),"the real presence helper is extractable");
+  const randomCode=html.slice(html.indexOf("function mulberry("),html.indexOf("let STARS=null;"));
+  const ctx=vm.createContext({});
+  vm.runInContext(randomCode+countCode,ctx);
+  const calm={weather_code:1,temperature_2m:65,wind_speed_10m:6,wind_gusts_10m:10};
+  const expected=[1,2,0,0,0,0,0,1,2,1,1,0,1,2,2,0,2,1,0,0,0,0,0,1,0,1,0,1,1,0,1];
+  const month=()=>expected.map((_,i)=>ctx.oakEgretCount(`2026-10-${String(i+1).padStart(2,"0")}`,calm));
+  assert.deepEqual(month(),expected,"the fixed daily seed leaves some days empty and uses both occupied poses");
+  assert.deepEqual(month(),expected,"another render cannot change the day's count");
+  assert.deepEqual([...new Set(month())].sort(),[0,1,2],"there are never more than two birds");
+  const date="2026-10-02",count=(patch={},storm=false)=>ctx.oakEgretCount(date,{...calm,...patch},storm);
+  assert.equal(count({temperature_2m:40,wind_speed_10m:12,wind_gusts_10m:18}),2,"the stated gentle-weather limits are inclusive");
+  for(const code of [0,1,2,3])assert.equal(count({weather_code:code}),2,`known sky code ${code} permits the day's birds`);
+  for(const code of [45,48,51,53,55,56,57,61,63,65,66,67,71,73,75,77,80,81,82,85,86,95,96,99,4,-1])
+    assert.equal(count({weather_code:code}),0,`code ${code} cannot put birds on exposed limbs`);
+  for(const patch of [{temperature_2m:39.9},{wind_speed_10m:12.1},{wind_gusts_10m:18.1}])assert.equal(count(patch),0);
+  for(const field of Object.keys(calm))for(const value of [null,undefined,"",NaN,Infinity,"unavailable"])
+    assert.equal(count({[field]:value}),0,`${field} must be known`);
+  assert.equal(count({},true),0,"nearby thunder suppresses birds even when the current sky is clear");
+  for(const bad of ["","20261002","2026-10-2","2026-10-02T12:00"])
+    assert.equal(ctx.oakEgretCount(bad,calm),0,"a missing or malformed local date has no daily selection");
+  // Pin the policy boundaries separately from the real calendar's sampled values.
+  for(const [sample,want] of [[0,0],[.449999,0],[.45,1],[.799999,1],[.8,2],[.999999,2]]){
+    let seed;
+    const edge=vm.createContext({mulberry:n=>{seed=n;return()=>sample}});
+    vm.runInContext(countCode,edge);
+    assert.equal(edge.oakEgretCount(date,calm),want);
+    assert.equal(seed,20261002^0xE6E7,"the location's date supplies the same seed at every refresh");
+  }
+
+  const oak=html.slice(html.indexOf("const liveOak=()=>{"),html.indexOf("const oak=liveOak();"));
+  assert.match(oak,/oakEgretCount\(locToday\(\),weather,storm\|\|THUNDER>0\)/);
+  assert.match(oak,/const birds=\[\[-54,-18\.4,\.32,1\],\[55,-18\.2,\.30,-1\]\]\.slice\(0,count\)/,"only the two outer branch anchors are used");
+  assert.match(oak,/inkAt\(x,y,s,flip,inkRig\(rigEgret\(null,dark\|\|i===1\)/,"both night birds and the second daytime bird rest with tucked necks");
+  assert.match(oak,/decorPal\(INK\.egret,oakD\)/,"white feathers receive the tree's distance and sky light");
+  assert.match(oak,/return `<g data-prop="live-oak"\$\{treeAt\(oakX\)\}>\$\{inkAt\(oakX,gy,oakS,1,inkUnit\(propOak\(\)/);
+  assert.match(oak,/\$\{moss\}<\/g>`\+birds\)\}<\/g>`;/,"birds are above the leaves but inside both parent transforms");
+  const rig=html.slice(html.indexOf("const rigEgret="),html.indexOf("/* This is an occasional resident"));
+  assert.match(rig,/rest\?\[/,"the small silhouette has a separate tucked-neck pose");
+  assert.doesNotMatch(rig,/animation|class=|style=|phase\(/,"the birds add no independent movement");
+  const css=html.slice(html.indexOf("<style>"),html.indexOf("</style>"));
+  assert.doesNotMatch(css,/(?:\.oak-egret|\.egret)[^{]*\{[^}]*(?:animation|transition)/,"no CSS loop or transition moves birds independently of their branch");
+  assert.doesNotMatch(css,/@keyframes\s+[^\s{]*egret/i);
 });

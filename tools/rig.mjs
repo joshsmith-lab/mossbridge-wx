@@ -50,6 +50,9 @@ const cast = new Function("mulberry", `${src}; return {inkRig, inkAt, INK, rigs:
   [...src.matchAll(/^const (prop\w+)=/gm)].map((m) => m[1]).join(",")}}};`)(mulberry);
 /* a prop is a list of parts rather than a rig, so it is wrapped as a rig of one layer */
 const PROPS = {
+  egret: ["egret", (c) => c.rigEgret(null), {}, [38,40,20,36], { phone: .437,
+    o: {line:.42,heavy:.15,shade:.55,lit:.35,light:[-.5,-1]}, frame:[40,30,20,23],
+    skies:["#81977A","#142F3C"],skyPal:[{}, {body:"#8B9B9F",wing:"#6F848D",bill:"#8C8970",ink:"#102834",lit:"#BDCCD1",litOp:.25}] }],
   /* The farm's approved fish, close up and at its moon-chart size. */
   fish: ["fish", (c) => c.rigFish(), {}, [38, 24, 19, 12], { phone: 0.7,
     o: { line: 0.8, heavy: 0.35, shade: 1.3, lit: 0.65, light: [-0.5, -1] },
