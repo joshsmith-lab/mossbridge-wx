@@ -1,4 +1,4 @@
-/* Build a local, animated design study. No production files are written. */
+/* Build a local fixture gallery from the current app. No production files are written. */
 import {readFileSync,writeFileSync,mkdirSync,copyFileSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -10,9 +10,6 @@ const font=process.env.PORCH_FONT_DIR;
 if(!font)throw Error('PORCH_FONT_DIR is required for the real app fonts.');
 for(const name of ['bricolage','spline'])copyFileSync(path.join(font,name+'.woff2'),path.join(OUT,'f',name+'.woff2'));
 const original=readFileSync(path.join(ROOT,'index.html'),'utf8');
-const art=readFileSync(path.join(HERE,'art.mjs'),'utf8').replaceAll('export ','');
-const proposal=readFileSync(path.join(HERE,'prototype.js'),'utf8');
-const motion=readFileSync(path.join(HERE,'motion.css'),'utf8');
 const replace=(s,a,b)=>{if(!s.includes(a))throw Error('Missing preview anchor: '+a);return s.replace(a,b)};
 const spec={
   day:{time:'2026-10-07T10:20:00-04:00',temp:65},
@@ -28,19 +25,7 @@ for(const [name,cs] of Object.entries(spec)){
     cloud:cs.storm?96:night?8:18,nowWind:cs.storm?18:4,nowDir:285,nowGust:cs.storm?35:8,nowUv:night?0:3,
     uvMax:4.5,windAmp:2,gustAmp:3,popCurve:()=>cs.storm?90:5,dailyPop:p=>p.fill(cs.storm?80:5),
     sunrise:cs.coast?'07:10':'07:25',sunset:cs.coast?'18:47':'18:55'};
-  let html=replace(original,'</style>',motion+'\n</style>');
-  html=replace(html,'/* ── the scene: arc, sun / moon, marsh horizon ──────── */',art+'\nconst rigFish=makeRigFish({pBlob,pTaper,pDot});\nconst FISH_PALETTE=FISH_DAY;\n'+proposal+'\n/* ── the scene: arc, sun / moon, marsh horizon ──────── */');
-  html=replace(html,'function renderScene(sunrise,sunset,now,weather,dark,tideDir){','function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[]){');
-  html=replace(html,'  const scene=renderScene(sunrise,sunset,now,c,dark,LOC.tide?tideTrend(d.tides):0);',
-    '  const previewWindows=LOC.fish&&farmCard(LOC,h,c,dy,warning,storm,now,[]).fish?fishWindows(h,now):[];\n  const scene=renderScene(sunrise,sunset,now,c,dark,LOC.tide?tideTrend(d.tides):0,previewWindows);');
-  html=replace(html,'if(!PRM&&!wet&&!storm&&solunarWindows(now).some(w=>now>=w.start&&now<=w.end))\n      pondFx+=ringAt(pcx-prx*.08,base+13,4.5,13,4)+ringAt(pcx+prx*.16,base+10,3.5,17,11);',
-    'if(!PRM&&!wet&&!storm&&temp>=45&&fishWins.some(w=>now>=w.start&&now<w.end))\n      pondFx+=fishBite(pcx-prx*.08,base+13,.88,{...inkPal(FISH_PALETTE),water:dark?"#B7D6E1":"#426E80"},{pond:true,delay:(Date.now()/1000)%18});');
-  // Fish get breathing room below the fishing-time labels; scales and times stay intact.
-  const a=html.indexOf('function renderMoon('),b=html.indexOf('function yearTitle(',a);
-  let moon=html.slice(a,b);
-  moon=replace(moon,'const topY=26,botY=H-8','const topY=50,botY=H-8');
-  moon=replace(moon,'    ${labels}\n','    ${!PRM?previewChartFish(wins,X,Y,now,nx,ny,css):""}\n    ${labels}\n');
-  html=html.slice(0,a)+moon+html.slice(b);
+  let html=original;
   html=html.replace(/<link[^>]+(?:fonts\.google|rel="manifest"|rel="apple-touch-icon"|rel="icon")[^>]*>/g,'');
   html=replace(html,'</head>','<style>@font-face{font-family:"Bricolage Grotesque";src:url(f/bricolage.woff2);font-weight:200 800}@font-face{font-family:"Spline Sans Mono";src:url(f/spline.woff2);font-weight:300 700}</style></head>');
   html=replace(html,'if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});','/* Service workers are disabled in this local study. */');
@@ -66,6 +51,13 @@ for(const [name,cs] of Object.entries(spec)){
   </script>`;
   html=replace(html,'<script>',init+'\n<script>');
   html=replace(html,'</body>',`<script>
+    // Replay belongs only to the review gallery, never the family app.
+    addEventListener('message',event=>{
+      if(event.origin!==location.origin||event.data?.type!=='replay-fish')return;
+      document.getAnimations().filter(a=>String(a.animationName).startsWith('porchFish')).forEach(a=>{
+        const t=a.effect.getTiming();a.currentTime=t.delay+t.duration;a.play();
+      });
+    });
     const focus=new URLSearchParams(location.search).get('focus')||'chart';
     const ready=setInterval(()=>{if(!LAST?.d)return;clearInterval(ready);finishReveal();
       const el=document.querySelector(focus==='pond'?'#sceneSvg':'#moonSection');

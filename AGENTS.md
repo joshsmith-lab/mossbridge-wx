@@ -236,7 +236,9 @@ place name.
   that says stay in takes the fishing times off the moon chart, and so does freezing rain falling
   now, even after dark when the card speaks for tomorrow (`farmCard`'s `fish` is that gate).
   Otherwise each window is dropped on its own hours (`fishWindows`): thunder, freezing rain or a
-  30 mph gust in it, a gust the run does not carry, or running past the end of the run.
+  30 mph gust in it, a gust or weather code the run does not carry, a gap in its hourly coverage,
+  or running past the end of the run. Every overlapping hour still ahead must be known;
+  duplicate and partially overlapping rows must all pass, even when another row covers them.
   `farmCard` and `fishWindows` are pure and test.mjs runs them. The parked trip has no card.
 - **The sun card is the rest of today, and it steps aside.** In September 2026 the card became
   `Sun` over one bar on the 0-12 scale: the pin is now and carries the reading, the bar is lit
@@ -1068,7 +1070,7 @@ Established with Josh and enforced by `test.mjs`:
   real moon transits from the app's own astronomy. That framing is deliberate.
   Do not upgrade them into a forecast, and do not replace them with an API; the
   honesty is that the moon times are real and the theory is the almanac's. The
-  pond's extra rise rings during a window read the same moon as the card, and
+  pond's fish and its rise rings during a window read the same approved times as the chart, and
   the windows disappear under anything that says stay in (a warning, a storm overhead, ice,
   a gale, thunder within the hour, freezing rain falling), and one by one on their own hours
   otherwise, so they never read as an
@@ -1090,6 +1092,44 @@ span. The moon rides the curve at now in its own phase, the way the skiff rides 
 phase is the note beside the title (`moonName`: new moon, waxing crescent, first quarter, waxing
 gibbous, full moon and back). Anything that says stay in takes the windows with it. The chart speaks
 its windows (`The almanac's fishing times: 6:58 pm to 7:58 pm, ...`). It is drawn in like the tide.
+
+Josh approved fish on both this moon line and the Shady Spring pond on October 7, 2026, as the
+farm's playful counterpart to the boat on Wilmington's tide. A small olive-and-cream fish with a
+forked tail, warm fins and Storybook ink makes one short leap, then rests. The chart fish mark the
+displayed almanac windows, including those still ahead; one pond fish rises only while an approved
+window is underway, from its start up to but not including its end. The pond needs known weather,
+at least 45°F, and no rain or storm. Both drawings share the weather-filtered window list and the
+farm's stay-in gate. This is the almanac's picture, never a report of actual fish activity.
+The brief almanac fish rise is Josh's approved extra cue alongside the farm's existing resident;
+the one-cue rule otherwise stands, and neither animal is shrunk or sped up to make room.
+
+Each fish's takeoff ring, landing splash and expanding ring share its 18-second clock. There is
+one brief arc and a long quiet gap, with chart fish staggered across their bands. Motion is
+transform and opacity only, phased off wall time so a repaint continues the gesture. The chart
+keeps a continuous loop while it is visible and nobody is exploring its reading. Keep paused
+animation objects while it is out of view and resume at the current wall phase. Starting and
+stopping each short leap caused repeated SVG layouts. The moon event owns the stagger, so one
+window ending cannot retime its neighbours. The chart
+keeps its real moon curve, horizon and dashed underfoot section. Fish sit on that curve, leave
+room below the time labels, and give way to the current moon disc when there is no clear place
+inside the same band. The band remains even when its fish gives way. They arrive with the chart's
+entrance and step aside while its reading is being explored. The pond's splash lands on the water
+at the fish's contact point and stays behind the cattails.
+
+An open app rechecks the fishing windows at their starts and ends, and on returning to the front;
+changing places, hiding the app or clearing an unavailable reading cancels the old fishing timer.
+The boundary repaint must not renew an old forecast's age or leave a stale fishing cue on screen.
+The astronomy's existing two-minute samples use a fixed clock grid, so recomputing a window at
+its edge cannot move that same edge forward and keep a fish out past its time.
+`tools/fishing.mjs` checks these transitions, weather gates, phone-sized art, moon/label clearance,
+quiet gaps and shared water contact. The animation ceiling stays 120.
+
+The header's moving picture rests while the whole header is outside the viewport, leaving room
+for the moon chart's fish without running the unseen rain and animals. It keeps the existing
+animation objects and restores their elapsed clock when the header returns. A repaint replaces
+those references; it must not revive the last place's animals or restart a gesture. On an unusually
+tall screen that shows the header and moon together, the animation budget takes priority: a fish
+can give way while its fishing-time band remains, just as it gives way to the moon disc.
 
 ## The year
 
