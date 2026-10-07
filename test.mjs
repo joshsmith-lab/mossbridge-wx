@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v88/);
+  assert.match(worker, /mbwx-shell-v89/);
   // the clouds end in their own scallops: Josh loves the clouds and not the curly tail
   const cloud = html.match(/const propCloud=seed=>\[[\s\S]*?\];/);
   assert.ok(cloud, "propCloud should be extractable");
@@ -115,7 +115,7 @@ test("loading, cached data and the hourly explorer tell the truth", async () => 
 
   // Feels-like is real hourly data, revealed only when it differs enough to matter.
   assert.match(html, /hourly=temperature_2m,apparent_temperature,precipitation_probability/);
-  assert.match(html, /feels:wj\.hourly\.apparent_temperature\?\.slice\(i0,i0\+24\)/);
+  assert.match(html, /feels:wj\.hourly\.apparent_temperature\?\.slice\(i0\)/);
   // and the hourly readout is one reader on the one machine every chart reads through
   assert.match(html, /const showFeels=T!=null&&F!=null&&Math\.abs\(F-T\)>=3;/);
   assert.match(html, /function readHour\(h,i,nowI,golden=false\)\{/);
@@ -243,7 +243,7 @@ test("the page agrees with itself", async () => {
   const html = await readFile(new URL("index.html", root), "utf8");
 
   // the chart's NOW is the reading in the header, not the top-of-hour forecast
-  assert.match(html, /temp:d\.hourly\.temp\.map\(\(t,i\)=>i\?t:now0\(t,"temperature_2m"\)\)/);
+  assert.match(html, /temp:hourly\.temp\.map\(\(t,i\)=>i\?t:now0\(t,"temperature_2m"\)\)/);
   // ink is judged against the cloud the text sits on as well as the bare gradient
   assert.match(html, /const cInk=Math\.min\(contrast\(INK_ON,field\),contrast\(INK_ON,lit\)\)/);
   // the headline never names an hour that has already started
@@ -252,7 +252,7 @@ test("the page agrees with itself", async () => {
   // aside rather than say so, and the hour it starts from is the live reading
   assert.match(html, /if\(!slots\.length\)return null;/);
   assert.match(html, /document\.getElementById\("sunCard"\)\.hidden=!sunAdvice;/);
-  assert.match(html, /uv:d\.hourly\.uv&&d\.hourly\.uv\.map\(\(u,i\)=>i\?u:now0\(u,"uv_index"\)\)/);
+  assert.match(html, /uv:hourly\.uv&&hourly\.uv\.map\(\(u,i\)=>i\?u:now0\(u,"uv_index"\)\)/);
   assert.doesNotMatch(html, /UV stays low|Sunscreen weather is over|The strong sun is done|Easy sun/);
   // golden hour is said once, as the legend of the hourly chart's gold bands: the Tonight card
   // no longer repeats it, and the low stays with its words
@@ -579,7 +579,7 @@ test("it snows in Shady Spring", async () => {
   assert.match(html, /rf\.className="rainfx"\+\(snowing\?" snow":""\)/);
   // and the week's one-line brief no longer calls a heavy snow day "periods of rain"
   assert.match(html, /else if\(snow\)\{text=`\$\{code===75\|\|code===86\?"Heavy snow":"Snow"\}/);
-  assert.match(html, /code:wj\.hourly\.weather_code\.slice\(i0,i0\+24\)/);
+  assert.match(html, /code:wj\.hourly\.weather_code\.slice\(i0\)/);
   // and the odds word follows the odds: 35% snow is possible, not likely
   assert.match(html, /const likely=is=>is\.some\(i=>known\(h\.pop\?\.\[i\]\)&&\+h\.pop\[i\]>=60\)/);
   assert.match(html, /snow\.length\?`Snow \$\{likely\(snow\)\?"likely":"possible"\}`:/);
@@ -884,7 +884,7 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /const frogAt=/);
   assert.match(html, /const crabAt=/);
   assert.doesNotMatch(html, /marshDeer/);
-  assert.match(html, /const night=tonightBrief\(dy,h,now\);/);
+  assert.match(html, /const night=tonightBrief\(dy,full,now\);/);
   assert.doesNotMatch(html, /id="eveWind"/);
   assert.match(html, /function dailyBrief\(dy,i\)/);
   // the week is two lines, not a stack of bars: highs and lows on one scale, the range washed
@@ -2587,7 +2587,7 @@ test("the page reads top down: now, today, the week, and nothing it has already 
   assert.match(html, /<div id="feelsRow">feels <b id="feels">/);
   assert.match(html, /\|\|Math\.abs\(Math\.round\(c\.apparent_temperature\)-Math\.round\(c\.temperature_2m\)\)<3;/);
   // hour 0 carries the live gust, so the headline knows about the wind the chip is showing
-  assert.match(html, /gust:d\.hourly\.gust&&d\.hourly\.gust\.map\(\(g,i\)=>i\?g:now0\(g,"wind_gusts_10m"\)\)/);
+  assert.match(html, /gust:hourly\.gust&&hourly\.gust\.map\(\(g,i\)=>i\?g:now0\(g,"wind_gusts_10m"\)\)/);
 
   // The hourly note names the gold band and nothing else: the bars and the headline say the rain.
   assert.doesNotMatch(html, /staying mostly dry|blue bars show rain chance/);
@@ -2714,8 +2714,8 @@ test("the page reads top down: now, today, the week, and nothing it has already 
   assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 1 }, { pop: (i) => (i === 2 ? 45 : 5) }), "Showers possible around 3 p.m.");
   assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 1 }, { pop: () => 30 }), "Maybe a stray shower.");
   assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 63 }, { pop: (i) => (i < 3 ? 80 : 10) }), "Raining now. Should let up around 4 p.m.");
-  assert.equal(tell({ time: "2026-08-02T15:00", temperature_2m: 70, weather_code: 45 }), "Foggy. Dry through the afternoon.");
-  assert.equal(tell({ time: "2026-08-02T08:00", temperature_2m: 70, weather_code: 45 }), "Foggy this morning. Dry today.");
+  assert.equal(tell({ time: "2026-08-02T15:00", temperature_2m: 70, weather_code: 45 }), "Foggy. Some sun later.");
+  assert.equal(tell({ time: "2026-08-02T08:00", temperature_2m: 70, weather_code: 45 }), "Foggy this morning. Some sun later.");
   assert.match(tell({ time: "2026-08-02T08:00", temperature_2m: 31, weather_code: 66 }, { pop: () => 90 }), /^Freezing rain\. Expect ice on anything untreated\. Give yourself extra time on the roads\./);
   // thunder the run carries on poor odds is still thunder, and never "Should stay dry."
   assert.equal(tell({ time: "2026-08-02T10:30", temperature_2m: 70, weather_code: 2 }, { code: (i) => i >= 2 && i <= 9 ? 95 : 2 }), "Warm today. Thunder possible around noon.");
@@ -2750,7 +2750,19 @@ test("the page reads top down: now, today, the week, and nothing it has already 
     options.change?.(h);
     return ctx.dayStory(c, options.dy || completeDy, h, new Date(options.now || time));
   };
-  assert.equal(readAt("2026-08-02T14:00").html, "Nice this afternoon.");
+  assert.equal(readAt("2026-08-02T14:00").html, "Nice and sunny this afternoon.");
+  assert.equal(readAt("2026-08-02T07:40",{hours:{code:i=>i<5?3:0}}).html,"Cloudy, then sunny.","sustained clearing replaces an empty dry-day summary");
+  assert.equal(readAt("2026-08-02T07:40",{hours:{code:i=>i<5?0:3}}).html,"Sunny, then cloudy.");
+  assert.equal(readAt("2026-08-02T07:40",{hours:{code:i=>i%2?3:0}}).html,"Clouds and sun today.","mixed skies still say what the day looks like");
+  assert.equal(readAt("2026-08-02T07:40",{hours:{code:i=>i%4?3:0}}).html,"Mostly cloudy today.","one sunny hour cannot become a sustained clearing");
+  assert.equal(readAt("2026-08-02T07:40",{hours:{code:i=>i%4?0:3}}).html,"Mostly sunny today.");
+  assert.equal(readAt("2026-08-02T07:40",{hours:{code:()=>2}}).html,"Nice with some sun today.");
+  assert.equal(readAt("2026-08-02T07:40",{c:{temperature_2m:80,relative_humidity_2m:80},
+    dy:{...completeDy,temperature_2m_max:[90,68]}}).html,"Warm, soupy and sunny today.");
+  assert.equal(readAt("2026-08-02T07:40",{hours:{code:i=>i===3?45:3}}).html,"Some fog today.");
+  assert.equal(readAt("2026-08-02T07:40",{c:{temperature_2m:60,relative_humidity_2m:90},
+    dy:{...completeDy,temperature_2m_max:[90,68]}}).html,"Warm and sunny today.","a damp cool morning cannot borrow afternoon heat to become humid or soupy");
+  assert.doesNotMatch(storyCode,/Dry today\.|Dry through the afternoon\./,"a quiet daytime summary names the sky rather than only the absence of rain");
   assert.equal(readAt("2026-08-02T14:00", { c: { weather_code: 3 }, hours: { code: () => 3 } }).html, "Cloudy this afternoon.");
   assert.equal(readAt("2026-08-02T19:00").html, "Sunny tomorrow and 8° cooler.");
   assert.equal(readAt("2026-08-02T19:00", { c: { weather_code: 45 } }).html, "Foggy. Sunny tomorrow and 8° cooler.", "looking ahead cannot hide fog here now");
@@ -2772,7 +2784,7 @@ test("the page reads top down: now, today, the week, and nothing it has already 
   assert.match(readAt("2026-08-02T14:00", { c: { apparent_temperature: 20 } }).html, /Bundle up\./);
   // The wall clock changes the subject even if the cache was written before evening.
   assert.equal(readAt("2026-08-02T13:00", { now: "2026-08-02T18:00" }).html, "8° cooler tomorrow, with a high of 68°.");
-  assert.equal(readAt("2026-08-02T10:00", { now: "2026-08-02T14:00", c: { weather_code: 95 } }).html, "Nice this afternoon.", "an old current storm is not overhead now");
+  assert.equal(readAt("2026-08-02T10:00", { now: "2026-08-02T14:00", c: { weather_code: 95 } }).html, "Nice and sunny this afternoon.", "an old current storm is not overhead now");
   // The current afternoon is graded from its remaining hours, never a spent high.
   assert.equal(readAt("2026-08-02T14:00", { dy: { ...completeDy, temperature_2m_max: [95, 68] }, c: { temperature_2m: 55, apparent_temperature: 55 }, change: h => h.temp.fill(55) }).html, "Cool and sunny this afternoon.");
   // Thunder keeps its name with high or missing rain odds, and a rain shower cannot hide it.
@@ -3295,6 +3307,84 @@ test("Tonight uses its own hours, connected words, and honest missing readings",
   assert.equal(ctx.tonightBrief({sunrise:[],sunset:[]},run(),new Date("2026-10-06T20:30")).text,"Forecast unavailable tonight.","no invented sunrise or nighttime interval");
 });
 
+
+test("the real morning refresh keeps tomorrow's sunrise for Tonight and only 24 slots for the chart", async () => {
+  const html=await readFile(new URL("index.html",root),"utf8");
+  const source=[
+    html.match(/const SNOW=\[[\s\S]*?const isWet=w=>WETC\.includes\(w\);/)[0],
+    html.match(/const known=v=>[^;]+;/)[0],
+    html.slice(html.indexOf("function tonightBrief("),html.indexOf("function dailyBrief(")),
+    html.slice(html.indexOf("function renderHours("),html.indexOf("function render(d,")),
+    html.slice(html.indexOf('const cacheKey=id=>'),html.indexOf("async function fetchJSON(")),
+    html.slice(html.indexOf("let REFRESH_ID=0;"),html.indexOf("\nconst SWAP="))
+  ].join("\n");
+  for(const [id,rise] of [["mb","07:11"],["sp","07:25"]]){
+    let now=+new Date("2026-10-07T07:40"),response,offline=false;
+    class Clock extends Date {constructor(...a){super(...(a.length?a:[now]))}static now(){return now}}
+    const store=new Map(),paints=[],node={classList:{add(){},remove(){}},setAttribute(){}};
+    const ctx=vm.createContext({Date:Clock,LOC:{id,lat:34,lon:-77,tz:"America/New_York"},
+      locToday:()=>new Clock().getFullYear()+"-"+String(new Clock().getMonth()+1).padStart(2,"0")+"-"+String(new Clock().getDate()).padStart(2,"0"),
+      document:{getElementById:()=>node},navigator:{onLine:!offline},
+      localStorage:{getItem:k=>store.get(k),setItem:(k,v)=>store.set(k,v)},
+      fetchJSON:async url=>{if(offline)throw Error("offline");return url.includes("api.open-meteo.com")?response:{features:[]}},
+      paintLoadingState:()=>{},
+      render:(data,live,savedAt)=>{
+        const projected=ctx.renderHours(data.hourly,data.current);
+        paints.push({data,live,savedAt,...projected,night:ctx.tonightBrief(data.daily,projected.full,new Clock())});
+      }});
+    vm.runInContext(source,ctx);
+    const time=Array.from({length:192},(_,i)=>{
+      const d=new Date("2026-10-07T00:00");d.setHours(i);
+      return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")+"T"+String(d.getHours()).padStart(2,"0")+":00";
+    });
+    response={current:{time:"2026-10-07T07:30",temperature_2m:66,apparent_temperature:65,wind_gusts_10m:9,uv_index:2},
+      daily:{sunrise:["2026-10-07T"+rise,"2026-10-08T"+rise],sunset:["2026-10-07T18:46"],
+        temperature_2m_min:[20,20],precipitation_probability_max:[100,100]},
+      hourly:{time,temperature_2m:time.map(()=>60),apparent_temperature:time.map(()=>59),
+        precipitation_probability:time.map(()=>0),weather_code:time.map(()=>1),
+        wind_speed_10m:time.map((_,i)=>i),wind_gusts_10m:time.map((_,i)=>i+1),uv_index:time.map((_,i)=>i/10)}};
+    // The last sunrise hour is outside the old retained run and controls both readings.
+    response.hourly.temperature_2m[31]=42;
+    response.hourly.weather_code[31]=95;
+    response.hourly.precipitation_probability[31]=80;
+    response.hourly.temperature_2m[32]=-10; // daylight after sunrise cannot become the night's low
+    await ctx.refresh();
+    const first=paints.at(-1);
+    assert.equal(first.data.hourly.time.length,185,id+": refresh retains the actual remaining provider run");
+    assert.equal(first.night.text,"Thunder likely tonight, with a low of 42°.");
+    for(const [key,values] of Object.entries(first.full)){
+      assert.equal(first.h[key].length,24,key+": the chart and its companion readings keep their horizon");
+      assert.deepEqual(Array.from(first.h[key]),Array.from(values.slice(0,24)),key+": fields stay aligned");
+    }
+    assert.deepEqual([first.h.temp[0],first.h.feels[0],first.h.gust[0],first.h.uv[0]],[66,65,9,2]);
+    assert.equal(first.data.hourly.temp[0],60,"the live chart reading does not overwrite the cached forecast");
+    assert.deepEqual([...store.keys()],["mbwx-"+id],"the existing cache key is preserved");
+    const saved=ctx.readCache(id);assert.equal(saved.data.hourly.time.length,185);
+    now+=2*36e5;offline=true;await ctx.refresh();
+    assert.equal(paints.at(-1).live,false);
+    assert.equal(paints.at(-1).night.text,first.night.text,"reopening a morning cache later keeps its full night");
+    assert.equal(paints.at(-1).savedAt,saved.savedAt,"the failed refresh does not renew its age");
+    const original=structuredClone(saved.data.hourly);
+    for(const field of ["temp","pop"]){
+      const missing=structuredClone(original);missing[field][24]=null;
+      const brief=ctx.tonightBrief(saved.data.daily,missing,new Clock());
+      if(field==="temp")assert.equal(brief.text,"Thunder likely tonight. Low unavailable.");
+      else assert.equal(brief.text,"Thunder possible tonight, with a low of 42°.","unknown odds cannot make thunder likely");
+    }
+    const missingHour=structuredClone(original);
+    for(const values of Object.values(missingHour))values.splice(24,1);
+    assert.equal(ctx.tonightBrief(saved.data.daily,missingHour,new Clock()).text,"Low unavailable tonight. Rain odds unavailable.");
+    const legacy={...saved.data,hourly:Object.fromEntries(Object.entries(original).map(([k,v])=>[k,v.slice(0,24)]))};
+    store.set("mbwx-"+id,JSON.stringify({savedAt:saved.savedAt,data:legacy}));
+    assert.equal(ctx.tonightBrief(legacy.daily,ctx.renderHours(ctx.readCache(id).data.hourly,legacy.current).full,new Clock()).text,
+      "Low unavailable tonight. Rain odds unavailable.","old short caches are accepted without inventing their absent hours");
+    now=saved.savedAt+6*36e5+1;assert.equal(ctx.readCache(id),null,"expiry remains enforced");
+    now=+new Date("2026-10-07T23:30");ctx.writeCache(id,saved.data);
+    now=+new Date("2026-10-08T00:10");assert.equal(ctx.readCache(id),null,"yesterday's forecast cannot survive midnight");
+  }
+  assert.match(html,/const c=d\.current,dy=d\.daily,m=d\.marine,\{full,h\}=renderHours\(d\.hourly,c\);/);
+  assert.match(html,/const night=tonightBrief\(dy,full,now\);/);
+});
 
 test("condition words follow daylight and the copy previews cover both family places", async () => {
   const html = await readFile(new URL("index.html", root), "utf8");

@@ -45,7 +45,7 @@ place name.
   thing twice. In October 2026 Josh asked for a more useful summary. The headline may name
   the sky over the remaining day or tomorrow when the hourly run supports the whole period,
   rather than repeat the current condition beside the number. On a quiet afternoon it can be
-  one sentence: `Nice this afternoon.` Feels-like gets its line only when it is 3° or
+  one sentence: `Nice and sunny this afternoon.` Feels-like gets its line only when it is 3° or
   more off the air, the rule the hourly readout already used, because inside that it is the
   same number twice. The hourly note is the golden-hour span or nothing. It names the next band;
   a finger inside any gold band, tomorrow morning's too, reads a quiet gold `golden hour` on the pill.
@@ -99,10 +99,21 @@ place name.
 - **The summary moves with the day.** In October 2026 Josh asked for ordinary words,
   smarter timing and no extra length. Before noon the summary can use today's known high;
   afternoons use the temperatures still ahead so a spent high cannot make a cool afternoon
-  warm. A quiet afternoon can be `Nice this afternoon.` Nice requires every remaining daylight
+  warm. A quiet afternoon can be `Nice and sunny this afternoon.` Nice requires every remaining daylight
   hour to have known temperature and feels-like from 50 to under 85, known gusts under 28,
-  known rain odds under 25%, no wet weather codes, and a clear or partly cloudy sky. The
-  warmth being described must be 68 to under 82: the daily high before noon, the warmest
+  known rain odds under 25%, no wet weather codes, and a clear or partly cloudy sky.
+  Josh asked for more information in these same short main words on October 7, 2026:
+  `Dry today.` is not a useful description. Quiet daytime headlines name the sky:
+  `Cloudy, then sunny.`, `Mostly cloudy today.`, `Clouds and sun today.`, or
+  `Nice with some sun today.` A sustained sunny/cloudy change needs at least two forecast
+  hours on each side; one odd hour does not become a clearing or clouding trend. Mixed skies
+  use mostly only when at least 70% of the known daylight hours support it. Nice keeps its
+  sky word. Combine heat, humidity and sky without stacked ands: `Warm, soupy and sunny today.`
+  Fog can give way to `Some sun later.` when the run supports it.
+  Humid and soupy need the current air to be at least 75°F as well as the existing humidity
+  and heat thresholds; a damp cool morning cannot borrow the afternoon high to earn them.
+  Missing hours still cannot certify a whole period, and hazard timing keeps priority.
+  The warmth being described must be 68 to under 82: the daily high before noon, the warmest
   remaining afternoon hour after noon. Current discomfort cannot be hidden by it. From 5 p.m. the
   quiet headline looks toward tomorrow: `Sunny tomorrow and 7° cooler.` A difference of at
   least 5° between the two known daily highs earns a comparison. Smaller changes get no filler.
@@ -313,7 +324,14 @@ place name.
   new hour's run, once an hour, so NOW and the now pill land back on the live reading. A missing
   hourly temperature is not a zero: the line runs through it between its known neighbours, stops at
   the first and last known hour (with no neighbour past them, a line held flat drew a temperature the
-  run does not carry), and only known hours are marked. The Tonight card reads the same run in
+  run does not carry), and only known hours are marked. Keep the provider's full remaining
+  hourly forecast in the existing cache. The Next 24 hours chart and its existing companion
+  readings still use the first 24 slots; Tonight alone reads the longer run through the next
+  sunrise. Truncating the stored forecast at 24 slots discarded tomorrow's sunrise hour on an
+  early-morning refresh and falsely printed both readings as unavailable (fixed October 7, 2026).
+  Check this through the real refresh path, including a morning cache reopened later, rather
+  than giving the sentence helper more hours than the app actually retained.
+  The Tonight card reads the night's own hours in
   one connected sentence (`Rain likely tonight, with a low of 62°.`), and after midnight says
   `before morning`. A low needs every remaining night hour through sunrise: a missing temperature
   or a run ending early means `Low unavailable`, never zero or a minimum borrowed from half a

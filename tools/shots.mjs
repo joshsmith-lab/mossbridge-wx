@@ -458,7 +458,9 @@ for (const cs of cases) {
           await page.locator("#hourlyExplore").screenshot({ path: path.join(OUT, `${cs.name}-peek.png`) });
           await page.mouse.move(5, 5);
           await page.locator("#hourlyExplore .xp-key").focus();
-          await page.evaluate(() => { XP.hourly.D.read = ((read, h) => (i) => { h.pop[1] = 3; return read(i); })(XP.hourly.D.read, LAST.d.hourly); });
+          // Paint the changed forecast through the real chart path. The stored full run and
+          // the chart's 24-hour view are separate copies, so mutating LAST cannot update it.
+          await page.evaluate(() => { const d=structuredClone(LAST.d); d.hourly.pop[1]=3; render(d,true); });
           await page.keyboard.press("ArrowRight");
           const spoken = await page.locator("#hourlyExplore .xp-key").getAttribute("aria-valuetext");
           if (!/degrees/.test(spoken || "")) { failures++; console.log("!! hourly explorer: arrow key did not speak an hour"); }

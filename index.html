@@ -5482,7 +5482,7 @@ function dayStory(c,dy,h,now){
   const afternoonEnd=dy.sunset?.[di]?new Date(dy.sunset[di]).getTime():new Date(today+"T17:00").getTime();
   const ahead=times.map((t,i)=>t>=t0&&t<afternoonEnd?h.temp?.[i]:null).filter(has).map(Number);
   if(has(air))ahead.push(+air);
-  const ref=evening||overnight?air:hr>=12?(ahead.length?Math.max(...ahead):null):high,humid=fresh&&has(c.relative_humidity_2m)&&+c.relative_humidity_2m>=70&&has(ref)&&+ref>=78;
+  const ref=evening||overnight?air:hr>=12?(ahead.length?Math.max(...ahead):null):high,humid=fresh&&has(c.relative_humidity_2m)&&+c.relative_humidity_2m>=70&&has(air)&&+air>=75&&has(ref)&&+ref>=78;
   /* "soupy" is earned: real humidity sitting on real heat, never a borrowed afternoon high at night. */
   const soupy=humid&&+c.relative_humidity_2m>=74&&+ref>=88,damp=soupy?" and soupy":humid?" and humid":"";
   const tempWord=!has(ref)?"":+ref>=94?"Hot":+ref>=(evening||overnight?74:82)?"Warm":+ref>=68?"":+ref>=50?"Cool":"Cold";
@@ -5513,7 +5513,22 @@ function dayStory(c,dy,h,now){
     return span(Math.max(t0,a),b)};
   const dry=ids=>ids.length>0&&ids.every(i=>has(h.pop?.[i])&&+h.pop[i]<25&&has(h.code?.[i])&&!isWet(+h.code[i]));
   const quiet=ids=>dry(ids)&&ids.every(i=>has(h.gust?.[i])&&+h.gust[i]<WINDY_GUST);
-  const sky=ids=>ids.every(i=>+h.code[i]<=1)?"Sunny":ids.every(i=>+h.code[i]===3)?"Cloudy":ids.every(i=>+h.code[i]<=2)?"Some sun":"";
+  const sky=(ids,changes=false)=>{
+    if(!ids.length||!ids.every(i=>has(h.code?.[i])&&(+h.code[i]>=0&&+h.code[i]<=3||[45,48].includes(+h.code[i]))))return "";
+    const codes=ids.map(i=>+h.code[i]),sun=c=>c<=1,cloud=c=>c===3;
+    if(codes.some(c=>[45,48].includes(c)))return codes.every(c=>[45,48].includes(c))?"Foggy":"Some fog";
+    /* Name a sustained change, not one odd hour between otherwise matching skies. */
+    if(changes)for(const [a,b,words] of [[cloud,sun,"Cloudy, then sunny"],[sun,cloud,"Sunny, then cloudy"]]){
+      const split=codes.findIndex(c=>!a(c));
+      if(split>=2&&codes.length-split>=2&&codes.slice(split).every(b))return words;
+    }
+    if(codes.every(sun))return "Sunny";
+    if(codes.every(cloud))return "Cloudy";
+    if(codes.every(c=>c<=2))return "Some sun";
+    if(codes.filter(cloud).length/codes.length>=.7)return "Mostly cloudy";
+    if(codes.filter(sun).length/codes.length>=.7)return "Mostly sunny";
+    return "Clouds and sun";
+  };
   const nice=ids=>quiet(ids)&&ids.every(i=>has(h.temp?.[i])&&+h.temp[i]>=50&&+h.temp[i]<85&&has(h.feels?.[i])&&+h.feels[i]>=50&&+h.feels[i]<85&&+h.code[i]<=2);
   const tomorrowLine=()=>{const k=(dy.time||[]).indexOf(tomorrow),v=dy.temperature_2m_max?.[k],n=has(v)?Math.round(+v):null;
     const change=n!=null&&high!=null&&Math.abs(n-high)>=5?`${Math.abs(n-high)}° ${n>high?"warmer":"cooler"}`:"";
@@ -5560,16 +5575,16 @@ function dayStory(c,dy,h,now){
     const morning=span(t0,new Date(today+"T11:00").getTime());
     second=dry(morning)?"Dry through the morning.":"";
   }else{
-    const ids=daylight(today),view=quiet(ids)?sky(ids):"",p=hr<12?"today":"this afternoon";
+    const ids=daylight(today),view=quiet(ids)?sky(ids,true):"",p=hr<12?"today":"this afternoon";
     if(dry(ids)&&![45,48].includes(+code)){
-      if(nice(ids)&&has(ref)&&+ref>=68&&+ref<82&&!humid&&!(feels!=null&&(feels>=98||feels<=25)))return{html:`Nice ${p}.`,told};
+      if(nice(ids)&&has(ref)&&+ref>=68&&+ref<82&&!humid&&!(feels!=null&&(feels>=98||feels<=25)))return{html:`Nice ${view==="Sunny"?"and sunny":"with some sun"} ${p}.`,told};
       if(view){
-        const lead=tempWord?tempWord+damp:"";
-        const phrase=view==="Some sun"?(lead?lead+" with some sun":"Some sun"):lead?lead+" and "+view.toLowerCase():view;
-        return{html:`${phrase} ${p}.`+(feels!=null&&feels>=98?" Keep the middle of the day short.":feels!=null&&feels<=25?" Bundle up.":""),told};
+        const lead=tempWord?tempWord+damp:humid?"Humid":"";
+        const phrase=/^(Some sun|Some fog|Clouds and sun)$/.test(view)?(lead?lead+" with "+view.toLowerCase():view):lead?lead.replace(" and ",", ")+" and "+view.toLowerCase():view;
+        return{html:phrase+(view.includes(", then")?".":` ${p}.`)+(feels!=null&&feels>=98?" Keep the middle of the day short.":feels!=null&&feels<=25?" Bundle up.":""),told};
       }
-      second=hr<12?"Dry today.":"Dry through the afternoon.";
-    }else second=dry(ids)?(hr<12?"Dry today.":"Dry through the afternoon."):"";
+      second="";
+    }else second=dry(ids)&&view&&!/fog/i.test(view)?(view==="Sunny"?"Sun later.":view==="Some sun"?"Some sun later.":view+"."):"";
   }
   if(!second&&!win.length)second="Hourly forecast unavailable.";
   else if(!second&&win.some(i=>!has(h.pop?.[i])))second="Rain odds unavailable.";
@@ -6518,9 +6533,7 @@ function cacheAgeText(savedAt){
   const hours=Math.round(mins/60);
   return`updated ${hours}h ago`;
 }
-function render(d,live,savedAt=0){
-  sceneResume();
-  const c=d.current,dy=d.daily,m=d.marine;
+function renderHours(hourly,c){
   /* The hourly run starts at the top of the current hour, so its first temperature is a
      forecast for 2:00 while the header shows the 2:20 reading, and the chart's NOW dot sat a
      degree or three away from the big number above it. The first hour is now: it carries the
@@ -6528,10 +6541,18 @@ function render(d,live,savedAt=0){
      showed 30 mph while the headline, reading the top-of-hour forecast, said nothing. And
      the UV, so the sun card's sentence and its pin read the same number. */
   const now0=(v,k)=>c[k]!=null&&Number.isFinite(+c[k])?+c[k]:v;
-  const h={...d.hourly,temp:d.hourly.temp.map((t,i)=>i?t:now0(t,"temperature_2m")),
-    feels:d.hourly.feels&&d.hourly.feels.map((t,i)=>i?t:now0(t,"apparent_temperature")),
-    gust:d.hourly.gust&&d.hourly.gust.map((g,i)=>i?g:now0(g,"wind_gusts_10m")),
-    uv:d.hourly.uv&&d.hourly.uv.map((u,i)=>i?u:now0(u,"uv_index"))};
+  const full={...hourly,temp:hourly.temp.map((t,i)=>i?t:now0(t,"temperature_2m")),
+    feels:hourly.feels&&hourly.feels.map((t,i)=>i?t:now0(t,"apparent_temperature")),
+    gust:hourly.gust&&hourly.gust.map((g,i)=>i?g:now0(g,"wind_gusts_10m")),
+    uv:hourly.uv&&hourly.uv.map((u,i)=>i?u:now0(u,"uv_index"))};
+  /* Tonight may end beyond the chart's next 24 hours, especially on a morning opened from
+     cache. Keep the full run for it; every other reader keeps its existing 24-hour horizon. */
+  const h=Object.fromEntries(Object.entries(full).map(([key,values])=>[key,Array.isArray(values)?values.slice(0,24):values]));
+  return{full,h};
+}
+function render(d,live,savedAt=0){
+  sceneResume();
+  const c=d.current,dy=d.daily,m=d.marine,{full,h}=renderHours(d.hourly,c);
   const alerts=activeAlerts(d.alerts),warning=outdoorWarning(alerts);
   syncClock();
   const now=wallNow(), sunrise=new Date(dy.sunrise[0]), sunset=new Date(dy.sunset[0]);
@@ -6930,7 +6951,7 @@ function render(d,live,savedAt=0){
   if(N)renderYear(N,dy,css);else xpPublish("year",null);
 
   /* one connected sentence, from tonight's own hours */
-  const night=tonightBrief(dy,h,now);
+  const night=tonightBrief(dy,full,now);
   document.getElementById("eveLead").textContent=night.text;
   document.getElementById("eveLine").className="lead tonight-line "+night.cls;
   document.getElementById("moonTxt").innerHTML=moonPhaseIcon(scene.moon);
@@ -7194,10 +7215,10 @@ async function refresh(){
     const nowcast=wj.minutely_15||null;
     const hi=wj.hourly.time.findIndex(t=>t>=wj.current.time.slice(0,13)+":00");
     const i0=Math.max(0,hi),s={
-      time:wj.hourly.time.slice(i0,i0+24),temp:wj.hourly.temperature_2m.slice(i0,i0+24),
-      feels:wj.hourly.apparent_temperature?.slice(i0,i0+24),
-      pop:wj.hourly.precipitation_probability.slice(i0,i0+24),code:wj.hourly.weather_code.slice(i0,i0+24),wind:wj.hourly.wind_speed_10m.slice(i0,i0+24),
-      gust:wj.hourly.wind_gusts_10m.slice(i0,i0+24),uv:wj.hourly.uv_index.slice(i0,i0+24)};
+      time:wj.hourly.time.slice(i0),temp:wj.hourly.temperature_2m.slice(i0),
+      feels:wj.hourly.apparent_temperature?.slice(i0),
+      pop:wj.hourly.precipitation_probability.slice(i0),code:wj.hourly.weather_code.slice(i0),wind:wj.hourly.wind_speed_10m.slice(i0),
+      gust:wj.hourly.wind_gusts_10m.slice(i0),uv:wj.hourly.uv_index.slice(i0)};
     const data={current:wj.current,daily:wj.daily,hourly:s,marine,tides,water,alerts,storms,nowcast};
     if(L!==LOC||request!==REFRESH_ID)return; /* a newer refresh or location change won */
     render(data,true);
