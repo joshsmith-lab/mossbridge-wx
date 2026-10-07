@@ -305,7 +305,7 @@ async function animalContactCheck(page) {
     const point = (el, x, y) => new DOMPoint(x, y).matrixTransform(el.getScreenCTM());
     const centre = (el) => point(el, +el.getAttribute("cx"), +el.getAttribute("cy"));
     const opacity = (el) => Number(getComputedStyle(el).opacity);
-    const animations = [...svg.querySelectorAll(".raccoon *, .heron *, .crab-run, .crab-run *, .frog *, [data-water-contact]")]
+    const animations = [...svg.querySelectorAll(".raccoon *, .heron *, .oak-egret *, .crab-run, .crab-run *, .frog *, [data-water-contact]")]
       .flatMap((el) => el.getAnimations()).filter((a, i, all) => all.indexOf(a) === i);
     const saved = animations.map((a) => [a, a.currentTime, a.playState]);
     animations.forEach((a) => a.pause());
@@ -365,6 +365,23 @@ async function animalContactCheck(page) {
           for (const f of [0, .2, .35, .55, .8]) {
             at(150000, f);
             if ([near, far, bill].some((el) => opacity(el) > .005)) issues.push("heron: water gestures during a rest");
+          }
+        }
+        const egrets = [...svg.querySelectorAll(".oak-egret")], wing = svg.querySelector(".egret-wing-stretch");
+        if (egrets.length) {
+          checked.push("egret branch clearance");
+          if (wing) clock(90000, "egret wing");
+          const overlap = () => {
+            const h = heron.getBoundingClientRect();
+            return egrets.some((bird) => {
+              const b = bird.getBoundingClientRect();
+              return b.left < h.right && b.right > h.left && b.top < h.bottom && b.bottom > h.top;
+            });
+          };
+          for (const f of [0, .22, .408, .436, .462, .8]) {
+            at(150000, f); at(97000, f);
+            if (wing) for (const wf of [0, .96, .97, .98, .99]) at(90000, wf);
+            if (overlap()) issues.push("egret: perch overlaps the heron through its movement");
           }
         }
       }

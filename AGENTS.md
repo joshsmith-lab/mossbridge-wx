@@ -1018,19 +1018,25 @@ Established with Josh and enforced by `test.mjs`:
   posture, negative space and a species landmark to survive a phone screen.
   Residents move only at real joints, with long rests between gestures. The
   scene should feel alive, never busy.
-- **White birds in the live oak are an October 7, 2026 preview, pending Josh's approval.**
-  This direction is not approved for shipping. Up to two small great egrets (`rigEgret`,
-  `INK.egret`) rest on the coast's outer lower limbs, never in Ghostface's center fork.
-  Their foot anchors, in the oak's own units, are `[-54,-18.4,.32,1]` and
-  `[55,-18.2,.30,-1]` (x, y, scale, direction). Both sit inside the oak's existing
-  `treeAt` and `inkAt` transforms, so toes and branches move together. They are painted
-  over the leaf layer, lit at the tree's distance, with no independent animation; the
-  second bird and both birds after dark tuck their necks. `oakEgretCount` uses the local
-  date as numeric YYYYMMDD, xor `0xE6E7`, with the existing `mulberry`: below .45 is none,
-  below .8 is one, otherwise two. Refreshing cannot reshuffle them. Presence needs known
-  sky code 0–3, temperature at least 40°, wind no more than 12 mph and gusts no more than
-  18 mph. Missing readings, wet weather, fog, or thunder nearby keep the limbs empty.
-  These are occasional scene residents, never a claim that birds have been observed.
+- **White egrets in the live oak were approved October 7, 2026.** Up to two small great
+  egrets (`rigEgret`, `INK.egret`) rest on the coast's limbs, clear of the heron's lane
+  and Ghostface's center fork. Their foot anchors, in the oak's own units, are
+  `[-28,-23.5,.32,1]` and `[55,-18.2,.30,-1]` (x, y, scale, direction); the left one
+  moved right after it read as if it were perched on the heron. Both sit inside the oak's
+  existing `treeAt` and `inkAt` transforms, so toes and branches move together. The birds
+  are absent during the morning forage, rest from noon to 4 p.m., return as the sun drops
+  toward evening, and stay tucked in the oak overnight (`oakEgretCount`, using local hour
+  and solar altitude). One bird may make a short wing-settling flutter at its real shoulder
+  during the day, once in a 90-second loop, with a long quiet rest; the second bird and both
+  birds after dark tuck their necks. The wing motion is a transform inside the tree's own
+  sway and stays still under `PRM`. `oakEgretCount` uses the local date as numeric YYYYMMDD,
+  xor `0xE6E7`, with the existing `mulberry`: below .45 is none, below .8 is one, otherwise
+  two. Refreshing cannot reshuffle them. Presence needs known sky code 0–3, temperature at
+  least 40°, wind no more than 12 mph and gusts no more than 18 mph. Missing readings, wet
+  weather, fog, or thunder nearby keep the limbs empty. These are occasional scene residents,
+  never a claim that birds have been observed. `tools/egrets.mjs` checks their times, branch
+  contact, wing motion and clearance from the heron at phone size; `tools/scene.mjs` walks
+  the heron's gestures and the egret's wing stretch to keep their silhouettes apart.
 - **The marsh's water band is the whole lower frame, so "in the scene" is not the
   same as "on the ground."** The ridge has a pond you can test a position against;
   the marsh does not, and the pond check in `tools/scene.mjs` exempts it for exactly

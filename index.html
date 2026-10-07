@@ -253,6 +253,11 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .heron-scan{animation:heronScan 97s ease-in-out infinite}
 @keyframes heronScan{0%,80%,100%{transform:rotate(0)}
   85.5%,91%{transform:rotate(-3deg)}96%{transform:rotate(0)}}
+/* A perched egret rests for a long time, then gives its wings one quick settling flutter.
+   The shoulder is the real pivot; the long quiet gap keeps it a resident, not a show. */
+.egret-wing-stretch{animation:egretWingStretch 90s ease-in-out infinite}
+@keyframes egretWingStretch{0%,95%,100%{transform:none}
+  96%{transform:rotate(-34deg)}97%{transform:rotate(-8deg)}98%{transform:rotate(-28deg)}99%{transform:rotate(-3deg)}}
 /* one gull actually crosses, instead of two pinned to the sky */
 .gull-cross{animation:gullCross var(--gd,70s) linear infinite}
 @keyframes gullCross{0%{transform:translate(0,0);opacity:0}6%,94%{opacity:1}
@@ -750,7 +755,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
 /* Storybook ink rigs pivot on the real joint. Each moving group sits inside a wrapper whose own
    origin is the joint (joint() in the script), so its origin is simply 0 0 in its own units and
    redrawing a part can never walk the pivot off the shoulder the way a fill-box percentage does */
-#sceneSvg .heron-lunge,#sceneSvg .heron-strike,#sceneSvg .heron-scan,#sceneSvg .heron-leg,#sceneSvg .heron-tarsus,
+#sceneSvg .heron-lunge,#sceneSvg .heron-strike,#sceneSvg .heron-scan,#sceneSvg .heron-leg,#sceneSvg .heron-tarsus,#sceneSvg .egret-wing-stretch,
 #sceneSvg .wildlife.deer .deer-head,#sceneSvg .wildlife.deer .deer-nod,#sceneSvg .wildlife.deer .deer-ear,
 #sceneSvg .wildlife.deer .deer-leg,#sceneSvg .wildlife.deer .deer-tail,#sceneSvg .shore-head,#sceneSvg .corm-neck,
 #sceneSvg .corm-wing,#sceneSvg .raccoon-head,#sceneSvg .raccoon-paw,#sceneSvg .crab-claw,#sceneSvg .crab-leg,#sceneSvg .owl-head,
@@ -1607,17 +1612,17 @@ const rigHeron=phase=>[
             pTaper([[-9.2,-62.6,0.9],[-5.4,-62.8,0.6],[-1.4,-61.8,0.12]],"crest"),
             pDot(-12.8,-62.2,0.55,"eye")]}]}]}]}]}];
 /* A great egret at rest, facing -x. Toes grip y=0; the folded neck and narrow yellow
-   bill identify the small white silhouette. No independent animation: its perch carries it. */
-const rigEgret=(phase,rest=false)=>[
+   bill identify the small white silhouette. Its occasional wing stretch turns at the shoulder. */
+const rigEgret=(phase,rest=false,stretch=false)=>[
   {parts:[
     pTaper([[2,-13,1.5],[1.5,-7,1],[1,0,.85]],"legFar"),
     pTaper([[-1,-12,1.5],[-1.5,-6,1],[-1,0,.9]],"leg"),
     pTaper([[-3.7,.5,.7],[-1,0,.9],[1.6,.6,.5]],"leg"),
     pTaper([[-.8,.4,.6],[1,0,.8],[3,.5,.45]],"legFar")]},
-  {parts:[
-    pBlob([[-4,-23],[-.5,-25],[4.6,-22.5],[7,-18],[8.5,-11],[3,-11.8],[-1.8,-13.2],[-4.5,-17.5]],"body"),
-    pBlob([[-.5,-23],[4.8,-20.7],[7.8,-12],[3,-14.2],[.2,-18]],"wing"),
-    ...(rest?[
+  {parts:[pBlob([[-4,-23],[-.5,-25],[4.6,-22.5],[7,-18],[8.5,-11],[3,-11.8],[-1.8,-13.2],[-4.5,-17.5]],"body")]},
+  {open:`<g class="${stretch?"egret-wing-stretch":"egret-wing"}"${stretch?` style="${phase(90)}"`:""}>`,pivot:[-.5,-22],layers:[
+    {parts:[pBlob([[-.5,-23],[4.8,-20.7],[7.8,-12],[3,-14.2],[.2,-18]],"wing")] }]},
+  {parts:[...(rest?[
       pBlob([[-4.2,-19.2],[-7.2,-23],[-6.8,-27],[-3.5,-28.8],[-.5,-27.7],[.4,-25.7],[-2.9,-24.5],[-1.7,-21]],"body"),
       pTaper([[-4.9,-25.5,1.5],[-1.2,-24.7,1],[2.5,-22.9,.1]],"bill",{capEnd:false}),
       pTaper([[-4.8,-27.1,.45],[-3.4,-27,.45]],"detail")
@@ -1627,12 +1632,15 @@ const rigEgret=(phase,rest=false)=>[
       pTaper([[-7.8,-33,1.5],[-11.8,-32.8,.9],[-16,-32.1,.08]],"bill",{capEnd:false}),
       pDot(-6.7,-33,.45,"eye")
     ])]}];
-/* This is an occasional resident, never a sighting claim. One daily seed keeps a refresh
-   from moving it around; only known gentle, dry conditions leave birds on exposed limbs. */
-function oakEgretCount(date,c,storm=false){
+/* These are occasional residents, never a sighting claim. They rest in the oak after the
+   morning forage and return as the sun drops; one daily seed keeps a refresh from moving them. */
+function oakEgretCount(date,c,localHour=13,sunAltDeg=45,storm=false){
   const hasValue=v=>v!=null&&v!==""&&Number.isFinite(+v);
   if(storm||!/^\d{4}-\d{2}-\d{2}$/.test(date)||![c.weather_code,c.temperature_2m,c.wind_speed_10m,c.wind_gusts_10m].every(hasValue)
     ||![0,1,2,3].includes(+c.weather_code)||+c.temperature_2m<40||+c.wind_speed_10m>12||+c.wind_gusts_10m>18)return 0;
+  const hour=+localHour,alt=+sunAltDeg;
+  if(!Number.isFinite(hour)||!Number.isFinite(alt)||hour<0||hour>=24
+    ||!(alt<=-.83||(hour>=12&&hour<16)||(hour>=16&&alt<=6)))return 0;
   const n=mulberry(Number(date.replaceAll("-",""))^0xE6E7)();
   return n<.45?0:n<.8?1:2;
 }
@@ -4345,10 +4353,12 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[]){
     }
     const pal={wood:"#6A4E40",leaf:"url(#oakLeaf)"};
     const o={wood:air(pal.wood,oakD),leaf:pal.leaf,ink:inkAir(oakD),shade:shadeC,lit:litC,litOp:.6*litK,shadeOp:.34*shadeK};
-    const count=oakEgretCount(locToday(),weather,storm||THUNDER>0),birdPal={...decorPal(INK.egret,oakD),shadeOp:.24*shadeK,litOp:.42*litK};
-    const birds=[[-54,-18.4,.32,1],[55,-18.2,.30,-1]].slice(0,count).map(([x,y,s,flip],i)=>
-      inkAt(x,y,s,flip,inkRig(rigEgret(null,dark||i===1),birdPal,{s:s*oakS,flip,line:.42,heavy:.15,shade:.55,lit:.35,light:lightAt(oakX+x*oakS,gy+y*oakS)}),
-        ` class="oak-egret" data-species="great-egret" data-perch="${x},${y}"`)).join("");
+    const count=oakEgretCount(locToday(),weather,localHour,sunAltDeg,storm||THUNDER>0),birdPal={...decorPal(INK.egret,oakD),shadeOp:.24*shadeK,litOp:.42*litK};
+    const birds=[[-28,-23.5,.32,1],[55,-18.2,.30,-1]].slice(0,count).map(([x,y,s,flip],i)=>{
+      const stretch=i===0&&!dark&&localHour>=10&&localHour<16&&!PRM;
+      return inkAt(x,y,s,flip,inkRig(rigEgret(phase,sunAltDeg<=-.83||i===1,stretch),birdPal,{s:s*oakS,flip,line:.42,heavy:.15,shade:.55,lit:.35,light:lightAt(oakX+x*oakS,gy+y*oakS)}),
+        ` class="oak-egret" data-species="great-egret" data-perch="${x},${y}"`);
+    }).join("");
     return `<g data-prop="live-oak"${treeAt(oakX)}>${inkAt(oakX,gy,oakS,1,inkUnit(propOak(),o,{s:oakS,light:lightAt(oakX,gy-40)})
       +`<g fill="${air("#CACBB2",oakD)}" stroke="${inkAir(oakD+.2)}" stroke-width=".32" stroke-linejoin="round" opacity=".92">${moss}</g>`+birds)}</g>`;
   };

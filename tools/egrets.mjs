@@ -13,10 +13,12 @@ const before=hash(),results=[],failures=[];
 const o={baseTemp:70,nowTemp:74,feels:74,rh:55,isDay:1,code:1,cloud:18,nowWind:5,nowGust:8,nowDir:240,
   nowUv:4,uvMax:5,windAmp:2,gustAmp:2,popCurve:()=>0,dailyPop:p=>p.fill(0),sunrise:'07:12',sunset:'18:43'};
 const cases=[
-  {name:'coast-day',when:'2026-10-09T14:20:00',count:2},
+  {name:'coast-day',when:'2026-10-09T14:20:00',count:2,wing:true},
   {name:'coast-golden',when:'2026-10-09T18:15:00',count:2},
   {name:'coast-night',when:'2026-10-09T22:00:00',count:2,o:{isDay:0,nowTemp:62,feels:62,nowUv:0}},
-  {name:'coast-one-bird',when:'2026-10-08T14:20:00',count:1},
+  {name:'coast-one-bird',when:'2026-10-08T14:20:00',count:1,wing:true},
+  {name:'coast-morning',when:'2026-10-09T09:20:00',count:0},
+  {name:'coast-roost',when:'2026-10-09T19:15:00',count:2},
   {name:'coast-empty-day',when:'2026-10-07T14:20:00',count:0},
   {name:'coast-windy',when:'2026-10-09T14:20:00',count:0,o:{nowWind:13,nowGust:25}},
   {name:'coast-rain',when:'2026-10-09T14:20:00',count:0,o:{code:63,cloud:95,popCurve:()=>80}},
@@ -40,19 +42,21 @@ try{
     const birds=[...oak.querySelectorAll('.oak-egret')],box=pathBox(propOak().map(p=>p.d));
     const wood=propOak().filter(p=>p.role==='wood').map(p=>new Path2D(p.d));
     const ctx=document.createElement('canvas').getContext('2d');ctx.lineWidth=1.05/1.12;
-    return birds.map(b=>{
+    const heron=document.querySelector('.wildlife.heron'),hr=heron?.getBoundingClientRect();
+    return birds.map((b,index)=>{
      const [x,y]=b.dataset.perch.split(',').map(Number),p=new DOMPoint(0,0).matrixTransform(b.getScreenCTM());
      const anchor=new DOMPoint(x,y).matrixTransform(b.parentNode.getScreenCTM());
      const bb=b.getBoundingClientRect(),local=b.getBBox(),m=b.transform.baseVal.consolidate().matrix;
      const a=new DOMPoint(local.x,local.y).matrixTransform(m),z=new DOMPoint(local.x+local.width,local.y+local.height).matrixTransform(m);
      const toes=[-1,1].map(tx=>new DOMPoint(tx,.3).matrixTransform(m));
-     return {anchorError:Math.hypot(p.x-anchor.x,p.y-anchor.y),width:bb.width,height:bb.height,
+     return {index,anchorError:Math.hypot(p.x-anchor.x,p.y-anchor.y),width:bb.width,height:bb.height,
        animations:b.getAnimations({subtree:true}).length,contained:b.closest('[data-prop="live-oak"]')===oak,
+       heronClear:!hr||bb.right<=hr.left||bb.left>=hr.right||bb.bottom<=hr.top||bb.top>=hr.bottom,
        contact:toes.every(t=>wood.some(w=>ctx.isPointInPath(w,t.x,t.y)||ctx.isPointInStroke(w,t.x,t.y))),
        inside:Math.min(a.x,z.x)>=box[0]&&Math.max(a.x,z.x)<=box[0]+box[2]&&Math.min(a.y,z.y)>=box[1]&&Math.max(a.y,z.y)<=box[1]+box[3]};
     });
    });
-   for(const p of perch){assert.ok(p.anchorError<.1);assert.equal(p.animations,0);assert.ok(p.contained&&p.inside);assert.ok(p.contact,'toes touch the drawn wood');assert.ok(p.height>=7&&p.height<=22);}
+   for(const p of perch){assert.ok(p.anchorError<.1);assert.equal(p.animations,p.index===0&&c.wing?1:0,'only the first daytime bird stretches its wing');assert.ok(p.contained&&p.inside);assert.ok(p.contact,'toes touch the drawn wood');assert.ok(p.height>=7&&p.height<=22);assert.ok(p.heronClear,'perched body clears the heron');}
    if(count){
     // The foot transform and branch anchor remain identical at both ends of the tree's sway.
     for(const t of [0,5000,10000]){
