@@ -15,14 +15,14 @@ const o={baseTemp:70,nowTemp:74,feels:74,rh:55,isDay:1,code:1,cloud:18,nowWind:5
 const cases=[
   {name:'coast-day',when:'2026-10-09T14:20:00',count:2},
   {name:'coast-golden',when:'2026-10-09T18:15:00',count:2},
-  {name:'coast-night',when:'2026-10-09T22:00:00',count:2,o:{isDay:0,nowTemp:62,nowUv:0}},
+  {name:'coast-night',when:'2026-10-09T22:00:00',count:2,o:{isDay:0,nowTemp:62,feels:62,nowUv:0}},
   {name:'coast-one-bird',when:'2026-10-08T14:20:00',count:1},
   {name:'coast-empty-day',when:'2026-10-07T14:20:00',count:0},
   {name:'coast-windy',when:'2026-10-09T14:20:00',count:0,o:{nowWind:13,nowGust:25}},
   {name:'coast-rain',when:'2026-10-09T14:20:00',count:0,o:{code:63,cloud:95,popCurve:()=>80}},
   {name:'coast-storm',when:'2026-10-09T14:20:00',count:0,o:{code:95,cloud:95,popCurve:()=>80}},
   {name:'farm-day',loc:'sp',when:'2026-10-09T14:20:00',count:0},
-  {name:'farm-night',loc:'sp',when:'2026-10-09T22:00:00',count:0,o:{isDay:0,nowTemp:62,nowUv:0}},
+  {name:'farm-night',loc:'sp',when:'2026-10-09T22:00:00',count:0,o:{isDay:0,nowTemp:62,feels:62,nowUv:0}},
 ];
 const server=await serve(PORT,FONT_DIR),browser=await chromium.launch({executablePath:process.env.PORCH_CHROME_PATH});
 try{
