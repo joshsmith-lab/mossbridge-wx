@@ -78,6 +78,8 @@ try{
       assert.equal(state.cacheHours,state.hours,"the same full run survives the existing cache");
       assert.equal(state.overflow,false);
       if(c.picture){
+        // Let the initial theme and scene entrance finish before reviewing the phone.
+        await page.waitForTimeout(2500);
         await page.evaluate(()=>finishReveal());
         await page.screenshot({path:path.join(OUT,c.name+"-header.png")});
         await page.locator("#eveCard").scrollIntoViewIfNeeded();await page.waitForTimeout(200);
