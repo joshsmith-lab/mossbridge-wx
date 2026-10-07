@@ -581,6 +581,39 @@ html[data-theme=dark] .xp-peek .warm{color:var(--heat)}
    how hard it flutters about that angle */
 .boat-flag{transform-box:view-box;transform-origin:0 0}
 @keyframes burgee{from{transform:rotate(calc(var(--fa,0deg) - var(--ff,2deg)))}to{transform:rotate(calc(var(--fa,0deg) + var(--ff,2deg)))}}
+/* The approved fish arc, its takeoff ring and its landing share one clock. */
+.bite-body,.bite-ring,.bite-drops{transform-box:view-box;transform-origin:0 0}
+.bite-body{opacity:0;animation:porchFishRise 18s linear infinite;animation-delay:var(--bite-delay,0s)}
+.bite-ring{fill:none;stroke:var(--bite-water);stroke-width:1.1;opacity:0;animation:porchFishRing 18s ease-out infinite;animation-delay:var(--bite-delay,0s)}
+.bite-drops{fill:var(--bite-water);opacity:0;animation:porchFishDrops 18s ease-out infinite;animation-delay:var(--bite-delay,0s)}
+@keyframes porchFishRise{
+  0%,4%,15%,100%{opacity:0;transform:translate(-5px,8px) rotate(-24deg)}
+  4.5%{opacity:1;transform:translate(-5px,4px) rotate(-27deg)}
+  6%{opacity:1;transform:translate(-3px,-5px) rotate(-24deg)}
+  8%{opacity:1;transform:translate(0,-9px) rotate(-5deg)}
+  10%{opacity:1;transform:translate(3px,-6px) rotate(17deg)}
+  12%{opacity:1;transform:translate(5px,2px) rotate(30deg)}
+  13.5%{opacity:0;transform:translate(6px,10px) rotate(34deg)}
+}
+@keyframes porchFishRing{
+  0%,4%,25%,100%{opacity:0;transform:translate(-5px,0) scale(.45)}
+  4.5%{opacity:.5;transform:translate(-5px,0) scale(.5)}
+  9%{opacity:0;transform:translate(-5px,0) scale(1.3)}
+  11.9%{opacity:0;transform:translate(5px,0) scale(.45)}
+  12.5%{opacity:.7;transform:translate(5px,0) scale(.55)}
+  21%{opacity:0;transform:translate(5px,0) scale(1.65)}
+}
+@keyframes porchFishDrops{
+  0%,11.9%,19%,100%{opacity:0;transform:translate(5px,1px) scale(.2)}
+  12.5%{opacity:.8;transform:translate(5px,-1px) scale(.55)}
+  14%{opacity:.65;transform:translate(5px,-5px) scale(1)}
+  18%{opacity:0;transform:translate(5px,2px) scale(.85)}
+}
+.fish-bite{pointer-events:none}
+/* Chart fish start paused until their chart is visible; fishMotion resumes the same
+   animation objects on their original clock, with no work between their quiet gaps. */
+#moonSvg .bite-body,#moonSvg .bite-ring,#moonSvg .bite-drops{animation-play-state:paused}
+
 /* the charts' entrance (see REVEAL): hidden until the pen gets there, and what grows,
    grows from where it stands */
 .rv-pre .tline,.rv-pre .wline,.rv-pre .rv-line2,.rv-pre .rv-fill,.rv-pre [data-rk]{opacity:0}
@@ -1078,7 +1111,8 @@ function goldenWindow(around){
    astronomy that places the moon in the scene. Presented as the almanac's word, never
    as a forecast. */
 function solunarWindows(now){
-  const t0=now.getTime()-3*3.6e6,STEP=12e4,N=Math.round(33*3.6e6/STEP);
+  /* A fixed two-minute grid keeps the same window fixed when a boundary repaint runs. */
+  const STEP=12e4,t0=Math.floor(now.getTime()/STEP)*STEP-3*3.6e6,N=Math.round(33*3.6e6/STEP);
   const alt=Array.from({length:N},(_,i)=>moonPos(new Date(t0+i*STEP)).alt);
   const wins=[];
   for(let i=1;i<N-1;i++){
@@ -2769,8 +2803,69 @@ const rigBat=(beat=()=>"")=>{const open=side=>`<g class="bat-wing bat-w${side<0?
       pTaper([[-.55,-3.6,1.5],[-1.05,-4.6,.9],[-1.55,-5.6,.1]],"body"),
       pTaper([[.55,-3.6,1.5],[1.05,-4.6,.9],[1.55,-5.6,.1]],"body")]}];
 };
+/* The approved almanac fish: an open fork, cream belly and warm fins. */
+const rigFish=(phase=()=>"")=>[
+      /* The tail's deep open fork stays legible after shrinking. Its root sits
+         under the body, so a small turn cannot open a gap at the joint. */
+      { open: `<g class="fish-tail"${phase(1.4)}>`, pivot: [-8, 0], layers: [
+        { parts: [
+          pBlob([
+            [-7.7, -1.6], [-10.5, -2.5], [-14.7, -5], [-14.4, -3.4],
+            [-11.8, 0], [-14.5, 3.5], [-14.8, 5], [-10.4, 2.5],
+            [-7.7, 1.6],
+          ], "tail"),
+        ] },
+      ] },
+      /* Two small fins break the silhouette without spines or fine ray lines. */
+      { parts: [
+        pBlob([
+          [-4.4, -3.4], [-2.4, -5.3], [-0.3, -6.8], [1.6, -5.9],
+          [4.4, -3.9], [1, -3.3],
+        ], "fin"),
+        pBlob([
+          [-2.6, 3.2], [-0.8, 6.2], [1.8, 6.1], [4.1, 3.2],
+        ], "fin"),
+      ] },
+      { parts: [
+        /* Narrow at the tail, full through the shoulder, then a blunt little
+           muzzle: recognizably a pond fish rather than a leaf or a shark. */
+        pBlob([
+          [-8.7, -1.5], [-5.6, -3.2], [-0.8, -4.4], [5.6, -4.2],
+          [10.1, -2.7], [12.9, -0.9], [14.7, 0.1], [13.2, 1.9],
+          [9.4, 3.8], [3.1, 4.7], [-3.1, 3.6], [-6.5, 1.9],
+          [-8.7, 1.4],
+        ], "body"),
+        /* One cream underside; no scales or lateral stripe to muddy the icon. */
+        pBlob([
+          [-7.6, 0.6], [-3.5, 1.2], [1.9, 1.4], [7.8, 0.9],
+          [13.7, 0.6], [12.6, 2.1], [8.8, 3.7], [3.2, 4.3],
+          [-2.8, 3.2], [-6.4, 1.8],
+        ], "mark"),
+        pTaper([[7.6, -1.3, 0.18], [6.9, 0.2, 0.55], [7, 1.8, 0.2]], "detail"),
+        pDot(10.5, -1.1, 1.15, "eyeRing"),
+        pDot(10.7, -1.1, 0.72, "eye"),
+      ] },
+      /* One near fin reads as a warm brush-shaped stroke, not an extra limb. */
+      { parts: [
+        pBlob([[5.6, 1.8], [3.8, 2.1], [1.5, 3.9], [4.2, 3.8], [6.1, 2.4]], "fin"),
+      ] },
+  ];
 /* palettes: day colours per role. The scene sets ink, shade and lit from its own light */
 const INK={
+  fish:{
+  body: "#73824A",
+  mark: "#F0E5BF",
+  fin: "#C48A47",
+  tail: "#A88A4A",
+  detail: "#485137",
+  eyeRing: "#EFE2AD",
+  eye: "#1B1720",
+  ink: "#2A1B33",
+  shade: "#3A2350",
+  lit: "#FFE2A8",
+  shadeOp: 0.32,
+  litOp: 0.5,
+},
   deer:{body:"#B87A4A",far:"#8A5636",tail:"#FBF3E4",detail:"#8A5636",mark:"#FBF3E4",antler:"#EAD6AC",antlerFar:"#B9A077",eye:"#1B1420",eyeRing:"#FBF3E4",nose:"#241A26",hoof:"#2A1B33",ink:"#2A1B33",shade:"#3A2350",lit:"#FFE2A8",litOp:0.6},
   heron:{body:"#8C92B5",wing:"#6B6E95",neck:"#A9A9C4",bill:"#E8B04A",face:"#FBF3E4",crest:"#241F33",plume:"#E6E1EA",leg:"#8A7358",legFar:"#6A5846",eye:"#F4C64E",ink:"#2A1B33",shade:"#3A2350",lit:"#FFD99A",litOp:0.6},
   raccoon:{body:"#8E929C",far:"#646A76",band:"#1C1E28",mark:"#F1F2F5",detail:"#6E7482",eye:"#FFE38A",nose:"#15161E",ink:"#15131F",shade:"#1B2140",lit:"#DDE8FF",litOp:0.5},
@@ -2833,6 +2928,94 @@ const INK={
 };
 
 /* ── the scene: arc, sun / moon, marsh horizon ──────── */
+/* The same fish is a mark on the moon line and a visitor to the farm pond. */
+function fishBite(x,y,s,pal,{delay=0,pond=false,tilt=0,offset=0}={}){
+  const id=`fishClip${++inkUid}`;
+  const fish=inkRig(rigFish(),pal,{s,line:.8,heavy:.35,shade:1.3,lit:.65,light:[-.5,-1]});
+  const water=pal.water||pal.ink;
+  return `<g class="fish-bite" data-fish-offset="${offset}" data-fish-place="${pond?'pond':'chart'}" data-anchor="${x} ${y}" transform="translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${tilt.toFixed(2)})" style="--bite-delay:-${delay.toFixed(2)}s;--bite-water:${water}" aria-hidden="true">
+    <defs><clipPath id="${id}" clipPathUnits="userSpaceOnUse"><rect x="-35" y="-40" width="70" height="41"/></clipPath></defs>
+    <g clip-path="url(#${id})"><g class="bite-body"><g transform="scale(${s})">${fish}</g></g></g>
+    <ellipse class="bite-ring" rx="9" ry="1.8"/>
+    <g class="bite-drops"><path d="M -4 0 Q -7 -3 -7 -6 Q -3 -5 -4 0 M 0 -1 Q -1 -6 1 -9 Q 3 -5 0 -1 M 4 0 Q 5 -5 8 -5 Q 8 -2 4 0"/></g>
+  </g>`;
+}
+function chartFish(wins,X,Y,now,nx,ny,css,rvAt,{t0,t1,W,H}){
+  const night=document.documentElement.dataset.theme==='dark';
+  const pal={...INK.fish,water:night?'#A5C6D5':css.water};
+  if(night)Object.assign(pal,{body:'#A1B391',mark:'#E2DDC0',fin:'#BC9966',ink:'#172633',lit:'#FFF3D0'});
+  return wins.map(w=>{
+    const a=Math.max(t0,+w.start),b=Math.min(t1,+w.end);if(b<=a)return '';
+    const t=(a+b)/2,yAt=t=>Y(moonPos(new Date(t)).alt*180/Math.PI);
+    /* Keep the approved centre, or wait further into the same band near the live moon.
+       The full arc keeps off its disc and the chart edges; the band remains if none fits. */
+    const far=t+Math.min(22*6e4,(b-t)*.7);
+    const candidates=Math.abs(X(t)-nx)<23?[far,t]:[t,far];
+    let at=null;
+    for(const q of candidates){const x=X(q),y=yAt(q);
+      if(x-22<0||x+22>W||y-22<0||y+10>H)continue;
+      if(x-22<nx+10&&x+22>nx-10&&y-22<ny+10&&y+10>ny-10)continue;
+      at=q;break;
+    }
+    if(at==null)return '';
+    const fx=X(at),fy=yAt(at),slope=(yAt(at+6e4)-yAt(at-6e4))/(X(at+6e4)-X(at-6e4));
+    /* Moon events own four staggered beats: overhead, setting, underfoot, rising. Dropping
+       an ended window cannot retime its neighbours, and at most two brief arcs overlap. */
+    const mid=(+w.start+ +w.end)/2,alt=moonPos(new Date(mid)).alt;
+    const offset=(w.major?(alt>=0?0:2):(moonPos(new Date(mid+6e4)).alt>alt?3:1))*5;
+    return `<g${rvAt(fx,"fade")}>${fishBite(fx,fy,.70,pal,{tilt:Math.atan(slope)*180/Math.PI,offset,delay:(Date.now()/1000+offset)%18})}</g>`;
+  }).join('');
+}
+let FISH_SEEN=false,SCENE_PARKED=[];
+function sceneResume(){
+  const now=Date.now();
+  for(const {animation,at,time} of SCENE_PARKED){
+    if(!animation.effect?.target?.isConnected||animation.playState!=="paused")continue;
+    const elapsed=time+now-at,end=animation.effect.getComputedTiming().endTime;
+    if(Number.isFinite(end)&&elapsed>=end){animation.finish();continue}
+    animation.currentTime=elapsed;animation.play();
+  }
+  SCENE_PARKED=[];
+}
+function sceneMotion(){
+  const sky=document.getElementById("sky"),box=sky.getBoundingClientRect();
+  const park=!PRM&&!document.hidden&&(box.bottom<=0||box.top>=innerHeight);
+  if(!park){sceneResume();return false}
+  /* Nothing offscreen needs to run. Keep the actual objects and their clocks: scrolling back
+     restores the phase they would have reached, rather than replaying the animal's wait. */
+  SCENE_PARKED=SCENE_PARKED.filter(s=>s.animation.effect?.target?.isConnected);
+  const moving=sky.getAnimations({subtree:true}).filter(a=>a.animationName&&a.playState==="running");
+  const at=Date.now();
+  for(const animation of moving){SCENE_PARKED.push({animation,at,time:animation.currentTime||0});animation.pause()}
+  return true;
+}
+function fishMotion(){
+  const parked=sceneMotion(),svg=document.getElementById("moonSvg");
+  const on=!PRM&&!document.hidden&&FISH_SEEN&&REVEAL.moon.state!=="armed"&&!XP.moon?.shown;
+  /* A very tall viewport can show both the header and this chart. Keep the nearest windows'
+     fish within the same running-animation ceiling; every almanac band and time remains. */
+  const ambient=on?document.getAnimations().filter(a=>a.animationName&&a.playState==="running"
+    &&a.effect.getTiming().iterations===Infinity&&!a.effect.target?.closest('#moonSvg .fish-bite')
+    &&!(parked&&a.effect.target?.closest('#sky'))).length:0;
+  const budget=Math.max(0,Math.floor((120-ambient)/3));
+  const frame=[...svg.querySelectorAll(".fish-bite")].map(fish=>({
+    phase:(Date.now()/1000+(+fish.dataset.fishOffset||0))%18,
+    animations:fish.getAnimations({subtree:true}).filter(a=>String(a.animationName).startsWith("porchFish"))}));
+  frame.forEach(({phase,animations},i)=>{
+    for(const a of animations){
+      const timing=a.effect.getTiming();
+      if(on&&i<budget){
+        if(a.playState!=="running"){a.currentTime=timing.delay+timing.duration+phase*1000;a.play()}
+      }else{
+        if(a.playState!=="paused")a.pause();
+        const rest=timing.delay+timing.duration;
+        if(a.currentTime==null||Math.abs(a.currentTime-rest)>.1)a.currentTime=rest;
+      }
+    }
+  });
+  svg.classList.toggle("fish-playing",on);
+}
+
 const appW=()=>clamp(document.querySelector(".app").clientWidth||760,320,760);
 const chartH=w=>Math.round(165+(760-w)*.09);
 /* which way the water is going right now, so the light on it can lean the same way:
@@ -2847,7 +3030,7 @@ function tideTrend(preds){
   }
   return 0;
 }
-function renderScene(sunrise,sunset,now,weather,dark,tideDir){
+function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[]){
   const cloud=weather.cloud_cover||0,wind=weather.wind_speed_10m||0,code=weather.weather_code;
   const wet=isWet(code),snowing=isSnow(code);
   const storm=[95,96,99].includes(code),fog=[45,48].includes(code),quietWeather=!wet&&!storm;
@@ -3879,10 +4062,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir){
       }
     }
     if(!PRM&&!wet&&!storm)pondFx+=ringAt(pcx-prx*.3,base+12,5,31,9)+ringAt(pcx+prx*.35,base+16,4,25,17);
-    /* when the almanac says the fish are moving, the pond dimples a little more often.
-       The moon chart's fishing times and this water agree, because they read the same moon. */
-    if(!PRM&&!wet&&!storm&&solunarWindows(now).some(w=>now>=w.start&&now<=w.end))
-      pondFx+=ringAt(pcx-prx*.08,base+13,4.5,13,4)+ringAt(pcx+prx*.16,base+10,3.5,17,11);
+    /* The pond reads the same allowed windows as the moon chart, and only an underway one.
+       Takeoff and landing answer the fish on its own clock, behind the near cattails. */
+    if(!PRM&&fishWindowActive(fishWins,now,weather))
+      pondFx+=fishBite(pcx-prx*.08,base+13,.88,{...inkPal(INK.fish),water:dark?"#B7D6E1":"#426E80"},{pond:true,delay:(Date.now()/1000)%18});
     /* and rain, which every one of those rules used to switch the water off for. The pond
        going glass-still in a downpour is backwards: rain dimples small water harder than a
        rising fish or a breeze does, and it is the one surface here that shows it. The
@@ -4764,11 +4947,11 @@ const moonName=m=>{const f=m.fraction,wax=m.phase<.5;
   return f<.03?"new moon":f>.97?"full moon":Math.abs(f-.5)<.07?(wax?"first quarter":"last quarter")
     :f<.5?(wax?"waxing crescent":"waning crescent"):(wax?"waxing gibbous":"waning gibbous")};
 const MOON_INK="#7A73AE";
-function renderMoon(css,wins){
+function renderMoon(css,wins,now=wallNow()){
   const svg=document.getElementById("moonSvg");
-  const now=wallNow(),t0=now.getTime()-2.5*3.6e6,t1=now.getTime()+26*3.6e6;
+  const t0=now.getTime()-2.5*3.6e6,t1=now.getTime()+26*3.6e6;
   const W=appW()-40,H=chartH(W),padX=8,fs=(W<360?1.08:W<520?1.16:1)*1.22;
-  const topY=26,botY=H-8,x0=padX+Math.round(26*fs);
+  const topY=50,botY=H-8,x0=padX+Math.round(26*fs);
   const X=t=>x0+(t-t0)/(t1-t0)*(W-padX-x0);
   const as=[];for(let t=t0;t<=t1;t+=9e5)as.push(moonPos(new Date(t)).alt*180/Math.PI);
   const hi=Math.max(12,Math.max(...as)+8),lo=Math.min(-12,Math.min(...as)-6);
@@ -4818,6 +5001,7 @@ function renderMoon(css,wins){
     <g class="xp-cursor"></g>
     <line x1="${nx.toFixed(1)}" y1="${(topY-6).toFixed(1)}" x2="${nx.toFixed(1)}" y2="${(ny-9).toFixed(1)}" stroke="${css.ink}" stroke-width="1" stroke-dasharray="2 4" opacity=".22"${rvAt(nx,"fade")}/>
     <g${rvAt(nx,"pin")}>${disc}</g>
+    ${!PRM?chartFish(wins,X,Y,now,nx,ny,css,rvAt,{t0,t1,W,H}):""}
     ${labels}
     ${rv?`<g class="rv-tip" opacity="0" fill="${MOON_INK}"><circle r="12" opacity=".14"/><circle r="6.5" opacity=".28"/><circle r="3"/><circle class="rv-core" r="1.4" fill="#FFFFFF" opacity=".95"/></g>`:""}`;
   document.getElementById("moonNote").textContent=moonName(m);
@@ -5161,18 +5345,35 @@ function waterCard(L,h,c,dy,marine,water,warning,storm,now,told){
     ...tempItem];
   return{say,line:line.length?line:null,level};
 }
-/* The almanac's bite windows that have not ended, for the moon chart. Each is dropped on its own
-   hours: thunder, freezing rain or a 30 mph gust in it, a gust the run does not carry (a gap is
-   never calm), or running past the end of the run, where nothing is known. The old card took
-   them all away under any no go, and a gale at noon hid an evening with nothing wrong in it. */
+/* The almanac's windows that have not ended, shared by the moon chart and pond. Every remaining
+   hour must be present with its code and gust: a gap is never calm. Thunder, freezing rain or a
+   30 mph gust takes its window away, even in a duplicate or overlapping row. The past portion
+   of an underway window needs no forecast.
+   A gale at noon does not hide an evening whose own hours are clear. */
 function fishWindows(h,now){
   const n=h.time?.length||0;if(!n)return[];
-  const end=new Date(h.time[n-1]).getTime()+36e5;
-  const clear=w=>w.end.getTime()<=end&&h.time.every((s,i)=>{const a=new Date(s).getTime();
-    return a>=w.end.getTime()||a+36e5<=w.start.getTime()
-      ||![95,96,99].includes(+h.code?.[i])&&!isIce(+h.code?.[i])&&known(h.gust?.[i])&&+h.gust[i]<30});
+  const hours=h.time.map((s,i)=>({start:new Date(s).getTime(),i})).filter(x=>Number.isFinite(x.start)).sort((a,b)=>a.start-b.start);
+  const clear=w=>{
+    const start=Math.max(+now,+w.start),end=+w.end;
+    const overlapping=hours.filter(x=>x.start<end&&x.start+36e5>start);
+    if(overlapping.some(({i})=>!known(h.code?.[i])||[95,96,99].includes(+h.code[i])||isIce(+h.code[i])
+      ||!known(h.gust?.[i])||+h.gust[i]>=30))return false;
+    let cursor=start;
+    for(const {start:hour} of overlapping){
+      if(hour>cursor)return false;
+      cursor=Math.max(cursor,hour+36e5);if(cursor>=end)return true;
+    }
+    return false;
+  };
   return solunarWindows(now).filter(w=>w.end>now&&clear(w));
 }
+/* The pond is a current illustration: unknown, wet or cold weather never puts a fish out. */
+function fishWindowActive(wins,now,weather){
+  return known(weather.temperature_2m)&&+weather.temperature_2m>=45&&known(weather.weather_code)
+    &&!isWet(+weather.weather_code)&&![95,96,99].includes(+weather.weather_code)
+    &&wins.some(w=>now>=w.start&&now<w.end);
+}
+
 function fishLine(h,now){
   const wins=fishWindows(h,now).slice(0,2);
   return wins.length?wins.map(w=>now>=w.start?"now–"+clock(w.end):spanTxt(w.start,w.end)).join(" · "):null;
@@ -5967,6 +6168,7 @@ function revealFinish(k){
   }
   for(const a of R.anims)a.cancel();
   R.anims=[];
+  if(k==="moon")fishMotion();
 }
 const rvTag=(on,x,k,d)=>on?` data-rx="${x.toFixed(1)}" data-rk="${k}"${d?` data-rd="${d}"`:""}`:"";
 function finishReveal(){for(const k in REVEAL)revealFinish(k)}
@@ -5978,14 +6180,15 @@ function revealArm(){
 }
 function revealReady(){REVEAL_READY=true;clearTimeout(REVEAL_WAIT);REVEAL_WAIT=0;for(const k in REVEAL)revealTry(k)}
 if(!PRM){
-  const seen=(k,on)=>{REVEAL[k].seen=on;if(on)revealTry(k)};
+  const seen=(k,on)=>{REVEAL[k].seen=on;if(on)revealTry(k);if(k==="moon"){FISH_SEEN=on;fishMotion()}};
   /* each drawing and the key it draws under, in page order */
   const RV_OF={hourlySvg:"hourly",weekSvg:"week",tideSvg:"tide",moonSvg:"moon",uvSvg:"sun",yearSvg:"year"};
   if("IntersectionObserver" in window){
     const io=new IntersectionObserver(es=>{for(const e of es)
       seen(RV_OF[e.target.id],e.isIntersecting&&e.intersectionRatio>=.3)},{threshold:[0,.3,.6,1]});
     for(const id in RV_OF)io.observe(document.getElementById(id));
-  }else{for(const k in REVEAL)REVEAL[k].seen=true}
+    new IntersectionObserver(()=>fishMotion(),{threshold:0}).observe(document.getElementById("sky"));
+  }else{for(const k in REVEAL)REVEAL[k].seen=true;FISH_SEEN=true}
 }
 /* ── reading a chart ───────────────────────────────── */
 /* Josh asked for the slider to do something helpful on every line. So every chart reads the same
@@ -6246,6 +6449,7 @@ function xpShow(X,i){
   const slot=D.svg.querySelector(".xp-cursor");
   if(X.shown&&X.i===i&&slot&&slot.firstChild)return;
   X.i=i;X.shown=true;
+  if(X.k==="moon")fishMotion();
   const r=D.read(i);
   X.peek.innerHTML=r.parts.map(([t,c])=>`<span${c?` class="${c}"`:""}>${esc(t)}</span>`).join("");
   X.peek.hidden=false;
@@ -6273,6 +6477,7 @@ function xpShow(X,i){
 function xpHide(X,delay=0){
   clearTimeout(X.hideT);X.hideAt=delay?performance.now()+delay:0;
   const go=()=>{X.hideAt=0;X.shown=false;X.peek.hidden=true;
+    if(X.k==="moon")fishMotion();
     const slot=X.D&&X.D.svg.querySelector(".xp-cursor");if(slot)slot.innerHTML="";
     /* a finger's reading is not the keys': the next Tab starts where the chart starts */
     if(document.activeElement!==X.key)xpRest(X);
@@ -6314,6 +6519,7 @@ function cacheAgeText(savedAt){
   return`updated ${hours}h ago`;
 }
 function render(d,live,savedAt=0){
+  sceneResume();
   const c=d.current,dy=d.daily,m=d.marine;
   /* The hourly run starts at the top of the current hour, so its first temperature is a
      forecast for 2:00 while the header shows the 2:20 reading, and the chart's NOW dot sat a
@@ -6381,8 +6587,11 @@ function render(d,live,savedAt=0){
 
   document.getElementById("themeColor").setAttribute("content",stops[0]);
 
+  const dayRead=dayStory(c,dy,h,now);
+  const farm=LOC.kind==="farm"?farmCard(LOC,h,c,dy,warning,storm,now,dayRead.told):null;
+  const allowedFishWins=LOC.fish&&farm?.fish?fishWindows(h,now):[];
   renderSkyFx(altDeg,c.cloud_cover,c.wind_direction_10m,wet,storm,c.wind_speed_10m,c.weather_code);
-  const scene=renderScene(sunrise,sunset,now,c,dark,LOC.tide?tideTrend(d.tides):0);
+  const scene=renderScene(sunrise,sunset,now,c,dark,LOC.tide?tideTrend(d.tides):0,allowedFishWins);
   /* the scene settles in the first time the app paints, and never on the refresh, resize
      and foreground re-renders after that */
   if(!SCENE_IN&&!PRM){SCENE_IN=true;document.querySelector(".scene").classList.add("first")}
@@ -6405,7 +6614,6 @@ function render(d,live,savedAt=0){
   document.getElementById("hiNow").textContent=Math.round(dy.temperature_2m_max[0])+"°";
   document.getElementById("loNow").textContent=Math.round(dy.temperature_2m_min[0])+"°";
 
-  const dayRead=dayStory(c,dy,h,now);
   document.getElementById("verdict").innerHTML=dayRead.html;
 
   const CI={wind:'<svg width="12" height="12" viewBox="0 0 16 16"><path d="M2 5.5h7.5a2 2 0 1 0-2-2M2 9h10a2 2 0 1 1-2 2M2 12.5h6" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>',
@@ -6677,11 +6885,10 @@ function render(d,live,savedAt=0){
 
   /* the farm's card, assembled by farmCard and painted here: hidden when it has nothing to say
      and no bite time to give, the way the sun card steps aside */
-  const farm=LOC.kind==="farm"?farmCard(LOC,h,c,dy,warning,storm,now,dayRead.told):null;
   /* the farm's picture is the moon and the almanac's fishing times, in the place the coast has its
      tide; anything that says stay in takes the windows with it */
   document.getElementById("moonSection").hidden=!LOC.fish;
-  if(LOC.fish)renderMoon(css,farm&&farm.fish?fishWindows(h,now):[]);else xpPublish("moon",null);
+  if(LOC.fish)renderMoon(css,allowedFishWins,now);else xpPublish("moon",null);
   /* the sentences sit with the cards: the farm's when there is something to plan around, under the
      family's word for it, and the boat's while the boat is going out */
   const said=farm&&farm.say?{title:"Piddling",...farm.say}:water&&water.say?{title:"The boat",...water.say}:null;
@@ -6733,8 +6940,12 @@ function render(d,live,savedAt=0){
      measured before them stops in mid-air where the sky used to end. */
   paintBolts();
   starsClearOfType();
+  /* A boundary repaint carries the original reading age, including a live reading. */
+  savedAt=savedAt||(LAST?.d===d?LAST.savedAt:Date.now());
   LAST={d,live,savedAt};LASTW=appW();
+  fishSchedule(allowedFishWins);
   paintCobweb();
+  fishMotion();
 }
 /* The line boxes of the type in the header, which the stars and Halloween's cobweb keep off. Text
    nodes, not elements: a Range over an element also returns every child's border box, which is the
@@ -6899,7 +7110,25 @@ function paintCobweb(){
   el.innerHTML=`<svg width="${W-x0}" height="${H}" viewBox="${x0} 0 ${W-x0} ${H}" data-web="${f1(plan.R)}"${sp?` data-spider="${f1(sp.x)} ${f1(sp.y)} ${sp.D} ${sp.d}"`:""}>${out}</svg>`;
   el.hidden=false;
 }
-let LAST=null,LASTW=0,rzT;
+let LAST=null,LASTW=0,rzT,FISH_TIMER=0;
+function fishCancel(){clearTimeout(FISH_TIMER);FISH_TIMER=0}
+function fishSchedule(wins){
+  clearTimeout(FISH_TIMER);FISH_TIMER=0;
+  if(document.hidden||!LOC.fish||!LAST||!wins.length)return;
+  const last=LAST,id=LOC.id,now=wallNow();
+  const next=wins.flatMap(w=>[+w.start,+w.end]).filter(t=>t>+now).sort((a,b)=>a-b)[0];
+  const midnight=new Date(now);midnight.setHours(24,0,0,0);
+  const due=Math.min(next==null?Infinity:+trueTime(new Date(next)),last.savedAt+CACHE_MAX_AGE,+trueTime(midnight));
+  FISH_TIMER=setTimeout(()=>{
+    FISH_TIMER=0;
+    if(document.hidden||LOC.id!==id||LAST!==last)return;
+    syncClock();
+    if(Date.now()-last.savedAt>=CACHE_MAX_AGE||forecastDay(last.d)!==todayET()){
+      paintLoadingState();refresh();return;
+    }
+    render(last.d,last.live,last.savedAt);
+  },Math.max(20,due-Date.now()+20));
+}
 addEventListener("resize",()=>{clearTimeout(rzT);rzT=setTimeout(()=>{
   if(LAST&&Math.abs(appW()-LASTW)>16)render(LAST.d,LAST.live,LAST.savedAt);
 },240)});
@@ -7020,6 +7249,8 @@ function paintLocationShell(){
   document.getElementById("uvDetails").style.display=comfort?"none":"";
 }
 function paintLoadingState(){
+  sceneResume();
+  fishCancel();
   paintLocationShell();
   const root=document.documentElement;
   root.removeAttribute("data-theme");
@@ -7058,6 +7289,8 @@ function paintLoadingState(){
 }
 function setLoc(id){
   if(!LOC_ORDER.includes(id)||LOC.id===id)return;
+  sceneResume();
+  fishCancel();
   LOC=LOCS[id];LAT=LOC.lat;LON=LOC.lon;
   try{localStorage.setItem("mbwx-loc",id)}catch(e){}
   revealArm();
@@ -7090,7 +7323,17 @@ keyboardClick(document.getElementById("refreshBtn"),refresh);
 document.getElementById("alertStrip").addEventListener("click",toggleAlert);
 document.getElementById("alertStrip").addEventListener("keydown",e=>{
   if(e.key==="Enter"||e.key===" "){e.preventDefault();toggleAlert()}});
-document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh()});
+document.addEventListener("visibilitychange",()=>{
+  fishCancel();fishMotion();
+  if(!document.hidden){
+    syncClock();
+    if(LOC.fish&&LAST){
+      if(Date.now()-LAST.savedAt>=CACHE_MAX_AGE||forecastDay(LAST.d)!==todayET())paintLoadingState();
+      else render(LAST.d,LAST.live,LAST.savedAt);
+    }
+    refresh();
+  }
+});
 addEventListener("online",()=>{if(!document.hidden)refresh()});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>

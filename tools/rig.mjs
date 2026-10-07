@@ -50,6 +50,11 @@ const cast = new Function("mulberry", `${src}; return {inkRig, inkAt, INK, rigs:
   [...src.matchAll(/^const (prop\w+)=/gm)].map((m) => m[1]).join(",")}}};`)(mulberry);
 /* a prop is a list of parts rather than a rig, so it is wrapped as a rig of one layer */
 const PROPS = {
+  /* The farm's approved fish, close up and at its moon-chart size. */
+  fish: ["fish", (c) => c.rigFish(), {}, [38, 24, 19, 12], { phone: 0.7,
+    o: { line: 0.8, heavy: 0.35, shade: 1.3, lit: 0.65, light: [-0.5, -1] },
+    skies: ["#D3E3DF", "#0D222B"],
+    skyPal: [{}, { body: "#A1B391", mark: "#E2DDC0", fin: "#BC9966", ink: "#172633", lit: "#FFF3D0" }] }],
   pumpkin: ["pumpkin", (c) => c.propPumpkin(10, 7, { seed: 3 })],
   lantern: ["pumpkin", (c) => c.propPumpkin(10, 7, { carved: true, seed: 3 })],
   "lantern-lit": ["pumpkin", (c) => c.propPumpkin(10, 7, { carved: true, seed: 3 }), { carve: "candleLit", eyeRing: "rindLit" }],

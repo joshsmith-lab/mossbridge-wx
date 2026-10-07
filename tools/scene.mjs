@@ -767,6 +767,15 @@ for (const cs of cases) {
     if (!!witch !== !!cs.witch) problems.push(`${cs.name}: the witch is ${witch ? "out" : "not out"}, expected ${cs.witch ? "out" : "not out"}`);
     if (witch) reportWitch(cs, PHONE_WIDTH, witch);
 
+    // The tide picture scrolls the header away. Bring the sky back before measuring
+    // its motion; offscreen scenery deliberately rests until it is visible again.
+    await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
+    await page.waitForFunction(() => {
+      const sky = document.getElementById("sky").getBoundingClientRect();
+      return sky.bottom > 0 && sky.top < innerHeight
+        && (typeof SCENE_PARKED === "undefined" || SCENE_PARKED.length === 0);
+    });
+
     // The count that matters for battery is what is still running. One-shot entrances
     // (rise, wipe, grow) finish in under a second but linger in getAnimations() because
     // they use fill:both, so counting them makes an idle page look busy.

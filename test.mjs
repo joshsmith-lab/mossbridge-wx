@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v87/);
+  assert.match(worker, /mbwx-shell-v88/);
   // the clouds end in their own scallops: Josh loves the clouds and not the curly tail
   const cloud = html.match(/const propCloud=seed=>\[[\s\S]*?\];/);
   assert.ok(cloud, "propCloud should be extractable");
@@ -386,7 +386,7 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /const vaneHunt=clamp\(\(gust-wind\)\*\.11,\.15,1\.25\)/);
   assert.match(html, /--vh-neg:-\$\{vaneHunt\.toFixed\(1\)\}deg/);
   assert.match(html, /function tideTrend\(preds\)/);
-  assert.match(html, /renderScene\(sunrise,sunset,now,c,dark,LOC\.tide\?tideTrend\(d\.tides\):0\)/);
+  assert.match(html, /renderScene\(sunrise,sunset,now,c,dark,LOC\.tide\?tideTrend\(d\.tides\):0,allowedFishWins\)/);
   assert.match(html, /specular\(glintX,GY\+12\.5,tideDir<0\?2\.4:tideDir>0\?-1\.6:0\)/);
 
   // vegetation: gusts raise the throw, and the wave crosses the bank downwind
@@ -624,7 +624,7 @@ test("and the rain is visible when it rains there", async () => {
   assert.match(html, /const tw=s\.y>52&&Number\(o\)>=\.18/);
 });
 
-test("the almanac fishes the farm pond, the coast keeps sunscreen, and Denver dresses for comfort", async () => {
+test("the almanac fishes the farm pond, the coast keeps its neutral sun line, and Denver dresses for comfort", async () => {
   const html = await readFile(new URL("index.html", root), "utf8");
 
   // solunar is folklore built on honest astronomy, and the code says so out loud
@@ -636,7 +636,7 @@ test("the almanac fishes the farm pond, the coast keeps sunscreen, and Denver dr
   // the run does not carry). fishLine and farmCard are run under "the water and the farm" below
   assert.match(html, /function fishLine\(h,now\)/);
   assert.match(html, /function fishWindows\(h,now\)/);
-  assert.match(html, /if\(LOC\.fish\)renderMoon\(css,farm&&farm\.fish\?fishWindows\(h,now\):\[\]\);/);
+  assert.match(html, /if\(LOC\.fish\)renderMoon\(css,allowedFishWins,now\);/);
   // the ridge sun line states when, never what to wear; the kids' language stays coastal
   assert.match(html, /function ridgeSunLine\(c,dy,h,now\)/);
   assert.match(html, /comfort\?comfortAdvice\(c,h\):LOC\.scene==="ridge"\?ridgeSunLine\(c,dy,h,now\):sunProtectionAdvice\(c,dy,h,now\)/);
@@ -647,12 +647,136 @@ test("the almanac fishes the farm pond, the coast keeps sunscreen, and Denver dr
   assert.match(html, /Warm coat, gloves, and waterproof shoes/);
   assert.match(html, /T-shirt weather\. Bring a light layer for tonight/);
   assert.match(html, /id="uvDetails"/);
-  // the pond dimples during a bite window, off the same moon the card reads
-  assert.match(html, /solunarWindows\(now\)\.some\(w=>now>=w\.start&&now<=w\.end\)/);
+  // the pond uses the same allowed list, with an exclusive end and weather-aware fish motion
+  assert.match(html, /if\(!PRM&&fishWindowActive\(fishWins,now,weather\)\)/);
+  assert.match(html, /const allowedFishWins=LOC\.fish&&farm\?\.fish\?fishWindows\(h,now\):\[\];/);
   // and the title says whose theory the times are (the footer used to), on screen as the almanac's,
   // and in full to a screen reader and on hover; the chart speaks its windows
   assert.match(html, /<b title="The almanac's solunar tables: its theory, worked out from the moon's real positions\.">Almanac fishing times<span class="sr-only">\. The almanac's solunar tables: its theory, worked out from the moon's real positions\.<\/span><\/b><span id="moonNote"><\/span>/);
   assert.match(html, /The almanac's fishing times: \$\{said\.length\?said\.join\(", "\):"none clear"\}/);
+});
+
+test("the approved fish shares the almanac windows and keeps its water on the same clock", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const agents = await readFile(new URL("AGENTS.md", root), "utf8");
+  const source = html.slice(html.indexOf("function fishWindowActive("), html.indexOf("function fishLine("));
+  const ctx = vm.createContext({ known: v => v != null && v !== "" && Number.isFinite(+v),
+    isWet: v => [51,53,55,56,57,61,63,65,66,67,71,73,75,77,80,81,82,85,86].includes(v) });
+  vm.runInContext(source, ctx);
+  const start = new Date("2026-10-07T10:00:00Z"), end = new Date("2026-10-07T12:00:00Z");
+  const wins = [{start,end}], weather = {temperature_2m:65,weather_code:1};
+  const active = (time, w = weather, windows = wins) => ctx.fishWindowActive(windows, new Date(time), w);
+  assert.equal(active(+start-1), false); assert.equal(active(+start), true);
+  assert.equal(active(+end-1), true); assert.equal(active(+end), false);
+  assert.equal(active(+start, weather, []), false, "a weather-filtered or warning-suppressed window cannot put fish in the pond");
+  for (const temp of [null, undefined, "", NaN, 44.9])
+    assert.equal(active(+start, {...weather,temperature_2m:temp}), false);
+  assert.equal(active(+start, {...weather,temperature_2m:45}), true);
+  for (const code of [null,undefined,"",NaN,51,56,61,66,71,80,85,95,96,99])
+    assert.equal(active(+start, {...weather,weather_code:code}), false, `weather ${code} keeps the pond quiet`);
+  assert.match(html, /const rigFish=/);
+  assert.match(html, /inkRig\(rigFish\(\),pal/);
+  assert.match(html, /inkPal\(INK\.fish\)/);
+  for (const name of ["Rise","Ring","Drops"])
+    assert.match(html, new RegExp(`animation:porchFish${name} 18s`), "one cycle for fish and water");
+  assert.match(html, /now>=w\.start&&now<w\.end/);
+  assert.match(html, /#moonSvg \.bite-body,#moonSvg \.bite-ring,#moonSvg \.bite-drops\{animation-play-state:paused\}/);
+  assert.match(agents, /Josh approved fish on both this moon line and the Shady Spring pond/);
+  assert.match(agents, /never a report of actual fish activity/);
+  assert.match(agents, /The animation ceiling stays 120/);
+});
+
+test("offscreen scenery resumes elapsed gestures without replaying entrances or old animals", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const source = html.slice(html.indexOf("let FISH_SEEN=false,SCENE_PARKED=[];"), html.indexOf("function fishMotion("));
+  let now=1000, box={top:-500,bottom:0}, moving=[];
+  const animation=(time,end=Infinity)=>{
+    const target={isConnected:true};
+    return {animationName:"resident",currentTime:time,playState:"running",plays:0,finishes:0,
+      effect:{target,getComputedTiming:()=>({endTime:end})},
+      pause(){this.playState="paused"},play(){this.plays++;this.playState="running"},
+      finish(){this.finishes++;this.currentTime=end;this.playState="finished"}};
+  };
+  const sky={getBoundingClientRect:()=>box,getAnimations:()=>moving};
+  const ctx=vm.createContext({Date:{now:()=>now},PRM:false,innerHeight:852,
+    document:{hidden:false,getElementById:()=>sky}});
+  vm.runInContext(source,ctx);
+  const deer=animation(200), entrance=animation(10,100), removed=animation(50);
+  moving=[deer,entrance,removed];
+  assert.equal(ctx.sceneMotion(),true);
+  assert.equal(deer.playState,"paused");
+  assert.equal(entrance.playState,"paused");
+  removed.effect.target.isConnected=false;
+  const replacement=animation(400);
+  moving=[deer,entrance,replacement];now+=100;
+  ctx.sceneMotion(); // replacement children must be found while the header stays offscreen
+  assert.equal(replacement.playState,"paused");
+  now+=900;box={top:-200,bottom:1}; // even a sliver back in view resumes the scene
+  assert.equal(ctx.sceneMotion(),false);
+  assert.equal(deer.currentTime,1200);
+  assert.equal(deer.plays,1,"a repeated offscreen pass cannot duplicate a clock");
+  assert.equal(replacement.currentTime,1300);
+  assert.equal(entrance.finishes,1);
+  assert.equal(entrance.plays,0,"an elapsed entrance must not rewind to its beginning");
+  assert.equal(removed.plays,0,"disconnected animals never return");
+  ctx.sceneResume();assert.equal(deer.plays,1,"released animation references are cleared");
+  box={top:852,bottom:1200};assert.equal(ctx.sceneMotion(),true);
+  now+=50;ctx.document.hidden=true;assert.equal(ctx.sceneMotion(),false);
+  assert.equal(deer.currentTime,1250,"visibility handoff preserves the same elapsed clock");
+  assert.ok(html.includes('new IntersectionObserver(()=>fishMotion(),{threshold:0}).observe(document.getElementById("sky"))'));
+  assert.ok(html.includes('Math.floor((120-ambient)/3)'),"chart fish yield within the existing animation ceiling");
+});
+
+test("fishing boundaries repaint once without renewing the forecast or crossing locations", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const source = html.slice(html.indexOf("let LAST=null,LASTW=0,rzT,FISH_TIMER=0;"), html.indexOf('addEventListener("resize"'));
+  assert.ok(source.includes("function fishSchedule("), "the boundary scheduler is extractable");
+  let now = Date.parse("2026-10-07T14:00:00Z"), seq = 0, shift = 0;
+  const timers = new Map(), paints = [], events = [];
+  class Clock extends Date { constructor(...a){super(...(a.length?a:[now]))} static now(){return now} }
+  const ctx = vm.createContext({ Date:Clock, document:{hidden:false}, LOC:{id:"sp",fish:true},
+    CACHE_MAX_AGE:6*3.6e6, wallNow:()=>new Clock(now-shift), trueTime:d=>new Clock(+d+shift),
+    syncClock:()=>{}, forecastDay:d=>d.day, todayET:()=>"2026-10-07",
+    setTimeout:(fn,ms)=>{const id=++seq;timers.set(id,{fn,ms});return id}, clearTimeout:id=>timers.delete(id),
+    render:(...a)=>paints.push(a), paintLoadingState:()=>events.push("clear"), refresh:()=>events.push("refresh") });
+  vm.runInContext(source,ctx);
+  const reset = (age=0,day="2026-10-07") => {
+    ctx.reading={d:{day},live:age===0,savedAt:now-age};
+    vm.runInContext("LAST=reading",ctx);
+    return ctx.reading;
+  };
+  const wins = () => [{start:new Clock(now-shift+60000),end:new Clock(now-shift+120000)}];
+  const armed = () => {assert.equal(timers.size,1);return [...timers.values()][0]};
+  const first=reset();ctx.fishSchedule(wins());assert.equal(armed().ms,60020);
+  ctx.fishSchedule(wins());assert.equal(timers.size,1,"repainting replaces the timer");
+  let callback=armed().fn;timers.clear();now+=60020;callback();
+  assert.equal(paints.length,1);assert.equal(paints[0][2],first.savedAt,"the original reading age survives a boundary repaint");
+  reset();ctx.fishSchedule(wins());callback=armed().fn;timers.clear();ctx.LOC={id:"mb",fish:false};callback();
+  assert.equal(paints.length,1,"an old farm timer cannot repaint the coast");
+  ctx.LOC={id:"sp",fish:true};reset();ctx.fishSchedule(wins());callback=armed().fn;timers.clear();reset();callback();
+  assert.equal(paints.length,1,"a newer reading wins over an old callback");
+  ctx.document.hidden=true;ctx.fishSchedule(wins());assert.equal(timers.size,0,"hiding cancels old work");
+  ctx.document.hidden=false;reset();ctx.fishSchedule(wins());ctx.fishCancel();assert.equal(timers.size,0);
+  reset(6*3.6e6-1000);ctx.fishSchedule(wins());assert.equal(armed().ms,1020,"cache expiry comes before the next fishing boundary");
+  callback=armed().fn;timers.clear();now+=1020;callback();assert.deepEqual(events,["clear","refresh"]);
+  reset(0,"2026-10-06");ctx.fishSchedule(wins());callback=armed().fn;timers.clear();callback();
+  assert.deepEqual(events,["clear","refresh","clear","refresh"],"a different forecast day is not revived");
+  reset();shift=2*3.6e6;ctx.fishSchedule(wins());assert.equal(armed().ms,60020,"wall-clock boundaries convert back to true elapsed time");
+  ctx.fishSchedule([]);assert.equal(timers.size,0,"no approved windows leave no boundary timer");
+  assert.match(html, /function paintLoadingState\(\)\{\n  sceneResume\(\);\n  fishCancel\(\);/);
+  assert.match(html, /if\(!LOC_ORDER\.includes\(id\)\|\|LOC\.id===id\)return;\n  sceneResume\(\);\n  fishCancel\(\);/);
+  assert.match(html, /savedAt=savedAt\|\|\(LAST\?\.d===d\?LAST\.savedAt:Date\.now\(\)\);/);
+});
+
+test("a fishing window keeps its minute when now advances between sampling ticks", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const source = html.slice(html.indexOf("function solunarWindows("), html.indexOf("const clock12="));
+  const now=new Date("2026-10-07T14:20:00Z");
+  const ctx=vm.createContext({moonPos:d=>({alt:Math.cos((+d-+now)/(6*3.6e6)*2*Math.PI)})});
+  vm.runInContext(source,ctx);
+  const interior=t=>Array.from(ctx.solunarWindows(t)).filter(w=>+w.start>+now+3*3.6e6&&+w.end<+now+24*3.6e6).map(w=>[+w.start,+w.end]);
+  assert.ok(interior(now).length>0);
+  assert.deepEqual(interior(now),interior(new Date(+now+61000)),"repainting at a boundary cannot move that same boundary");
 });
 
 test("the fuller daytime paper follows its sky, stays readable, and eases into golden hour", async () => {
@@ -1649,7 +1773,7 @@ test("Halloween's cobweb is strung across the corner of the app itself, clear of
   // Halloween window's, read off the place's own calendar the way the decorations are, and it is
   // strung once there is a reading: the loading and error shell has none
   assert.match(html, /if\(holidayOn\(locToday\(\)\)\?\.id!=="halloween"\|\|!LAST\)return off\(\);/);
-  assert.match(html, /LAST=\{d,live,savedAt\};LASTW=appW\(\);\n  paintCobweb\(\);\n\}/);
+  assert.match(html, /LAST=\{d,live,savedAt\};LASTW=appW\(\);\n  fishSchedule\(allowedFishWins\);\n  paintCobweb\(\);\n  fishMotion\(\);\n\}/);
   assert.match(html, /xpReset\(\);LAST=null;\n  paintCobweb\(\);\n\}/);
   // placed again when the alert strip opens and moves everything under it, and when the fonts land
   assert.match(html, /el\.setAttribute\("aria-expanded",open\?"true":"false"\);\n  \/\*[^\n]*\*\/\n  paintCobweb\(\);/);
@@ -2165,6 +2289,29 @@ test("the water and the farm say what is there, and nothing is scored or picked"
   assert.equal(W.fishLine(fishRun({ gust: (i, hr) => hr === 22 ? 31 : 12 }), now), "3:30–5:30p");
   assert.equal(W.fishLine(fishRun({ code: (i, hr) => hr === 17 ? 66 : 1 }), now), "9:30–10:30p");
   assert.equal(W.fishLine(fishRun({ gust: (i, hr) => hr === 15 ? null : 12 }), now), "9:30–10:30p", "a gust the run does not carry is not calm");
+  for (const missing of [null, undefined, "", NaN])
+    assert.equal(W.fishLine(fishRun({ code: (i, hr) => hr === 16 ? missing : 1 }), now), "9:30–10:30p", "an unknown weather code never earns a fishing window");
+  const extraFishHour = (time, overrides = {}) => {
+    const h = fishRun();
+    for (const [key, values] of Object.entries(h))
+      values.push(key === "time" ? time : Object.hasOwn(overrides, key) ? overrides[key] : values[4]);
+    return h;
+  };
+  for (const time of ["2026-08-02T16:00", "2026-08-02T17:00", "2026-08-02T17:15"]) {
+    for (const hazard of [{ code: 95 }, { code: 66 }, { gust: 31 }])
+      assert.equal(W.fishLine(extraFishHour(time, hazard), now), "9:30–10:30p", "a duplicate or partially overlapping hazard cannot hide behind a clear row");
+    for (const key of ["code", "gust"])
+      for (const missing of [null, undefined, "", NaN])
+        assert.equal(W.fishLine(extraFishHour(time, { [key]: missing }), now), "9:30–10:30p", "every overlapping row needs its own known code and gust");
+    assert.equal(W.fishLine(extraFishHour(time), now), "3:30–5:30p · 9:30–10:30p", "known calm duplicates and partial overlaps retain a fully covered window");
+  }
+  assert.equal(W.fishLine(extraFishHour("2026-08-02T15:00", { code: 95 }), at("2026-08-02T16:10")), "now–5:30p · 9:30–10:30p", "an overlapping hazard entirely in the past does not remove the remaining clear window");
+  const gap = fishRun();
+  for (const values of Object.values(gap)) values.splice(3, 1); // the whole 4 p.m. row is absent
+  assert.equal(W.fishLine(gap, now), "9:30–10:30p", "a missing hour inside a window is not clear weather");
+  assert.equal(W.fishLine(run("2026-08-02T16:00"), now), "9:30–10:30p", "the run must cover the beginning of a future window");
+  assert.equal(W.fishLine(run("2026-08-02T16:00"), at("2026-08-02T16:10")), "now–5:30p · 9:30–10:30p", "an underway window needs coverage from now, not a spent hour");
+  assert.equal(W.fishLine(fishRun(), at("2026-08-02T17:30")), "9:30–10:30p", "the window ends at its published end, exclusively");
   assert.equal(W.fishLine(run("2026-08-02T13:00", {}, 9), now), "3:30–5:30p", "a window past the end of the run is not known");
   assert.equal(W.fishLine(fishRun(), at("2026-08-02T16:10")), "now–5:30p · 9:30–10:30p");
   assert.equal(W.fishLine(fishRun({ gust: 31 }), now), null);
@@ -2726,7 +2873,7 @@ test("every line reads the same way: one machine, and readers that say only what
   assert.doesNotMatch(html, /HOURLY_PEEK|TIDE_PEEK|setupHourlyPeek|setupTidePeek|PeekLive|hourly-cursor|tide-cursor/);
   assert.match(html, /xpReset\(\);LAST=null;/, "the loading and error shell resets every explorer");
   assert.match(html, /\}else xpPublish\("tide",null\);/, "a paint with no tide chart publishes none");
-  assert.match(html, /if\(LOC\.fish\)renderMoon\(css,farm&&farm\.fish\?fishWindows\(h,now\):\[\]\);else xpPublish\("moon",null\);/);
+  assert.match(html, /if\(LOC\.fish\)renderMoon\(css,allowedFishWins,now\);else xpPublish\("moon",null\);/);
   assert.match(html, /if\(N\)renderYear\(N,dy,css\);else xpPublish\("year",null\);/);
   // the week: its days stay buttons and tab stops, a slide opens the day you let go on the way a tap
   // does (weekPick), the click a drag leaves behind is swallowed, and the arrows move and open
