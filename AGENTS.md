@@ -1005,8 +1005,24 @@ Established with Josh and enforced by `test.mjs`:
   in the channel with its belly on the water and nothing under its feet. A heron
   standing there reads as wading; a four-footed animal standing there reads as
   floating. Waders and the fiddler crab work the flat. Anything else keeps its body
-  above the bank line and wets no more than its feet, and the harness now fails a
-  marsh scene where more than 45% of a land animal sits below the waterline.
+  above the bank line and wets no more than its feet, and the harness fails a
+  marsh scene where more than 45% of a land animal sits below the waterline. Josh
+  later asked for the raccoon fully on land: it now has a low, solid bank rise and
+  ground shadow, and even its reaching paw stays above the water. The harness walks
+  its whole gesture and checks its feet, not just the old 45% allowance. No water
+  ring belongs under this animal.
+- **If an animal moves in water, the water answers that contact.** The heron's two
+  footfalls make small rings on its existing 150-second clock; the bill's existing
+  splash meets the bill at the strike. There is no independent idle ring standing
+  in for either. The crab's four near legs turn at their roots in alternating pairs
+  during its short scuttles; the four farther legs support it. All eight stay drawn,
+  and its faint ripple follows those same 58-second bursts. Eight moving joints
+  pushed the downpour past the 120-animation limit; that limit stays. The frog's
+  small pond-edge ring shares its 13-second calling motion. These clocks take their
+  phase from wall time, so a repaint does not restart a gesture or detach its water.
+  `tools/scene.mjs` walks the contacts and the rests, checks the actual positions,
+  and preserves the quiet gaps. The oystercatcher already stands on its oyster rake
+  and the cormorant on its piling; neither needs a swimming effect.
 - **A dark animal on the dark bank is a smudge, and a dash behind the reeds is not
   a dash.** The fiddler crab sat on the grass line, where its outline merged into
   the spartina and its ten-pixel scuttle had nothing to travel against, so the one
@@ -1102,6 +1118,34 @@ lines over bars. They change once a decade, so they live in `NORMALS` and nothin
   snow never reads as the same amount as 5 inches of rain. Only the tallest month is named, noun
   first: `rain 8.7 in`, `snow 16 in`. Snow shows only where it falls (the farm).
 
+## Fuller, closer, more playful — October 6, 2026
+
+Josh picked mockup B, then asked for it to be "fuller. funner" and approved shipping when ready.
+Keep the open title/note → chart → labels layout. This is more presence in the same app, not
+boxed cards or more information. Main data curves are 4px; lower-temperature curves remain
+quieter at 2.4px. The Sun bar keeps its own 6px thickness and honest 0–12 scale. Temperature
+numbers use Bricolage at weight 650, roughly 22% larger; time axes stay in Spline. Label placement
+grows with the type and keeps the conservative .6em width allowance, checked against the actual
+rendered faces. Chart heights grow together: `chartH` starts at 165, the week's height is 146,
+and the hourly plot leaves 18px for its 15px axis and 3px gap. Small-phone titles and long notes
+keep enough room. The heavier marks never change a value, scale, threshold or missing-data rule.
+The tide's level tag also reserves six pixels around the curve and measures the larger label's
+cap height; a thicker line must never run through a number's paper halo.
+
+Daytime paper takes a pale blue-green tint from the actual sky (`daylightPaper`), with a slight
+sage lean at the farm. Storm grey stays grey. The paper keeps a luminance floor of .72 and the
+small daytime inks are darker so they still read clearly. `daylightBlend` eases from no daytime
+tint at −3° solar altitude to its full tint at +6°, blending with the existing golden-hour light;
+there is no switch from blue to cream at +6°. Night keeps its established palette. Chart-label
+halos and reading pills use the same paper, computed before the charts draw.
+
+The scene is closer through a smaller logical frame: `Math.max(320,appW()/1.22)`. Positions are
+recomputed inside that frame before it fits the phone, rather than cropping off the outer
+animals or scaling individual creatures separately. It gives about 22% enlargement at 393px;
+at the narrowest 320px phone the scene keeps its full supported frame. Preserve the relative
+sizes of the Storybook Ink cast, the sun path, edge residents, and every holiday clearance.
+The fuller scene earns its playfulness from the existing drawings and their behavior.
+
 ## Interaction and reading refinements
 
 - Every chart's pill is measured against the visible part of its chart (for the hours, the scroll
@@ -1123,13 +1167,14 @@ lines over bars. They change once a decade, so they live in `NORMALS` and nothin
   pleasant outdoor reading: the farm says the family's action in red and takes the fishing times,
   and with the boat season on the water says `Stay off the water.` Include
   the NWS instruction text in the expanded alert; do not invent an instruction.
-- Small labels need enough ink on both the plain paper and the tinted evening
+- Small labels need enough ink on both the sky-tinted daytime paper and the tinted evening
   paper. Keep long condition names wrappable beside three-digit temperatures.
 - **Chart labels are placed, not stamped.** On a phone an hour of the hourly chart is about
   twelve pixels wide, so a label every fourth hour printed straight through the high beside
   it (78° under 79°, 62° under the 61° low), and only at some widths, which is why it came
   and went between the phone and the desktop. Each label gets a box in chart units (screen
-  pixels, off the mono face's .6em advance) and goes down in priority order against what is
+  pixels, keeping the mono face's .6em advance as conservative room for the fuller display face)
+  and goes down in priority order against what is
   already drawn: the bars and key dots, then the high, now and the low, then the regular
   hours where they have room, then the rain odds, then the moon on the night band (the words
   AFTER DARK went: the band and the moon already say it, so the moon has only its own box). The high always

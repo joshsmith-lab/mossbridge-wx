@@ -221,27 +221,61 @@ const CASES = [
       tempCurve: (i, hr, t) => t + (i >= 24 ? 7 : 0) } },
 ];
 
-/* labels are placed, not stamped: on the tide, the moon and the year every word sits inside its
-   chart and clear of every other word, whatever the water or the moon is doing, and the skiff's
+/* labels are placed, not stamped: every chart's words sit inside its frame and clear of every
+   other word, whatever the forecast, water or moon is doing, and the skiff's
    level tag rides on the water, never on the bed under it (seaY is H-34). Run at every width,
    because an hour or a tide is a few pixels narrower at 320 and that is where they meet. */
 async function crowded(page) {
-  const out = await page.evaluate(() => ["tideSvg", "moonSvg", "yearSvg"].flatMap((id) => {
+  const out = await page.evaluate(() => {
+    const measure = document.createElement("canvas").getContext("2d");
+    /* SVG getBBox includes the font's full ascent/descent, even for a row of digits. The
+       heavier proportional face needs its actual glyph ink, not the old mono estimate. */
+    const inkBox = (el, svg) => {
+      const style = getComputedStyle(el), text = el.textContent;
+      measure.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      measure.fontKerning = style.fontKerning;
+      if ("letterSpacing" in measure) measure.letterSpacing = style.letterSpacing === "normal" ? "0px" : style.letterSpacing;
+      const m = measure.measureText(text), advance = el.getComputedTextLength();
+      const anchor = style.textAnchor === "middle" ? advance / 2 : style.textAnchor === "end" ? advance : 0;
+      const x = el.x.baseVal.getItem(0).value - anchor, y = el.y.baseVal.getItem(0).value;
+      const matrix = svg.getScreenCTM().inverse().multiply(el.getScreenCTM());
+      const points = [[x-m.actualBoundingBoxLeft,y-m.actualBoundingBoxAscent], [x+m.actualBoundingBoxRight,y-m.actualBoundingBoxAscent],
+        [x-m.actualBoundingBoxLeft,y+m.actualBoundingBoxDescent], [x+m.actualBoundingBoxRight,y+m.actualBoundingBoxDescent]]
+        .map(([a,b]) => new DOMPoint(a,b).matrixTransform(matrix));
+      const left = Math.min(...points.map(p=>p.x)), top = Math.min(...points.map(p=>p.y));
+      return {x:left,y:top,width:Math.max(...points.map(p=>p.x))-left,height:Math.max(...points.map(p=>p.y))-top};
+    };
+    const halfStroke = (line, svg) => {
+      const style = getComputedStyle(line), scale = Math.hypot(svg.getScreenCTM().a,svg.getScreenCTM().b);
+      return (parseFloat(style.strokeWidth)||0) / 2 / (style.vectorEffect === "non-scaling-stroke" ? scale : 1);
+    };
+    return ["hourlySvg", "weekSvg", "tideSvg", "moonSvg", "yearSvg"].flatMap((id) => {
     const svg = document.getElementById(id); if (!svg || !svg.getBoundingClientRect().height) return [];
-    const vb = svg.viewBox.baseVal, boxes = [...svg.querySelectorAll("text")].map((e) => ({ t: e.textContent, b: e.getBBox() })).filter((x) => x.t.trim());
+    const proportional = id === "hourlySvg" || id === "weekSvg";
+    const vb = svg.viewBox.baseVal, boxes = [...svg.querySelectorAll("text")].filter(e=>e.textContent.trim())
+      .map((e) => ({ t:e.textContent, b:proportional?inkBox(e,svg):e.getBBox() }));
     const out = boxes.filter(({ b }) => b.x < -1 || b.y < -1 || b.x + b.width > vb.width + 1 || b.y + b.height > vb.height + 1).map((x) => `${id} "${x.t}" off the chart`);
     for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
       const a = boxes[i].b, c = boxes[j].b, w = Math.min(a.x + a.width, c.x + c.width) - Math.max(a.x, c.x), h = Math.min(a.y + a.height, c.y + c.height) - Math.max(a.y, c.y);
       if (w > 1 && h > 1) out.push(`${id} "${boxes[i].t}" runs into "${boxes[j].t}"`);
     }
+    /* A paper halo can hide a line through a number. Check the actual line edge against the
+       number's ink as well as checking numbers against one another. */
+    if (proportional) for (const line of svg.querySelectorAll(".tline,.rv-line2")) {
+      const length = line.getTotalLength(), pad = halfStroke(line,svg) + .5;
+      if (!length) continue;
+      const matrix = svg.getScreenCTM().inverse().multiply(line.getScreenCTM()), samples = [];
+      for (let d=0;d<=length;d+=1) { const p=line.getPointAtLength(d); samples.push(new DOMPoint(p.x,p.y).matrixTransform(matrix)); }
+      for (const {t,b} of boxes) if (samples.some(p=>p.x>b.x-pad&&p.x<b.x+b.width+pad&&p.y>b.y-pad&&p.y<b.y+b.height+pad))
+        out.push(`${id} "${t}" sits on a temperature line`);
+    }
     if (id === "tideSvg") {
       const tag = boxes.find((x) => /^[+−][\d.]+ ft$/.test(x.t)), sea = vb.height - 34;
       if (tag && tag.b.y + tag.b.height > sea + .5) out.push(`tideSvg "${tag.t}" sits on the bed (${(tag.b.y + tag.b.height).toFixed(1)} under ${sea})`);
-      /* and never on the tide line: its paper halo cut the water at now. The tag's ink runs from its
-         baseline up its cap height (no descenders), and the line's own edge is 1.2 off its path */
+      /* The tag's real glyph ink and the line's actual painted width decide clearance. */
       const el = [...svg.querySelectorAll("text")].find((e) => /^[+−][\d.]+ ft$/.test(e.textContent)), line = svg.querySelector(".wline");
       if (el && line) {
-        const fs = parseFloat(el.getAttribute("font-size")), base = +el.getAttribute("y"), b = el.getBBox(), top = base - .72 * fs, pad = 2 + 1.2;
+        const b = inkBox(el,svg), top=b.y, base=b.y+b.height, pad=2+halfStroke(line,svg);
         const L = line.getTotalLength();
         for (let d = 0; d <= L; d += 1) { const q = line.getPointAtLength(d);
           if (q.x > b.x - pad && q.x < b.x + b.width + pad && q.y > top - pad && q.y < base + pad) { out.push(`tideSvg "${el.textContent}" sits on the tide line at ${q.x.toFixed(0)},${q.y.toFixed(0)}`); break; } }
@@ -254,11 +288,31 @@ async function crowded(page) {
       }
     }
     return out;
-  }));
+    });
+  });
   /* the hourly axis is words in a row too: the hour beside NOW gives way to it */
   const hr = await page.evaluate(() => { const b = [...document.querySelectorAll("#hrLabels span")].filter((e) => e.textContent).map((e) => ({ t: e.textContent, r: e.getBoundingClientRect() }));
     return b.slice(1).flatMap((x, i) => x.r.left < b[i].r.right - .5 ? [`hourly axis "${b[i].t}" runs into "${x.t}"`] : []); });
-  return [...out, ...hr];
+  const rows = await page.evaluate(() => [
+    ["week days","#weekRows .wk-name","#weekRows"], ["week rain odds","#weekRows .wk-rain","#weekRows"],
+    ["year months","#yearMonths span","#yearMonths"]
+  ].flatMap(([name,selector,parent])=>{
+    const host=document.querySelector(parent);if(!host||!host.getBoundingClientRect().height)return[];
+    const frame=host.getBoundingClientRect(), boxes=[...document.querySelectorAll(selector)].filter(e=>e.textContent.trim()).map(el=>{
+      const range=document.createRange();range.selectNodeContents(el);return{t:el.textContent,r:range.getBoundingClientRect()};
+    });
+    const errors=boxes.filter(({r})=>r.left<frame.left-1||r.right>frame.right+1).map(({t})=>`${name} "${t}" runs off its row`);
+    for(let i=1;i<boxes.length;i++)if(boxes[i].r.left<boxes[i-1].r.right-.5)errors.push(`${name} "${boxes[i-1].t}" runs into "${boxes[i].t}"`);
+    return errors;
+  }));
+  return [...out, ...hr, ...rows];
+}
+
+async function titlesFit(page) {
+  return page.evaluate(() => [...document.querySelectorAll(".eyebrow")].filter((e) => e.offsetParent && !e.closest("[hidden]")).flatMap((e) => {
+    const b = e.querySelector("b"), sp = e.querySelector("span"); if (!b || !sp || !sp.textContent.trim()) return [];
+    return Math.abs(sp.getBoundingClientRect().top - b.getBoundingClientRect().top) > 4 ? [`"${b.textContent}" note "${sp.textContent}" drops under its title`] : [];
+  }));
 }
 
 /* a reading never covers what it reads: at every stop of every chart the pill stays clear of the
@@ -324,10 +378,7 @@ for (const cs of cases) {
     /* the narrowest phone is only measured: its words are the ones that crowd, and every title keeps
        its note on its own line */
     if (vp.tag === "narrow") {
-      const wrapped = await page.evaluate(() => [...document.querySelectorAll(".eyebrow")].filter((e) => e.offsetParent && !e.closest("[hidden]")).flatMap((e) => {
-        const b = e.querySelector("b"), sp = e.querySelector("span"); if (!b || !sp || !sp.textContent.trim()) return [];
-        return Math.abs(sp.getBoundingClientRect().top - b.getBoundingClientRect().top) > 4 ? [`"${b.textContent}" note "${sp.textContent}" drops under its title`] : [];
-      }));
+      const wrapped = await titlesFit(page);
       for (const m of wrapped) { failures++; console.log(`!! ${cs.name} at 320: ${m}`); }
       if (errs.length) { failures++; console.log(`!! ${cs.name} ${vp.tag}: ${errs.join(" | ")}`); }
       await ctx.close(); continue;
@@ -449,6 +500,15 @@ for (const cs of cases) {
       if (ex.uvBar && !ex.uvBar.test(copy.uvBar || "")) fail(`sun bar "${copy.uvBar}"`);
       if ("marine" in ex && marineAsks !== ex.marine) fail(`${marineAsks} marine requests, expected ${ex.marine}`);
       for (const [k, re] of Object.entries(ex.xp || {})) if (!re.test(copy.xp[k] || "")) fail(`${k} pill "${copy.xp[k]}"`);
+    }
+    /* Reuse the settled phone for the intermediate widths. This exercises the actual loaded
+       fonts without three more network loads or duplicate full-page captures per scenario. */
+    if (vp.tag === "phone") for (const width of [375,393,430]) {
+      await page.setViewportSize({width,height:vp.h});
+      await page.evaluate(() => {clearTimeout(rzT);render(LAST.d,LAST.live,LAST.savedAt);finishReveal();});
+      for (const m of [...await crowded(page),...await pillClear(page),...await titlesFit(page)]) {
+        failures++;console.log(`!! ${cs.name} at ${width}: ${m}`);
+      }
     }
     if (errs.length) { failures++; console.log(`!! ${cs.name} ${vp.tag}: ${errs.join(" | ")}`); }
     await ctx.close();

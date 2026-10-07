@@ -297,6 +297,123 @@ async function open(cs, { width, height = 932, reducedMotion, dpr = 2 }) {
   return { ctx, page, errs };
 }
 
+/** Walk the animal's own clock, checking the contact and the long quiet rest. A ring
+ * on an unrelated loop can look plausible in one screenshot and still describe nothing. */
+async function animalContactCheck(page) {
+  return page.evaluate(() => {
+    const svg = document.getElementById("sceneSvg"), issues = [], checked = [];
+    const point = (el, x, y) => new DOMPoint(x, y).matrixTransform(el.getScreenCTM());
+    const centre = (el) => point(el, +el.getAttribute("cx"), +el.getAttribute("cy"));
+    const opacity = (el) => Number(getComputedStyle(el).opacity);
+    const animations = [...svg.querySelectorAll(".raccoon *, .heron *, .crab-run, .crab-run *, .frog *, [data-water-contact]")]
+      .flatMap((el) => el.getAnimations()).filter((a, i, all) => all.indexOf(a) === i);
+    const saved = animations.map((a) => [a, a.currentTime, a.playState]);
+    animations.forEach((a) => a.pause());
+    const at = (duration, fraction) => {
+      for (const a of animations) {
+        const t = a.effect.getTiming();
+        if (t.duration === duration) a.currentTime = t.delay + duration * (2 + fraction);
+      }
+    };
+    const clock = (duration, label) => {
+      const same = animations.filter((a) => a.effect.getTiming().duration === duration);
+      if (!same.length) { issues.push(`${label}: movement clock missing`); return; }
+      const delays = same.map((a) => a.effect.getTiming().delay);
+      if (Math.max(...delays) - Math.min(...delays) > 101) issues.push(`${label}: joint and water phases disagree`);
+    };
+    try {
+      const raccoon = svg.querySelector('[data-species="raccoon"]');
+      if (raccoon) {
+        checked.push("raccoon on land");
+        const water = svg.querySelector('rect[fill="url(#waterband)"]'), bank = svg.querySelector('[data-prop="raccoon-bank"] path');
+        if (!water || !bank) issues.push("raccoon: water boundary or solid bank missing");
+        else {
+          let wet = 0, unsupported = 0;
+          for (let i = 0; i <= 80; i++) {
+            at(34000, i / 80);
+            if (raccoon.getBoundingClientRect().bottom >= water.getBoundingClientRect().top) wet++;
+            // Test within the inked soles, including the reaching paw, against the bank's fill.
+            for (const [el, x, y] of [[raccoon, 11.6, 1], [raccoon.querySelector('.raccoon-paw > g'), -6.2, 1]]) {
+              const p = point(el, x, y).matrixTransform(bank.getScreenCTM().inverse());
+              if (!bank.isPointInFill(p)) unsupported++;
+            }
+          }
+          if (wet) issues.push(`raccoon: feet meet water in ${wet} gesture frames`);
+          if (unsupported) issues.push(`raccoon: unsupported feet in ${unsupported} gesture frames`);
+        }
+        if (svg.querySelector('[data-water-contact="raccoon"]')) issues.push("raccoon: dry-bank animal has a water ring");
+      }
+      const heron = svg.querySelector('[data-species="great-blue-heron"]');
+      if (heron) {
+        checked.push("heron footfalls and strike"); clock(150000, "heron");
+        const near = svg.querySelector('[data-water-contact="heron-near"]'), far = svg.querySelector('[data-water-contact="heron-far"]'), bill = svg.querySelector('[data-water-contact="heron-bill"]');
+        if (!near || !far || !bill) issues.push("heron: a water contact is missing");
+        else {
+          for (const [ring, joint, x, y, f, label] of [
+            [near, '.heron-leg.near .heron-tarsus > g', 2.4, 3, .25, 'near foot'],
+            [far, '.heron-leg.far .heron-tarsus > g', 6, 3, .30, 'far foot'],
+            [bill, '.heron-scan > g', -27.4, -61.2, .408, 'bill']
+          ]) {
+            at(150000, f); at(97000, 0);
+            const a = point(heron.querySelector(joint), x, y), b = centre(ring);
+            if (Math.hypot(a.x-b.x, a.y-b.y) > 2 || opacity(ring) < .15) issues.push(`heron: ${label} misses its live ripple`);
+            if (label === 'bill') {
+              at(97000, .88); const p = point(heron.querySelector(joint), x, y);
+              if (Math.hypot(p.x-b.x, p.y-b.y) > 3) issues.push("heron: head scan moves the bill clear of its splash");
+            }
+          }
+          for (const f of [0, .2, .35, .55, .8]) {
+            at(150000, f);
+            if ([near, far, bill].some((el) => opacity(el) > .005)) issues.push("heron: water gestures during a rest");
+          }
+        }
+      }
+      const crab = svg.querySelector('[data-species="fiddler-crab"]');
+      if (crab) {
+        checked.push("crab steps and shallows"); clock(58000, "crab");
+        const ring = svg.querySelector('[data-water-contact="crab"]'), legs = [...crab.querySelectorAll('.crab-leg')], support = [...crab.querySelectorAll('.crab-support')];
+        if (!ring || legs.length !== 4 || support.length !== 4) issues.push("crab: water contact or one of its eight legs missing");
+        else {
+          for (const f of [.51, .55, .59, .785, .835, .885]) {
+            at(58000, f);
+            const a = point(crab, 0, 0), b = centre(ring);
+            if (Math.hypot(a.x-b.x, a.y-b.y) > .5 || opacity(ring) < .15) issues.push("crab: moving feet miss the water disturbance");
+            if (legs.some((el) => Math.abs(new DOMMatrix(getComputedStyle(el).transform).b) < .04)) issues.push("crab: rigid moving leg during a scuttle");
+            if (support.some((el) => el.getAnimations().length || getComputedStyle(el).transform !== "none")) issues.push("crab: support legs leave their planted pose");
+          }
+          for (const f of [0, .25, .54, .70, .95]) {
+            at(58000, f);
+            if (opacity(ring) > .005 || legs.some((el) => Math.abs(new DOMMatrix(getComputedStyle(el).transform).b) > .001)) issues.push("crab: legs or water keep moving through a rest");
+          }
+        }
+      }
+      const frog = svg.querySelector('[data-species="frog"]');
+      if (frog) {
+        checked.push("frog pond contact"); clock(13000, "frog");
+        const ring = svg.querySelector('[data-water-contact="frog"]'), throat = frog.querySelector('.frog-throat');
+        if (!ring || !throat) issues.push("frog: throat or pond contact missing");
+        else {
+          at(13000, 0); const rest = throat.getBoundingClientRect().width;
+          if (opacity(ring) > .005) issues.push("frog: pond ring continues through a rest");
+          at(13000, .74);
+          const a = point(frog, -3, 0), b = centre(ring);
+          if (Math.hypot(a.x-b.x, a.y-b.y) > .5 || opacity(ring) < .15 || throat.getBoundingClientRect().width < rest * 1.15)
+            issues.push("frog: calling gesture and pond ring disagree");
+          at(13000, .96);
+          if (opacity(ring) > .005) issues.push("frog: pond ring does not settle");
+        }
+      }
+    } finally {
+      for (const [a, time, state] of saved) { a.currentTime = time; if (state === "running") a.play(); }
+    }
+    return { checked, issues: [...new Set(issues)] };
+  });
+}
+function reportAnimalContacts(cs, width, result) {
+  if (result.checked.length) console.log(`    animal contact at ${width}: ${result.checked.join("; ")}${result.issues.length ? "; !! " + result.issues.join("; ") : ""}`);
+  for (const issue of result.issues) problems.push(`${cs.name} ${width}: ${issue}`);
+}
+
 /** The witch crosses in the first 22% of her cycle and spends the rest off the frame's edge, so her
  * crossing is walked on her own clock: she must come in and go out wholly off the frame, keep her
  * hat inside its top, never touch a grounded animal or a decoration, never pass behind a sunrise or
@@ -774,7 +891,8 @@ for (const cs of cases) {
     // The pond check above exempts the marsh because its water band covers the whole
     // lower frame and a heron is supposed to be ankle deep in it. That exemption is
     // what let the raccoon sit sixteen units out in the channel with its belly on the
-    // water. Waders and the crab work the flat; a raccoon wets its feet at the edge.
+    // water. Waders and the crab work the flat; the separate whole-cycle check below
+    // requires the raccoon to stay fully on its solid bank, including its reaching paw.
     if (cs.loc === "mb") {
       const WADERS = ["great-blue-heron", "oystercatcher", "cormorant", "fiddler-crab"];
       const floating = await page.evaluate((waders) => {
@@ -795,6 +913,8 @@ for (const cs of cases) {
       for (const f of floating) problems.push(`${cs.name}: ${f}`);
       console.log(`    waterline: ${floating.length ? "!! " + floating.join("; ") : "nothing four-footed is floating"}`);
     }
+
+    reportAnimalContacts(cs, PHONE_WIDTH, await animalContactCheck(page));
 
     // ── a bolt and the sky wash are one event ─────────────────────────
     // They used to be two: the wash cycled every 7s and the bolt every 37s, so the sky lit
@@ -857,7 +977,7 @@ for (const cs of cases) {
             const root=animal?.closest(".crab-run")||animal;
             for(const a of root?.getAnimations({subtree:true})||[]){
               const duration=a.effect?.getComputedTiming().duration;
-              if(Number.isFinite(duration))a.currentTime=fraction*duration;
+              if(Number.isFinite(duration))a.currentTime=a.effect.getTiming().delay+(2+fraction)*duration;
             }
           },{subject,fraction});
           await page.locator(".scene").screenshot({path:path.join(OUT,`${cs.name}-${subject}-${label}.png`)});
@@ -874,6 +994,7 @@ for (const cs of cases) {
     const { ctx, page, errs } = await open(cs, { width: 760, height: 1200 });
     try { await page.locator(".sky").screenshot({ path: path.join(OUT, `${cs.name}-sky-760.png`) }); } catch {}
     reportWeb(cs, 760, await webCheck(page));
+    reportAnimalContacts(cs, 760, await animalContactCheck(page));
     if (cs.decor?.length) reportDecor(cs, 760, await decorCheck(page));
     if (errs.length) problems.push(`${cs.name} 760: ${errs.join(" | ")}`);
     await ctx.close();
@@ -893,6 +1014,7 @@ for (const cs of cases) {
       });
       if (box && width !== 390) await page.screenshot({ path: path.join(OUT, `${cs.name}-decor-${width}.png`), clip: box });
       const web = await webCheck(page);
+      reportAnimalContacts(cs, width, await animalContactCheck(page));
       if (width !== PHONE_WIDTH) { reportWeb(cs, width, web); reportDecor(cs, width, await decorCheck(page)); }
       if (web.on) await page.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
       if (web.on && width !== 390) await page.screenshot({ path: path.join(OUT, `${cs.name}-web-${width}.png`), clip: { x: Math.max(0, web.box.x - 12), y: 0, width: Math.min(width, web.box.width + 12), height: web.box.height + 4 } });
