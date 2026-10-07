@@ -1,0 +1,32 @@
+/* Local proposal only. The shipped shell does not load this stylesheet. */
+.bite-body,.bite-ring,.bite-drops{transform-box:view-box;transform-origin:0 0}
+.bite-body{opacity:0;animation:porchFishRise 18s linear infinite;animation-delay:var(--bite-delay,0s)}
+.bite-ring{fill:none;stroke:var(--bite-water);stroke-width:1.1;opacity:0;animation:porchFishRing 18s ease-out infinite;animation-delay:var(--bite-delay,0s)}
+.bite-drops{fill:var(--bite-water);opacity:0;animation:porchFishDrops 18s ease-out infinite;animation-delay:var(--bite-delay,0s)}
+@keyframes porchFishRise{
+  0%,4%,15%,100%{opacity:0;transform:translate(-5px,8px) rotate(-24deg)}
+  4.5%{opacity:1;transform:translate(-5px,4px) rotate(-27deg)}
+  6%{opacity:1;transform:translate(-3px,-5px) rotate(-24deg)}
+  8%{opacity:1;transform:translate(0,-9px) rotate(-5deg)}
+  10%{opacity:1;transform:translate(3px,-6px) rotate(17deg)}
+  12%{opacity:1;transform:translate(5px,2px) rotate(30deg)}
+  13.5%{opacity:0;transform:translate(6px,10px) rotate(34deg)}
+}
+@keyframes porchFishRing{
+  0%,4%,25%,100%{opacity:0;transform:translate(-5px,0) scale(.45)}
+  4.5%{opacity:.5;transform:translate(-5px,0) scale(.5)}
+  9%{opacity:0;transform:translate(-5px,0) scale(1.3)}
+  11.9%{opacity:0;transform:translate(5px,0) scale(.45)}
+  12.5%{opacity:.7;transform:translate(5px,0) scale(.55)}
+  21%{opacity:0;transform:translate(5px,0) scale(1.65)}
+}
+@keyframes porchFishDrops{
+  0%,11.9%,19%,100%{opacity:0;transform:translate(5px,1px) scale(.2)}
+  12.5%{opacity:.8;transform:translate(5px,-1px) scale(.55)}
+  14%{opacity:.65;transform:translate(5px,-5px) scale(1)}
+  18%{opacity:0;transform:translate(5px,2px) scale(.85)}
+}
+.fish-bite{pointer-events:none}
+.fish-bite.resting .bite-body{opacity:.9;animation:none;transform:translate(0,-3px)}
+.fish-bite.resting .bite-ring,.fish-bite.resting .bite-drops{animation:none;opacity:0}
+/* The preview has a replay control outside the app. Existing PRM behavior is untouched. */
