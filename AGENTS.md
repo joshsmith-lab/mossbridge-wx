@@ -1359,7 +1359,12 @@ order, hourly, week, tide, moon, sun, year, and so is `RV_OF`, the observer's ma
 - **Cheap on the first frame.** The line is sampled by walking the cubics `spline()` wrote,
   not with `getPointAtLength`, which walks the whole path per call and cost 25ms. What grows
   or pops takes its transform origin from its own geometry in user space, not a fill-box
-  percentage.
+  percentage. A cold open yields that work: the picture lands, then the hourly chart, then
+  its pen, then the week and its pen, then the rest of the page, so the line's first frame
+  is the pen and not the whole render. The animations keep the samples a straight join would
+  miss by a third of a pixel (`penIdx`); the clock underneath stays the dense walk, and the
+  dash, the tails, the tip and the fill stay the same. Reduced motion still yields the paint
+  and never arms the pen.
 
 `tools/interactions.mjs` runs thirty-five scenarios: every pill kept inside its chart at both edges
 at 320, 390 and 900, keyboard navigation, location switching, snow/ice labels, a warning at the farm that is `Chores can
