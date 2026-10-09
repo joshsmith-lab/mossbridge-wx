@@ -1163,7 +1163,11 @@ quiet gaps and shared water contact. The animation ceiling stays 120.
 
 The header's moving picture rests while the whole header is outside the viewport, leaving room
 for the moon chart's fish without running the unseen rain and animals. It keeps the existing
-animation objects and restores their elapsed clock when the header returns. A repaint replaces
+animation objects and restores their elapsed clock when the header returns. The same park rests
+that picture while the next-24-hours and week pens are drawing, even though the header is on
+screen: the scene, the rain, the sky effects and the cobweb hold their clock and go on from it
+when the pen lands. The live dot keeps pulsing. Tide, moon and year leave the picture running.
+Reduced motion never parks for the pen. A repaint replaces
 those references; it must not revive the last place's animals or restart a gesture. On an unusually
 tall screen that shows the header and moon together, the animation budget takes priority: a fish
 can give way while its fishing-time band remains, just as it gives way to the moon disc.

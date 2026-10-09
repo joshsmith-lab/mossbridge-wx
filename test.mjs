@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v92/);
+  assert.match(worker, /mbwx-shell-v93/);
   // the clouds end in their own scallops: Josh loves the clouds and not the curly tail
   const cloud = html.match(/const propCloud=seed=>\[[\s\S]*?\];/);
   assert.ok(cloud, "propCloud should be extractable");
@@ -734,6 +734,34 @@ test("offscreen scenery resumes elapsed gestures without replaying entrances or 
   box={top:852,bottom:1200};assert.equal(ctx.sceneMotion(),true);
   now+=50;ctx.document.hidden=true;assert.equal(ctx.sceneMotion(),false);
   assert.equal(deer.currentTime,1250,"visibility handoff preserves the same elapsed clock");
+  /* the temperature pens park the picture while the header is still on screen, and the live
+     dot is not part of that picture. Coming off the pen restores the elapsed clock. */
+  ctx.document.hidden=false;
+  ctx.REVEAL={hourly:{state:"running"},week:{state:"done"}};
+  box={top:40,bottom:620};
+  const gull=animation(80), dot=animation(12);
+  gull.effect.target.closest=()=>gull.effect.target;
+  dot.effect.target.closest=()=>null;
+  moving=[gull,dot];
+  assert.equal(ctx.sceneMotion(),true);
+  assert.equal(gull.playState,"paused");
+  assert.equal(dot.playState,"running","the live stamp keeps pulsing under the pen");
+  now+=2000;
+  ctx.REVEAL.hourly.state="done";
+  assert.equal(ctx.sceneMotion(),false);
+  assert.equal(gull.currentTime,2080);
+  assert.equal(gull.plays,1);
+  assert.equal(dot.plays,0,"a stamp that never parked is not resumed");
+  ctx.REVEAL.hourly.state="running";
+  box={top:-400,bottom:-10};
+  const cloud=animation(15);
+  moving=[gull,dot,cloud];
+  assert.equal(ctx.sceneMotion(),true);
+  assert.equal(cloud.playState,"paused","off screen, the whole header still parks");
+  assert.equal(dot.playState,"paused");
+  assert.match(html, /function penScene\(\)/);
+  assert.match(html, /t\.closest\("#sceneSvg,#rainFx,#skyFx,#flash,#cobweb"\)/);
+  assert.match(html, /sceneMotion\(\);\s*const was=PEN_HELD/);
   assert.ok(html.includes('new IntersectionObserver(()=>fishMotion(),{threshold:0}).observe(document.getElementById("sky"))'));
   assert.ok(html.includes('Math.floor((120-ambient)/3)'),"chart fish yield within the existing animation ceiling");
 });

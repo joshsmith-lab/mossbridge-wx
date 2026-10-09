@@ -3034,14 +3034,30 @@ function sceneResume(){
   }
   SCENE_PARKED=[];
 }
+/* The hours and the week draw on the first screen, with the picture still in view. The same
+   park that rests it off screen rests it then too: the scene, the rain, the sky and the cobweb
+   hold their clock, and they go on from it when the pen lands. The live dot is the stamp, not
+   the picture, so it keeps pulsing. Tide, moon and year leave it running. Reduced motion never
+   starts those pens, and never parks for them. */
+function penScene(){
+  return typeof REVEAL!=="undefined"&&!PRM&&(REVEAL.hourly.state==="running"||REVEAL.week.state==="running");
+}
 function sceneMotion(){
   const sky=document.getElementById("sky"),box=sky.getBoundingClientRect();
-  const park=!PRM&&!document.hidden&&(box.bottom<=0||box.top>=innerHeight);
+  const off=!document.hidden&&(box.bottom<=0||box.top>=innerHeight);
+  const pens=penScene();
+  const park=!PRM&&(off||pens);
   if(!park){sceneResume();return false}
-  /* Nothing offscreen needs to run. Keep the actual objects and their clocks: scrolling back
-     restores the phase they would have reached, rather than replaying the animal's wait. */
+  /* Nothing offscreen, and nothing under the temperature pens, needs to run. Keep the actual
+     objects and their clocks: coming back restores the phase they would have reached, rather
+     than replaying the animal's wait. */
   SCENE_PARKED=SCENE_PARKED.filter(s=>s.animation.effect?.target?.isConnected);
-  const moving=sky.getAnimations({subtree:true}).filter(a=>a.animationName&&a.playState==="running");
+  const moving=sky.getAnimations({subtree:true}).filter(a=>{
+    if(!a.animationName||a.playState!=="running")return false;
+    if(off)return true;
+    const t=a.effect&&a.effect.target;
+    return !!(t&&t.closest&&t.closest("#sceneSvg,#rainFx,#skyFx,#flash,#cobweb"));
+  });
   const at=Date.now();
   for(const animation of moving){SCENE_PARKED.push({animation,at,time:animation.currentTime||0});animation.pause()}
   return true;
@@ -6267,12 +6283,17 @@ function revealApply(k){
   syncRainHold();
 }
 /* The pen stays the dash it is. While the hours or the week are drawing, the streaks
-   pause so that paint does not share the frame with every drop. Tide, moon and year
-   draw below the fold and leave the rain alone. Reduced motion never holds it. */
+   pause so that paint does not share the frame with every drop, and the header picture
+   parks on the same clock it uses when it scrolls off. Tide, moon and year draw below
+   the fold and leave both alone. Reduced motion never holds either. */
+let PEN_HELD=false;
 function syncRainHold(){
   const on=!PRM&&(REVEAL.hourly.state==="running"||REVEAL.week.state==="running");
   document.getElementById("rainFx").classList.toggle("held",on);
   document.getElementById("sceneSvg").classList.toggle("rain-held",on);
+  sceneMotion();
+  const was=PEN_HELD;PEN_HELD=on;
+  if(was&&!on)fishMotion();
 }
 function revealFinish(k){
   const R=REVEAL[k];
