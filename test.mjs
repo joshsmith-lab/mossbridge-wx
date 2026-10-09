@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v92/);
+  assert.match(worker, /mbwx-shell-v93/);
   // the clouds end in their own scallops: Josh loves the clouds and not the curly tail
   const cloud = html.match(/const propCloud=seed=>\[[\s\S]*?\];/);
   assert.ok(cloud, "propCloud should be extractable");
@@ -386,7 +386,7 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /const vaneHunt=clamp\(\(gust-wind\)\*\.11,\.15,1\.25\)/);
   assert.match(html, /--vh-neg:-\$\{vaneHunt\.toFixed\(1\)\}deg/);
   assert.match(html, /function tideTrend\(preds\)/);
-  assert.match(html, /renderScene\(sunrise,sunset,now,c,dark,LOC\.tide\?tideTrend\(d\.tides\):0,allowedFishWins\)/);
+  assert.match(html, /renderScene\(sunrise,sunset,now,c,dark,LOC\.tide\?tideTrend\(d\.tides\):0,allowedFishWins,scene=>\{/);
   assert.match(html, /specular\(glintX,GY\+12\.5,tideDir<0\?2\.4:tideDir>0\?-1\.6:0\)/);
 
   // vegetation: gusts raise the throw, and the wave crosses the bank downwind
@@ -545,7 +545,18 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /if\(live\)\{REVEAL_READY=true;clearTimeout\(REVEAL_WAIT\);REVEAL_WAIT=0\}/);
   assert.match(html, /else if\(!REVEAL_READY&&!REVEAL_WAIT\)REVEAL_WAIT=setTimeout\(revealReady,900\);/);
   // a re-render mid-sweep continues it rather than restarting or snapping it to full
-  assert.match(html, /if\(R\.state==="running"\)\{revealApply\(k\);return\}/);
+  assert.match(html, /if\(R\.state==="running"\)\{R\.job=\(R\.job\|0\)\+1;revealApply\(k\);return\}/);
+  // the pen's keyframes are built on the frame after the chart is in the page, and a
+  // newer continue or finish drops the one still waiting
+  assert.match(html, /const job=R\.job=\(R\.job\|0\)\+1;/);
+  assert.match(html, /requestAnimationFrame\(\(\)=>\{if\(R\.job===job&&R\.state==="running"\)revealApply\(k\)\}\)/);
+  // the animations keep the samples a straight join would miss, on the same clock
+  assert.match(html, /function penIdx\(samp,more\)/);
+  assert.match(html, /if\(at>=0&&worst>\.34\)/);
+  // the first paint yields: picture, then the hourly pen, then the week pen, then the rest
+  assert.match(html, /function paintSoon\(gen,fn\)\{requestAnimationFrame\(\(\)=>\{if\(gen===RENDER_GEN\)fn\(\)\}\)\}/);
+  assert.match(html, /function paintAfter\(gen,fn\)\{requestAnimationFrame\(\(\)=>requestAnimationFrame\(\(\)=>requestAnimationFrame\(\(\)=>\{if\(gen===RENDER_GEN\)fn\(\)\}\)\)\)\}/);
+  assert.match(html, /savedAt=savedAt\|\|\(LAST\?\.d===d\?LAST\.savedAt:Date\.now\(\)\);\n  LAST=\{d,live,savedAt\};\n  sceneResume\(\);/);
   assert.match(html, /const base=R\.t0-performance\.now\(\)/);
   // the wipe animates the content of a static clip, never the clip itself
   assert.match(html, /<clipPath id="hourlyArea"><path d="\$\{area\}"\/><\/clipPath>/);
@@ -620,7 +631,7 @@ test("and the rain is visible when it rains there", async () => {
   assert.match(html, /Math\.min\(176,880\/d\/30\*2\.6\)/);
   assert.match(html, /\(nowS\+seed\*d\)%d/);
   assert.match(html, /rainKey!==RAIN_KEY\|\|rf\.childElementCount!==count/);
-  assert.match(html, /pictureKey===SCENE_KEY&&SCENE_META&&sceneSvg\.childElementCount\)return SCENE_META/);
+  assert.match(html, /pictureKey===SCENE_KEY&&SCENE_META&&sceneSvg\.childElementCount\)\{andThen\(SCENE_META\);return\}/);
   assert.match(html, /REVEAL\.hourly\.state==="running"\|\|REVEAL\.week\.state==="running"/);
   assert.match(html, /\.rainfx\.held i,#sceneSvg\.rain-held \.nearrain\{animation-play-state:paused\}/);
   // dealt one to a slot across the frame, not thrown in clumps
@@ -774,7 +785,7 @@ test("fishing boundaries repaint once without renewing the forecast or crossing 
   assert.deepEqual(events,["clear","refresh","clear","refresh"],"a different forecast day is not revived");
   reset();shift=2*3.6e6;ctx.fishSchedule(wins());assert.equal(armed().ms,60020,"wall-clock boundaries convert back to true elapsed time");
   ctx.fishSchedule([]);assert.equal(timers.size,0,"no approved windows leave no boundary timer");
-  assert.match(html, /function paintLoadingState\(\)\{\n  sceneResume\(\);\n  fishCancel\(\);/);
+  assert.match(html, /function paintLoadingState\(\)\{\n  \/\* a paint still landing from the previous reading stands down \*\/\n  RENDER_GEN\+\+;\n  sceneResume\(\);\n  fishCancel\(\);/);
   assert.match(html, /if\(!LOC_ORDER\.includes\(id\)\|\|LOC\.id===id\)return;\n  sceneResume\(\);\n  fishCancel\(\);/);
   assert.match(html, /savedAt=savedAt\|\|\(LAST\?\.d===d\?LAST\.savedAt:Date\.now\(\)\);/);
 });
@@ -1784,7 +1795,7 @@ test("Halloween's cobweb is strung across the corner of the app itself, clear of
   // Halloween window's, read off the place's own calendar the way the decorations are, and it is
   // strung once there is a reading: the loading and error shell has none
   assert.match(html, /if\(holidayOn\(locToday\(\)\)\?\.id!=="halloween"\|\|!LAST\)return off\(\);/);
-  assert.match(html, /LAST=\{d,live,savedAt\};LASTW=appW\(\);\n  fishSchedule\(allowedFishWins\);\n  paintCobweb\(\);\n  fishMotion\(\);\n\}/);
+  assert.match(html, /LASTW=appW\(\);\n  fishSchedule\(allowedFishWins\);\n  paintCobweb\(\);\n  fishMotion\(\);\n  \}\);\}\);\}\);\}\);\n\}/);
   assert.match(html, /xpReset\(\);LAST=null;\n  paintCobweb\(\);\n\}/);
   // placed again when the alert strip opens and moves everything under it, and when the fonts land
   assert.match(html, /el\.setAttribute\("aria-expanded",open\?"true":"false"\);\n  \/\*[^\n]*\*\/\n  paintCobweb\(\);/);

@@ -3115,10 +3115,10 @@ function scenePictureKey(now,weather,dark,tideDir,fishWins){
     Math.round(sun*2)/2,Math.round(malt*2)/2,q(maz/2)*2,now.getHours(),locToday(),
     fishWindowActive(fishWins,now,weather)?1:0,fish,gates,q(moonPhase(now)*100)].join("|");
 }
-function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[]){
+function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen){
   const pictureKey=scenePictureKey(now,weather,dark,tideDir,fishWins);
   const sceneSvg=document.getElementById("sceneSvg");
-  if(pictureKey===SCENE_KEY&&SCENE_META&&sceneSvg.childElementCount)return SCENE_META;
+  if(pictureKey===SCENE_KEY&&SCENE_META&&sceneSvg.childElementCount){andThen(SCENE_META);return}
   const commit=meta=>(SCENE_KEY=pictureKey,SCENE_META=meta);
   const cloud=weather.cloud_cover||0,wind=weather.wind_speed_10m||0,code=weather.weather_code;
   const wet=isWet(code),snowing=isSnow(code);
@@ -3822,6 +3822,11 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[]){
 
   document.getElementById("sceneSvg").setAttribute("aria-label",LOC.sceneLabel);
 
+  /* The shared light is already worked out. The place's own drawing waits a frame, so the
+     open is not one long turn of picture plus both pens. A newer paint drops this one. */
+  const sceneGen=RENDER_GEN;
+  requestAnimationFrame(()=>{
+  if(sceneGen!==RENDER_GEN)return;
   if(LOC.scene==="front-range"){
     /* ── Denver: high plains foreground, the Front Range, cottonwood and city edge ── */
     const ink=dark?"#07161B":"#173029",base=GY+10,g=mulberry(5280);
@@ -3954,7 +3959,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[]){
       ${snowing?`<path d="M -12 ${base+1} Q ${W*.28} ${base-3} ${W*.52} ${base+1} T ${W+12} ${base-1} L ${W+12} ${base+5} L -12 ${base+5} Z" fill="#F4F7F2" opacity=".42"/>`:""}
       ${tufts.map((d,i)=>d?`<g fill="${ink}" opacity=".82"${bandAt(i)}><path d="${d}"/></g>`:"").join("")}
       ${deer}${magpie}${rabbit}${sunTimes}`;
-    return commit({sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05});
+    andThen(commit({sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05}));return;
   }
 
   if(LOC.scene==="ridge"){
@@ -4341,7 +4346,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[]){
       ${bloom}${motes}
       ${flies}
       ${sunTimes}`;
-    return commit({sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05});
+    andThen(commit({sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05}));return;
   }
 
   /* marsh: hazy maritime treeline, loblollies, live oak, spartina bank, dock, heron */
@@ -4699,7 +4704,8 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[]){
     <path d="M 0 ${H-3} L ${W} ${H-3}" stroke="${mix(waterBot,dark?'#3E7CA6':'#8FC3D9',.35)}" stroke-width="3" opacity="${dark?.4:.6}"/>
     ${sunTimes}`;
 
-  return commit({sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05});
+  andThen(commit({sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05}));return;
+  });
 }
 
 /* ── smooth path through points ─────────────────────── */
@@ -6151,7 +6157,9 @@ function revealChart(k,svg,g){
   const R=REVEAL[k];
   if(R.state==="done")return;
   R.g={...g,svg};
-  if(R.state==="running"){revealApply(k);return}
+  /* a re-render mid-sweep continues on this frame. Bump the job so a keyframe build
+     still waiting from the previous one does not start a second pen. */
+  if(R.state==="running"){R.job=(R.job|0)+1;revealApply(k);return}
   svg.classList.add("rv-pre");
   revealTry(k);
 }
@@ -6174,7 +6182,38 @@ function revealTry(k,settled){
   const order=Object.keys(REVEAL);
   for(const u of order.slice(0,order.indexOf(k)))if(REVEAL[u].state==="running")t0=Math.max(t0,REVEAL[u].t0+420);
   R.state="running";R.t0=t0;
-  revealApply(k);
+  /* The chart is already in the page, hidden under rv-pre. Building the pen's keyframes
+     here made the line's first frame carry that work, and on a cold open that frame was
+     also still the picture and the week. The line plays on the next frame. A finish or a
+     newer continue bumps the job and this one stands down. */
+  const job=R.job=(R.job|0)+1;
+  requestAnimationFrame(()=>{if(R.job===job&&R.state==="running")revealApply(k)});
+}
+/* Samples the pen keeps. A straight join between the neighbours has to stay within a third
+   of a pixel of the real dash, the tip and the fill, and the comet's opacity within a
+   little, or the sample stays. The clock underneath is still the dense one. */
+function penIdx(samp,more){
+  const n=samp.length-1,keep=new Uint8Array(samp.length);
+  keep[0]=keep[n]=1;
+  const err=(a,b,i)=>{
+    const f=(i-a)/(b-a),lerp=(p,q)=>p+(q-p)*f,s=samp[i],s0=samp[a],s1=samp[b];
+    let e=Math.abs(s.L-lerp(s0.L,s1.L));
+    e=Math.max(e,Math.hypot(s.x-lerp(s0.x,s1.x),s.y-lerp(s0.y,s1.y)));
+    e=Math.max(e,Math.abs(s.fx-lerp(s0.fx,s1.fx)));
+    e=Math.max(e,Math.abs(s.glow-lerp(s0.glow,s1.glow))*24,Math.abs(s.op-lerp(s0.op,s1.op))*24);
+    for(const L of more)e=Math.max(e,Math.abs(L[i]-lerp(L[a],L[b])));
+    return e;
+  };
+  const stack=[[0,n]];
+  while(stack.length){
+    const [a,b]=stack.pop();
+    let worst=0,at=-1;
+    for(let i=a+1;i<b;i++){const e=err(a,b,i);if(e>worst){worst=e;at=i}}
+    if(at>=0&&worst>.34){keep[at]=1;stack.push([a,at],[at,b])}
+  }
+  const idx=[];
+  for(let i=0;i<keep.length;i++)if(keep[i])idx.push(i);
+  return idx;
 }
 function revealApply(k){
   const R=REVEAL[k],g=R.g,svg=g.svg,line=svg.querySelector(".tline,.wline");
@@ -6221,22 +6260,27 @@ function revealApply(k){
   const{len,along}=main;
   const opt=(delay,duration,easing="linear")=>({delay:base+delay,duration,easing,fill:"both",id:"reveal-"+k});
   const run=(el,frames,o)=>{if(el)R.anims.push(el.animate(frames,o))};
-  const T=g.tail,lineF=[],tailK=[],tipF=[],fillF=[];
+  const T=g.tail,samp=[];
   for(let i=0;i<=N;i++){
     const off=i/N,x=g.xa+P[i]*span,[y,L]=along(x),glow=clamp(Math.min(off/.05,(1-off)/.12),0,1);
     const a=Math.max(0,i-1),b=Math.min(N,i+1),speed=(P[b]-P[a])*N/(b-a);
-    lineF.push({offset:off,strokeDashoffset:(len-L).toFixed(1)+"px"});
-    tailK.push([off,L,clamp(speed/1.4,0,1)*glow]);
-    tipF.push({offset:off,transform:`translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`,fill:g.color(x),opacity:glow.toFixed(3)});
-    fillF.push({offset:off,transform:`translateX(${((P[i]-1)*span).toFixed(1)}px)`});
+    samp.push({off,x,y,L,glow,op:clamp(speed/1.4,0,1)*glow,fx:(P[i]-1)*span,fill:g.color(x)});
   }
+  /* The dense walk stays, so a mark's delay is unchanged. The animations keep only the
+     samples a straight join would miss by more than a third of a pixel, which is the
+     same pen: same dash, same tip, same fill, far fewer keyframes to set up. */
+  const lines2=[...svg.querySelectorAll(".rv-line2")].map(el=>{const w=walk(el);return w?{el,w,L:samp.map(s=>w.along(s.x)[1])}:null}).filter(Boolean);
+  const idx=penIdx(samp,lines2.map(s=>s.L));
+  const lineF=idx.map(i=>{const s=samp[i];return {offset:s.off,strokeDashoffset:(len-s.L).toFixed(1)+"px"}});
+  const tailK=idx.map(i=>{const s=samp[i];return [s.off,s.L,s.op]});
+  const tipF=idx.map(i=>{const s=samp[i];return {offset:s.off,transform:`translate(${s.x.toFixed(1)}px,${s.y.toFixed(1)}px)`,fill:s.fill,opacity:s.glow.toFixed(3)}});
+  const fillF=idx.map(i=>{const s=samp[i];return {offset:s.off,transform:`translateX(${s.fx.toFixed(1)}px)`}});
   line.style.strokeDasharray=`${len.toFixed(1)} ${len.toFixed(1)}`;
   run(line,lineF,opt(0,D));
   /* a second line (the week's lows) is drawn by the same pen, at the same x */
-  for(const el of svg.querySelectorAll(".rv-line2")){
-    const w=walk(el);if(!w)continue;
+  for(const {el,w,L} of lines2){
     el.style.strokeDasharray=`${w.len.toFixed(1)} ${w.len.toFixed(1)}`;
-    run(el,P.map((p,i)=>({offset:i/N,strokeDashoffset:(w.len-w.along(g.xa+p*span)[1]).toFixed(1)+"px"})),opt(0,D));
+    run(el,idx.map(i=>({offset:samp[i].off,strokeDashoffset:(w.len-L[i]).toFixed(1)+"px"})),opt(0,D));
   }
   for(const el of svg.querySelectorAll(".rv-tail")){
     const t=T*+el.dataset.f,o=+el.dataset.o;
@@ -6656,7 +6700,20 @@ function renderHours(hourly,c){
   const h=Object.fromEntries(Object.entries(full).map(([key,values])=>[key,Array.isArray(values)?values.slice(0,24):values]));
   return{full,h};
 }
+/* A cold open used to build the picture, both temperature charts and both pens in one
+   turn, and that turn was the hitch when the line started. Each piece waits out the
+   one before it. paintSoon is the next frame. paintAfter leaves the pen a frame of
+   its own, including the extra look revealTry takes when the first measure is off
+   screen, before the next chart is built. A newer render bumps the generation. */
+let RENDER_GEN=0;
+function paintSoon(gen,fn){requestAnimationFrame(()=>{if(gen===RENDER_GEN)fn()})}
+function paintAfter(gen,fn){requestAnimationFrame(()=>requestAnimationFrame(()=>requestAnimationFrame(()=>{if(gen===RENDER_GEN)fn()})))}
 function render(d,live,savedAt=0){
+  const gen=++RENDER_GEN;
+  /* fixed before the first yield: a resize while the picture is still landing retries
+     this reading, and a boundary timer from the previous paint stands down */
+  savedAt=savedAt||(LAST?.d===d?LAST.savedAt:Date.now());
+  LAST={d,live,savedAt};
   sceneResume();
   const c=d.current,dy=d.daily,m=d.marine,{full,h}=renderHours(d.hourly,c);
   const alerts=activeAlerts(d.alerts),warning=outdoorWarning(alerts);
@@ -6718,7 +6775,10 @@ function render(d,live,savedAt=0){
   const farm=LOC.kind==="farm"?farmCard(LOC,h,c,dy,warning,storm,now,dayRead.told):null;
   const allowedFishWins=LOC.fish&&farm?.fish?fishWindows(h,now):[];
   renderSkyFx(altDeg,c.cloud_cover,c.wind_direction_10m,wet,storm,c.wind_speed_10m,c.weather_code);
-  const scene=renderScene(sunrise,sunset,now,c,dark,LOC.tide?tideTrend(d.tides):0,allowedFishWins);
+  /* The picture lands on its own frame. The header follows in that same frame, then the
+     hourly chart, its pen, the week and its pen, then everything below. */
+  renderScene(sunrise,sunset,now,c,dark,LOC.tide?tideTrend(d.tides):0,allowedFishWins,scene=>{
+  if(gen!==RENDER_GEN)return;
   /* the scene settles in the first time the app paints, and never on the refresh, resize
      and foreground re-renders after that */
   if(!SCENE_IN&&!PRM){SCENE_IN=true;document.querySelector(".scene").classList.add("first")}
@@ -6764,6 +6824,7 @@ function render(d,live,savedAt=0){
   if(live){REVEAL_READY=true;clearTimeout(REVEAL_WAIT);REVEAL_WAIT=0}
   else if(!REVEAL_READY&&!REVEAL_WAIT)REVEAL_WAIT=setTimeout(revealReady,900);
 
+  paintSoon(gen,()=>{
   /* hourly */
   const W=appW()-40,Ht=chartH(W)-18,pad=16,n=h.temp.length,base=Ht-6;
   document.getElementById("hourlySvg").setAttribute("viewBox",`0 0 ${W} ${Ht}`);
@@ -6982,11 +7043,13 @@ function render(d,live,savedAt=0){
     read:i=>readHour(hLive,i,nowI,gold.has(i))});
   document.getElementById("hrLabels").innerHTML=labels;
 
+  paintAfter(gen,()=>{
   /* week: drawn before the tide because it sits above it, so its entrance is armed first */
   const {wk,we}=weekSpan(dy);
   renderWeek(wk,css,we);
   document.getElementById("weekNote").textContent=weekendNote(wk,we);
 
+  paintAfter(gen,()=>{
   document.getElementById("tideSection").style.display=LOC.tide?"":"none";
   /* the water over the tide chart, assembled by waterCard and painted before the chart is drawn,
      so the chart's entrance measures it where it will stay */
@@ -7067,12 +7130,13 @@ function render(d,live,savedAt=0){
      measured before them stops in mid-air where the sky used to end. */
   paintBolts();
   starsClearOfType();
-  /* A boundary repaint carries the original reading age, including a live reading. */
-  savedAt=savedAt||(LAST?.d===d?LAST.savedAt:Date.now());
-  LAST={d,live,savedAt};LASTW=appW();
+  /* The reading age was fixed when this paint began. Width is taken once the page
+     below the header has landed, which is what a resize compares against. */
+  LASTW=appW();
   fishSchedule(allowedFishWins);
   paintCobweb();
   fishMotion();
+  });});});});
 }
 /* The line boxes of the type in the header, which the stars and Halloween's cobweb keep off. Text
    nodes, not elements: a Range over an element also returns every child's border box, which is the
@@ -7376,6 +7440,8 @@ function paintLocationShell(){
   document.getElementById("uvDetails").style.display=comfort?"none":"";
 }
 function paintLoadingState(){
+  /* a paint still landing from the previous reading stands down */
+  RENDER_GEN++;
   sceneResume();
   fishCancel();
   paintLocationShell();
