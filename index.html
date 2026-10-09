@@ -7257,6 +7257,9 @@ function paintCobweb(){
   }
   el.innerHTML=`<svg width="${W-x0}" height="${H}" viewBox="${x0} 0 ${W-x0} ${H}" data-web="${f1(plan.R)}"${sp?` data-spider="${f1(sp.x)} ${f1(sp.y)} ${sp.D} ${sp.d}"`:""}>${out}</svg>`;
   el.hidden=false;
+  /* Placed after the pens park the picture, and again when the fonts land. The spider
+     would otherwise start after that park and sway through the draw. */
+  sceneMotion();
 }
 let LAST=null,LASTW=0,rzT,FISH_TIMER=0;
 function fishCancel(){clearTimeout(FISH_TIMER);FISH_TIMER=0}

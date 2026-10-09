@@ -762,6 +762,7 @@ test("offscreen scenery resumes elapsed gestures without replaying entrances or 
   assert.match(html, /function penScene\(\)/);
   assert.match(html, /t\.closest\("#sceneSvg,#rainFx,#skyFx,#flash,#cobweb"\)/);
   assert.match(html, /sceneMotion\(\);\s*const was=PEN_HELD/);
+  assert.match(html, /el\.hidden=false;\n  \/\* Placed after the pens park the picture[\s\S]*?\*\/\n  sceneMotion\(\);/);
   assert.ok(html.includes('new IntersectionObserver(()=>fishMotion(),{threshold:0}).observe(document.getElementById("sky"))'));
   assert.ok(html.includes('Math.floor((120-ambient)/3)'),"chart fish yield within the existing animation ceiling");
 });
