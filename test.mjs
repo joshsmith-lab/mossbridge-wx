@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v91/);
+  assert.match(worker, /mbwx-shell-v92/);
   // the clouds end in their own scallops: Josh loves the clouds and not the curly tail
   const cloud = html.match(/const propCloud=seed=>\[[\s\S]*?\];/);
   assert.ok(cloud, "propCloud should be extractable");
@@ -608,10 +608,21 @@ test("and the rain is visible when it rains there", async () => {
   assert.match(html, /const nrTop=base-rTop\*\.94,nrLand=base\+4;/);
   assert.match(html, /span=nrLand-nrTop;/);
   assert.doesNotMatch(html, /span=H\+10-nrTop/);
-  // a drop is several frames long at its own speed, so it reads as a streak, not a dash
-  // jumping its own length every frame
-  assert.match(html, /const step=968\/nrFall\/60/);
-  assert.match(html, /const len=clamp\(step\*2\.6,22,Math\.min\(64,span\*\.72\)\)/);
+  // a drop is 2.6 frames long at 30Hz, so a phone that steps down from 60 still
+  // overlaps the streak. The 60Hz step and the 64px cap left light rain short of that.
+  assert.match(html, /const step=968\/nrFall\/30/);
+  assert.match(html, /const len=clamp\(step\*2\.6,22,span\*\.72\)/);
+  assert.doesNotMatch(html, /968\/nrFall\/60/);
+  assert.doesNotMatch(html, /Math\.min\(64,span\*\.72\)/);
+  // sky streaks use the same 30Hz step, take their phase off the clock, and are not
+  // rebuilt when the rain itself has not changed. The pen pauses them while it draws
+  // the hours or the week, and leaves them running for every chart below that.
+  assert.match(html, /Math\.min\(176,880\/d\/30\*2\.6\)/);
+  assert.match(html, /\(nowS\+seed\*d\)%d/);
+  assert.match(html, /rainKey!==RAIN_KEY\|\|rf\.childElementCount!==count/);
+  assert.match(html, /pictureKey===SCENE_KEY&&SCENE_META&&sceneSvg\.childElementCount\)return SCENE_META/);
+  assert.match(html, /REVEAL\.hourly\.state==="running"\|\|REVEAL\.week\.state==="running"/);
+  assert.match(html, /\.rainfx\.held i,#sceneSvg\.rain-held \.nearrain\{animation-play-state:paused\}/);
   // dealt one to a slot across the frame, not thrown in clumps
   assert.match(html, /const tx=-34\+\(i\+\.15\+nr\(\)\*\.7\)\*slot/);
   // the pond answers the rain rather than going glass-still under it, which it used to do

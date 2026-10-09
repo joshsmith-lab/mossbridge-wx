@@ -116,6 +116,9 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
   transform:skewX(var(--rlean,0deg))}
 .rainfx i{position:absolute;top:-12%;width:var(--rw,1.2px);height:var(--rh,8%);border-radius:1px;
   background:linear-gradient(180deg,transparent,var(--rain,rgba(226,240,246,.62)));animation:fall linear infinite}
+/* the first-screen pen and the streaks do not share a frame. Paused, not removed,
+   so the phase they already have is the one they resume on. */
+.rainfx.held i,#sceneSvg.rain-held .nearrain{animation-play-state:paused}
 @keyframes fall{to{transform:translate3d(var(--rx,-14px),880px,0)}}
 /* snow is the same generator wearing different clothes: round, slow, and it wanders on the
    way down instead of falling in a line */
@@ -1264,7 +1267,8 @@ function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd,code){
       </defs>${glow}${stars}${meteor}${clouds}<g id="boltLayer"></g></svg>`;
 
   const rf=document.getElementById("rainFx"),snowing=isSnow(code);
-  rf.className="rainfx"+(snowing?" snow":"");
+  const held=rf.classList.contains("held");
+  rf.className="rainfx"+(snowing?" snow":"")+(held?" held":"");
   if(wet&&!PRM){
     const [count,fallSec,weight]=snowing?(SNOWFALL[code]||SNOWFALL[73]):(RAIN[code]||RAIN[63]);
     /* the lean follows the same side as the cloud drift, so the whole sky agrees. Snow is
@@ -1278,12 +1282,26 @@ function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd,code){
        belongs further down, in front of the fold, where the problem actually is. */
     rf.style.setProperty("--rw",(snowing?weight:1.2*weight).toFixed(2)+"px");
     rf.style.setProperty("--rh",(5.5+weight*3).toFixed(1)+"%");
-    const r2=mulberry(4242);
-    rf.innerHTML=Array.from({length:count},()=>{
-      const l=r2()*112-6, d=(fallSec*(.82+r2()*.4)).toFixed(2), dl=(r2()*(snowing?9:1.6)).toFixed(2);
-      return `<i style="left:${l.toFixed(1)}%;animation-duration:${d}s;animation-delay:-${dl}s;opacity:${(snowing?.5+r2()*.5:.28+r2()*.42*weight).toFixed(2)}"></i>`;
-    }).join("");
-  } else rf.innerHTML="";
+    /* Same drops, same lengths, same seeds: a refresh only retouches the wind on the
+       parent. Rebuilding them restarted every streak. The delay is the clock plus this
+       drop's own seed, the way the animals take their phase, so a rebuild that does
+       happen picks the streak up where it was. Snow stays a dot. Rain is long enough
+       that one frame at 30Hz still overlaps the one before it: 2.6 times the distance
+       the drop travels in that frame (880px across `d` seconds), capped so the fastest
+       downpour stays a streak rather than a column. */
+    const rainKey=[code,count,fallSec,weight,snowing?1:0].join("|");
+    if(rainKey!==RAIN_KEY||rf.childElementCount!==count){
+      RAIN_KEY=rainKey;
+      const r2=mulberry(4242),nowS=Date.now()/1000;
+      rf.innerHTML=Array.from({length:count},()=>{
+        const l=r2()*112-6,d=fallSec*(.82+r2()*.4),seed=r2();
+        const op=snowing?.5+r2()*.5:.28+r2()*.42*weight;
+        const dl=(nowS+seed*d)%d;
+        const h=snowing?"":`height:${Math.min(176,880/d/30*2.6).toFixed(0)}px;`;
+        return `<i style="left:${l.toFixed(1)}%;${h}animation-duration:${d.toFixed(2)}s;animation-delay:-${dl.toFixed(2)}s;opacity:${op.toFixed(2)}"></i>`;
+      }).join("");
+    }
+  } else {RAIN_KEY="";rf.innerHTML=""}
   const fl=document.getElementById("flash");
   fl.className="flash"+(PRM||!THUNDER?"":THUNDER>1?" on":" far");
   fl.style.animationDelay=`-${(Date.now()/1000%STORM_P).toFixed(2)}s`;
@@ -3069,7 +3087,39 @@ function tideTrend(preds){
   }
   return 0;
 }
+/* The picture is expensive to build and a refresh rebuilds it from scratch, which is the
+   hitch under the pen and the rain. Skip that write when the inputs that change the
+   picture still match, and keep the last sun and moon reading to hand back. Cleared
+   whenever the svg is emptied. */
+let SCENE_KEY="",SCENE_META=null,RAIN_KEY="";
+function scenePictureKey(now,weather,dark,tideDir,fishWins){
+  const sp=sunPos(now),mp=moonPos(now);
+  const sun=sp.alt*180/Math.PI,malt=mp.alt*180/Math.PI;
+  const maz=((mp.az*180/Math.PI)%360+360)%360;
+  const rising=sunPos(new Date(now.getTime()+6e5)).alt>sp.alt;
+  const q=n=>Math.round(+n||0);
+  const wind=+weather.wind_speed_10m||0,gust=+weather.wind_gusts_10m||0,temp=+weather.temperature_2m||0,cloud=+weather.cloud_cover||0;
+  const bit=(...xs)=>xs.map(v=>v?1:0).join("");
+  /* thresholds the drawing actually branches on, so a reading that crosses one still
+     rebuilds even when the rounded numbers land in the same bucket */
+  const gates=bit(
+    sun<-6,sun<-.83,sun<=6,sun>=-4.5&&sun<=6,sun<9,sun<14,rising,
+    wind<9,wind<=12,wind<18,wind>=7,
+    gust<5,gust<15,gust>=22,gust>=30,gust<=18,
+    temp<=34,temp<42,temp<48,temp<50,temp>=40,temp>=45,temp>=60,
+    cloud>=10,cloud>40,cloud<=85,cloud>75,cloud<30,mp.alt>-.05);
+  const fish=fishWins.map(w=>Math.round(w.start/6e4)+"-"+Math.round(w.end/6e4)).join(",");
+  return [LOC.id,q(appW()),PRM?1:0,dark?1:0,tideDir|0,THUNDER|0,
+    weather.weather_code|0,q(cloud/5)*5,q(wind),q((+weather.wind_direction_10m||0)/5)*5,q(gust),q(temp),
+    q((+weather.relative_humidity_2m||0)/5)*5,q(weather.uv_index),
+    Math.round(sun*2)/2,Math.round(malt*2)/2,q(maz/2)*2,now.getHours(),locToday(),
+    fishWindowActive(fishWins,now,weather)?1:0,fish,gates,q(moonPhase(now)*100)].join("|");
+}
 function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[]){
+  const pictureKey=scenePictureKey(now,weather,dark,tideDir,fishWins);
+  const sceneSvg=document.getElementById("sceneSvg");
+  if(pictureKey===SCENE_KEY&&SCENE_META&&sceneSvg.childElementCount)return SCENE_META;
+  const commit=meta=>(SCENE_KEY=pictureKey,SCENE_META=meta);
   const cloud=weather.cloud_cover||0,wind=weather.wind_speed_10m||0,code=weather.weather_code;
   const wet=isWet(code),snowing=isSnow(code);
   const storm=[95,96,99].includes(code),fog=[45,48].includes(code),quietWeather=!wet&&!storm;
@@ -3904,7 +3954,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[]){
       ${snowing?`<path d="M -12 ${base+1} Q ${W*.28} ${base-3} ${W*.52} ${base+1} T ${W+12} ${base-1} L ${W+12} ${base+5} L -12 ${base+5} Z" fill="#F4F7F2" opacity=".42"/>`:""}
       ${tufts.map((d,i)=>d?`<g fill="${ink}" opacity=".82"${bandAt(i)}><path d="${d}"/></g>`:"").join("")}
       ${deer}${magpie}${rabbit}${sunTimes}`;
-    return {sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05};
+    return commit({sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05});
   }
 
   if(LOC.scene==="ridge"){
@@ -4136,15 +4186,13 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[]){
       const nrK=clamp((nrWeight-.55)/.7,0,1),span=nrLand-nrTop;
       const nrTan=Math.tan(clamp(wind*.62,0,18)*downwind*Math.PI/180);
       const nr=mulberry(5347),drops=10+Math.round(nrK*9);
-      /* A drop's length comes off how far it moves in one frame. In a downpour the near
-         drops cover 26px a frame, and at 32px long a drop barely overlapped the frame
-         before it, so the eye got a field of white dashes jumping about rather than rain:
-         quick enough, but not long enough to be a streak. The sky layer never had this
-         because its drops are several frames long and fade in from the tail. These do the
-         same now, as a taper rather than a gradient, so a calm day's dead-vertical drop has
-         nothing to lose to a zero-width bounding box. Across the frame they are dealt one
-         to a slot rather than thrown at random, which is what stacked three over the barn. */
-      const step=968/nrFall/60,hw=(1.25+nrK*1.05)/2,cs=1/Math.hypot(1,nrTan),slot=(W+68)/drops;
+      /* A drop's length is 2.6 frames at 30Hz, the slow step a phone falls to, and it
+         is still capped to the ridge face. Sized for 60Hz, a light rain was shorter than
+         one slow frame and read as dashes. The taper keeps a dead-vertical drop from
+         collapsing to a zero-width box. Across the frame they are dealt one to a slot
+         rather than thrown at random, which is what stacked three over the barn. The
+         delay is the clock plus this drop's own seed, so a rebuild picks it up. */
+      const step=968/nrFall/30,hw=(1.25+nrK*1.05)/2,cs=1/Math.hypot(1,nrTan),slot=(W+68)/drops;
       nearRain=`<g mask="url(#ridgerain)" fill="${dark?'#DCE9F0':'#F4FAFC'}">`
         +Array.from({length:drops},(_,i)=>{
           /* Speed is not a taste: the layer above crosses 880px in nrFall seconds, and a
@@ -4153,11 +4201,12 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[]){
              out four times slower than the rain over the ridgeline, which is what made a
              long one read as a slash drawn across the picture rather than as a drop. Long
              and quick is a raindrop. Long and slow is a scratch. */
-          const len=clamp(step*2.6,22,Math.min(64,span*.72))*(.85+nr()*.3),travel=span+len;
+          const len=clamp(step*2.6,22,span*.72)*(.85+nr()*.3),travel=span+len;
           const d=travel*nrFall/968*(.9+nr()*.2);
           const tx=-34+(i+.15+nr()*.7)*slot,ty=nrTop-len,hx=tx+len*nrTan,nx=cs,ny=-nrTan*cs,tw=.15;
           const P=(x,y)=>`${x.toFixed(1)} ${y.toFixed(1)}`;
-          return `<path class="nearrain" d="M ${P(tx+nx*tw,ty+ny*tw)} L ${P(hx+nx*hw,nrTop+ny*hw)} A ${hw.toFixed(2)} ${hw.toFixed(2)} 0 0 1 ${P(hx-nx*hw,nrTop-ny*hw)} L ${P(tx-nx*tw,ty-ny*tw)} Z" opacity="${(.38+nrK*.24+nr()*.13).toFixed(2)}" style="--nx:${(travel*nrTan).toFixed(0)}px;--ny:${travel.toFixed(0)}px;animation-duration:${d.toFixed(2)}s;animation-delay:-${(nr()*d).toFixed(2)}s"/>`;
+          const delay=(Date.now()/1000+nr()*d)%d;
+          return `<path class="nearrain" d="M ${P(tx+nx*tw,ty+ny*tw)} L ${P(hx+nx*hw,nrTop+ny*hw)} A ${hw.toFixed(2)} ${hw.toFixed(2)} 0 0 1 ${P(hx-nx*hw,nrTop-ny*hw)} L ${P(tx-nx*tw,ty-ny*tw)} Z" opacity="${(.38+nrK*.24+nr()*.13).toFixed(2)}" style="--nx:${(travel*nrTan).toFixed(0)}px;--ny:${travel.toFixed(0)}px;animation-duration:${d.toFixed(2)}s;animation-delay:-${delay.toFixed(2)}s"/>`;
         }).join("")+`</g>`;
     }
 
@@ -4292,7 +4341,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[]){
       ${bloom}${motes}
       ${flies}
       ${sunTimes}`;
-    return {sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05};
+    return commit({sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05});
   }
 
   /* marsh: hazy maritime treeline, loblollies, live oak, spartina bank, dock, heron */
@@ -4650,7 +4699,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[]){
     <path d="M 0 ${H-3} L ${W} ${H-3}" stroke="${mix(waterBot,dark?'#3E7CA6':'#8FC3D9',.35)}" stroke-width="3" opacity="${dark?.4:.6}"/>
     ${sunTimes}`;
 
-  return {sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05};
+  return commit({sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05});
 }
 
 /* ── smooth path through points ─────────────────────── */
@@ -6215,20 +6264,31 @@ function revealApply(k){
   let last=0;
   for(const a of R.anims){const t=a.effect.getTiming();last=Math.max(last,t.delay+t.duration)}
   R.end=setTimeout(()=>revealFinish(k),last+120);
+  syncRainHold();
+}
+/* The pen stays the dash it is. While the hours or the week are drawing, the streaks
+   pause so that paint does not share the frame with every drop. Tide, moon and year
+   draw below the fold and leave the rain alone. Reduced motion never holds it. */
+function syncRainHold(){
+  const on=!PRM&&(REVEAL.hourly.state==="running"||REVEAL.week.state==="running");
+  document.getElementById("rainFx").classList.toggle("held",on);
+  document.getElementById("sceneSvg").classList.toggle("rain-held",on);
 }
 function revealFinish(k){
   const R=REVEAL[k];
   clearTimeout(R.end);
-  if(R.state==="done")return;
-  R.state="done";
-  const svg=R.g&&R.g.svg;
-  if(svg){
-    svg.classList.remove("rv-pre");
-    for(const line of svg.querySelectorAll(".tline,.wline,.rv-line2"))line.style.strokeDasharray="";
+  if(R.state!=="done"){
+    R.state="done";
+    const svg=R.g&&R.g.svg;
+    if(svg){
+      svg.classList.remove("rv-pre");
+      for(const line of svg.querySelectorAll(".tline,.wline,.rv-line2"))line.style.strokeDasharray="";
+    }
+    for(const a of R.anims)a.cancel();
+    R.anims=[];
+    if(k==="moon")fishMotion();
   }
-  for(const a of R.anims)a.cancel();
-  R.anims=[];
-  if(k==="moon")fishMotion();
+  syncRainHold();
 }
 const rvTag=(on,x,k,d)=>on?` data-rx="${x.toFixed(1)}" data-rk="${k}"${d?` data-rd="${d}"`:""}`:"";
 function finishReveal(){for(const k in REVEAL)revealFinish(k)}
@@ -6237,6 +6297,7 @@ function revealArm(){
   if(PRM)return;
   for(const k in REVEAL){const R=REVEAL[k];clearTimeout(R.end);for(const a of R.anims)a.cancel();R.anims=[];R.state="armed"}
   REVEAL_READY=false;clearTimeout(REVEAL_WAIT);REVEAL_WAIT=0;
+  syncRainHold();
 }
 function revealReady(){REVEAL_READY=true;clearTimeout(REVEAL_WAIT);REVEAL_WAIT=0;for(const k in REVEAL)revealTry(k)}
 if(!PRM){
@@ -7332,6 +7393,7 @@ function paintLoadingState(){
   document.getElementById("verdict").textContent="Reading the sky…";
   for(const id of ["chips","skyFx","rainFx","sceneSvg","hourlySvg","hrLabels","weekRows","weekSvg","moonTxt","uvSvg","moonSvg","yearSvg"])
     document.getElementById(id).innerHTML="";
+  SCENE_KEY="";SCENE_META=null;RAIN_KEY="";
   document.getElementById("flash").className="flash";
   document.getElementById("rainFx").className="rainfx";
   document.getElementById("hourlyNote").textContent="";
