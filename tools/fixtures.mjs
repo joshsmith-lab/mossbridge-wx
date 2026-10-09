@@ -213,14 +213,16 @@ export async function stage(page, { now, loc, o, tidePhase = 0, fontDir = "", po
     window.Date = F;
   }, { id: loc, t: now.getTime() });
 
+  // Regex, not a **host** glob. Playwright 1.55 does not match that glob, so the
+  // harness was painting the live forecast and calling it the fixture.
   if (fontDir) {
-    await page.route("**fonts.googleapis.com**", (r) => r.fulfill({ contentType: "text/css", body: FONT_CSS(port) }));
-    await page.route("**fonts.gstatic.com**", (r) => r.abort());
+    await page.route(/fonts\.googleapis\.com/, (r) => r.fulfill({ contentType: "text/css", body: FONT_CSS(port) }));
+    await page.route(/fonts\.gstatic\.com/, (r) => r.abort());
   }
-  await page.route("**api.open-meteo.com**", (r) => r.fulfill({ json: forecast(now, o, LOC_TZ[loc], loc) }));
+  await page.route(/api\.open-meteo\.com/, (r) => r.fulfill({ json: forecast(now, o, LOC_TZ[loc], loc) }));
   // two days of seas, because after dark the boat's sentence speaks for tomorrow
-  await page.route("**marine-api.open-meteo.com**", (r) => r.fulfill({ json: marine(now, o, LOC_TZ[loc]) }));
-  await page.route("**tidesandcurrents.noaa.gov**", (r) => r.fulfill({ json: coops(r.request().url(), now, o, tidePhase) }));
-  await page.route("**api.weather.gov/alerts**", (r) => r.fulfill({ json: { features: o.code >= 95 ? SEVERE(now) : [] } }));
-  await page.route("**api.weather.gov/products**", (r) => r.fulfill({ json: { "@graph": [] } }));
+  await page.route(/marine-api\.open-meteo\.com/, (r) => r.fulfill({ json: marine(now, o, LOC_TZ[loc]) }));
+  await page.route(/tidesandcurrents\.noaa\.gov/, (r) => r.fulfill({ json: coops(r.request().url(), now, o, tidePhase) }));
+  await page.route(/api\.weather\.gov\/alerts/, (r) => r.fulfill({ json: { features: o.code >= 95 ? SEVERE(now) : [] } }));
+  await page.route(/api\.weather\.gov\/products/, (r) => r.fulfill({ json: { "@graph": [] } }));
 }
