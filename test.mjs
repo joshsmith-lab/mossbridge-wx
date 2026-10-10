@@ -2338,9 +2338,10 @@ test("the water and the farm say what is there, and nothing is scored or picked"
   assert.deepEqual(W.buoyRow(erddap([["2026-08-02T17:00:00Z", 24.7, 2]]), ET), { t: "2026-08-02 13:00", v: 76.46, at: u("2026-08-02T17:00:00Z") }, "one the checks have not looked at is kept, like NOAA's preliminary readings");
   assert.deepEqual(W.buoyRow(erddap([["2026-08-02T16:30:00Z", 24.6, 1], ["2026-08-02T17:00:00Z", null, 1]]), ET), { t: "2026-08-02 12:30", v: 76.28, at: u("2026-08-02T16:30:00Z") }, "a row with no reading is no reading");
   assert.deepEqual(W.buoyRow(erddap([["2026-01-15T12:30:00Z", 8.5, 1]]), ET), { t: "2026-01-15 07:30", v: 47.3, at: u("2026-01-15T12:30:00Z") }, "January is five hours behind UTC, not four");
-  // rounded once: 24.7°C is 76.46°F, said as 76. Rounded to a tenth first it was 76.5 and said as 77
-  assert.equal(W.waterTemp({ buoy: W.buoyRow(erddap([["2026-08-02T17:00:00Z", 24.7, 1]]), ET) }, at("2026-08-02T13:30")), 76);
-  assert.equal(W.waterTemp({ buoy: W.buoyRow(erddap([["2026-08-02T17:00:00Z", 23.6, 1]]), ET) }, at("2026-08-02T13:30")), 74, "23.6°C is 74.48°F");
+  // rounded once: 24.7°C is 76.46°F, said as 76. Rounded to a tenth first it was 76.5 and said as 77.
+  // The buoy keeps its true instant, so its now is a true instant too, the same on any clock
+  assert.equal(W.waterTemp({ buoy: W.buoyRow(erddap([["2026-08-02T17:00:00Z", 24.7, 1]]), ET) }, new Date("2026-08-02T17:30:00Z")), 76);
+  assert.equal(W.waterTemp({ buoy: W.buoyRow(erddap([["2026-08-02T17:00:00Z", 23.6, 1]]), ET) }, new Date("2026-08-02T17:30:00Z")), 74, "23.6°C is 74.48°F");
   // its age is its true instant against the true now: on the night the clocks go back, 01:35 EST
   // and a reading from 01:00 EST is 35 minutes old, not the 95 that "01:00" read as EDT would be
   const fallBack = W.buoyRow(erddap([["2026-11-01T06:00:00Z", 20.0, 1]]), ET);
