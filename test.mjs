@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v95/);
+  assert.match(worker, /mbwx-shell-v96/);
   // the buoy's readings are data, so the worker never answers them from the shell's cache
   assert.match(worker, /u\.hostname\.includes\("weather\.gov"\)\|\|u\.hostname\.includes\("secoora\.org"\)\|\|/);
   // the clouds end in their own scallops: Josh loves the clouds and not the curly tail
@@ -680,7 +680,8 @@ test("the almanac fishes the farm pond, the coast keeps its neutral sun line, an
   // the run does not carry). fishLine and farmCard are run under "the water and the farm" below
   assert.match(html, /function fishLine\(h,now\)/);
   assert.match(html, /function fishWindows\(h,now\)/);
-  assert.match(html, /if\(LOC\.fish\)renderMoon\(css,allowedFishWins,now\);/);
+  // the moon chart draws the same allowed list, and reads the whole run for its water and for why
+  assert.match(html, /if\(LOC\.fish\)renderMoon\(css,allowedFishWins,now,\{h:full,why:fishWhy\(full,now,\{storm,warning,ice:isIce\(\+c\.weather_code\),\n    stay:stayed\?coveredHours\(h,dy,now\)\.hrs:null,shown:allowedFishWins,\n    until:h\.time\?\.length\?new Date\(h\.time\[h\.time\.length-1\]\)\.getTime\(\)\+36e5:\+now\}\)\}\);/);
   // the ridge sun line states when, never what to wear; the kids' language stays coastal
   assert.match(html, /function ridgeSunLine\(c,dy,h,now\)/);
   assert.match(html, /comfort\?comfortAdvice\(c,h\):LOC\.scene==="ridge"\?ridgeSunLine\(c,dy,h,now\):sunProtectionAdvice\(c,dy,h,now\)/);
@@ -724,10 +725,213 @@ test("the approved fish shares the almanac windows and keeps its water on the sa
   for (const name of ["Rise","Ring","Drops"])
     assert.match(html, new RegExp(`animation:porchFish${name} 18s`), "one cycle for fish and water");
   assert.match(html, /now>=w\.start&&now<w\.end/);
-  assert.match(html, /#moonSvg \.bite-body,#moonSvg \.bite-ring,#moonSvg \.bite-drops\{animation-play-state:paused\}/);
+  assert.match(html, /#moonSvg \.leap-body,#moonSvg \.leap-ring,#moonSvg \.leap-drops\{animation-play-state:paused\}/);
   assert.match(agents, /Josh approved fish on both this moon line and the Shady Spring pond/);
   assert.match(agents, /never a report of actual fish activity/);
   assert.match(agents, /The animation ceiling stays 120/);
+});
+
+test("the moon explained (Josh, October 10 2026): the pond, its chop, its resting fish, and why the fishing times went", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const agents = await readFile(new URL("AGENTS.md", root), "utf8");
+  const css = html.slice(html.indexOf("<style>"), html.indexOf("</style>"));
+  const cut = (a, b) => { const i = html.indexOf(a), j = html.indexOf(b, i); assert.ok(i > 0 && j > i, `${a} is extractable`); return html.slice(i, j); };
+  // the solunar windows are fixed here, so each window's own hours are what is tested
+  let wins = [];
+  const ctx = vm.createContext({ solunarWindows: () => wins, clamp: (v, a, b) => Math.min(b, Math.max(a, v)),
+    known: (v) => v != null && v !== "" && Number.isFinite(+v), isIce: (w) => [56, 57, 66, 67].includes(w) });
+  vm.runInContext([cut("function rowPlace(", "function moonNoteFit("), cut("const FISH_REACH=", "function chartFish("),
+    "Object.assign(globalThis,{rowPlace,fishWhy,chopLevel,pondSurface,fishSpots,FISH_REACH,FISH_REST});"].join("\n"), ctx);
+  const own = (r) => r == null || typeof r !== "object" ? r : JSON.parse(JSON.stringify(r));
+
+  // The chop is the run's own gusts, B's lines: flat under 22, a light chop from 22, choppy from 30,
+  // the gust that takes a fishing time. A gust the run does not carry is flat water, never a gale
+  for (const g of [null, undefined, "", NaN, "x", 0, 12, 21.9]) assert.equal(ctx.chopLevel(g), 0, `gust ${g} is flat`);
+  for (const g of [22, 25, 29.9, "24"]) assert.equal(ctx.chopLevel(g), 1, `gust ${g} is a light chop`);
+  for (const g of [30, 41, 51]) assert.equal(ctx.chopLevel(g), 2, `gust ${g} is choppy`);
+  // the surface rides on the horizon from x0 to x1 exactly, flat before the run starts, past its end
+  // and wherever the gust is unknown, and it never moves the scale under it
+  const hour = (h) => `2026-10-10T${String(h).padStart(2, "0")}:00`, t = (h) => new Date(hour(h)).getTime();
+  const flat = own(ctx.pondSurface(null, 16, 334, t(10), t(20), 120));
+  assert.equal(flat[0].x, 16); assert.equal(flat.at(-1).x, 334);
+  assert.ok(flat.every((p) => p.y === 120 && p.chop === 0), "no run is a flat pond");
+  const run = { time: [12, 13, 14, 15, 16, 17].map(hour), gust: [12, 25, 25, 36, 36, null] };
+  const S = own(ctx.pondSurface(run, 0, 400, t(10), t(20), 120)), at = (h) => S.filter((p) => p.x >= (h - 10) * 40 + 12 && p.x < (h - 9) * 40 - 12);
+  assert.ok(at(10).every((p) => p.y === 120) && at(11).every((p) => p.y === 120), "before the run starts the water is flat");
+  assert.ok(at(12).every((p) => p.chop === 0), "a 12 mph hour is flat");
+  assert.ok(at(13).every((p) => Math.abs(p.chop - 1.1) < 1e-9) && at(13).some((p) => p.y < 119), "a 25 mph hour stands up in a light chop");
+  assert.ok(at(15).every((p) => Math.abs(p.chop - 2.2) < 1e-9), "a 36 mph hour is choppy");
+  assert.ok(Math.min(...at(15).map((p) => p.y)) < Math.min(...at(13).map((p) => p.y)) - 1, "choppy stands higher than a light chop");
+  assert.ok(at(17).every((p) => p.y === 120) && at(19).every((p) => p.y === 120), "an unknown gust and the hours past the run are flat");
+  assert.ok(S.every((p) => p.y > 120 - 5 && p.y < 120 + 2), "the chop stays a few pixels either side of the horizon");
+  assert.match(html, /const surf=pondSurface\(h,x0,xR,t0,t1,hz\),rough=surf\.some\(p=>p\.chop>0\);/);
+  assert.match(html, /if\(surf\.some\(p=>p\.chop>=1\.4\)\)for\(let row=0;row<3;row\+\+\)\{/, "wavelets only in the choppy water");
+  // and the moon's line is cut at that surface: up over it, dotted under the water, which is drawn over the dots
+  assert.match(html, /<clipPath id="moonUp"><path d="M 0 \$\{sy0\.toFixed\(1\)\} \$\{sLine\} L \$\{W\} \$\{sy1\.toFixed\(1\)\} L \$\{W\} 0 L 0 0 Z"\/><\/clipPath>/);
+  const tpl = cut("function renderMoon(", "function yearTitle(");
+  const order = ['<g clip-path="url(#moonDown)">', "${fish.svg}", 'fill="url(#pondFill)" clip-path="url(#pondArea)"/>', "${caps}", '<path class="pond-line"', '<g class="xp-cursor"></g>', "${labels}"].map((k) => tpl.indexOf(k));
+  assert.ok(order.every((i, k) => i > 0 && (k === 0 || i > order[k - 1])), "the dots, the fish, the water over them, the wavelets, the surface, then the words: " + order);
+  assert.doesNotMatch(tpl, /class="wline"[^\n]*css\.water/, "the surface is not the line the pen draws; the moon's is");
+
+  // Why there are no fishing times, from the page's own readings, and only when the weather took
+  // every one: storms, a warning and ice now first, then ice, thunder and wind in the times' own hours
+  // or the hours the card said stay in for. A gap is nobody's reason. Never a time
+  const now = new Date("2026-10-10T12:30");
+  const W2 = [{ start: new Date("2026-10-10T12:10"), end: new Date("2026-10-10T14:10"), major: true },
+    { start: new Date("2026-10-10T18:16"), end: new Date("2026-10-10T19:16"), major: false },
+    { start: new Date("2026-10-11T00:38"), end: new Date("2026-10-11T02:38"), major: true }];
+  const hrs = (n, o = {}) => { const t0 = new Date("2026-10-10T12:00").getTime(), p = (v) => String(v).padStart(2, "0");
+    const time = Array.from({ length: n }, (_, i) => { const d = new Date(t0 + i * 36e5); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:00`; });
+    return { time, gust: time.map((s, i) => typeof o.gust === "function" ? o.gust(i) : o.gust ?? 12), code: time.map((s, i) => typeof o.code === "function" ? o.code(i) : o.code ?? 3) }; };
+  wins = W2;
+  const why = (h, o) => ctx.fishWhy(h, now, o);
+  assert.equal(why(hrs(30, { gust: 40 }), { shown: [W2[1]] }), null, "a time still drawn means nothing to explain");
+  assert.equal(why(hrs(30), {}), null, "a calm day explains nothing");
+  assert.equal(why(hrs(30), { storm: true }), "storms");
+  assert.equal(why(hrs(30), { warning: { event: "Winter Storm Warning" } }), "weather warning");
+  assert.equal(why(hrs(30), { ice: true }), "icy");
+  assert.equal(why(hrs(30, { gust: 36 }), {}), "too windy", "a gale through every time");
+  assert.equal(why(hrs(30, { gust: 36, code: (i) => i === 7 ? 95 : 3 }), {}), "thunder", "thunder is named before wind");
+  assert.equal(why(hrs(30, { gust: 36, code: (i) => i === 13 ? 66 : 3 }), {}), "icy", "and ice before thunder");
+  assert.equal(why(hrs(30, { gust: (i) => i === 13 ? null : i === 12 || i === 14 ? 12 : 36 }), {}), null, "a time lost to an unknown gust is nobody's reason");
+  assert.equal(why(hrs(30, { gust: (i) => i === 13 ? null : 36 }), {}), "too windy", "and one with a gale in it as well went for the gale");
+  assert.equal(why(hrs(8, { gust: 36 }), {}), null, "nor a time past the end of the run");
+  assert.equal(why(hrs(30, { gust: (i) => i < 3 ? 36 : 12 }), {}), null, "a time clear of the wind was not taken by it");
+  assert.equal(why(hrs(30, { gust: (i) => i === 0 ? 41 : 12 }), { stay: [0, 1, 2, 3] }), "too windy", "the card's stay-in for a gale now explains times clear on their own hours");
+  assert.equal(why(hrs(30), { stay: [0, 1, 2, 3] }), null, "a stay-in with no reading behind it says nothing");
+  // only the times the chart could ever draw count: a gale through all of them, with one calm time
+  // past the hours fishWindows reads (the chart's last two hours), is still "too windy". On October 10
+  // 2026 a day-long gale left the chart empty with only "new moon" beside it for that reason
+  const reach = new Date("2026-10-10T12:00").getTime() + 12 * 36e5;
+  assert.equal(why(hrs(30, { gust: (i) => i < 12 ? 40 : 12 }), {}), null, "a calm time the chart can draw still stands");
+  assert.equal(why(hrs(30, { gust: (i) => i < 12 ? 40 : 12 }), { until: reach }), "too windy", "and one past its reach is no reason to say nothing");
+  wins = [];
+  assert.equal(why(hrs(30, { gust: 40 }), {}), null, "no almanac time in the span, nothing to explain");
+  wins = W2;
+  for (const o of [{ storm: true }, { warning: {} }, { ice: true }, {}]) assert.doesNotMatch(String(why(hrs(30, { gust: 40 }), o)), /\d|until|after|later|from|tomorrow/, "a reason, never a time");
+  // it goes in the note after the phase, the reason alone when both do not fit beside the title,
+  // fitted again when the fonts land; and the chart's spoken label says it after "none clear"
+  assert.match(html, /moonNoteFit\(moonName\(m\)\+\(why\?" · "\+why:""\),why\);/);
+  assert.match(html, /if\(note\.dataset\.why&&title&&note\.offsetTop>title\.offsetTop\+4\)note\.textContent=note\.dataset\.why;/);
+  assert.match(html, /\$\{said\.length\?said\.join\(", "\):"none clear"\}\$\{!said\.length&&why\?", "\+why:""\}\./);
+  // and the farm's stay-in rule is the card's, unchanged: the chart is handed only the allowed list
+  assert.match(html, /const stayed=LOC\.fish&&farm&&!farm\.fish&&fishWindows\(h,now\)\.length>0;/);
+  assert.match(html, /const allowedFishWins=LOC\.fish&&farm\?\.fish\?fishWindows\(h,now\):\[\];/);
+
+  // Labels in a row: a crowded row stands a real gap apart, moves apart about evenly, and a label
+  // that would sit too far off its point gives way, the lowest priority first
+  const row = (items, lo, hi, give, gap) => own(ctx.rowPlace(items, lo, hi, give, gap));
+  const night320 = row([{ pri: 2, cx: 62, hw: 25 }, { pri: 1, cx: 112, hw: 21 }, { pri: 2, cx: 152, hw: 25 }, { pri: 1, cx: 202, hw: 21 }], 16, 264, 18, 12.4);
+  assert.equal(night320.length, 4, "four starts at 320 all stand");
+  for (let i = 1; i < 4; i++) assert.ok(night320[i].x - night320[i].hw - (night320[i - 1].x + night320[i - 1].hw) >= 12.4 - 1e-6, "a character and a half apart");
+  const pair = row([{ pri: 1, cx: 100, hw: 20 }, { pri: 1, cx: 120, hw: 20 }], 0, 400, 20, 10);
+  assert.ok(Math.abs((100 - pair[0].x) - (pair[1].x - 120)) < 1e-6, "a crowded pair moves apart evenly");
+  assert.deepEqual(row([{ pri: 1, cx: 100, hw: 20, k: "minor" }, { pri: 2, cx: 104, hw: 20, k: "major" }], 0, 400, 12, 10).map((m) => m.k), ["major"], "the minor gives way");
+  assert.ok(row([{ pri: 1, cx: 2, hw: 20 }], 0, 400, 12, 10)[0].x === 20, "an end label steps inside the edge");
+
+  // Every fishing time drawn gets one fish, a major's bigger than a minor's, seated on the water
+  // inside its own band, so each fish stands for its own time: at the band's middle, or the nearest
+  // spot inside the band where its whole leap clears the moon's disc. When none does (the time under
+  // way at moonrise or moonset, the moon on the water in its band) it rests still in its band, sunk
+  // clear of the disc. It was walked along the whole chart, and on October 10 2026 rested hours past
+  // its time under the gale that took the next one. No two resting fish touch
+  const X = (t) => t, hz = 120, base = { hz, W: 400, bottom: 200 };
+  const bands = [{ major: true, a: 40, b: 64 }, { major: false, a: 180, b: 192 }, { major: true, a: 300, b: 324 }];
+  const sp = own(ctx.fishSpots(bands, X, { ...base, disc: null }));
+  assert.equal(sp.length, 3, "a fish for every time");
+  assert.deepEqual(sp.map((f) => [f.x, f.s, f.still]), [[52, 1.15, false], [186, .88, false], [312, 1.15, false]], "in the middle of each band, majors bigger, all leaping");
+  const R = ctx.FISH_REACH, box = (f, Q) => [f.x - Q.l * f.s, hz - Q.up * f.s + (f.dy || 0), f.x + Q.r * f.s, hz + Q.down * f.s + (f.dy || 0)];
+  const hit = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
+  // a fish resting still may sit up to half its resting width past its band, its body still across it,
+  // when nothing inside the band keeps it off the moon or its neighbours; a leap starts inside it
+  const inBand = (f) => { const slack = f.still ? ctx.FISH_REST.l * f.s / 2 : 0; return f.x >= f.a - slack - 1e-9 && f.x <= f.b + slack + 1e-9; };
+  // a major overhead in the band under way, with the disc high in the sky: the leap moves inside the band to clear it
+  const high = [52, 70, 64, 90];
+  const over = own(ctx.fishSpots([{ major: true, now: true, a: 40, b: 64 }], X, { ...base, disc: high }));
+  assert.ok(inBand(over[0]) && !over[0].still && !hit(box(over[0], R), high), "it leaps from inside its band, clear of the disc: " + over[0].x);
+  // the moon setting into the pond in the band under way: no spot in the band clears the leap
+  const disc = [32, 108, 57, 133];
+  const busy = own(ctx.fishSpots([{ major: false, now: true, a: 40, b: 52 }, { major: true, a: 100, b: 124 }], X, { ...base, disc }));
+  assert.equal(busy.length, 2, "the time under way keeps its fish");
+  assert.ok(inBand(busy[0]), "inside its own band, never hours away: " + busy[0].x);
+  assert.equal(busy[0].still, true, "resting, with no leap the moon is in the way of");
+  assert.ok(!hit(box(busy[0], ctx.FISH_REST), disc), "sunk clear of the disc");
+  assert.equal(busy[0].x, 52, "at the side of its band farthest from the moon");
+  assert.ok(inBand(busy[1]) && !busy[1].still, "and the next fish keeps its own band and its leap");
+  assert.ok(!hit(box(busy[0], ctx.FISH_REST), [box(busy[1], ctx.FISH_REST)[0] - 4, 0, box(busy[1], ctx.FISH_REST)[2] + 4, 400]), "resting fish keep apart");
+  for (const f of [...sp, ...busy]) assert.ok(box(f, f.still ? ctx.FISH_REST : R)[3] <= 200, "over the times under the water");
+  // a crowded run never pushes a fish into its neighbour's band
+  const crowd = own(ctx.fishSpots([{ major: false, now: true, a: 30, b: 41 }, { major: true, a: 46, b: 68 }, { major: false, a: 80, b: 91 }], X, { ...base, disc: [24, 108, 48, 133] }));
+  assert.ok(crowd.every(inBand), "every fish in its own band: " + crowd.map((f) => f.x).join(", "));
+  // and the chart seats every fish on the pond's surface, in its band, a still one sunk just clear of the moon
+  assert.match(html, /leapFish\(x,hz\+dy,s,pal,\{offset,delay:\(Date\.now\(\)\/1000\+offset\)%18,still,band:\[X\(a\),X\(b\)\]\}\)/);
+  assert.match(html, /#moonSvg \.leap-still \.leap-body,#moonSvg \.leap-still \.leap-ring,#moonSvg \.leap-still \.leap-drops\{animation:none\}/);
+  assert.match(html, /const fish=chartFish\(wins,X,now,css,rvAt,\{t0,t1,hz,W,bottom:labTop-2,floor:botY-1,x0,xR,disc:discBox\}\);/);
+  // a moon just under the water, underfoot: a resting fish over it stays up rather than sinking onto it
+  // (October 28 2026 3:20 p.m. at 320: it was sunk 25px, onto the disc)
+  const uDisc = [25.2, 168.1, 50.4, 193.3], drawn = [28.2, 171.1, 47.4, 190.3], uhz = 150.5;
+  const uf = own(ctx.fishSpots([{ major: true, now: true, a: 24, b: 42 }], X, { hz: uhz, W: 280, bottom: 196, floor: 187, disc: uDisc }))[0];
+  const ubox = (f, Q) => [f.x - Q.l * f.s, uhz - Q.up * f.s + f.dy, f.x + Q.r * f.s, uhz + Q.down * f.s + f.dy];
+  assert.ok(inBand(uf), "in its band");
+  assert.ok(uf.dy <= 0, "not sunk onto a moon under it: " + JSON.stringify(uf));
+  assert.equal(hit(ubox(uf, ctx.FISH_REST), drawn), false, "clear of the moon under the water: " + JSON.stringify(uf));
+  // a resting fish sunk under a moon on the water never hangs past the pond's floor
+  const low = own(ctx.fishSpots([{ major: true, now: true, a: 40, b: 52 }], X, { hz: 120, W: 400, bottom: 200, floor: 145, disc: [34, 104, 58, 128] }))[0];
+  assert.ok(box(low, ctx.FISH_REST)[3] <= 145 + 1e-6, "its resting body stays in the water: " + JSON.stringify(low));
+  // neighbours keep their 4px at rest, and one's leap never reaches the other resting
+  const pair2 = own(ctx.fishSpots([{ major: true, a: 60, b: 82 }, { major: false, a: 108, b: 117 }], X, { ...base, disc: null }));
+  const occ = (f) => box(f, f.still ? ctx.FISH_REST : R);
+  assert.ok(!hit(occ(pair2[0]), box(pair2[1], ctx.FISH_REST)) && !hit(occ(pair2[1]), box(pair2[0], ctx.FISH_REST)), "no dive into a resting neighbour: " + JSON.stringify(pair2.map((f) => [f.x, f.still])));
+  assert.ok(pair2.every(inBand));
+  // and a spot at the very end of a band counts: a fish that has room to leap there leaps
+  const edge = own(ctx.fishSpots([{ major: false, a: 64.35, b: 75.51 }], X, { ...base, disc: [31.29, 108, 75.4 - 24 * .88, 133] }))[0];
+  assert.equal(edge.still, false, "it leaps from the band's end: " + edge.x);
+  assert.doesNotMatch(tpl, /over=true|ring:!over/, "no fish leaps out of the moon");
+
+  // The chart's fish rest where you can see them: their own keyframes start and end on the resting
+  // pose, which is also their plain style, so a paused fish, one past the budget and one under reduced
+  // motion all rest visibly under the water. Each is three animations on the staggered 18s clock, all
+  // transforms and opacity, under the porchFish name fishMotion pauses and resumes
+  const kf = (name) => { const i = css.indexOf(`@keyframes ${name}{`); assert.ok(i > 0, name); return css.slice(i, css.indexOf("\n}", i)); };
+  const rest = kf("porchFishLeap").match(/0%,30%,100%\{opacity:([\d.]+);transform:([^}]*)\}/);
+  assert.ok(rest && +rest[1] >= .5, "the chart's fish is visible at rest");
+  assert.match(rest[2], /^translate\(0,10px\) rotate\(-3deg\)$/, "resting just under the water");
+  assert.ok(css.includes(`#moonSvg .leap-body{opacity:${rest[1]};transform:${rest[2]};animation:porchFishLeap 18s linear infinite;`), "the plain style is the resting pose");
+  for (const n of ["LeapRing", "LeapDrops"]) assert.match(kf(`porchFish${n}`), /0%,4%(,100%)?\{opacity:0;/, `the ${n} is gone at rest`);
+  for (const n of ["Leap", "LeapRing", "LeapDrops"]) assert.doesNotMatch(kf(`porchFish${n}`).replace(/@keyframes \w+\{/, ""), /[{;](?!opacity|transform)[a-z-]+:/, `${n} moves by transform and opacity alone`);
+  assert.match(html, /<g class="leap-body">\$\{fish\}<\/g>\n    <ellipse class="leap-ring" rx="10" ry="2"\/>\n    <g class="leap-drops">/);
+  assert.match(html, /function leapFish\(x,y,s,pal,\{offset=0,delay=0,still=false,band=null\}=\{\}\)\{/);
+  assert.match(html, /transform="translate\(\$\{x\.toFixed\(2\)\} \$\{y\.toFixed\(2\)\}\) scale\(\$\{s\}\)" style="--bite-delay:-\$\{delay\.toFixed\(2\)\}s;--bite-water:\$\{pal\.water\}"/);
+  // the scene's pond fish keeps its own clock exactly: gone between leaps, drawn only while a time
+  // is under way, never under reduced motion
+  assert.ok(css.includes(`@keyframes porchFishRise{
+  0%,4%,15%,100%{opacity:0;transform:translate(-5px,8px) rotate(-24deg)}
+  4.5%{opacity:1;transform:translate(-5px,4px) rotate(-27deg)}
+  6%{opacity:1;transform:translate(-3px,-5px) rotate(-24deg)}
+  8%{opacity:1;transform:translate(0,-9px) rotate(-5deg)}
+  10%{opacity:1;transform:translate(3px,-6px) rotate(17deg)}
+  12%{opacity:1;transform:translate(5px,2px) rotate(30deg)}
+  13.5%{opacity:0;transform:translate(6px,10px) rotate(34deg)}
+}`), "the pond fish's leap is unchanged");
+  assert.match(css, /\.bite-body\{opacity:0;animation:porchFishRise 18s linear infinite;animation-delay:var\(--bite-delay,0s\)\}/);
+  assert.match(html, /pondFx\+=fishBite\(pcx-prx\*\.08,base\+13,\.88,\{\.\.\.inkPal\(INK\.fish\),water:dark\?"#B7D6E1":"#426E80"\},\{pond:true,delay:\(Date\.now\(\)\/1000\)%18\}\);/);
+  assert.match(html, /function fishBite\(x,y,s,pal,\{delay=0,pond=false,tilt=0,offset=0\}=\{\}\)\{/);
+  assert.doesNotMatch(css, /fish-still/);
+
+  // The moon's own times sit under the water, MOONRISE and MOONSET, on a tick from where the curve
+  // crosses the surface, quieter than the fishing times over the picture: faint, at the regular weight
+  assert.match(tpl, /const word=c\.rise\?"MOONRISE":"MOONSET",time=clock\(new Date\(c\.t\)\);/);
+  assert.match(tpl, /font-size="\$\{wfs\}" letter-spacing="\.06em" fill="\$\{css\.faint\}" \$\{halo\}>\$\{mk\.word\}<\/text>/);
+  assert.match(tpl, /font-size="\$\{tfs\.toFixed\(1\)\}" font-weight="400" fill="\$\{css\.faint\}" \$\{halo\}>\$\{mk\.time\}<\/text>/);
+  assert.match(tpl, /font-size="\$\{\(10\.5\*fs\)\.toFixed\(1\)\}" font-weight="600" fill="\$\{css\.wink\}"/, "the fishing times stay the answer");
+  assert.match(tpl, /const tfs=9\.2\*fs,wfs=9\.5,/, "the moon's time is smaller than a fishing time's 10.5");
+  // the disc shows its phase on light paper: a deep dark side, a white lit side, the rim outside the face
+  assert.match(tpl, /<circle r="\$\{r\}" fill="\$\{MOON_INK\}" opacity="\$\{dark\?\.55:\.88\}"\/>/);
+  assert.match(tpl, /fill="\$\{dark\?"#FFF6E2":"#FFFFFF"\}"\/>\n    <circle r="\$\{r\+\.5\}" fill="none" stroke="\$\{MOON_INK\}" stroke-width="1"\/>/);
+  // and the explorer stops on them and says them, PageUp and PageDown included
+  assert.match(tpl, /const named=ts\.map\(\(t,i\)=>t===nt\|\|starts\.includes\(t\)\|\|rim\.includes\(t\)\?i:-1\)/);
+
+  assert.match(agents, /Josh picked "A, plus B's choppy water"/);
 });
 
 test("offscreen scenery resumes elapsed gestures without replaying entrances or old animals", async () => {
@@ -1824,7 +2028,7 @@ test("Halloween's cobweb is strung across the corner of the app itself, clear of
   assert.match(html, /xpReset\(\);LAST=null;\n  paintCobweb\(\);\n\}/);
   // placed again when the alert strip opens and moves everything under it, and when the fonts land
   assert.match(html, /el\.setAttribute\("aria-expanded",open\?"true":"false"\);\n  \/\*[^\n]*\*\/\n  paintCobweb\(\);/);
-  assert.match(html, /document\.fonts\.ready\.then\(\(\)=>\{starsClearOfType\(\);paintCobweb\(\)\}\)/);
+  assert.match(html, /document\.fonts\.ready\.then\(\(\)=>\{starsClearOfType\(\);paintCobweb\(\);moonNoteFit\(\)\}\)/);
   // on the glass: out of the flow, over the rain, hidden from screen readers, and every tap goes
   // through it
   assert.match(html, /<div class="cobweb" id="cobweb" aria-hidden="true" hidden><\/div>\n<\/header>/);
@@ -2603,8 +2807,10 @@ test("the water and the farm say what is there, and nothing is scored or picked"
   const shell = html.slice(html.indexOf("function paintLocationShell("), html.indexOf("function paintLoadingState("));
   for (const s of ['"tideSvg").setAttribute("aria-label","Tide curve, next 27 hours")', '"moonSvg").setAttribute("aria-label","The moon over the next day and a half, and the almanac\'s fishing times")', '"yearSvg").setAttribute("aria-label","Normal highs and lows by month")'])
     assert.ok(shell.includes(s), `the shell resets ${s}`);
-  // the moon's labels are placed, majors first, and one that would touch a label down gives way
-  assert.match(html, /for\(const mk of\[\.\.\.marks\.filter\(m=>m\.major\),\.\.\.marks\.filter\(m=>!m\.major\)\]\)\{\n    if\(placed\.some\(p=>Math\.abs\(p\.x-mk\.x\)<p\.hw\+mk\.hw\)\)continue;/);
+  // the moon's labels are placed, a character and a half apart, and one that would sit too far off
+  // its point gives way, a minor before a major (rowPlace is run under "the moon explained" below)
+  assert.match(html, /marks\.push\(\{pri:w\.major\?2:1,txt,cx:\(X\(a\)\+X\(b\)\)\/2,hw:txt\.length\*10\.5\*fs\*\.3\}\);/);
+  assert.match(html, /for\(const mk of rowPlace\(marks,x0,xR,18,10\.5\*fs\*\.9\)\)/);
   assert.doesNotMatch(html, /id="waterRead"|id="waterLine"|id="waterLevel"|id="wFishWrap"/);
   // the farm's wave is the moon, where the tide is at the coast; the sentences are one card, the
   // farm's under the family's word and the boat's while the boat is out, painted on every render
@@ -3120,7 +3326,7 @@ test("every line reads the same way: one machine, and readers that say only what
   assert.doesNotMatch(html, /HOURLY_PEEK|TIDE_PEEK|setupHourlyPeek|setupTidePeek|PeekLive|hourly-cursor|tide-cursor/);
   assert.match(html, /xpReset\(\);LAST=null;/, "the loading and error shell resets every explorer");
   assert.match(html, /\}else xpPublish\("tide",null\);/, "a paint with no tide chart publishes none");
-  assert.match(html, /if\(LOC\.fish\)renderMoon\(css,allowedFishWins,now\);else xpPublish\("moon",null\);/);
+  assert.match(html, /until:h\.time\?\.length\?new Date\(h\.time\[h\.time\.length-1\]\)\.getTime\(\)\+36e5:\+now\}\)\}\);else xpPublish\("moon",null\);/);
   assert.match(html, /if\(N\)renderYear\(N,dy,css\);else xpPublish\("year",null\);/);
   // the week: its days stay buttons and tab stops, a slide opens the day you let go on the way a tap
   // does (weekPick), the click a drag leaves behind is swallowed, and the arrows move and open
@@ -3738,7 +3944,12 @@ test("every line runs the same width, from CHART_IN to CHART_IN", async () => {
   assert.match(tide, /const spots=\[\["end",xR\],\["start",x0\]\];/);
   // and clear of the tag's room beside the bow and the stern, drawn or not
   assert.match(tide, /const solid=\[\.\.\.times,\[nx-26\*fs-tagRoom,boatTop,nx\+24\*fs\+tagRoom,ny\+6\],/);
-  assert.match(fn("renderMoon", "function yearTitle("), /padX=CHART_IN,fs=[^\n]*\n[^\n]*\n  const topY=50,botY=H-8,x0=padX;/);
+  // the moon too, with the pond's surface and its water from CHART_IN to CHART_IN as well
+  const moonSrc = fn("renderMoon", "function yearTitle(");
+  assert.match(moonSrc, /const topLab=12\*fs,topY=Math\.round\(topLab\+27\),botY=Math\.round\(labTop-10\),x0=padX,xR=W-padX;\n  const X=t=>x0\+\(t-t0\)\/\(t1-t0\)\*\(xR-x0\);/);
+  assert.match(moonSrc, /const W=appW\(\)-40,padX=CHART_IN,fs=/);
+  assert.match(moonSrc, /const surf=pondSurface\(h,x0,xR,t0,t1,hz\)/);
+  assert.match(moonSrc, /<rect x="\$\{x0\}" y="\$\{\(hz-6\)\.toFixed\(1\)\}" width="\$\{\(xR-x0\)\.toFixed\(1\)\}"[^>]*fill="url\(#pondFill\)"/);
   // the year's months are laid out between the two edges, the wrap clipped to them, the months
   // row padded by the same 16px so each letter sits under its point
   const year = fn("renderYear", "const vane=");

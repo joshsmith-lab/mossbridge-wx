@@ -619,9 +619,52 @@ html[data-theme=dark] .xp-peek .warm{color:var(--heat)}
   18%{opacity:0;transform:translate(5px,2px) scale(.85)}
 }
 .fish-bite{pointer-events:none}
+/* The chart's fish live in the pond under the moon (Josh, October 10 2026: "where did my fishing
+   times go? i had lil jumping fish?"). Each one rests where you can see it, just under the water in
+   its own fishing time, ghosted by the water drawn over it. On the same staggered 18-second clock it
+   makes its one leap, out past the surface with its ring and back in with its splash, and settles
+   back under, so a fish is there the whole time and not only for the two seconds it is in the air.
+   The rest pose is the first frame and the plain style alike, so a paused fish, a fish past the
+   budget and a fish under reduced motion all rest in the same place. The scene's pond fish keeps
+   its own keyframes above. */
+#moonSvg .leap-body,#moonSvg .leap-ring,#moonSvg .leap-drops{transform-box:view-box;transform-origin:0 0}
+#moonSvg .leap-body{opacity:.62;transform:translate(0,10px) rotate(-3deg);animation:porchFishLeap 18s linear infinite;animation-delay:var(--bite-delay,0s)}
+#moonSvg .leap-ring{fill:none;stroke:var(--bite-water);stroke-width:1.2;opacity:0;animation:porchFishLeapRing 18s ease-out infinite;animation-delay:var(--bite-delay,0s)}
+#moonSvg .leap-drops{fill:var(--bite-water);opacity:0;animation:porchFishLeapDrops 18s ease-out infinite;animation-delay:var(--bite-delay,0s)}
+@keyframes porchFishLeap{
+  0%,30%,100%{opacity:.62;transform:translate(0,10px) rotate(-3deg)}
+  2.5%{opacity:.66;transform:translate(-7px,10px) rotate(-14deg)}
+  4.5%{opacity:1;transform:translate(-8px,2px) rotate(-34deg)}
+  6%{opacity:1;transform:translate(-4px,-8px) rotate(-26deg)}
+  7.5%{opacity:1;transform:translate(-1px,-12px) rotate(-8deg)}
+  9%{opacity:1;transform:translate(3px,-10px) rotate(14deg)}
+  10.5%{opacity:1;transform:translate(6px,-3px) rotate(32deg)}
+  12%{opacity:.92;transform:translate(8px,6px) rotate(40deg)}
+  13.5%{opacity:.66;transform:translate(8px,11px) rotate(16deg)}
+  22%{opacity:.62;transform:translate(3px,10px) rotate(0deg)}
+}
+@keyframes porchFishLeapRing{
+  0%,4%,100%{opacity:0;transform:translate(-9px,1px) scale(.45)}
+  4.5%{opacity:.6;transform:translate(-9px,1px) scale(.5)}
+  9%{opacity:0;transform:translate(-9px,1px) scale(1.4)}
+  11.4%{opacity:0;transform:translate(9px,1px) scale(.45)}
+  12%{opacity:.75;transform:translate(9px,1px) scale(.55)}
+  22%{opacity:0;transform:translate(9px,1px) scale(1.6)}
+}
+@keyframes porchFishLeapDrops{
+  0%,4%{opacity:0;transform:translate(-9px,1px) scale(.2)}
+  4.6%{opacity:.7;transform:translate(-9px,-1px) scale(.45)}
+  6.5%{opacity:0;transform:translate(-9px,-4px) scale(.8)}
+  11.4%{opacity:0;transform:translate(9px,1px) scale(.2)}
+  12%{opacity:.85;transform:translate(9px,-1px) scale(.6)}
+  13.5%{opacity:.7;transform:translate(9px,-6px) scale(1.1)}
+  18%,100%{opacity:0;transform:translate(9px,2px) scale(.9)}
+}
 /* Chart fish start paused until their chart is visible; fishMotion resumes the same
-   animation objects on their original clock, with no work between their quiet gaps. */
-#moonSvg .bite-body,#moonSvg .bite-ring,#moonSvg .bite-drops{animation-play-state:paused}
+   animation objects on their original clock, with no work between their leaps. */
+#moonSvg .leap-body,#moonSvg .leap-ring,#moonSvg .leap-drops{animation-play-state:paused}
+/* a fish whose leap the moon is in the way of rests in its band and does not leap */
+#moonSvg .leap-still .leap-body,#moonSvg .leap-still .leap-ring,#moonSvg .leap-still .leap-drops{animation:none}
 
 /* the charts' entrance (see REVEAL): hidden until the pen gets there, and what grows,
    grows from where it stands */
@@ -3102,31 +3145,92 @@ function fishBite(x,y,s,pal,{delay=0,pond=false,tilt=0,offset=0}={}){
     <g class="bite-drops"><path d="M -4 0 Q -7 -3 -7 -6 Q -3 -5 -4 0 M 0 -1 Q -1 -6 1 -9 Q 3 -5 0 -1 M 4 0 Q 5 -5 8 -5 Q 8 -2 4 0"/></g>
   </g>`;
 }
-function chartFish(wins,X,Y,now,nx,ny,css,rvAt,{t0,t1,W,H}){
+/* One of the chart's fish, anchored on the pond's surface. It rests just under the water, which
+   is drawn over it, and leaps on its own clock (porchFishLeap), its ring and spray meeting the
+   water where it goes out and where it comes back in. The whole leap is drawn at the fish's size,
+   so a major's fish, its leap and its splash are bigger than a minor's. */
+function leapFish(x,y,s,pal,{offset=0,delay=0,still=false,band=null}={}){
+  const fish=inkRig(rigFish(),pal,{s,line:.8,heavy:.35,shade:1.3,lit:.65,light:[-.5,-1]});
+  return `<g class="fish-bite${still?" leap-still":""}" data-fish-offset="${offset}" data-fish-place="chart" data-anchor="${x.toFixed(1)} ${y.toFixed(1)}"${band?` data-band="${band[0].toFixed(1)} ${band[1].toFixed(1)}"`:""} transform="translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(${s})" style="--bite-delay:-${delay.toFixed(2)}s;--bite-water:${pal.water}" aria-hidden="true">
+    <g class="leap-body">${fish}</g>
+    <ellipse class="leap-ring" rx="10" ry="2"/>
+    <g class="leap-drops"><path d="M -4 0 Q -7 -3 -7 -6 Q -3 -5 -4 0 M 0 -1 Q -1 -6 1 -9 Q 3 -5 0 -1 M 4 0 Q 5 -5 8 -5 Q 8 -2 4 0"/></g>
+  </g>`;
+}
+/* How far a chart fish reaches, in its own units before its scale, measured off porchFishLeap with
+   its ink: it leaps toward later in the day, so from its anchor its tail swings 24 back as it winds up
+   and its nose and ring reach 25 ahead as it dives, its crest is 19 over the surface and its dive 19
+   under. Resting it keeps to 17 either side and 3 to 18 under the water, and two resting fish keep
+   4px apart. */
+const FISH_REACH={l:24,r:25,up:19,down:19},FISH_REST={l:17,r:17,up:-3,down:18};
+/* Every fishing time the chart draws gets its fish, seated on the water inside its own band, so each
+   fish stands for its own time and no other: a major's is bigger than a minor's (1.15 to .88). Every
+   spot in the band is tried, half a pixel apart and both ends, leaping or resting, and the best kept,
+   judged in this order: the fish never on the moon's disc, wherever the moon is (a leap only where
+   its whole reach is clear of it); then clear of the other fish, its rest 4px off theirs, and neither
+   one's leap reaching the other at rest; then inside the pond, its sides and its floor; then leaping
+   rather than resting; then nearest the band's middle, or for a resting fish the side of its band
+   farthest from the moon. So a fish rests in its band without leaping (`still`) when its leap would
+   reach the moon or a neighbour: the time under way at moonrise or moonset, with the moon on the
+   water in its band, often the next time for an hour or two before it starts, and on a narrow phone a
+   crowded one. A resting fish settles at whatever depth keeps it off the moon (`dy`), from its back at
+   pond's floor and never past it, the shallowest that does, and when nothing in its band does, a
+   few pixels past the band's end, its body still across it. The first build walked a fish along the
+   whole chart to find room, and it rested hours past its own time, under the gale that took the
+   next one. A minor's band is narrower than its fish on a phone and centred on the moment the moon
+   crosses the water, so a minor's fish rests where the moon's line goes under. Pure. */
+function fishSpots(bands,X,{hz,W,bottom,disc,floor=bottom,x0=0,xR=W}){
+  const box=(x,s,R,dy=0)=>[x-R.l*s,hz-R.up*s+dy,x+R.r*s,hz+R.down*s+dy];
+  const area=(a,b)=>!a||!b?0:Math.max(0,Math.min(a[2],b[2])-Math.max(a[0],b[0]))*Math.max(0,Math.min(a[3],b[3])-Math.max(a[1],b[1]));
+  const wide=(b,p)=>[b[0]-p,b[1],b[2]+p,b[3]];
+  const placed=[],out=[];
+  /* the time under way chooses first, because the moon is always in its band, then the majors, then
+     the minors */
+  const rank=w=>w.now?0:w.major?1:2;
+  for(const w of [...bands].sort((p,q)=>rank(p)-rank(q)||(p.a-q.a))){
+    const s=w.major?1.15:.88,bl=X(w.a),br=X(w.b),mid=(bl+br)/2;
+    /* a leap starts inside the band; a fish resting still may sit up to half its resting width past
+       either end, so its body still lies across its band, when that is what keeps it off the moon or
+       its neighbours (a moon low in shallow water at 760 left no spot inside the band at all) */
+    const slack=FISH_REST.l*s/2,span=(l,r)=>{const o=[];for(let x=l;x<r;x+=.5)o.push(x);o.push(r);return o};
+    const xs=span(bl,br),wider=[...xs,...span(bl-slack,br+slack)];
+    const cx=disc?(disc[0]+disc[2])/2:mid,far=Math.abs(bl-cx)>Math.abs(br-cx)?bl:br;
+    /* a resting fish can settle at any depth in the pond, from its back at the surface down to the
+       pond's floor, a pixel at a time, to keep off a moon in the water */
+    const rise=-(FISH_REST.up*-s-.5),deep=Math.max(0,floor-(hz+FISH_REST.down*s));
+    const depths=disc?[0,rise,...Array.from({length:Math.floor(deep)},(_,i)=>i+1),...(deep%1?[deep]:[])]:[0];
+    let best=null;
+    for(const [still,dy,x] of [...xs.map(x=>[false,0,x]),...wider.flatMap(x=>depths.map(d=>[true,d,x]))]){
+      const rest=box(x,s,FISH_REST,dy),reach=still?null:box(x,s,FISH_REACH);
+      if(reach&&(area(reach,disc)>0||reach[0]<0||reach[2]>W||reach[3]>bottom))continue;
+      const score=[
+        area(rest,disc),
+        placed.reduce((t,o)=>t+area(wide(rest,4),o.rest)+area(reach,o.rest)+area(o.reach,rest),0),
+        Math.max(0,x0-rest[0])+Math.max(0,rest[2]-xR)+Math.max(0,rest[3]-floor),
+        Math.max(0,bl-x,x-br),
+        still?1:0,
+        still?Math.abs(x-far):Math.abs(x-mid),
+        Math.abs(dy)];
+      if(!best||score.some((v,i)=>score.slice(0,i).every((u,j)=>Math.abs(u-best.score[j])<1e-6)&&v<best.score[i]-1e-6))
+        best={score,x,still,dy,rest,reach};
+    }
+    placed.push(best);out.push({...w,x:best.x,s,still:best.still,dy:best.dy});
+  }
+  return out.sort((p,q)=>p.a-q.a);
+}
+function chartFish(wins,X,now,css,rvAt,{t0,t1,hz,W,bottom,floor,x0,xR,disc}){
   const night=document.documentElement.dataset.theme==='dark';
   const pal={...INK.fish,water:night?'#A5C6D5':css.water};
   if(night)Object.assign(pal,{body:'#A1B391',mark:'#E2DDC0',fin:'#BC9966',ink:'#172633',lit:'#FFF3D0'});
-  return wins.map(w=>{
-    const a=Math.max(t0,+w.start),b=Math.min(t1,+w.end);if(b<=a)return '';
-    const t=(a+b)/2,yAt=t=>Y(moonPos(new Date(t)).alt*180/Math.PI);
-    /* Keep the approved centre, or wait further into the same band near the live moon.
-       The full arc keeps off its disc and the chart edges; the band remains if none fits. */
-    const far=t+Math.min(22*6e4,(b-t)*.7);
-    const candidates=Math.abs(X(t)-nx)<23?[far,t]:[t,far];
-    let at=null;
-    for(const q of candidates){const x=X(q),y=yAt(q);
-      if(x-22<0||x+22>W||y-22<0||y+10>H)continue;
-      if(x-22<nx+10&&x+22>nx-10&&y-22<ny+10&&y+10>ny-10)continue;
-      at=q;break;
-    }
-    if(at==null)return '';
-    const fx=X(at),fy=yAt(at),slope=(yAt(at+6e4)-yAt(at-6e4))/(X(at+6e4)-X(at-6e4));
+  const bands=wins.map(w=>({w,major:w.major,now:now>=w.start&&now<w.end,a:Math.max(t0,+w.start),b:Math.min(t1,+w.end)})).filter(b=>b.b>b.a);
+  const spots=fishSpots(bands,X,{hz,W,bottom,floor,x0,xR,disc});
+  return{spots,svg:spots.map(({w,x,s,still,dy,a,b})=>{
     /* Moon events own four staggered beats: overhead, setting, underfoot, rising. Dropping
        an ended window cannot retime its neighbours, and at most two brief arcs overlap. */
     const mid=(+w.start+ +w.end)/2,alt=moonPos(new Date(mid)).alt;
     const offset=(w.major?(alt>=0?0:2):(moonPos(new Date(mid+6e4)).alt>alt?3:1))*5;
-    return `<g${rvAt(fx,"fade")}>${fishBite(fx,fy,.70,pal,{tilt:Math.atan(slope)*180/Math.PI,offset,delay:(Date.now()/1000+offset)%18})}</g>`;
-  }).join('');
+    return `<g${rvAt(x,"fade")}>${leapFish(x,hz+dy,s,pal,{offset,delay:(Date.now()/1000+offset)%18,still,band:[X(a),X(b)]})}</g>`;
+  }).join('')};
 }
 let FISH_SEEN=false,SCENE_PARKED=[];
 function sceneResume(){
@@ -5221,22 +5325,124 @@ function renderTides(preds,css,gust,wind,gap=0){
 /* The farm's wave, in the place the coast has its tide. At the coast the moon moves the water; at
    the farm the almanac says it moves the fish, and its fishing times are the moon's own hours:
    overhead and underfoot (two hours each), rising and setting (one hour). So the farm draws the
-   moon's height over the same day and a half the tide chart covers, on one honest scale with the
-   horizon where zero falls, dashed while it is down, and the almanac's windows that are clear on
-   their own hours as quiet water bands, each marked when it starts. The moon rides the curve at now
-   in its own phase, the way the skiff rides the tide, and the phase is the note beside the title.
-   The title says whose theory it is; the moon times are real. */
+   moon's height over the same day and a half the tide chart covers, on one honest scale, with the
+   pond's surface where zero falls: the moon rides the sky over the water while it is up and runs on
+   under it, dotted, while it is down. Josh, October 10 2026, on a day a gale took every window:
+   "where did my fishing times go? i had lil jumping fish? that whole moon section doesn't make
+   sense now". He picked the moon explained, with the choppy water from the pond he was also shown.
+   So the almanac's windows that are clear on their own hours are quiet water bands, each marked
+   when it starts, each with a fish resting in the pond inside it that leaps now and then; the
+   moon's own times sit under the water, MOONRISE and MOONSET, quieter than the fishing times; the
+   surface stands up in a chop from the run's own gusts, so a day the wind takes the fish shows the
+   water it took them with; and the note beside the title says why when the weather has taken every
+   fishing time. The moon rides the curve at now in its own phase, the way the skiff rides the tide,
+   and the phase is the note beside the title. The title says whose theory it is; the moon times
+   are real. */
 const moonName=m=>{const f=m.fraction,wax=m.phase<.5;
   return f<.03?"new moon":f>.97?"full moon":Math.abs(f-.5)<.07?(wax?"first quarter":"last quarter")
     :f<.5?(wax?"waxing crescent":"waning crescent"):(wax?"waxing gibbous":"waning gibbous")};
 const MOON_INK="#7A73AE";
-function renderMoon(css,wins,now=wallNow()){
+/* One row of labels, placed and not stamped: each wants to sit over its own point, labels that would
+   touch join a run laid edge to edge with a real gap between them, and a run sits where its points
+   say on average, inside the chart's edges, so a crowded pair moves apart about evenly rather than
+   one shoving the next along. No label ends up more than `give` off its point; one that would
+   gives way, the lowest `pri` first, so a band never carries a time that reads as its neighbour's.
+   Two starts four hours apart at 320 used to drop one of them outright when a nudge of a few pixels
+   let both stand, and then stood them a few pixels apart, which read as one long number. Pure. */
+function rowPlace(items,lo,hi,give=14,gap=6){
+  let keep=[...items].sort((a,b)=>a.cx-b.cx);
+  while(keep.length){
+    const home=keep.map(m=>clamp(m.cx,lo+m.hw,hi-m.hw)),runs=[];
+    const fit=r=>{r.S=clamp(r.want.reduce((s,L,i)=>s+L-r.off[i],0)/r.want.length,lo,hi-r.len)};
+    keep.forEach((m,i)=>{
+      let run={n:[i],off:[0],len:2*m.hw,want:[home[i]-m.hw]};fit(run);
+      while(runs.length){const p=runs[runs.length-1];
+        if(p.S+p.len+gap<=run.S+.01)break;
+        runs.pop();const base=p.len+gap;
+        run={n:[...p.n,...run.n],off:[...p.off,...run.off.map(o=>o+base)],len:base+run.len,want:[...p.want,...run.want]};fit(run);
+      }
+      runs.push(run);
+    });
+    const x=[];for(const r of runs)r.n.forEach((i,k)=>{x[i]=r.S+r.off[k]+keep[i].hw});
+    const bad=keep.map((m,i)=>Math.abs(x[i]-home[i])>give+.5||x[i]-m.hw<lo-.5||x[i]+m.hw>hi+.5);
+    if(!bad.some(Boolean))return keep.map((m,i)=>({...m,x:x[i]}));
+    /* the weakest label among the ones that would not fit and their neighbours gives way */
+    const near=new Set();bad.forEach((b,i)=>{if(b)[i-1,i,i+1].forEach(j=>{if(j>=0&&j<keep.length)near.add(j)})});
+    const out=[...near].sort((a,b)=>keep[a].pri-keep[b].pri||Math.abs(x[b]-home[b])-Math.abs(x[a]-home[a]))[0];
+    keep=keep.filter((_,i)=>i!==out);
+  }
+  return[];
+}
+/* Why the chart has no fishing times, in a word or two from what the page already knows, for the
+   note beside the title. Said only when the weather has taken every almanac time the chart would
+   draw, so the moon's day never reads as broken ("where did my fishing times go?", Josh, October 10
+   2026, under a gale). A storm overhead, a warning and ice falling now come first, because they take
+   every time at once. When the farm's card said stay in (`stay`, the hours it speaks for), the reason
+   is in those hours or the times' own. Otherwise each time went on its own hours, and every one of
+   them has to have gone for ice, thunder or a 30 mph gust: a time that went for a gap in the forecast
+   is nobody's reason, and then nothing is said. Ice, thunder and wind are named in that order. It is
+   a reason, never a time: nothing here names when anyone could go. Pure. */
+function fishWhy(h,now,{storm=false,warning=null,ice=false,stay=null,shown=[],until=Infinity}={}){
+  const t1=+now+26*3.6e6,inSpan=w=>+w.end>+now&&+w.start<t1;
+  if(shown.some(inSpan))return null;
+  /* only the times the chart could ever have drawn: fishWindows reads the hours the card reads
+     (`until`, the end of their last hour), so a calm time in the chart's last two hours, past them,
+     was never going to be drawn and is no reason to stay quiet about a gale through all the rest */
+  const wins=solunarWindows(now).filter(w=>inSpan(w)&&+w.end<=until);
+  if(!wins.length)return null;
+  if(storm)return"storms";
+  if(warning)return"weather warning";
+  if(ice)return"icy";
+  const hours=(h?.time||[]).map((s,i)=>({a:new Date(s).getTime(),i})).filter(x=>Number.isFinite(x.a));
+  const own=w=>{const a=Math.max(+now,+w.start);return hours.filter(x=>x.a<+w.end&&x.a+36e5>a).map(x=>x.i)};
+  const code=i=>known(h.code?.[i])?+h.code[i]:NaN;
+  const WHY=[["icy",i=>isIce(code(i))],["thunder",i=>[95,96,99].includes(code(i))],["too windy",i=>known(h.gust?.[i])&&+h.gust[i]>=30]];
+  const said=idx=>WHY.find(([,f])=>idx.some(f))?.[0]||null;
+  if(stay)return said([...new Set([...stay,...wins.flatMap(own)])]);
+  const each=wins.map(w=>said(own(w)));
+  return each.every(Boolean)?WHY.map(([k])=>k).find(k=>each.includes(k)):null;
+}
+/* How rough the pond's surface is drawn for an hour's gust (Josh's pick, October 10 2026, from the
+   pond he was shown beside the moon): flat under 22 mph, a light chop from 22, and choppy from 30,
+   the farm's own gale line, the gust that takes a fishing time, with a few small wavelets in the
+   water too. A gust the run does not carry is flat water, never a gale. Pure. */
+const chopLevel=g=>!known(g)?0:+g>=30?2:+g>=22?1:0;
+/* The pond's surface across the chart, hour by hour from the gusts the run carries: a sample every
+   two pixels, flat before the run starts, past its end and wherever an hour's gust is unknown. A
+   chop stands up in sharp crests over broad troughs, the way wind stands water up, and it eases in
+   over about ten pixels so one rough hour does not cut in like a step. The surface rides on the
+   horizon and never moves the moon's scale. Pure. */
+function pondSurface(h,x0,x1,t0,t1,hz){
+  const hrs=(h?.time||[]).map((s,i)=>({a:new Date(s).getTime(),i})).filter(x=>Number.isFinite(x.a));
+  const level=t=>{const x=hrs.find(x=>t>=x.a&&t<x.a+36e5);return x?chopLevel(h.gust?.[x.i]):0};
+  const xs=[];for(let x=x0;x<x1;x+=2)xs.push(x);xs.push(x1);
+  const raw=xs.map(x=>[0,1.1,2.2][level(t0+(x-x0)/(x1-x0)*(t1-t0))]);
+  const chop=raw.map((_,i)=>{let s=0,n=0;for(let j=Math.max(0,i-5);j<=Math.min(raw.length-1,i+5);j++){s+=raw[j];n++}return s/n});
+  const crest=x=>{const q=(1+Math.cos(x/13*Math.PI*2+.6))/2;return 2*q**2.6-.55};
+  return xs.map((x,i)=>({x,y:hz-chop[i]*1.35*crest(x),chop:chop[i]}));
+}
+/* the note beside the title: the phase, and when the weather has taken every fishing time, why, in a
+   word or two. On a narrow phone a long phase and a reason do not both fit beside the title, and then
+   the reason stands alone, because the disc on the curve already shows the phase. It is fitted again
+   when the fonts land, because the fallback face is narrower */
+function moonNoteFit(full,why){
+  const note=document.getElementById("moonNote"),title=note.previousElementSibling;
+  if(full!=null){note.dataset.full=full;note.dataset.why=why||""}
+  if(full==null&&!note.textContent)return;
+  note.textContent=note.dataset.full||"";
+  if(note.dataset.why&&title&&note.offsetTop>title.offsetTop+4)note.textContent=note.dataset.why;
+}
+function renderMoon(css,wins,now=wallNow(),{why=null,h=null}={}){
   const svg=document.getElementById("moonSvg");
   const t0=now.getTime()-2.5*3.6e6,t1=now.getTime()+26*3.6e6;
-  const W=appW()-40,H=chartH(W),padX=CHART_IN,fs=(W<360?1.08:W<520?1.16:1)*1.22;
-  /* the same width as every other line, the water's included */
-  const topY=50,botY=H-8,x0=padX;
-  const X=t=>x0+(t-t0)/(t1-t0)*(W-padX-x0);
+  const W=appW()-40,padX=CHART_IN,fs=(W<360?1.08:W<520?1.16:1)*1.22;
+  /* The moon explains itself (October 2026): its own times sit under the water the way the tide's
+     lows sit under the tide, a quiet word over the time, MOONRISE or MOONSET, each on a tick down from
+     where the curve crosses the surface, in the page's faint ink at its regular weight, so they never
+     read as rival answers to the fishing times over the picture. The chart is taller by that row */
+  const tfs=9.2*fs,wfs=9.5,H=chartH(W)+16,timeY=H-4,wordY=timeY-tfs*.74-6,labTop=wordY-wfs*.74;
+  const topLab=12*fs,topY=Math.round(topLab+27),botY=Math.round(labTop-10),x0=padX,xR=W-padX;
+  const X=t=>x0+(t-t0)/(t1-t0)*(xR-x0);
   const as=[];for(let t=t0;t<=t1;t+=9e5)as.push(moonPos(new Date(t)).alt*180/Math.PI);
   const hi=Math.max(12,Math.max(...as)+8),lo=Math.min(-12,Math.min(...as)-6);
   const Y=a=>topY+(botY-topY)*(hi-a)/(hi-lo),hz=Y(0);
@@ -5244,63 +5450,100 @@ function renderMoon(css,wins,now=wallNow()){
   const mono=`font-family="Spline Sans Mono,ui-monospace,monospace"`;
   const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3.5" stroke-linejoin="round"`;
   const nx=X(now.getTime()),na=moonPos(now).alt*180/Math.PI,ny=Y(na),m=moonPhase(now);
+  const dark=document.documentElement.dataset.theme==="dark";
   const rv=REVEAL.moon.state!=="done",rvAt=(x,k,d)=>rvTag(rv,x,k,d);
   let bands="",labels="";const said=[],marks=[];
   for(const w of wins){
     const a=Math.max(t0,w.start.getTime()),b=Math.min(t1,w.end.getTime());if(b<=a)continue;
     bands+=`<rect x="${X(a).toFixed(1)}" y="${(topY-6).toFixed(1)}" width="${(X(b)-X(a)).toFixed(1)}" height="${(botY-topY+6).toFixed(1)}" rx="3" fill="${css.water}" opacity="${w.major?.13:.08}"${rvAt(X(a),"fade")}/>`;
     /* the band is the span, so the label is when it starts, the way the tide says its turns */
-    const txt=now>=w.start?"now":clock(w.start),cx=(X(a)+X(b))/2,hw=txt.length*10.5*fs*.3+3;
-    marks.push({major:w.major,txt,cx,x:clamp(cx,x0+hw,W-padX-hw),hw});
+    const txt=now>=w.start?"now":clock(w.start);
+    marks.push({pri:w.major?2:1,txt,cx:(X(a)+X(b))/2,hw:txt.length*10.5*fs*.3});
     said.push(now>=w.start?"now until "+clock12(w.end):clock12(w.start)+" to "+clock12(w.end));
   }
-  /* placed, not stamped: the majors take their places first, and a label that would touch one
-     already down gives way, so two starts four hours apart at 320 never read as one time */
-  const placed=[];
-  for(const mk of[...marks.filter(m=>m.major),...marks.filter(m=>!m.major)]){
-    if(placed.some(p=>Math.abs(p.x-mk.x)<p.hw+mk.hw))continue;placed.push(mk);
-    labels+=`<text x="${mk.x.toFixed(1)}" y="${(12*fs).toFixed(1)}" text-anchor="middle" ${mono} font-size="${(10.5*fs).toFixed(1)}" font-weight="600" fill="${css.wink}" ${halo}${rvAt(mk.cx,"label")}>${mk.txt}</text>`;
+  /* a character and a half apart, so two times never read as one long number */
+  for(const mk of rowPlace(marks,x0,xR,18,10.5*fs*.9))
+    labels+=`<text x="${mk.x.toFixed(1)}" y="${topLab.toFixed(1)}" text-anchor="middle" ${mono} font-size="${(10.5*fs).toFixed(1)}" font-weight="600" fill="${css.wink}" ${halo}${rvAt(mk.cx,"label")}>${mk.txt}</text>`;
+  /* the moon's own times: where the curve meets the water, to the minute the slider says */
+  const cross=moonCross(t0,t1+26*3.6e6),rims=cross.filter(c=>c.t>=t0&&c.t<=t1);
+  let ticks="",rimLab="";
+  const rimMarks=rims.map(c=>{const word=c.rise?"MOONRISE":"MOONSET",time=clock(new Date(c.t));
+    return{pri:1,c,word,time,cx:X(c.t),hw:Math.max(word.length*wfs*.66,time.length*tfs*.6)/2}});
+  for(const mk of rowPlace(rimMarks,x0,xR,24,9)){
+    const x=X(mk.c.t);
+    ticks+=`<line x1="${x.toFixed(1)}" y1="${(hz+2).toFixed(1)}" x2="${x.toFixed(1)}" y2="${(labTop-4).toFixed(1)}" stroke="${css.line}" stroke-width="1"${rvAt(x,"fade")}/>`;
+    rimLab+=`<g${rvAt(x,"label")}><text x="${mk.x.toFixed(1)}" y="${wordY.toFixed(1)}" text-anchor="middle" ${mono} font-size="${wfs}" letter-spacing=".06em" fill="${css.faint}" ${halo}>${mk.word}</text>
+      <text x="${mk.x.toFixed(1)}" y="${timeY.toFixed(1)}" text-anchor="middle" ${mono} font-size="${tfs.toFixed(1)}" font-weight="400" fill="${css.faint}" ${halo}>${mk.time}</text></g>`;
   }
-  const r=6.2,ill=clamp(m.fraction,0,1),wax=m.phase<.5,k=(1-2*ill)*r,sw=wax?(ill>.5?0:1):(ill>.5?1:0);
-  const disc=`<g transform="translate(${nx.toFixed(1)} ${ny.toFixed(1)})"><g opacity="${na<0?.5:1}">
-    <circle r="${r+2.2}" fill="${css.paper}"/><circle r="${r}" fill="${MOON_INK}" opacity=".55"/>
-    <path d="M 0 ${-r} A ${Math.max(.01,Math.abs(k)).toFixed(2)} ${r} 0 0 ${sw} 0 ${r} A ${r} ${r} 0 0 ${wax?0:1} 0 ${-r} Z" fill="#FFF6E2"/>
-    <circle r="${r}" fill="none" stroke="${MOON_INK}" stroke-width="1.1"/></g></g>`;
+  /* The disc is the moon in its own phase. On light paper the dark side is inked deep enough and the
+     lit side white enough that a crescent still reads as a crescent, and the rim sits just outside
+     the face, so it never covers the thin lit edge of a crescent */
+  const r=7.4,R=r+2.2,ill=clamp(m.fraction,0,1),wax=m.phase<.5,k=(1-2*ill)*r,sw=wax?(ill>.5?0:1):(ill>.5?1:0);
+  const disc=`<g class="moon-disc" transform="translate(${nx.toFixed(1)} ${ny.toFixed(1)})"><g opacity="${na<0?.55:1}">
+    <circle r="${R}" fill="${css.paper}"/><circle r="${r}" fill="${MOON_INK}" opacity="${dark?.55:.88}"/>
+    <path d="M 0 ${-r} A ${Math.max(.01,Math.abs(k)).toFixed(2)} ${r} 0 0 ${sw} 0 ${r} A ${r} ${r} 0 0 ${wax?0:1} 0 ${-r} Z" fill="${dark?"#FFF6E2":"#FFFFFF"}"/>
+    <circle r="${r+.5}" fill="none" stroke="${MOON_INK}" stroke-width="1"/></g></g>`;
+  const discBox=[nx-R-3,ny-R-3,nx+R+3,ny+R+3];
+  /* the pond: its surface from the run's own gusts, the water under it, and its fish */
+  const surf=pondSurface(h,x0,xR,t0,t1,hz),rough=surf.some(p=>p.chop>0);
+  const sPath=rough?spline(surf.map(p=>[p.x,p.y])):`M ${x0} ${hz.toFixed(1)} L ${xR} ${hz.toFixed(1)}`;
+  const sLine=rough?surf.map(p=>`L ${p.x.toFixed(1)} ${p.y.toFixed(2)}`).join(" "):`L ${x0} ${hz.toFixed(1)} L ${xR} ${hz.toFixed(1)}`;
+  const sy0=rough?surf[0].y:hz,sy1=rough?surf[surf.length-1].y:hz;
+  const fish=chartFish(wins,X,now,css,rvAt,{t0,t1,hz,W,bottom:labTop-2,floor:botY-1,x0,xR,disc:discBox});
+  /* choppy water shows in the water too: a few short wavelets where the gusts reach 30, clear of the
+     disc and of every fish resting */
+  let caps="";
+  if(surf.some(p=>p.chop>=1.4))for(let row=0;row<3;row++){
+    const yy=hz+9+row*10;if(yy>botY-4)break;
+    for(let x=x0+6+row*9;x<xR-10;x+=18){const p=surf[clamp(Math.round((x-x0)/2),0,surf.length-1)];
+      if(p.chop<1.4)continue;
+      if(x+9>discBox[0]&&x<discBox[2]&&yy+1>discBox[1]&&yy-3<discBox[3])continue;
+      if(fish.spots.some(f=>x+9>f.x-FISH_REST.l*f.s&&x<f.x+FISH_REST.r*f.s))continue;
+      caps+=`<path d="M ${x.toFixed(1)} ${yy.toFixed(1)} q 3 -2.6 6 0 q 1.4 1.1 2.8 -.2" fill="none" stroke="${css.water}" stroke-width="1.2" stroke-linecap="round" opacity="${[.6,.42,.26][row]}"/>`;
+    }
+  }
+  const rimSaid=rims.map(c=>`${c.rise?"moonrise":"moonset"} ${clock12(new Date(c.t))}`).join(", ");
   svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
-  svg.setAttribute("aria-label",`The moon over the next day and a half, ${moonName(m)}. The almanac's fishing times: ${said.length?said.join(", "):"none clear"}.`);
+  svg.setAttribute("aria-label",`The moon over the next day and a half, ${moonName(m)}${rimSaid?", "+rimSaid:""}. The almanac's fishing times: ${said.length?said.join(", "):"none clear"}${!said.length&&why?", "+why:""}.`);
   svg.innerHTML=`<defs>
       <linearGradient id="moonFill" gradientUnits="userSpaceOnUse" x1="0" y1="${Y(hi).toFixed(1)}" x2="0" y2="${hz.toFixed(1)}">
         <stop offset="0" stop-color="${MOON_INK}" stop-opacity=".26"/><stop offset="1" stop-color="${MOON_INK}" stop-opacity=".04"/></linearGradient>
-      <clipPath id="moonUp"><rect x="0" y="0" width="${W}" height="${hz.toFixed(1)}"/></clipPath>
-      <clipPath id="moonDown"><rect x="0" y="${hz.toFixed(1)}" width="${W}" height="${(H-hz).toFixed(1)}"/></clipPath>
+      <linearGradient id="pondFill" gradientUnits="userSpaceOnUse" x1="0" y1="${(hz-5).toFixed(1)}" x2="0" y2="${botY}">
+        <stop offset="0" stop-color="${css.water}" stop-opacity="${dark?.42:.34}"/><stop offset="1" stop-color="${css.water}" stop-opacity=".05"/></linearGradient>
+      <clipPath id="moonUp"><path d="M 0 ${sy0.toFixed(1)} ${sLine} L ${W} ${sy1.toFixed(1)} L ${W} 0 L 0 0 Z"/></clipPath>
+      <clipPath id="moonDown"><path d="M 0 ${sy0.toFixed(1)} ${sLine} L ${W} ${sy1.toFixed(1)} L ${W} ${H} L 0 ${H} Z"/></clipPath>
+      <clipPath id="pondArea"><path d="${sPath} L ${xR} ${botY} L ${x0} ${botY} Z"/></clipPath>
       <clipPath id="moonArea"><path d="${path} L ${X(t1).toFixed(1)} ${hz.toFixed(1)} L ${X(t0).toFixed(1)} ${hz.toFixed(1)} Z"/></clipPath></defs>
     ${bands}
-    <rect x="${x0}" y="${hz.toFixed(1)}" width="${(W-padX-x0).toFixed(1)}" height="${(botY-hz).toFixed(1)}" fill="${css.ink}" opacity=".035"/>
     <g clip-path="url(#moonArea)"><rect class="rv-fill" x="${X(t0).toFixed(1)}" y="0" width="${(X(t1)-X(t0)).toFixed(1)}" height="${hz.toFixed(1)}" fill="url(#moonFill)"/></g>
+    ${ticks}
     <g clip-path="url(#moonDown)"><path d="${path}" fill="none" stroke="${MOON_INK}" stroke-width="1.5" stroke-dasharray="2 4" stroke-linecap="round" opacity=".6"${rvAt((X(t0)+X(t1))/2,"fade")}/></g>
     <g clip-path="url(#moonUp)">
       ${rv?[[10,.3,.24],[6.5,.6,.2],[4.4,1,.16]].map(([w,f,o])=>`<path class="rv-tail" data-f="${f}" data-o="${o}" d="${path}" fill="none" stroke="${MOON_INK}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>`).join(""):""}
       <path class="wline" d="${path}" fill="none" stroke="${MOON_INK}" stroke-width="2.4" stroke-linecap="round"/></g>
-    <line x1="${x0}" y1="${hz.toFixed(1)}" x2="${W-padX}" y2="${hz.toFixed(1)}" stroke="${css.line}" stroke-width="1.2"/>
+    ${fish.svg}
+    <rect x="${x0}" y="${(hz-6).toFixed(1)}" width="${(xR-x0).toFixed(1)}" height="${(botY-hz+6).toFixed(1)}" fill="url(#pondFill)" clip-path="url(#pondArea)"/>
+    ${caps}
+    <path class="pond-line" d="${sPath}" fill="none" stroke="${css.water}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
     <g class="xp-cursor"></g>
-    <line x1="${nx.toFixed(1)}" y1="${(topY-6).toFixed(1)}" x2="${nx.toFixed(1)}" y2="${(ny-9).toFixed(1)}" stroke="${css.ink}" stroke-width="1" stroke-dasharray="2 4" opacity=".22"${rvAt(nx,"fade")}/>
+    <line x1="${nx.toFixed(1)}" y1="${(topY-6).toFixed(1)}" x2="${nx.toFixed(1)}" y2="${(ny-r-3).toFixed(1)}" stroke="${css.ink}" stroke-width="1" stroke-dasharray="2 4" opacity=".22"${rvAt(nx,"fade")}/>
     <g${rvAt(nx,"pin")}>${disc}</g>
-    ${!PRM?chartFish(wins,X,Y,now,nx,ny,css,rvAt,{t0,t1,W,H}):""}
     ${labels}
+    ${rimLab}
     ${rv?`<g class="rv-tip" opacity="0" fill="${MOON_INK}"><circle r="12" opacity=".14"/><circle r="6.5" opacity=".28"/><circle r="3"/><circle class="rv-core" r="1.4" fill="#FFFFFF" opacity=".95"/></g>`:""}`;
-  document.getElementById("moonNote").textContent=moonName(m);
+  moonNoteFit(moonName(m)+(why?" · "+why:""),why);
   revealChart("moon",svg,{xa:X(t0),xb:X(t1),dur:clamp(2100+W*1.1,2400,2950),tail:72,color:()=>MOON_INK});
   /* the quarter hours, now, each fishing time the chart drew at its start and the moon on the
      horizon at its minute. The reader sees only the windows drawn here, so a window the weather
-     took away is never named; the disc is the mark at now */
+     took away is never named; the disc is the mark at now. PageUp and PageDown jump between the
+     points the chart names: now, the fishing times' starts, and moonrise and moonset */
   const nt=now.getTime(),drawn=wins.filter(w=>Math.min(t1,w.end.getTime())>Math.max(t0,w.start.getTime()));
-  const cross=moonCross(t0,t1+26*3.6e6),starts=drawn.map(w=>w.start.getTime()).filter(t=>t>=t0&&t<=t1);
-  const rim=cross.map(c=>c.t).filter(t=>t>=t0&&t<=t1),ts=quarterStops(t0,t1,nt,[...starts,...rim]);
+  const starts=drawn.map(w=>w.start.getTime()).filter(t=>t>=t0&&t<=t1);
+  const rim=rims.map(c=>c.t),ts=quarterStops(t0,t1,nt,[...starts,...rim]);
   const alts=ts.map(t=>t===nt?na:moonPos(new Date(t)).alt*180/Math.PI),ni=ts.indexOf(nt);
-  const named=ts.map((t,i)=>t===nt||starts.includes(t)?i:-1).filter(i=>i>=0);
+  const named=ts.map((t,i)=>t===nt||starts.includes(t)||rim.includes(t)?i:-1).filter(i=>i>=0);
   xpPublish("moon",{svg,W,x:ts.map(X),y:alts.map(a=>[Y(a)]),t:ts,band:[topY-6,botY],start:ni,marks:named,
-    snap:[...named,...ts.map((t,i)=>rim.includes(t)?i:-1).filter(i=>i>=0)],noRing:[ni],
-    read:i=>readMoon(ts[i],nt,alts[i],drawn,cross)});
+    snap:named,noRing:[ni],read:i=>readMoon(ts[i],nt,alts[i],drawn,cross)});
 }
 
 /* the year's title names the place and its hover text the airport the numbers are from, set
@@ -6706,9 +6949,12 @@ function readMoon(t,now,alt,wins,cross){
   const endMin=w=>Math.floor(w.end.getTime()/6e4)*6e4;   /* the end to the minute the pill prints, so no stop is inside a window that ends on it */
   const when=xpWhen(t,now),said=xpSaid(t,now),up=alt>=0,w=wins.find(w=>t>=w.start.getTime()&&t<endMin(w));
   const at=x=>xpWhen(x,NaN,t),sayAt=x=>xpSaid(x,NaN,t);
-  if(w)return{parts:[[when,""],[`fishing until ${at(w.end.getTime())}`,"b"]],said:`${said}, moon ${up?"up":"down"}, an almanac fishing time until ${sayAt(w.end.getTime())}`};
+  /* moonrise and moonset are printed under the chart, so a stop on one names it first, and the
+     fishing time it sits in after it */
   const on=cross.find(c=>Math.abs(c.t-t)<6e4);
-  if(on)return{parts:[[when,""],[on.rise?"moonrise":"moonset","b"]],said:`${said}, the moon ${on.rise?"rises":"sets"}`};
+  if(on)return{parts:[[when,""],[on.rise?"moonrise":"moonset","b"],...(w?[[`fishing until ${at(w.end.getTime())}`,""]]:[])],
+    said:`${said}, the moon ${on.rise?"rises":"sets"}${w?`, an almanac fishing time until ${sayAt(w.end.getTime())}`:""}`};
+  if(w)return{parts:[[when,""],[`fishing until ${at(w.end.getTime())}`,"b"]],said:`${said}, moon ${up?"up":"down"}, an almanac fishing time until ${sayAt(w.end.getTime())}`};
   const next=cross.find(c=>c.t>t&&c.rise===!up);
   if(!next)return{parts:[[when,""],[up?"moon up":"moon down","b"]],said:`${said}, moon ${up?"up":"down"}`};
   return{parts:[[when,""],[`${up?"moonset":"moonrise"} ${at(next.t)}`,"b"]],said:`${said}, moon ${up?"up, sets":"down, rises"} ${xpSaidAt(next.t,t)}`};
@@ -7320,7 +7566,12 @@ function render(d,live,savedAt=0){
   /* the farm's picture is the moon and the almanac's fishing times, in the place the coast has its
      tide; anything that says stay in takes the windows with it */
   document.getElementById("moonSection").hidden=!LOC.fish;
-  if(LOC.fish)renderMoon(css,allowedFishWins,now);else xpPublish("moon",null);
+  /* The water and the reason read the whole run the chart spans, past the 24 hours the card reads.
+     When the card's stay-in took times that were clear on their own hours, its hours say why */
+  const stayed=LOC.fish&&farm&&!farm.fish&&fishWindows(h,now).length>0;
+  if(LOC.fish)renderMoon(css,allowedFishWins,now,{h:full,why:fishWhy(full,now,{storm,warning,ice:isIce(+c.weather_code),
+    stay:stayed?coveredHours(h,dy,now).hrs:null,shown:allowedFishWins,
+    until:h.time?.length?new Date(h.time[h.time.length-1]).getTime()+36e5:+now})});else xpPublish("moon",null);
   /* the sentences sit with the cards: the farm's when there is something to plan around, under the
      family's word for it, and the boat's while the boat is going out */
   const said=farm&&farm.say?{title:"Piddling",...farm.say}:water&&water.say?{title:"The boat",...water.say}:null;
@@ -7409,7 +7660,7 @@ function starsClearOfType(){
     st.style.display=lines.some(r=>x>r.left-8&&x<r.right+8&&y>r.top-4&&y<r.bottom+4)?"none":"";
   }
 }
-document.fonts&&document.fonts.ready.then(()=>{starsClearOfType();paintCobweb()});
+document.fonts&&document.fonts.ready.then(()=>{starsClearOfType();paintCobweb();moonNoteFit()});
 
 /* ── Halloween's cobweb, on the glass ───────────────────────────────────────────────────
    Josh, October 3 2026: "maybe cobwebs a corner of the app that breaks the fourth wall". So for the

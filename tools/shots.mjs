@@ -213,6 +213,20 @@ const CASES = [
       dailyTemps: (hi, lo, c) => { hi.splice(0, 8, 53, 58, 61, 57, 55, 60, 63, 59); lo.splice(0, 8, 29, 33, 38, 41, 35, 34, 39, 42); c.splice(0, 8, 0, 1, 2, 3, 3, 2, 1, 2); } },
     expect: { moon: true, sayTitle: "Piddling", say: "Cold one. Bundle up for the morning rounds.", sayCls: "caution", fish: true, year: /^The year · Shady Spring \/ \d+° cooler this week$/,
       xp: { year: /^Oct 64° \/ 44° rain 2\.7 in snow 1 in$/ } } },
+  // a gale through the day and night at the farm (Josh, October 10 2026: "where did my fishing times
+  // go?"): every fishing time goes for the wind, the pond's surface is choppy under the moon, and the
+  // note beside the title says why, after the phase where both fit and alone where they do not
+  { name: "29-gale-shady-spring", loc: "sp", when: "2026-10-10T12:30:00",
+    o: { baseTemp: 61, nowTemp: 63, feels: 63, rh: 60, isDay: 1, code: 3, cloud: 80, nowWind: 24, nowDir: 290, nowGust: 41, nowUv: 2.2, uvMax: 3,
+      windAmp: 8, gustAmp: 7, sunrise: "07:28", sunset: "18:51", popCurve: () => 5, dailyPop: (p) => p.fill(10),
+      gustCurve: (i) => 32 + ((i * 7) % 20) },
+    expect: { moon: true, fish: false, moonNote: /^(new moon · )?too windy$/, moonSaid: /none clear, too windy\.$/, chop: 2, sayTitle: "Piddling", sayCls: "no" } },
+  // and a fine farm morning: every fishing time keeps its fish resting in the pond, the water is
+  // flat in a calm, and the note is the phase alone
+  { name: "30-calm-fishing-shady-spring", loc: "sp", when: "2026-10-07T10:20:00",
+    o: { baseTemp: 61, nowTemp: 65, feels: 65, rh: 55, isDay: 1, code: 1, cloud: 15, nowWind: 4, nowDir: 240, nowGust: 7, nowUv: 3, uvMax: 4,
+      windAmp: 1, gustAmp: 2, sunrise: "07:25", sunset: "18:55", popCurve: () => 5, dailyPop: (p) => p.fill(10) },
+    expect: { moon: true, fish: true, moonNote: /^waning crescent$/, chop: 0, say: null } },
   // October copy previews: ordinary afternoons and evenings that look ahead to a real change.
   // The temperature callback shapes the hourly run and its daily highs together.
   { name: "words-day-porters-neck", loc: "mb", when: "2026-10-10T14:20:00",
@@ -483,7 +497,12 @@ for (const cs of cases) {
             level: (document.getElementById("tideSvg").getAttribute("aria-label").match(/Running .+? the tide table\./) || [null])[0],
             tag: [...document.querySelectorAll("#tideSvg text")].map((x) => x.textContent).find((s) => /^[+−]\d/.test(s)) || null },
           // the farm's moon: its phase and the almanac's fishing times it speaks
-          moon: document.getElementById("moonSection").hidden ? null : { note: T("moonNote"), said: document.getElementById("moonSvg").getAttribute("aria-label") },
+          moon: document.getElementById("moonSection").hidden ? null : { note: T("moonNote"), said: document.getElementById("moonSvg").getAttribute("aria-label"),
+            /* the pond under the moon: how many fish rest in it (one a fishing time), and how rough its
+               surface is drawn (0 flat, 1 a light chop, 2 choppy with its wavelets) */
+            fish: document.querySelectorAll("#moonSvg .fish-bite").length,
+            chop: (() => { const d = document.querySelector("#moonSvg .pond-line")?.getAttribute("d") || "", ys = [...d.matchAll(/[\d.]+ ([\d.]+)/g)].map((m) => +m[1]);
+              const span = ys.length ? Math.max(...ys) - Math.min(...ys) : 0; return span < .5 ? 0 : span < 3.2 ? 1 : 2; })() },
           // the sentence card, when there is something to say: its title, its sentence and colour
           card: document.getElementById("sayCard").hidden ? null : { title: T("sayTitle"), say: T("saySay"),
             cls: document.getElementById("saySay").className.replace("lead", "").trim() || null },
@@ -566,6 +585,12 @@ for (const cs of cases) {
       if (ex.level && !copy.water?.tag) fail("the skiff carries no level tag");
       if (ex.moon && !copy.moon) fail("no moon at the farm");
       if ("fish" in ex && /none clear/.test(copy.moon?.said || "none clear") === ex.fish) fail(`fishing times "${copy.moon?.said}"`);
+      /* every fishing time the moon speaks has its fish in the pond, and none is drawn where none is said */
+      if (copy.moon && copy.moon.fish !== ((copy.moon.said.match(/fishing times: (.*)\./) || [, ""])[1].match(/ to | until /g) || []).length)
+        fail(`${copy.moon.fish} fish for "${copy.moon.said}"`);
+      if (ex.moonNote && !ex.moonNote.test(copy.moon?.note || "")) fail(`moon note "${copy.moon?.note}"`);
+      if (ex.moonSaid && !ex.moonSaid.test(copy.moon?.said || "")) fail(`moon said "${copy.moon?.said}"`);
+      if ("chop" in ex && copy.moon?.chop !== ex.chop) fail(`pond drawn at chop ${copy.moon?.chop}, expected ${ex.chop}`);
       if (ex.year && !ex.year.test(copy.year || "")) fail(`year "${copy.year}"`);
       if (ex.sun && copy.sun !== ex.sun) fail(`sun card "${copy.sun}", expected "${ex.sun}"`);
       if (ex.uvBar && !ex.uvBar.test(copy.uvBar || "")) fail(`sun bar "${copy.uvBar}"`);
