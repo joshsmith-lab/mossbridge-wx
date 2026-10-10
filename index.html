@@ -699,6 +699,10 @@ html[data-theme=dark] .uv-svg .uv-track{opacity:.28}
    paper-coloured box around every label it crossed, and read as a selected card */
 .wk-day::before{content:"";position:absolute;left:3px;right:3px;top:calc(var(--wk-h) + 3px);bottom:0;border-radius:8px;
   background:var(--wash);opacity:0;transition:opacity .2s var(--ease)}
+/* the two outer columns are cut at the content edge, so their wash is centred on the day's point
+   (half a column or CHART_IN+3 either side, whichever is less) and runs at most 3px past the edge */
+.wk-day:first-child::before{left:max(-3px,calc(3px - var(--wk-pad,0px)));right:max(3px,calc(var(--wk-pad,0px) - 3px))}
+.wk-day:last-child::before{left:max(3px,calc(var(--wk-pad,0px) - 3px));right:max(-3px,calc(3px - var(--wk-pad,0px)))}
 .wk-day>*{position:relative}
 button.wk-day{cursor:pointer}
 button.wk-day:focus-visible{outline:none}
@@ -1274,14 +1278,31 @@ function bakeClouds(){
     const b=cloudLayer(ly,W,H);
     if(!b){cv.width=cv.height=0;return}
     cv.width=b.im.width;cv.height=b.im.height;cv.getContext("2d").putImageData(b.im,0,0);
-    Object.assign(cv.style,{left:b.ax+"px",top:b.ay+"px",width:(b.bx-b.ax)+"px",height:(b.by-b.ay)+"px"});
+    /* placed in the sky's own percentages, so a header that grows stretches the baked picture
+       with the sky (the puffs' y and ry are percentages of it already) until the re-bake lands */
+    const pc=(v,d)=>(v/d*100).toFixed(3)+"%";
+    Object.assign(cv.style,{left:pc(b.ax,W),top:pc(b.ay,H),width:pc(b.bx-b.ax,W),height:pc(b.by-b.ay,H)});
   });
 }
-if("ResizeObserver" in window)new ResizeObserver(es=>{
+/* One bake per render, at the size that is shown. renderSkyFx asks for it (CLOUD_DUE) and
+   re-observes, so the observer reports after this frame's layout and before its paint even when
+   the size has not changed: the loading shell's sky is never baked and thrown away. A header that
+   only grows taller (the alert strip, the nowcast) waits for the pens to finish drawing in */
+let CLOUD_DUE=false,CLOUD_LATER=0;
+const CLOUD_RO="ResizeObserver" in window?new ResizeObserver(es=>{
   const r=es[es.length-1].contentRect;
-  if(SKY_FX&&SKY_FX[0]===r.width&&SKY_FX[1]===r.height)return;
-  SKY_FX=[r.width,r.height];bakeClouds();
-}).observe(document.getElementById("skyFx"));
+  if(!CLOUD_DUE&&SKY_FX&&SKY_FX[0]===r.width&&SKY_FX[1]===r.height)return;
+  const tall=!CLOUD_DUE&&SKY_FX&&SKY_FX[0]===r.width;
+  CLOUD_DUE=false;SKY_FX=[r.width,r.height];clearTimeout(CLOUD_LATER);
+  if(!tall){bakeClouds();return}
+  CLOUD_LATER=setTimeout(function later(){
+    if(Object.values(REVEAL).some(v=>v.state==="running")){CLOUD_LATER=setTimeout(later,400);return}
+    bakeClouds();
+  },400);
+}):null;
+if(CLOUD_RO)CLOUD_RO.observe(document.getElementById("skyFx"));
+/* warm the canvas and getImageData path while the loading shell waits on the network */
+requestAnimationFrame(()=>setTimeout(()=>{if(!CLOUD_MEMO.size)cloudLayer({fill:"#FFFFFF",puffs:[[50,40,30,12]]},64,48)}));
 function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd,code){
   const night=clamp((-altDeg-2)/8,0,1);
   const st=starField();
@@ -1344,7 +1365,8 @@ function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd,code){
         <linearGradient id="streak" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF6E2" stop-opacity="0"/><stop offset="1" stop-color="#FFF6E2" stop-opacity=".95"/></linearGradient>
       </defs>${glow}${stars}${meteor}</svg>${clouds}<svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><g id="boltLayer"></g></svg>`;
   CLOUDS=layers.length?layers:null;
-  bakeClouds();
+  if(CLOUD_RO){CLOUD_DUE=true;clearTimeout(CLOUD_LATER);const fx=document.getElementById("skyFx");CLOUD_RO.unobserve(fx);CLOUD_RO.observe(fx)}
+  else bakeClouds();
 
   const rf=document.getElementById("rainFx"),snowing=isSnow(code);
   const held=rf.classList.contains("held");
@@ -5132,7 +5154,10 @@ function renderTides(preds,css,gust,wind,gap=0){
   const gfs=Math.max(10,9*fs),gcap=gfs*.74,grids=[];
   for(let ft=Math.ceil(base/2)*2;ft<=hiV;ft+=2)if(ft>base+.05)grids.push({ft,y:Y(ft),w:(ft+" ft").length*gfs*.6});
   const xR=W-padX;
-  const solid=[...times,[nx-25,boatTop,nx+21,ny+6],...(nowY2>nowTop+2?[[nx-2,nowTop,nx+2,nowY2]]:[]),...(tag?[[tag.x0,tag.t,tag.x1,tag.b+2]]:[]),
+  /* the tag's room beside the bow and the stern counts as solid whether or not a tag is drawn:
+     a bare "2 ft" in the slot where "+1.5 ft" goes reads as a reading about the boat */
+  const tagRoom=7*10.5*fs*.6;
+  const solid=[...times,[nx-26*fs-tagRoom,boatTop,nx+24*fs+tagRoom,ny+6],...(nowY2>nowTop+2?[[nx-2,nowTop,nx+2,nowY2]]:[]),...(tag?[[tag.x0,tag.t,tag.x1,tag.b+2]]:[]),
     ...P.filter(p=>p.type!=="H"&&p.time.getTime()>=t0&&p.time.getTime()<=t1).map(p=>{const x=X(p.time.getTime());return[x-2,Y(p.v),x+2,bedY+2]})];
   const spots=[["end",xR],["start",x0]];
   for(let st=3;st<=xR-x0;st+=3)spots.push(["end",xR-st],["start",x0+st]);
@@ -6056,12 +6081,14 @@ function renderWeek(dy,css,we=[]){
      (the week used to put them at its column centres, half a column in, so its line stopped short
      of the hours' over it). Each day's column is centred under its point and meets its neighbours
      halfway between them, and the two outer columns are cut at the content edge, padded toward
-     the inside so their day still sits under its point. A cut column's tapped wash is cut with it */
+     the inside so their day still sits under its point. A cut column's tapped wash and the weekend
+     band are centred on its point, no more than 3px past the edge */
   const W=appW()-40,L=CHART_IN,R=W-CHART_IN,s=(R-L)/Math.max(1,n-1),X=i=>L+i*s;
   const edge=(L+s/2).toFixed(2)+"px";
   wrap.style.setProperty("--wk-cols",n>2?`${edge} repeat(${n-2},1fr) ${edge}`:"repeat(var(--wk-n,7),1fr)");
   wrap.style.setProperty("--wk-pad",n>1?Math.max(0,s/2-L).toFixed(2)+"px":"0px");
   wrap.classList.toggle("wk8",n>7);
+  wrap.style.minHeight="";
   wrap.innerHTML=days.map(({t,has,pop,sky,code,likely,odds},i)=>{
     const long=new Date(t+"T12:00").toLocaleDateString("en-US",{weekday:"long"});
     /* the day in full, the same sentence its pill reads from */
@@ -6127,8 +6154,8 @@ function renderWeek(dy,css,we=[]){
      box (the open day's lesson), and ink at 5% darkens light paper and lightens dark paper the
      same amount, over the golden-hour tint too. SAT and SUN are printed under it, so it says
      no WEEKEND of its own. It fades in as the pen reaches Saturday. */
-  const colL=i=>i<=0?0:L+(i-.5)*s,colR=i=>i>=n-1?W:L+(i+.5)*s;
-  const wx0=we.length?colL(we[0])+3:0,wx1=we.length?colR(we[we.length-1])-3:0,wr=8;
+  const he=Math.min(s/2-3,L+3),colL=i=>i<=0?L-he:L+(i-.5)*s+3,colR=i=>i>=n-1?W-L+he:L+(i+.5)*s-3;
+  const wx0=we.length?colL(we[0]):0,wx1=we.length?colR(we[we.length-1]):0,wr=8;
   const weBand=we.length?`<path class="wk-we" d="M${wx0.toFixed(1)} ${H} V${2+wr} Q${wx0.toFixed(1)} 2 ${(wx0+wr).toFixed(1)} 2 H${(wx1-wr).toFixed(1)} Q${wx1.toFixed(1)} 2 ${wx1.toFixed(1)} ${2+wr} V${H} Z" fill="${css.ink}" opacity=".05"${rvAt(wx0,"fade")}/>`:"";
   svg.innerHTML=`
     <defs>
@@ -6147,7 +6174,7 @@ function renderWeek(dy,css,we=[]){
     ${marks}
     ${weBand}
     ${rv?`<g class="rv-tip" opacity="0" fill="${tempColor(hv[0])}"><circle r="12" opacity=".12"/><circle r="6.5" opacity=".24"/><circle r="3.3"/><circle class="rv-core" r="1.5" fill="#FFF8EC" opacity=".95"/></g>`:""}
-    <line x1="3" y1="${H-.5}" x2="${(W-3).toFixed(1)}" y2="${H-.5}" stroke="${css.line}" stroke-width="1"/>`;
+    <line x1="${L}" y1="${H-.5}" x2="${R.toFixed(1)}" y2="${H-.5}" stroke="${css.line}" stroke-width="1"/>`;
   const hiAt=x=>{const f=clamp((x-L)/s,0,n-1),i=Math.min(n-2,Math.floor(f));return hv[i]+(hv[i+1]-hv[i])*(f-i)};
   revealChart("week",svg,{xa,xb,dur:clamp(1300+W*.9,1600,2100),tail:50,color:x=>tempColor(hiAt(x))});
   /* one stop a column, found by the nearest centre, so a 320 Sunday's 35px columns all work. The
@@ -7641,6 +7668,7 @@ function paintLoadingState(){
   document.getElementById("verdict").textContent="Reading the sky…";
   for(const id of ["chips","skyFx","rainFx","sceneSvg","hourlySvg","hrLabels","weekRows","weekSvg","moonTxt","uvSvg","moonSvg","yearSvg"])
     document.getElementById(id).innerHTML="";
+  document.getElementById("weekRows").style.minHeight="";
   SCENE_KEY="";SCENE_META=null;RAIN_KEY="";
   document.getElementById("flash").className="flash";
   document.getElementById("rainFx").className="rainfx";
@@ -7668,6 +7696,9 @@ function paintLoadingState(){
    the coast's week, its tide chart and its warning sat under the farm's name (about 70 to 130ms,
    twice that on a slow phone). The charts draw in again, the way a new place's do */
 function clearPlaceReadings(){
+  /* the week's height comes from its columns (its chart is absolutely placed), so hold it across
+     the clear, or everything under it jumps up and back while the cached paint is staged in */
+  const wr=document.getElementById("weekRows");wr.style.minHeight=wr.offsetHeight+"px";
   for(const id of ["hourlySvg","hrLabels","weekRows","weekSvg","tideSvg","moonSvg","yearSvg","uvSvg"])
     document.getElementById(id).innerHTML="";
   for(const id of ["hourlyNote","weekNote","tideNote"])document.getElementById(id).textContent="";

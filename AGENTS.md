@@ -435,7 +435,13 @@ drawing to both views.
   second, at both places, by day and by night. `bakeClouds` now works the same puffs and the
   filter's own region out once into a canvas that each drifting layer carries, blurred as wide
   (three passes of a box, the approximation the SVG spec gives for a blur this wide), again
-  whenever the sky changes size, and the drift is a plain HTML layer sliding sideways. The same
+  whenever the sky changes size, and the drift is a plain HTML layer sliding sideways. It bakes
+  once a render, at the size that is shown: `renderSkyFx` sets `CLOUD_DUE` and re-observes the sky,
+  so the observer reports after that frame's layout and before its paint (a direct bake there baked
+  the loading shell's short sky and threw it away, 40ms on the frame the picture lands). The
+  canvases are placed in the sky's own percentages, so when the alert strip or the nowcast only
+  makes the header taller the baked picture stretches with it, and the re-bake waits until no pen is
+  drawing in (`CLOUD_LATER`). The same
   frames ran at 59 to 60, and the baked sky matches the filter's to 3 levels in 255. Chrome never
   showed it, because Chrome composites SVG animations and WebKit repaints them (`tools/webkit.mjs`).
 - **The picture still does not make claims.** Clouds are drawn in the scene only when there
@@ -1336,11 +1342,17 @@ The fuller scene earns its playfulness from the existing drawings and their beha
   week's day columns are centred under their points and meet halfway between them, so the two
   outer columns are cut at the content edge and pad toward the inside (`--wk-cols`, `--wk-pad`);
   TODAY is wider than its 32px and safe centring holds it inside the edge, a couple of pixels right
-  of its point, and a cut column's tapped wash and the weekend band are cut with it. An end day's
-  number steps in rather than hang off the page. The water's depth scale is no longer an axis that
+  of its point. A cut column's tapped wash and the weekend band are centred on its point, no more
+  than 3px past the edge (the cut once left MON hard against the right of its own box), and the
+  week's hairline runs from `CHART_IN` to `CHART_IN` like every other chart's rule. A cached place
+  switch holds the week's height across the clear (`clearPlaceReadings`), because its height comes
+  from its columns and everything under it jumped 200px and back while the paint was staged in.
+  An end day's number steps in rather than hang off the page. The water's depth scale is no longer an axis that
   held its curve in: `2 ft` and `4 ft` sit on their own gridlines inside the plot, placed, not
   stamped, at the right end, then the left, then the nearest clear spot along the line, clear of
-  the curve, the skiff and its tag, the now line, the times and the lows' ticks, and in one column
+  the curve, the skiff and its tag, the tag's room beside the bow and the stern (drawn or not, because
+  a bare `2 ft` in the slot `+1.5 ft` goes in reads as a reading about the boat), the now line, the
+  times and the lows' ticks, and in one column
   when one spot clears every gridline. The year's twelve months are laid out between the two
   edges, its wrap (December into January, which is real) is clipped to them, and `.yr-months` pads
   by the same 16px so every letter is under its point. `tools/shots.mjs` measures it (`even`).

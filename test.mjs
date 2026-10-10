@@ -505,6 +505,12 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.doesNotMatch(skyFx, /filter="url|feGaussianBlur/);
   assert.match(skyFx, /<div class="cloud drift" style="opacity:\$\{op\.toFixed\(3\)\};animation:drift /);
   assert.match(html, /function bakeClouds\(\)\{/);
+  // one bake per render at the size shown: renderSkyFx re-observes instead of baking the loading
+  // shell's sky, the canvases are placed in the sky's percentages, and a header that only grows
+  // taller waits for the pens before it bakes again
+  assert.match(skyFx, /if\(CLOUD_RO\)\{CLOUD_DUE=true;clearTimeout\(CLOUD_LATER\);const fx=document\.getElementById\("skyFx"\);CLOUD_RO\.unobserve\(fx\);CLOUD_RO\.observe\(fx\)\}\n  else bakeClouds\(\);/);
+  assert.match(html, /left:pc\(b\.ax,W\),top:pc\(b\.ay,H\),width:pc\(b\.bx-b\.ax,W\),height:pc\(b\.by-b\.ay,H\)/);
+  assert.match(html, /if\(Object\.values\(REVEAL\)\.some\(v=>v\.state==="running"\)\)\{CLOUD_LATER=setTimeout\(later,400\);return\}/);
   assert.match(html, /const CLOUD_BLUR=9,CLOUD_BOX=5,CLOUD_PX=2\*CLOUD_BLUR\/CLOUD_BOX,/);
   // clouds are drawn in the scene only when there are clouds to draw, and they really drift:
   // two direction keywords in one animation shorthand made Chrome drop it and nothing moved
@@ -3661,7 +3667,16 @@ test("every line runs the same width, from CHART_IN to CHART_IN", async () => {
   assert.match(week, /wrap\.style\.setProperty\("--wk-cols",n>2\?`\$\{edge\} repeat\(\$\{n-2\},1fr\) \$\{edge\}`/);
   assert.match(week, /wrap\.style\.setProperty\("--wk-pad",/);
   assert.match(week, /const xh=clamp\(x,wh,W-wh\),xl=clamp\(x,wl,W-wl\);/);
-  assert.match(week, /const colL=i=>i<=0\?0:L\+\(i-\.5\)\*s,colR=i=>i>=n-1\?W:L\+\(i\+\.5\)\*s;/);
+  // an end column is cut at the content edge, but its tapped wash and the weekend band are centred
+  // on its point, no more than 3px past the edge, or the box sat visibly off its own day's name
+  assert.match(week, /const he=Math\.min\(s\/2-3,L\+3\),colL=i=>i<=0\?L-he:L\+\(i-\.5\)\*s\+3,colR=i=>i>=n-1\?W-L\+he:L\+\(i\+\.5\)\*s-3;/);
+  assert.match(html, /\.wk-day:first-child::before\{left:max\(-3px,calc\(3px - var\(--wk-pad,0px\)\)\);right:max\(3px,calc\(var\(--wk-pad,0px\) - 3px\)\)\}/);
+  assert.match(html, /\.wk-day:last-child::before\{left:max\(3px,calc\(var\(--wk-pad,0px\) - 3px\)\);right:max\(-3px,calc\(3px - var\(--wk-pad,0px\)\)\)\}/);
+  // the week's hairline runs under the line's ends, like every other chart's rule
+  assert.match(week, /<line x1="\$\{L\}" y1="\$\{H-\.5\}" x2="\$\{R\.toFixed\(1\)\}"/);
+  // a cached place switch holds the week's height across the clear, so nothing under it jumps
+  assert.match(fn("clearPlaceReadings", "\n}\n"), /wr\.style\.minHeight=wr\.offsetHeight\+"px"/);
+  assert.match(week, /wrap\.style\.minHeight="";\n  wrap\.innerHTML=days\.map/);
   assert.doesNotMatch(week, /\(i\+\.5\)\*col/);
   assert.match(html, /\.wk-day:first-child\{padding-right:var\(--wk-pad,0px\)\}\.wk-day:last-child\{padding-left:var\(--wk-pad,0px\)\}/);
   assert.match(html, /align-items:center;align-items:safe center;/);
@@ -3673,6 +3688,8 @@ test("every line runs the same width, from CHART_IN to CHART_IN", async () => {
   assert.doesNotMatch(tide, /axisW|\(x0-6\)\.toFixed/);
   assert.match(tide, /const shared=spots\.find\(s=>grids\.every\(g=>!gHits\(g,s\)\)\);/);
   assert.match(tide, /const spots=\[\["end",xR\],\["start",x0\]\];/);
+  // and clear of the tag's room beside the bow and the stern, drawn or not
+  assert.match(tide, /const solid=\[\.\.\.times,\[nx-26\*fs-tagRoom,boatTop,nx\+24\*fs\+tagRoom,ny\+6\],/);
   assert.match(fn("renderMoon", "function yearTitle("), /padX=CHART_IN,fs=[^\n]*\n[^\n]*\n  const topY=50,botY=H-8,x0=padX;/);
   // the year's months are laid out between the two edges, the wrap clipped to them, the months
   // row padded by the same 16px so each letter sits under its point
