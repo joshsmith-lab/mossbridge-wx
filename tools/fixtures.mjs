@@ -188,6 +188,25 @@ export function coops(url, now, o, tidePhase = 0) {
   return { error: { message: "unknown product" } };
 }
 
+/**
+ * SECOORA's ERDDAP for the Masonboro Inlet buoy (41110): its water temperature every half hour, in
+ * Celsius at UTC instants, the way the server writes it. `buoyTemp` is the reading in Fahrenheit
+ * (as `waterTemp` is) and `buoyAge` how many minutes old the latest one is, to the minute, with the
+ * ones before it every half hour (the real buoy posts each about half an hour after it reads, so
+ * its newest is 30 to 60 minutes old). A scenario that does not
+ * ask for the buoy gets one that last read three hours ago, too old to say, so it shows exactly what
+ * it showed before there was a buoy and still checks that an old reading is not said. `buoyTemp:
+ * null` is a buoy with nothing in the day asked for, which the server answers with a 404.
+ */
+export function erddap(now, o) {
+  if (o.buoyTemp === null) return null;
+  const temp = o.buoyTemp ?? 70, age = o.buoyTemp == null ? 180 : o.buoyAge ?? 4;
+  const last = Math.floor((now.getTime() - age * 6e4) / 6e4) * 6e4, c = (temp - 32) * 5 / 9;
+  const rows = [3, 2, 1, 0].map((k) => [new Date(last - k * 18e5).toISOString().replace(".000Z", "Z"), +c.toFixed(1), o.buoyQc ?? 1]);
+  return { table: { columnNames: ["time", "sea_water_temperature", "sea_water_temperature_qc_agg"],
+    columnTypes: ["String", "double", "int"], columnUnits: ["UTC", "degree_Celsius", null], rows } };
+}
+
 export const SEVERE = (now) => [{
   properties: {
     event: "Severe Thunderstorm Warning", severity: "Severe",
@@ -223,6 +242,8 @@ export async function stage(page, { now, loc, o, tidePhase = 0, fontDir = "", po
   // two days of seas, because after dark the boat's sentence speaks for tomorrow
   await page.route(/marine-api\.open-meteo\.com/, (r) => r.fulfill({ json: marine(now, o, LOC_TZ[loc]) }));
   await page.route(/tidesandcurrents\.noaa\.gov/, (r) => r.fulfill({ json: coops(r.request().url(), now, o, tidePhase) }));
+  await page.route(/erddap\.secoora\.org/, (r) => { const j = erddap(now, o);
+    return j ? r.fulfill({ json: j }) : r.fulfill({ status: 404, contentType: "text/plain", body: 'Error {\n    code=404;\n    message="Not Found: Your query produced no matching results.";\n}\n' }); });
   await page.route(/api\.weather\.gov\/alerts/, (r) => r.fulfill({ json: { features: o.code >= 95 ? SEVERE(now) : [] } }));
   await page.route(/api\.weather\.gov\/products/, (r) => r.fulfill({ json: { "@graph": [] } }));
 }

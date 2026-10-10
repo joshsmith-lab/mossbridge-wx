@@ -918,6 +918,9 @@ const LOCS={
       tz:"America/New_York",tzLabel:"ET",
       sceneLabel:"Sun and moon over the marsh horizon",
       marine:{lat:34.26,lon:-77.68},tide:8658163,tropics:true,
+      /* the Masonboro Inlet buoy's water temperature, for when the tide station's has nothing:
+         its dataset on SECOORA's ERDDAP (see waterTemp) */
+      buoy:"41110-ilm2wave-ilm2w-5-miles-",
       /* The boat went out March 15 to October 31, on Josh's club trips. The club is paused from
          September 27 2026 and the season stays off until Josh says it is back: the water still
          reads every day, and only the boat's sentence waits. To bring it back, put a pair of
@@ -5500,13 +5503,44 @@ function waterGrade(gust,seas){
 }
 const WATER_SAY={easy:"easy",choppy:"choppy",outside:"rough outside",windy:"too windy",rough:"too rough"};
 const waterStep=g=>g==="windy"||g==="rough"?2:g==="easy"?0:1;
-/* The water temperature is NOAA's own at Wrightsville Beach, read every six minutes, and it is
-   said only while it is under an hour old. There is no model to fall back on: the ocean model's
-   cell is eight kilometres out and its makers call it limited at the coast. */
+/* The water temperature is a thermometer in the water at Wrightsville Beach, said only while its
+   reading is fresh. NOAA's own at the tide station, read every six minutes, comes first, under an
+   hour old. It went quiet on August 12 2026 and NOAA no longer lists it among the station's
+   sensors, so when it has nothing the Masonboro Inlet buoy (41110, UNCW's, five miles off the
+   beach) is said in its place, Josh's ask on October 10 2026: "just a data point I always want".
+   The buoy reads on the hour and the half hour and each reading reaches the server about half an
+   hour later (the 14:00 UTC reading of October 10 2026 landed at 14:30), so its newest is always
+   30 to 60 minutes old and a one-hour rule would blink it off at the end of every half hour. Its
+   reading stands an hour and a half (BUOY_FRESH), one late post's grace. Its age is read off its
+   true instant (`at`) against the true now, so the night the clocks go back does not make a fresh
+   reading an hour old; the station's is the wall clock its strings are written in. There is no
+   model to fall back on: the ocean model's cell is eight kilometres out and its makers call it
+   limited at the coast. With neither thermometer fresh it is not said. */
+const BUOY_FRESH=54e5;
 function waterTemp(w,now){
-  const r=w?.temp;if(!r||!r.t||!known(r.v))return null;
-  const age=new Date(now).getTime()-new Date(r.t.replace(" ","T")).getTime();
-  return age<=36e5&&age>=-9e5&&+r.v>28&&+r.v<100?Math.round(+r.v):null;
+  const wall=new Date(now).getTime(),real=wall-(typeof TZSHIFT==="number"?TZSHIFT:0);
+  const say=(r,fresh)=>{if(!r||!r.t||!known(r.v))return null;
+    const age=Number.isFinite(r.at)?real-r.at:wall-new Date(r.t.replace(" ","T")).getTime();
+    return age<=fresh&&age>=-9e5&&+r.v>28&&+r.v<100?Math.round(+r.v):null};
+  return say(w?.temp,36e5)??say(w?.buoy,BUOY_FRESH);
+}
+/* The buoy's latest reading from SECOORA's data server, which a phone can read where NOAA's buoy
+   files cannot be: in Celsius at a UTC instant, so it is put in the station's terms, degrees
+   Fahrenheit at the place's own wall clock (`t`), keeping the instant (`at`) for its age. The
+   degrees keep two places, because waterTemp rounds them once: rounded to a tenth first, 24.7°C
+   (76.46°F) went to 76.5 and was said as 77. A reading the buoy's quality checks call suspect or
+   failed (3 and 4, the QARTOD flags) is passed over, and one they have not looked at (2) is kept,
+   the way NOAA's preliminary six-minute readings are. Pure, so test.mjs runs it. */
+function buoyRow(j,tz){
+  const tb=j?.table,c=tb?.columnNames||[],rows=Array.isArray(tb?.rows)?tb.rows:[];
+  const iT=c.indexOf("time"),iV=c.indexOf("sea_water_temperature"),iQ=c.indexOf("sea_water_temperature_qc_agg");
+  if(iT<0||iV<0)return null;
+  const wall=d=>{const p={};for(const x of new Intl.DateTimeFormat("en-US",{timeZone:tz,hourCycle:"h23",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"}).formatToParts(d))p[x.type]=x.value;
+    return`${p.year}-${p.month}-${p.day} ${p.hour==="24"?"00":p.hour}:${p.minute}`};
+  const ok=rows.filter(r=>r&&known(r[iV])&&!Number.isNaN(Date.parse(r[iT]))&&(iQ<0||r[iQ]==null||+r[iQ]===1||+r[iQ]===2))
+    .sort((a,b)=>Date.parse(a[iT])-Date.parse(b[iT]));
+  const r=ok[ok.length-1],at=r?Date.parse(r[iT]):NaN;
+  return r?{t:wall(new Date(at)),v:+(+r[iV]*9/5+32).toFixed(2),at}:null;
 }
 /* The tide chart is NOAA's table, and the water does not always keep it: a northeaster or a
    king tide can hold it two feet over for a day, and on September 27 2026 it was, under a coastal
@@ -7581,13 +7615,17 @@ async function refresh(){
       }).catch(()=>null):Promise.resolve(null),
       L.tide?fetchJSON(`https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&datum=MLLW&station=${L.tide}&time_zone=lst_ldt&units=english&interval=hilo&format=json&begin_date=${bd}&range=96`,6000).then(tj=>tj.predictions||null).catch(()=>null):Promise.resolve(null),
       /* the water that is there: NOAA's own gauge and thermometer at the tide station, with the
-         table's six-minute marks to read the gauge against. Each is the station's latest, and a
+         table's six-minute marks to read the gauge against, and the buoy's thermometer for when
+         the station's has nothing (waterTemp), over its last day: the server answers an empty
+         window with a 404, which every phone would log as an error on every refresh, and a day
+         nearly always holds a reading for waterTemp to judge. Each is its source's latest, and a
          failure hides only its own reading */
-      L.tide?Promise.all(["product=water_temperature&date=latest","product=water_level&datum=MLLW&range=1","product=predictions&datum=MLLW&interval=6&range=1"].map(q=>
-        fetchJSON(`https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?${q}&station=${L.tide}&units=english&time_zone=lst_ldt&format=json`,6000).catch(()=>null)))
-        .then(([wt,wl,pr])=>{const rows=a=>Array.isArray(a)?a.map(r=>({t:r.t,v:r.v})):null;
+      L.tide?Promise.all([...["product=water_temperature&date=latest","product=water_level&datum=MLLW&range=1","product=predictions&datum=MLLW&interval=6&range=1"].map(q=>
+        fetchJSON(`https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?${q}&station=${L.tide}&units=english&time_zone=lst_ldt&format=json`,6000).catch(()=>null)),
+        L.buoy?fetchJSON(`https://erddap.secoora.org/erddap/tabledap/${L.buoy}.json?time%2Csea_water_temperature%2Csea_water_temperature_qc_agg&time%3E%3Dnow-1day`,6000).then(j=>buoyRow(j,L.tz)).catch(()=>null):null])
+        .then(([wt,wl,pr,buoy])=>{const rows=a=>Array.isArray(a)?a.map(r=>({t:r.t,v:r.v})):null;
           const temp=rows(wt?.data)?.[0]||null,level=rows(wl?.data);
-          return temp||level?{temp,level,pred:rows(pr?.predictions)}:null}):Promise.resolve(null),
+          return temp||level||buoy?{temp,level,pred:rows(pr?.predictions),buoy}:null}):Promise.resolve(null),
       fetchJSON(`https://api.weather.gov/alerts/active?point=${L.lat},${L.lon}`,6000).then(aj=>(aj.features||[]).map(f=>({event:f.properties.event,severity:f.properties.severity,ends:f.properties.ends,expires:f.properties.expires,desc:f.properties.description||"",inst:f.properties.instruction||""}))).catch(()=>null),
       stormsP
     ]);
