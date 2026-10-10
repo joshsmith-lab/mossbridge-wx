@@ -1,5 +1,7 @@
 /**
- * The almanac's fish, in the chart and the pond, against fixed upstream data.
+ * The almanac's fish, in the chart and the pond, against fixed upstream data. The chart's fish rest
+ * in the moon chart's pond, visible under the water, and leap on their own clock (porchFishLeap);
+ * the scene's pond fish keeps its own (porchFishRise), gone between leaps.
  * TZ=America/New_York PORCH_FONT_DIR=/path/to/fonts node tools/fishing.mjs
  * PORCH_CHROME_PATH and PORCH_PORT work as in the other visual harnesses.
  * Pictures and the machine-readable report go into ignored tools/shots/fishing/.
@@ -52,6 +54,9 @@ const results=[],failures=[];
 const server=await serve(PORT,FONT_DIR);
 const browser=await chromium.launch(process.env.PORCH_CHROME_PATH?{executablePath:process.env.PORCH_CHROME_PATH}:{});
 const pond=".fish-bite[data-fish-place=pond]",chart="#moonSvg .fish-bite";
+/* the chart fish's poses on its 18-second clock: resting under the water, breaking the surface, at
+   the top of the leap, coming down and back in with its splash */
+const LEAP=[["rest",0],["takeoff",.045],["apex",.075],["fall",.10],["splash",.12],["settle",.2]];
 async function open(c,width=c.width||Number(process.env.PORCH_FISH_WIDTH||393)){
   const context=await browser.newContext({viewport:{width,height:c.height||852},deviceScaleFactor:2,
     timezoneId:"America/New_York",serviceWorkers:"block"});
@@ -111,8 +116,18 @@ async function collisions(page){
     const box=e=>{const r=e.getBoundingClientRect();return{x:r.x,y:r.y,right:r.right,bottom:r.bottom}};
     const hit=(a,b)=>a.x<b.right&&a.right>b.x&&a.y<b.bottom&&a.bottom>b.y;
     const svg=document.getElementById("moonSvg"),bounds=box(svg),labels=[...svg.querySelectorAll("text")].map(e=>({text:e.textContent,box:box(e)}));
-    const disc=svg.querySelector('circle[r="8.4"]'),moon=disc&&box(disc),issues=[];
-    const fish=[...svg.querySelectorAll(".bite-body")].filter(e=>+getComputedStyle(e).opacity>.1);
+    const disc=svg.querySelector(".moon-disc"),moon=disc&&box(disc),issues=[];
+    const fish=[...svg.querySelectorAll(".leap-body")].filter(e=>+getComputedStyle(e).opacity>.1);
+    /* a fish resting still stays in the water, over the pond's floor */
+    const floor=svg.querySelector('rect[fill="url(#pondFill)"]');
+    if(floor){const fb=box(floor);for(const [i,f] of [...svg.querySelectorAll(".fish-bite.leap-still .leap-body")].entries()){const b=box(f);if(b.bottom>fb.bottom+1)issues.push({fish:i,belowPond:b.bottom-fb.bottom})}}
+    /* each fish stands for its own fishing time: its anchor is inside its own band */
+    for(const [i,f] of [...svg.querySelectorAll(".fish-bite[data-band]")].entries()){
+      const [a,b]=f.dataset.band.split(" ").map(Number),[x]=f.dataset.anchor.split(" ").map(Number);
+      /* a fish resting still may sit up to half its resting width past its band, its body across it */
+      const sc=+(f.getAttribute("transform").match(/scale\(([\d.]+)\)/)||[0,1])[1],slack=f.classList.contains("leap-still")?17*sc/2:0;
+      if(x<a-slack-.5||x>b+slack+.5)issues.push({fish:i,outsideBand:{x,a,b,slack}});
+    }
     fish.forEach((e,i)=>{const b=box(e);
       for(const l of labels)if(hit(b,l.box))issues.push({fish:i,label:l.text});
       if(moon&&hit(b,moon))issues.push({fish:i,moon:true,fishBox:b,moonBox:moon});
@@ -130,6 +145,8 @@ async function capture(page,name){
   if(await page.locator(chart).count()){
     await inView(page,"#moonSvg");await pose(page);
     await page.locator("#moonSection").screenshot({path:path.join(OUT,`${name}-moon.png`)});
+    for(const [label,fraction]of LEAP){await pose(page,fraction);
+      await page.locator("#moonSection").screenshot({path:path.join(OUT,`${name}-moon-${label}.png`)});}
     for(const [label,fraction]of[["rise",.055],["crest",.08],["splash",.14],["quiet",.3]]){
       await inView(page,"#sceneSvg");
       await pose(page,fraction);
@@ -176,16 +193,22 @@ try{
     }finally{await context.close();}
   });
 
-  for(const width of [320,393,760])for(const c of CASES.slice(0,3))await check(`${c.name}-layout-${width}`,async()=>{
+  /* The moments the moon gets in the way of a fish (October 10 2026's reviews): a moon just under the
+     water underfoot, a moonset and a moonrise under way, a crowded run at 320, and a moon on the water
+     the hour before a time. Every fish stays in its own band, off the disc and inside the pond. */
+  const MOONWAY=[["underfoot-now","2026-10-28T15:20:00-04:00"],["underfoot-shallow","2026-10-27T14:20:00-04:00"],
+    ["underfoot-early","2026-10-01T17:40:00-04:00"],["moonset-now","2026-10-10T18:40:00-04:00"],
+    ["moonrise-now","2026-10-18T15:00:00-04:00"],["crowded","2026-10-15T13:50:00-04:00"]].map(([n,when])=>({name:`farm-moon-${n}`,loc:"sp",when,o:base}));
+  for(const width of [320,393,760])for(const c of [...CASES.slice(0,3),...MOONWAY])await check(`${c.name}-layout-${width}`,async()=>{
     const {context,page,errors}=await open(c,width);
     try{
       await page.evaluate(()=>finishReveal());
       await inView(page,"#moonSvg");
-      const poses=[];
-      for(const f of [.055,.08,.10]){
-        await pose(page,f);const state=await collisions(page);poses.push(state);
-        assert.ok(state.fish>0,"the step actually shows the fish");
-        assert.deepEqual(state.issues,[],"fish stay off labels, the live moon and the frame");
+      const poses=[],drawn=await page.locator(chart).count();
+      for(const [label,f] of LEAP){
+        await pose(page,f);const state=await collisions(page);poses.push({label,...state});
+        assert.equal(state.fish,drawn,`every chart fish shows at ${label}, resting ones included`);
+        assert.deepEqual(state.issues,[],`fish stay off labels, the live moon and the frame (${label})`);
         assert.equal(state.overflow,false,"the page has no horizontal overflow");
       }
       await pose(page);
@@ -194,15 +217,58 @@ try{
     }finally{await context.close();}
   });
 
+  /* The chart's fish rest where you can see them (Josh, October 10 2026: "i had lil jumping fish?").
+     Paused, past the budget, between leaps and under reduced motion, each one rests just under the
+     water at the waterline inside its band, and the scene's pond fish keeps its own clock exactly:
+     gone between leaps and never drawn under reduced motion. */
+  for(const reduce of [false,true])await check(`chart-fish-rest-${reduce?"reduced":"motion"}`,async()=>{
+    const c=CASES[0],context=await browser.newContext({viewport:{width:393,height:852},deviceScaleFactor:2,
+      timezoneId:"America/New_York",serviceWorkers:"block",reducedMotion:reduce?"reduce":"no-preference"});
+    const page=await context.newPage(),errors=[];page.on("pageerror",e=>errors.push(String(e)));
+    try{
+      await stage(page,{now:new Date(c.when),loc:c.loc,o:c.o,fontDir:FONT_DIR,port:PORT});
+      await page.goto(`http://localhost:${PORT}/`);
+      await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
+      await page.evaluate(async()=>{await document.fonts.ready;await PAINT;finishReveal()});
+      await inView(page,"#moonSvg");await page.waitForTimeout(150);
+      if(!reduce)await pose(page,.5);
+      const state=await page.evaluate(()=>{
+        const svg=document.getElementById("moonSvg"),hz=[...svg.querySelectorAll(".pond-line")].length;
+        const vis=e=>{let o=1;for(let p=e;p&&p!==svg;p=p.parentElement)o*=+getComputedStyle(p).opacity;return o};
+        const fish=[...svg.querySelectorAll(".fish-bite")].map(f=>{const b=f.querySelector(".leap-body"),r=b.getBoundingClientRect(),[x,y]=f.dataset.anchor.split(" ").map(Number);
+          const m=svg.getScreenCTM(),sy=m.d*y+m.f;
+          return{opacity:vis(b),top:r.top-sy,bottom:r.bottom-sy,still:f.classList.contains("leap-still"),anim:b.getAnimations().map(a=>a.animationName)}});
+        return{fish,surface:hz,pond:document.querySelectorAll(".fish-bite[data-fish-place=pond]").length,
+          moonAnims:svg.getAnimations({subtree:true}).map(a=>a.animationName)};
+      });
+      assert.ok(state.fish.length>0,"the fixture draws fishing times");
+      assert.equal(state.surface,1,"the chart has its pond's surface");
+      for(const f of state.fish){
+        assert.ok(f.opacity>=.5,`a resting fish is visible (${f.opacity.toFixed(2)})`);
+        assert.ok(f.top>0&&f.bottom<24,`it rests just under the water, ${f.top.toFixed(1)} to ${f.bottom.toFixed(1)}px below the surface`);
+      }
+      if(reduce){
+        assert.equal(state.moonAnims.length,0,"reduced motion runs nothing on the chart");
+        assert.equal(state.pond,0,"the scene's pond fish is never drawn under reduced motion");
+      }else{
+        assert.deepEqual([...new Set(state.moonAnims)].sort(),["porchFishLeap","porchFishLeapDrops","porchFishLeapRing"],"the chart's fish have their own keyframes");
+        assert.equal(state.moonAnims.length,state.fish.filter(f=>!f.still).length*3,"three animations a fish that leaps, none for one resting still");
+        const pondNames=await page.evaluate(()=>[...new Set([...document.querySelectorAll("#sceneSvg .fish-bite *")].flatMap(e=>e.getAnimations().map(a=>a.animationName)))].sort());
+        assert.deepEqual(pondNames,state.pond?["porchFishDrops","porchFishRing","porchFishRise"]:[],"the pond fish keeps its own clock");
+      }
+      assert.deepEqual(errors,[]);return{fish:state.fish.length,pond:state.pond};
+    }finally{await context.close();}
+  });
+
   await check("moon-entrance-and-explorer",async()=>{
     const {context,page,errors}=await open(CASES[0]);
     try{
       await pose(page);
-      const hidden=await page.evaluate(()=>[...document.querySelectorAll("#moonSvg .bite-body")].every(e=>{
+      const hidden=await page.evaluate(()=>{const els=[...document.querySelectorAll("#moonSvg .leap-body")];return els.length>0&&els.every(e=>{
         let opacity=1;for(let p=e;p&&p instanceof Element;p=p.parentElement){const s=getComputedStyle(p);opacity*=+s.opacity;if(s.display==="none"||s.visibility==="hidden")return true;}
         return opacity<.01;
-      }));
-      assert.equal(hidden,true,"a waiting moon chart cannot show fish ahead of its line");
+      })});
+      assert.equal(hidden,true,"a waiting moon chart has its fish, and cannot show them ahead of its line");
       await page.locator("#moonSvg").scrollIntoViewIfNeeded();
       await page.waitForFunction(()=>REVEAL.moon.state==="running");
       await page.locator("#moonExplore .xp-key").focus();

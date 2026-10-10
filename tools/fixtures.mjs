@@ -111,7 +111,10 @@ export function forecast(now, o, tz, loc = "mb") {
     const wetCode = thunder ? o.code : 80;
     code.push(frozen ? o.code : o.hourlyCode?.(i, hr) ?? (pop[i] >= 55 ? wetCode : pop[i] >= 35 ? 3 : o.code));
     wind.push(Math.round(6 + Math.abs(diurnal) * o.windAmp));
-    gust.push(Math.round(10 + Math.abs(diurnal) * o.gustAmp));
+    /* the diurnal gust is 10 at five o'clock whatever the wind, so a day that blows through needs
+       its own: `gustCurve` reshapes the run hour by hour, the way tempCurve does the temperature */
+    const g = Math.round(10 + Math.abs(diurnal) * o.gustAmp);
+    gust.push(o.gustCurve ? o.gustCurve(i, hr, g) : g);
     uv.push(Math.max(0, +(Math.max(0, diurnal) * o.uvMax).toFixed(1)));
   }
   const dtime = [], dmax = [], dmin = [], dcode = [], dpop = [], dsun = [], dset = [], duv = [], dwmax = [];

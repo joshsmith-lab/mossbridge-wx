@@ -195,7 +195,9 @@ try{
     assert.equal(await page.locator("#sayTitle").innerText(),"PIDDLING");
     assert.equal(await page.locator("#saySay").innerText(),"Chores can wait.");
     assert.equal(await page.locator("#saySay").getAttribute("class"),"lead no");
-    assert.match(await fishing(),/fishing times: none clear\.$/);
+    assert.match(await fishing(),/fishing times: none clear, weather warning\.$/);
+    /* and the moon's note says why there are none, beside the phase (Josh, October 10 2026) */
+    assert.match(await page.locator("#moonNote").innerText(),/(^| · )weather warning$/);
     await page.locator("#alertStrip").click();
     assert.match(await page.locator(".alert-body").innerText(),/Move to an interior room/);
     assert.equal(await page.locator("#alertStrip").getAttribute("aria-expanded"),"true");
@@ -204,6 +206,7 @@ try{
     assert.equal(await page.locator("#alertStrip").isVisible(),false);
     /* and when it has ended an ordinary day is the moon and its fishing times, and no card: never a green go */
     assert.doesNotMatch(await fishing(),/none clear/);
+    assert.doesNotMatch(await page.locator("#moonNote").innerText(),/warning/,"a time drawn again needs no reason");
     assert.equal(await page.locator("#sayCard").isVisible(),false);
     assert.match(await page.locator("#moonSection .eyebrow b").innerText(),/^ALMANAC FISHING TIMES/);
     assert.deepEqual(errors,[]);await context.close();checks++;

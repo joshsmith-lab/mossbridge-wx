@@ -359,7 +359,7 @@ place name.
   undrawn (`knownRun`), which once dove its line off the chart and printed `0°`. The water says the water that is there at now (the table plus the gauge's gap, which
   the tag beside the boat reconciles with the curve it rides; the skiff is the mark there, so no
   ring) and `by the table` everywhere else while the gauge runs off it. The moon says when a fishing time ends, to the minute it prints, or when the moon rises or
-  sets, and never names a window it dropped. A day is named only where a clock time could mean two moments. The Sun bar has
+  sets, names moonrise and moonset on their own stops, and never names a window it dropped. A day is named only where a clock time could mean two moments. The Sun bar has
   no explorer, because it is a scale and not a day, and its two readings are already printed on it.
   A chart still drawing in finishes first, a repaint
   under a finger keeps the moment (even one that landed a moment before and has not slid yet), a
@@ -843,7 +843,7 @@ node tools/rig.mjs heron                          # one animal, close up and at 
 both family locations, a fine farm afternoon, a washout, a shoulder-season moderate-UV day with
 the water running two feet over the tide table, and two shaped weeks: a cool snap into a warm run
 on a Thursday, gusting 30 at five with the boat season switched on, and a stormy Sunday week with
-100% odds and a 101° high, which is also the eight-column week), then eighteen for the water, the
+100% odds and a 101° high, which is also the eight-column week), then twenty for the water, the
 farm and the weekend: a Saturday at the coast with the boat season switched on, where the weekend
 is today and tomorrow and the water is `Easy out there.`; a mid-November Saturday, with the seas
 and the water and no sentence; a cold January morning on the coast with the station's thermometer
@@ -858,8 +858,11 @@ bed and the tag goes beside it; a wet weekend of 40% and 100% with three-digit h
 weekend of rain then snow, whose notes stay beside their title at 320; the water two feet over at a high and
 an hour before one, where the tag keeps below the high's time and the pill at now stays under the title;
 half a foot over and two and a half under on the falling tide, where at 320 the tag finds a spot
-off both flanks; and a cold October morning at the farm, `Cold one. Bundle up for
-the morning rounds.` on the `Piddling` card over the moon. A scenario marked `boat: true` is served with
+off both flanks; a cold October morning at the farm, `Cold one. Bundle up for
+the morning rounds.` on the `Piddling` card over the moon; a gale through the day and night at the
+farm, where every fishing time goes for the wind, the pond is choppy and the note says `new moon ·
+too windy`; and a calm farm morning whose four fishing times each have their fish resting in a flat
+pond under the phase alone. A scenario marked `boat: true` is served with
 `boatSeason:null` switched back on, and fails if there is nothing to switch. It writes screenshots
 to `tools/shots/` and prints the generated copy (the headline, the chips as they are seen, the
 water's note, the level the chart speaks and the tag on the skiff, the moon's phase and the
@@ -867,11 +870,13 @@ fishing times it speaks, the sentence card, the sun sentence, tonight, the week'
 banded weekend in brackets, the year's title and note, and `xp`, each chart's pill where it starts
 and the water an hour on), so wording changes are reviewable as text. A scenario can carry an
 `expect`: the week's columns and banded days, the sentence card's title, sentence and colour, the
-water's note, the level and its tag, the moon and whether it has fishing times, the year, the sun
+water's note, the level and its tag, the moon and whether it has fishing times, the moon's note
+and spoken label, how rough its pond is drawn (`chop`, 0 to 2), the year, the sun
 card, the sun bar's spoken label, how many times the seas were asked for, and its pills (`xp`). The
 loading-shell check at the end also holds the sun scale hidden and every slider off while there is no
 bar or reading, and the farm's moon and its year's title (and its hover text's airport) in place before any forecast lands. Every scenario
-also fails when a word on the tide, the moon or the year runs off its chart or into another word,
+also fails when the moon speaks a fishing time it has no fish for, or draws a fish for one it does
+not speak, when a word on the tide, the moon or the year runs off its chart or into another word,
 when the skiff's level tag sits on the bed, within 2px of the tide line or on the boat, or when
 the water's
 pill at now covers the skiff, measured at 390 and 900 and once more at 320, the width where they
@@ -1166,7 +1171,8 @@ Established with Josh and enforced by `test.mjs`:
   real moon transits from the app's own astronomy. That framing is deliberate.
   Do not upgrade them into a forecast, and do not replace them with an API; the
   honesty is that the moon times are real and the theory is the almanac's. The
-  pond's fish and its rise rings during a window read the same approved times as the chart, and
+  pond's fish and its rise rings during a window read the same approved times as the chart's resting
+  fish, and
   the windows disappear under anything that says stay in (a warning, a storm overhead, ice,
   a gale, thunder within the hour, freezing rain falling), and one by one on their own hours
   otherwise, so they never read as an
@@ -1181,51 +1187,123 @@ The farm's wave, in the place the coast has its tide (Josh, September 27 2026: t
 like it's missing something"). At the coast the moon moves the water; at the farm the almanac says it
 moves the fish, and its fishing times are the moon's own hours. `#moonSection`, `Almanac fishing
 times`, draws the moon's height over the same day and a half as the tide chart, on one honest linear
-scale with the horizon where zero falls: solid and washed while the moon is up, dashed while it is
-down. The windows that are clear on their own hours (`fishWindows`) are quiet water bands, a major
-darker than a minor, each marked by when it starts (`now` when under way), because the band is the
-span. The moon rides the curve at now in its own phase, the way the skiff rides the tide, and the
-phase is the note beside the title (`moonName`: new moon, waxing crescent, first quarter, waxing
-gibbous, full moon and back). Anything that says stay in takes the windows with it. The chart speaks
-its windows (`The almanac's fishing times: 6:58 pm to 7:58 pm, ...`). It is drawn in like the tide.
+scale with the pond's surface where zero falls: solid and washed in the sky while the moon is up,
+dotted under the water while it is down. The windows that are clear on their own hours
+(`fishWindows`) are quiet water bands, a major darker than a minor, each marked by when it starts
+(`now` when under way), because the band is the span. The moon rides the curve at now in its own
+phase, the way the skiff rides the tide, and the phase is the note beside the title (`moonName`: new
+moon, waxing crescent, first quarter, waxing gibbous, full moon and back). Anything that says stay in
+takes the windows with it. The chart speaks its windows (`The almanac's fishing times: 6:58 pm to
+7:58 pm, ...`). It is drawn in like the tide.
+
+**The moon, explained (October 10 2026).** A gale gusting 32 to 51 took every fishing time, and Josh
+asked: "where did my fishing times go? i had lil jumping fish? that whole moon section doesn't make
+sense now? maybe we can rethink that visual...". Three ways were drawn into copies of the page, and
+Josh picked "A, plus B's choppy water": the moon chart explained, with the pond's surface from the
+other drawing. So the chart says what it is on a day with no fishing times at all:
+
+- **The moon's own times.** Under the water, the way the tide prints its lows, MOONRISE and MOONSET
+  over their times, each on a tick down from where the curve crosses the surface. They are the faint
+  ink at the regular weight and a size under the fishing times (`tfs` 9.2 to their 10.5), so the
+  blue, heavy fishing times over the picture stay the answer and the two rows never read as rival
+  answers. The slider stops on them and names them (`moonrise`, then `fishing until` when a time is
+  under way there too), and PageUp and PageDown jump between now, the fishing times' starts and
+  these. Both rows are placed, not stamped (`rowPlace`): labels that would touch join a run laid a
+  character and a half apart, the run sits where its points say on average, inside the chart's
+  edges, and one that would end up more than 18px off its point gives way, a minor before a major.
+  At 320 the old placement stood two starts a single character apart, which read as one long
+  number; the four starts of a full moon's night all stand at 320 now.
+- **Why, in a word or two.** When the weather has taken every almanac time the chart would draw,
+  the note beside the title says so after the phase, `new moon · too windy`, and the reason alone
+  (`too windy`) when the two do not fit beside the title, because the disc already shows the phase.
+  It is fitted again when the fonts land (`moonNoteFit`). `fishWhy` is pure and says, in this order:
+  `storms` (thunder overhead), `weather warning`, `icy` (freezing rain falling now), then `icy`,
+  `thunder` or `too windy` from the hours that took the times. When the farm's card said stay in for
+  times that were clear on their own hours, those are the hours the card speaks for (`stay`).
+  Otherwise every one of the times has to have gone for ice, thunder or a 30 mph gust in its own
+  hours: a time that went for a gap in the forecast, or past the end of the run, is nobody's reason,
+  and then nothing is said. It counts only the times the chart could ever draw, the ones that end
+  inside the hours `fishWindows` reads (`until`, the card's 24 hours): the chart runs two hours past
+  them, and a calm almanac time there was never going to be drawn, so a gale through all the rest
+  left the chart empty with only `new moon` beside it until that was fixed (October 10 2026). It
+  reads each time's own hours off the whole run (`full`). It is a reason, never a time: nothing in
+  it names when anyone could go. The chart's spoken label says it after `none clear`.
+- **The pond.** The horizon is the pond's surface, the water under it a light wash of the page's
+  water colour in both themes, and the moon's dotted path runs on under the water, which is drawn
+  over it. The surface stands up hour by hour from the gusts the run carries (`chopLevel`, pure):
+  flat under 22 mph, a light chop from 22, and choppy from 30, the farm's own gale line, with a few
+  short wavelets in the water too, clear of the disc and the fish. Flat before the run starts, past
+  its end and wherever a gust is unknown, never a gale. `pondSurface` (pure) samples it every two
+  pixels and eases it over about ten, sharp crests over broad troughs, the way wind stands water up.
+  It is a still shape and adds no animation. It runs from `CHART_IN` to `CHART_IN` and rides on the
+  horizon, so it never moves the moon's scale, and the moon's line is cut at it: over it in the sky,
+  dotted under it. So a day the wind takes the fish shows the water it took them with.
 
 Josh approved fish on both this moon line and the Shady Spring pond on October 7, 2026, as the
 farm's playful counterpart to the boat on Wilmington's tide. A small olive-and-cream fish with a
-forked tail, warm fins and Storybook ink makes one short leap, then rests. The chart fish mark the
-displayed almanac windows, including those still ahead; one pond fish rises only while an approved
-window is underway, from its start up to but not including its end. The pond needs known weather,
-at least 45°F, and no rain or storm. Both drawings share the weather-filtered window list and the
-farm's stay-in gate. This is the almanac's picture, never a report of actual fish activity.
-The brief almanac fish rise is Josh's approved extra cue alongside the farm's existing resident;
-the one-cue rule otherwise stands, and neither animal is shrunk or sped up to make room.
+forked tail, warm fins and Storybook ink makes one short leap, then rests. On October 10 2026 the
+chart's fish moved into the pond and became fish you can see the whole time: until then they were
+drawn only for the two seconds of each leap, out of 18, so on a phone with motion on there was no fish
+most of the time, and that was half of "i had lil jumping fish?". Every fishing time the chart draws
+gets one fish (`fishSpots`, pure), a major's bigger than a minor's (1.15 to .88), seated on the water
+inside its own band, so each fish stands for its own time and no other: at the band's middle, or the
+nearest spot inside the band where its whole leap clears the moon's disc. It rests just under the
+surface, ghosted by the water drawn over it, then on its staggered 18-second clock leaps out past the
+surface with its ring and spray, comes back in with its splash and settles back under
+(`porchFishLeap`, `porchFishLeapRing`, `porchFishLeapDrops`, the chart's own keyframes). The resting
+pose is the first frame and the plain style alike, so a paused fish, one past the animation budget and
+one under reduced motion all rest in the same place, visible. The time under way chooses first,
+because the moon is always in its band. Every spot in a band is tried, half a pixel apart and both
+ends, leaping or resting at any depth, and the best kept, in this order: never on the moon's disc,
+wherever the moon is; then clear of the other fish (4px apart at rest, and no leap reaching a resting
+neighbour); then inside the pond, its sides and its floor; then inside its band; then leaping rather
+than resting; then nearest the band's middle. So a fish rests without leaping (`leap-still`, no
+animations) when its leap would reach the moon or a neighbour: the time under way at moonrise or
+moonset with the moon on the water in its band, often the next time for an hour or two before it
+starts, and on a narrow phone a crowded one. Measured over October 2026 that is some fish for about
+eight hours a day at 320 and three at 760, and the rest leap. A resting fish settles at whatever depth
+keeps it off the moon, from its back at the surface to the pond's floor, so it never sinks onto a moon
+under the water (the first fix did, and sank it past the floor). When nothing inside its band clears
+the moon, as with a moon low in shallow water at 760, a resting fish may sit up to half its resting
+width past the band's end, its body still across its band. The first build walked the fish out along the whole chart to
+find room, and it rested hours past its own time, under the gale that took the next one, and pushed its
+neighbours out of their bands. The moon is not water, so no fish leaps out of the disc. A minor's band
+is narrower than its fish on a phone and centred on the moment the moon crosses the water, so a
+minor's fish rests where the moon's line goes under, over its first dots. The others keep 4px between resting fish and stay over the times under the water. On light paper the disc's dark side
+is inked deep and its lit side white, with the rim just outside the face, so a crescent still reads as
+a crescent. One pond fish in the header rises only while an approved window is underway, from its
+start up to but not including its end, on its own keyframes (`porchFishRise`), gone between leaps,
+and never under reduced motion: that is unchanged. The pond needs known weather, at least 45°F, and
+no rain or storm. Both drawings share the weather-filtered window list and the farm's stay-in gate.
+This is the almanac's picture, never a report of actual fish activity. The brief almanac fish rise
+is Josh's approved extra cue alongside the farm's existing resident; the one-cue rule otherwise
+stands, and neither animal is shrunk or sped up to make room.
 
-Each fish's takeoff ring, landing splash and expanding ring share its 18-second clock. There is
-one brief arc and a long quiet gap, with chart fish staggered across their bands. Motion is
-transform and opacity only, phased off wall time so a repaint continues the gesture. The chart
-keeps a continuous loop while it is visible and nobody is exploring its reading. Keep paused
-animation objects while it is out of view and resume at the current wall phase. Starting and
-stopping each short leap caused repeated SVG layouts. The moon event owns the stagger, so one
-window ending cannot retime its neighbours. The chart
-keeps its real moon curve, horizon and dashed underfoot section. Fish sit on that curve, leave
-room below the time labels, and give way to the current moon disc when there is no clear place
-inside the same band. The band remains even when its fish gives way. They arrive with the chart's
-entrance and step aside while its reading is being explored. The pond's splash lands on the water
-at the fish's contact point and stays behind the cattails.
+Each fish's takeoff ring, landing splash and expanding ring share its 18-second clock: one brief arc
+and a long rest, with chart fish staggered across their bands. Motion is transform and opacity only,
+phased off wall time so a repaint continues the gesture. The chart keeps a continuous loop while it
+is visible and nobody is exploring its reading. Keep paused animation objects while it is out of
+view and resume at the current wall phase. Starting and stopping each short leap caused repeated SVG
+layouts. The moon event owns the stagger, so one window ending cannot retime its neighbours. The fish
+arrive with the chart's entrance and settle under the water while its reading is being explored. The
+pond's splash lands on the water at the fish's contact point and stays behind the cattails.
 
 An open app rechecks the fishing windows at their starts and ends, and on returning to the front;
 changing places, hiding the app or clearing an unavailable reading cancels the old fishing timer.
 The boundary repaint must not renew an old forecast's age or leave a stale fishing cue on screen.
 The astronomy's existing two-minute samples use a fixed clock grid, so recomputing a window at
 its edge cannot move that same edge forward and keep a fish out past its time.
-`tools/fishing.mjs` checks these transitions, weather gates, phone-sized art, moon/label clearance,
-quiet gaps and shared water contact. The animation ceiling stays 120.
+`tools/fishing.mjs` checks these transitions, weather gates, phone-sized art, the chart fish resting
+visibly (with motion and under reduced motion, the pond fish on its own clock), every chart fish
+clear of the labels, the live moon and the frame at rest, takeoff, the top of the leap, the fall, the
+splash and settling, and shared water contact. The animation ceiling stays 120.
 
 The header's moving picture rests while the whole header is outside the viewport, leaving room
 for the moon chart's fish without running the unseen rain and animals. It keeps the existing
 animation objects and restores their elapsed clock when the header returns. A repaint replaces
 those references; it must not revive the last place's animals or restart a gesture. On an unusually
 tall screen that shows the header and moon together, the animation budget takes priority: a fish
-can give way while its fishing-time band remains, just as it gives way to the moon disc.
+past it rests in the pond and does not leap, and its fishing-time band and its fish both remain.
 
 ## The year
 
@@ -1484,7 +1562,8 @@ order, hourly, week, tide, moon, sun, year, and so is `RV_OF`, the observer's ma
 
 `tools/interactions.mjs` runs thirty-seven scenarios: every pill kept inside its chart at both edges
 at 320, 390 and 900, keyboard navigation, location switching, snow/ice labels, a warning at the farm that is `Chores can
-wait.` in red and takes the fishing times until it expires, source instructions, a warning strip
+wait.` in red and takes the fishing times until it expires (the moon's note saying `weather warning`
+while it does), source instructions, a warning strip
 opened on the cache that stays put through the live paint, a re-render, a resize and a foreground
 and changes its words in place when the warning is extended, then enters again for a different
 alert, goes when it ends (refreshed or left open) and enters for the next (at the coast at 390 and
