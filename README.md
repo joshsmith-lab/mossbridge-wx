@@ -27,4 +27,4 @@ TZ=America/New_York node tools/scene.mjs
 See [AGENTS.md](AGENTS.md) for the deploy route, the design principles behind
 the current copy and charts, and the known issues.
 
-Weather data comes from Open-Meteo, the seas from Open-Meteo Marine, the tide table, water temperature and water level from NOAA CO-OPS station 8658163 (Wrightsville Beach), alerts and tropical products from the National Weather Service, and the year's averages from NOAA's 1991-2020 climate normals at Wilmington and Beckley airports.
+Weather data comes from Open-Meteo, the seas from Open-Meteo Marine, the tide table, water temperature and water level from NOAA CO-OPS station 8658163 (Wrightsville Beach), the water temperature when that station has none from UNCW CORMP's Masonboro Inlet buoy (NDBC 41110) through SECOORA's ERDDAP, alerts and tropical products from the National Weather Service, and the year's averages from NOAA's 1991-2020 climate normals at Wilmington and Beckley airports.

@@ -187,8 +187,24 @@ place name.
   and the wind is the chip's. The seas are Open-Meteo's
   marine model, hour by hour for two days, asked for every day of the year. It ran low against
   buoy 41110 off Masonboro Inlet and its makers say it is not for navigation, so it is said to
-  the whole foot with "about" ("under 1 ft" below half a foot). The water temperature is NOAA's
-  own at station 8658163, said only while under an hour old, with no model to fall back on. The
+  the whole foot with "about" ("under 1 ft" below half a foot). The water temperature is a
+  thermometer in the water, never a model (`waterTemp`): NOAA's own at station 8658163 while it
+  is under an hour old, and when it has nothing, the Masonboro Inlet buoy's (41110, UNCW's CORMP,
+  five miles off the beach) while it is under an hour and a half. The station's went quiet on
+  August 12 2026 and NOAA no longer lists a water thermometer among its sensors. Josh asked for
+  it back on October 10 2026, "next to "seas" - can be same size, etc. just a data point I always
+  want", so the buoy's is said in its place, the same size, `76° · seas ~3 ft`, and the station's
+  comes first again by itself if NOAA puts it back. The buoy is read from SECOORA's ERDDAP, which
+  a phone may read where NOAA's buoy files may not (`buoyRow`: Celsius at a UTC instant, made the
+  station's degrees at the place's wall clock, the latest reading its quality checks have not
+  called suspect or failed, its degrees kept to two places so they are rounded once, because a
+  tenth first made 24.7°C, 76.46°F, read 77). It reads on the hour and the half hour and each
+  reading reaches the server about half an hour later (14:00 UTC landed at 14:30 on October 10
+  2026), so its newest is always 30 to 60 minutes old and a one-hour rule would blink it off at the
+  end of every half hour (`BUOY_FRESH`). Its age is taken off its true instant, so the night the
+  clocks go back does not make a fresh reading an hour old. The request
+  asks for the buoy's last day, because the server answers an empty window with a 404 that every
+  phone would log on every refresh, and the service worker never answers it from the cache. The
   level reads the station's six-minute gauge against the table's six-minute marks over the
   gauge's last half hour (`levelFeet`, and `levelGap` for its sentence), from half a foot, to the
   half foot. On September 27 2026 the water ran two feet over under a coastal flood advisory while
@@ -827,11 +843,12 @@ node tools/rig.mjs heron                          # one animal, close up and at 
 both family locations, a fine farm afternoon, a washout, a shoulder-season moderate-UV day with
 the water running two feet over the tide table, and two shaped weeks: a cool snap into a warm run
 on a Thursday, gusting 30 at five with the boat season switched on, and a stormy Sunday week with
-100% odds and a 101° high, which is also the eight-column week), then sixteen for the water, the
+100% odds and a 101° high, which is also the eight-column week), then eighteen for the water, the
 farm and the weekend: a Saturday at the coast with the boat season switched on, where the weekend
 is today and tomorrow and the water is `Easy out there.`; a mid-November Saturday, with the seas
 and the water and no sentence; a cold January morning on the coast with the station's thermometer
-down and the sun card stepped aside; a boat day whose marine run carries no seas, which is `Seas
+and the buoy's both down and the sun card stepped aside; the station gone quiet and the buoy's
+`76°` said in its place, and the buoy's reading too old to say, with no water temperature at all; a boat day whose marine run carries no seas, which is `Seas
 unavailable.` and never green; the water two feet over the table half an hour before a high,
 where the skiff rides the curve with `+2 ft` beside it and the high's time steps over both, and a
 winter northwester blowing it out a foot and a half under the table at the low, where the tag stays
@@ -1511,7 +1528,8 @@ its points are (`weekAt`), not at even column centres. Request ordering and aler
   day, up to 6 hours old) and the cards worked out from it, cached seas and all,
   behind the age stamp and the dimmed live dot, which reads as working but stale.
   The water temperature and the level are not carried that far: they hide once
-  the station's reading is an hour and half an hour old. Past 6 hours or into a new
+  the thermometer's reading is past its window (an hour for the station's, an hour and a half
+  for the buoy's) and the gauge's is half an hour old. Past 6 hours or into a new
   day there is no cache, and the page shows the unavailable state: the sections in their
   places with their titles and no pictures, and no sentence card. When
   the marine host alone fails, the forecast still lands and the seas are left off the

@@ -19,7 +19,7 @@ import { createServer } from "node:http";
 import { existsSync, readFileSync, mkdirSync, statSync } from "node:fs";
 import { spawn, execFileSync } from "node:child_process";
 import path from "node:path";
-import { ROOT, FONT_CSS, LOC_TZ, forecast, marine, coops } from "./fixtures.mjs";
+import { ROOT, FONT_CSS, LOC_TZ, forecast, marine, coops, erddap } from "./fixtures.mjs";
 
 const PORT = Number(process.env.PORCH_PORT || 8930);
 const FONT_DIR = process.env.PORCH_FONT_DIR || "";
@@ -52,7 +52,7 @@ function pageScript(cs, mode, secs) {
   const now = new Date(cs.when), tz = LOC_TZ[cs.loc], q = (p, x = "") => `https://x/?product=${p}${x}`;
   const FX = { forecast: forecast(now, cs.o, tz, cs.loc), marine: marine(now, cs.o, tz),
     hilo: coops(q("predictions", "&interval=hilo"), now, cs.o), wt: coops(q("water_temperature"), now, cs.o),
-    wl: coops(q("water_level"), now, cs.o), pred: coops(q("predictions", "&interval=6"), now, cs.o) };
+    wl: coops(q("water_level"), now, cs.o), pred: coops(q("predictions", "&interval=6"), now, cs.o), buoy: erddap(now, cs.o) };
   return `(function(){
   var FX=${JSON.stringify(FX)},T=${now.getTime()},MODE=${JSON.stringify(mode)},SECS=${secs};
   try{localStorage.setItem("mbwx-loc",${JSON.stringify(cs.loc)})}catch(e){}
@@ -62,6 +62,7 @@ function pageScript(cs, mode, secs) {
   window.fetch=function(url){var u=String(url),b=null;
     if(/marine-api\\.open-meteo/.test(u))b=FX.marine;else if(/api\\.open-meteo/.test(u))b=FX.forecast;
     else if(/tidesandcurrents/.test(u)){var s=new URL(u).searchParams,p=s.get("product");b=p==="predictions"&&s.get("interval")==="hilo"?FX.hilo:p==="water_temperature"?FX.wt:p==="water_level"?FX.wl:p==="predictions"?FX.pred:{error:{message:"unknown product"}}}
+    else if(/erddap\\.secoora/.test(u)){if(!FX.buoy)return Promise.resolve(new Response("Error {code=404;}",{status:404}));b=FX.buoy}
     else if(/api\\.weather\\.gov\\/alerts/.test(u))b={features:[]};else if(/api\\.weather\\.gov\\/products/.test(u))b={"@graph":[]};
     return b?Promise.resolve(new Response(JSON.stringify(b),{status:200,headers:{"Content-Type":"application/json"}})):rf.apply(this,arguments)};
   var post=function(o){try{webkit.messageHandlers.porch.postMessage(o)}catch(e){}},iv=[],last=0,on=false;

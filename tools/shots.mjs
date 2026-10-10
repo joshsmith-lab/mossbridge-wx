@@ -107,19 +107,33 @@ const CASES = [
   // a Saturday in mid-November: no boat sentence, and the seas and the water are read all the same
   { name: "17-off-season-saturday-porters-neck", loc: "mb", when: "2026-11-14T11:15:00",
     o: { baseTemp: 58, nowTemp: 61, feels: 61, rh: 55, isDay: 1, code: 2, cloud: 35, nowWind: 9, nowDir: 330, nowGust: 15, nowUv: 2.9, uvMax: 3.2,
-      windAmp: 7, gustAmp: 10, sunrise: "06:48", sunset: "17:09", waterTemp: 63.1, popCurve: () => 5, dailyPop: (p) => p.fill(10),
+      windAmp: 7, gustAmp: 10, sunrise: "06:48", sunset: "17:09", waterTemp: 63.1, buoyTemp: 59, popCurve: () => 5, dailyPop: (p) => p.fill(10),
       dailyTemps: (hi, lo, c) => { hi.splice(0, 7, 62, 60, 58, 62, 65, 61, 57); lo.splice(0, 7, 46, 43, 40, 44, 49, 45, 39); } },
+    // The station's thermometer is in, so it is said and the buoy's 59° is not.
     // The sun sentence stays neutral at the coast. The 3.1 still to come crosses into moderate,
     // so its ring stays even when the live reading is still below 3.
     expect: { cols: 7, weekend: ["Today", "Sun"], say: null, tide: /^63° · seas ~2 ft$/, level: null, marine: 1,
       sun: "Strongest sun noon to 1 p.m.", uvBar: /^UV 2\.9 now, low, peaking at 3\.1 around noon\.$/ } },
   // a cold, clear January morning on the coast: the headline owns the cold, the water section says
-  // only the water, and the sun card steps aside. The station's thermometer is down: no water at all
+  // only the water, and the sun card steps aside. The station's thermometer is down and the buoy has
+  // nothing either: no water temperature at all
   { name: "18-january-porters-neck", loc: "mb", when: "2027-01-14T08:40:00",
     o: { baseTemp: 32, nowTemp: 28, feels: 20, rh: 58, isDay: 1, code: 0, cloud: 4, nowWind: 11, nowDir: 340, nowGust: 19, nowUv: 0.6, uvMax: 2.4,
       windAmp: 7, gustAmp: 10, sunrise: "07:22", sunset: "17:25", waterTemp: null, popCurve: () => 3, dailyPop: (p) => p.fill(5),
       dailyTemps: (hi, lo, c) => { hi.splice(1, 6, 44, 51, 55, 47, 40, 36); lo.splice(1, 6, 26, 33, 39, 31, 25, 21); c.splice(1, 6, 1, 2, 3, 3, 1, 0); } },
     expect: { say: null, tide: /^seas ~2 ft$/, sun: "(steps aside)", marine: 1, xp: { year: /^Jan 57° \/ 36° rain 3\.8 in$/ } } },
+  // October 10 2026: the station's thermometer went quiet on August 12, so the Masonboro Inlet
+  // buoy's is said in its place, the same size beside the seas (Josh: "a data point I always want")
+  { name: "18b-buoy-water-porters-neck", loc: "mb", when: "2026-10-10T10:00:00",
+    o: { baseTemp: 74, nowTemp: 75, feels: 75, rh: 70, isDay: 1, code: 2, cloud: 45, nowWind: 12, nowDir: 60, nowGust: 20, nowUv: 3.4, uvMax: 5.1,
+      windAmp: 7, gustAmp: 10, sunrise: "07:12", sunset: "18:43", waterTemp: null, buoyTemp: 76.3, buoyAge: 34, popCurve: () => 8, dailyPop: (p) => p.fill(10) },
+    expect: { tide: /^76° · seas ~2 ft$/ } },
+  // and the buoy's last reading an hour and forty minutes old, past its hour and a half, with the
+  // station quiet: no water temperature rather than an old one
+  { name: "18c-buoy-stale-porters-neck", loc: "mb", when: "2026-10-10T10:00:00",
+    o: { baseTemp: 74, nowTemp: 75, feels: 75, rh: 70, isDay: 1, code: 2, cloud: 45, nowWind: 12, nowDir: 60, nowGust: 20, nowUv: 3.4, uvMax: 5.1,
+      windAmp: 7, gustAmp: 10, sunrise: "07:12", sunset: "18:43", waterTemp: null, buoyTemp: 76.3, buoyAge: 100, popCurve: () => 8, dailyPop: (p) => p.fill(10) },
+    expect: { tide: /^seas ~2 ft$/ } },
   // the boat season on, with the marine run answering but carrying no seas: never green, and said once
   { name: "19-no-seas-porters-neck", loc: "mb", when: "2026-09-15T10:10:00",
     o: { baseTemp: 76, nowTemp: 77, feels: 78, rh: 62, isDay: 1, code: 1, cloud: 20, nowWind: 6, nowDir: 190, nowGust: 10, nowUv: 5.2, uvMax: 6.4,

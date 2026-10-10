@@ -34,7 +34,9 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v94/);
+  assert.match(worker, /mbwx-shell-v95/);
+  // the buoy's readings are data, so the worker never answers them from the shell's cache
+  assert.match(worker, /u\.hostname\.includes\("weather\.gov"\)\|\|u\.hostname\.includes\("secoora\.org"\)\|\|/);
   // the clouds end in their own scallops: Josh loves the clouds and not the curly tail
   const cloud = html.match(/const propCloud=seed=>\[[\s\S]*?\];/);
   assert.ok(cloud, "propCloud should be extractable");
@@ -2272,11 +2274,11 @@ test("the water and the farm say what is there, and nothing is scored or picked"
     html.slice(start, end),
     html.slice(html.indexOf("const NORMALS={"), html.indexOf("function renderYear(")),
     lift(/const moonName=m=>\{[\s\S]*?\};/),
-    "Object.assign(globalThis,{coveredHours,waterGrade,waterTemp,levelGap,levelFeet,waterCard,waterNote,fishLine,fishWindows,farmCard,LOCS,NORMALS,yearCompare,doyOf,moonName});",
+    "Object.assign(globalThis,{coveredHours,waterGrade,waterTemp,buoyRow,levelGap,levelFeet,waterCard,waterNote,fishLine,fishWindows,farmCard,LOCS,NORMALS,yearCompare,doyOf,moonName});",
   ].join("\n"), ctx);
   // what the context returns is made again on this side, so deepEqual compares values, not realms
   const own = (r) => r == null || typeof r !== "object" ? r : JSON.parse(JSON.stringify(r));
-  const W = Object.fromEntries(["coveredHours", "waterGrade", "waterTemp", "levelGap", "levelFeet", "waterCard", "waterNote", "fishLine", "farmCard", "yearCompare", "moonName"].map((k) => [k, (...a) => own(ctx[k](...a))]));
+  const W = Object.fromEntries(["coveredHours", "waterGrade", "waterTemp", "buoyRow", "levelGap", "levelFeet", "waterCard", "waterNote", "fishLine", "farmCard", "yearCompare", "moonName"].map((k) => [k, (...a) => own(ctx[k](...a))]));
   const p = (v) => String(v).padStart(2, "0");
   const key = (d) => `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:00`;
   // a run of hours from `from`, each reading a constant or a function of (index, hour)
@@ -2307,12 +2309,50 @@ test("the water and the farm say what is there, and nothing is scored or picked"
   assert.deepEqual(["21,2", "22,2", "30,2", "12,3", "12,5", "24,5", "31,3"].map((s) => W.waterGrade(...s.split(",").map(Number))),
     ["easy", "choppy", "windy", "outside", "rough", "rough", "windy"]);
 
-  // the water temperature is the station's, under an hour old, and never a model's
+  // the water temperature is a thermometer's, under an hour old, and never a model's
   const now = at("2026-08-02T13:20");
   assert.equal(W.waterTemp({ temp: { t: "2026-08-02 13:12", v: "76.8" } }, now), 77);
   assert.equal(W.waterTemp({ temp: { t: "2026-08-02 12:12", v: "76.8" } }, now), null, "an hour and more old is not said");
   assert.equal(W.waterTemp({ temp: { t: "2026-08-02 13:12", v: "" } }, now), null);
   assert.equal(W.waterTemp(null, now), null);
+  // NOAA's station first, under its hour, and when it has nothing the Masonboro Inlet buoy's, under
+  // its hour and a half (Josh, October 10 2026: "just a data point I always want")
+  const buoyAt = (t, v) => ({ t: "2026-08-02 " + t, v });
+  assert.equal(W.waterTemp({ temp: { t: "2026-08-02 13:12", v: "80.2" }, buoy: buoyAt("13:00", "76.3") }, now), 80, "the station's, when it has one");
+  assert.equal(W.waterTemp({ temp: null, buoy: buoyAt("13:00", "76.3") }, now), 76, "the station gone quiet, the buoy says it");
+  assert.equal(W.waterTemp({ temp: { t: "2026-08-02 12:12", v: "80.2" }, buoy: buoyAt("13:00", "76.3") }, now), 76, "the station's an hour old, the buoy's is not");
+  assert.equal(W.waterTemp({ temp: null, buoy: buoyAt("12:00", "76.3") }, now), 76, "the buoy reads every half hour and posts late, so its reading stands an hour and a half");
+  assert.equal(W.waterTemp({ temp: null, buoy: buoyAt("11:40", "76.3") }, now), null, "and past that it is not said either");
+  assert.equal(W.waterTemp({ temp: { t: "2026-08-02 12:12", v: "80.2" }, buoy: null }, now), null, "the station's hour is still an hour");
+  assert.equal(W.waterTemp({ temp: null, buoy: buoyAt("13:00", "") }, now), null);
+  assert.equal(W.waterTemp({ temp: null, buoy: null }, now), null, "with neither thermometer it is not said");
+  // the buoy's row: Celsius at a UTC instant, made the station's degrees at the place's wall clock,
+  // the latest in time, and never a reading its quality checks call suspect (3) or failed (4)
+  const erddap = (rows) => ({ table: { columnNames: ["time", "sea_water_temperature", "sea_water_temperature_qc_agg"], columnUnits: ["UTC", "degree_Celsius", null], rows } });
+  const ET = "America/New_York";
+  const u = (s) => Date.parse(s);
+  assert.deepEqual(W.buoyRow(erddap([["2026-08-02T16:30:00Z", 24.6, 1], ["2026-08-02T17:00:00Z", 24.7, 1]]), ET), { t: "2026-08-02 13:00", v: 76.46, at: u("2026-08-02T17:00:00Z") });
+  assert.deepEqual(W.buoyRow(erddap([["2026-08-02T17:00:00Z", 24.7, 1], ["2026-08-02T16:30:00Z", 24.6, 1]]), ET), { t: "2026-08-02 13:00", v: 76.46, at: u("2026-08-02T17:00:00Z") }, "the latest by its time, in any order");
+  assert.deepEqual(W.buoyRow(erddap([["2026-08-02T16:30:00Z", 24.6, 1], ["2026-08-02T17:00:00Z", 31.0, 4]]), ET), { t: "2026-08-02 12:30", v: 76.28, at: u("2026-08-02T16:30:00Z") }, "a failed reading is passed over");
+  assert.deepEqual(W.buoyRow(erddap([["2026-08-02T16:30:00Z", 24.6, 1], ["2026-08-02T17:00:00Z", 31.0, 3]]), ET), { t: "2026-08-02 12:30", v: 76.28, at: u("2026-08-02T16:30:00Z") }, "and a suspect one");
+  assert.deepEqual(W.buoyRow(erddap([["2026-08-02T17:00:00Z", 24.7, 2]]), ET), { t: "2026-08-02 13:00", v: 76.46, at: u("2026-08-02T17:00:00Z") }, "one the checks have not looked at is kept, like NOAA's preliminary readings");
+  assert.deepEqual(W.buoyRow(erddap([["2026-08-02T16:30:00Z", 24.6, 1], ["2026-08-02T17:00:00Z", null, 1]]), ET), { t: "2026-08-02 12:30", v: 76.28, at: u("2026-08-02T16:30:00Z") }, "a row with no reading is no reading");
+  assert.deepEqual(W.buoyRow(erddap([["2026-01-15T12:30:00Z", 8.5, 1]]), ET), { t: "2026-01-15 07:30", v: 47.3, at: u("2026-01-15T12:30:00Z") }, "January is five hours behind UTC, not four");
+  // rounded once: 24.7°C is 76.46°F, said as 76. Rounded to a tenth first it was 76.5 and said as 77
+  assert.equal(W.waterTemp({ buoy: W.buoyRow(erddap([["2026-08-02T17:00:00Z", 24.7, 1]]), ET) }, at("2026-08-02T13:30")), 76);
+  assert.equal(W.waterTemp({ buoy: W.buoyRow(erddap([["2026-08-02T17:00:00Z", 23.6, 1]]), ET) }, at("2026-08-02T13:30")), 74, "23.6°C is 74.48°F");
+  // its age is its true instant against the true now: on the night the clocks go back, 01:35 EST
+  // and a reading from 01:00 EST is 35 minutes old, not the 95 that "01:00" read as EDT would be
+  const fallBack = W.buoyRow(erddap([["2026-11-01T06:00:00Z", 20.0, 1]]), ET);
+  assert.equal(fallBack.t, "2026-11-01 01:00");
+  assert.equal(W.waterTemp({ buoy: fallBack }, new Date("2026-11-01T06:35:00Z")), 68, "fresh across the change");
+  assert.equal(W.waterTemp({ buoy: W.buoyRow(erddap([["2026-11-01T04:00:00Z", 20.0, 1]]), ET) }, new Date("2026-11-01T06:00:00Z")), null, "and two hours old is two hours old");
+  assert.equal(W.buoyRow(erddap([]), ET), null);
+  assert.equal(W.buoyRow(erddap([["2026-08-02T17:00:00Z", 31.0, 4]]), ET), null);
+  assert.equal(W.buoyRow({ table: { columnNames: ["time"], rows: [["2026-08-02T17:00:00Z"]] } }, ET), null);
+  assert.equal(W.buoyRow(null, ET), null);
+  // and it is said in the note in the station's place, the same size: "76° · seas ~3 ft"
+  assert.equal(W.waterNote({ line: [{ label: "seas about", value: "3 ft" }, { label: "water", value: W.waterTemp({ temp: null, buoy: buoyAt("13:00", "76.3") }, now) + "°" }] }, null), "76° · seas ~3 ft");
 
   // the gauge against the table, over its last half hour, to the half foot from half a foot
   const gauge = (off, o = {}) => { const n = o.n ?? 11, marks = Array.from({ length: n }, (_, i) => new Date(now.getTime() - (o.age ?? 8) * 6e4 - (n - 1 - i) * 36e4));
@@ -2621,6 +2661,13 @@ test("the water and the farm say what is there, and nothing is scored or picked"
   // thermometer and gauge beside the table they are read against
   assert.match(html, /L\.marine\?fetchJSON\(`https:\/\/marine-api\.open-meteo\.com\/v1\/marine\?[^`]*&hourly=wave_height&[^`]*&forecast_days=2&length_unit=imperial`/);
   assert.match(html, /"product=water_temperature&date=latest","product=water_level&datum=MLLW&range=1","product=predictions&datum=MLLW&interval=6&range=1"/);
+  // and the buoy's thermometer, the last day of it (an empty window is a 404 every phone would log),
+  // for when the station's has nothing
+  assert.match(html, /buoy:"41110-ilm2wave-ilm2w-5-miles-",/);
+  assert.match(html, /L\.buoy\?fetchJSON\(`https:\/\/erddap\.secoora\.org\/erddap\/tabledap\/\$\{L\.buoy\}\.json\?time%2Csea_water_temperature%2Csea_water_temperature_qc_agg&time%3E%3Dnow-1day`,6000\)\.then\(j=>buoyRow\(j,L\.tz\)\)\.catch\(\(\)=>null\):null\]/);
+  assert.match(html, /return temp\|\|level\|\|buoy\?\{temp,level,pred:rows\(pr\?\.predictions\),buoy\}:null/);
+  assert.match(html, /return say\(w\?\.temp,36e5\)\?\?say\(w\?\.buoy,BUOY_FRESH\);/);
+  assert.match(html, /const BUOY_FRESH=54e5;/);
   assert.match(html, /hourly:s,marine,tides,water,alerts,storms,nowcast/);
   // and a marine run with no reading in it is no seas, never a default
   assert.match(html, /w\.some\(v=>v!=null&&Number\.isFinite\(\+v\)\)\?\{time:t,wave:w\}:null;\s*\}\)\.catch\(\(\)=>null\):Promise\.resolve\(null\)/);
