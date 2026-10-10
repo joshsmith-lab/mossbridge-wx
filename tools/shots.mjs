@@ -308,6 +308,60 @@ async function crowded(page) {
   return [...out, ...hr, ...rows];
 }
 
+/* every line runs the same width (Josh, October 9 2026: "everything should be even"): the hours, the
+   week, the water, the moon and the year each start their line and its fill CHART_IN inside the
+   content edge and end CHART_IN inside the other, within a pixel, measured on the screen with each
+   chart's clip applied (the year wraps past both edges and is clipped to them). A line whose first or
+   last reading is missing stops at its last known point, which is honest, so it is left out. The
+   rows under them follow: each day's sky is centred under its point, its name too unless the
+   content edge holds it in, and each month under its own point */
+async function even(page) {
+  return page.evaluate(() => {
+    const out = [], spans = [];
+    const clipX = (el) => { let lo = -Infinity, hi = Infinity;
+      for (let a = el; a && a.tagName !== "svg"; a = a.parentElement) {
+        const id = (a.getAttribute("clip-path") || "").match(/#([^)]+)/)?.[1], c = id && document.getElementById(id);
+        const r = c && !c.querySelector("path") && c.querySelector("rect");
+        if (r) { lo = Math.max(lo, r.x.baseVal.value); hi = Math.min(hi, r.x.baseVal.value + r.width.baseVal.value); }
+      }
+      return [lo, hi];
+    };
+    for (const [id, k] of [["hourlySvg", "hourly"], ["weekSvg", "week"], ["tideSvg", "tide"], ["moonSvg", "moon"], ["yearSvg", "year"]]) {
+      const svg = document.getElementById(id), sec = svg?.closest("section,.week");
+      if (!svg || !sec || sec.hidden || getComputedStyle(sec).display === "none" || !svg.getBoundingClientRect().height) continue;
+      const D = XP[k]?.D, line = svg.querySelector(".tline,.wline");
+      if (!D || !line) { out.push(`${k} has no line to measure`); continue; }
+      if ((k === "hourly" || k === "week") && !(Number.isFinite(D.y[0][0]) && Number.isFinite(D.y.at(-1)[0]))) continue;
+      const m = svg.getScreenCTM(), sx = (x) => m.a * x + m.e, cs = getComputedStyle(sec), r = sec.getBoundingClientRect();
+      const want = [r.left + parseFloat(cs.paddingLeft) + CHART_IN, r.right - parseFloat(cs.paddingRight) - CHART_IN];
+      const b = line.getBBox(), [lo, hi] = clipX(line);
+      const fill = svg.querySelector(".rv-fill"), area = fill && document.getElementById(fill.parentElement.getAttribute("clip-path").match(/#([^)]+)/)[1]).querySelector("path").getBBox();
+      const [flo, fhi] = fill ? clipX(fill.parentElement) : [0, 0];
+      for (const [what, a, z] of [["line", Math.max(b.x, lo), Math.min(b.x + b.width, hi)],
+        ...(fill ? [["fill", Math.max(area.x, fill.x.baseVal.value, flo), Math.min(area.x + area.width, fill.x.baseVal.value + fill.width.baseVal.value, fhi)]] : [])]) {
+        const s = [sx(a), sx(z)];
+        if (Math.abs(s[0] - want[0]) > 1 || Math.abs(s[1] - want[1]) > 1) out.push(`${k} ${what} runs ${s.map((v) => v.toFixed(1)).join("–")}, not ${want.map((v) => v.toFixed(1)).join("–")}`);
+        spans.push([k, what, s]);
+      }
+      const at = (i) => sx(D.x[i]);
+      if (k === "week") [...document.querySelectorAll("#weekRows .wk-day")].forEach((d, i) => {
+        const ic = d.querySelector(".wk-icon svg")?.getBoundingClientRect(), nm = d.querySelector(".wk-name"), rg = document.createRange();
+        rg.selectNodeContents(nm); const nb = rg.getBoundingClientRect(), edge = nb.left < want[0] - CHART_IN + .5 || nb.right > want[1] + CHART_IN - .5;
+        if (ic && Math.abs(ic.left + ic.width / 2 - at(i)) > 1) out.push(`week ${nm.textContent} sky sits ${(ic.left + ic.width / 2 - at(i)).toFixed(1)}px off its point`);
+        const off = nb.left + nb.width / 2 - at(i);
+        if (Math.abs(off) > 1 && !(Math.abs(off) <= 4 && (nb.left >= want[0] - CHART_IN - .5 && nb.left <= want[0] - CHART_IN + .5 || nb.right >= want[1] + CHART_IN - .5 && nb.right <= want[1] + CHART_IN + .5)))
+          out.push(`week ${nm.textContent} sits ${off.toFixed(1)}px off its point${edge ? " past the content edge" : ""}`);
+      });
+      if (k === "year") document.querySelectorAll("#yearMonths span").forEach((el, i) => {
+        const rg = document.createRange(); rg.selectNodeContents(el); const mb = rg.getBoundingClientRect();
+        if (Math.abs(mb.left + mb.width / 2 - at(i)) > 1) out.push(`year ${el.textContent} (month ${i + 1}) sits ${(mb.left + mb.width / 2 - at(i)).toFixed(1)}px off its point`);
+      });
+    }
+    if (spans.length < 4) out.push(`only ${spans.length} spans measured`);
+    return out;
+  });
+}
+
 async function titlesFit(page) {
   return page.evaluate(() => [...document.querySelectorAll(".eyebrow")].filter((e) => e.offsetParent && !e.closest("[hidden]")).flatMap((e) => {
     const b = e.querySelector("b"), sp = e.querySelector("span"); if (!b || !sp || !sp.textContent.trim()) return [];
@@ -372,9 +426,10 @@ for (const cs of cases) {
     await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: "domcontentloaded" });
     await page.evaluate(() => document.fonts.ready).catch(() => {});
     await page.waitForTimeout(1400);
+    await page.evaluate(() => typeof PAINT !== "undefined" && PAINT);
     // settle the charts' entrance (a one-shot sweep that waits to be on screen) before looking
     await page.evaluate(() => typeof finishReveal === "function" && finishReveal());
-    for (const m of [...await crowded(page), ...await pillClear(page)]) { failures++; console.log(`!! ${cs.name} at ${vp.w}: ${m}`); }
+    for (const m of [...await crowded(page), ...await pillClear(page), ...await even(page)]) { failures++; console.log(`!! ${cs.name} at ${vp.w}: ${m}`); }
     /* the narrowest phone is only measured: its words are the ones that crowd, and every title keeps
        its note on its own line */
     if (vp.tag === "narrow") {
@@ -507,8 +562,11 @@ for (const cs of cases) {
        fonts without three more network loads or duplicate full-page captures per scenario. */
     if (vp.tag === "phone") for (const width of [375,393,430]) {
       await page.setViewportSize({width,height:vp.h});
-      await page.evaluate(() => {clearTimeout(rzT);render(LAST.d,LAST.live,LAST.savedAt);finishReveal();});
-      for (const m of [...await crowded(page),...await pillClear(page),...await titlesFit(page)]) {
+      /* the paint lands in stages (the picture, the hours, the week, then the rest), so wait for the
+         last stage to take the new width before measuring, or the charts measured are the old
+         width's paint stretched to fit */
+      await page.evaluate(async () => {clearTimeout(rzT);render(LAST.d,LAST.live,LAST.savedAt);await PAINT;finishReveal();});
+      for (const m of [...await crowded(page),...await pillClear(page),...await titlesFit(page),...await even(page)]) {
         failures++;console.log(`!! ${cs.name} at ${width}: ${m}`);
       }
     }

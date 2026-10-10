@@ -64,6 +64,8 @@ try{
       await page.goto("http://localhost:"+PORT+"/");
       await page.waitForFunction(()=>typeof LAST!=="undefined"&&LAST&&document.getElementById("refreshBtn").getAttribute("aria-busy")==="false");
       await page.evaluate(()=>document.fonts.ready);
+      /* the paint lands in stages and Tonight is in the last, a few frames after the refresh ends */
+      await page.evaluate(()=>PAINT);
       const state=await page.evaluate(()=>({
         text:document.getElementById("eveLead").textContent,headline:document.getElementById("verdict").textContent,
         hours:LAST.d.hourly.time.length,first:LAST.d.hourly.time[0],last:LAST.d.hourly.time.at(-1),
@@ -94,7 +96,7 @@ try{
           const F=function(...a){return a.length?new RD(...a):new RD(RD.now()+off)};
           F.now=()=>RD.now()+off;F.parse=RD.parse;F.UTC=RD.UTC;F.prototype=RD.prototype;window.Date=F;
           syncClock();const old=readCache(LOC.id),savedAt=old.savedAt;
-          render(old.data,false,old.savedAt);await refresh();
+          render(old.data,false,old.savedAt);await PAINT;await refresh();await PAINT;
           return{text:document.getElementById("eveLead").textContent,hours:LAST.d.hourly.time.length,
             unchangedAge:LAST.savedAt===savedAt,cached:!LAST.live};
         });

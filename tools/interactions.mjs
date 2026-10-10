@@ -33,10 +33,16 @@ async function open(width,o=base,loc="sp",when=now){
   await stage(page,{now:when,loc,o,fontDir:FONT_DIR,port:PORT});
   return {context,page,errors};
 }
+/* a paint lands in stages: the stamp goes live with the header, then the hours a frame on, the week
+   three after that and the rest three after that, so a chart measured at the stamp is the cache's or
+   nothing (the tide measured 58px tall). PAINT settles when the latest paint's last stage has drawn,
+   and a frame on everything it wrote has been laid out */
+const painted=page=>page.evaluate(async()=>{await PAINT;await new Promise(r=>requestAnimationFrame(r))});
 const load=async page=>{
   await page.goto(`http://localhost:${PORT}/`);
   await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
   await page.evaluate(()=>document.fonts.ready);
+  await painted(page);
 };
 /* ── reading a chart ──────────────────────────────────
    Every line reads through one machine (xpSetup in index.html). These read it from the page: the
@@ -83,6 +89,9 @@ async function phone(width,o,loc,{motion=false,when=now,cache=null,gate=false}={
   const cdp=await context.newCDPSession(page);
   return{context,page,errors,cdp,release};
 }
+/* the week's points run CHART_IN in from each content edge like every other line, and each day's
+   column is centred under its point, so a finger goes where the chart puts the day */
+const weekAt=async(page,b)=>{const f=await page.evaluate(()=>XP.week.D.x.map(x=>x/XP.week.D.W));return i=>b.x+f[i]*b.width};
 const inView=async(page,sel)=>{await page.evaluate(sel=>{const e=document.querySelector(sel),b=e.getBoundingClientRect();scrollTo(0,scrollY+b.top-(innerHeight-b.height)/2)},sel);
   await page.waitForTimeout(80);return page.locator(sel).boundingBox()};
 const coast={baseTemp:84,nowTemp:88,feels:95,rh:66,isDay:1,code:1,cloud:22,nowWind:9,nowDir:214,nowGust:16,nowUv:6,uvMax:8,
@@ -191,13 +200,91 @@ try{
     assert.match(await page.locator(".alert-body").innerText(),/Move to an interior room/);
     assert.equal(await page.locator("#alertStrip").getAttribute("aria-expanded"),"true");
     features=features.map(f=>({properties:{...f.properties,ends:new Date(now.getTime()-60000).toISOString()}}));
-    await page.evaluate(()=>refresh());
+    await page.evaluate(()=>refresh());await painted(page);
     assert.equal(await page.locator("#alertStrip").isVisible(),false);
     /* and when it has ended an ordinary day is the moon and its fishing times, and no card: never a green go */
     assert.doesNotMatch(await fishing(),/none clear/);
     assert.equal(await page.locator("#sayCard").isVisible(),false);
     assert.match(await page.locator("#moonSection .eyebrow b").innerText(),/^ALMANAC FISHING TIMES/);
     assert.deepEqual(errors,[]);await context.close();checks++;
+  }
+  for(const [loc,width,o] of [["mb",390,coast],["sp",320,{...base,code:1,popCurve:()=>5}]]){
+    /* The warning strip enters once per open. A phone with saved weather paints the cache with the
+       warning in it, and the live forecast lands a moment later with the same warning. The strip
+       used to be written from scratch on that paint and on every one after it (a resize, a
+       foreground, a re-render), so a strip opened on the cache came in again under the reader.
+       It stays put now, open or not, and the words change in place when the warning is extended.
+       It still enters when a different alert takes the lead, goes when the alert ends, and enters
+       when the next one arrives. Motion is on, because the entrance is what is being counted. */
+    const asAlerts=f=>f.map(({properties:p})=>({event:p.event,severity:p.severity,ends:p.ends,expires:p.expires,desc:p.description||"",inst:p.instruction||""}));
+    const t=new Date(now.getTime()-20*6e4);
+    let features=SEVERE(now);
+    const m=await phone(width,o,loc,{motion:true,gate:true,when:now,
+      cache:{k:"mbwx-"+loc,v:{savedAt:t.getTime(),data:{...cachePayload(t,o,loc),alerts:asAlerts(features)}}}});
+    await m.page.route("**api.weather.gov/alerts**",route=>route.fulfill({json:{features}}));
+    await m.page.addInitScript(()=>{
+      window.__in={alertIn:0,briefIn:0};window.__writes=[];
+      addEventListener("animationstart",e=>{if(e.target.closest?.("#alertStrip")&&e.animationName in __in)__in[e.animationName]++},true);
+      window.__watch=()=>new MutationObserver(ms=>__writes.push(...ms.map(x=>x.type+":"+(x.attributeName||x.target.nodeName))))
+        .observe(document.getElementById("alertStrip"),{attributes:true,childList:true,characterData:true,subtree:true});
+    });
+    const p=m.page,frames=n=>p.evaluate(n=>new Promise(r=>{const f=()=>--n?requestAnimationFrame(f):r();requestAnimationFrame(f)}),n);
+    const state=()=>p.evaluate(()=>{const el=document.getElementById("alertStrip");
+      return{...__in,writes:__writes.length,on:el.classList.contains("on"),open:el.getAttribute("aria-expanded"),
+        head:el.querySelector(".alert-head")?.textContent||"",body:window.__body?window.__body===el.querySelector(".alert-body"):null}});
+    await p.goto(`http://localhost:${PORT}/`);
+    await p.waitForFunction(()=>document.getElementById("stamp").textContent.startsWith("updated")&&document.getElementById("alertStrip").classList.contains("on"));
+    await p.waitForTimeout(700);
+    assert.equal((await state()).alertIn,1,`${loc}: the strip enters on the cached paint`);
+    /* open it while the cache is still the reading, and watch it from here */
+    await p.locator("#alertStrip").click();
+    await p.waitForTimeout(400);
+    await p.evaluate(()=>{window.__body=document.querySelector("#alertStrip .alert-body");__watch()});
+    const still=async(why)=>{
+      const s=await state();
+      assert.equal(s.briefIn,1,`${loc}: the open strip's body does not come in again on ${why}`);
+      assert.equal(s.alertIn,1,`${loc}: the strip does not enter again on ${why}`);
+      assert.equal(s.body,true,`${loc}: the open strip keeps its body on ${why}`);
+      assert.equal(s.open,"true",`${loc}: and stays open on ${why}`);
+      return s;
+    };
+    m.release();
+    await p.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
+    await frames(24);
+    assert.equal((await still("the live paint")).writes,0,`${loc}: the same warning writes nothing to the strip on the live paint`);
+    await p.evaluate(()=>render(LAST.d,LAST.live,LAST.savedAt));await frames(24);
+    await p.setViewportSize({width:width+60,height:800});await p.waitForTimeout(300);await frames(24);
+    await p.evaluate(()=>document.dispatchEvent(new Event("visibilitychange")));await p.waitForTimeout(300);await frames(24);
+    assert.equal((await still("a re-render, a resize and a foreground")).writes,0,`${loc}: and nothing on a re-render, a resize or a foreground`);
+    /* the warning extended: the words change in place, and nothing enters */
+    const later=new Date(now.getTime()+90*6e4);
+    features=features.map(f=>({properties:{...f.properties,ends:later.toISOString()}}));
+    await p.evaluate(()=>refresh());await frames(24);
+    const ext=await still("the warning being extended");
+    assert.ok(ext.head.includes(await p.evaluate(t=>clock12(new Date(t)),later.getTime())),`${loc}: the strip says the new end: ${ext.head}`);
+    /* a different alert takes the lead: the strip enters again, with its words */
+    features=[{properties:{...SEVERE(now)[0].properties,event:"Tornado Warning",severity:"Extreme"}},...features];
+    await p.evaluate(()=>refresh());await frames(24);
+    let s=await state();
+    assert.equal(s.alertIn,2,`${loc}: a different alert taking the lead enters`);
+    assert.match(s.head,/^Tornado Warning/);assert.match(s.head,/\+1 more/);
+    /* it ends: the strip goes. The next one enters */
+    features=[];
+    await p.evaluate(()=>refresh());await frames(24);
+    assert.equal(await p.locator("#alertStrip").isVisible(),false,`${loc}: an ended alert takes the strip down`);
+    features=SEVERE(now);
+    await p.evaluate(()=>refresh());await frames(24);
+    s=await state();
+    assert.ok(s.on&&s.alertIn===3,`${loc}: the next alert to arrive enters: `+JSON.stringify(s));
+    assert.equal(s.open,"false","and arrives closed");
+    /* and it goes when it ends, with nothing touched: the Weather Service still lists it, ended */
+    const soon=await p.evaluate(()=>Date.now()+2500);
+    features=features.map(f=>({properties:{...f.properties,ends:new Date(soon).toISOString()}}));
+    await p.evaluate(()=>refresh());await frames(24);
+    assert.equal(await p.locator("#alertStrip").isVisible(),true);
+    await p.waitForTimeout(4200);await frames(24);
+    assert.equal(await p.locator("#alertStrip").isVisible(),false,`${loc}: the strip goes when the alert ends, with the app left open`);
+    assert.deepEqual(m.errors,[]);await m.context.close();checks++;
   }
   {
     /* the ordinary summer afternoon at the farm: thunder in the hourly run, nothing warned. The
@@ -238,16 +325,26 @@ try{
     await load(page);
     let release;const gate=new Promise(r=>release=r);
     await page.route("**api.open-meteo.com**",async r=>{if(r.request().url().includes("marine-api"))return r.fallback();await gate;r.fallback()});
-    await page.locator("#locBtn").click();
+    /* and on the very next frame nothing of the coast's is left under the farm's name: the cached
+       paint lands in stages, and until its last stage the coast's week, its water and Wilmington's
+       year sat there (about 70 to 130ms) */
+    const first=await page.evaluate(()=>new Promise(r=>{document.getElementById("locBtn").click();requestAnimationFrame(()=>{const $=id=>document.getElementById(id);
+      r({tide:getComputedStyle($("tideSection")).display,moon:$("moonSection").hidden,year:$("yearTitle").textContent,
+        week:$("weekSvg").childElementCount===0||$("weekSvg").classList.contains("rv-pre"),tideSvg:$("tideSvg").childElementCount,alert:$("alertStrip").classList.contains("on")})})}));
+    assert.equal(first.tide,"none","the coast's water is gone on the switch's first frame");
+    assert.equal(first.moon,false,"the farm's moon is up on the switch's first frame");
+    assert.match(first.year,/Shady Spring/,"the year is the farm's on the switch's first frame");
+    assert.ok(first.week,"the coast's week is not drawn under the farm's name");
+    assert.equal(first.tideSvg,0);
     /* the new place's shell names the farm's airport in the hover text before any paint lands */
     assert.match(await page.locator("#yearTitle").getAttribute("title"),/Beckley airport/,"the shell's hover text is the farm's airport");
-    await page.waitForFunction(()=>document.getElementById("stamp").textContent.startsWith("updated"));
+    await page.waitForFunction(()=>document.getElementById("stamp").textContent.startsWith("updated"));await painted(page);
     assert.equal(await page.locator("#moonSection").isVisible(),true,"the cached farm paint has its moon");
     assert.match(await page.locator("#yearTitle").innerText(),/SHADY SPRING/);
     assert.match(await page.locator("#yearTitle").getAttribute("title"),/Beckley airport/);
     assert.equal(await page.locator("#tideSection").isVisible(),false);
     release();
-    await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
+    await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));await painted(page);
     assert.equal(await page.locator("#moonSection").isVisible(),true,"and so does the live one");
     assert.match(await page.locator("#yearTitle").innerText(),/SHADY SPRING/);
     assert.deepEqual(errors,[]);await context.close();checks++;
@@ -270,7 +367,7 @@ try{
     let release;const gate=new Promise(r=>release=r);
     await page.route("**api.open-meteo.com**",async r=>{if(r.request().url().includes("marine-api"))return r.fallback();await gate;r.fallback()});
     await page.goto(`http://localhost:${PORT}/`,{waitUntil:"domcontentloaded"});
-    await page.evaluate(()=>document.fonts.ready);
+    await page.evaluate(()=>document.fonts.ready);await painted(page);
     /* how much of each drawing is on screen, measured in the page */
     await page.addScriptTag({content:"window.__vis=id=>{const b=document.getElementById(id).getBoundingClientRect();return b.height>0?(Math.min(b.bottom,innerHeight)-Math.max(b.top,0))/b.height:0}"});
     const before=await page.evaluate(()=>{const b=document.getElementById("weekSvg").getBoundingClientRect();
@@ -280,7 +377,7 @@ try{
     assert.ok(before.strip&&before.week>.3&&before.week<.6&&await page.evaluate(()=>REVEAL.week.seen&&REVEAL.week.state==="armed"),
       "the cache paints the strip and puts the week at the fold, still to be drawn: "+JSON.stringify(before));
     release();
-    await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
+    await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));await painted(page);
     await page.waitForTimeout(4800);
     const after=await page.evaluate(()=>({strip:document.getElementById("nowcast").classList.contains("on"),
       verdict:document.getElementById("verdict").offsetHeight,charts:Object.fromEntries(["hourlySvg","weekSvg","tideSvg","uvSvg"].map(id=>
@@ -310,7 +407,7 @@ try{
     const shell=await tide();
     assert.ok(shell.top<shell.fold,"the loading shell has the tide on the first screen: "+JSON.stringify(shell));
     release();
-    await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
+    await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));await painted(page);
     await page.waitForTimeout(3500);
     const below=await tide();
     assert.ok(below.top>=below.fold&&below.state==="armed","the tide below the fold waits to be seen: "+JSON.stringify(below));
@@ -325,20 +422,20 @@ try{
     let offline=true;
     await page.route("**api.open-meteo.com**",route=>offline?route.abort():route.fallback());
     await page.goto(`http://localhost:${PORT}/`);
-    await page.waitForFunction(()=>document.getElementById("stamp").textContent==="unavailable");
+    await page.waitForFunction(()=>document.getElementById("stamp").textContent==="unavailable");await painted(page);
     assert.match(await page.locator("#verdict").innerText(),/Tap the timestamp to try again/);
     assert.equal(await page.locator("#refreshBtn").getAttribute("aria-busy"),"false");
     assert.equal(await page.locator(".skel").count(),0,"failed loading must end its skeleton animation");
     assert.equal(await page.locator(".live-dot").isVisible(),false,"no live pulse without a reading");
     offline=false;await page.locator("#refreshBtn").click();
-    await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
+    await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));await painted(page);
     assert.equal(await page.locator("#bigTemp").innerText(),"67°");
     assert.equal(await page.locator(".live-dot").isVisible(),true);
-    offline=true;await page.evaluate(()=>refresh());
+    offline=true;await page.evaluate(()=>refresh());await painted(page);
     assert.match(await page.locator("#stamp").innerText(),/updated/i);
     assert.equal(await page.locator("#bigTemp").innerText(),"67°");
     offline=false;await page.evaluate(()=>window.dispatchEvent(new Event("online")));
-    await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
+    await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));await painted(page);
     assert.deepEqual(errors,[]);await context.close();checks++;
   }
   /* ── every line reads the same way, with a real finger ── */
@@ -421,7 +518,7 @@ try{
     await page.goto(`http://localhost:${PORT}/`,{waitUntil:"domcontentloaded"});
     assert.deepEqual(await page.evaluate(()=>[...document.querySelectorAll(".xp-key")].map(k=>k.disabled)),[true,true,true,true],"no slider before a reading");
     release();
-    await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
+    await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));await painted(page);
     const reached=[];
     for(let j=0;j<40&&reached.length<3;j++){
       await page.keyboard.press("Tab");
@@ -459,7 +556,7 @@ try{
        drag that ends on the day it started on keeps it open; the arrows move and open */
     const {context,page,errors,cdp}=await phone(320,wetSunday,"sp",{when:sunday});
     await load(page);
-    const b=await inView(page,"#weekExplore"),n=await page.locator("#weekRows .wk-day").count(),col=b.width/n,cx=i=>b.x+(i+.5)*col,y=b.y+b.height*.55;
+    const b=await inView(page,"#weekExplore"),n=await page.locator("#weekRows .wk-day").count(),cx=await weekAt(page,b),y=b.y+b.height*.55;
     assert.equal(n,8);
     const openDay=()=>page.evaluate(()=>[...document.querySelectorAll("#weekRows .wk-day")].findIndex(d=>d.getAttribute("aria-expanded")==="true"));
     const inked=()=>page.evaluate(()=>[...document.querySelectorAll("#weekRows .wk-day")].findIndex(d=>d.classList.contains("xp-on")));
@@ -492,7 +589,7 @@ try{
     assert.deepEqual(errors,[]);await context.close();
     /* and with a mouse */
     const m=await open(320,wetSunday,"sp",sunday);await load(m.page);
-    const mb=await inView(m.page,"#weekExplore"),mcx=i=>mb.x+(i+.5)*mb.width/8,my=mb.y+mb.height*.55;
+    const mb=await inView(m.page,"#weekExplore"),mcx=await weekAt(m.page,mb),my=mb.y+mb.height*.55;
     const mopen=()=>m.page.evaluate(()=>[...document.querySelectorAll("#weekRows .wk-day")].findIndex(d=>d.getAttribute("aria-expanded")==="true"));
     for(let x=mcx(1);x<=mcx(6);x+=10)await m.page.mouse.move(x,my);
     assert.ok((await xpState(m.page,"week")).shown&&await mopen()===-1,"hover shows the pill and never opens a day");
@@ -553,7 +650,7 @@ try{
     const pts=[];for(let x=b.x+20;x<=x5;x+=6)pts.push([x,y]);pts.push([x5,y]);
     await touch(cdp,page,pts,{end:false});
     assert.match((await xpState(page,"hourly")).text,/^5p /);
-    await page.evaluate(()=>render(LAST.d,true));
+    await page.evaluate(()=>render(LAST.d,true));await painted(page);
     assert.match((await xpState(page,"hourly")).text||"",/^5p /,"the repaint keeps 5p");
     await page.evaluate(()=>setLoc("sp"));
     assert.equal((await xpState(page,"hourly")).shown,false,"a new place puts it away");
@@ -569,7 +666,7 @@ try{
     await page.addInitScript(c=>localStorage.setItem("mbwx-mb",JSON.stringify(c)),{savedAt:t.getTime(),data:cachePayload(t,o,"mb")});
     await page.route("**api.open-meteo.com**",r=>r.request().url().includes("marine-api")?r.fallback():r.abort());
     await page.goto(`http://localhost:${PORT}/`);
-    await page.waitForFunction(()=>/updated/.test(document.getElementById("stamp").textContent));
+    await page.waitForFunction(()=>/updated/.test(document.getElementById("stamp").textContent));await painted(page);
     await page.locator("#hourlyExplore .xp-key").focus();
     const s=await xpState(page,"hourly");
     assert.equal(s.start,age,"the hour now is in");
@@ -587,7 +684,7 @@ try{
        still drawing in, and the explorer adds no animation of its own */
     const {context,page,errors,cdp}=await phone(390,coast,"mb",{motion:true});
     await page.goto(`http://localhost:${PORT}/`);
-    await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
+    await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));await painted(page);
     await page.waitForFunction(()=>REVEAL.hourly.state==="running",null,{timeout:3000});
     const b=await page.locator("#hourlyExplore").boundingBox(),y=b.y+b.height*.55;
     await touch(cdp,page,across(b,y,30,120));
@@ -611,7 +708,7 @@ try{
     await page.addInitScript(c=>localStorage.setItem("mbwx-mb",JSON.stringify(c)),{savedAt:t.getTime(),data});
     await page.route("**api.open-meteo.com**",r=>r.request().url().includes("marine-api")?r.fallback():r.abort());
     await page.goto(`http://localhost:${PORT}/`);
-    await page.waitForFunction(()=>/updated/.test(document.getElementById("stamp").textContent));
+    await page.waitForFunction(()=>/updated/.test(document.getElementById("stamp").textContent));await painted(page);
     const r=await page.evaluate(()=>{const h=LAST.d.hourly,known=h.temp.map((v,i)=>v==null?null:i===0&&LAST.d.current.temperature_2m!=null?LAST.d.current.temperature_2m:v).filter(v=>v!=null);
       return{nan:/NaN/.test(document.getElementById("hourlySvg").innerHTML),marks:XP.hourly.D.marks,low:Math.round(Math.min(...known)),
         labels:[...document.querySelectorAll("#hourlySvg text")].map(e=>e.textContent),said:XP.hourly.D.read(5).said}});
@@ -621,27 +718,34 @@ try{
     assert.match(r.said,/temperature unavailable/);
     /* The Tonight card reads the same run: a missing night hour is neither zero nor permission
        to call the rest of a partial night its low. */
-    const eve=await page.evaluate(()=>{const d=structuredClone(LAST.d),h=d.hourly,set=new Date(d.daily.sunset[0]),rise=new Date(d.daily.sunrise[1]);
+    const eve0=await page.evaluate(()=>{const d=structuredClone(LAST.d),h=d.hourly,set=new Date(d.daily.sunset[0]),rise=new Date(d.daily.sunrise[1]);
       const night=h.time.map((t,i)=>i).filter(i=>new Date(h.time[i])>=set&&new Date(h.time[i])<=rise);
       h.temp[night[2]]=null;render(d,false,LAST.savedAt);
       const low=Math.round(Math.min(...night.filter(i=>h.temp[i]!=null).map(i=>+h.temp[i])));
-      return{n:night.length,low,text:document.getElementById("eveLead").textContent}});
+      return{n:night.length,low}});
+    await painted(page);
+    const eve={...eve0,text:await page.evaluate(()=>document.getElementById("eveLead").textContent)};
     assert.ok(eve.n>3,"the run reaches into the night");
     assert.doesNotMatch(eve.text,/Low\u00A00°/,"a missing night hour is not a zero: "+eve.text);
     assert.match(eve.text,/Low unavailable/,`the incomplete night has no claimed low: ${eve.text}`);
     /* past the last known hour there is no neighbour: the line and its fill stop there rather than
        holding flat a temperature the run does not carry, and with one known hour there is no line */
-    const tail=await page.evaluate(()=>{const d=structuredClone(LAST.d),h=d.hourly,n=h.temp.length;h.temp=h.temp.map((t,i)=>i>=n-8?null:t);
-      render(d,false,LAST.savedAt);const xs=el=>(el.getAttribute("d").match(/-?\d+(?:\.\d+)?/g)||[]).map(Number).filter((_,j)=>j%2===0);
+    await page.evaluate(()=>{const d=structuredClone(LAST.d),h=d.hourly,n=h.temp.length;h.temp=h.temp.map((t,i)=>i>=n-8?null:t);
+      window.__tail=d;render(d,false,LAST.savedAt)});
+    await painted(page);
+    const tail=await page.evaluate(()=>{const d=window.__tail,h=d.hourly,n=h.temp.length,xs=el=>(el.getAttribute("d").match(/-?\d+(?:\.\d+)?/g)||[]).map(Number).filter((_,j)=>j%2===0);
       const svg=document.getElementById("hourlySvg"),last=XP.hourly.D.x[n-9];
       const r={last,line:Math.max(...xs(svg.querySelector(".tline"))),clip:Math.max(...xs(svg.querySelector("#hourlyArea path"))),nan:/NaN/.test(svg.innerHTML)};
-      h.temp=h.temp.map((t,i)=>i===0?t:null);render(d,false,LAST.savedAt);
-      r.one=svg.querySelector(".tline").getAttribute("d");return r});
+      h.temp=h.temp.map((t,i)=>i===0?t:null);render(d,false,LAST.savedAt);return r});
+    await painted(page);
+    tail.one=await page.evaluate(()=>document.getElementById("hourlySvg").querySelector(".tline").getAttribute("d"));
     assert.equal(tail.nan,false,"nothing is drawn at NaN past the run's temperatures");
     assert.ok(tail.line<=tail.last+.5&&tail.clip<=tail.last+.5,`the line (${tail.line}) and its fill (${tail.clip}) stop at the last known hour (${tail.last})`);
     assert.equal(tail.one,"","one known hour draws no line");
     /* the week too: a missing high runs its line between the known days and prints no "0°" */
-    const wk=await page.evaluate(()=>{const d=structuredClone(LAST.d);d.daily.temperature_2m_max[3]=null;render(d,false,LAST.savedAt);
+    await page.evaluate(()=>{const d=structuredClone(LAST.d);d.daily.temperature_2m_max[3]=null;render(d,false,LAST.savedAt)});
+    await painted(page);
+    const wk=await page.evaluate(()=>{
       const svg=document.getElementById("weekSvg"),H=svg.viewBox.baseVal.height,ys=(svg.querySelector(".tline").getAttribute("d").match(/-?\d+(?:\.\d+)?/g)||[]).map(Number).filter((_,j)=>j%2);
       return{labels:[...svg.querySelectorAll("text")].map(e=>e.textContent),nan:/NaN/.test(svg.innerHTML),lo:Math.max(...ys),H}});
     assert.equal(wk.nan,false,"nothing in the week is drawn at NaN");
@@ -670,7 +774,7 @@ try{
        water came into view drawn, with no entrance, on the ordinary way up to it */
     const {context,page,errors,cdp}=await phone(390,coast,"mb",{motion:true});
     await page.goto(`http://localhost:${PORT}/`);
-    await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
+    await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));await painted(page);
     await page.waitForTimeout(3200);
     await page.evaluate(()=>{const b=document.getElementById("tideSvg").getBoundingClientRect();scrollTo(0,scrollY+b.top-innerHeight+b.height*.2)});
     await page.waitForTimeout(400);
@@ -846,7 +950,7 @@ try{
        still the slide's; a missing daily high is a dash with no ring */
     const {context,page,errors,cdp}=await phone(320,{...wetSunday,dailyTemps:(hi,lo,c)=>{wetSunday.dailyTemps(hi,lo,c);hi[3]=null}},"sp",{when:sunday});
     await load(page);
-    const b=await inView(page,"#weekExplore"),n=await page.locator("#weekRows .wk-day").count(),cx=i=>b.x+(i+.5)*b.width/n,y=b.y+b.height*.55;
+    const b=await inView(page,"#weekExplore"),cx=await weekAt(page,b),y=b.y+b.height*.55;
     const openDay=()=>page.evaluate(()=>[...document.querySelectorAll("#weekRows .wk-day")].findIndex(d=>d.getAttribute("aria-expanded")==="true"));
     const pts=[];for(let x=cx(1);x<=cx(2);x+=4)pts.push([x,y]);pts.push([cx(2),y]);
     await touch(cdp,page,pts);await page.waitForTimeout(250);
@@ -865,7 +969,7 @@ try{
        stay up once the mouse leaves */
     for(const width of [390,900]){
       const m=await open(width,wetSunday,"sp",sunday);await load(m.page);
-      const mb=await inView(m.page,"#weekExplore"),mcx=i=>mb.x+(i+.5)*mb.width/8,my=mb.y+mb.height*.55;
+      const mb=await inView(m.page,"#weekExplore"),mcx=await weekAt(m.page,mb),my=mb.y+mb.height*.55;
       await m.page.mouse.move(mcx(3),my);await m.page.mouse.down();
       for(let j=1;j<=6;j++)await m.page.mouse.move(mcx(3),my+j*(mb.height*.45+80)/6);
       await m.page.mouse.up();
@@ -889,7 +993,7 @@ try{
     const off=()=>page.evaluate(()=>[...document.querySelectorAll(".xp-key")].filter(k=>k.disabled).map(k=>k.getAttribute("aria-valuetext")));
     assert.deepEqual(await off(),[null,null,null,null],"the loading shell speaks no reading");
     release();
-    await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
+    await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));await painted(page);
     await page.unroute("**api.open-meteo.com**");
     await page.route("**api.open-meteo.com**",r=>r.request().url().includes("marine-api")?r.fallback():r.abort());
     await page.evaluate(()=>{localStorage.removeItem("mbwx-sp");document.getElementById("locBtn").click()});

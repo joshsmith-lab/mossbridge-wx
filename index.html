@@ -110,15 +110,16 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
   .6%{opacity:.22}2.4%{opacity:0}
   61%{opacity:0}61.7%{opacity:.13}63.2%{opacity:0}}
 .drift{will-change:transform}
+/* the sky's clouds: each layer is the sky's own size, so the drift's 14% is 14% of the sky, and
+   its canvas (bakeClouds) hangs out past it as far as the puffs and their blur reach */
+.sky-fx .cloud{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:0 0;pointer-events:none}
+.sky-fx .cloud canvas{position:absolute;display:block}
 @keyframes drift{from{transform:translate3d(-14%,0,0)}to{transform:translate3d(14%,0,0)}}
 /* rain leans and travels with the wind that is actually blowing */
 .rainfx{position:absolute;inset:-10% 0 0;z-index:1;pointer-events:none;overflow:hidden;
   transform:skewX(var(--rlean,0deg))}
 .rainfx i{position:absolute;top:-12%;width:var(--rw,1.2px);height:var(--rh,8%);border-radius:1px;
   background:linear-gradient(180deg,transparent,var(--rain,rgba(226,240,246,.62)));animation:fall linear infinite}
-/* the first-screen pen and the streaks do not share a frame. Paused, not removed,
-   so the phase they already have is the one they resume on. */
-.rainfx.held i,#sceneSvg.rain-held .nearrain{animation-play-state:paused}
 @keyframes fall{to{transform:translate3d(var(--rx,-14px),880px,0)}}
 /* snow is the same generator wearing different clothes: round, slow, and it wanders on the
    way down instead of falling in a line */
@@ -654,7 +655,7 @@ html:not([data-theme=dark]) .rv-core{display:none}
 /* the year: the week's grammar at the scale of a year, the months on the same quiet axis */
 #yearSection{padding-top:9px}
 .year-svg{display:block;width:100%;height:auto;overflow:visible}
-.yr-months{display:flex;margin-top:8px}
+.yr-months{display:flex;margin-top:8px;padding:0 16px}            /* CHART_IN: the months sit under the year's points */
 .yr-months span{flex:1;text-align:center;font-family:var(--mono);font-size:10px;line-height:13px;letter-spacing:.06em;color:var(--ink-faint)}
 .yr-months span.yr-now{color:var(--marker);font-weight:600}
 .vane{flex:0 0 auto;color:var(--water);opacity:.85}
@@ -683,10 +684,15 @@ html[data-theme=dark] .uv-svg .uv-track{opacity:.28}
    gap each column leaves at its top, so it lands without measuring anything. */
 .week{padding:28px 20px 0}
 .wk-wrap{position:relative}
-.wk{display:grid;grid-template-columns:repeat(var(--wk-n,7),1fr)}
+/* the columns sit under the line's points, which run CHART_IN in from each content edge like every
+   other line, so the outer two are cut at the content edge and pad toward the inside to keep their
+   day centred under its point (renderWeek sets --wk-cols and --wk-pad). TODAY is wider than its 32px:
+   safe centring keeps it inside the content edge, a couple of pixels right of its point */
+.wk{display:grid;grid-template-columns:var(--wk-cols,repeat(var(--wk-n,7),1fr))}
+.wk-day:first-child{padding-right:var(--wk-pad,0px)}.wk-day:last-child{padding-left:var(--wk-pad,0px)}
 /* a Sunday's eight columns are 35px each on a 320 phone, and TODAY at the week's tracking is 33 */
 @media (max-width:359px){.wk.wk8 .wk-name{letter-spacing:.02em}}
-.wk-day{position:relative;display:flex;flex-direction:column;align-items:center;min-width:0;padding:0 0 6px;margin:0;
+.wk-day{position:relative;display:flex;flex-direction:column;align-items:center;align-items:safe center;min-width:0;padding:0 0 6px;margin:0;
   border:0;border-radius:0;background:transparent;color:inherit;font:inherit;text-align:center;
   -webkit-tap-highlight-color:transparent}
 /* the open day is marked where its name is, under the hairline: a wash behind the chart put a
@@ -1205,6 +1211,77 @@ const RAIN={51:[16,1.55,.55],53:[18,1.4,.62],55:[22,1.22,.72],
   56:[18,1.4,.62],57:[24,1.2,.75],66:[28,1,.85],67:[46,.66,1.1]};
 /* snow takes six to nine seconds to cross the same sky rain crosses in one */
 const SNOWFALL={71:[22,9,2.4],73:[40,7.4,2.9],75:[64,6,3.4],77:[30,8.2,1.8],85:[34,7,2.8],86:[58,6.2,3.2]};
+/* The sky's clouds are soft: the union of their puffs under a nine-pixel blur. That blur was a
+   live SVG filter on each drifting layer, worked out again on every frame anything in the header
+   moved, and WebKit repaints the whole sky under a filtered SVG group that moves: 10 to 23 frames
+   a second on a phone-sized sky at 3x. So the blur is done once, here, into a canvas each drifting
+   layer carries, and the drift is a plain layer sliding sideways. It is the picture the filter
+   drew: the same puffs at the same percentages of the sky, clipped to the filter's own region (30%
+   of the puffs' box either side, 60% above, 100% below), blurred as wide. The canvas is 3.6 CSS
+   pixels to its pixel, far finer than a nine-pixel blur can show, and three passes of a five-pixel
+   box there, with the coverage and the stretch back up, add up to the filter's nine exactly. It is
+   measured off the sky's size, and again whenever that changes, because the puffs are percentages
+   of it and the blur is not. */
+let CLOUDS=null,SKY_FX=null,CLOUD_SCRATCH=null;
+const CLOUD_BLUR=9,CLOUD_BOX=5,CLOUD_PX=2*CLOUD_BLUR/CLOUD_BOX,CLOUD_MEMO=new Map();
+function cloudBox(a,b,w,h){
+  const r=CLOUD_BOX>>1,n=CLOUD_BOX;
+  for(let y=0;y<h;y++){const o=y*w;let s=0;
+    for(let j=0;j<=r&&j<w;j++)s+=a[o+j];
+    for(let x=0;x<w;x++){b[o+x]=s/n;if(x+r+1<w)s+=a[o+x+r+1];if(x>=r)s-=a[o+x-r]}}
+  for(let x=0;x<w;x++){let s=0;
+    for(let j=0;j<=r&&j<h;j++)s+=b[j*w+x];
+    for(let y=0;y<h;y++){a[y*w+x]=s/n;if(y+r+1<h)s+=b[(y+r+1)*w+x];if(y>=r)s-=b[(y-r)*w+x]}}
+}
+function cloudLayer(ly,W,H){
+  const key=JSON.stringify([ly.fill,ly.puffs,W,H]);
+  if(CLOUD_MEMO.has(key))return CLOUD_MEMO.get(key);
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  const px=ly.puffs.map(([cx,cy,rx,ry])=>[cx*W/100,cy*H/100,rx*W/100,ry*H/100]);
+  for(const [X,Y,RX,RY] of px){x0=Math.min(x0,X-RX);x1=Math.max(x1,X+RX);y0=Math.min(y0,Y-RY);y1=Math.max(y1,Y+RY)}
+  const bw=x1-x0,bh=y1-y0,pad=CLOUD_BLUR*3+CLOUD_PX*2;
+  /* the filter region, cut to what the drift can ever bring into the sky */
+  const ax=Math.max(x0-.3*bw,-.14*W-pad),bx=Math.min(x0+1.3*bw,1.14*W+pad);
+  const ay=Math.max(y0-.6*bh,-pad),by=Math.min(y0+2*bh,H+pad);
+  let out=null;
+  if(bx>ax&&by>ay){
+    const cw=Math.max(1,Math.round((bx-ax)/CLOUD_PX)),ch=Math.max(1,Math.round((by-ay)/CLOUD_PX)),sx=(bx-ax)/cw,sy=(by-ay)/ch;
+    const sc=CLOUD_SCRATCH||(CLOUD_SCRATCH=document.createElement("canvas"));
+    sc.width=cw;sc.height=ch;
+    const g=sc.getContext("2d",{willReadFrequently:true});
+    g.setTransform(1/sx,0,0,1/sy,-ax/sx,-ay/sy);g.fillStyle="#000";
+    for(const [X,Y,RX,RY] of px){g.beginPath();g.ellipse(X,Y,RX,RY,0,0,Math.PI*2);g.fill()}
+    const m=g.getImageData(0,0,cw,ch).data,a=new Float32Array(cw*ch),t=new Float32Array(cw*ch);
+    for(let i=0;i<a.length;i++)a[i]=m[i*4+3]/255;
+    cloudBox(a,t,cw,ch);cloudBox(a,t,cw,ch);cloudBox(a,t,cw,ch);
+    const c=parseInt(ly.fill.slice(1),16),im=new ImageData(cw,ch),d=im.data;
+    for(let i=0;i<a.length;i++){d[i*4]=c>>16;d[i*4+1]=c>>8&255;d[i*4+2]=c&255;d[i*4+3]=Math.round(Math.min(1,a[i])*255)}
+    out={im,ax,ay,bx,by};
+  }
+  if(CLOUD_MEMO.size>8)CLOUD_MEMO.clear();
+  CLOUD_MEMO.set(key,out);
+  return out;
+}
+function bakeClouds(){
+  const fx=document.getElementById("skyFx");
+  if(!CLOUDS)return;
+  if(!SKY_FX&&!("ResizeObserver" in window)){const b=fx.getBoundingClientRect();SKY_FX=[b.width,b.height]}
+  if(!SKY_FX)return;
+  const [W,H]=SKY_FX,cvs=fx.querySelectorAll(".cloud canvas");
+  if(!(W>0&&H>0))return;
+  CLOUDS.forEach((ly,L)=>{
+    const cv=cvs[L];if(!cv)return;
+    const b=cloudLayer(ly,W,H);
+    if(!b){cv.width=cv.height=0;return}
+    cv.width=b.im.width;cv.height=b.im.height;cv.getContext("2d").putImageData(b.im,0,0);
+    Object.assign(cv.style,{left:b.ax+"px",top:b.ay+"px",width:(b.bx-b.ax)+"px",height:(b.by-b.ay)+"px"});
+  });
+}
+if("ResizeObserver" in window)new ResizeObserver(es=>{
+  const r=es[es.length-1].contentRect;
+  if(SKY_FX&&SKY_FX[0]===r.width&&SKY_FX[1]===r.height)return;
+  SKY_FX=[r.width,r.height];bakeClouds();
+}).observe(document.getElementById("skyFx"));
 function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd,code){
   const night=clamp((-altDeg-2)/8,0,1);
   const st=starField();
@@ -1236,35 +1313,38 @@ function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd,code){
   /* the sky moves at the speed of the day: calm air barely drifts, a blow pushes it along */
   const rush=clamp(1+(Number(windSpd)||0)/11,1,4.2);
   const dur=[128/rush,92/rush,164/rush], amp=[1,.72,1.28];
-  const rr=mulberry(7311);
+  const rr=mulberry(7311),r1=v=>+v.toFixed(1);
   let clouds="";
+  const layers=[];
   for(let L=0;L<3;L++){
     if(!n)break;
-    let puffs="";
+    const puffs=[];
     const cnt=Math.max(1,Math.round(n*(L===0?1:.7)));
     for(let i=0;i<cnt;i++){
       const cx=rr()*130-15, cy=6+rr()*46, w=16+rr()*26, h=w*(.30+rr()*.14);
-      puffs+=`<ellipse cx="${cx.toFixed(1)}%" cy="${cy.toFixed(1)}%" rx="${w.toFixed(1)}%" ry="${h.toFixed(1)}%"/>`
-           +`<ellipse cx="${(cx+w*.5).toFixed(1)}%" cy="${(cy+h*.42).toFixed(1)}%" rx="${(w*.68).toFixed(1)}%" ry="${(h*.8).toFixed(1)}%"/>`;
+      puffs.push([cx,cy,w,h].map(r1),[cx+w*.5,cy+h*.42,w*.68,h*.8].map(r1));
     }
     const op=(.09+cloud/100*.20)*(L===0?1:.7)*(night>.5?.5:1);
     /* one direction keyword: "reverse" and "alternate" together made Chrome drop the whole
        shorthand, so these clouds never moved at all */
     const rev=windDir>180?"alternate-reverse":"alternate";
-    clouds+=`<g fill="${night>.5?'#8FA6B4':'#FFFFFF'}" opacity="${op.toFixed(3)}" filter="url(#soft)"
-      class="drift" style="animation:drift ${dur[L]/(PRM?1e6:1)}s ease-in-out infinite ${rev};transform:scale(${amp[L]})">${puffs}</g>`;
+    layers.push({fill:night>.5?'#8FA6B4':'#FFFFFF',puffs});
+    clouds+=`<div class="cloud drift" style="opacity:${op.toFixed(3)};animation:drift ${dur[L]/(PRM?1e6:1)}s ease-in-out infinite ${rev};transform:scale(${amp[L]})"><canvas></canvas></div>`;
   }
   /* inside golden hour the horizon carries more light, and it breathes with the arc */
   const golden=altDeg>-4.5&&altDeg<6.5;
   const glow=altDeg>-8&&altDeg<14
     ?`<ellipse cx="50%" cy="100%" rx="${golden?78:70}%" ry="${golden?48:42}%" fill="url(#hglow)"${golden&&!PRM?` class="goldpulse" style="--ga:1"`:""}/>`:"";
+  /* back to front as one picture: the glow and the stars, the clouds over them, the bolts over
+     everything. The bolts have an SVG of their own only because the clouds are not SVG now */
   document.getElementById("skyFx").innerHTML=
     `<svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <filter id="soft" x="-30%" y="-60%" width="160%" height="260%"><feGaussianBlur stdDeviation="9"/></filter>
         <radialGradient id="hglow"><stop offset="0" stop-color="#FFD79A" stop-opacity="${golden?.64:.5}"/><stop offset="1" stop-color="#FFD79A" stop-opacity="0"/></radialGradient>
         <linearGradient id="streak" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF6E2" stop-opacity="0"/><stop offset="1" stop-color="#FFF6E2" stop-opacity=".95"/></linearGradient>
-      </defs>${glow}${stars}${meteor}${clouds}<g id="boltLayer"></g></svg>`;
+      </defs>${glow}${stars}${meteor}</svg>${clouds}<svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><g id="boltLayer"></g></svg>`;
+  CLOUDS=layers.length?layers:null;
+  bakeClouds();
 
   const rf=document.getElementById("rainFx"),snowing=isSnow(code);
   const held=rf.classList.contains("held");
@@ -3075,6 +3155,15 @@ function fishMotion(){
 
 const appW=()=>clamp(document.querySelector(".app").clientWidth||760,320,760);
 const chartH=w=>Math.round(165+(760-w)*.09);
+/* Every line runs the same width (Josh, October 9 2026: "the width of the week part doesn't extend
+   as far as the other lines. everything should be even"). The hours, the week, the water, the moon
+   and the year each start their line and its fill CHART_IN inside the content edge and end CHART_IN
+   inside the other, at every width. It is the hourly's own 16px: room for the three-letter label
+   under an end point (NOW, Sun, J, a time) to sit centred under it inside the content edge, which
+   full bleed would push half off its point. The week's end columns are cut at the content edge, the
+   water's depth scale sits on its own gridlines inside the plot, the year's wrap is clipped to these
+   two edges and its months are laid out between them. `.yr-months` pads by the same 16px */
+const CHART_IN=16;
 /* which way the water is going right now, so the light on it can lean the same way:
    1 rising, -1 falling, 0 when we have no predictions */
 function tideTrend(preds){
@@ -4196,18 +4285,20 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
          one slow frame and read as dashes. The taper keeps a dead-vertical drop from
          collapsing to a zero-width box. Across the frame they are dealt one to a slot
          rather than thrown at random, which is what stacked three over the barn. The
-         delay is the clock plus this drop's own seed, so a rebuild picks it up. */
-      const step=968/nrFall/30,hw=(1.25+nrK*1.05)/2,cs=1/Math.hypot(1,nrTan),slot=(W+68)/drops;
+         delay is the clock plus this drop's own seed, so a rebuild picks it up. A scene unit
+         is k screen pixels (the frame came closer in for the phone, W=appW/1.22), so the step
+         and the timing are taken on screen and turned back into units. */
+      const k=appW()/W,step=968/k/nrFall/30,hw=(1.25+nrK*1.05)/2,cs=1/Math.hypot(1,nrTan),slot=(W+68)/drops;
       nearRain=`<g mask="url(#ridgerain)" fill="${dark?'#DCE9F0':'#F4FAFC'}">`
         +Array.from({length:drops},(_,i)=>{
-          /* Speed is not a taste: the layer above crosses 880px in nrFall seconds, and a
-             scene unit is a screen pixel here, so the near drops are timed off that same
-             rate and land a little quicker, being nearer. Timed by feel instead they came
+          /* Speed is not a taste: the layer above crosses 880px in nrFall seconds, and the
+             near drops are timed off that same rate on screen (a unit is k px) and land a
+             little quicker, being nearer. Timed by feel instead they came
              out four times slower than the rain over the ridgeline, which is what made a
              long one read as a slash drawn across the picture rather than as a drop. Long
              and quick is a raindrop. Long and slow is a scratch. */
           const len=clamp(step*2.6,22,span*.72)*(.85+nr()*.3),travel=span+len;
-          const d=travel*nrFall/968*(.9+nr()*.2);
+          const d=travel*k*nrFall/968*(.9+nr()*.2);
           const tx=-34+(i+.15+nr()*.7)*slot,ty=nrTop-len,hx=tx+len*nrTan,nx=cs,ny=-nrTan*cs,tw=.15;
           const P=(x,y)=>`${x.toFixed(1)} ${y.toFixed(1)}`;
           const delay=(Date.now()/1000+nr()*d)%d;
@@ -4611,9 +4702,11 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
      resident rather than set as a fraction of the frame: residents are drawn at
      a fixed size while the frame is a fraction of the screen, so a fixed
      fraction that cleared the oystercatcher at 430px ran the crab through it at
-     320. Sixty-four units is a clear body-length of water either way. */
+     320. Sixty-four units is a clear body-length of water either way. And in a
+     downpour (65, 82) a fiddler is down its burrow with the door shut: the rain's
+     own rings and splashes carry the water, and the busiest frame keeps its headroom. */
   const crabX=residentX>W*.5?residentX-64:residentX+64;
-  const marshCrab=(wet||storm)&&temp>=48?crabAt(crabX,base+14,.5,1):"";
+  const marshCrab=(wet||storm)&&temp>=48&&![65,82].includes(+code)?crabAt(crabX,base+14,.5,1):"";
   let flies="";
   if(showFlies){const fr=mulberry(80126);
     for(let i=0;i<flyCount;i++){
@@ -4748,9 +4841,17 @@ function outdoorWarning(alerts){
   const warnings=alerts.filter(a=>/warning/i.test(a.event||""));
   return warnings.find(a=>a.severity==="Extreme")||warnings.find(a=>a.severity==="Severe")||null;
 }
-function renderAlerts(alerts){
-  const el=document.getElementById("alertStrip");
-  if(!alerts||!alerts.length){el.className="alert-strip";el.innerHTML="";el.removeAttribute("role");el.removeAttribute("tabindex");el.removeAttribute("aria-expanded");el.dataset.open="0";return}
+/* The strip enters when an alert arrives, and then it stays put. The cache paints first and the
+   live forecast lands a moment later, and a resize, a foreground and the hour turning over all
+   paint again. The strip used to be written from scratch on every one of them, and an open strip's
+   body came in again under the reader each time. So the strip is worked out as words first
+   (alertStrip), and renderAlerts writes only what changed (alertStep). The same alert said the same
+   way writes nothing. An update (the warning extended, another alert joining it) changes the words
+   in place, so an open strip keeps its body. A different alert taking the lead plays the entrance
+   again. An alert ending takes the strip down, and the next one to arrive enters. Both are pure and
+   test.mjs runs them. */
+function alertStrip(alerts){
+  if(!alerts||!alerts.length)return null;
   const sev={Extreme:0,Severe:1,Moderate:2,Minor:3};
   const sorted=[...alerts].sort((x,y)=>(sev[x.severity]??4)-(sev[y.severity]??4));
   const a=sorted[0];
@@ -4761,17 +4862,47 @@ function renderAlerts(alerts){
   const gist=alertGist(a);
   const others=sorted.slice(1).map(o=>o.event);
   const body=gist.length||others.length||a.inst
-    ?`<div class="alert-body">${gist.map(g=>`<p>${g.k?`<b>${g.k}</b> `:""}${esc(g.v)}</p>`).join("")}
+    ?`${gist.map(g=>`<p>${g.k?`<b>${g.k}</b> `:""}${esc(g.v)}</p>`).join("")}
        ${a.inst?`<p><b>What to do</b> ${esc(a.inst)}</p>`:""}
-       ${others.length?`<p class="alert-more">also active: ${esc(others.join(", "))}</p>`:""}</div>`
+       ${others.length?`<p class="alert-more">also active: ${esc(others.join(", "))}</p>`:""}`
     :"";
-  el.innerHTML=`<span class="alert-head">${esc(t)}${body?'<span class="alert-caret" aria-hidden="true"></span>':""}</span>${body}`;
-  el.className="alert-strip on";
-  if(body){
+  return{lead:a.event+"|"+(a.severity||""),head:esc(t)+(body?'<span class="alert-caret" aria-hidden="true"></span>':""),body};
+}
+function alertStep(was,next){
+  if(!next)return was?"off":"none";
+  if(!was)return"enter";
+  if(was.lead!==next.lead)return"replace";
+  return was.head===next.head&&was.body===next.body?"keep":"update";
+}
+/* It goes when the alert ends, not at the next paint after it: with the app open in front, nothing
+   else paints at the coast until something is touched. The forecast is asked for again a second
+   after the end, so a warning the Weather Service has extended stays up with its new words */
+let ALERT_SHOWN=null,ALERT_TIMER=0;
+function alertTimer(alerts){
+  clearTimeout(ALERT_TIMER);ALERT_TIMER=0;
+  const end=Math.min(...(alerts||[]).map(a=>Date.parse(a.ends||a.expires||"")).filter(Number.isFinite));
+  if(!Number.isFinite(end))return;
+  const id=LOC.id;
+  ALERT_TIMER=setTimeout(()=>{ALERT_TIMER=0;if(!document.hidden&&LOC.id===id)refresh()},Math.min(2147483647,Math.max(20,end-Date.now()+1000)));
+}
+function renderAlerts(alerts){
+  const el=document.getElementById("alertStrip"),next=alertStrip(alerts);
+  const step=alertStep(el.classList.contains("on")?ALERT_SHOWN:null,next);
+  ALERT_SHOWN=next;
+  alertTimer(next&&alerts);
+  if(step==="keep")return;
+  if(!next){el.className="alert-strip";el.innerHTML="";el.removeAttribute("role");el.removeAttribute("tabindex");el.removeAttribute("aria-expanded");el.dataset.open="0";return}
+  const body=el.querySelector(".alert-body");
+  if(step==="update"&&body&&next.body){el.querySelector(".alert-head").innerHTML=next.head;body.innerHTML=next.body}
+  else el.innerHTML=`<span class="alert-head">${next.head}</span>${next.body?`<div class="alert-body">${next.body}</div>`:""}`;
+  const open=!!next.body&&el.dataset.open==="1";
+  el.classList.add("on");el.classList.toggle("open",open);
+  if(next.body){
     el.setAttribute("role","button");el.setAttribute("tabindex","0");
-    el.setAttribute("aria-expanded",el.dataset.open==="1"?"true":"false");
-    if(el.dataset.open==="1")el.classList.add("open");
+    el.setAttribute("aria-expanded",open?"true":"false");
   }else{el.removeAttribute("role");el.removeAttribute("tabindex");el.removeAttribute("aria-expanded")}
+  /* the strip is already on, so a different alert taking the lead plays its entrance again */
+  if(step==="replace")for(const a of el.getAnimations?.()||[])if(a.animationName==="alertIn"){a.cancel();a.play()}
 }
 const esc=s=>String(s).replace(/[&<>"]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
 function toggleAlert(){
@@ -4786,11 +4917,13 @@ function toggleAlert(){
 }
 function renderNowcast(mins,code,h){
   const el=document.getElementById("nowcast");
-  if(!mins||!mins.time||!mins.precipitation){el.className="nowcast";return}
+  /* hidden, the strip lets its bars go, so when it comes back they grow in once */
+  const bars=document.getElementById("ncBars"),off=()=>{el.className="nowcast";bars.innerHTML=""};
+  if(!mins||!mins.time||!mins.precipitation){off();return}
   const th=.1,p=mins.precipitation,n=Math.min(10,p.length);
   let first=-1,last=-1;
   for(let i=0;i<n;i++){if(p[i]>=th){if(first<0)first=i;last=i}}
-  if(first<0){el.className="nowcast";return}
+  if(first<0){off();return}
   const st=new Date(mins.time[first]),en=last<n-1?new Date(new Date(mins.time[last]).getTime()+9e5):null;
   /* it names what is falling: the strip said "Rain" through snow and freezing rain at the farm.
      What is falling now is the current code; what starts later is the code for its own hour */
@@ -4802,8 +4935,11 @@ function renderNowcast(mins,code,h){
   else txt=en?kind+" ~"+clock(st)+"–"+clock(en):kind+" from ~"+clock(st);
   document.getElementById("ncText").textContent=txt;
   const mx=Math.max(...p.slice(0,n),.5);
-  document.getElementById("ncBars").innerHTML=Array.from({length:n},(_,i)=>
-    `<i style="height:${Math.max(2,Math.round(p[i]/mx*22))}px;opacity:${p[i]>=th?.9:.25};animation-delay:${i*45}ms"></i>`).join("");
+  /* The bars grow in once, when the strip comes up. A repaint (the live data landing a moment
+     after the cache, a refresh, a resize, a foreground) sets their heights in place on the same
+     nodes: written fresh each paint, every bar collapsed and grew again under the reader */
+  if(bars.children.length!==n)bars.innerHTML=Array.from({length:n},(_,i)=>`<i style="animation-delay:${i*45}ms"></i>`).join("");
+  [...bars.children].forEach((b,i)=>{b.style.height=Math.max(2,Math.round(p[i]/mx*22))+"px";b.style.opacity=p[i]>=th?".9":".25"});
   el.className="nowcast on";
 }
 const SWIRL=`<svg width="15" height="15" viewBox="0 0 16 16"><path d="M8 8c0-2.6 2.1-4.7 4.7-4.7M8 8c0 2.6-2.1 4.7-4.7 4.7M8 8c2.2 0 4 1.8 4 4M8 8c-2.2 0-4-1.8-4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><circle cx="8" cy="8" r="1.2" fill="currentColor"/></svg>`;
@@ -4869,9 +5005,11 @@ function renderTides(preds,css,gust,wind,gap=0){
     const f=clamp((t-a.time.getTime())/(b.time.getTime()-a.time.getTime()),0,1);
     return a.v+(b.v-a.v)*(1-Math.cos(Math.PI*f))/2;
   };
-  const W=appW()-40,H=chartH(W),padX=8;
+  const W=appW()-40,H=chartH(W),padX=CHART_IN;
   const fs=(W<360?1.08:W<520?1.16:1)*1.22;               /* labels scale up on a phone */
-  const topY=22,seaY=H-34,bedY=seaY+6,lowY=H-9,axisW=Math.round(26*fs),x0=padX+axisW;
+  /* the water runs the same width as every other line: its depth scale is on its own gridlines
+     inside the plot, so it no longer holds the curve in from the left */
+  const topY=22,seaY=H-34,bedY=seaY+6,lowY=H-9,x0=padX;
   const vs=[];for(let t=t0;t<=t1;t+=9e5)vs.push(interp(t));
   /* measured up from the chart datum, so the height of the water on screen is the water there */
   const hiV=Math.max(...vs),base=Math.min(0,...vs);
@@ -4929,17 +5067,8 @@ function renderTides(preds,css,gust,wind,gap=0){
   const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3.5" stroke-linejoin="round"`;
   const rv=REVEAL.tide.state!=="done",rvAt=(x,k,d)=>rvTag(rv,x,k,d);
 
-  /* one depth scale instead of a height printed beside every peak */
-  let grid="";
-  for(let ft=Math.ceil(base/2)*2;ft<=hiV;ft+=2){
-    if(ft<=base+.05)continue;
-    const y=Y(ft);
-    grid+=`<line x1="${x0}" y1="${y.toFixed(1)}" x2="${W-padX}" y2="${y.toFixed(1)}" stroke="${css.line}" stroke-width="1" stroke-dasharray="2 7"/>
-    <text x="${(x0-6).toFixed(1)}" y="${(y+3.2).toFixed(1)}" text-anchor="end" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${Math.max(10,9*fs).toFixed(1)}" fill="${css.faint}">${ft} ft</text>`;
-  }
-
   /* highs ride above their own peak, lows share one aligned row under the waterline */
-  let labels="",ticks="",nowTop=topY-10;
+  let labels="",ticks="",nowTop=topY-10;const times=[];
   for(const p of P){
     const tm=p.time.getTime();if(tm<t0||tm>t1)continue;
     const x=X(tm),y=Y(p.v),high=p.type==="H";
@@ -4952,7 +5081,8 @@ function renderTides(preds,css,gust,wind,gap=0){
     const lift=onBoat?Math.max(9,y-boatTop+4):9;
     /* and the now-line stops under any high label it would cross, lifted or not */
     if(high&&nx>lx-2&&nx<lx+lw+2)nowTop=Math.max(nowTop,y-lift+5);
-    labels+=`<text x="${x.toFixed(1)}" y="${(high?Math.max(12*fs,y-lift):lowY).toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(11*fs).toFixed(1)}" font-weight="600" fill="${high?css.ink:css.soft}" ${halo}${rvAt(anchor==="start"?x+20*fs:anchor==="end"?x-20*fs:x,"label")}>${clock(p.time)}</text>`;
+    const ty=high?Math.max(12*fs,y-lift):lowY;times.push([lx,ty-11*fs*.78-2,lx+lw,ty+3]);
+    labels+=`<text x="${x.toFixed(1)}" y="${ty.toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(11*fs).toFixed(1)}" font-weight="600" fill="${high?css.ink:css.soft}" ${halo}${rvAt(anchor==="start"?x+20*fs:anchor==="end"?x-20*fs:x,"label")}>${clock(p.time)}</text>`;
     /* the low's tick is drawn under the tag and the boat, whose halos break it */
     if(!high)ticks+=`<line x1="${x.toFixed(1)}" y1="${(y+1).toFixed(1)}" x2="${x.toFixed(1)}" y2="${(bedY+2).toFixed(1)}" stroke="${css.line}" stroke-width="1"${rvAt(x,"fade")}/>`;
   }
@@ -4992,6 +5122,31 @@ function renderTides(preds,css,gust,wind,gap=0){
   /* the now line runs down into the boat, and stops over the tag when the tag sits on it */
   let nowY2=ny-6;
   if(tagUp&&tag.x0<nx+1&&tag.x1>nx-1)nowY2=Math.min(nowY2,tag.t-3);
+
+  /* One depth scale instead of a height printed beside every peak. Its words sit on their own
+     gridlines, inside the plot, so the curve runs the same width as every other line instead of
+     starting after an axis. They are placed, not stamped: a word goes down at the right end of its
+     line if the curve, the boat and its tag, the now line, the times and the lows' ticks all leave
+     it clear there, then the left end, then the nearest clear spot along the line, and every
+     gridline takes the same spot when one spot clears them all, so the scale reads as one column */
+  const gfs=Math.max(10,9*fs),gcap=gfs*.74,grids=[];
+  for(let ft=Math.ceil(base/2)*2;ft<=hiV;ft+=2)if(ft>base+.05)grids.push({ft,y:Y(ft),w:(ft+" ft").length*gfs*.6});
+  const xR=W-padX;
+  const solid=[...times,[nx-25,boatTop,nx+21,ny+6],...(nowY2>nowTop+2?[[nx-2,nowTop,nx+2,nowY2]]:[]),...(tag?[[tag.x0,tag.t,tag.x1,tag.b+2]]:[]),
+    ...P.filter(p=>p.type!=="H"&&p.time.getTime()>=t0&&p.time.getTime()<=t1).map(p=>{const x=X(p.time.getTime());return[x-2,Y(p.v),x+2,bedY+2]})];
+  const spots=[["end",xR],["start",x0]];
+  for(let st=3;st<=xR-x0;st+=3)spots.push(["end",xR-st],["start",x0+st]);
+  const gBox=(g,[a,x])=>a==="end"?[x-g.w,g.y-3-gcap,x,g.y-1]:[x,g.y-3-gcap,x+g.w,g.y-1];
+  const gHits=(g,s)=>{const b=gBox(g,s);if(b[0]<x0-.1||b[2]>xR+.1)return Infinity;
+    return pts.filter(([px,py])=>px>b[0]-5&&px<b[2]+5&&py>b[1]-5&&py<b[3]+5).length
+      +solid.filter(o=>o[0]<b[2]+3&&o[2]>b[0]-3&&o[1]<b[3]+2&&o[3]>b[1]-2).length*100};
+  const shared=spots.find(s=>grids.every(g=>!gHits(g,s)));
+  let grid="";
+  for(const g of grids){
+    const s=shared||spots.find(q=>!gHits(g,q))||spots.reduce((a,q)=>gHits(g,q)<gHits(g,a)?q:a,spots[0]);
+    grid+=`<line x1="${x0}" y1="${g.y.toFixed(1)}" x2="${xR}" y2="${g.y.toFixed(1)}" stroke="${css.line}" stroke-width="1" stroke-dasharray="2 7"/>
+    <text x="${s[1].toFixed(1)}" y="${(g.y-3).toFixed(1)}" text-anchor="${s[0]}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${gfs.toFixed(1)}" fill="${css.faint}">${g.ft} ft</text>`;
+  }
   const tideSvg=document.getElementById("tideSvg"),waterTop=Math.min(...pts.map(p=>p[1]));
   tideSvg.setAttribute("viewBox",`0 0 ${W} ${H}`);
   tideSvg.innerHTML=`
@@ -5050,8 +5205,9 @@ const MOON_INK="#7A73AE";
 function renderMoon(css,wins,now=wallNow()){
   const svg=document.getElementById("moonSvg");
   const t0=now.getTime()-2.5*3.6e6,t1=now.getTime()+26*3.6e6;
-  const W=appW()-40,H=chartH(W),padX=8,fs=(W<360?1.08:W<520?1.16:1)*1.22;
-  const topY=50,botY=H-8,x0=padX+Math.round(26*fs);
+  const W=appW()-40,H=chartH(W),padX=CHART_IN,fs=(W<360?1.08:W<520?1.16:1)*1.22;
+  /* the same width as every other line, the water's included */
+  const topY=50,botY=H-8,x0=padX;
   const X=t=>x0+(t-t0)/(t1-t0)*(W-padX-x0);
   const as=[];for(let t=t0;t<=t1;t+=9e5)as.push(moonPos(new Date(t)).alt*180/Math.PI);
   const hi=Math.max(12,Math.max(...as)+8),lo=Math.min(-12,Math.min(...as)-6);
@@ -5168,14 +5324,15 @@ function yearCompare(N,dy){
    scale, with only the tallest month named, noun first. */
 function renderYear(N,dy,css){
   const svg=document.getElementById("yearSvg"),cmp=yearCompare(N,dy);
-  const W=appW()-40,col=W/12,X=m=>(m+.5)*col,snowy=N.snow.some(s=>s>=1);
+  /* the months are laid out between the two edges every line shares, and the wrap past them is clipped */
+  const W=appW()-40,L=CHART_IN,R=W-CHART_IN,col=(R-L)/12,X=m=>L+(m+.5)*col,snowy=N.snow.some(s=>s>=1);
   const TH=138,RH=34,GAP=snowy?12:0,SH=snowy?34:0,H=TH+RH+GAP+SH;
   const tMin=Math.min(20,cmp?cmp.wkLo-3:99),tMax=Math.max(95,cmp?cmp.wkHi+3:0);
   const top=24,bot=TH-18,Y=t=>top+(bot-top)*(1-(t-tMin)/(tMax-tMin));
   const mono=`text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace"`;
   const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3" stroke-linejoin="round"`;
   const dark=document.documentElement.getAttribute("data-theme")==="dark";
-  const now=wallNow(),m0=now.getMonth(),nx=(m0+(now.getDate()-.5)/new Date(now.getFullYear(),m0+1,0).getDate())*col;
+  const now=wallNow(),m0=now.getMonth(),nx=L+(m0+(now.getDate()-.5)/new Date(now.getFullYear(),m0+1,0).getDate())*col;
   const wrap=a=>[[X(-1),Y(a[11])],...a.map((t,i)=>[X(i),Y(t)]),[X(12),Y(a[0])]];
   const yOn=a=>{const p=wrap(a);return px=>{let i=0;while(i<p.length-2&&p[i+1][0]<px)i++;
     return p[i][1]+(p[i+1][1]-p[i][1])*(px-p[i][0])/(p[i+1][0]-p[i][0])}};
@@ -5218,7 +5375,7 @@ function renderYear(N,dy,css){
       s+=`<rect x="${(X(i)-bw/2).toFixed(1)}" y="${(y0+h-1-bh).toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="2" ${paint(i===wi)}${rvAt(X(i),"rise")}/>`});
     const txt=`${word} ${fmt(mx)} in`,lw=txt.length*10*.3+1;
     s+=`<text x="${clamp(X(wi),lw,W-lw).toFixed(1)}" y="${(y0+9).toFixed(1)}" ${mono} font-size="10" font-weight="600" fill="${labelFill}" ${halo}${rvAt(X(wi),"label")}>${txt}</text>`;
-    return s+`<line x1="3" y1="${(y0+h-.5).toFixed(1)}" x2="${(W-3).toFixed(1)}" y2="${(y0+h-.5).toFixed(1)}" stroke="${css.line}" stroke-width="1"/>`;
+    return s+`<line x1="${L}" y1="${(y0+h-.5).toFixed(1)}" x2="${R.toFixed(1)}" y2="${(y0+h-.5).toFixed(1)}" stroke="${css.line}" stroke-width="1"/>`;
   };
   const rain=strip(N.rain,TH,RH,w=>`fill="${css.water}" opacity="${w?(dark?.75:.85):(dark?.42:.5)}"`,css.wink,"rain",v=>String(+v.toFixed(1)));
   const snow=snowy?strip(N.snow,TH+RH+GAP,SH,w=>`fill="${css.ink}" opacity="${w?.3:.17}"`,css.faint,"snow",v=>Math.round(v)):"";
@@ -5229,10 +5386,10 @@ function renderYear(N,dy,css){
       <linearGradient id="yrLo" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${W}" y2="0">${stops(N.lo)}</linearGradient>
       <linearGradient id="yrBand" gradientUnits="userSpaceOnUse" x1="0" y1="${Y(Math.max(...N.hi)).toFixed(1)}" x2="0" y2="${Y(Math.min(...N.lo)).toFixed(1)}">
         <stop offset="0" stop-color="${tempColor(Math.max(...N.hi))}" stop-opacity=".29"/><stop offset="1" stop-color="${tempColor(Math.min(...N.lo))}" stop-opacity=".07"/></linearGradient>
-      <clipPath id="yrClip"><rect x="3" y="0" width="${W-6}" height="${TH}"/></clipPath>
+      <clipPath id="yrClip"><rect x="${L}" y="0" width="${(R-L).toFixed(1)}" height="${TH}"/></clipPath>
       <clipPath id="yrArea"><path d="${band}"/></clipPath></defs>
     <g clip-path="url(#yrClip)">
-      <g clip-path="url(#yrArea)"><rect class="rv-fill" x="0" y="0" width="${W}" height="${TH}" fill="url(#yrBand)"/></g>
+      <g clip-path="url(#yrArea)"><rect class="rv-fill" x="${L}" y="0" width="${(R-L).toFixed(1)}" height="${TH}" fill="url(#yrBand)"/></g>
       <path class="rv-line2" d="${loLine}" fill="none" stroke="url(#yrLo)" stroke-width="1.5" stroke-linecap="round" opacity=".72"/>
       ${rv?[[10,.3,.24],[6.5,.6,.2],[4.4,1,.16]].map(([w,f,o])=>`<path class="rv-tail" data-f="${f}" data-o="${o}" d="${hiLine}" fill="none" stroke="url(#yrHi)" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>`).join(""):""}
       <path class="tline" d="${hiLine}" fill="none" stroke="url(#yrHi)" stroke-width="2.4" stroke-linecap="round"/></g>
@@ -5242,8 +5399,8 @@ function renderYear(N,dy,css){
   document.getElementById("yearMonths").innerHTML="JFMAMJJASOND".split("").map((c,i)=>`<span${i===m0?' class="yr-now"':""}>${c}</span>`).join("");
   yearTitle(N);
   document.getElementById("yearNote").textContent=cmp?cmp.note:"";
-  const hiAt=x=>{const f=clamp(x/col-.5,0,11),i=Math.min(10,Math.floor(f));return N.hi[i]+(N.hi[i+1]-N.hi[i])*(f-i)};
-  revealChart("year",svg,{xa:0,xb:W,dur:clamp(1400+W*.9,1700,2200),tail:50,color:x=>tempColor(hiAt(x))});
+  const hiAt=x=>{const f=clamp((x-L)/col-.5,0,11),i=Math.min(10,Math.floor(f));return N.hi[i]+(N.hi[i+1]-N.hi[i])*(f-i)};
+  revealChart("year",svg,{xa:L,xb:R,dur:clamp(1400+W*.9,1700,2200),tail:50,color:x=>tempColor(hiAt(x))});
   /* the twelve months, never the wrapped ends: a finger past December is December */
   const ms=[...Array(12).keys()];
   xpPublish("year",{svg,W,x:ms.map(X),y:ms.map(m=>[Y(N.hi[m]),Y(N.lo[m])]),t:ms,band:[12,H-1],start:m0,marks:[m0,hiI,loI],
@@ -5573,6 +5730,10 @@ function dayStory(c,dy,h,now){
   /* A cached storm belongs to its hour. The hourly run, when it has this hour, says what is here now. */
   const code=fresh?c.weather_code:h.code?.[nowI],air=fresh?c.temperature_2m:h.temp?.[nowI];
   const feel=fresh?c.apparent_temperature:h.feels?.[nowI],feels=has(feel)?Math.round(+feel):null;
+  /* the sky this hour is the one the label beside the number names: with a fresh reading the now
+     hour's code is the observed one, the way the readout's now hour is (liveHour), so the headline
+     never calls a cloudy now sunny off the top-of-hour forecast */
+  const codeAt=i=>fresh&&i===nowI&&has(code)?+code:has(h.code?.[i])?+h.code[i]:NaN;
   if(fresh&&[95,96,99].includes(+code))
     return{html:LOC.boatSeason&&inSeason(today,LOC.boatSeason)?"<em>Storms overhead.</em> Stay off the water."
                               :"<em>Storms overhead.</em> Head inside.",told:[]};
@@ -5602,7 +5763,11 @@ function dayStory(c,dy,h,now){
   const currentlyWet=isWet(+code)&&![95,96,99].includes(+code);
   /* After dark the small hours are tonight's. Midnight belongs to the day it ends. */
   const dayOf=t=>{if(t.slice(11,16)!=="00:00")return t.slice(0,10);const d=new Date(Date.UTC(+t.slice(0,4),+t.slice(5,7)-1,+t.slice(8,10)-1));return d.toISOString().slice(0,10)};
-  const bare=i=>spokenAt(h.time[i])+(dayOf(h.time[i])===today||evening&&+h.time[i].slice(11,13)<6?"":" tomorrow");
+  /* the night runs to tomorrow's sunrise, the way the Tonight card's does: in October 6 a.m. is
+     still dark, and "6 a.m. tomorrow" sat over a card that called the same shower tonight's */
+  const riseNext=Date.parse(dy.sunrise?.[(dy.time||[]).indexOf(tomorrow)]||"");
+  const beforeDawn=t=>Number.isFinite(riseNext)?new Date(t).getTime()<riseNext:+t.slice(11,13)<6;
+  const bare=i=>spokenAt(h.time[i])+(dayOf(h.time[i])===today||evening&&beforeDawn(h.time[i])?"":" tomorrow");
   const when=i=>sentence(bare(i));
   /* A description of a whole period requires every hour, with real odds and codes. A cache may
      hold tomorrow morning but no afternoon. An unknown hour is never a dry hour. */
@@ -5611,11 +5776,17 @@ function dayStory(c,dy,h,now){
     if(!rise||!set)return[];
     const a=Math.ceil(new Date(rise).getTime()/36e5)*36e5,b=Math.floor((new Date(set).getTime()-1)/36e5)*36e5;
     return span(Math.max(t0,a),b)};
-  const dry=ids=>ids.length>0&&ids.every(i=>has(h.pop?.[i])&&+h.pop[i]<25&&has(h.code?.[i])&&!isWet(+h.code[i]));
+  const dry=ids=>ids.length>0&&ids.every(i=>has(h.pop?.[i])&&+h.pop[i]<25&&has(codeAt(i))&&!isWet(codeAt(i)));
+  /* Every hour known, a wet sky in one of them, and odds under 25 all through: that is a stray
+     shower and is said as one. It is not missing data, so it never reads "Forecast details
+     unavailable." */
+  const lowWet=ids=>ids.length>0&&ids.every(i=>has(h.pop?.[i])&&has(codeAt(i)))&&ids.some(i=>isWet(codeAt(i)))&&!ids.some(i=>+h.pop[i]>=25);
+  const stray=ids=>{const w=ids.filter(i=>isWet(codeAt(i)));
+    return w.some(i=>isIce(codeAt(i)))?"Maybe a little freezing rain.":w.some(i=>isSnow(codeAt(i)))?"Maybe a few flurries.":"Maybe a stray shower."};
   const quiet=ids=>dry(ids)&&ids.every(i=>has(h.gust?.[i])&&+h.gust[i]<WINDY_GUST);
   const sky=(ids,changes=false)=>{
-    if(!ids.length||!ids.every(i=>has(h.code?.[i])&&(+h.code[i]>=0&&+h.code[i]<=3||[45,48].includes(+h.code[i]))))return "";
-    const codes=ids.map(i=>+h.code[i]),sun=c=>c<=1,cloud=c=>c===3;
+    if(!ids.length||!ids.every(i=>{const k=codeAt(i);return has(k)&&(k>=0&&k<=3||[45,48].includes(k))}))return "";
+    const codes=ids.map(codeAt),sun=c=>c<=1,cloud=c=>c===3;
     if(codes.some(c=>[45,48].includes(c)))return codes.every(c=>[45,48].includes(c))?"Foggy":"Some fog";
     /* Name a sustained change, not one odd hour between otherwise matching skies. */
     if(changes)for(const [a,b,words] of [[cloud,sun,"Cloudy, then sunny"],[sun,cloud,"Sunny, then cloudy"]]){
@@ -5629,7 +5800,7 @@ function dayStory(c,dy,h,now){
     if(codes.filter(sun).length/codes.length>=.7)return "Mostly sunny";
     return "Clouds and sun";
   };
-  const nice=ids=>quiet(ids)&&ids.every(i=>has(h.temp?.[i])&&+h.temp[i]>=50&&+h.temp[i]<85&&has(h.feels?.[i])&&+h.feels[i]>=50&&+h.feels[i]<85&&+h.code[i]<=2);
+  const nice=ids=>quiet(ids)&&ids.every(i=>has(h.temp?.[i])&&+h.temp[i]>=50&&+h.temp[i]<85&&has(h.feels?.[i])&&+h.feels[i]>=50&&+h.feels[i]<85&&codeAt(i)<=2);
   const tomorrowLine=()=>{const k=(dy.time||[]).indexOf(tomorrow),v=dy.temperature_2m_max?.[k],n=has(v)?Math.round(+v):null;
     const change=n!=null&&high!=null&&Math.abs(n-high)>=5?`${Math.abs(n-high)}° ${n>high?"warmer":"cooler"}`:"";
     const ids=daylight(tomorrow),view=quiet(ids)?sky(ids):"";
@@ -5670,12 +5841,14 @@ function dayStory(c,dy,h,now){
        but its sky must have a complete daylight run. A hazard above always takes this space first. */
     second=tomorrowLine();
     if(second&&![45,48].includes(+code)&&!(has(air)&&(+air<40||+air>=94)))first="";
-    if(!second){const end=new Date(tomorrow+"T05:00").getTime(),night=span(t0,end);second=dry(night)?"Dry through the night.":""}
+    if(!second){const end=new Date(tomorrow+"T05:00").getTime(),night=span(t0,end);second=dry(night)?"Dry through the night.":lowWet(night)?stray(night):""}
   }else if(overnight){
     const morning=span(t0,new Date(today+"T11:00").getTime());
-    second=dry(morning)?"Dry through the morning.":"";
+    second=dry(morning)?"Dry through the morning.":lowWet(morning)?stray(morning):"";
   }else{
     const ids=daylight(today),view=quiet(ids)?sky(ids,true):"",p=hr<12?"today":"this afternoon";
+    /* fog now is the first sentence, so what comes after it is the sky of the hours after this one */
+    const after=[45,48].includes(+code)?ids.filter(i=>i!==nowI):ids,later=quiet(after)?sky(after,true):"";
     if(dry(ids)&&![45,48].includes(+code)){
       if(nice(ids)&&has(ref)&&+ref>=68&&+ref<82&&!humid&&!(feels!=null&&(feels>=98||feels<=25)))return{html:`Nice ${view==="Sunny"?"and sunny":"with some sun"} ${p}.`,told};
       if(view){
@@ -5684,7 +5857,7 @@ function dayStory(c,dy,h,now){
         return{html:phrase+(view.includes(", then")?".":` ${p}.`)+(feels!=null&&feels>=98?" Keep the middle of the day short.":feels!=null&&feels<=25?" Bundle up.":""),told};
       }
       second="";
-    }else second=dry(ids)&&view&&!/fog/i.test(view)?(view==="Sunny"?"Sun later.":view==="Some sun"?"Some sun later.":view+"."):"";
+    }else second=!dry(ids)&&lowWet(ids)?stray(ids):dry(after)&&later&&!/fog/i.test(later)?(later==="Sunny"?"Sun later.":later==="Some sun"?"Some sun later.":later+"."):"";
   }
   if(!second&&!win.length)second="Hourly forecast unavailable.";
   else if(!second&&win.some(i=>!has(h.pop?.[i])))second="Rain odds unavailable.";
@@ -5879,6 +6052,15 @@ function renderWeek(dy,css,we=[]){
   const someOdds=days.some(d=>d.has),anyOdds=days.some(d=>d.odds||someOdds&&!d.has);
   wrap.style.setProperty("--wk-h",H+"px");
   wrap.style.setProperty("--wk-n",n);
+  /* The points run CHART_IN in from each content edge, the same two edges as every other line
+     (the week used to put them at its column centres, half a column in, so its line stopped short
+     of the hours' over it). Each day's column is centred under its point and meets its neighbours
+     halfway between them, and the two outer columns are cut at the content edge, padded toward
+     the inside so their day still sits under its point. A cut column's tapped wash is cut with it */
+  const W=appW()-40,L=CHART_IN,R=W-CHART_IN,s=(R-L)/Math.max(1,n-1),X=i=>L+i*s;
+  const edge=(L+s/2).toFixed(2)+"px";
+  wrap.style.setProperty("--wk-cols",n>2?`${edge} repeat(${n-2},1fr) ${edge}`:"repeat(var(--wk-n,7),1fr)");
+  wrap.style.setProperty("--wk-pad",n>1?Math.max(0,s/2-L).toFixed(2)+"px":"0px");
   wrap.classList.toggle("wk8",n>7);
   wrap.innerHTML=days.map(({t,has,pop,sky,code,likely,odds},i)=>{
     const long=new Date(t+"T12:00").toLocaleDateString("en-US",{weekday:"long"});
@@ -5895,8 +6077,7 @@ function renderWeek(dy,css,we=[]){
   }).join("");
   weekBrief(wrap.querySelector('.wk-day[aria-expanded="true"]'));
 
-  /* the chart: a column is a screen pixel wide per unit, the same as the other two charts */
-  const W=appW()-40,col=W/Math.max(1,n),X=i=>(i+.5)*col;
+  /* the chart: a unit is a screen pixel, the same as every other chart */
   svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
   const HI=knownRun(his),LO=knownRun(los),hv=HI.v,lv=LO.v;
   if(n<2||!HI.ok||!LO.ok){svg.innerHTML="";xpPublish("week",null);return}
@@ -5910,7 +6091,7 @@ function renderWeek(dy,css,we=[]){
   const band=bl>bf?spline(hiP.slice(bf,bl+1))+" "+spline(loP.slice(bf,bl+1).reverse()).replace(/^M/,"L")+" Z":"";
   /* where each line runs under a label's two ends, so a steep day beside it cannot strike
      through the number (the hourly chart learned this one on a phone) */
-  const yOn=a=>px=>{const f=clamp(px/col-.5,0,n-1),i=Math.min(n-2,Math.floor(f));return Y(a[i]+(a[i+1]-a[i])*(f-i))};
+  const yOn=a=>px=>{const f=clamp((px-L)/s,0,n-1),i=Math.min(n-2,Math.floor(f));return Y(a[i]+(a[i+1]-a[i])*(f-i))};
   const yHi=yOn(hv),yLo=yOn(lv);
   /* the warmest day is the key point; a tie is every day that reaches it, or one 93° reads
      as warmer than the next, and the ring plays once, on the first */
@@ -5924,16 +6105,19 @@ function renderWeek(dy,css,we=[]){
   for(let i=0;i<n;i++){
     const x=X(i),yh=Y(hv[i]),yl=Y(lv[i]),th=Math.round(hv[i])+"°",tl=Math.round(lv[i])+"°",hk=HI.k[i]!=null,key=hk&&keyed&&Math.round(hv[i])===peak;
     const fh=key?15.86:14.64,wh=th.length*fh*.3+2,wl=tl.length*12.81*.3+2;
-    const ly=Math.min(yh-(key?11:9),yHi(x-wh)-7,yHi(x+wh)-7);
-    const lyl=Math.min(H-6,Math.max(yl+17,yLo(x-wl)+17,yLo(x+wl)+17));
+    /* an end day's number stays inside the content edge: a 101° over the first point steps in a
+       pixel or two rather than hang off the page */
+    const xh=clamp(x,wh,W-wh),xl=clamp(x,wl,W-wl);
+    const ly=Math.min(yh-(key?11:9),yHi(xh-wh)-7,yHi(xh+wh)-7);
+    const lyl=Math.min(H-6,Math.max(yl+17,yLo(xl-wl)+17,yLo(xl+wl)+17));
     if(LO.k[i]!=null)marks+=`<circle cx="${x.toFixed(1)}" cy="${yl.toFixed(1)}" r="1.6" fill="${tempColor(lv[i])}" opacity=".75"${rvAt(x,"dot")}/>
-      <text x="${x.toFixed(1)}" y="${lyl.toFixed(1)}" ${mono} font-size="12.81" fill="${css.faint}" ${halo}${rvAt(x,"label")}>${tl}</text>`;
+      <text x="${xl.toFixed(1)}" y="${lyl.toFixed(1)}" ${mono} font-size="12.81" fill="${css.faint}" ${halo}${rvAt(x,"label")}>${tl}</text>`;
     if(!hk)continue;
     if(key){
       if(rv&&i===hiI)marks+=`<circle cx="${x.toFixed(1)}" cy="${yh.toFixed(1)}" r="15" fill="none" stroke="${tempColor(hv[i])}" stroke-width="1.6" opacity="0"${rvAt(x,"ring")}/>`;
       marks+=`<circle cx="${x.toFixed(1)}" cy="${yh.toFixed(1)}" r="3.6" fill="${css.paper}" stroke="${tempColor(hv[i])}" stroke-width="2.4"${rvAt(x,"dot")}/>`;
     }else marks+=`<circle cx="${x.toFixed(1)}" cy="${yh.toFixed(1)}" r="2" fill="${tempColor(hv[i])}" opacity=".8"${rvAt(x,"dot")}/>`;
-    marks+=`<text x="${x.toFixed(1)}" y="${ly.toFixed(1)}" ${mono} font-size="${fh}" font-weight="${key?650:600}" fill="${css.ink}" ${halo}${rvAt(x,"label")}>${th}</text>`;
+    marks+=`<text x="${xh.toFixed(1)}" y="${ly.toFixed(1)}" ${mono} font-size="${fh}" font-weight="${key?650:600}" fill="${css.ink}" ${halo}${rvAt(x,"label")}>${th}</text>`;
   }
   const stops=a=>a.map((t,i)=>`<stop offset="${(i/(n-1)*100).toFixed(1)}%" stop-color="${tempColor(t)}"/>`).join("");
   const xa=X(0),xb=X(n-1);
@@ -5943,7 +6127,8 @@ function renderWeek(dy,css,we=[]){
      box (the open day's lesson), and ink at 5% darkens light paper and lightens dark paper the
      same amount, over the golden-hour tint too. SAT and SUN are printed under it, so it says
      no WEEKEND of its own. It fades in as the pen reaches Saturday. */
-  const wx0=we.length?we[0]*col+3:0,wx1=we.length?(we[we.length-1]+1)*col-3:0,wr=8;
+  const colL=i=>i<=0?0:L+(i-.5)*s,colR=i=>i>=n-1?W:L+(i+.5)*s;
+  const wx0=we.length?colL(we[0])+3:0,wx1=we.length?colR(we[we.length-1])-3:0,wr=8;
   const weBand=we.length?`<path class="wk-we" d="M${wx0.toFixed(1)} ${H} V${2+wr} Q${wx0.toFixed(1)} 2 ${(wx0+wr).toFixed(1)} 2 H${(wx1-wr).toFixed(1)} Q${wx1.toFixed(1)} 2 ${wx1.toFixed(1)} ${2+wr} V${H} Z" fill="${css.ink}" opacity=".05"${rvAt(wx0,"fade")}/>`:"";
   svg.innerHTML=`
     <defs>
@@ -5963,7 +6148,7 @@ function renderWeek(dy,css,we=[]){
     ${weBand}
     ${rv?`<g class="rv-tip" opacity="0" fill="${tempColor(hv[0])}"><circle r="12" opacity=".12"/><circle r="6.5" opacity=".24"/><circle r="3.3"/><circle class="rv-core" r="1.5" fill="#FFF8EC" opacity=".95"/></g>`:""}
     <line x1="3" y1="${H-.5}" x2="${(W-3).toFixed(1)}" y2="${H-.5}" stroke="${css.line}" stroke-width="1"/>`;
-  const hiAt=x=>{const f=clamp(x/col-.5,0,n-1),i=Math.min(n-2,Math.floor(f));return hv[i]+(hv[i+1]-hv[i])*(f-i)};
+  const hiAt=x=>{const f=clamp((x-L)/s,0,n-1),i=Math.min(n-2,Math.floor(f));return hv[i]+(hv[i+1]-hv[i])*(f-i)};
   revealChart("week",svg,{xa,xb,dur:clamp(1300+W*.9,1600,2100),tail:50,color:x=>tempColor(hiAt(x))});
   /* one stop a column, found by the nearest centre, so a 320 Sunday's 35px columns all work. The
      days were already buttons, so the week has no key of its own: a slide shows the pill and opens
@@ -6308,15 +6493,6 @@ function revealApply(k){
   let last=0;
   for(const a of R.anims){const t=a.effect.getTiming();last=Math.max(last,t.delay+t.duration)}
   R.end=setTimeout(()=>revealFinish(k),last+120);
-  syncRainHold();
-}
-/* The pen stays the dash it is. While the hours or the week are drawing, the streaks
-   pause so that paint does not share the frame with every drop. Tide, moon and year
-   draw below the fold and leave the rain alone. Reduced motion never holds it. */
-function syncRainHold(){
-  const on=!PRM&&(REVEAL.hourly.state==="running"||REVEAL.week.state==="running");
-  document.getElementById("rainFx").classList.toggle("held",on);
-  document.getElementById("sceneSvg").classList.toggle("rain-held",on);
 }
 function revealFinish(k){
   const R=REVEAL[k];
@@ -6332,7 +6508,6 @@ function revealFinish(k){
     R.anims=[];
     if(k==="moon")fishMotion();
   }
-  syncRainHold();
 }
 const rvTag=(on,x,k,d)=>on?` data-rx="${x.toFixed(1)}" data-rk="${k}"${d?` data-rd="${d}"`:""}`:"";
 function finishReveal(){for(const k in REVEAL)revealFinish(k)}
@@ -6341,7 +6516,6 @@ function revealArm(){
   if(PRM)return;
   for(const k in REVEAL){const R=REVEAL[k];clearTimeout(R.end);for(const a of R.anims)a.cancel();R.anims=[];R.state="armed"}
   REVEAL_READY=false;clearTimeout(REVEAL_WAIT);REVEAL_WAIT=0;
-  syncRainHold();
 }
 function revealReady(){REVEAL_READY=true;clearTimeout(REVEAL_WAIT);REVEAL_WAIT=0;for(const k in REVEAL)revealTry(k)}
 if(!PRM){
@@ -6706,10 +6880,17 @@ function renderHours(hourly,c){
    its own, including the extra look revealTry takes when the first measure is off
    screen, before the next chart is built. A newer render bumps the generation. */
 let RENDER_GEN=0;
+/* A paint lands over several frames, so nothing outside it can tell from the stamp that the charts
+   below have landed. PAINT is the latest paint's promise: it settles when the last stage has drawn,
+   or when a newer paint or the loading shell takes over, so a waiter never hangs on a paint that
+   was superseded. The harnesses wait on it before they measure */
+let PAINT=Promise.resolve(),PAINT_DONE=()=>{};
+function paintBegin(){PAINT_DONE();PAINT=new Promise(r=>PAINT_DONE=r)}
 function paintSoon(gen,fn){requestAnimationFrame(()=>{if(gen===RENDER_GEN)fn()})}
 function paintAfter(gen,fn){requestAnimationFrame(()=>requestAnimationFrame(()=>requestAnimationFrame(()=>{if(gen===RENDER_GEN)fn()})))}
 function render(d,live,savedAt=0){
   const gen=++RENDER_GEN;
+  paintBegin();
   /* fixed before the first yield: a resize while the picture is still landing retries
      this reading, and a boundary timer from the previous paint stands down */
   savedAt=savedAt||(LAST?.d===d?LAST.savedAt:Date.now());
@@ -6771,7 +6952,7 @@ function render(d,live,savedAt=0){
 
   document.getElementById("themeColor").setAttribute("content",stops[0]);
 
-  const dayRead=dayStory(c,dy,h,now);
+  const dayRead=dayStory(c,dy,full,now);
   const farm=LOC.kind==="farm"?farmCard(LOC,h,c,dy,warning,storm,now,dayRead.told):null;
   const allowedFishWins=LOC.fish&&farm?.fish?fishWindows(h,now):[];
   renderSkyFx(altDeg,c.cloud_cover,c.wind_direction_10m,wet,storm,c.wind_speed_10m,c.weather_code);
@@ -6826,7 +7007,7 @@ function render(d,live,savedAt=0){
 
   paintSoon(gen,()=>{
   /* hourly */
-  const W=appW()-40,Ht=chartH(W)-18,pad=16,n=h.temp.length,base=Ht-6;
+  const W=appW()-40,Ht=chartH(W)-18,pad=CHART_IN,n=h.temp.length,base=Ht-6;
   document.getElementById("hourlySvg").setAttribute("viewBox",`0 0 ${W} ${Ht}`);
   /* The hourly run can step up or down a degree between adjacent model hours. Blend only
      neighboring values for the drawn trend: the actual hourly reading remains available
@@ -7136,6 +7317,7 @@ function render(d,live,savedAt=0){
   fishSchedule(allowedFishWins);
   paintCobweb();
   fishMotion();
+  PAINT_DONE();
   });});});});
 }
 /* The line boxes of the type in the header, which the stars and Halloween's cobweb keep off. Text
@@ -7441,7 +7623,7 @@ function paintLocationShell(){
 }
 function paintLoadingState(){
   /* a paint still landing from the previous reading stands down */
-  RENDER_GEN++;
+  RENDER_GEN++;PAINT_DONE();
   sceneResume();
   fishCancel();
   paintLocationShell();
@@ -7467,9 +7649,9 @@ function paintLoadingState(){
   weekBrief(null);
   document.getElementById("tideSvg").innerHTML="";
   document.getElementById("tideNote").textContent="loading…";
-  document.getElementById("nowcast").className="nowcast";
-  document.getElementById("alertStrip").className="alert-strip";
-  document.getElementById("alertStrip").innerHTML="";
+  document.getElementById("nowcast").className="nowcast";document.getElementById("ncBars").innerHTML="";
+  /* the strip goes with the reading it belonged to, the way an ended alert takes it down */
+  renderAlerts(null);
   document.getElementById("stormSection").style.display="none";
   /* a place with no reading yet shows both cards as skeletons, not the last place's absence */
   document.getElementById("sunCard").hidden=false;document.getElementById("eveCard").classList.remove("wide");
@@ -7481,6 +7663,21 @@ function paintLoadingState(){
   xpReset();LAST=null;
   paintCobweb();
 }
+/* A place switch with a cache: the last place's pictures, strips, notes and sentences come down
+   before the new place's first frame, because its paint lands in stages and until the last stage
+   the coast's week, its tide chart and its warning sat under the farm's name (about 70 to 130ms,
+   twice that on a slow phone). The charts draw in again, the way a new place's do */
+function clearPlaceReadings(){
+  for(const id of ["hourlySvg","hrLabels","weekRows","weekSvg","tideSvg","moonSvg","yearSvg","uvSvg"])
+    document.getElementById(id).innerHTML="";
+  for(const id of ["hourlyNote","weekNote","tideNote"])document.getElementById(id).textContent="";
+  for(const id of ["uvLead","eveLead"])document.getElementById(id).textContent="—";
+  weekBrief(null);xpReset();
+  document.getElementById("nowcast").className="nowcast";document.getElementById("ncBars").innerHTML="";
+  renderAlerts(null);
+  document.getElementById("stormSection").style.display="none";
+  document.getElementById("uvDetails").style.display="none";
+}
 function setLoc(id){
   if(!LOC_ORDER.includes(id)||LOC.id===id)return;
   sceneResume();
@@ -7490,7 +7687,10 @@ function setLoc(id){
   revealArm();
   paintAddr();
   const cached=readCache(id);
-  if(cached)render(cached.data,false,cached.savedAt);
+  /* the cached paint lands in stages, so the new place's shape (its sections, the year's title and
+     its airport) goes up first: until the last stage the coast's water and Wilmington's year sat
+     under the farm's name */
+  if(cached){paintLocationShell();clearPlaceReadings();render(cached.data,false,cached.savedAt)}
   else paintLoadingState();
   refresh();
 }

@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v93/);
+  assert.match(worker, /mbwx-shell-v94/);
   // the clouds end in their own scallops: Josh loves the clouds and not the curly tail
   const cloud = html.match(/const propCloud=seed=>\[[\s\S]*?\];/);
   assert.ok(cloud, "propCloud should be extractable");
@@ -464,6 +464,8 @@ test("every motion is driven by a reading, not by decoration", async () => {
   // and its x comes off the resident, because a fixed fraction of a frame that is a
   // fraction of the screen ran the crab through the oystercatcher on a 320px phone
   assert.match(html, /const crabX=residentX>W\*\.5\?residentX-64:residentX\+64/);
+  // a fiddler is down its burrow in a downpour, which also keeps the busiest frame under the ceiling
+  assert.match(html, /const marshCrab=\(wet\|\|storm\)&&temp>=48&&!\[65,82\]\.includes\(\+code\)\?crabAt/);
   // the residents are solid ink now: no more grass reading through a bird
   assert.match(html, /const owlAt=\(x,y,s,opacity=\.96\)/);
   assert.match(html, /const frogAt=\(x,y,s,opacity=\.96\)/);
@@ -495,6 +497,15 @@ test("every motion is driven by a reading, not by decoration", async () => {
   // paper grain is a baked tile and nothing in renderScene carries filter=
   const scene = html.slice(html.indexOf("function renderScene("), html.indexOf("/* ── smooth path through points"));
   assert.doesNotMatch(scene, /filter="url/);
+  // nor does the sky: the clouds' blur is worked out once into a canvas each drifting layer carries,
+  // because a live blur on a moving group held WebKit to 10 to 23 frames a second. Three passes of
+  // a five-pixel box at 3.6 CSS pixels to the canvas pixel are the filter's nine, with the coverage
+  // and the stretch back up
+  const skyFx = html.slice(html.indexOf("function renderSkyFx("), html.indexOf("function paintBolts("));
+  assert.doesNotMatch(skyFx, /filter="url|feGaussianBlur/);
+  assert.match(skyFx, /<div class="cloud drift" style="opacity:\$\{op\.toFixed\(3\)\};animation:drift /);
+  assert.match(html, /function bakeClouds\(\)\{/);
+  assert.match(html, /const CLOUD_BLUR=9,CLOUD_BOX=5,CLOUD_PX=2\*CLOUD_BLUR\/CLOUD_BOX,/);
   // clouds are drawn in the scene only when there are clouds to draw, and they really drift:
   // two direction keywords in one animation shorthand made Chrome drop it and nothing moved
   assert.equal(html.split("cloud>=10&&cloud<=85&&!wet&&!storm&&!fog").length - 1, 2);
@@ -621,19 +632,22 @@ test("and the rain is visible when it rains there", async () => {
   assert.doesNotMatch(html, /span=H\+10-nrTop/);
   // a drop is 2.6 frames long at 30Hz, so a phone that steps down from 60 still
   // overlaps the streak. The 60Hz step and the 64px cap left light rain short of that.
-  assert.match(html, /const step=968\/nrFall\/30/);
+  // taken on screen: a scene unit is appW()/W px since the frame came closer in, so in units the
+  // step and the fall are divided by it, or the near rain fell 1.35 times the sky layer's speed
+  assert.match(html, /const k=appW\(\)\/W,step=968\/k\/nrFall\/30/);
+  assert.match(html, /const d=travel\*k\*nrFall\/968\*/);
   assert.match(html, /const len=clamp\(step\*2\.6,22,span\*\.72\)/);
   assert.doesNotMatch(html, /968\/nrFall\/60/);
   assert.doesNotMatch(html, /Math\.min\(64,span\*\.72\)/);
   // sky streaks use the same 30Hz step, take their phase off the clock, and are not
-  // rebuilt when the rain itself has not changed. The pen pauses them while it draws
-  // the hours or the week, and leaves them running for every chart below that.
+  // rebuilt when the rain itself has not changed. They keep falling through the pen: holding them
+  // while the hours or the week drew froze every streak mid-air for about three seconds each time
+  // the app opened in the rain, and saved nothing, because the drops are compositor transforms.
   assert.match(html, /Math\.min\(176,880\/d\/30\*2\.6\)/);
   assert.match(html, /\(nowS\+seed\*d\)%d/);
   assert.match(html, /rainKey!==RAIN_KEY\|\|rf\.childElementCount!==count/);
   assert.match(html, /pictureKey===SCENE_KEY&&SCENE_META&&sceneSvg\.childElementCount\)\{andThen\(SCENE_META\);return\}/);
-  assert.match(html, /REVEAL\.hourly\.state==="running"\|\|REVEAL\.week\.state==="running"/);
-  assert.match(html, /\.rainfx\.held i,#sceneSvg\.rain-held \.nearrain\{animation-play-state:paused\}/);
+  assert.doesNotMatch(html, /rain-held|syncRainHold|\.rainfx\.held/);
   // dealt one to a slot across the frame, not thrown in clumps
   assert.match(html, /const tx=-34\+\(i\+\.15\+nr\(\)\*\.7\)\*slot/);
   // the pond answers the rain rather than going glass-still under it, which it used to do
@@ -785,7 +799,7 @@ test("fishing boundaries repaint once without renewing the forecast or crossing 
   assert.deepEqual(events,["clear","refresh","clear","refresh"],"a different forecast day is not revived");
   reset();shift=2*3.6e6;ctx.fishSchedule(wins());assert.equal(armed().ms,60020,"wall-clock boundaries convert back to true elapsed time");
   ctx.fishSchedule([]);assert.equal(timers.size,0,"no approved windows leave no boundary timer");
-  assert.match(html, /function paintLoadingState\(\)\{\n  \/\* a paint still landing from the previous reading stands down \*\/\n  RENDER_GEN\+\+;\n  sceneResume\(\);\n  fishCancel\(\);/);
+  assert.match(html, /function paintLoadingState\(\)\{\n  \/\* a paint still landing from the previous reading stands down \*\/\n  RENDER_GEN\+\+;PAINT_DONE\(\);\n  sceneResume\(\);\n  fishCancel\(\);/);
   assert.match(html, /if\(!LOC_ORDER\.includes\(id\)\|\|LOC\.id===id\)return;\n  sceneResume\(\);\n  fishCancel\(\);/);
   assert.match(html, /savedAt=savedAt\|\|\(LAST\?\.d===d\?LAST\.savedAt:Date\.now\(\)\);/);
 });
@@ -885,7 +899,10 @@ test("plain-language and living-scene refinements stay in place", async () => {
   // sentences, the water's and the farm's say today and today only, off the hours coveredHours gives.
   assert.match(html, /function dayStory\(c,dy,h,now\)/);
   assert.match(html, /return\{html:\[first,second\]\.filter\(Boolean\)\.join\(" "\),told\};/);
-  assert.match(html, /const dayRead=dayStory\(c,dy,h,now\);/);
+  // the headline reads the whole run, so from five o'clock it can describe tomorrow's daylight: with the
+  // 24-hour slice it said only "Tomorrow's high is 79°." until tomorrow's last daylight hour was inside
+  // it. Its look-ahead is still capped at 24 hours inside dayStory (win), so nothing else changes
+  assert.match(html, /const dayRead=dayStory\(c,dy,full,now\);/);
   assert.match(html, /function coveredHours\(h,dy,now\)/);
   assert.doesNotMatch(html, /Best outside stretch:|bestOutsideWindow|windowLabel|best time to piddle|best time to head out|best window/);
   assert.match(html, /id="goldenband"/);
@@ -918,7 +935,7 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /class="wk-day\$\{cls\}" type="button" data-day="\$\{t\}" data-i="\$\{i\}" aria-expanded=/);
   // the weekend is marked, not described: a quiet ink band over its columns, laid over the
   // chart (so the labels' paper halos never draw boxes on it), fading in as the pen reaches it
-  assert.match(html, /\.wk\{display:grid;grid-template-columns:repeat\(var\(--wk-n,7\),1fr\)\}/);
+  assert.match(html, /\.wk\{display:grid;grid-template-columns:var\(--wk-cols,repeat\(var\(--wk-n,7\),1fr\)\)\}/);
   assert.match(html, /wrap\.style\.setProperty\("--wk-n",n\);/);
   assert.match(html, /const cls=we\.includes\(i\)\?" we":"";/);
   assert.match(html, /<path class="wk-we" d="M/);
@@ -1795,7 +1812,7 @@ test("Halloween's cobweb is strung across the corner of the app itself, clear of
   // Halloween window's, read off the place's own calendar the way the decorations are, and it is
   // strung once there is a reading: the loading and error shell has none
   assert.match(html, /if\(holidayOn\(locToday\(\)\)\?\.id!=="halloween"\|\|!LAST\)return off\(\);/);
-  assert.match(html, /LASTW=appW\(\);\n  fishSchedule\(allowedFishWins\);\n  paintCobweb\(\);\n  fishMotion\(\);\n  \}\);\}\);\}\);\}\);\n\}/);
+  assert.match(html, /LASTW=appW\(\);\n  fishSchedule\(allowedFishWins\);\n  paintCobweb\(\);\n  fishMotion\(\);\n  PAINT_DONE\(\);\n  \}\);\}\);\}\);\}\);\n\}/);
   assert.match(html, /xpReset\(\);LAST=null;\n  paintCobweb\(\);\n\}/);
   // placed again when the alert strip opens and moves everything under it, and when the fonts land
   assert.match(html, /el\.setAttribute\("aria-expanded",open\?"true":"false"\);\n  \/\*[^\n]*\*\/\n  paintCobweb\(\);/);
@@ -1990,7 +2007,8 @@ test("tide chart reads as depth over the bottom", async () => {
   // label is set above the chart, and the tag arrives with the skiff
   assert.match(html, /const boatTop=Math\.min\(ny-22,tagUp\?tag\.t-3:Infinity\);/);
   assert.match(html, /const onBoat=high&&lx<tagR&&lx\+lw>tagL&&y-6>boatTop;/);
-  assert.match(html, /y="\$\{\(high\?Math\.max\(12\*fs,y-lift\):lowY\)\.toFixed\(1\)\}"/);
+  assert.match(html, /const ty=high\?Math\.max\(12\*fs,y-lift\):lowY;times\.push\(\[lx,ty-11\*fs\*\.78-2,lx\+lw,ty\+3\]\);/);
+  assert.match(html, /<text x="\$\{x\.toFixed\(1\)\}" y="\$\{ty\.toFixed\(1\)\}" text-anchor="\$\{anchor\}"/);
   assert.match(html, /\$\{tag\?`<g\$\{rvAt\(nx,"fade"\)\}><text/);
   assert.doesNotMatch(html, /if\(onBoat&&gap&&tm<now\.getTime\(\)\)continue;/);
   assert.doesNotMatch(html, /ny=Y\(wNow\)/);
@@ -2123,6 +2141,108 @@ test("expired alerts disappear and the strongest active warning owns the outdoor
   assert.equal(ctx.activeAlerts([{...thunder,ends:"2026-09-13T15:00:00Z"}],now).length,0,
     "an alert that has ended stays ended even if its message expires later");
   assert.equal(ctx.activeAlerts([{event:"Alert without a stated end"}],now).length,1);
+});
+
+test("the warning strip enters once and stays put through every repaint", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const clock12 = html.match(/const clock12=d=>\{[\s\S]*?ap\};/);
+  assert.ok(clock12, "clock12 should be extractable");
+  const code = html.slice(html.indexOf("function alertGist("), html.indexOf("function toggleAlert("));
+  // a strip with only what renderAlerts touches, logging every write that would reach the page
+  const strip = () => {
+    const cls = new Set(["alert-strip"]), attrs = {}, writes = [];
+    const part = (name) => ({ set innerHTML(v) { writes.push(name); } });
+    let markup = "", head = null, body = null, restarts = 0;
+    return {
+      dataset: {}, writes, get restarts() { return restarts; },
+      get className() { return [...cls].join(" "); },
+      set className(v) { writes.push("class"); cls.clear(); v.split(/\s+/).filter(Boolean).forEach((c) => cls.add(c)); },
+      classList: {
+        contains: (c) => cls.has(c),
+        add: (c) => { if (!cls.has(c)) { writes.push("class"); cls.add(c); } },
+        toggle: (c, on) => { if (cls.has(c) !== !!on) { writes.push("class"); on ? cls.add(c) : cls.delete(c); } return !!on; },
+      },
+      get innerHTML() { return markup; },
+      set innerHTML(v) {
+        writes.push("html"); markup = v;
+        head = /class="alert-head"/.test(v) ? part("head") : null;
+        body = /class="alert-body"/.test(v) ? part("body") : null;
+      },
+      querySelector: (s) => (s === ".alert-head" ? head : s === ".alert-body" ? body : null),
+      setAttribute: (k, v) => { if (attrs[k] !== String(v)) writes.push(k); attrs[k] = String(v); },
+      removeAttribute: (k) => { if (k in attrs) { writes.push(k); delete attrs[k]; } },
+      getAttribute: (k) => attrs[k] ?? null,
+      getAnimations: () => [{ animationName: "alertIn", cancel() {}, play() { restarts++; } }],
+    };
+  };
+  const el = strip(), NOW = Date.parse("2026-09-13T20:30:00Z"), timers = new Map();
+  let tid = 0, asked = 0;
+  class Clock extends Date { static now() { return NOW; } }
+  const ctx = vm.createContext({ Date: Clock, LOC: { id: "mb" }, refresh: () => asked++,
+    document: { hidden: false, getElementById: () => el },
+    setTimeout: (fn, ms) => { timers.set(++tid, { fn, ms }); return tid; }, clearTimeout: (id) => timers.delete(id) });
+  vm.runInContext(clock12[0] + "\n" + code, ctx);
+  const svr = { event: "Severe Thunderstorm Warning", severity: "Severe", ends: "2026-09-13T21:15:00Z",
+    desc: "* WHAT...Sixty mph wind gusts.\n\n* WHERE...Porters Neck.", inst: "Move to an interior room." };
+
+  // the words are worked out first, and the lead alert is what the strip is
+  const one = ctx.alertStrip([svr]), two = ctx.alertStrip([svr, { event: "Heat Advisory", severity: "Moderate" }]);
+  assert.equal(ctx.alertStrip([]), null);
+  assert.equal(one.lead, two.lead, "another alert joining does not change which alert the strip is");
+  assert.match(two.head, /\+1 more/);
+  assert.match(two.body, /also active: Heat Advisory/);
+  assert.equal(ctx.alertStep(null, null), "none");
+  assert.equal(ctx.alertStep(one, null), "off");
+  assert.equal(ctx.alertStep(null, one), "enter");
+  assert.equal(ctx.alertStep(one, { ...one }), "keep");
+  assert.equal(ctx.alertStep(one, two), "update");
+  assert.equal(ctx.alertStep(one, ctx.alertStrip([{ ...svr, event: "Tornado Warning", severity: "Extreme" }, svr])), "replace");
+
+  // the cache paints it, and it comes on
+  ctx.renderAlerts([svr]);
+  assert.equal(el.className, "alert-strip on");
+  assert.equal(el.getAttribute("aria-expanded"), "false");
+  // and it goes when the warning ends, not at the next paint: the forecast is asked for again a
+  // second after the end, in front and at the same place only
+  assert.equal(timers.size, 1);
+  const [[endId, end]] = timers;
+  assert.equal(end.ms, Date.parse(svr.ends) - NOW + 1000);
+  end.fn(); assert.equal(asked, 1);
+  ctx.document.hidden = true; end.fn(); ctx.document.hidden = false;
+  ctx.LOC.id = "sp"; end.fn(); ctx.LOC.id = "mb";
+  assert.equal(asked, 1, "a phone in a pocket, or at the other place, asks nothing");
+  timers.delete(endId);
+  // the live paint, a re-render, a resize, a foreground: the same warning writes nothing at all,
+  // which is what keeps its entrance from playing again
+  el.writes.length = 0;
+  for (let i = 0; i < 4; i++) ctx.renderAlerts([{ ...svr }]);
+  assert.deepEqual(el.writes, [], "the same warning painted again writes nothing to the strip");
+  // opened, then extended: the words change in place, and the open strip keeps its body
+  el.classList.toggle("open", true); el.dataset.open = "1";
+  const body = el.querySelector(".alert-body");
+  el.writes.length = 0;
+  ctx.renderAlerts([{ ...svr, ends: "2026-09-13T22:00:00Z" }]);
+  assert.ok(!el.writes.includes("html") && el.writes.includes("head"), "an extended warning changes its words in place: " + el.writes);
+  assert.equal(el.querySelector(".alert-body"), body, "and an open strip keeps its body");
+  assert.equal(el.className, "alert-strip on open");
+  assert.equal(el.restarts, 0, "nothing enters for an update");
+  // a different alert takes the lead: the strip is already on, so its entrance is played again
+  ctx.renderAlerts([{ ...svr, event: "Tornado Warning", severity: "Extreme" }, svr]);
+  assert.equal(el.restarts, 1);
+  // it ends, and the strip comes down; the next one enters by coming on, and arrives closed
+  ctx.renderAlerts([]);
+  assert.equal(timers.size, 0, "no alert, no end to wait for");
+  assert.equal(el.className, "alert-strip");
+  assert.equal(el.innerHTML, "");
+  assert.equal(el.dataset.open, "0");
+  ctx.renderAlerts([svr]);
+  assert.equal(el.className, "alert-strip on");
+  assert.equal(el.getAttribute("aria-expanded"), "false");
+  assert.equal(el.restarts, 1, "a strip coming on enters by its class, with nothing replayed by hand");
+  // and the loading shell takes it down the same way an ended alert does
+  const shell = html.slice(html.indexOf("function paintLoadingState("), html.indexOf("function setLoc("));
+  assert.match(shell, /renderAlerts\(null\);/);
+  assert.doesNotMatch(html, /className="alert-strip on"/);
 });
 
 test("the water and the farm say what is there, and nothing is scored or picked", async () => {
@@ -2619,7 +2739,10 @@ test("the page reads top down: now, today, the week, and nothing it has already 
   assert.doesNotMatch(html, /"Rain now, ending ~"/);
   {
     // and run: what is falling now is the current code, what starts later is its own hour's code
-    const els = {}, el = (id) => (els[id] ??= { id, textContent: "", innerHTML: "", className: "" });
+    /* the bars' row keeps its nodes: a stand-in that counts the rewrites and makes its children */
+    let barWrites = 0;
+    const barRow = { id: "ncBars", children: [], set innerHTML(v) { barWrites++; this.children = Array.from({ length: (v.match(/<i /g) || []).length }, () => ({ style: {} })); }, get innerHTML() { return ""; } };
+    const els = { ncBars: barRow }, el = (id) => (els[id] ??= { id, textContent: "", innerHTML: "", className: "" });
     const nc = vm.createContext({ document: { getElementById: el } });
     vm.runInContext([
       lift(/const SNOW=\[[\s\S]*?const isWet=w=>WETC\.includes\(w\);/),
@@ -2640,8 +2763,16 @@ test("the page reads top down: now, today, the week, and nothing it has already 
     assert.equal(cast([.5, .5, .5, .1, 0, 0, 0, 0, 0, 0, 0, 0], 71), "Snow now, ending ~5:30p");
     assert.equal(cast([0, 0, 0, 0, .4, .5, .5, .5, .5, .5, .5, .5], 3, [3, 75, 75, 75]), "Snow from ~5:30p");
     assert.equal(el("nowcast").className, "nowcast on");
+    // a repaint of the same strip writes no new bars, so none of them grows in again; it sets the
+    // heights in place
+    const w0 = barWrites;
+    cast(all, 63); cast(all, 63);
+    assert.equal(barWrites, w0, "the bars are not rewritten on a repaint");
+    assert.equal(barRow.children.length, 10);
+    assert.equal(barRow.children[0].style.height, "22px");
     cast(Array(12).fill(0), 3);
     assert.equal(el("nowcast").className, "nowcast", "a dry hour hides the strip");
+    assert.equal(barRow.children.length, 0, "and lets its bars go, so they grow in once when it is back");
   }
   // code 99 is not a warning, so it does not borrow the NWS warning word
   assert.match(html, /96:"Storms with hail",99:"Storms, heavy hail"/);
@@ -2704,6 +2835,11 @@ test("the page reads top down: now, today, the week, and nothing it has already 
   // daylight tomorrow is "tomorrow". The Tonight card under it calls the same shower tonight's.
   assert.equal(tell({ time: "2026-08-02T21:30", temperature_2m: 72, weather_code: 1 }, { pop: (i) => (i === 4 ? 45 : 5) }), "Showers possible around 1 a.m.");
   assert.equal(tell({ time: "2026-08-02T21:30", temperature_2m: 72, weather_code: 1 }, { pop: (i) => (i === 10 ? 45 : 5) }), "Showers possible around 7 a.m. tomorrow.");
+  // the night runs to tomorrow's sunrise, as the Tonight card's does: an October 6 a.m. is dark
+  const octDy = { time: ["2026-10-09", "2026-10-10"], temperature_2m_max: [80, 81], sunrise: ["2026-10-09T07:15", "2026-10-10T07:16"], sunset: ["2026-10-09T18:47", "2026-10-10T18:46"] };
+  assert.equal(tell({ time: "2026-10-09T21:30", temperature_2m: 72, weather_code: 1 }, { pop: (i) => (i === 9 ? 45 : 5) }, undefined, octDy), "Showers possible around 6 a.m.");
+  assert.equal(tell({ time: "2026-10-09T21:30", temperature_2m: 72, weather_code: 1 }, { pop: (i) => (i === 10 ? 45 : 5) }, undefined, octDy), "Showers possible around 7 a.m.");
+  assert.equal(tell({ time: "2026-10-09T21:30", temperature_2m: 72, weather_code: 1 }, { pop: (i) => (i === 11 ? 45 : 5) }, undefined, octDy), "Showers possible around 8 a.m. tomorrow.");
   assert.equal(tell({ time: "2026-08-02T19:15", temperature_2m: 76, weather_code: 63 }, { pop: (i) => (i < 7 ? 80 : 10) }), "Raining now. Should let up around 2 a.m.");
   // after midnight the midnight at the far end of the run is the one that ends today, so it is
   // plain "midnight": "midnight tomorrow" reads as the end of tomorrow, a day late
@@ -2773,7 +2909,7 @@ test("the page reads top down: now, today, the week, and nothing it has already 
     return ctx.dayStory(c, options.dy || completeDy, h, new Date(options.now || time));
   };
   assert.equal(readAt("2026-08-02T14:00").html, "Nice and sunny this afternoon.");
-  assert.equal(readAt("2026-08-02T07:40",{hours:{code:i=>i<5?3:0}}).html,"Cloudy, then sunny.","sustained clearing replaces an empty dry-day summary");
+  assert.equal(readAt("2026-08-02T07:40",{c:{weather_code:3},hours:{code:i=>i<5?3:0}}).html,"Cloudy, then sunny.","sustained clearing replaces an empty dry-day summary");
   assert.equal(readAt("2026-08-02T07:40",{hours:{code:i=>i<5?0:3}}).html,"Sunny, then cloudy.");
   assert.equal(readAt("2026-08-02T07:40",{hours:{code:i=>i%2?3:0}}).html,"Clouds and sun today.","mixed skies still say what the day looks like");
   assert.equal(readAt("2026-08-02T07:40",{hours:{code:i=>i%4?3:0}}).html,"Mostly cloudy today.","one sunny hour cannot become a sustained clearing");
@@ -2786,6 +2922,29 @@ test("the page reads top down: now, today, the week, and nothing it has already 
     dy:{...completeDy,temperature_2m_max:[90,68]}}).html,"Warm and sunny today.","a damp cool morning cannot borrow afternoon heat to become humid or soupy");
   assert.doesNotMatch(storyCode,/Dry today\.|Dry through the afternoon\./,"a quiet daytime summary names the sky rather than only the absence of rain");
   assert.equal(readAt("2026-08-02T14:00", { c: { weather_code: 3 }, hours: { code: () => 3 } }).html, "Cloudy this afternoon.");
+  // The now hour's sky is the one the label beside the number names. The forecast run said sunny at
+  // 2:00 while the reading at 2:20 was cloudy, and the headline said "Nice and sunny" beside "Cloudy"
+  assert.equal(readAt("2026-08-02T14:20", { c: { weather_code: 3 }, hours: { code: () => 1 } }).html, "Mostly sunny this afternoon.");
+  assert.doesNotMatch(readAt("2026-08-02T09:00", { c: { weather_code: 3 }, hours: { code: () => 1 } }).html, /^Nice and sunny/);
+  assert.equal(readAt("2026-08-02T09:00", { c: { weather_code: 3 }, hours: { code: i => i < 2 ? 3 : 1 } }).html, "Cloudy, then sunny.");
+  // A wet sky at an hour with odds under 25 is a stray shower, not missing data: every reading is
+  // there, so the headline never says "Forecast details unavailable." over a whole run
+  assert.equal(readAt("2026-08-02T10:00", { c: { temperature_2m: 74, apparent_temperature: 74 }, hours: { code: i => i === 5 ? 51 : 1, pop: i => i === 5 ? 15 : 5 } }).html, "Maybe a stray shower.");
+  assert.equal(readAt("2026-08-02T10:00", { c: { temperature_2m: 74, apparent_temperature: 74 }, hours: { code: i => i === 5 ? 80 : 1, pop: i => i === 5 ? 20 : 5 } }).html, "Maybe a stray shower.");
+  assert.equal(readAt("2026-08-02T02:00", { c: { temperature_2m: 70, apparent_temperature: 70 }, hours: { code: i => i === 4 ? 51 : 1, pop: i => i === 4 ? 10 : 5 } }).html, "Maybe a stray shower.");
+  assert.equal(readAt("2026-08-02T10:00", { c: { temperature_2m: 74, apparent_temperature: 74 }, hours: { code: i => i === 5 ? 71 : 1, pop: i => i === 5 ? 15 : 5 } }).html, "Maybe a few flurries.");
+  assert.equal(readAt("2026-08-02T10:00", { c: { temperature_2m: 74, apparent_temperature: 74 }, hours: { code: i => i === 5 ? 56 : 1, pop: i => i === 5 ? 15 : 5 } }).html, "Maybe a little freezing rain.");
+  // a real gap still says so
+  assert.doesNotMatch(readAt("2026-08-02T10:00", { c: { temperature_2m: 74, apparent_temperature: 74 }, change: h => { h.code[5] = null; } }).html, /stray|nice|sunny|dry/i);
+  // With the whole run in hand the evening describes tomorrow's daylight from five o'clock; the bare
+  // number is for a short cache (the 17:00 case above, a 24-hour run ending at four)
+  {
+    const t0 = new Date("2026-10-09T17:00:00Z").getTime(), time = Array.from({ length: 48 }, (_, i) => new Date(t0 + i * 3.6e6).toISOString().slice(0, 16));
+    const h48 = { time, temp: time.map(() => 75), feels: time.map(() => 75), pop: time.map(() => 5), gust: time.map(() => 10), code: time.map(() => 1) };
+    const oct = { time: ["2026-10-09", "2026-10-10"], temperature_2m_max: [79, 79], sunrise: ["2026-10-09T07:15", "2026-10-10T07:16"], sunset: ["2026-10-09T18:47", "2026-10-10T18:46"] };
+    const c = { time: "2026-10-09T17:20", temperature_2m: 75, apparent_temperature: 75, relative_humidity_2m: 50, weather_code: 1 };
+    assert.equal(ctx.dayStory(c, oct, h48, new Date("2026-10-09T17:20")).html, "Sunny tomorrow.");
+  }
   assert.equal(readAt("2026-08-02T19:00").html, "Sunny tomorrow and 8° cooler.");
   assert.equal(readAt("2026-08-02T19:00", { c: { weather_code: 45 } }).html, "Foggy. Sunny tomorrow and 8° cooler.", "looking ahead cannot hide fog here now");
   assert.equal(readAt("2026-08-02T17:00").html, "8° cooler tomorrow, with a high of 68°.", "a 24-hour run ending at four cannot promise tomorrow afternoon's sky");
@@ -3485,4 +3644,71 @@ test("the oak-egret preview stays occasional, weather-aware and attached to its 
   assert.match(css,/@keyframes egretWingStretch\{0%,95%,100%\{transform:none\}/);
   assert.match(scene,/\.oak-egret \*/,"scene checks include the perched bird's occasional wing movement");
   assert.match(scene,/egret: perch overlaps the heron through its movement/,"scene checks the egret and heron across their gestures");
+});
+
+test("every line runs the same width, from CHART_IN to CHART_IN", async () => {
+  const [html, shots, interactions] = await Promise.all(["index.html", "tools/shots.mjs", "tools/interactions.mjs"].map((f) => readFile(new URL(f, root), "utf8")));
+  const fn = (name, next) => html.slice(html.indexOf(`function ${name}(`), html.indexOf(next, html.indexOf(`function ${name}(`)));
+  // Josh, October 9 2026: "the width of the week part doesn't extend as far as the other lines.
+  // everything should be even". One inset, the hourly's own 16px, for all five
+  assert.match(html, /\nconst CHART_IN=16;\n/);
+  assert.match(html, /const W=appW\(\)-40,Ht=chartH\(W\)-18,pad=CHART_IN,n=h\.temp\.length,base=Ht-6;/);
+  assert.match(html, /const X=i=>pad\+i\*\(W-2\*pad\)\/\(n-1\);/);
+  // the week's points run edge to edge with the others, its columns are centred under them and cut
+  // at the content edge, and an end day's number stays inside it
+  const week = fn("renderWeek", "function weekBrief(");
+  assert.match(week, /const W=appW\(\)-40,L=CHART_IN,R=W-CHART_IN,s=\(R-L\)\/Math\.max\(1,n-1\),X=i=>L\+i\*s;/);
+  assert.match(week, /wrap\.style\.setProperty\("--wk-cols",n>2\?`\$\{edge\} repeat\(\$\{n-2\},1fr\) \$\{edge\}`/);
+  assert.match(week, /wrap\.style\.setProperty\("--wk-pad",/);
+  assert.match(week, /const xh=clamp\(x,wh,W-wh\),xl=clamp\(x,wl,W-wl\);/);
+  assert.match(week, /const colL=i=>i<=0\?0:L\+\(i-\.5\)\*s,colR=i=>i>=n-1\?W:L\+\(i\+\.5\)\*s;/);
+  assert.doesNotMatch(week, /\(i\+\.5\)\*col/);
+  assert.match(html, /\.wk-day:first-child\{padding-right:var\(--wk-pad,0px\)\}\.wk-day:last-child\{padding-left:var\(--wk-pad,0px\)\}/);
+  assert.match(html, /align-items:center;align-items:safe center;/);
+  // the water and the moon start where the others do: the depth scale sits on its own gridlines
+  // inside the plot, placed clear of the curve, the boat, its tag, the now line and the times
+  const tide = fn("renderTides", "function renderMoon(");
+  assert.match(tide, /const W=appW\(\)-40,H=chartH\(W\),padX=CHART_IN;/);
+  assert.match(tide, /const topY=22,seaY=H-34,bedY=seaY\+6,lowY=H-9,x0=padX;/);
+  assert.doesNotMatch(tide, /axisW|\(x0-6\)\.toFixed/);
+  assert.match(tide, /const shared=spots\.find\(s=>grids\.every\(g=>!gHits\(g,s\)\)\);/);
+  assert.match(tide, /const spots=\[\["end",xR\],\["start",x0\]\];/);
+  assert.match(fn("renderMoon", "function yearTitle("), /padX=CHART_IN,fs=[^\n]*\n[^\n]*\n  const topY=50,botY=H-8,x0=padX;/);
+  // the year's months are laid out between the two edges, the wrap clipped to them, the months
+  // row padded by the same 16px so each letter sits under its point
+  const year = fn("renderYear", "const vane=");
+  assert.match(year, /const W=appW\(\)-40,L=CHART_IN,R=W-CHART_IN,col=\(R-L\)\/12,X=m=>L\+\(m\+\.5\)\*col/);
+  assert.match(year, /<clipPath id="yrClip"><rect x="\$\{L\}" y="0" width="\$\{\(R-L\)\.toFixed\(1\)\}"/);
+  assert.match(year, /revealChart\("year",svg,\{xa:L,xb:R,/);
+  assert.match(html, /\.yr-months\{display:flex;margin-top:8px;padding:0 16px\}/);
+  // and the harnesses measure it: every line and its fill at the same two edges within a pixel at
+  // 320 to 900 at both places, with the rows under their points, and the week tapped at its points
+  assert.match(shots, /async function even\(page\)/);
+  assert.match(shots, /\.\.\.await crowded\(page\), \.\.\.await pillClear\(page\), \.\.\.await even\(page\)/);
+  assert.match(shots, /\.\.\.await titlesFit\(page\),\.\.\.await even\(page\)/);
+  assert.match(shots, /render\(LAST\.d,LAST\.live,LAST\.savedAt\);await PAINT;finishReveal\(\);/);
+  assert.match(interactions, /const weekAt=async\(page,b\)=>/);
+});
+
+test("a paint says when it has landed, and the harnesses wait on it rather than counting frames", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  // the stamp goes live on a paint's first frame and the charts land several frames after it, so
+  // the stamp is no signal that the page can be measured: PAINT is the latest paint's promise
+  assert.match(html, /let PAINT=Promise\.resolve\(\),PAINT_DONE=\(\)=>\{\};\nfunction paintBegin\(\)\{PAINT_DONE\(\);PAINT=new Promise\(r=>PAINT_DONE=r\)\}/);
+  assert.match(html, /const gen=\+\+RENDER_GEN;\n  paintBegin\(\);/);
+  // settled after the last stage, and by a superseding loading shell, so no waiter hangs
+  assert.match(html, /  fishMotion\(\);\n  PAINT_DONE\(\);\n  \}\);\}\);\}\);\}\);\n\}/);
+  assert.match(html, /RENDER_GEN\+\+;PAINT_DONE\(\);/);
+  for (const f of ["interactions", "tonight", "shots"]) {
+    const src = await readFile(new URL(`tools/${f}.mjs`, root), "utf8");
+    assert.match(src, /\bPAINT\b/, `tools/${f}.mjs waits on PAINT`);
+  }
+  const inter = await readFile(new URL("tools/interactions.mjs", root), "utf8");
+  assert.match(inter, /const painted=page=>page\.evaluate\(async\(\)=>\{await PAINT;/);
+  // a place switch with a cache takes the last place's pictures down before the first frame
+  assert.match(html, /if\(cached\)\{paintLocationShell\(\);clearPlaceReadings\(\);render\(cached\.data,false,cached\.savedAt\)\}/);
+  const clear = html.slice(html.indexOf("function clearPlaceReadings("), html.indexOf("function setLoc("));
+  for (const id of ["hourlySvg", "weekSvg", "tideSvg", "moonSvg", "yearSvg", "uvSvg", "ncBars"]) assert.ok(clear.includes(`"${id}"`), `${id} is cleared on a switch`);
+  assert.match(clear, /renderAlerts\(null\);/);
+  assert.match(inter, /the coast's water is gone on the switch's first frame/);
 });
