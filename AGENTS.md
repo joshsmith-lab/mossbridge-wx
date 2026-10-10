@@ -85,7 +85,8 @@ place name.
   the wet hours' own codes, freezing rain before snow before rain (`Snow likely around 4 p.m.`,
   `Freezing rain could start any time.`, `Maybe a few flurries.`), because it once called the
   snow the Tonight card named "Rain likely". After dark the small hours before morning are
-  tonight's (`Showers possible around 1 a.m.`) and only daylight is "tomorrow", so one night is
+  tonight's (`Showers possible around 1 a.m.`) and only daylight is "tomorrow" (the night runs to tomorrow's
+  sunrise, as the Tonight card's does, so an October `6 a.m.` is tonight's), so one night is
   not given two names. Thunder the run carries on poor odds is still thunder (`Thunder possible
   around noon.`, and `Windy by 11 a.m., then thunder possible around 2 p.m.` when the wind comes
   an hour or more first, with "tomorrow" said once), never `Should stay dry.`, which once sat over a
@@ -428,6 +429,21 @@ drawing to both views.
 - **Grain is baked once** (`paperTex()`, a seeded tile) and laid over the big still shapes as
   a pattern. Never an SVG filter on anything inside an animated subtree: the scene repaints
   every frame something moves.
+- **So is the sky's blur.** The soft clouds behind the type were a live nine-pixel
+  `feGaussianBlur` on each drifting layer, and that was the iPhone stutter: in WebKit at 3x
+  (a WKWebView on the Mac, October 9 2026) every idle frame took 44 to 97ms, 10 to 23 frames a
+  second, at both places, by day and by night. `bakeClouds` now works the same puffs and the
+  filter's own region out once into a canvas that each drifting layer carries, blurred as wide
+  (three passes of a box, the approximation the SVG spec gives for a blur this wide), again
+  whenever the sky changes size, and the drift is a plain HTML layer sliding sideways. It bakes
+  once a render, at the size that is shown: `renderSkyFx` sets `CLOUD_DUE` and re-observes the sky,
+  so the observer reports after that frame's layout and before its paint (a direct bake there baked
+  the loading shell's short sky and threw it away, 40ms on the frame the picture lands). The
+  canvases are placed in the sky's own percentages, so when the alert strip or the nowcast only
+  makes the header taller the baked picture stretches with it, and the re-bake waits until no pen is
+  drawing in (`CLOUD_LATER`). The same
+  frames ran at 59 to 60, and the baked sky matches the filter's to 3 levels in 255. Chrome never
+  showed it, because Chrome composites SVG animations and WebKit repaints them (`tools/webkit.mjs`).
 - **The picture still does not make claims.** Clouds are drawn in the scene only when there
   are clouds (10 to 85 per cent, dry, no fog) and drift with the wind. The barn lamps come on
   after sunset. The oyster rake is part of the creek and is drawn in every weather, whether or
@@ -803,6 +819,7 @@ TZ=America/New_York node tools/shots.mjs          # the copy
 TZ=America/New_York node tools/interactions.mjs   # the charts, keys, warnings and retry
 TZ=America/New_York node tools/scene.mjs          # the picture and its motion
 TZ=America/New_York node tools/scene.mjs fog storm  # just the scenes you are working on
+TZ=America/New_York node tools/webkit.mjs         # WebKit's frame rate, the engine on every iPhone
 node tools/rig.mjs heron                          # one animal, close up and at phone size
 ```
 
@@ -841,16 +858,22 @@ also fails when a word on the tide, the moon or the year runs off its chart or i
 when the skiff's level tag sits on the bed, within 2px of the tide line or on the boat, or when
 the water's
 pill at now covers the skiff, measured at 390 and 900 and once more at 320, the width where they
-meet, where it also fails any section title whose note drops under it. It exits non-zero when one does not show what it
+meet, where it also fails any section title whose note drops under it. Every scenario also fails
+when any line or its fill does not start and end `CHART_IN` inside the content edge within a
+pixel, measured on the screen with the chart's clip applied, or a day's sky or name or a month sits
+off its point, at 320, 375, 390, 393, 430 and 900 (`even`). The intermediate widths wait for the
+staged paint to land at the new width (`await PAINT`) before they measure, or what they measure
+is the old width's charts stretched to fit. It exits non-zero when one does not show what it
 is there for.
 
-`tools/scene.mjs` is for anything that moves. Forty-two scenes force the light
+`tools/scene.mjs` is for anything that moves. Forty-three scenes force the light
 and weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
 clear night, a storm, a fog morning, drizzle against a downpour, freezing rain on
 the coast, a night of rain over the marsh, and the ridge by day, by evening with
 the buck out, in warm rain, on a snow day, on a cold January night and in a night
-downpour. Twenty-three more are Halloween: the coast on an October afternoon, at golden hour,
-at dusk with the first bats out, and on a fog morning in October, on Halloween night with no
+downpour. Twenty-four more are Halloween: the coast on an October afternoon, at golden hour,
+at dusk with the first bats out, on a fog morning in October, and in a midday downpour in October
+(the oystercatcher and the cobweb's spider out, the crab down its burrow), the busiest daytime frame, on Halloween night with no
 moon and a trick-or-treater on the dock, in a drizzle that night with the kid still out, at a raw
 dusk that evening with the cormorant on the dock and the kid not, on a cold morning in the carved week with the cormorant on its piling, on a rainy night
 in it (bats and witch down), under the moon a night short of full in it with the witch crossing
@@ -884,15 +907,30 @@ survives reduced motion, or on a scene at a family place whose wall clock is shi
 off the Eastern phone it runs in (the half past midnight scene on November 1 is the one that
 used to be).
 
-Two numbers worth knowing before you change motion: every scene idles at **0-2
-layouts per 6 seconds**, and the busiest scene runs **115 animations**. If either
+Two numbers worth knowing before you change motion: every scene idles at **0-4
+layouts per 6 seconds** (most at 0 to 2), and the busiest scene runs **117 animations** (October
+10 2026: the coast under a full moon with a westerly; the busiest daytime frame is the October
+midday downpour at 114, and the August one 112, with the crab down its burrow). If either
 jumps, you have added something that is not a `transform` or an `opacity`. Halloween's nights
 are the other busy ones, legitimately: three animations a bat, three for the witch and three for
 the spider in the cobweb, and on an October night one for the cat's tail, one for each pair of eyes
 in the dark and one for each of the coast's three marsh lights (the farm's ghost adds one when the
 gusts reach 5). So the coast under the moon with seven bats, the witch and the marsh lights out
-runs about 111 to 114, Halloween night there about 108, and the farm's October nights 83 to 89
+runs about 114 to 117, Halloween night there about 111, and the farm's October nights 84 to 90
 (the harness fails anything over 120).
+
+`tools/webkit.mjs` is the one harness that is not Chrome. Chrome runs SVG animations on its
+compositor, so it never paid for the sky's live blur, and every browser on an iPhone is WebKit,
+which repaints a moving SVG part on every frame. It drives a WKWebView on the Mac
+(`tools/webkit.swift`, built with swiftc into tools/shots/ on first use) at 390 CSS pixels and
+3x, off the screen, so it runs with the screen locked, and counts frames in the page: the coast
+and the farm on October nights, a rainy coast day and an ordinary afternoon, idle for 10 seconds
+and opening for 6. On October 9 2026, with the clouds baked, every case held 59 to 60 frames a
+second idle and 58 to 60 opening, where the live blur had held them to 10 to 23. Its GPU process
+still spends one to two of the Mac's cores at idle repainting the scene's moving parts, and no one
+group of them is most of it: that is the next thing to look at. `--strict` fails a case under 50
+frames a second. The zoom that makes 3x assumes a Retina Mac, and the report prints the width
+and pixel ratio the page saw.
 
 ## Time and place
 
@@ -987,10 +1025,13 @@ Established with Josh and enforced by `test.mjs`:
 - **Two things falling in one picture have to fall at the same rate.** The near rain
   was first timed by feel and came out four times slower than the layer above it,
   which is what made a long drop read as a slash drawn across the scene rather than as
-  rain: long and quick is a raindrop, long and slow is a scratch. A scene unit is a
-  screen pixel (the viewBox width is the rendered width), so the two are directly
-  comparable and the near drops are timed off the sky layer's 880px / `fallSec`,
-  landing 10% quicker because they are nearer. This is worth measuring rather than
+  rain: long and quick is a raindrop, long and slow is a scratch. The near drops are timed
+  off the sky layer's 880px / `fallSec` on screen, landing 10% quicker because they are
+  nearer. Since the frame came closer in for the phone (`W=appW()/1.22`), a scene unit is
+  `appW()/W` screen pixels, about 1.22 from 390 up and 1 only at 320, so the step and the fall
+  are worked on screen and turned back into units (`k`). Worked in units, as they were until
+  October 2026, the near rain fell 1.35 times the sky layer's speed on every phone but the
+  narrowest. This is worth measuring rather than
   eyeballing; four times off was invisible in a still and obvious in a strip of frames
   60ms apart.
 - **A falling drop has to be longer than one frame's fall, and it has to land.** At the
@@ -1101,7 +1142,8 @@ Established with Josh and enforced by `test.mjs`:
   magpie has the rest of the day. Where a resident's size is fighting the frame,
   the answer is a schedule, not a smaller animal.
 - Animals only appear in weather they would actually be out in. Frogs go under
-  below 45F, fiddler crabs below 48F, and the cormorant and the cardinal exist
+  below 45F, fiddler crabs below 48F and in a downpour (65, 82: down the burrow with
+  the door shut, which also keeps the busiest frame under the animation ceiling), and the cormorant and the cardinal exist
   because something still has to be out there when they do.
 - The farm's "fish bite" windows are solunar tables: almanac folklore built on
   real moon transits from the app's own astronomy. That framing is deliberate.
@@ -1244,6 +1286,19 @@ The fuller scene earns its playfulness from the existing drawings and their beha
   pleasant outdoor reading: the farm says the family's action in red and takes the fishing times,
   and with the boat season on the water says `Stay off the water.` Include
   the NWS instruction text in the expanded alert; do not invent an instruction.
+- **The warning strip enters once.** It comes in when an alert arrives and then it stays put. The
+  cache paints first and the live forecast lands a moment later, and a resize, a foreground and
+  the hour turning over all paint again, so `renderAlerts` writes only what changed: `alertStrip`
+  works out the words and `alertStep` says what to do with them. The same alert said the same way
+  writes nothing. The warning extended, or another alert joining it, changes the words in place,
+  so an open strip keeps its body. A different alert taking the lead plays the entrance again. An
+  alert comes down when it ends, with the app left open and nothing touched (`alertTimer` asks for
+  the forecast a second after the end, so a warning the Weather Service has extended stays up with
+  its new words), and the next one to arrive enters, closed. Until October 2026 the strip was
+  written from scratch on every paint, so a strip opened on the cache came in again when the live
+  forecast landed, a Tornado Warning taking over from a thunderstorm warning only swapped the
+  words, and an ended warning stayed up until something painted. `alertStrip` and `alertStep` are
+  pure and test.mjs runs them, with `renderAlerts` and `alertTimer` against a stand-in strip.
 - Small labels need enough ink on both the sky-tinted daytime paper and the tinted evening
   paper. Keep long condition names wrappable beside three-digit temperatures.
 - **Chart labels are placed, not stamped.** On a phone an hour of the hourly chart is about
@@ -1257,6 +1312,50 @@ The fuller scene earns its playfulness from the existing drawings and their beha
   AFTER DARK went: the band and the moon already say it, so the moon has only its own box). The high always
   keeps the space above its dot; now or the low take the space under their own dot when the
   space above is taken. Check it at 320, 375, 393 and 430, not only at one width.
+- **Opening and switching in October 2026.** Four things a family member saw on a phone, fixed
+  together on October 10 2026 after an audit of the staged paint (#75):
+  - A place switch with a cache takes the last place's pictures, notes, sentences and strips down
+    before the new place's first frame (`clearPlaceReadings`), and puts up the new place's shell
+    (`paintLocationShell`). The cached paint lands in stages, and until the last one the coast's
+    week, its water and Wilmington's year sat under the farm's name for 70 to 130ms. The charts
+    draw in again, the way a new place's do. `tools/interactions.mjs` reads the frame after the tap.
+  - The rain keeps falling while the lines draw in. PR #73 paused the streaks while the hours or
+    the week drew, so every drop hung mid-air for about three seconds each time the app opened in
+    the rain. The drops are compositor transforms, so the pause saved nothing a phone could feel.
+  - The rain-soon bars grow in once, when the strip comes up, and a repaint sets their heights on
+    the same nodes (`renderNowcast`). Rewritten each paint, every bar collapsed and grew again when
+    the live forecast landed, the same fault the warning strip had.
+  - The headline reads the whole hourly run (`dayStory(c,dy,full,now)`), so from five o'clock it
+    says `Sunny tomorrow.` and not only `Tomorrow's high is 79°.`, which is for a short cache. Its
+    look-ahead is still capped at 24 hours inside it. The hour now is in takes the observed sky
+    (`codeAt`), so a cloudy reading never sits beside `Nice and sunny this afternoon.` And a wet
+    sky at an hour with odds under 25, every reading known, is `Maybe a stray shower.` (`lowWet`,
+    `stray`), never `Forecast details unavailable.`, which is for real gaps.
+- **Every line runs the same width.** Josh, October 9 2026: "the width of the week part doesn't
+  extend as far as the other lines. everything should be even". The hours, the week, the water,
+  the moon and the year each start their line and its fill `CHART_IN` (16px, the hourly's own
+  inset) inside the content edge and end 16px inside the other, at every width and at both places.
+  16 and not full bleed, because 16 is room for a three-letter label under an end point (NOW, SUN,
+  J, a tide time) to sit centred under it inside the content edge. No line is drawn past its first
+  or last reading to get there: the week's points moved out to the edges instead of its line being
+  stretched, and a missing first or last reading still stops the line at the last known one. The
+  week's day columns are centred under their points and meet halfway between them, so the two
+  outer columns are cut at the content edge and pad toward the inside (`--wk-cols`, `--wk-pad`);
+  TODAY is wider than its 32px and safe centring holds it inside the edge, a couple of pixels right
+  of its point. A cut column's tapped wash and the weekend band are centred on its point, no more
+  than 3px past the edge (the cut once left MON hard against the right of its own box), and the
+  week's hairline runs from `CHART_IN` to `CHART_IN` like every other chart's rule. A cached place
+  switch holds the week's height across the clear (`clearPlaceReadings`), because its height comes
+  from its columns and everything under it jumped 200px and back while the paint was staged in.
+  An end day's number steps in rather than hang off the page. The water's depth scale is no longer an axis that
+  held its curve in: `2 ft` and `4 ft` sit on their own gridlines inside the plot, placed, not
+  stamped, at the right end, then the left, then the nearest clear spot along the line, clear of
+  the curve, the skiff and its tag, the tag's room beside the bow and the stern (drawn or not, because
+  a bare `2 ft` in the slot `+1.5 ft` goes in reads as a reading about the boat), the now line, the
+  times and the lows' ticks, and in one column
+  when one spot clears every gridline. The year's twelve months are laid out between the two
+  edges, its wrap (December into January, which is real) is clipped to them, and `.yr-months` pads
+  by the same 16px so every letter is under its point. `tools/shots.mjs` measures it (`even`).
 
 - **The week is lines, not bars, and says only what the picture does not.** Josh asked for lines
   in September 2026, then sent the first version back as "too overwhelming with text and info".
@@ -1366,9 +1465,13 @@ order, hourly, week, tide, moon, sun, year, and so is `RV_OF`, the observer's ma
   dash, the tails, the tip and the fill stay the same. Reduced motion still yields the paint
   and never arms the pen.
 
-`tools/interactions.mjs` runs thirty-five scenarios: every pill kept inside its chart at both edges
+`tools/interactions.mjs` runs thirty-seven scenarios: every pill kept inside its chart at both edges
 at 320, 390 and 900, keyboard navigation, location switching, snow/ice labels, a warning at the farm that is `Chores can
-wait.` in red and takes the fishing times until it expires, source instructions, a farm day with
+wait.` in red and takes the fishing times until it expires, source instructions, a warning strip
+opened on the cache that stays put through the live paint, a re-render, a resize and a foreground
+and changes its words in place when the warning is extended, then enters again for a different
+alert, goes when it ends (refreshed or left open) and enters for the next (at the coast at 390 and
+the farm at 320, with motion on), a farm day with
 thunder in the run from noon and nothing warned (the headline `Thunder possible around noon.`,
 the card `Piddle before the thunder.` in amber, and no fishing time inside the thunder), a phone that opens at the coast and taps to the farm's
 cache (the farm's moon and its year's title on the cached paint and the live one),
@@ -1391,7 +1494,14 @@ whose last hours carry no temperature, and a missing daily high, none of them dr
 motion on, a slide during the entrance, the animation count across a slide, and a creeping scroll
 from a chart still waiting to draw in that leaves its entrance to play. The entrance checks run with motion
 on; everything else runs under reduced motion. Run it with the same font and browser settings as
-`tools/shots.mjs`. Request ordering and alert expiry also run in `node --test test.mjs`.
+`tools/shots.mjs`. A paint lands in stages (the picture, the hours a frame on, the week three after
+that, the rest three after that), and the live stamp is written on the first of those frames, so
+`interactions.mjs`, `tonight.mjs` and `shots.mjs` wait on `PAINT` past the live stamp, a refresh or
+a render before they read a chart (`painted`). `PAINT` is the latest paint's promise: `render()`
+makes a new one, its last stage settles it, and a newer paint or the loading shell settles the old
+one, so a waiter never hangs on a paint that was superseded. Counting frames was a guess at the
+staging and broke whenever a stage moved; and the week is tapped where
+its points are (`weekAt`), not at even column centres. Request ordering and alert expiry also run in `node --test test.mjs`.
 
 ## Known issues
 

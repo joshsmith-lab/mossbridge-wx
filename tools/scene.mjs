@@ -82,6 +82,12 @@ const CASES = [
     note: "code 82: dense, fast, hard angle. Must not look like the drizzle beside it",
     o: { baseTemp: 76, nowTemp: 75, feels: 79, rh: 94, isDay: 1, code: 82, cloud: 98, nowWind: 21, nowDir: 240, nowGust: 33, nowUv: 1.1, uvMax: 6, windAmp: 14, gustAmp: 24,
       popCurve: () => 90, dailyPop: (p) => p.fill(90) } },
+  // the same downpour on an October afternoon: the oystercatcher and the cobweb's spider are out
+  // too, and with the crab out it ran 122 animations, past the ceiling
+  { name: "49-marsh-october-downpour-midday", loc: "mb", when: "2026-10-09T12:30:00", tidePhase: 0, decor: ["ghostface", "pumpkin", "blood-moon"], candles: 0,
+    note: "code 82 in October: the busiest daytime frame, the crab down its burrow",
+    o: { baseTemp: 76, nowTemp: 75, feels: 79, rh: 94, isDay: 1, code: 82, cloud: 98, nowWind: 21, nowDir: 240, nowGust: 33, nowUv: 1.1, uvMax: 6, windAmp: 14, gustAmp: 24,
+      popCurve: () => 90, dailyPop: (p) => p.fill(90) } },
   // ── ridge ──────────────────────────────────────────────────────────────
   { name: "09-ridge-clear-day", loc: "sp", when: "2026-08-02T14:00:00",
     note: "hawk circling, hardwoods working, pond breathing",
