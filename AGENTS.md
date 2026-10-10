@@ -901,14 +901,16 @@ survives reduced motion, or on a scene at a family place whose wall clock is shi
 off the Eastern phone it runs in (the half past midnight scene on November 1 is the one that
 used to be).
 
-Two numbers worth knowing before you change motion: every scene idles at **0-2
-layouts per 6 seconds**, and the busiest scene runs **115 animations**. If either
+Two numbers worth knowing before you change motion: every scene idles at **0-4
+layouts per 6 seconds** (most at 0 to 2), and the busiest scene runs **117 animations** (October
+10 2026: the coast under a full moon with a westerly; the busiest daytime frame is the October
+midday downpour at 114, and the August one 112, with the crab down its burrow). If either
 jumps, you have added something that is not a `transform` or an `opacity`. Halloween's nights
 are the other busy ones, legitimately: three animations a bat, three for the witch and three for
 the spider in the cobweb, and on an October night one for the cat's tail, one for each pair of eyes
 in the dark and one for each of the coast's three marsh lights (the farm's ghost adds one when the
 gusts reach 5). So the coast under the moon with seven bats, the witch and the marsh lights out
-runs about 111 to 114, Halloween night there about 108, and the farm's October nights 83 to 89
+runs about 114 to 117, Halloween night there about 111, and the farm's October nights 84 to 90
 (the harness fails anything over 120).
 
 `tools/webkit.mjs` is the one harness that is not Chrome. Chrome runs SVG animations on its
