@@ -22,6 +22,12 @@ import { mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { serve, stage } from "./fixtures.mjs";
+import { STORMS } from "./storm-fixtures.mjs";
+/* a short-fuse warning as the API sends one, for the storm cases that put one under Florence */
+const FUSE = (event, k, ends, endZ, description, instruction) => ({ properties: { id: `urn:fixture:${k}.180913`, event,
+  severity: k === "TO.W" ? "Extreme" : "Severe", certainty: "Observed", urgency: "Immediate", sent: "2018-09-13T11:40:00-04:00", onset: "2018-09-13T11:40:00-04:00",
+  ends, expires: ends, description, instruction, parameters: { VTEC: [`/O.NEW.KILM.${k}.0031.180913T1540Z-${endZ}/`], AWIPSidentifier: [k === "TO.W" ? "TORILM" : "FFWILM"] } } });
+const FLO_LANES = /^WIND gusts to 105 mph · at the beach 115 \| RAIN more than two feet \| SURGE 2–4 ft( above ground)? · at the beach 6–9 ft \| TORNADOES a few possible$/;
 
 const OUT = path.join(path.dirname(fileURLToPath(import.meta.url)), "shots");
 const FONT_DIR = process.env.PORCH_FONT_DIR || "";
@@ -247,6 +253,69 @@ const CASES = [
       nowWind: 4, nowDir: 285, nowGust: 8, nowUv: 0, uvMax: 4.4, windAmp: 3, gustAmp: 4,
       sunrise: "07:25", sunset: "18:54", popCurve: () => 5, dailyPop: (p) => p.fill(5),
       tempCurve: (i, hr, t) => t + (i >= 24 ? 7 : 0) } },
+  /* The storm card (October 10 2026), on tools/storm-fixtures.mjs's real products. The bar is high: a
+     day like October 10 2026 at Wilmington, a Flood Watch credited to tropical moisture and a Coastal
+     Flood Advisory with Isaias 329 miles off, shows nothing about the storm, and Erin a Category 4 far
+     out shows nothing either. Under a storm the headline is the storm's, the cards under it say only
+     what to do, nothing is green, and the card names its warnings and what to do in the Weather
+     Service's words. A named storm with nothing major here is one quiet line */
+  ...[
+    ["florence-coast", { stormTier: "storm", stormTitle: "Hurricane Florence", stormNote: "Category 2 · 145 mi ESE", headline: "Hurricane Florence is closest Friday morning.",
+      stormWarns: "Hurricane Warning · Storm Surge Warning", stormSay: /^Now is the time to shelter from life-threatening wind\./, stormAsOf: "Weather Service 10:55 am · advisory 57 10:44 am",
+      strip: /^Hurricane Warning · \+2 more$/, tonight: "Down to 71° tonight.", tonightCls: null, say: null, stormLegends: ["hurricane force", "high tides"], stormFades: 1, stormLanes: FLO_LANES }],
+    /* every number on Debby's card is the beach zone's, and is said as the beach's */
+    ["debby-flood-coast", { stormTier: "storm", stormTitle: "Tropical Storm Debby", headline: "Tropical Storm Debby is closest Thursday morning.",
+      stormWarns: "Tropical Storm Warning at the beach", stormSay: /^Heed any flood watches and warnings\./, stormAsOf: "Weather Service 10:58 am · advisory 21 10:55 am",
+      strip: /^Flood Watch · until 8:00 am Fri$/, tonightCls: null,
+      stormLanes: /^RAIN (at the )?beach 4–8 inches \| SURGE (at the )?beach 1–3 ft( above ground)? \| WIND (at the )?beach gusts to 45 mph \| TORNADOES (at the )?beach a few possible$/,
+      stormWords: /Rain, at the beach 4–8 inches: Flood Watch until [\s\S]*Surge, at the beach 1–3 ft above ground: storm surge at the beach/ }],
+    /* a storm with no name is titled by the warning's own sentence, whole: RLX's 2016 warning has no WHAT
+       line, so its headline, in sentence case. Its lane says what it is for and no number */
+    ["blizzard-farm", { stormTier: "storm", stormTitle: "Winter storm warning remains in effect until 1 AM EST Sunday", stormNote: "", headline: "Winter storm until 1 a.m. Sunday.",
+      stormWarns: "Winter Storm Warning", stormSay: "Only travel in an emergency.", stormAsOf: "Weather Service 12:49 pm", stormLanes: /^SNOW$/,
+      sayTitle: "Piddling", say: "Feed early and keep a path open.", sayCls: "no", fish: false, tonightCls: null }],
+    ["isaias-farm-today", { stormTier: "named", stormLine: "Isaias's remnants pass 33 mi north Sunday evening · gusts to 50", headline: /^(?!Isaias)/,
+      sayTitle: "Piddling", say: "Chores can wait.", strip: /^Wind Advisory · until 11:00 am Sun$/ }],
+    ["isaias-coast-today", { stormTier: null, headline: "Raining now. Keep the rain gear close.", strip: /^Flood Watch · until 11:00 am Sun · \+1 more$/, stripLines: 2 }],
+    ["quiet-distant", { stormTier: null, headline: /^(?!.*Erin)/ }],
+    /* RLX's January 23 2026 warning from the winter corpus, with WPC's index at Moderate at the farm: no
+       card, and the warning is the strip's */
+    ["ice-farm", { stormTier: null, strip: /^Winter Storm Warning · until 7:00 am Mon$/ }],
+    /* RLX's January 5 2025 warning, with WPC's index at Major at the farm on its second day: the card, titled
+       by the warning's own sentence (never numbers rebuilt from it), one lane for what it is for, from its
+       noon start, which the headline and the chart's spoken label both say. At 320 the sentence will not fit
+       three lines at 17px, so the title is the warning's shorter sentence and the whole one is under the chart.
+       Its chart's pill at NOW names the warning and its start, as the headline does */
+    ["snow-ice-farm", { stormTier: "storm", stormTitle: "Total snow accumulations between 4 and 10 inches and ice accumulations between one tenth and one half of an inch.", stormNote: "", stormFull: null,
+      stormTitle320: "Heavy mixed precipitation expected.", stormFull320: "Total snow accumulations between 4 and 10 inches and ice accumulations between one tenth and one half of an inch.",
+      headline: "Winter storm from noon until 6 a.m. Tuesday.", stormWarns: "Winter Storm Warning", stormSay: /^If you must travel, keep an extra flashlight, food, and water in your vehicle/,
+      stormAsOf: "Weather Service 5:24 am", stormLanes: /^SNOW AND ICE$/, stormWords: /Snow and ice: Winter Storm Warning from noon until Tuesday at 6 am/, strip: /^Winter Storm Warning · until 6:00 am Tue$/,
+      sayTitle: "Piddling", sayCls: "no", fish: false, tonightCls: null, xp: { storm: /^now Winter Storm Warning from 12p$/ } }],
+    /* the corpus's longest sentence, 153 characters (RLX, February 17 2021): too long for three lines at a
+       readable size, so the title is the warning's own shorter sentence and the whole one is said under the
+       chart in the card's own type, never cut */
+    ["long-quote-farm", { stormTier: "storm", stormTitle: "Heavy mixed precipitation.", stormNote: "",
+      stormFull: "Additional snow accumulations of 3 to 5 inches, ice accumulations of one tenth to three tenths of an inch and sleet accumulations of around half an inch.",
+      stormTitle320: "Heavy mixed precipitation.", stormFull320: "Additional snow accumulations of 3 to 5 inches, ice accumulations of one tenth to three tenths of an inch and sleet accumulations of around half an inch.",
+      headline: "Winter storm until 10 a.m. Friday.", stormWarns: "Winter Storm Warning", stormLanes: /^SNOW AND ICE$/, stormWords: /^Heavy mixed precipitation\.[\s\S]*Additional snow accumulations of 3 to 5 inches/,
+      sayTitle: "Piddling", sayCls: "no", fish: false, tonightCls: null }],
+  ].map(([name, expect]) => ({ name, loc: STORMS[name].loc, when: STORMS[name].when, o: { ...STORMS[name].o, storm: name }, expect })),
+  /* Florence with a routine short-fuse warning issued under it, in the API's own shape (ILM issued dozens
+     of these): the warning leads the strip with its own words, and is never a lane's hours. The rain
+     keeps the Flash Flood Watch's hours to Saturday, and the tornadoes keep their row with no bar. And a
+     thunderstorm overhead under the Hurricane Warning still leads the headline */
+  ...[
+    ["florence-ffw", (st) => ({ ...st, point: [...st.point, FUSE("Flash Flood Warning", "FF.W", "2018-09-13T17:30:00-04:00", "180913T2130Z",
+      "* WHAT...Flash flooding caused by excessive rainfall.\n\n* WHERE...Northeastern New Hanover County.\n\n* WHEN...Until 530 PM EDT.", "Turn around, don't drown when encountering flooded roads.")] }), {},
+      { stormTier: "storm", stormTitle: "Hurricane Florence", strip: /^Flash Flood Warning · until 5:30 pm · \+3 more$/, stormLanes: FLO_LANES,
+        stormWords: /Rain, more than two feet: Flash Flood Watch until Saturday/ }],
+    ["florence-tor", (st) => ({ ...st, point: [...st.point, FUSE("Tornado Warning", "TO.W", "2018-09-13T12:15:00-04:00", "180913T1615Z",
+      "* WHAT...A tornado moving ashore from a waterspout.\n\n* WHERE...Porters Neck and Ogden.", "TAKE COVER NOW! Move to an interior room on the lowest floor of a sturdy building.")] }), {},
+      { stormTier: "storm", stormTitle: "Hurricane Florence", strip: /^Tornado Warning · until 12:15 pm · \+3 more$/, stormLanes: FLO_LANES,
+        stormWords: /Tornadoes, a few possible, no hours given/, stormNoWords: /Tornadoes, a few possible: Tornado Warning/ }],
+    ["florence-thunder", (st) => st, { code: 95 },
+      { stormTier: "storm", headline: "Storms overhead. Head inside. Hurricane Florence is closest Friday morning.", tonight: "Thunder likely tonight, with a low of 71°." }],
+  ].map(([name, edit, o, expect]) => { const st = edit(STORMS["florence-coast"]); return { name, loc: st.loc, when: st.when, o: { ...st.o, ...o, storm: { ...st, name } }, expect }; }),
 ];
 
 /* labels are placed, not stamped: every chart's words sit inside its frame and clear of every
@@ -277,7 +346,7 @@ async function crowded(page) {
       const style = getComputedStyle(line), scale = Math.hypot(svg.getScreenCTM().a,svg.getScreenCTM().b);
       return (parseFloat(style.strokeWidth)||0) / 2 / (style.vectorEffect === "non-scaling-stroke" ? scale : 1);
     };
-    return ["hourlySvg", "weekSvg", "tideSvg", "moonSvg", "yearSvg"].flatMap((id) => {
+    return ["stormSvg", "hourlySvg", "weekSvg", "tideSvg", "moonSvg", "yearSvg"].flatMap((id) => {
     const svg = document.getElementById(id); if (!svg || !svg.getBoundingClientRect().height) return [];
     const proportional = id === "hourlySvg" || id === "weekSvg";
     const vb = svg.viewBox.baseVal, boxes = [...svg.querySelectorAll("text")].filter(e=>e.textContent.trim())
@@ -390,6 +459,48 @@ async function even(page) {
   });
 }
 
+/* A strip that wraps starts its next line with "· until ..." and never leaves a lone dot at the end of a
+   line: each " · " rides with the words after it. The same goes for every other line that joins its parts
+   with a dot, the storm card's warnings and sources and the named storm's line: at 320 and 330 the sources
+   read "Weather Service 10:55 am ·" / "advisory 57 10:44 am". Each line as it is laid out, character by
+   character, at every width */
+const DOT_LINES = { "#alertStrip.on .alert-head": "the strip", "#stormWarns": "the storm card's warnings", "#stormAsOf": "the storm card's sources", "#stormLineText": "the named storm's line" };
+const laidOut = (page, sel) => page.evaluate((sel) => {
+  const el = document.querySelector(sel);
+  if (!el || !el.getClientRects().length || el.closest("[hidden]")) return null;
+  const r = document.createRange(), lines = [], walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  for (let node; (node = walk.nextNode());) for (let i = 0; i < node.length; i++) {
+    r.setStart(node, i); r.setEnd(node, i + 1); const b = [...r.getClientRects()].find((x) => x.width > 0); if (!b) continue;
+    let ln = lines.find((l) => Math.abs(l.top - b.top) < 4); if (!ln) lines.push(ln = { top: b.top, s: "" }); ln.s += node.data[i];
+  }
+  return lines.sort((a, b) => a.top - b.top).map((l) => l.s.replace(/\s+/g, " ").trim()).filter(Boolean);
+}, sel);
+async function stripWrap(page) {
+  const out = [];
+  for (const [sel, name] of Object.entries(DOT_LINES)) {
+    const said = await laidOut(page, sel);
+    if (said && said.length > 1 && said.some((x) => /·$/.test(x))) out.push(`${name} wraps on a lone dot: ${said.map((x) => `"${x}"`).join(" / ")}`);
+  }
+  return out;
+}
+
+/* A winter warning's quoted title is at most three lines, at 18px at the least (17 under 360), and never
+   cut: when its sentence will not fit it is the warning's own shorter sentence or its name, and then the
+   whole sentence is on the card under the chart, once */
+async function stormTitleRule(page) {
+  return page.evaluate(() => {
+    const q = typeof STORM_FIT !== "undefined" && STORM_FIT, sec = document.getElementById("stormSection");
+    if (!q || sec.hidden) return [];
+    const t = document.getElementById("stormTitle"), head = document.getElementById("stormHead"), full = document.getElementById("stormFull"), out = [], shown = t.textContent;
+    const cs = getComputedStyle(t), px = parseFloat(cs.fontSize), lines = Math.round(t.getBoundingClientRect().height / parseFloat(cs.lineHeight)), min = innerWidth < 360 ? 17 : 18;
+    if (![q.text, q.short, q.name].includes(shown)) out.push(`the storm title "${shown}" is none of the warning's own sentences or its name`);
+    if (head.classList.contains("storm-quote") && (lines > 3 || px < min)) out.push(`the storm title is ${lines} lines at ${px}px: "${shown}"`);
+    if (shown !== q.text && (full.hidden || full.textContent !== q.text)) out.push(`the title is "${shown}" and the whole sentence is not under the chart: "${full.hidden ? "" : full.textContent}"`);
+    if (shown === q.text && !full.hidden) out.push(`the whole sentence is said twice: "${full.textContent}"`);
+    return out;
+  });
+}
+
 async function titlesFit(page) {
   return page.evaluate(() => [...document.querySelectorAll(".eyebrow")].filter((e) => e.offsetParent && !e.closest("[hidden]")).flatMap((e) => {
     const b = e.querySelector("b"), sp = e.querySelector("span"); if (!b || !sp || !sp.textContent.trim()) return [];
@@ -457,11 +568,18 @@ for (const cs of cases) {
     await page.evaluate(() => typeof PAINT !== "undefined" && PAINT);
     // settle the charts' entrance (a one-shot sweep that waits to be on screen) before looking
     await page.evaluate(() => typeof finishReveal === "function" && finishReveal());
-    for (const m of [...await crowded(page), ...await pillClear(page), ...await even(page)]) { failures++; console.log(`!! ${cs.name} at ${vp.w}: ${m}`); }
+    for (const m of [...await crowded(page), ...await pillClear(page), ...await even(page), ...await stripWrap(page), ...await stormTitleRule(page)]) { failures++; console.log(`!! ${cs.name} at ${vp.w}: ${m}`); }
     /* the narrowest phone is only measured: its words are the ones that crowd, and every title keeps
        its note on its own line */
     if (vp.tag === "narrow") {
       const wrapped = await titlesFit(page);
+      /* and the strip's head, which tied whole clauses together once and went to three lines here */
+      if (cs.expect?.stripLines) { const ln = await laidOut(page, "#alertStrip.on .alert-head"); if (!ln || ln.length > cs.expect.stripLines) wrapped.push(`the strip's head is ${ln ? ln.length : 0} lines, not ${cs.expect.stripLines} at most: ${(ln || []).map((x) => `"${x}"`).join(" / ")}`); }
+      /* and the storm card's title where the narrowest phone gives it less room */
+      for (const [k, id] of [["stormTitle320", "stormTitle"], ["stormFull320", "stormFull"]]) if (cs.expect && k in cs.expect) {
+        const got = await page.evaluate((id) => { const e = document.getElementById(id); return !e || e.hidden ? null : e.textContent.trim(); }, id);
+        if (got !== cs.expect[k]) wrapped.push(`${id} "${got}", expected "${cs.expect[k]}"`);
+      }
       for (const m of wrapped) { failures++; console.log(`!! ${cs.name} at 320: ${m}`); }
       if (errs.length) { failures++; console.log(`!! ${cs.name} ${vp.tag}: ${errs.join(" | ")}`); }
       await ctx.close(); continue;
@@ -512,7 +630,19 @@ for (const cs of cases) {
           sun: sunOff ? "(steps aside)" : T("uvLead"),
           uvBar: sunOff || document.getElementById("uvDetails")?.style.display === "none"
             ? null : document.getElementById("uvSvg")?.getAttribute("aria-label"),
-          tonight: T("eveLead"),
+          tonight: T("eveLead"), tonightCls: document.getElementById("eveLine").className.replace(/\b(lead|tonight-line)\b/g, "").trim() || null,
+          // the storm card and the named storm's line: what the page says when there is a storm
+          storm: { tier: typeof STORM_NOW !== "undefined" && STORM_NOW ? STORM_NOW.tier : null,
+            card: document.getElementById("stormSection").hidden ? null : { title: T("stormTitle"), note: T("stormNote"), full: shown("stormFull"), warns: shown("stormWarns"), say: shown("stormSay"), asOf: shown("stormAsOf"),
+              lanes: [...document.querySelectorAll("#stormSvg text")].filter((x) => x.getAttribute("font-size") === "10.5").map((x) => [x.textContent, x.nextElementSibling?.tagName === "text" && x.nextElementSibling.getAttribute("font-size") !== "10.5" ? x.nextElementSibling.textContent : ""].join(" ").trim()),
+              words: document.getElementById("stormSection").innerText + " " + document.getElementById("stormSvg").getAttribute("aria-label"),
+              /* the marks say what they are on the chart, and a window's ends are clean: the only fade is
+                 a window with no end yet, off the right edge */
+              legends: [...document.querySelectorAll("#stormSvg .storm-leg")].map((x) => x.textContent),
+              fades: [...document.querySelectorAll("#stormSvg linearGradient")].filter((g) => /^sg\d+f$/.test(g.id)).length,
+              bars: document.querySelectorAll("#stormSvg clipPath").length },
+            line: shown("stormLine") },
+          strip: document.getElementById("alertStrip").classList.contains("on") ? document.querySelector("#alertStrip .alert-head").textContent.trim() : null,
           tideNote: getComputedStyle(document.getElementById("tideSection")).display === "none" ? null : T("tideNote"),
           hourlyNote: T("hourlyNote"), weekNote: T("weekNote"),
           // the week's days, with the weekend's banded columns in brackets
@@ -596,6 +726,26 @@ for (const cs of cases) {
       if (ex.uvBar && !ex.uvBar.test(copy.uvBar || "")) fail(`sun bar "${copy.uvBar}"`);
       if ("marine" in ex && marineAsks !== ex.marine) fail(`${marineAsks} marine requests, expected ${ex.marine}`);
       for (const [k, re] of Object.entries(ex.xp || {})) if (!re.test(copy.xp[k] || "")) fail(`${k} pill "${copy.xp[k]}"`);
+      /* the storm card, the headline over it, the strip, and Tonight under it */
+      const is = (v, want) => want instanceof RegExp ? want.test(v ?? "") : (v ?? null) === want, sc = copy.storm, cd = sc.card || {};
+      if ("stormTier" in ex && sc.tier !== ex.stormTier) fail(`storm tier ${sc.tier}, expected ${ex.stormTier}`);
+      if ("stormTier" in ex && !!sc.card !== (ex.stormTier === "storm")) fail(`storm card ${sc.card ? "up" : "down"} for tier ${sc.tier}`);
+      if ("stormTier" in ex && !!sc.line !== (ex.stormTier === "named")) fail(`storm line ${sc.line ? "shown" : "hidden"} for tier ${sc.tier}`);
+      for (const [k, key] of [["stormTitle", "title"], ["stormNote", "note"], ["stormFull", "full"], ["stormWarns", "warns"], ["stormSay", "say"], ["stormAsOf", "asOf"]])
+        if (k in ex && !is(cd[key]?.replace(/\u00A0/g, " ") ?? null, ex[k])) fail(`storm ${key} "${cd[key]}", expected ${ex[k]}`);
+      if (ex.stormLanes && !ex.stormLanes.test((cd.lanes || []).join(" | ").replace(/\u00A0/g, " "))) fail(`storm lanes "${(cd.lanes || []).join(" | ")}"`);
+      if (ex.stormWords && !ex.stormWords.test((cd.words || "").replace(/\u00A0/g, " "))) fail(`storm card's words "${cd.words}", expected ${ex.stormWords}`);
+      if (ex.stormNoWords && ex.stormNoWords.test((cd.words || "").replace(/\u00A0/g, " "))) fail(`storm card says ${ex.stormNoWords}: "${cd.words}"`);
+      if (ex.stormLegends && (cd.legends || []).join() !== ex.stormLegends.join()) fail(`storm legends "${(cd.legends || []).join()}", expected ${ex.stormLegends.join()}`);
+      if ("stormFades" in ex && cd.fades !== ex.stormFades) fail(`${cd.fades} storm windows fade, expected ${ex.stormFades} of ${cd.bars}`);
+      if ("stormLine" in ex && !is(sc.line?.replace(/\u00A0/g, " "), ex.stormLine)) fail(`storm line "${sc.line}", expected ${ex.stormLine}`);
+      if ("headline" in ex && !is(copy.verdict, ex.headline)) fail(`headline "${copy.verdict}", expected ${ex.headline}`);
+      if ("strip" in ex && !is(copy.strip?.replace(/\u00A0/g, " "), ex.strip)) fail(`strip "${copy.strip}", expected ${ex.strip}`);
+      if ("tonight" in ex && copy.tonight !== ex.tonight) fail(`tonight "${copy.tonight}", expected "${ex.tonight}"`);
+      if ("tonightCls" in ex && copy.tonightCls !== ex.tonightCls) fail(`tonight coloured ${copy.tonightCls}, expected ${ex.tonightCls}`);
+      /* no TCV impacts word is ever a label, and nothing cheerful sits under a storm */
+      if (sc.card && /\b(unfolding|being assessed|devastating|catastrophic|extensive|significant|little to none)\b/i.test(cd.words)) fail(`a TCV impacts word on the card: ${cd.words.match(/\b(unfolding|being assessed|devastating|catastrophic|extensive|significant|little to none)\b/i)[0]}`);
+      if (sc.card && (/rain gear|warm night|Nice/i.test(copy.verdict + " " + copy.tonight) || card.cls === "go" || copy.tonightCls === "go")) fail("something cheerful under the storm card");
     }
     /* Reuse the settled phone for the intermediate widths. This exercises the actual loaded
        fonts without three more network loads or duplicate full-page captures per scenario. */
@@ -605,7 +755,7 @@ for (const cs of cases) {
          last stage to take the new width before measuring, or the charts measured are the old
          width's paint stretched to fit */
       await page.evaluate(async () => {clearTimeout(rzT);render(LAST.d,LAST.live,LAST.savedAt);await PAINT;finishReveal();});
-      for (const m of [...await crowded(page),...await pillClear(page),...await titlesFit(page),...await even(page)]) {
+      for (const m of [...await crowded(page),...await pillClear(page),...await titlesFit(page),...await even(page),...await stripWrap(page)]) {
         failures++;console.log(`!! ${cs.name} at ${width}: ${m}`);
       }
     }

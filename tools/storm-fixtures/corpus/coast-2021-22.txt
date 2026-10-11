@@ -1,0 +1,432 @@
+# ILM, Inland New Hanover (NCZ107): winter storm, blizzard and ice storm warnings, the 2021-22 winter, verbatim from Iowa State's AFOS archive (tools/storm-corpus.mjs)
+%% WSWILM 2022-01-20T08:57:00Z NCZ107
+WWUS42 KILM 200857
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+357 AM EST Thu Jan 20 2022
+
+NCZ096-099-105>110-SCZ054-058-059-201700-
+/O.UPG.KILM.WS.A.0002.220121T0500Z-220122T1700Z/
+/O.NEW.KILM.IS.W.0001.220121T0500Z-220122T1700Z/
+Bladen-Columbus-Inland Pender-Coastal Pender-Inland New Hanover-
+Coastal New Hanover-Inland Brunswick-Coastal Brunswick-
+Coastal Horry-Central Horry-Northern Horry-
+Including the cities of Elizabethtown, Bladenboro, Whiteville, 
+Tabor City, Chadbourn, Lake Waccamaw, Burgaw, Surf City, 
+Wilmington, Masonboro, Myrtle Grove, Ogden, Carolina Beach, 
+Seagate, Boiling Spring Lakes, Leland, Shallotte, Oak Island, 
+Long Beach, Southport, Sunset Beach, Myrtle Beach, Socastee, 
+North Myrtle Beach, Garden City, Little River, Conway, Longs, 
+Bucksport, Loris, Green Sea, and Aynor
+357 AM EST Thu Jan 20 2022
+
+...ICE STORM WARNING IN EFFECT FROM MIDNIGHT TONIGHT TO NOON EST
+SATURDAY...
+
+* WHAT...Significant icing expected. Periods of freezing rain will
+  result in total ice accumulations ranging between 0.20 to 0.30
+  inches, with locally higher amounts possible. The freezing rain
+  may mix with or change to a period of sleet and or snow prior to
+  ending late Friday Night or early Saturday. A trace to less than
+  one-quarter of an inch sleet and snow accumulation is possible.
+
+* WHERE...Portions of northeast South Carolina and southeast 
+  North Carolina.
+
+* WHEN...From midnight tonight to noon EST Saturday.
+
+* IMPACTS...The forecast ice accumulations will make traveling
+  extremely hazardous if not impossible. Scattered to numerous
+  power outages and tree damage will occur. 
+
+* ADDITIONAL DETAILS...Temperatures during Friday will hold at or
+  below 32 degrees, before dropping well into the 20s Friday night
+  into early Saturday. 
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+Travel is strongly discouraged. If you must travel, keep an extra
+flashlight, food and water in your vehicle in case of an
+emergency. Prepare for power outages. 
+
+The latest road conditions for the state you are calling from can
+be obtained by calling 5 1 1.
+
+&&
+
+$$
+
+%% WSWILM 2022-01-20T16:35:00Z NCZ107
+WWUS42 KILM 201635
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+1135 AM EST Thu Jan 20 2022
+
+NCZ096-099-105>110-SCZ054-058-059-210500-
+/O.CON.KILM.IS.W.0001.220121T0500Z-220122T1700Z/
+Bladen-Columbus-Inland Pender-Coastal Pender-Inland New Hanover-
+Coastal New Hanover-Inland Brunswick-Coastal Brunswick-
+Coastal Horry-Central Horry-Northern Horry-
+Including the cities of Elizabethtown, Bladenboro, Whiteville, 
+Tabor City, Chadbourn, Lake Waccamaw, Burgaw, Surf City, 
+Wilmington, Masonboro, Myrtle Grove, Ogden, Carolina Beach, 
+Seagate, Boiling Spring Lakes, Leland, Shallotte, Oak Island, 
+Long Beach, Southport, Sunset Beach, Myrtle Beach, Socastee, 
+North Myrtle Beach, Garden City, Little River, Conway, Longs, 
+Bucksport, Loris, Green Sea, and Aynor
+1135 AM EST Thu Jan 20 2022
+
+...ICE STORM WARNING REMAINS IN EFFECT FROM MIDNIGHT TONIGHT TO
+NOON EST SATURDAY...
+
+* WHAT...Significant icing expected. Periods of freezing rain 
+  will result in total ice accumulations ranging between 0.20 to 
+  0.30 inches, with locally higher amounts possible. The 
+  freezing rain may mix with or change to a period of sleet and 
+  or snow prior to ending late Friday Night or early Saturday. A 
+  trace to less than one-quarter of an inch sleet and snow 
+  accumulation is possible.
+
+* WHERE...Portions of northeast South Carolina and southeast 
+  North Carolina.
+
+* WHEN...From midnight tonight to noon EST Saturday.
+
+* IMPACTS...The forecast ice accumulations will make traveling 
+  extremely hazardous if not impossible. Scattered to numerous 
+  power outages and tree damage will occur.
+
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+Travel is strongly discouraged. If you must travel, keep an extra
+flashlight, food and water in your vehicle in case of an
+emergency. Prepare for possible power outages. 
+
+The latest road conditions for the state you are calling from can
+be obtained by calling 5 1 1.
+
+&&
+
+$$
+
+%% WSWILM 2022-01-21T05:13:00Z NCZ107
+WWUS42 KILM 210513
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+1213 AM EST Fri Jan 21 2022
+
+NCZ096-099-105>110-SCZ054-058-059-211000-
+/O.CON.KILM.IS.W.0001.000000T0000Z-220122T1700Z/
+Bladen-Columbus-Inland Pender-Coastal Pender-Inland New Hanover-
+Coastal New Hanover-Inland Brunswick-Coastal Brunswick-
+Coastal Horry-Central Horry-Northern Horry-
+Including the cities of Elizabethtown, Bladenboro, Whiteville, 
+Tabor City, Chadbourn, Lake Waccamaw, Burgaw, Surf City, 
+Wilmington, Masonboro, Myrtle Grove, Ogden, Carolina Beach, 
+Seagate, Boiling Spring Lakes, Leland, Shallotte, Oak Island, 
+Long Beach, Southport, Sunset Beach, Myrtle Beach, Socastee, 
+North Myrtle Beach, Garden City, Little River, Conway, Longs, 
+Bucksport, Loris, Green Sea, and Aynor
+1213 AM EST Fri Jan 21 2022
+
+...ICE STORM WARNING REMAINS IN EFFECT UNTIL NOON EST SATURDAY...
+
+* WHAT...Significant icing expected. Periods of freezing rain 
+  will result in total ice accumulations ranging between 0.20 to 
+  0.30 inches, with locally higher amounts possible. The 
+  freezing rain may mix with or change to a period of sleet and 
+  or snow prior to ending late Friday Night or early Saturday. A 
+  trace to less than one-quarter of an inch sleet and snow 
+  accumulation is possible.
+
+* WHERE...Portions of northeast South Carolina and southeast 
+  North Carolina.
+
+* WHEN...From midnight tonight to noon EST Saturday.
+
+* IMPACTS...The forecast ice accumulations will make traveling 
+  extremely hazardous if not impossible. Scattered to numerous 
+  power outages and tree damage will occur.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+Travel is strongly discouraged. If you must travel, keep an extra
+flashlight, food and water in your vehicle in case of an
+emergency. Prepare for possible power outages. 
+
+The latest road conditions for the state you are calling from can
+be obtained by calling 5 1 1.
+
+&&
+
+$$
+
+%% WSWILM 2022-01-21T09:41:00Z NCZ107
+WWUS42 KILM 210941
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+441 AM EST Fri Jan 21 2022
+
+NCZ096-099-105>110-SCZ054-058-059-211745-
+/O.CON.KILM.IS.W.0001.000000T0000Z-220122T1700Z/
+Bladen-Columbus-Inland Pender-Coastal Pender-Inland New Hanover-
+Coastal New Hanover-Inland Brunswick-Coastal Brunswick-
+Coastal Horry-Central Horry-Northern Horry-
+Including the cities of Elizabethtown, Bladenboro, Whiteville, 
+Tabor City, Chadbourn, Lake Waccamaw, Burgaw, Surf City, 
+Wilmington, Masonboro, Myrtle Grove, Ogden, Carolina Beach, 
+Seagate, Boiling Spring Lakes, Leland, Shallotte, Oak Island, 
+Long Beach, Southport, Sunset Beach, Myrtle Beach, Socastee, 
+North Myrtle Beach, Garden City, Little River, Conway, Longs, 
+Bucksport, Loris, Green Sea, and Aynor
+441 AM EST Fri Jan 21 2022
+
+...ICE STORM WARNING REMAINS IN EFFECT UNTIL NOON EST SATURDAY...
+
+* WHAT...Significant icing expected. Periods of freezing rain will
+  result in total ice accumulations ranging between 0.20 to 0.40
+  inches, with locally higher amounts possible. The freezing rain
+  may mix with or change to a period of sleet and or snow prior to
+  ending early Saturday morning. Northern areas could see half
+  inch or greater of snow and sleet accumulation.
+
+* WHERE...Portions of northeast South Carolina and southeast 
+  North Carolina.
+
+* WHEN...From midnight tonight to noon EST Saturday.
+
+* IMPACTS...The forecast ice accumulations will make traveling 
+  extremely hazardous if not impossible. Scattered to numerous 
+  power outages and tree damage will occur.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+Travel is strongly discouraged. If you must travel, keep an extra
+flashlight, food and water in your vehicle in case of an
+emergency. Prepare for possible power outages. 
+
+The latest road conditions for the state you are calling from can
+be obtained by calling 5 1 1.
+
+&&
+
+$$
+
+%% WSWILM 2022-01-21T09:42:00Z NCZ107
+WWUS42 KILM 210942
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+442 AM EST Fri Jan 21 2022
+
+NCZ096-099-105>110-SCZ054-058-059-211700-
+/O.CON.KILM.IS.W.0001.000000T0000Z-220122T1700Z/
+Bladen-Columbus-Inland Pender-Coastal Pender-Inland New Hanover-
+Coastal New Hanover-Inland Brunswick-Coastal Brunswick-
+Coastal Horry-Central Horry-Northern Horry-
+Including the cities of Elizabethtown, Bladenboro, Whiteville, 
+Tabor City, Chadbourn, Lake Waccamaw, Burgaw, Surf City, 
+Wilmington, Masonboro, Myrtle Grove, Ogden, Carolina Beach, 
+Seagate, Boiling Spring Lakes, Leland, Shallotte, Oak Island, 
+Long Beach, Southport, Sunset Beach, Myrtle Beach, Socastee, 
+North Myrtle Beach, Garden City, Little River, Conway, Longs, 
+Bucksport, Loris, Green Sea, and Aynor
+442 AM EST Fri Jan 21 2022
+
+...ICE STORM WARNING REMAINS IN EFFECT UNTIL NOON EST SATURDAY...
+
+* WHAT...Significant icing expected. Periods of freezing rain 
+  will result in total ice accumulations ranging between 0.20 to 
+  0.40 inches, with locally higher amounts possible. The 
+  freezing rain may mix with or change to a period of sleet and 
+  or snow prior to ending early Saturday morning. Northern areas 
+  could see half inch or greater of snow and sleet accumulation.
+
+* WHERE...Portions of northeast South Carolina and southeast 
+  North Carolina.
+
+* WHEN...From midnight tonight to noon EST Saturday.
+
+* IMPACTS...The forecast ice accumulations will make traveling 
+  extremely hazardous if not impossible. Scattered to numerous 
+  power outages and tree damage will occur.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+Travel is strongly discouraged. If you must travel, keep an extra
+flashlight, food and water in your vehicle in case of an
+emergency. Prepare for possible power outages. 
+
+The latest road conditions for the state you are calling from can
+be obtained by calling 5 1 1.
+
+&&
+
+$$
+
+%% WSWILM 2022-01-21T15:30:00Z NCZ107
+WWUS42 KILM 211530
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+1030 AM EST Fri Jan 21 2022
+
+NCZ096-099-105>110-SCZ054-058-059-212330-
+/O.CON.KILM.IS.W.0001.000000T0000Z-220122T1700Z/
+Bladen-Columbus-Inland Pender-Coastal Pender-Inland New Hanover-
+Coastal New Hanover-Inland Brunswick-Coastal Brunswick-
+Coastal Horry-Central Horry-Northern Horry-
+Including the cities of Elizabethtown, Bladenboro, Whiteville, 
+Tabor City, Chadbourn, Lake Waccamaw, Burgaw, Surf City, 
+Wilmington, Masonboro, Myrtle Grove, Ogden, Carolina Beach, 
+Seagate, Boiling Spring Lakes, Leland, Shallotte, Oak Island, 
+Long Beach, Southport, Sunset Beach, Myrtle Beach, Socastee, 
+North Myrtle Beach, Garden City, Little River, Conway, Longs, 
+Bucksport, Loris, Green Sea, and Aynor
+1030 AM EST Fri Jan 21 2022
+
+...ICE STORM WARNING REMAINS IN EFFECT UNTIL NOON EST SATURDAY...
+
+* WHAT...Significant icing expected. Periods of freezing rain 
+  will result in total ice accumulations ranging between 0.20 to 
+  0.40 inches, with locally higher amounts possible. The 
+  freezing rain may mix with or change to a period of sleet and 
+  or snow prior to ending early Saturday morning. Northern areas 
+  could see half inch or greater of snow and sleet accumulation.
+
+* WHERE...Portions of northeast South Carolina and southeast 
+  North Carolina.
+
+* WHEN...Until noon EST Saturday.
+
+* IMPACTS...The forecast ice accumulations will make traveling 
+  extremely hazardous if not impossible. Scattered to numerous 
+  power outages and tree damage will occur.
+
+* ADDITIONAL DETAILS...Conditions will worsen through the
+  afternoon as areas of light freezing rain expand from south to 
+  north.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+Travel is strongly discouraged. If you must travel, keep an extra
+flashlight, food and water in your vehicle in case of an
+emergency. Prepare for possible power outages.
+
+The latest road conditions for the state you are calling from can
+be obtained by calling 5 1 1.
+
+&&
+
+$$
+
+%% WSWILM 2022-01-21T21:18:00Z NCZ107
+WWUS42 KILM 212118
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+418 PM EST Fri Jan 21 2022
+
+NCZ096-099-105>110-SCZ054-058-059-220530-
+/O.CON.KILM.IS.W.0001.000000T0000Z-220122T1700Z/
+Bladen-Columbus-Inland Pender-Coastal Pender-Inland New Hanover-
+Coastal New Hanover-Inland Brunswick-Coastal Brunswick-
+Coastal Horry-Central Horry-Northern Horry-
+Including the cities of Elizabethtown, Bladenboro, Whiteville, 
+Tabor City, Chadbourn, Lake Waccamaw, Burgaw, Surf City, 
+Wilmington, Masonboro, Myrtle Grove, Ogden, Carolina Beach, 
+Seagate, Boiling Spring Lakes, Leland, Shallotte, Oak Island, 
+Long Beach, Southport, Sunset Beach, Myrtle Beach, Socastee, 
+North Myrtle Beach, Garden City, Little River, Conway, Longs, 
+Bucksport, Loris, Green Sea, and Aynor
+418 PM EST Fri Jan 21 2022
+
+...ICE STORM WARNING REMAINS IN EFFECT UNTIL NOON EST SATURDAY...
+
+* WHAT...Significant icing expected. Periods of freezing rain will
+  result in total ice accumulations ranging between 0.20 to 0.40
+  inches, with locally higher amounts possible. The freezing rain
+  may mix with or change to a period of sleet and or snow prior to
+  ending early Saturday morning. Northern areas could see half to
+  one inch or greater of snow and sleet accumulation.
+
+* WHERE...Portions of northeast South Carolina and southeast 
+  North Carolina.
+
+* WHEN...Until noon EST Saturday.
+
+* IMPACTS...The forecast ice accumulations will make traveling 
+  extremely hazardous if not impossible. Scattered to numerous 
+  power outages and tree damage will occur.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+Travel is strongly discouraged. If you must travel, keep an extra
+flashlight, food and water in your vehicle in case of an
+emergency. Prepare for possible power outages. 
+
+The latest road conditions for the state you are calling from can
+be obtained by calling 5 1 1.
+
+&&
+
+$$
+
+%% WSWILM 2022-01-22T05:01:00Z NCZ107
+WWUS42 KILM 220501
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+1201 AM EST Sat Jan 22 2022
+
+NCZ096-099-105>110-SCZ054-058-059-221315-
+/O.CON.KILM.IS.W.0001.000000T0000Z-220122T1700Z/
+Bladen-Columbus-Inland Pender-Coastal Pender-Inland New Hanover-
+Coastal New Hanover-Inland Brunswick-Coastal Brunswick-
+Coastal Horry-Central Horry-Northern Horry-
+Including the cities of Elizabethtown, Bladenboro, Whiteville, 
+Tabor City, Chadbourn, Lake Waccamaw, Burgaw, Surf City, 
+Wilmington, Masonboro, Myrtle Grove, Ogden, Carolina Beach, 
+Seagate, Boiling Spring Lakes, Leland, Shallotte, Oak Island, 
+Long Beach, Southport, Sunset Beach, Myrtle Beach, Socastee, 
+North Myrtle Beach, Garden City, Little River, Conway, Longs, 
+Bucksport, Loris, Green Sea, and Aynor
+1201 AM EST Sat Jan 22 2022
+
+...ICE STORM WARNING REMAINS IN EFFECT UNTIL NOON EST TODAY...
+
+* WHAT...Significant icing up to an additional one-tenth inch. 
+  Additional snow and sleet accumulations of up to one inch.
+
+* WHERE...Portions of northeast South Carolina and southeast 
+  North Carolina.
+
+* WHEN...Until noon EST today.
+
+* IMPACTS...Plan on slippery road conditions.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+Travel is strongly discouraged. If you must travel, keep an extra
+flashlight, food and water in your vehicle in case of an
+emergency. Prepare for possible power outages. 
+
+The latest road conditions for the state you are calling from can
+be obtained by calling 5 1 1.
+
+&&
+
+$$

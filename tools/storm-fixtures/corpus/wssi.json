@@ -1,0 +1,1069 @@
+{
+ "source": "WPC's WSSI_Maximum_Overall GeoTIFFs and its three days' WSSI_Overall fhr24, fhr48 and fhr72 GeoTIFFs, ftp-wpc.ncep.noaa.gov/WSSI_Archive/David_Archive/, at each place's grid cell (tools/storm-corpus.mjs wssi)",
+ "readings": {
+  "coast 2022-01-20T08:57:00Z": {
+   "cycle": "2022-01-20T06Z",
+   "impact": "MINOR",
+   "days": [
+    null,
+    "MINOR",
+    "MINOR"
+   ]
+  },
+  "coast 2022-01-20T16:35:00Z": {
+   "cycle": "2022-01-20T12Z",
+   "missing": true
+  },
+  "coast 2022-01-21T05:13:00Z": {
+   "cycle": "2022-01-21T00Z",
+   "missing": true
+  },
+  "coast 2022-01-21T09:41:00Z": {
+   "cycle": "2022-01-21T06Z",
+   "impact": "MODERATE",
+   "days": [
+    "MODERATE",
+    "MODERATE",
+    null
+   ]
+  },
+  "coast 2022-01-21T09:42:00Z": {
+   "cycle": "2022-01-21T06Z",
+   "impact": "MODERATE",
+   "days": [
+    "MODERATE",
+    "MODERATE",
+    null
+   ]
+  },
+  "coast 2022-01-21T15:30:00Z": {
+   "cycle": "2022-01-21T12Z",
+   "missing": true
+  },
+  "coast 2022-01-21T21:18:00Z": {
+   "cycle": "2022-01-21T18Z",
+   "missing": true
+  },
+  "coast 2022-01-22T05:01:00Z": {
+   "cycle": "2022-01-22T00Z",
+   "missing": true
+  },
+  "coast 2025-01-21T07:43:00Z": {
+   "cycle": "2025-01-21T06Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    "MINOR",
+    null
+   ]
+  },
+  "coast 2025-01-21T17:16:00Z": {
+   "cycle": "2025-01-21T12Z",
+   "missing": true
+  },
+  "coast 2025-01-21T21:17:00Z": {
+   "cycle": "2025-01-21T18Z",
+   "missing": true
+  },
+  "coast 2025-01-22T09:00:00Z": {
+   "cycle": "2025-01-22T06Z",
+   "impact": "MODERATE",
+   "days": [
+    "MODERATE",
+    null,
+    null
+   ]
+  },
+  "coast 2026-01-30T05:46:00Z": {
+   "cycle": "2026-01-30T00Z",
+   "impact": "MAJOR",
+   "days": [
+    null,
+    "MINOR",
+    "MAJOR"
+   ]
+  },
+  "coast 2026-01-30T17:07:00Z": {
+   "cycle": "2026-01-30T12Z",
+   "impact": "MAJOR",
+   "days": [
+    "WINTER WEATHER AREA",
+    "MAJOR",
+    "MAJOR"
+   ]
+  },
+  "coast 2026-01-31T00:57:00Z": {
+   "cycle": "2026-01-31T00Z",
+   "impact": "MAJOR",
+   "days": [
+    "MINOR",
+    "MAJOR",
+    null
+   ]
+  },
+  "coast 2026-01-31T05:57:00Z": {
+   "cycle": "2026-01-31T00Z",
+   "impact": "MAJOR",
+   "days": [
+    "MINOR",
+    "MAJOR",
+    null
+   ]
+  },
+  "coast 2026-01-31T17:46:00Z": {
+   "cycle": "2026-01-31T12Z",
+   "impact": "MAJOR",
+   "days": [
+    "MAJOR",
+    "MAJOR",
+    null
+   ]
+  },
+  "coast 2026-02-01T05:21:00Z": {
+   "cycle": "2026-02-01T00Z",
+   "impact": "MAJOR",
+   "days": [
+    "MAJOR",
+    null,
+    null
+   ]
+  },
+  "farm 2020-12-15T09:32:00Z": {
+   "cycle": "2020-12-15T06Z",
+   "impact": "MINOR",
+   "days": [
+    null,
+    "MINOR",
+    "WINTER WEATHER AREA"
+   ]
+  },
+  "farm 2020-12-15T19:07:00Z": {
+   "cycle": "2020-12-15T18Z",
+   "missing": true
+  },
+  "farm 2020-12-16T03:18:00Z": {
+   "cycle": "2020-12-16T00Z",
+   "missing": true
+  },
+  "farm 2020-12-16T09:01:00Z": {
+   "cycle": "2020-12-16T06Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    "MINOR",
+    null
+   ]
+  },
+  "farm 2020-12-16T12:09:00Z": {
+   "cycle": "2020-12-16T06Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    "MINOR",
+    null
+   ]
+  },
+  "farm 2020-12-16T16:54:00Z": {
+   "cycle": "2020-12-16T12Z",
+   "missing": true
+  },
+  "farm 2020-12-16T18:54:00Z": {
+   "cycle": "2020-12-16T18Z",
+   "missing": true
+  },
+  "farm 2020-12-17T02:17:00Z": {
+   "cycle": "2020-12-17T00Z",
+   "missing": true
+  },
+  "farm 2020-12-17T05:35:00Z": {
+   "cycle": "2020-12-17T00Z",
+   "missing": true
+  },
+  "farm 2020-12-23T18:32:00Z": {
+   "cycle": "2020-12-23T18Z",
+   "missing": true
+  },
+  "farm 2020-12-23T21:19:00Z": {
+   "cycle": "2020-12-23T18Z",
+   "missing": true
+  },
+  "farm 2020-12-24T03:13:00Z": {
+   "cycle": "2020-12-24T00Z",
+   "missing": true
+  },
+  "farm 2020-12-24T09:59:00Z": {
+   "cycle": "2020-12-24T06Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    "MINOR",
+    null
+   ]
+  },
+  "farm 2020-12-24T17:37:00Z": {
+   "cycle": "2020-12-24T12Z",
+   "missing": true
+  },
+  "farm 2020-12-25T02:07:00Z": {
+   "cycle": "2020-12-25T00Z",
+   "missing": true
+  },
+  "farm 2020-12-25T02:33:00Z": {
+   "cycle": "2020-12-25T00Z",
+   "missing": true
+  },
+  "farm 2020-12-25T03:33:00Z": {
+   "cycle": "2020-12-25T00Z",
+   "missing": true
+  },
+  "farm 2020-12-25T08:09:00Z": {
+   "cycle": "2020-12-25T06Z",
+   "impact": "WINTER WEATHER AREA",
+   "days": [
+    "WINTER WEATHER AREA",
+    "WINTER WEATHER AREA",
+    null
+   ]
+  },
+  "farm 2021-01-30T09:37:00Z": {
+   "cycle": "2021-01-30T06Z",
+   "impact": "MINOR",
+   "days": [
+    "WINTER WEATHER AREA",
+    "MINOR",
+    "WINTER WEATHER AREA"
+   ]
+  },
+  "farm 2021-01-30T17:28:00Z": {
+   "cycle": "2021-01-30T12Z",
+   "missing": true
+  },
+  "farm 2021-01-30T23:54:00Z": {
+   "cycle": "2021-01-30T18Z",
+   "missing": true
+  },
+  "farm 2021-01-31T04:57:00Z": {
+   "cycle": "2021-01-31T00Z",
+   "missing": true
+  },
+  "farm 2021-01-31T11:48:00Z": {
+   "cycle": "2021-01-31T06Z",
+   "missing": true
+  },
+  "farm 2021-01-31T14:23:00Z": {
+   "cycle": "2021-01-31T12Z",
+   "missing": true
+  },
+  "farm 2021-02-11T08:17:00Z": {
+   "cycle": "2021-02-11T06Z",
+   "missing": true
+  },
+  "farm 2021-02-11T14:09:00Z": {
+   "cycle": "2021-02-11T12Z",
+   "impact": "MODERATE",
+   "days": [
+    "MODERATE",
+    "MODERATE",
+    "WINTER WEATHER AREA"
+   ]
+  },
+  "farm 2021-02-11T19:05:00Z": {
+   "cycle": "2021-02-11T18Z",
+   "missing": true
+  },
+  "farm 2021-02-12T03:03:00Z": {
+   "cycle": "2021-02-12T00Z",
+   "missing": true
+  },
+  "farm 2021-02-17T09:18:00Z": {
+   "cycle": "2021-02-17T06Z",
+   "impact": "MODERATE",
+   "days": [
+    "WINTER WEATHER AREA",
+    "MODERATE",
+    "WINTER WEATHER AREA"
+   ]
+  },
+  "farm 2021-02-17T09:53:00Z": {
+   "cycle": "2021-02-17T06Z",
+   "impact": "MODERATE",
+   "days": [
+    "WINTER WEATHER AREA",
+    "MODERATE",
+    "WINTER WEATHER AREA"
+   ]
+  },
+  "farm 2021-02-17T15:58:00Z": {
+   "cycle": "2021-02-17T12Z",
+   "missing": true
+  },
+  "farm 2021-02-17T20:01:00Z": {
+   "cycle": "2021-02-17T18Z",
+   "missing": true
+  },
+  "farm 2021-02-17T22:50:00Z": {
+   "cycle": "2021-02-17T18Z",
+   "missing": true
+  },
+  "farm 2021-02-18T03:04:00Z": {
+   "cycle": "2021-02-18T00Z",
+   "missing": true
+  },
+  "farm 2021-02-18T08:14:00Z": {
+   "cycle": "2021-02-18T06Z",
+   "missing": true
+  },
+  "farm 2021-02-18T10:47:00Z": {
+   "cycle": "2021-02-18T06Z",
+   "missing": true
+  },
+  "farm 2021-02-18T15:53:00Z": {
+   "cycle": "2021-02-18T12Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    null,
+    null
+   ]
+  },
+  "farm 2022-01-02T21:54:00Z": {
+   "cycle": "2022-01-02T18Z",
+   "missing": true
+  },
+  "farm 2022-01-03T05:49:00Z": {
+   "cycle": "2022-01-03T00Z",
+   "missing": true
+  },
+  "farm 2022-01-05T18:35:00Z": {
+   "cycle": "2022-01-05T18Z",
+   "missing": true
+  },
+  "farm 2022-01-06T05:17:00Z": {
+   "cycle": "2022-01-06T00Z",
+   "missing": true
+  },
+  "farm 2022-01-06T06:28:00Z": {
+   "cycle": "2022-01-06T06Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    "MINOR",
+    null
+   ]
+  },
+  "farm 2022-01-06T12:00:00Z": {
+   "cycle": "2022-01-06T06Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    "MINOR",
+    null
+   ]
+  },
+  "farm 2022-01-06T19:01:00Z": {
+   "cycle": "2022-01-06T18Z",
+   "missing": true
+  },
+  "farm 2022-01-07T01:41:00Z": {
+   "cycle": "2022-01-07T00Z",
+   "missing": true
+  },
+  "farm 2022-01-07T08:38:00Z": {
+   "cycle": "2022-01-07T06Z",
+   "impact": "WINTER WEATHER AREA",
+   "days": [
+    "WINTER WEATHER AREA",
+    null,
+    "WINTER WEATHER AREA"
+   ]
+  },
+  "farm 2022-01-15T18:53:00Z": {
+   "cycle": "2022-01-15T18Z",
+   "missing": true
+  },
+  "farm 2022-01-16T02:49:00Z": {
+   "cycle": "2022-01-16T00Z",
+   "missing": true
+  },
+  "farm 2022-01-16T10:55:00Z": {
+   "cycle": "2022-01-16T06Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    "MINOR",
+    "WINTER WEATHER AREA"
+   ]
+  },
+  "farm 2022-01-16T13:23:00Z": {
+   "cycle": "2022-01-16T12Z",
+   "missing": true
+  },
+  "farm 2022-01-16T18:52:00Z": {
+   "cycle": "2022-01-16T18Z",
+   "missing": true
+  },
+  "farm 2022-01-17T03:14:00Z": {
+   "cycle": "2022-01-17T00Z",
+   "missing": true
+  },
+  "farm 2022-01-17T09:32:00Z": {
+   "cycle": "2022-01-17T06Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    null,
+    null
+   ]
+  },
+  "farm 2022-01-17T13:46:00Z": {
+   "cycle": "2022-01-17T12Z",
+   "missing": true
+  },
+  "farm 2022-01-17T14:58:00Z": {
+   "cycle": "2022-01-17T12Z",
+   "missing": true
+  },
+  "farm 2022-01-17T17:56:00Z": {
+   "cycle": "2022-01-17T12Z",
+   "missing": true
+  },
+  "farm 2022-03-11T08:19:00Z": {
+   "cycle": "2022-03-11T06Z",
+   "impact": "MINOR",
+   "days": [
+    null,
+    "MINOR",
+    "WINTER WEATHER AREA"
+   ]
+  },
+  "farm 2022-03-11T14:18:00Z": {
+   "cycle": "2022-03-11T12Z",
+   "missing": true
+  },
+  "farm 2022-03-11T19:28:00Z": {
+   "cycle": "2022-03-11T18Z",
+   "missing": true
+  },
+  "farm 2022-03-12T02:16:00Z": {
+   "cycle": "2022-03-12T00Z",
+   "missing": true
+  },
+  "farm 2022-03-12T11:01:00Z": {
+   "cycle": "2022-03-12T06Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    "WINTER WEATHER AREA",
+    null
+   ]
+  },
+  "farm 2022-03-12T18:54:00Z": {
+   "cycle": "2022-03-12T18Z",
+   "missing": true
+  },
+  "farm 2024-01-14T19:17:00Z": {
+   "cycle": "2024-01-14T18Z",
+   "missing": true
+  },
+  "farm 2024-01-15T03:13:00Z": {
+   "cycle": "2024-01-15T00Z",
+   "missing": true
+  },
+  "farm 2024-01-15T08:44:00Z": {
+   "cycle": "2024-01-15T06Z",
+   "missing": true
+  },
+  "farm 2024-01-15T15:32:00Z": {
+   "cycle": "2024-01-15T12Z",
+   "missing": true
+  },
+  "farm 2024-01-15T16:45:00Z": {
+   "cycle": "2024-01-15T12Z",
+   "missing": true
+  },
+  "farm 2024-01-15T23:57:00Z": {
+   "cycle": "2024-01-15T18Z",
+   "missing": true
+  },
+  "farm 2024-01-16T07:40:00Z": {
+   "cycle": "2024-01-16T06Z",
+   "missing": true
+  },
+  "farm 2024-01-18T08:28:00Z": {
+   "cycle": "2024-01-18T06Z",
+   "missing": true
+  },
+  "farm 2024-01-18T15:07:00Z": {
+   "cycle": "2024-01-18T12Z",
+   "missing": true
+  },
+  "farm 2024-01-18T18:54:00Z": {
+   "cycle": "2024-01-18T18Z",
+   "missing": true
+  },
+  "farm 2024-01-19T01:29:00Z": {
+   "cycle": "2024-01-19T00Z",
+   "missing": true
+  },
+  "farm 2024-01-19T08:53:00Z": {
+   "cycle": "2024-01-19T06Z",
+   "missing": true
+  },
+  "farm 2024-01-19T17:56:00Z": {
+   "cycle": "2024-01-19T12Z",
+   "missing": true
+  },
+  "farm 2024-01-19T19:35:00Z": {
+   "cycle": "2024-01-19T18Z",
+   "missing": true
+  },
+  "farm 2024-01-19T20:03:00Z": {
+   "cycle": "2024-01-19T18Z",
+   "missing": true
+  },
+  "farm 2024-01-20T02:43:00Z": {
+   "cycle": "2024-01-20T00Z",
+   "missing": true
+  },
+  "farm 2024-01-20T10:14:00Z": {
+   "cycle": "2024-01-20T06Z",
+   "missing": true
+  },
+  "farm 2024-01-20T12:02:00Z": {
+   "cycle": "2024-01-20T06Z",
+   "missing": true
+  },
+  "farm 2025-01-04T19:19:00Z": {
+   "cycle": "2025-01-04T18Z",
+   "missing": true
+  },
+  "farm 2025-01-05T02:27:00Z": {
+   "cycle": "2025-01-05T00Z",
+   "missing": true
+  },
+  "farm 2025-01-05T10:24:00Z": {
+   "cycle": "2025-01-05T06Z",
+   "impact": "MAJOR",
+   "days": [
+    "MODERATE",
+    "MAJOR",
+    "WINTER WEATHER AREA"
+   ]
+  },
+  "farm 2025-01-05T16:16:00Z": {
+   "cycle": "2025-01-05T12Z",
+   "missing": true
+  },
+  "farm 2025-01-05T19:07:00Z": {
+   "cycle": "2025-01-05T18Z",
+   "missing": true
+  },
+  "farm 2025-01-05T22:36:00Z": {
+   "cycle": "2025-01-05T18Z",
+   "missing": true
+  },
+  "farm 2025-01-06T06:12:00Z": {
+   "cycle": "2025-01-06T00Z",
+   "missing": true
+  },
+  "farm 2025-01-06T14:30:00Z": {
+   "cycle": "2025-01-06T12Z",
+   "missing": true
+  },
+  "farm 2025-01-06T22:11:00Z": {
+   "cycle": "2025-01-06T18Z",
+   "missing": true
+  },
+  "farm 2025-01-07T00:11:00Z": {
+   "cycle": "2025-01-06T18Z",
+   "missing": true
+  },
+  "farm 2025-01-07T03:11:00Z": {
+   "cycle": "2025-01-07T00Z",
+   "missing": true
+  },
+  "farm 2025-01-07T05:47:00Z": {
+   "cycle": "2025-01-07T00Z",
+   "missing": true
+  },
+  "farm 2025-01-10T09:42:00Z": {
+   "cycle": "2025-01-10T06Z",
+   "impact": "MINOR",
+   "days": [
+    "WINTER WEATHER AREA",
+    "MINOR",
+    "WINTER WEATHER AREA"
+   ]
+  },
+  "farm 2025-01-10T17:23:00Z": {
+   "cycle": "2025-01-10T12Z",
+   "missing": true
+  },
+  "farm 2025-01-10T23:39:00Z": {
+   "cycle": "2025-01-10T18Z",
+   "missing": true
+  },
+  "farm 2025-01-11T07:49:00Z": {
+   "cycle": "2025-01-11T06Z",
+   "impact": "WINTER WEATHER AREA",
+   "days": [
+    "WINTER WEATHER AREA",
+    "WINTER WEATHER AREA",
+    null
+   ]
+  },
+  "farm 2025-01-11T15:59:00Z": {
+   "cycle": "2025-01-11T12Z",
+   "missing": true
+  },
+  "farm 2025-01-11T17:40:00Z": {
+   "cycle": "2025-01-11T12Z",
+   "missing": true
+  },
+  "farm 2025-01-11T20:35:00Z": {
+   "cycle": "2025-01-11T18Z",
+   "missing": true
+  },
+  "farm 2025-01-18T19:32:00Z": {
+   "cycle": "2025-01-18T18Z",
+   "missing": true
+  },
+  "farm 2025-01-19T01:16:00Z": {
+   "cycle": "2025-01-19T00Z",
+   "missing": true
+  },
+  "farm 2025-01-19T08:37:00Z": {
+   "cycle": "2025-01-19T06Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    "MINOR",
+    null
+   ]
+  },
+  "farm 2025-01-19T15:35:00Z": {
+   "cycle": "2025-01-19T12Z",
+   "missing": true
+  },
+  "farm 2025-01-19T19:20:00Z": {
+   "cycle": "2025-01-19T18Z",
+   "missing": true
+  },
+  "farm 2025-01-20T02:36:00Z": {
+   "cycle": "2025-01-20T00Z",
+   "missing": true
+  },
+  "farm 2025-01-20T06:47:00Z": {
+   "cycle": "2025-01-20T06Z",
+   "impact": "WINTER WEATHER AREA",
+   "days": [
+    "WINTER WEATHER AREA",
+    null,
+    null
+   ]
+  },
+  "farm 2025-01-20T10:15:00Z": {
+   "cycle": "2025-01-20T06Z",
+   "impact": "WINTER WEATHER AREA",
+   "days": [
+    "WINTER WEATHER AREA",
+    null,
+    null
+   ]
+  },
+  "farm 2025-02-10T07:51:00Z": {
+   "cycle": "2025-02-10T06Z",
+   "impact": "MODERATE",
+   "days": [
+    null,
+    "MINOR",
+    "MODERATE"
+   ]
+  },
+  "farm 2025-02-10T15:46:00Z": {
+   "cycle": "2025-02-10T12Z",
+   "missing": true
+  },
+  "farm 2025-02-10T19:38:00Z": {
+   "cycle": "2025-02-10T18Z",
+   "missing": true
+  },
+  "farm 2025-02-11T03:27:00Z": {
+   "cycle": "2025-02-11T00Z",
+   "missing": true
+  },
+  "farm 2025-02-11T08:05:00Z": {
+   "cycle": "2025-02-11T06Z",
+   "impact": "MODERATE",
+   "days": [
+    "MODERATE",
+    "MODERATE",
+    null
+   ]
+  },
+  "farm 2025-02-11T15:36:00Z": {
+   "cycle": "2025-02-11T12Z",
+   "missing": true
+  },
+  "farm 2025-02-11T19:26:00Z": {
+   "cycle": "2025-02-11T18Z",
+   "missing": true
+  },
+  "farm 2025-02-12T03:11:00Z": {
+   "cycle": "2025-02-12T00Z",
+   "missing": true
+  },
+  "farm 2025-02-12T08:01:00Z": {
+   "cycle": "2025-02-12T06Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    null,
+    null
+   ]
+  },
+  "farm 2025-02-12T14:55:00Z": {
+   "cycle": "2025-02-12T12Z",
+   "missing": true
+  },
+  "farm 2025-02-18T08:34:00Z": {
+   "cycle": "2025-02-18T06Z",
+   "impact": "MINOR",
+   "days": [
+    null,
+    "MINOR",
+    "WINTER WEATHER AREA"
+   ]
+  },
+  "farm 2025-02-18T14:45:00Z": {
+   "cycle": "2025-02-18T12Z",
+   "missing": true
+  },
+  "farm 2025-02-18T19:38:00Z": {
+   "cycle": "2025-02-18T18Z",
+   "missing": true
+  },
+  "farm 2025-02-19T03:11:00Z": {
+   "cycle": "2025-02-19T00Z",
+   "missing": true
+  },
+  "farm 2025-02-19T07:53:00Z": {
+   "cycle": "2025-02-19T06Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    "WINTER WEATHER AREA",
+    null
+   ]
+  },
+  "farm 2025-02-19T11:24:00Z": {
+   "cycle": "2025-02-19T06Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    "WINTER WEATHER AREA",
+    null
+   ]
+  },
+  "farm 2025-02-19T15:08:00Z": {
+   "cycle": "2025-02-19T12Z",
+   "missing": true
+  },
+  "farm 2025-02-19T22:45:00Z": {
+   "cycle": "2025-02-19T18Z",
+   "missing": true
+  },
+  "farm 2025-02-20T07:43:00Z": {
+   "cycle": "2025-02-20T06Z",
+   "impact": "WINTER WEATHER AREA",
+   "days": [
+    "WINTER WEATHER AREA",
+    "WINTER WEATHER AREA",
+    null
+   ]
+  },
+  "farm 2025-02-20T15:11:00Z": {
+   "cycle": "2025-02-20T12Z",
+   "missing": true
+  },
+  "farm 2025-12-08T16:49:00Z": {
+   "cycle": "2025-12-08T12Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    null,
+    "WINTER WEATHER AREA"
+   ]
+  },
+  "farm 2025-12-08T21:57:00Z": {
+   "cycle": "2025-12-08T18Z",
+   "impact": "WINTER WEATHER AREA",
+   "days": [
+    "WINTER WEATHER AREA",
+    null,
+    "WINTER WEATHER AREA"
+   ]
+  },
+  "farm 2025-12-08T23:52:00Z": {
+   "cycle": "2025-12-08T18Z",
+   "impact": "WINTER WEATHER AREA",
+   "days": [
+    "WINTER WEATHER AREA",
+    null,
+    "WINTER WEATHER AREA"
+   ]
+  },
+  "farm 2026-01-23T06:08:00Z": {
+   "cycle": "2026-01-23T00Z",
+   "impact": "MODERATE",
+   "days": [
+    null,
+    "WINTER WEATHER AREA",
+    "MODERATE"
+   ]
+  },
+  "farm 2026-01-23T14:07:00Z": {
+   "cycle": "2026-01-23T12Z",
+   "impact": "MODERATE",
+   "days": [
+    null,
+    "MINOR",
+    "MODERATE"
+   ]
+  },
+  "farm 2026-01-23T22:00:00Z": {
+   "cycle": "2026-01-23T18Z",
+   "impact": "MODERATE",
+   "days": [
+    null,
+    "MINOR",
+    "MODERATE"
+   ]
+  },
+  "farm 2026-01-24T03:03:00Z": {
+   "cycle": "2026-01-24T00Z",
+   "impact": "MODERATE",
+   "days": [
+    "WINTER WEATHER AREA",
+    "MODERATE",
+    "MODERATE"
+   ]
+  },
+  "farm 2026-01-24T06:28:00Z": {
+   "cycle": "2026-01-24T06Z",
+   "impact": "MODERATE",
+   "days": [
+    "MINOR",
+    "MODERATE",
+    "MODERATE"
+   ]
+  },
+  "farm 2026-01-24T14:35:00Z": {
+   "cycle": "2026-01-24T12Z",
+   "impact": "MODERATE",
+   "days": [
+    "MINOR",
+    "MODERATE",
+    "WINTER WEATHER AREA"
+   ]
+  },
+  "farm 2026-01-24T22:08:00Z": {
+   "cycle": "2026-01-24T18Z",
+   "impact": "MODERATE",
+   "days": [
+    "MINOR",
+    "MODERATE",
+    "WINTER WEATHER AREA"
+   ]
+  },
+  "farm 2026-01-25T06:03:00Z": {
+   "cycle": "2026-01-25T00Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    "MINOR",
+    null
+   ]
+  },
+  "farm 2026-01-25T16:27:00Z": {
+   "cycle": "2026-01-25T12Z",
+   "impact": "MODERATE",
+   "days": [
+    "MODERATE",
+    "WINTER WEATHER AREA",
+    null
+   ]
+  },
+  "farm 2026-01-25T23:04:00Z": {
+   "cycle": "2026-01-25T18Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    "WINTER WEATHER AREA",
+    null
+   ]
+  },
+  "farm 2026-01-26T05:29:00Z": {
+   "cycle": "2026-01-26T00Z",
+   "impact": "WINTER WEATHER AREA",
+   "days": [
+    "WINTER WEATHER AREA",
+    null,
+    null
+   ]
+  },
+  "farm 2026-02-05T17:39:00Z": {
+   "cycle": "2026-02-05T12Z",
+   "impact": "MINOR",
+   "days": [
+    null,
+    "MINOR",
+    "WINTER WEATHER AREA"
+   ]
+  },
+  "farm 2026-02-06T01:23:00Z": {
+   "cycle": "2026-02-06T00Z",
+   "impact": "MINOR",
+   "days": [
+    "WINTER WEATHER AREA",
+    "MINOR",
+    null
+   ]
+  },
+  "farm 2026-02-06T07:37:00Z": {
+   "cycle": "2026-02-06T06Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    "MINOR",
+    null
+   ]
+  },
+  "farm 2026-02-06T15:44:00Z": {
+   "cycle": "2026-02-06T12Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    "WINTER WEATHER AREA",
+    null
+   ]
+  },
+  "farm 2026-02-06T22:37:00Z": {
+   "cycle": "2026-02-06T18Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    "WINTER WEATHER AREA",
+    null
+   ]
+  },
+  "farm 2026-02-07T05:53:00Z": {
+   "cycle": "2026-02-07T00Z",
+   "impact": "WINTER WEATHER AREA",
+   "days": [
+    "WINTER WEATHER AREA",
+    null,
+    null
+   ]
+  },
+  "farm 2026-02-21T17:24:00Z": {
+   "cycle": "2026-02-21T12Z",
+   "impact": "MINOR",
+   "days": [
+    null,
+    "MINOR",
+    "MINOR"
+   ]
+  },
+  "farm 2026-02-21T20:24:00Z": {
+   "cycle": "2026-02-21T18Z",
+   "impact": "MINOR",
+   "days": [
+    "WINTER WEATHER AREA",
+    "MINOR",
+    "MINOR"
+   ]
+  },
+  "farm 2026-02-22T03:28:00Z": {
+   "cycle": "2026-02-22T00Z",
+   "impact": "MINOR",
+   "days": [
+    "WINTER WEATHER AREA",
+    "MINOR",
+    "WINTER WEATHER AREA"
+   ]
+  },
+  "farm 2026-02-22T10:16:00Z": {
+   "cycle": "2026-02-22T06Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    "MINOR",
+    "WINTER WEATHER AREA"
+   ]
+  },
+  "farm 2026-02-22T18:08:00Z": {
+   "cycle": "2026-02-22T12Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    "MINOR",
+    null
+   ]
+  },
+  "farm 2026-02-23T00:17:00Z": {
+   "cycle": "2026-02-22T18Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    "MINOR",
+    null
+   ]
+  },
+  "farm 2026-02-23T06:28:00Z": {
+   "cycle": "2026-02-23T06Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    "WINTER WEATHER AREA",
+    null
+   ]
+  },
+  "farm 2026-02-23T06:33:00Z": {
+   "cycle": "2026-02-23T06Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    "WINTER WEATHER AREA",
+    null
+   ]
+  },
+  "farm 2026-02-23T14:14:00Z": {
+   "cycle": "2026-02-23T12Z",
+   "impact": "MINOR",
+   "days": [
+    "MINOR",
+    "WINTER WEATHER AREA",
+    null
+   ]
+  },
+  "farm 2026-02-23T20:56:00Z": {
+   "cycle": "2026-02-23T18Z",
+   "impact": "WINTER WEATHER AREA",
+   "days": [
+    "WINTER WEATHER AREA",
+    null,
+    null
+   ]
+  },
+  "farm 2026-02-23T23:37:00Z": {
+   "cycle": "2026-02-23T18Z",
+   "impact": "WINTER WEATHER AREA",
+   "days": [
+    "WINTER WEATHER AREA",
+    null,
+    null
+   ]
+  }
+ }
+}

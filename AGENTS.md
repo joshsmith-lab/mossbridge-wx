@@ -10,7 +10,7 @@ A single-file, build-free PWA. `index.html` is the whole application,
 
 Production is <https://joshsmith-lab.github.io/mossbridge-wx/>, served from
 `main`, and it is shared with family. The `LOCS` table holds
-`mb` (Moss Bridge Ct, Porters Neck NC, coastal, gets the water + tides + tropics)
+`mb` (Moss Bridge Ct, Porters Neck NC, coastal, gets the water + tides + the beach zone's tropical warnings)
 and `sp` (Bob Plumley Rd, Shady Spring WV, inland), the permanent family places.
 `den` was the travel entry for the Denver trip. The trip is over, so it is
 **parked**: still in `LOCS`, with its Front Range scene and the "What to wear" card,
@@ -51,10 +51,12 @@ place name.
   a finger inside any gold band, tomorrow morning's too, reads a quiet gold `golden hour` on the pill.
 - **The page reads top down, and the first screen is the answer.** What the family opens it
   for is now, today and the weekend, so that is the first screen on a phone: the sky (the
-  reading, the headline, the chips, the scene), the next 24 hours, then this week. The week
-  used to sit at the foot of the page, which put the weekend a scroll away. Under it comes the
-  wave, the water and its tide at the coast and the moon at the farm, in the same place; the
-  tropics when a system is out; the cards (a sentence card when there is something to say, then
+  reading, the headline, the chips, the scene), the next 24 hours, then this week. In a major
+  storm the storm card comes first, between the sky and the hours, because then it is the answer.
+  The week used to sit at the foot of the page, which put the weekend a scroll away. Under it comes the
+  wave, the water and its tide at the coast and the moon at the farm, in the same place; a named
+  storm's one quiet line, and the storm card's model when `?storm=debug` is on the address (see The
+  storm card); the cards (a sentence card when there is something to say, then
   Sun and Tonight side by side); the year; and one credit. The charts draw in in that same order
   (see The charts' entrance), and test.mjs checks both.
 - **One shape for every section, and both places run alike.** Josh asked for the page to be
@@ -93,7 +95,9 @@ place name.
   card naming the thunder. The headline speaks from the hour now is in, so a cache opened at 11:40
   does not say `Thunder nearby.` about a storm that passed at nine. The headline
   hands the cards under it a list of what it named and when (`told`: Rain, Freezing rain, Snow,
-  Windy, Thunder), so they say what to do and not the same thing again. Windy is said from the first hour the gusts reach 28, not the windiest,
+  Windy, Thunder), so they say what to do and not the same thing again. Under a storm card the
+  headline is the storm's (`Hurricane Florence is closest Friday morning.`, see The storm card), and
+  what the card says goes down as `told` with no hour, said for every hour. Windy is said from the first hour the gusts reach 28, not the windiest,
   so a gust the chip is already showing is `windy now`. The week reaches further
   because it is a chart of the run's own numbers, and the weekend note beside it stays
   numbers: a high, and the odds wherever there is rain to talk about.
@@ -136,7 +140,7 @@ place name.
   while the text beside it read upwind. The vane now points into the wind, the
   way a rooftop vane does. The wind chip carries the same vane: the speed and an arrow
   into the wind. Josh does not care about "NNW", the arrow already says it, so the compass
-  point is spoken only (`dirLong`, sr-only) and `dirTxt` is left to the tropics rows. Under
+  point is spoken only (`dirLong`, sr-only) and `dirTxt` is left to the storm card's compass points. Under
   1 mph the chip says `calm` with no arrow, because calm air has no direction to point, and
   gusts running 6 or more over it are still said (`calm, gusts 9 mph`): the burgee and the
   trees are moving to them.
@@ -242,7 +246,9 @@ place name.
   Josh's call and the family's word for pottering at the outside jobs, and it makes no call and is
   never green. On an ordinary day there is no card, only the moon and its fishing times (see The
   moon over the farm). When there is something to plan around it says so in
-  the family's words, amber or red: a warning is `Chores can wait.` (`Feed early and keep a path
+  the family's words, amber or red: a warning (never a Freeze Warning or a Frost Advisory, which are CAP
+  Severe the way every one is and are about the garden, `NOT_OUTDOOR`; under a storm card the storm's
+  lead warning) is `Chores can wait.` (`Feed early and keep a path
   open.` for a winter one, `Stay off the hill until it turns over.` with ice), thunder in the
   hour under way `Thunder nearby.`, freezing rain `Freezing rain possible around 5 p.m. Stay off
   the hill until it turns over.` (the action alone once it is falling or the headline has named
@@ -355,7 +361,9 @@ place name.
   night. Weather is read separately, so a missing temperature cannot erase thunder, snow or ice.
   Thunder is said at any odds; freezing rain and snow keep their names, and each gets its odds
   word from its own hours. A day's rain odds never stand in for tonight's. Missing night odds
-  are unavailable, not dry. `tonightBrief` is pure and tested. The week leaves a missing day
+  are unavailable, not dry. Under a storm card the night's rain, snow and freezing rain are the
+  card's, nothing is a warm night and nothing is green (`Down to 71° tonight.`, see The storm card).
+  `tonightBrief` is pure and tested. The week leaves a missing day
   undrawn (`knownRun`), which once dove its line off the chart and printed `0°`. The water says the water that is there at now (the table plus the gauge's gap, which
   the tag beside the boat reconciles with the curve it rides; the skiff is the mark there, so no
   ring) and `by the table` everywhere else while the gauge runs off it. The moon says when a fishing time ends, to the minute it prints, or when the moon rises or
@@ -837,6 +845,8 @@ TZ=America/New_York node tools/scene.mjs          # the picture and its motion
 TZ=America/New_York node tools/scene.mjs fog storm  # just the scenes you are working on
 TZ=America/New_York node tools/webkit.mjs         # WebKit's frame rate, the engine on every iPhone
 node tools/rig.mjs heron                          # one animal, close up and at phone size
+node tools/storm-corpus.mjs                       # the storm card's winter backtest, fetched again from IEM
+node tools/storm-corpus.mjs wssi                  # and WPC's archived Winter Storm Severity Index for it
 ```
 
 `tools/shots.mjs` renders twenty-eight scenarios (day, night, after midnight, storm, dusk,
@@ -862,7 +872,13 @@ off both flanks; a cold October morning at the farm, `Cold one. Bundle up for
 the morning rounds.` on the `Piddling` card over the moon; a gale through the day and night at the
 farm, where every fishing time goes for the wind, the pond is choppy and the note says `new moon ·
 too windy`; and a calm farm morning whose four fishing times each have their fish resting in a flat
-pond under the phase alone. A scenario marked `boat: true` is served with
+pond under the phase alone. Then the eight storm cases from `tools/storm-fixtures.mjs` and three made
+from Florence's (see The storm card): Florence at the coast, Debby on the beach, the 12 to 18 inch
+blizzard at the farm (titled by its headline), RLX's January 2025 warning at the farm (titled by its own
+sentence, its lane from noon), Isaias at the farm (the named line), and RLX's January 2026 warning at the
+farm (the strip's, the index at Moderate), the coast on October 10 2026 and Erin far out (nothing), each with expects
+for the tier, the card's title, note, warnings, what to do and stamps, the named line, the headline,
+the strip and Tonight, failing a TCV impacts word on the card or anything cheerful under it. A scenario marked `boat: true` is served with
 `boatSeason:null` switched back on, and fails if there is nothing to switch. It writes screenshots
 to `tools/shots/` and prints the generated copy (the headline, the chips as they are seen, the
 water's note, the level the chart speaks and the tag on the skiff, the moon's phase and the
@@ -989,10 +1005,10 @@ If you add a location, give it a `tz` and a `tzLabel`. Nothing else needs to kno
 
 ## On file size
 
-`index.html` is about 600 KB of source (October 2026, with NOAA's daily normals and the Halloween cast baked in), and an early plan set
+`index.html` is about 750 KB of source (October 2026, with NOAA's daily normals, the Halloween cast and the storm card's readers baked in), and an early plan set
 160 KB as a ceiling. That number was about the source file and it is not the
 number that matters. GitHub Pages serves the file gzipped, so what a phone
-actually downloads is **about 200 KB**, once, and the service worker caches it
+actually downloads is **about 255 KB**, once, and the service worker caches it
 after that. Measure both rather than trusting this paragraph: `wc -c index.html`
 for the source and `gzip -6c index.html | wc -c` for roughly what is sent.
 
@@ -1180,6 +1196,391 @@ Established with Josh and enforced by `test.mjs`:
   framing. Now the moon chart's title carries it, `Almanac fishing times` (Josh chose it over
   "fish bite · by the moon" so the theory is plainly the almanac's), with the full sentence in its
   title and for screen readers.
+
+## The storm card
+
+Josh asked on October 10 2026 for "a hurricane or major weather card that only comes up when
+necessary. high threshold to appear, but replaced the dinky one I see sometimes in wilmington". The
+dinky one was the Tropics · Atlantic rows: any Atlantic system at any distance, and `Advisory Number
+(\w+)` with one space never read a full advisory (NHC pads the number, `Number  16`), so a storm
+showed only in the hours after an intermediate. He was shown three designs drawn on the same model
+and picked the storm timeline, the chart language's own. He chose to keep the bar high: a day like
+October 10 2026 at Wilmington, a Flood Watch credited to "tropical moisture" and a Coastal Flood
+Advisory with Isaias 329 miles off, shows nothing about the storm.
+
+- **The data.** Alerts keep their VTEC, NWSheadline, onset, AWIPS id and damage tags (`alertRow`), and
+  an alert whose every VTEC line is CAN, EXP or UPG is dropped at the fetch (`alertLive`), because the
+  feed keeps an upgraded watch beside its warning for a day. The coast also reads its beach zone,
+  `LOCS.mb.beach` (NCZ108, Coastal New Hanover), for TR, HU and SS products only: Debby's and PTC
+  Eight's tropical storm warnings were on the beach and not at the house, and the beach's surf, rip
+  current and flooding products stay off Moss Bridge Ct's strip. Both places read the advisories
+  (`fetchStorms`: the TCP for the name, the ATCF id and the mph, the TCM for the knots and the forecast
+  points), a special advisory as well as a full one or an intermediate (`... Special Advisory Number`,
+  `SPECIAL FORECAST/ADVISORY`): NHC writes one for a storm strengthening near landfall, and dropped, the
+  card fell back on the advisory before it. Away from the coast the lane also asks the Weather Prediction
+  Center's Winter Storm Severity Index at the point (`wssiUrl`: mapservices.weather.noaa.gov's wpc_wssi
+  MapServer, its three days in one identify request, layers 1 to 3, Overall_Impact_Day_1, _2 and _3, the
+  fields by name), only once the point's own alerts are in and a Winter Storm Warning stands among them,
+  because every other day it answers with no results. It is F3's bar (see The winter warnings), kept with
+  the forecast the way the beach's answer is (`wssiIn`, the reading's `wssi`), and a failed or empty answer
+  is no reading. With no point list (its request failed) there is no answer at all (`undefined`), and the
+  last reading is kept: a failed request threw away a cached Major. A reading keeps when it was asked for
+  (`at`, the model's `seen.wssi`) and the Winter Storm Warnings it was asked for, each event with its hours
+  (`for`, `wsFor`: `KRLX.WS.W.2 2025-01-05T17:00:00.000Z 2025-01-07T11:00:00.000Z`), because it is only ever
+  the judge of that list's warnings (see The latch).
+- **Its own lane, and the first frame.** The advisories and the beach zone (`stormLane`) start with the
+  forecast and run beside it, so the forecast never waits on them. When the lane is in by the time the
+  forecast lands it joins that paint and its cache, and the card is painted with the header, before the
+  hours under it are drawn: painted in the last stage it pushed them down after their pen had started. A
+  first open (the loading shell, nothing else on screen) waits for it up to `STORM_WAIT`, 3 seconds,
+  because a card that lands after the hours pushes them, but only when the card could come up
+  (`stormWaits`): every rule needs an alert at the place, so the farm waits only when the point has a
+  live one, and the coast looks at the beach zone's answer first (`lane.beach`) and waits for the
+  advisories only when the point or the beach has one. A slow api.weather.gov used to hold the first
+  paint of a quiet hurricane-season morning for 3 seconds that could change nothing. The beach's answer
+  is kept on its own the moment it is in (`beachIn`) and is every paint's, the first one too: a first open
+  with the advisories 3.7 seconds slow painted without the beach's warning it already had, then pushed
+  the hours down. And a cached beach whose tropical warning has reached its expiry is stale, not over
+  (the expiry is only the next advisory's time, and the warning is nearly always renewed by then): the
+  refresh at that expiry waits for the beach's own answer, up to `STORM_WAIT`, because painted on the
+  cache the card came down and the headline went back to "Raining now." at every advisory, and both came
+  back when the advisories landed. "The cache" there is the last reading this place had: `readCache` when
+  it can vouch for it, and when it cannot (past its six hours, or a new day) the page's own reading, `LAST`,
+  which says whose it is (`LAST.loc`). Debby's beach warning ran out at 7 pm, 7h20m after the 11:40
+  refresh, so the strip's timer always found the cache aged out, skipped the wait, and painted without the
+  page's storms or its beach. Each list also keeps when it was fetched (the reading's `seen`; a cache written
+  before it was kept has only its own age), and a tropical watch or warning past its expiry, in a list
+  fetched while it still stood, still stands until a newer answer for that list decides, up to six hours past
+  its own expiry (`stormRead`'s `seen`, `STORM_STALE`): a cold open or a place switch on a two-hour-old cache
+  painted Debby's renewed warning as ended, said "Raining now. Keep the rain gear close." under a tropical
+  storm, and the card then landed on the hours' running pen 371px down. So does a beach that has not answered
+  by the live paint, one slower than `STORM_WAIT` and one that fails. The window was measured from the fetch
+  until October 11 2026, so at Debby's 7 pm expiry, 7h20m after the 11:40 fetch, a beach 4.5 seconds slow
+  or failing still took the card down. One later still
+  (`stormRun`) goes into the reading and its cache, which keeps its age, and paints the page again only
+  when it changes what the page says. It comes in with the view held (`keepView`), the way a browser
+  anchors its scroll (WebKit does not), on what the card pushes: the first thing at or after
+  `#stormSection` whose top is on the screen or under it, the card itself only while its own top is on
+  the screen, and with nothing's top on the screen the one the screen starts in. Scrolled at all,
+  nothing on screen under the card moves, even with part of the sky still showing above it (anchored on
+  the header, a reader with its foot 150px down the screen watched the hours jump by the card), and even
+  from inside the card: anchored on its own top, off the screen, a card that grew when the advisories
+  landed ("Hurricane Warning" becoming "Hurricane Florence" with its note and its closest point) moved the
+  hours under the reader 22px at 320. The card does not come alone, so the hold runs across what comes with it:
+  from before the header's words (the headline turns to the storm's, 24px taller at 390) through the
+  card (`viewHold`), and across the strip, which the storm statement leaves. At the top the sky stays
+  put and only what is under the card moves. The storm is cached with the forecast, so the next open
+  shows the card on its cached paint. `tools/interactions.mjs` opens Debby cold with the beach zone in
+  time, late and scrolled to the week, late and scrolled partway (the header's foot 150px down the
+  screen), and late at the top, then reopens it offline; opens it with the beach fast and the
+  advisories 3.7 seconds slow (the card is in the first frame); leaves it open across the beach warning's
+  expiry and renewal with the advisories slower than the forecast, watching every frame (the card never
+  comes down); does the same at Debby's own timings, 7h21m on with the cache aged out, the beach fast and
+  1.5 and 4.5 seconds slow and failing, and the advisories 2.5 (the card, its title and the headline never
+  change); opens it cold
+  on a two-hour-old cache whose beach warning passed its expiry an hour before, with the cache's own fetch
+  times and without them (the card is in the cached frame, and the hours never move once their pen has
+  started); and opens Florence with the advisories late, scrolled so the card's top is 100px above
+  the screen, at 320 and 390 (the hours hold while the card grows).
+- **The model** is `stormRead(L, alerts, beach, storms, now)`, pure and tested. Two tiers and nothing on
+  an ordinary day. Storm: at the coast a hurricane warning or watch, tropical storm warning, storm surge
+  warning or watch (house or beach) or extreme wind warning (C1), a flash flood or tornado emergency
+  (C2), a winter storm, blizzard, ice storm or high wind warning (C3), a flash flood, tornado or coastal
+  flood warning with a linked storm (C4); at the farm an emergency (F1), a blizzard, ice storm or high
+  wind warning (F2), a winter storm warning with WPC's Winter Storm Severity Index at Major or Extreme at
+  the point on a day the warning is in effect (F3, see The winter warnings), a flash flood, flood, high wind,
+  tornado or severe thunderstorm
+  warning with a linked storm (F4). Once a warning has raised the card it holds it while that same warning
+  stands (see The latch). Named:
+  a tropical storm watch alone (N1), a storm named in an alert at the place (N2, word-bounded beside a
+  storm word or "remnants"), or one whose center or TCM point comes within 300 miles of the coast or 250
+  of the farm while any alert is up (N3). Linked means an advisory in the last 12 hours, tied to the
+  place by VTEC event number (1000 plus the storm number), by name, or by N3's distance. Distance alone,
+  CAP severity and a lone warning never raise it. The category is the TCM's knots (64, 83, 96, 113,
+  137), never the rounded mph, but only while the TCM is the public advisory's own (57 for 57 or 57A)
+  and its knots say the public advisory's mph (converted, so 96 knots and 110 mph agree): an
+  intermediate 57A at 115 mph is a Category 3 that TCM 57's 90 knots called a 2, under a stamp naming
+  57A. Otherwise it is the TCP's own mph on NHC's mph steps (74, 96, 111, 130, 157). A TR, HU or SS
+  product has no end (its expiry is only the next advisory), and nothing prints one for them. Hazards
+  come from the TCV segment in the house's own alert, then the beach's, then the house's WHAT and WHEN
+  lines, worst first. The TCV keeps its PLAN, PREPARE and ACT, and its potential and realized impacts
+  apart (`tcvRead`): Florence's house zone said REALIZED IMPACTS: Being Assessed for its surge a day
+  before landfall, and a design that printed it read as a surge nobody knew. The impacts words
+  (Unfolding, Devastating to Catastrophic, Limited) only rank the hazards and are never printed. A
+  hazard the house has keeps the beach's number beside it when the beach's is worse (`peakSize`):
+  Florence's surge was 2 to 4 feet at the house and 6 to 9 on the beach, and the family is on the water.
+  The HLS is read for its headline, STORM INFORMATION, current watches and final flag, and leaves the
+  strip while there is a tier (`stormStrip`).
+- **The card** is `#stormSection`, the first thing under the sky, above the hours, in the page's one
+  shape. The title is the storm as the advisory names it (`Hurricane Florence`; a post-tropical cyclone
+  or its remnants are `Remnants of Isaias`, because "post-tropical" means nothing to the family), and
+  the note is its strength and where it is now (`Category 2 · 145 mi ESE`), saying less on a 320 phone
+  rather than drop under the title. A storm with no name leads with its biggest number, title-sized in
+  the display face (`stormHero`). A winter warning's is the warning's own sentence that carries the
+  amounts, quoted verbatim from that alert's description (`stormQuote`): the sentence of its WHAT line that
+  says "accumulation", else that line's first sentence, else its NWSheadline, in sentence case through
+  `stCalm`, its relative words dated the way the instruction's are (`relDay`: "this evening" read the next
+  morning is the evening it meant) (`Total snow accumulations between 4 and 10 inches and ice accumulations
+  between one tenth and one half of an inch.`). It is never cut and never rebuilt into numbers: as large as
+  it fits on two lines, on three if it must, and never smaller than 18px (17 on a phone under 360), each
+  hyphenated range held with its unit (`stormTitleFit`, measured). A sentence that will not fit three lines
+  at that size gives way to a shorter sentence the warning itself gives, its WHAT line's first when that is
+  60 characters or fewer (`stormQuoteShort`: `Heavy mixed precipitation.`), else to the warning's name (`Winter
+  storm`), and the whole sentence is then said under the chart in the card's own type (`#stormFull`), once:
+  RLX's 153-character sentence of February 2021 ran to five lines at 16px on a 320 phone and pushed the hours
+  off the first screen. January 2025's 113 characters are three lines at 18px at 390, and at 320 the title is
+  `Heavy mixed precipitation expected.` with the sentence under the chart. The fit runs again when the fonts
+  land (the fonts.ready hook and `loadingdone`, the way `moonNoteFit` does), because fitted in the fallback
+  face Bricolage reflowed it to a line more. RLX's products before 2019 have no WHAT line, so the 2016
+  warning's title is its headline (`Winter storm warning remains in effect until 1 AM EST Sunday`), which
+  says what the headline under the sky says; every product the Weather Service writes now has one. With no
+  sentence at all the title is the warning in plain words (`Winter storm`). A rain amount is said when it is
+  short enough to read at a glance; otherwise the title is the warning in plain words. It has no note, because the headline says until when and the chart
+  shows it. The picture is the next two days
+  (longer to show a window close, never past three) on the hourly chart's axis, from NOW, with its night
+  bands and their moons: one lane per hazard the Weather Service has put hours on, worst first, each
+  labelled with its name and its peak in the fewest of the product's own words (`WIND gusts to 105 mph`,
+  `RAIN more than two feet`, `SURGE 2–4 ft above ground`), a range with both ends and its words (`1 to 2
+  ft`, `up to 2 ft`; it was the top alone), and the beach's worse number beside it in the
+  quieter ink (`· at the beach 6–9 ft`). A number only the beach has is said as the beach's the same way
+  (`SURGE at the beach 1–3 ft above ground`, and on its pill `storm surge at the beach`): every one of
+  Debby's was the beach zone's and read as the house's. The title, the headline and the named line say
+  it too (`4–8 inches of rain at the beach`, `Tropical Storm Warning at the beach.`, `gusts to 45 at the
+  beach`). Where a row is short every lane says less the same way (`2–4 ft · beach 6–9 ft`, `beach 1–3
+  ft`), so one card never says it two ways. A TCV window is drawn as its words (`stormPhrase`: Friday
+  afternoon is noon to six, early this evening six to nine), read against the product's own issue time.
+  Its ends are clean: an edge given as a part of a day is that stretch in a paler band, ended square, an
+  edge given to the minute (a watch's end) is the bar's end, and only a window with no end yet fades,
+  off the right edge: the first drawing faded every edge, and it read as a blur. The hurricane-force
+  window swells and darkens the wind's lane and says so under itself (`hurricane force`), and the
+  surge's lane carries the tide table's high tides as dots, named under the first (`high tides`): no
+  mark needs the slider to explain it. A winter warning is one lane, named by what its WHAT words say it
+  is for (`winterKinds`: `SNOW`, `ICE`, `SNOW AND ICE`, an ice storm's `ICE AND SNOW`, a blizzard's `SNOW
+  AND WIND`; before 2019 its hazard bullets and keys), never how much, on the warning's own hours. A hazard
+  with no hours in its statement takes the hours of the product it was read from. One from a TCV takes a
+  flood or flash flood watch's (Florence's rain is the Flash Flood Watch's hours) or none, never a warning's
+  or an advisory's: a routine Flash Flood Warning to 5:30 made Florence's two feet of rain end that evening,
+  a 3-hour Flood Advisory ended them at 2:30 and an areal Flood Warning at 5:30, a river's Flood Warning,
+  whose end is the crest and not the rain, ran the bar a week off the chart, and a 35-minute Tornado
+  Warning drew a red sliver at NOW on a row that still read "a few possible". With no watch the rain is the
+  quiet row. A lane from a product's hours starts at the product's start, its VTEC begin or else its onset,
+  never when it was sent: RLX's January 2026 warning, issued the evening before its 7 am start, drew its ice
+  from NOW, nine hours early, and Florence's Flash Flood Watch issued ahead of its 8 pm start read on the
+  NOW pill. A warning issued ahead of its start is said with its start on the chart's spoken label (`from`,
+  `fromSaid`: `Snow and ice: Winter Storm Warning from noon until Tuesday at 6 am`, Florence's watch `from 8
+  pm`), because the label read it as on now, and at NOW, when nothing is under way yet, the pill and the
+  slider say it the way the headline does (`now · Winter Storm Warning from 12p`, `Now, Winter Storm Warning
+  from noon`): until October 11 2026 NOW read `Now, no hours from the Weather Service`, which sounds like
+  nothing was given. Any other hour no window covers is still a dash. A short-fuse warning is the strip's, unless the hazard is
+  that warning's own (an emergency); one with no hours anywhere is said on a quieter last row with no bar,
+  because a bar would be hours nobody gave. The
+  storm's closest forecast point is the marked moment: the hurricane symbol (filled for a hurricane,
+  open for a tropical storm) with its distance, and a dashed line through the lanes that steps round
+  their words. Under the labels, the card's own words: the warnings it stands on (`stormWarns`:
+  `Hurricane Warning · Storm Surge Warning`, `Tropical Storm Warning at the beach`), because the strip
+  can lead with only one and Florence's Hurricane Warning sat in its "+2 more"; then what to do
+  (`stormSay`); then each source with its own time (`stormStamps`: `Weather Service 10:55 am · advisory
+  57 10:44 am`), never one stamp that put the Flood Watch's 11:35 beside an advisory written fifty
+  minutes before it. Each line that joins its parts with a dot (the warnings, the sources, the named
+  storm's line) keeps every part whole with its dot in front of it (`stormDots`), so a 320 phone breaks
+  between the parts and never ends a line on a lone dot: the sources read "Weather Service 10:55 am ·" /
+  "advisory 57 10:44 am" at 320 and 330. It has the explorer every chart has (`readStorm`): each stop says what is on, with
+  the day named once it is not today, and the stretch where an edge is only a part of a day, never an
+  invented hour. It adds no motion and has no entrance.
+- **What to do** is the TCV's own ACT line for the worst hazard (Florence: "Now is the time to shelter
+  from life-threatening wind."), else the instruction of the first warning that has one, never a watch's
+  (under Florence it was the Flash Flood Watch's paragraph on what a watch means) and never a short-fuse
+  warning's, which the strip carries. A link, "Additional information can be found ..." and a sentence
+  on what a warning means are left out (`SAY_JUNK`, sentence by sentence through `sayKeep`), on the card
+  and in the strip's "What to do" alike, which goes when nothing is left: the farm's Wind Advisory on
+  October 10 2026 gave only RLX's link line. It is quoted as written, an old product in capitals set in
+  sentence case (`stCalm`), and a messy one (capitals, or a list run together with "...") is cut to its
+  first instruction: RLX's January 2016 warning opened "CONDITIONS ARE EXPECT EARLY THIRD OR OCCURRING",
+  its own typo, which on the card read as the app's. So the blizzard's is `Only travel in an emergency.`
+- **Said once.** Under the card nothing else says the storm again, and nothing cheerful sits under it.
+  The headline is the storm's, from the model alone (`stormStory`): the storm and when it is closest
+  (`Hurricane Florence is closest Friday morning.`, the storm's name in the headline's warm ink), or a
+  storm with no name's warning in plain words and when it ends (`Winter storm until 1 a.m. Sunday.`), and
+  when it starts if that is still to come, its VTEC begin or onset (`Winter storm from noon until 6 a.m.
+  Tuesday.`: issued at 5:24 for noon, it read as on now at 5:40 under a bar that started at noon), a start on
+  another day named and a midnight the day it ends (`stormWhen`). A day is said once in it (`from 1 a.m.
+  until noon Monday`, `from 7 a.m. until 6 p.m. Monday`), and the small hours are the night before's, so
+  read on Sunday a 1 am Monday start is tonight's `1 a.m.`, never `1 a.m. Monday until noon Monday`. It ends
+  on one period, built through `sentence`, because a clock ending in "a.m." or "p.m." carries its own: from
+  midnight on a warning's last day it read `Winter storm until 6 a.m..`. With the app left open in front,
+  the strip's timer also asks again a second after a live product's VTEC begin (`alertTimer`), so at noon
+  the headline turns from `from noon` to under way and NOW to the warning, with nothing touched.
+  Josh's headline rules hold: the small hours are the night before's, today is "this morning" and
+  "tonight", and any other day is named, which in a storm is plainer than "tomorrow" said after
+  midnight. The forecast's own sentence went because it sat over a hurricane saying "Raining now. Keep
+  the rain gear close.", and every hazard it could name is on the card. A thunderstorm overhead (a fresh
+  current code 95, 96 or 99) still leads it (`Storms overhead. Head inside. Hurricane Florence is
+  closest Friday morning.`, `stormsOverhead`, shared with `dayStory`), because the cards under it leave
+  a storm overhead to the headline and the one thing to do now was said nowhere; `told` stays the
+  storm's. What the card says is handed down as `told`, with no hour, which the cards read as said for
+  every hour: Tonight leaves out the card's rain, snow and freezing rain, is never "a warm night" and
+  never green ("Rain likely tonight, with a low of 71°." became `Down to 71° tonight.`), thunder still
+  said because the card does not carry it, and missing night odds still `Rain odds unavailable.` unless
+  the card has said the rain (a High Wind Warning has not). The storm's lead warning stands for a
+  warning for the sentence cards, so the farm says only the family's action (`Feed early and keep a path
+  open.` for the blizzard, in red, and no fishing times) and the boat `Stay off the water.`. The Sun
+  card's sentence is never green under it.
+- **The strip** leads with the strongest tropical warning while the card is up (`card`), and when the
+  card speaks for the lead (`stormCover`: the tropical alerts, the one its instruction is from, a storm
+  with no name's own warning) its body says only what else is active. Debby's Flood Watch at the house
+  was none of those and kept its words. A short-fuse warning issued during the storm (`SHORT_FUSE`:
+  tornado, flash flood, extreme wind, severe thunderstorm) leads the strip on its own, enters, and keeps
+  its own words and instruction: it is minutes away, and it is never folded into the card. Each ` · `
+  rides with the word after it (a hard space after the dot, and the clock's own between it, its am or pm
+  and its day, and none else), so a strip that wraps starts its next line `· until 1:00 am Sun` or breaks
+  after "until", and never ends a line on a lone dot or a day on its own: tying the whole clause
+  together put today's coast strip on three lines at 320 where it had wrapped once. A midnight is `midnight`, on the day it
+  ends (`until midnight` read on Saturday for 00:00 Sunday, never `until 12:00 am Sun`). The card comes
+  down when what it stands on ends with the app left open: the house's alerts, the storm statement and
+  the beach's tropical ones (`stormDue`) arm the strip's timer (`alertTimer`) beside the strip's own,
+  because Debby's warning was the beach's alone and the house's only timed alert ran two days longer. A
+  tropical one still standing past its expiry is due six hours on, so a beach that never answers again
+  cannot hold the card.
+- **The named tier** is one quiet line, `#stormLine`, where the tropics list was, in plain words with
+  the miles from the hurricane center's or WPC's track and the gusts from the Weather Service's own
+  alert (`stormLineHtml`): `Isaias's remnants pass 33 mi north Sunday evening · gusts to 50`. Its wind
+  is the line's, so the Piddling card under it says only what to do (`Chores can wait.`) and not "Too
+  windy until about 5 p.m." as well. With no tier there is nothing.
+- **Relative words.** A product's "this evening", "tonight" and "late this morning" are its own day's.
+  Read the same day before then they are said as written, because today goes unsaid; on a later day, or
+  once the stretch they name is over, they take their day (`relDay`: "late this morning" read at 9:30 at
+  night is "late Thursday morning"). The card's pills, its instruction and the strip's words all read
+  through it.
+- **Seeing it.** `tools/storm-fixtures.mjs` serves nine real cases through `stage()`'s `o.storm`:
+  Florence at the coast (storm), Isaias at the farm on October 10 2026 (named), the coast the same day
+  (none), RLX's 12 to 18 inch warning of January 2016 re-dated to 2027 (storm, on a WSSI Major that is made
+  up, because WPC's archive starts in November 2020), Erin about 900 miles out (none), Debby on the beach
+  (storm), RLX's January 23 2026 warning at the farm from the winter corpus (none: `ice-farm`, the index at
+  Moderate there in WPC's archive, so the strip's alone), RLX's January 5 2025 warning, issued at 5:24
+  for noon, with the index at Major on its second day (storm, `snow-ice-farm`, titled in its own sentence,
+  its lane from noon, NOW the warning `from 12p` and the headline `from noon`), and RLX's February 17 2021 update, the
+  corpus's longest sentence at 153 characters, with a Major that is made up because WPC's archive does not
+  keep that cycle (storm, `long-quote-farm`, titled `Heavy mixed precipitation.` with the sentence under the
+  chart). The products are IEM's archived text, verbatim, cut to the place's segments, put
+  together as the API puts its alerts together, each alert's onset its VTEC begin; October 10's are the
+  live API's own JSON. A scenario's `wssi` is the index's answer in the identify request's own shape
+  (`wssiAnswer`), each day at the level WPC's archive gives the farm's grid cell for that cycle;
+  `tools/storm-fixtures/wssi/` keeps real answers from the live service, the farm's on October 11 2026
+  (no results) and a Montana point under a Major area on Day 1 that night (Winter Weather Area, Minor,
+  Moderate and Major: the areas nest), and the same two from layer 4, the 72-hour layer the page asked until
+  that day, which `wssiRead` no longer reads. `tools/shots.mjs` renders all nine with expects for the tier, the title, the line, the
+  headline, the strip and Tonight, and three more on Florence: a routine Flash Flood Warning and a
+  Tornado Warning issued under it (`FUSE`, in the API's shape), which lead the strip and leave the
+  rain's hours and the tornadoes' row alone, and a thunderstorm overhead, which leads the headline. It
+  fails a TCV impacts word on the card, anything cheerful under it, or a strip, a warnings line, a sources
+  line or a named line that wraps on a lone dot at any width, and today's coast strip past two lines at 320,
+  and a quoted title past three lines or under 18px (17 at 320), one that is not the warning's own sentence,
+  its shorter one or its name, or a fallen-back title without the whole sentence under the chart
+  (`stormTitleRule`), with the title at 320 held for the two long ones (`stormTitle320`).
+  `?storm=debug` shows the model as plain text in `#stormDebug`, and `STORM_NOW` holds it. `stormRead`,
+  `stormLanes`, `readStorm`, `stormStory`, `stormLineHtml`, `stormWarns`, `stormSay`, `stormStamps`,
+  `stormCover`, `stormHero`, `stormPeak`, `stormWaits`, `stormDue`, `relDay`, `alertStrip`, `stormQuote`,
+  `stormQuoteShort`, `winterKinds`, `wssiRead`, `wssiOver`, `wssiMajor` and `wsWindow` are pure and test.mjs
+  runs them.
+- **The winter warnings.** A wrong number on a storm card is worse than no card, and a winter warning's
+  words could not be read safely for one. Three rounds (October 10 2026) wrote an amount grammar for the
+  Weather Service's own phrasing, and each round's verifiers found another office's that it misread, across
+  twelve winters of RLX's and ILM's warnings and their neighbours': "a few hundredths of an inch" as an inch
+  of ice ("An inch of ice" on the card, firing F3), "below 3,000 feet" leaving "000 feet of snow", RLX's old
+  "PIEDMONT...18 TO 24 INCHES" read as 0.18, "up to an inch of snow" taking the ice before it, "one to a
+  quarter inch" as an inverted range, "snow and sleet" said as snow, and F3 coming and going within one
+  warning as its updates said "additional 3 to 6 inches". So nothing in a winter warning is read as a
+  number. Its title quotes it (`stormQuote`), its lane says what it is for (`winterKinds`), and the farm's
+  bar is someone else's judgement of the impact: the Weather Prediction Center's Winter Storm Severity Index
+  at the farm's own point, Major or Extreme on a day the warning is in effect (`wssiRead`, `wssiOver`,
+  `wssiMajor`). The service gives each of its three days on its own layer, 24 hours each from the cycle's
+  hour, and answers with the impact areas the point lies in, which nest (`WINTER WEATHER AREA`, `MINOR`,
+  `MODERATE`, `MAJOR`, `EXTREME`, the service's own words), so a day's reading is the highest of them. A day
+  counts only where it overlaps what is left of the warning's own hours, its VTEC begin (or onset), or now
+  once it has begun, to its VTEC end (or ends) (`wsWindow`): until October 11 2026 the bar was the 72-hour
+  layer's maximum, and a bigger storm on Day 3 raised and held tonight's small warning. A day that is over,
+  a day with no times, no results (every answer outside winter), a failed request and a shape it does not
+  know (the 72-hour layer's among them) are no reading: then the card stays down and the warning is the
+  strip's. F2 (a blizzard, ice storm or high wind
+  warning) and the coast's C3 (any winter storm, blizzard, ice storm or high wind warning) are read from
+  the product alone, as before.
+- **The latch.** Once a warning has raised the card it holds it while that same warning stands: its office,
+  product and number (`stormEvents`, `KRLX.WS.W.2`), through NEW, CON, EXT, EXA, EXB and COR, until it is
+  cancelled, runs out or is upgraded (an upgrade to a blizzard is the blizzard's own card). Another warning,
+  a watch with the warning's number and another office's never hold it. The index steps down a level
+  between updates of one warning, and RLX's January 2016 warning took the card down at the height of the
+  snow. The model hands out what is holding the card (`held`, `{"KRLX.WS.W.2": {"rule": "F3", "end":
+  "2025-01-07T11:00:00Z"}}`, the event's VTEC end; a bare `"F3"` from an older cache is read as one with no
+  end) and takes it back in the next read: the page keeps it in memory (`STORM_HELD`) and with the reading,
+  so its cache keeps it too. A held event applies only while that same event is live in the alert list, so
+  nothing is ever raised from the latch alone. A read with no point list (its request failed, `alerts`
+  null) knows nothing of the house's warnings: what is held is handed on as it was, and only its own end
+  takes it off, and `render()` and `stormRun` write the latch only from a paint with a fresh point list. A
+  list that no longer carries the event live lets it go (cancelled, run out or upgraded, which the fetch
+  drops, or gone).
+  VTEC event numbers restart every January, so with a list a held entry is the live event's only while it is
+  this season's: one whose stored end is more than 30 days before now is last winter's, and is ignored and
+  dropped (no warning runs that long, and every paint with the event live writes its end again), and one
+  ended in another year than the live event's end is a number used again when the live product is a NEW (an
+  update, CON, EXT and the rest, carries the same warning across the New Year). A latch left in the farm's
+  entry from January 2025's KRLX.WS.W.0002 raised the next winter's WS.W.0002 at Moderate, with no index.
+- **Only the list's own reading raises F3.** A reading of WPC's index is the judge only of the list it was
+  asked for: it raises a warning (and adds a held key) only when it was asked once this list was in (its
+  `at`, `seen.wssi`, at or after `seen.point`, when the house's list came in) or was asked for that same
+  warning with those same hours (its `for`). A reading asked for an earlier list is carried until the
+  lane's own answer lands and only keeps a warning already held, and `stormRun` raises the card when the
+  lane's own answer lands, with the view held. Until October 11 2026 an in-app refresh (which never waits
+  for the lane) painted a warning just extended into Day 3 on the last refresh's Day-3 Major, raised the card
+  and latched it, and the new cycle's Moderate never took it down; a cold open the next morning with the
+  lane slower than `STORM_WAIT` did the same for a new warning on yesterday's Day-2 Major. With no `seen`
+  (a caller handing a reading over with its own list, as the tests and the backtest do) the reading is
+  that list's.
+- **A failed point request keeps the card.** When the house's alerts request fails, the paint is on the
+  last good list this place had (the cache's, or the page's own `LAST`), less what has ended by now, and
+  every paint reads it against now as it reads any list (`activeAlerts`, `stormLive`), so an alert whose end
+  passes during the outage still comes down. It keeps the time it was fetched and is marked as carried, not
+  freshly seen (`seen.carried`): a carried list never writes the latch (`render()`, `stormRun`), never
+  raises F3 anew, and the model hands the latch on as it was. Until October 11 2026 one timed-out request
+  under storm load took the card, the strip and the storm's headline down for that paint (the headline went
+  back to the forecast's "Cold today. Freezing rain likely around 6 a.m. Bundle up." under a live Winter
+  Storm Warning), and the cache was written with no alerts, so a reopen inside six hours showed no card
+  either. The plain strip stays up through it too, where main blanked it. Until October 11 2026 a single timed-out request (api.weather.gov under storm load) wrote the
+  latch as empty, and the next update at Moderate took the card down. And the latch and the last index are
+  read out of this place's cache entry whatever its age (`readLatch`), apart from `readCache`'s six hours and
+  its day: a card raised at 5:30 pm was gone on a cold open at 7 the next morning under the same warning.
+  test.mjs runs both through the page's own `refresh()` (Major, a failed fetch, then the same warning CON at
+  Moderate; then a cold open the next morning on a day-old entry), and `tools/interactions.mjs` on the page.
+  test.mjs also runs the page's own `refresh()` and `stormRun` together on a moving clock (`pageRig`): a
+  Day-3 Major, then the warning extended into Day 3 with a fresh all-Moderate cycle, on an in-app refresh
+  (the cycle 0 and 1.5 seconds behind) and on a cold open with the lane slower than `STORM_WAIT`, inside six
+  hours and the next day; yesterday's Day-2 Major beside a new WS.W.3 with today's Moderate behind it; and
+  the farm and the coast through a failed point request, an advisory ending during it, a reopen while it
+  still fails and the warning's own end. `tools/interactions.mjs` watches every frame of the extended
+  warning's refresh with the index 1.5 seconds behind and of the next morning's cold open with a new warning
+  and the index 4 seconds behind (no frame has the card), and the farm at 320 and the coast at 390 through a
+  failed request with an advisory that ends 14 seconds in (the card, the strip and the headline never change,
+  and the advisory comes down at its end with the point still failing).
+  A held emergency holds the card, but is never still said to be an emergency (`emergency` is from the
+  alerts as they are now).
+- **The backtest.** `tools/storm-corpus.mjs` keeps every winter storm, blizzard and ice storm warning RLX
+  wrote for Raleigh County (WVZ516, WVZ035 before the split) and ILM for Inland New Hanover (NCZ107) from
+  January 2014 to October 10 2026, from Iowa State's AFOS archive, cut to the place's segment, live actions
+  only (NEW, CON, EXT, EXA, EXB, COR), 284 at the farm and 44 at the coast, one file a winter in
+  `tools/storm-fixtures/corpus/` (IEM has no ISW or BZW for either office: those warnings are in the WSW).
+  `node tools/storm-corpus.mjs wssi` adds `corpus/wssi.json`, the index at each place for each segment since
+  November 2020, from WPC's own archive of its grids (ftp-wpc.ncep.noaa.gov/WSSI_Archive/David_Archive/: the
+  WSSI_Maximum_Overall GeoTIFF of the cycle out when the segment was issued, and its three days, the
+  WSSI_Overall fhr24, fhr48 and fhr72 GeoTIFFs, read at the place's own grid cell, LZW and Lambert conformal
+  by hand, with no library). 104 of those 176 segments fall in a cycle the archive does not keep, and read
+  no index. test.mjs runs stormRead on every segment as it was issued, in order, each cycle's days on their
+  own windows, the latch handed on: every quote is the segment's own words, never absurd and never cut at a
+  number, F3 never fires from the words alone, and with the archived index the farm's card comes up for one
+  storm in six winters, RLX's January 5 to 7 2025 warning, Major at the farm on Day 2 of the cycle out at
+  10:24 UTC on the 5th (Moderate on Day 1), and held through its last update. Its January 23 to 26 2026 warning was Moderate there through every update,
+  which is why `ice-farm` stays down. At the coast every winter warning is the card, and the index was
+  Major there for one of them, January 30 2026. RLX's January 2016 sequence, given a Major at its first
+  update, keeps the card up through all of them. `PORCH_CORPUS=1 node --test test.mjs` prints every farm
+  firing with its title.
 
 ## The moon over the farm
 
@@ -1378,7 +1779,9 @@ The fuller scene earns its playfulness from the existing drawings and their beha
   retry; a failed refresh with a valid cache keeps the reading and shows its age.
 - Filter expired alerts before rendering them or using them for lightning and
   outdoor advice. Active severe/extreme warnings take precedence over an otherwise
-  pleasant outdoor reading: the farm says the family's action in red and takes the fishing times,
+  pleasant outdoor reading (a Freeze Warning or a Frost Advisory is not one: on a frosty fall night it
+  printed "Feed early and keep a path open." in red and took the fishing times, fixed October 10 2026):
+  the farm says the family's action in red and takes the fishing times,
   and with the boat season on the water says `Stay off the water.` Include
   the NWS instruction text in the expanded alert; do not invent an instruction.
 - **The warning strip enters once.** It comes in when an alert arrives and then it stays put. The
@@ -1389,11 +1792,19 @@ The fuller scene earns its playfulness from the existing drawings and their beha
   so an open strip keeps its body. A different alert taking the lead plays the entrance again. An
   alert comes down when it ends, with the app left open and nothing touched (`alertTimer` asks for
   the forecast a second after the end, so a warning the Weather Service has extended stays up with
-  its new words), and the next one to arrive enters, closed. Until October 2026 the strip was
+  its new words, and a second after a live product's VTEC begin when it was issued ahead of its
+  start, so the storm's headline turns to under way), and the next one to arrive enters, closed. Until October 2026 the strip was
   written from scratch on every paint, so a strip opened on the cache came in again when the live
   forecast landed, a Tornado Warning taking over from a thunderstorm warning only swapped the
   words, and an ended warning stayed up until something painted. `alertStrip` and `alertStep` are
   pure and test.mjs runs them, with `renderAlerts` and `alertTimer` against a stand-in strip.
+  Every end carries its day when it is not today, on the place's clock (`until 11:00 am Sun`):
+  read on a Saturday, a bare "until 11:00 am" for Sunday was a morning that had passed. Its words'
+  "this afternoon" takes its day once that afternoon is over (`relDay`). While a storm card is up it
+  leads with the strongest tropical warning, leaves the card's own alerts' words to the card, and lets
+  a short-fuse warning in on its own (see The storm card). At night the page's marker is a light
+  salmon for type on dark paper, and cream type on it read about 2.7:1, so the strip keeps a deeper
+  rust of its own at night, 4.5:1 and more for every word on it.
 - Small labels need enough ink on both the sky-tinted daytime paper and the tinted evening
   paper. Keep long condition names wrappable beside three-digit temperatures.
 - **Chart labels are placed, not stamped.** On a phone an hour of the hourly chart is about
@@ -1560,7 +1971,7 @@ order, hourly, week, tide, moon, sun, year, and so is `RV_OF`, the observer's ma
   dash, the tails, the tip and the fill stay the same. Reduced motion still yields the paint
   and never arms the pen.
 
-`tools/interactions.mjs` runs thirty-seven scenarios: every pill kept inside its chart at both edges
+`tools/interactions.mjs` runs forty-six scenarios: every pill kept inside its chart at both edges
 at 320, 390 and 900, keyboard navigation, location switching, snow/ice labels, a warning at the farm that is `Chores can
 wait.` in red and takes the fishing times until it expires (the moon's note saying `weather warning`
 while it does), source instructions, a warning strip
@@ -1573,7 +1984,17 @@ the card `Piddle before the thunder.` in amber, and no fishing time inside the t
 cache (the farm's moon and its year's title on the cached paint and the live one),
 the entrance across a cache-to-live paint that drops the nowcast strip with the week at the
 fold (nothing on screen left undrawn) and with no cache (the tide the live paint pushes below
-the fold waits for the scroll, then draws), retry, and cached/online recovery. Then the explorer
+the fold waits for the scroll, then draws), retry, and cached/online recovery; a cold open in Debby's
+storm with the beach zone in time (the card is in the first frame and the hours never move under it),
+late and scrolled to the week (nothing on screen moves), late and scrolled partway with the header's
+foot 150px down the screen (the hours hold still), and late at the top (the sky stays put), then
+reopened offline on its cached card; Debby opened with the beach fast and the advisories 3.7 seconds
+slow (the beach's warning is in the first frame), and left open across the beach warning's expiry
+and renewal with the advisories slower than the forecast (every frame watched: the card never comes
+down and the headline never leaves the storm); Florence with the advisories late and the card's top
+100px above the screen at 320 and 390 (the card grows, the hours hold); and a Tornado Warning under Florence's Hurricane Warning, which
+leads the strip with its own instruction, is never folded into the card, and hands the strip back to
+the hurricane when it ends. Then the explorer
 with a real finger (CDP touch in a phone context, because a synthetic dispatchEvent skips the
 browser's gesture handling, which is how the hourly chart's freeze went unseen): a sideways slide on
 every chart at 390 that keeps the finger, follows it and rings the published point, a vertical drag

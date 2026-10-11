@@ -13,6 +13,7 @@ import { createServer } from "node:http";
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { STORMS, stormAlerts, stormProducts, stormWssi } from "./storm-fixtures.mjs";
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -227,6 +228,10 @@ export const SEVERE = (now) => [{
  * every CSS animation we are here to look at.
  */
 export async function stage(page, { now, loc, o, tidePhase = 0, fontDir = "", port }) {
+  /* a storm scenario (tools/storm-fixtures.mjs) answers the Weather Service's alerts and the hurricane
+     centers' advisories with its real products; without one, nothing here changes */
+  const storm = o.storm == null ? null : typeof o.storm === "string" ? STORMS[o.storm] : o.storm;
+  if (o.storm != null && !storm) throw new Error(`no storm fixture called ${o.storm}`);
   await page.addInitScript((cfg) => {
     try { localStorage.setItem("mbwx-loc", cfg.id); } catch {}
     const off = cfg.t - Date.now(), RD = Date;
@@ -247,6 +252,13 @@ export async function stage(page, { now, loc, o, tidePhase = 0, fontDir = "", po
   await page.route(/tidesandcurrents\.noaa\.gov/, (r) => r.fulfill({ json: coops(r.request().url(), now, o, tidePhase) }));
   await page.route(/erddap\.secoora\.org/, (r) => { const j = erddap(now, o);
     return j ? r.fulfill({ json: j }) : r.fulfill({ status: 404, contentType: "text/plain", body: 'Error {\n    code=404;\n    message="Not Found: Your query produced no matching results.";\n}\n' }); });
-  await page.route(/api\.weather\.gov\/alerts/, (r) => r.fulfill({ json: { features: o.code >= 95 ? SEVERE(now) : [] } }));
-  await page.route(/api\.weather\.gov\/products/, (r) => r.fulfill({ json: { "@graph": [] } }));
+  await page.route(/api\.weather\.gov\/alerts/, (r) => r.fulfill({ json: { features: storm ? stormAlerts(storm, r.request().url()) : o.code >= 95 ? SEVERE(now) : [] } }));
+  await page.route(/api\.weather\.gov\/products/, (r) => {
+    if (!storm) return r.fulfill({ json: { "@graph": [] } });
+    const j = stormProducts(storm, r.request().url());
+    return j ? r.fulfill({ json: j }) : r.fulfill({ status: 404, json: { title: "Not Found", status: 404 } });
+  });
+  /* WPC's Winter Storm Severity Index, which the farm asks for while a Winter Storm Warning stands: the
+     scenario's answer, else the farm's real one outside winter, no features */
+  await page.route(/mapservices\.weather\.noaa\.gov/, (r) => r.fulfill({ json: stormWssi(storm) }));
 }

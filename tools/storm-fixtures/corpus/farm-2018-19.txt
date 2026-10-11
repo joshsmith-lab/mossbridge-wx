@@ -1,0 +1,1091 @@
+# RLX, Southeast Raleigh (WVZ516; Raleigh, WVZ035, before the split): winter storm, blizzard and ice storm warnings, the 2018-19 winter, verbatim from Iowa State's AFOS archive (tools/storm-corpus.mjs)
+%% WSWRLX 2018-11-15T11:12:00Z WVZ516
+WWUS41 KRLX 151112
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+612 AM EST Thu Nov 15 2018
+
+WVZ516-518-520-151600-
+/O.UPG.KRLX.WW.Y.0027.000000T0000Z-181115T1400Z/
+/O.EXB.KRLX.WS.W.0008.000000T0000Z-181115T1600Z/
+Southeast Raleigh-Southeast Fayette-Southeast Nicholas-
+Including the cities of Beckley, Meadow Bridge, and Richwood
+612 AM EST Thu Nov 15 2018
+
+...WINTER STORM WARNING IN EFFECT UNTIL 11 AM EST THIS MORNING...
+
+* WHAT...Significant icing. Additional ice accumulations of one 
+  tenth to one quarter of an inch. Winds gusting as high as 35 
+  mph.
+
+* WHERE...Southeast Raleigh, Southeast Fayette and Southeast 
+  Nicholas Counties.
+
+* WHEN...Until 11 AM EST this morning.
+
+* ADDITIONAL DETAILS...Roads may become slick in a few 
+  locations. Ice on roadways may be greater across Southeast 
+  Raleigh, Southeast Fayette, and Southeast Nicholas counties.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of ice will make
+travel very hazardous or impossible. Tree damage and power 
+outages are likely. Strong winds may exacerbate tree damage. If 
+you must travel...have a winter survival kit with you.
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2018-11-15T14:05:00Z WVZ516
+WWUS41 KRLX 151405
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+905 AM EST Thu Nov 15 2018
+
+WVZ516-518-520-151600-
+/O.CON.KRLX.WS.W.0008.000000T0000Z-181115T1600Z/
+Southeast Raleigh-Southeast Fayette-Southeast Nicholas-
+Including the cities of Beckley, Meadow Bridge, and Richwood
+905 AM EST Thu Nov 15 2018
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 11 AM EST THIS
+MORNING...
+
+* WHAT...Significant icing. Additional ice accumulations of one 
+  tenth to one quarter of an inch. Winds gusting as high as 35 
+  mph. 
+
+* WHERE...Southeast Raleigh, Southeast Fayette and Southeast 
+  Nicholas Counties. 
+
+* WHEN...Until 11 AM EST this morning.
+
+* ADDITIONAL DETAILS...Roads may become slick in a few 
+  locations. Ice on roadways may be greater across Southeast 
+  Raleigh, Southeast Fayette, and Southeast Nicholas counties. 
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of ice will make
+travel very hazardous or impossible. Tree damage and power
+outages are likely. Strong winds may exacerbate tree damage. If
+you must travel...have a winter survival kit with you.
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2018-12-09T07:27:00Z WVZ516
+WWUS41 KRLX 090727
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+227 AM EST Sun Dec 9 2018
+
+WVZ024-025-034-515-516-091530-
+/O.UPG.KRLX.WW.Y.0031.000000T0000Z-181210T0500Z/
+/O.EXA.KRLX.WS.W.0009.000000T0000Z-181210T0500Z/
+Mingo-Logan-Wyoming-Northwest Raleigh-Southeast Raleigh-
+Including the cities of Williamson, Logan, Chapmanville, Man, 
+Mullens, Oceana, Pineville, Bradley, Prosperity, Sophia, 
+and Beckley
+227 AM EST Sun Dec 9 2018
+
+...WINTER STORM WARNING IN EFFECT UNTIL MIDNIGHT EST TONIGHT...
+
+* WHAT...Heavy snow. Additional snow accumulations of 3 to 5
+  inches in Mingo and Logan County and 4 to 8 inches in Wyoming
+  and Raleigh County. Localized amounts of 10 inches or more will
+  be possible in Southeast Wyoming and Southeast Raleigh County. 
+
+* WHERE...Mingo, Logan, Wyoming, Northwest Raleigh and Southeast 
+  Raleigh Counties.
+
+* WHEN...Until midnight EST tonight.
+
+* ADDITIONAL DETAILS...Travel will become difficult due to the 
+  heavy snow. Isolated power outages are possible due to the 
+  heavy snow on trees and power lines.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning for snow means severe winter weather
+conditions will make travel very hazardous or impossible. If you
+must travel, keep an extra flashlight, food and water in your
+vehicle in case of an emergency. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2018-12-09T15:22:00Z WVZ516
+WWUS41 KRLX 091522
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+1022 AM EST Sun Dec 9 2018
+
+VAZ003-004-WVZ024-025-033-034-515-516-518-092330-
+/O.CON.KRLX.WS.W.0009.000000T0000Z-181210T0500Z/
+Dickenson-Buchanan-Mingo-Logan-McDowell-Wyoming-Northwest Raleigh-
+Southeast Raleigh-Southeast Fayette-
+Including the cities of Clintwood, Grundy, Vansant, Williamson, 
+Logan, Chapmanville, Man, Welch, Gary, War, Mullens, Oceana, 
+Pineville, Bradley, Prosperity, Sophia, Beckley, 
+and Meadow Bridge
+1022 AM EST Sun Dec 9 2018
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL MIDNIGHT EST
+TONIGHT...
+
+* WHAT...Heavy snow. Additional snow accumulations of 3 to 5 
+  inches.
+
+* WHERE...Southeast Fayette County.
+
+* WHEN...Until midnight EST tonight.
+
+* ADDITIONAL DETAILS...Travel will become difficult due to the 
+  heavy snow. Isolated power outages are possible due to the 
+  heavy snow on trees and power lines.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning for snow means severe winter weather
+conditions will make travel very hazardous or impossible. If you
+must travel, keep an extra flashlight, food and water in your
+vehicle in case of an emergency. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2018-12-09T20:01:00Z WVZ516
+WWUS41 KRLX 092001
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+301 PM EST Sun Dec 9 2018
+
+VAZ003-004-WVZ024-025-033-034-515-516-518-100415-
+/O.CON.KRLX.WS.W.0009.000000T0000Z-181210T0500Z/
+Dickenson-Buchanan-Mingo-Logan-McDowell-Wyoming-Northwest Raleigh-
+Southeast Raleigh-Southeast Fayette-
+Including the cities of Clintwood, Grundy, Vansant, Williamson, 
+Logan, Chapmanville, Man, Welch, Gary, War, Mullens, Oceana, 
+Pineville, Bradley, Prosperity, Sophia, Beckley, 
+and Meadow Bridge
+301 PM EST Sun Dec 9 2018
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL MIDNIGHT EST
+TONIGHT...
+
+* WHAT...Heavy snow. Additional snow accumulations of 3 to 5 
+  inches.
+
+* WHERE...Southeast Fayette County.
+
+* WHEN...Until midnight EST tonight.
+
+* ADDITIONAL DETAILS...Travel will become difficult due to the 
+  heavy snow. Isolated power outages are possible due to the 
+  heavy snow on trees and power lines.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning for snow means severe winter weather
+conditions will make travel very hazardous or impossible. If you
+must travel, keep an extra flashlight, food and water in your
+vehicle in case of an emergency. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2018-12-09T23:56:00Z WVZ516
+WWUS41 KRLX 092356
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+656 PM EST Sun Dec 9 2018
+
+VAZ003-004-WVZ024-025-033-034-515-516-518-100500-
+/O.CON.KRLX.WS.W.0009.000000T0000Z-181210T0500Z/
+Dickenson-Buchanan-Mingo-Logan-McDowell-Wyoming-Northwest Raleigh-
+Southeast Raleigh-Southeast Fayette-
+Including the cities of Clintwood, Grundy, Vansant, Williamson, 
+Logan, Chapmanville, Man, Welch, Gary, War, Mullens, Oceana, 
+Pineville, Bradley, Prosperity, Sophia, Beckley, 
+and Meadow Bridge
+656 PM EST Sun Dec 9 2018
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL MIDNIGHT EST
+TONIGHT...
+
+* WHAT...The heaviest of the snow is over. Snowfall amounts ranged
+  from ten to seventeen inches in eastern Raleigh county, and four
+  to ten inches elsewhere, with isolated higher amounts.
+
+* WHERE...Portions of southern West Virginia and southwest 
+  Virginia.
+
+* WHEN...Until midnight EST tonight.
+
+* ADDITIONAL DETAILS...Travel will become or remain difficult due
+  to the heavy snow earlier, and temperatures in the 20s. 
+  Additional isolated power outages are possible due to the heavy 
+  snow on trees and power lines.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning for snow means severe winter weather
+conditions will make travel very hazardous or impossible. If you
+must travel, keep an extra flashlight, food and water in your
+vehicle in case of an emergency. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2019-01-11T20:09:00Z WVZ516
+WWUS41 KRLX 112009
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+309 PM EST Fri Jan 11 2019
+
+WVZ516-518-120400-
+/O.UPG.KRLX.WS.A.0002.190112T0600Z-190114T0000Z/
+/O.NEW.KRLX.WS.W.0002.190112T1100Z-190114T0000Z/
+Southeast Raleigh-Southeast Fayette-
+Including the cities of Beckley and Meadow Bridge
+309 PM EST Fri Jan 11 2019
+
+...WINTER STORM WARNING IN EFFECT FROM 6 AM SATURDAY TO 7 PM EST
+SUNDAY...
+
+* WHAT...Heavy mixed precipitation expected. Total snow and sleet
+  accumulations of 3 to 5 inches and ice accumulations of a light 
+  glaze expected.
+
+* WHERE...Southeast Raleigh and Southeast Fayette Counties.
+
+* WHEN...From 6 AM Saturday to 7 PM EST Sunday.
+
+* ADDITIONAL DETAILS...Travel could become very difficult.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of snow, sleet
+and ice will make travel very hazardous or impossible. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2019-01-12T03:34:00Z WVZ516
+WWUS41 KRLX 120334
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+1034 PM EST Fri Jan 11 2019
+
+WVZ516-518-520-522>524-526-121145-
+/O.CON.KRLX.WS.W.0002.190112T1100Z-190114T0000Z/
+Southeast Raleigh-Southeast Fayette-Southeast Nicholas-
+Southeast Webster-Northwest Pocahontas-Southeast Pocahontas-
+Southeast Randolph-
+Including the cities of Beckley, Meadow Bridge, Richwood, 
+Snowshoe, Marlinton, and Harman
+1034 PM EST Fri Jan 11 2019
+
+...WINTER STORM WARNING REMAINS IN EFFECT FROM 6 AM SATURDAY TO
+7 PM EST SUNDAY...
+
+* WHAT...Heavy snow expected. Total snow accumulations of 5 to 8 
+  inches expected.
+
+* WHERE...Southeast Nicholas, Southeast Webster, Northwest 
+  Pocahontas, Southeast Pocahontas and Southeast Randolph 
+  Counties.
+
+* WHEN...From 6 AM Saturday to 7 PM EST Sunday.
+
+* ADDITIONAL DETAILS...Travel could become very difficult.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning for snow means severe winter weather
+conditions will make travel very hazardous or impossible. If you
+must travel, keep an extra flashlight, food and water in your
+vehicle in case of an emergency.
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2019-01-12T09:29:00Z WVZ516
+WWUS41 KRLX 120929
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+429 AM EST Sat Jan 12 2019
+
+WVZ516-518-520-522>524-526-121730-
+/O.CON.KRLX.WS.W.0002.190112T1100Z-190114T0000Z/
+Southeast Raleigh-Southeast Fayette-Southeast Nicholas-
+Southeast Webster-Northwest Pocahontas-Southeast Pocahontas-
+Southeast Randolph-
+Including the cities of Beckley, Meadow Bridge, Richwood, 
+Snowshoe, Marlinton, and Harman
+429 AM EST Sat Jan 12 2019
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 7 PM EST SUNDAY...
+
+* WHAT...Heavy snow expected. Total snow accumulations of 5 to 8 
+  inches expected.
+
+* WHERE...Southeast Nicholas, Southeast Webster, Northwest 
+  Pocahontas, Southeast Pocahontas and Southeast Randolph 
+  Counties.
+
+* WHEN...From 6 AM Saturday to 7 PM EST Sunday.
+
+* ADDITIONAL DETAILS...Travel could become very difficult.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning for snow means severe winter weather
+conditions will make travel very hazardous or impossible. If you
+must travel, keep an extra flashlight, food and water in your
+vehicle in case of an emergency.
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2019-01-12T15:26:00Z WVZ516
+WWUS41 KRLX 121526
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+1026 AM EST Sat Jan 12 2019
+
+WVZ516-518-520-522>524-526-122330-
+/O.CON.KRLX.WS.W.0002.000000T0000Z-190114T0000Z/
+Southeast Raleigh-Southeast Fayette-Southeast Nicholas-
+Southeast Webster-Northwest Pocahontas-Southeast Pocahontas-
+Southeast Randolph-
+Including the cities of Beckley, Meadow Bridge, Richwood, 
+Snowshoe, Marlinton, and Harman
+1026 AM EST Sat Jan 12 2019
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 7 PM EST SUNDAY...
+
+* WHAT...Heavy snow expected. Total snow accumulations of 4 to 6 
+  inches expected. Ice accumulations to two tenths possible.
+
+* WHERE...Southeast Nicholas, Southeast Webster, Northwest 
+  Pocahontas, Southeast Pocahontas and Southeast Randolph 
+  Counties.
+
+* WHEN...From 6 AM Saturday to 7 PM EST Sunday.
+
+* ADDITIONAL DETAILS...Travel could become very difficult.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of snow, sleet
+and ice will make travel very hazardous or impossible. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2019-01-12T18:17:00Z WVZ516
+WWUS41 KRLX 121817
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+117 PM EST Sat Jan 12 2019
+
+WVZ516-518-520-130230-
+/O.CON.KRLX.WS.W.0002.000000T0000Z-190114T0000Z/
+Southeast Raleigh-Southeast Fayette-Southeast Nicholas-
+Including the cities of Beckley, Meadow Bridge, and Richwood
+117 PM EST Sat Jan 12 2019
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 7 PM EST SUNDAY...
+
+* WHAT...Snow will change to a mixture of sleet and freezing rain
+  tonight. A change back to snow is expected on Sunday. Total snow
+  accumulations of 1 to 3 inches can be expected along with ice 
+  accumulations of up to two tenths.
+
+* WHERE...Southeast Nicholas, Southeast Fayette and Southeast 
+  Raleigh Counties.
+
+* WHEN...Until 7 PM EST Sunday.
+
+* ADDITIONAL DETAILS...Travel could be very difficult.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of snow, sleet
+and ice will make travel very hazardous or impossible. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2019-01-13T02:28:00Z WVZ516
+WWUS41 KRLX 130228
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+928 PM EST Sat Jan 12 2019
+
+WVZ516-518-520-131030-
+/O.CON.KRLX.WS.W.0002.000000T0000Z-190114T0000Z/
+Southeast Raleigh-Southeast Fayette-Southeast Nicholas-
+Including the cities of Beckley, Meadow Bridge, and Richwood
+928 PM EST Sat Jan 12 2019
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 7 PM EST SUNDAY...
+
+* WHAT...Snow will be mixed at times with sleet and freezing rain
+  overnight. A change back to all snow is expected on Sunday.
+  Total snow accumulations of 1 to 3 inches can be expected, along
+  with ice accumulations of up to one tenth of an inch.
+
+* WHERE...Southeast Nicholas, Southeast Fayette and Southeast 
+  Raleigh Counties.
+
+* WHEN...Until 7 PM EST Sunday.
+
+* ADDITIONAL DETAILS...Travel could be very difficult.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of snow, sleet
+and ice will make travel very hazardous or impossible.
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2019-01-13T11:08:00Z WVZ516
+WWUS41 KRLX 131108
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+608 AM EST Sun Jan 13 2019
+
+WVZ516-518-520-131915-
+/O.CON.KRLX.WS.W.0002.000000T0000Z-190114T0000Z/
+Southeast Raleigh-Southeast Fayette-Southeast Nicholas-
+Including the cities of Beckley, Meadow Bridge, and Richwood
+608 AM EST Sun Jan 13 2019
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 7 PM EST THIS
+EVENING...
+
+* WHAT...A change back to all snow is expected today. Total snow 
+  accumulations of 1 to 3 inches can be expected, along with ice 
+  accumulations of up to one tenth of an inch.
+
+* WHERE...Southeast Nicholas, Southeast Fayette and Southeast 
+  Raleigh Counties.
+
+* WHEN...Until 7 PM EST Sunday.
+
+* ADDITIONAL DETAILS...Travel could be very difficult.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of snow, sleet
+and ice will make travel very hazardous or impossible. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2019-01-13T13:38:00Z WVZ516
+WWUS41 KRLX 131338
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+838 AM EST Sun Jan 13 2019
+
+WVZ516-518-520-132145-
+/O.CON.KRLX.WS.W.0002.000000T0000Z-190114T0000Z/
+Southeast Raleigh-Southeast Fayette-Southeast Nicholas-
+Including the cities of Beckley, Meadow Bridge, and Richwood
+838 AM EST Sun Jan 13 2019
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 7 PM EST THIS
+EVENING...
+
+* WHAT...Freezing rain this morning, possibly mixed with sleet. A
+  change to snow is expected this afternoon. Storm total snow
+  accumulations of 1 to 3 inches, with ice accumulations around a
+  quarter of an inch. 
+
+* WHERE...Southeast Nicholas, Southeast Fayette and Southeast 
+  Raleigh Counties.
+
+* WHEN...Until 7 PM EST this evening.
+
+* ADDITIONAL DETAILS...Plan on slippery road conditions. Some
+  limbs may fall due to ice, resulting in some power outages. 
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of snow, sleet
+and ice will make travel very hazardous or impossible. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2019-01-13T17:05:00Z WVZ516
+WWUS41 KRLX 131705
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+1205 PM EST Sun Jan 13 2019
+
+WVZ516-518-520-140000-
+/O.CON.KRLX.WS.W.0002.000000T0000Z-190114T0000Z/
+Southeast Raleigh-Southeast Fayette-Southeast Nicholas-
+Including the cities of Beckley, Meadow Bridge, and Richwood
+1205 PM EST Sun Jan 13 2019
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 7 PM EST THIS
+EVENING...
+
+* WHAT...Occasional light freezing rain will change to periods of snow
+  this afternoon. Storm total snow accumulations of 1 to 3 
+  inches, with ice accumulations around a quarter of an inch.
+
+* WHERE...Southeast Nicholas, Southeast Fayette and Southeast 
+  Raleigh Counties.
+
+* WHEN...Until 7 PM EST this evening.
+
+* ADDITIONAL DETAILS...Plan on slippery road conditions. Some
+  limbs may fall, resulting in isolated power outages.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of snow, sleet
+and ice will make travel very hazardous or impossible. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2019-01-13T19:47:00Z WVZ516
+WWUS41 KRLX 131947
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+247 PM EST Sun Jan 13 2019
+
+WVZ516-518-520-140000-
+/O.CON.KRLX.WS.W.0002.000000T0000Z-190114T0000Z/
+Southeast Raleigh-Southeast Fayette-Southeast Nicholas-
+Including the cities of Beckley, Meadow Bridge, and Richwood
+247 PM EST Sun Jan 13 2019
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 7 PM EST THIS
+EVENING...
+
+* WHAT...Occasional light freezing rain will change to periods of
+  snow late this afternoon. Storm total snow accumulations of 1 
+  to 3 inches, with ice accumulations around a quarter of an inch.
+
+* WHERE...Southeast Nicholas, Southeast Fayette and Southeast 
+  Raleigh Counties.
+
+* WHEN...Until 7 PM EST this evening.
+
+* ADDITIONAL DETAILS...Plan on slippery road conditions. Some 
+  limbs may fall, resulting in isolated power outages.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning for snow means severe winter weather
+conditions will make travel very hazardous or impossible. If you
+must travel, keep an extra flashlight, food and water in your
+vehicle in case of an emergency. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2019-02-18T19:52:00Z WVZ516
+WWUS41 KRLX 181952
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+252 PM EST Mon Feb 18 2019
+
+WVZ516-518-190400-
+/O.UPG.KRLX.WS.A.0004.190219T2300Z-190220T1800Z/
+/O.NEW.KRLX.WS.W.0005.190220T0000Z-190220T1900Z/
+Southeast Raleigh-Southeast Fayette-
+Including the cities of Beckley and Meadow Bridge
+252 PM EST Mon Feb 18 2019
+
+...WINTER STORM WARNING IN EFFECT FROM 7 PM TUESDAY TO 2 PM EST
+WEDNESDAY...
+
+* WHAT...Heavy mixed precipitation expected. Total snow 
+  accumulations of 1 to 3 inches and ice accumulations of two 
+  tenths to four tenths of an inch expected. Winds gusting as 
+  high as 35 mph.
+
+* WHERE...Southeast Raleigh and Southeast Fayette Counties.
+
+* WHEN...From 7 PM Tuesday to 2 PM EST Wednesday.
+
+* ADDITIONAL DETAILS...Power outages and tree damage are likely 
+  due to the ice. Travel could be nearly impossible. The 
+  hazardous conditions could impact the morning commute.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of snow, sleet
+and ice will make travel very hazardous or impossible. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2019-02-19T08:07:00Z WVZ516
+WWUS41 KRLX 190807
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+307 AM EST Tue Feb 19 2019
+
+WVZ516-518-191615-
+/O.CON.KRLX.WS.W.0005.190220T0000Z-190220T1900Z/
+Southeast Raleigh-Southeast Fayette-
+Including the cities of Beckley and Meadow Bridge
+307 AM EST Tue Feb 19 2019
+
+...WINTER STORM WARNING REMAINS IN EFFECT FROM 7 PM THIS EVENING
+TO 2 PM EST WEDNESDAY...
+
+* WHAT...Heavy mixed precipitation expected. Total snow 
+  accumulations of 1 to 3 inches and ice accumulations of two 
+  tenths to four tenths of an inch expected. Winds gusting as 
+  high as 35 mph.
+
+* WHERE...Southeast Raleigh and Southeast Fayette Counties.
+
+* WHEN...From 7 PM Tuesday to 2 PM EST Wednesday.
+
+* ADDITIONAL DETAILS...Power outages and tree damage are likely 
+  due to the ice. Travel could be nearly impossible. The 
+  hazardous conditions could impact the morning commute.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of snow, sleet
+and ice will make travel very hazardous or impossible. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2019-02-19T13:52:00Z WVZ516
+WWUS41 KRLX 191352
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+852 AM EST Tue Feb 19 2019
+
+WVZ516-518-192200-
+/O.CON.KRLX.WS.W.0005.190220T0000Z-190220T1900Z/
+Southeast Raleigh-Southeast Fayette-
+Including the cities of Beckley and Meadow Bridge
+852 AM EST Tue Feb 19 2019
+
+...WINTER STORM WARNING REMAINS IN EFFECT FROM 7 PM THIS EVENING
+TO 2 PM EST WEDNESDAY...
+
+* WHAT...Heavy mixed precipitation expected. Total snow 
+  accumulations of 1 to 3 inches and ice accumulations of one 
+  tenth to four tenths of an inch expected. Winds gusting as 
+  high as 35 mph.
+
+* WHERE...Southeast Fayette and Southeast Raleigh Counties.
+
+* WHEN...From 7 PM this evening to 2 PM EST Wednesday.
+
+* ADDITIONAL DETAILS...Power outages and tree damage are likely 
+  due to the ice. Travel could be nearly impossible. The 
+  hazardous conditions could impact the morning commute.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of snow, sleet
+and ice will make travel very hazardous or impossible.
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2019-02-19T19:12:00Z WVZ516
+WWUS41 KRLX 191912
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+212 PM EST Tue Feb 19 2019
+
+WVZ516-518-200400-
+/O.CON.KRLX.WS.W.0005.190220T0000Z-190220T1900Z/
+Southeast Raleigh-Southeast Fayette-
+Including the cities of Beckley and Meadow Bridge
+212 PM EST Tue Feb 19 2019
+
+...WINTER STORM WARNING REMAINS IN EFFECT FROM 7 PM THIS EVENING
+TO 2 PM EST WEDNESDAY...
+
+* WHAT...Heavy mixed precipitation expected. Total snow 
+  accumulations of 1 to 3 inches and ice accumulations of one 
+  tenth to three tenths of an inch expected. Winds gusting as 
+  high as 35 mph.
+
+* WHERE...Southeast Fayette and Southeast Raleigh Counties.
+
+* WHEN...From 7 PM this evening to 2 PM EST Wednesday.
+
+* ADDITIONAL DETAILS...Power outages and tree damage are likely 
+  due to the ice. Travel could be nearly impossible. The 
+  hazardous conditions could impact the morning commute.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of snow, sleet
+and ice will make travel very hazardous or impossible.
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2019-02-20T02:33:00Z WVZ516
+WWUS41 KRLX 200233
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+933 PM EST Tue Feb 19 2019
+
+WVZ516-518-201045-
+/O.CON.KRLX.WS.W.0005.000000T0000Z-190220T1900Z/
+Southeast Raleigh-Southeast Fayette-
+Including the cities of Beckley and Meadow Bridge
+933 PM EST Tue Feb 19 2019
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 2 PM EST
+WEDNESDAY...
+
+* WHAT...Heavy mixed precipitation. Snow accumulations of up to 
+  one inch and ice accumulations of up to three tenths of an inch.
+  Winds gusting as high as 35 mph.
+
+* WHERE...Southeast Fayette and Southeast Raleigh Counties.
+
+* WHEN...Until 2 PM EST Wednesday.
+
+* ADDITIONAL DETAILS...Power outages and tree damage are likely 
+  due to the ice. Travel could be nearly impossible. The 
+  hazardous conditions could impact the morning commute.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of snow, sleet
+and ice will make travel very hazardous or impossible. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2019-02-20T10:25:00Z WVZ516
+WWUS41 KRLX 201025
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+525 AM EST Wed Feb 20 2019
+
+WVZ516-518-201830-
+/O.CON.KRLX.WS.W.0005.000000T0000Z-190220T1900Z/
+Southeast Raleigh-Southeast Fayette-
+Including the cities of Beckley and Meadow Bridge
+525 AM EST Wed Feb 20 2019
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 2 PM EST THIS
+AFTERNOON...
+
+* WHAT...Heavy mixed precipitation. Snow accumulations of up to 
+  one inch and ice accumulations of up to three tenths of an 
+  inch. Winds gusting as high as 35 mph.
+
+* WHERE...Southeast Fayette and Southeast Raleigh Counties.
+
+* WHEN...Until 2 PM EST Wednesday.
+
+* ADDITIONAL DETAILS...Power outages and tree damage are likely 
+  due to the ice. Travel could be nearly impossible. The 
+  hazardous conditions could impact the morning commute.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of snow, sleet
+and ice will make travel very hazardous or impossible. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2019-02-20T13:07:00Z WVZ516
+WWUS41 KRLX 201307
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+807 AM EST Wed Feb 20 2019
+
+WVZ516-518-201900-
+/O.CON.KRLX.WS.W.0005.000000T0000Z-190220T1900Z/
+Southeast Raleigh-Southeast Fayette-
+Including the cities of Beckley and Meadow Bridge
+807 AM EST Wed Feb 20 2019
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 2 PM EST THIS
+AFTERNOON...
+
+* WHAT...Mixed precipitation. Additional ice accumulations of one
+  tenth to two tenths of an inch possible. Winds gusting as high 
+  as 35 mph.
+
+* WHERE...Southeast Fayette and Southeast Raleigh Counties.
+
+* WHEN...Until 2 PM EST Wednesday.
+
+* ADDITIONAL DETAILS...Power outages and tree damage are likely 
+  due to the ice. Travel could be nearly impossible. The 
+  hazardous conditions could impact the morning commute.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of snow, sleet
+and ice will make travel very hazardous or impossible.
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2019-02-20T14:21:00Z WVZ516
+WWUS41 KRLX 201421
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+921 AM EST Wed Feb 20 2019
+
+WVZ516-518-201900-
+/O.CON.KRLX.WS.W.0005.000000T0000Z-190220T1900Z/
+Southeast Raleigh-Southeast Fayette-
+Including the cities of Beckley and Meadow Bridge
+921 AM EST Wed Feb 20 2019
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 2 PM EST THIS
+AFTERNOON...
+
+* WHAT...Significant icing. Additional ice accumulations of 
+  around one tenth of an inch. Winds gusting as high as 35 mph.
+
+* WHERE...Southeast Fayette and Southeast Raleigh Counties.
+
+* WHEN...Until 2 PM EST this afternoon.
+
+* ADDITIONAL DETAILS...Power outages and tree damage are likely 
+  due to the ice. Travel could be nearly impossible. The 
+  hazardous conditions could impact the morning commute.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of snow, sleet
+and ice will make travel very hazardous or impossible.
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2019-02-20T16:51:00Z WVZ516
+WWUS41 KRLX 201651
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+1151 AM EST Wed Feb 20 2019
+
+WVZ516-518-201900-
+/O.CON.KRLX.WS.W.0005.000000T0000Z-190220T1900Z/
+Southeast Raleigh-Southeast Fayette-
+Including the cities of Beckley and Meadow Bridge
+1151 AM EST Wed Feb 20 2019
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 2 PM EST THIS
+AFTERNOON...
+
+* WHAT...Significant icing. Additional ice accumulations of less
+  than a tenth of an inch. Freezing rain will turn to rain this
+  afternoon.  
+
+* WHERE...Southeast Fayette and Southeast Raleigh Counties.
+
+* WHEN...Until 2 PM EST this afternoon.
+
+* ADDITIONAL DETAILS...Power outages and tree damage are likely 
+  due to the ice. Travel could be nearly impossible. The 
+  hazardous conditions could impact the morning commute.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of snow, sleet
+and ice will make travel very hazardous or impossible.
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$

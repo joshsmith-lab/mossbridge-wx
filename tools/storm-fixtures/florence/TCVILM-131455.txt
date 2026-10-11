@@ -1,0 +1,259 @@
+WTUS82 KILM 131455
+TCVILM
+
+URGENT - IMMEDIATE BROADCAST REQUESTED
+Florence Local Watch/Warning Statement/Advisory Number 57
+National Weather Service Wilmington NC  AL062018
+1055 AM EDT Thu Sep 13 2018
+
+NCZ108-132300-
+/O.CON.KILM.SS.W.1006.000000T0000Z-000000T0000Z/
+/O.CON.KILM.HU.W.1006.000000T0000Z-000000T0000Z/
+Coastal New Hanover-
+1055 AM EDT Thu Sep 13 2018
+
+...HURRICANE WARNING REMAINS IN EFFECT...
+...STORM SURGE WARNING REMAINS IN EFFECT...
+
+* LOCATIONS AFFECTED
+    - Carolina Beach
+    - Wrightsville Beach
+
+* WIND
+    - LATEST LOCAL FORECAST: Equivalent Cat 1 Hurricane force wind
+        - Peak Wind Forecast: 70-90 mph with gusts to 115 mph
+        - Window for Tropical Storm force winds: until Saturday 
+          afternoon
+        - Window for Hurricane force winds: early this evening until 
+          Friday afternoon
+
+    - POTENTIAL THREAT TO LIFE AND PROPERTY: Potential for wind 
+      greater than 110 mph
+        - The wind threat has remained nearly steady from the 
+          previous assessment.
+        - PLAN: Plan for extreme wind of equivalent CAT 3 hurricane 
+          force or higher due to possible forecast changes in track, 
+          size, or intensity.
+        - PREPARE: Last minute efforts should solely focus on 
+          protecting life. The area remains subject to catastrophic 
+          wind damage.
+        - ACT: Now is the time to shelter from life-threatening wind. 
+          Be ready to move to the safest place inside your shelter if 
+          necessary.
+
+    - POTENTIAL IMPACTS: Unfolding
+        - Potential impacts from the main wind event are unfolding.
+
+* STORM SURGE
+    - LATEST LOCAL FORECAST: Life-threatening storm surge possible
+        - Peak Storm Surge Inundation: The potential for 6-9 feet 
+          above ground somewhere within surge prone areas
+        - Window of concern: through early Sunday evening
+
+    - POTENTIAL THREAT TO LIFE AND PROPERTY: Potential for storm 
+      surge flooding greater than 6 feet above ground
+        - The storm surge threat has increased from the previous 
+          assessment.
+        - PLAN: The threat of life-threatening storm surge is 
+          diminishing as flood waters recede.
+        - PREPARE: Do not return to evacuated areas until flood 
+          waters completely recede and the all-clear is given by 
+          local officials.
+        - ACT: Failure to practice safety may result in serious 
+          injury or loss of life. If you have a life-threatening 
+          emergency, dial 9 1 1.
+
+    - REALIZED IMPACTS: Being Assessed
+        - Little to no additional surge impacts expected. Community 
+          officials are now assessing the extent of actual surge 
+          impacts accordingly.
+
+* FLOODING RAIN
+    - LATEST LOCAL FORECAST: Flash Flood Watch is in effect
+        - Peak Rainfall Amounts: Additional More than two feet
+
+    - POTENTIAL THREAT TO LIFE AND PROPERTY: Potential for extreme 
+      flooding rain
+        - The flooding rain threat has increased from the previous 
+          assessment.
+        - PLAN: Emergency plans should include the potential for 
+          extreme flooding from heavy rain. Evacuations and rescues 
+          are likely.
+        - PREPARE: Urgently consider protective actions from extreme 
+          and widespread rainfall flooding.
+        - ACT: Heed any flood watches and warnings. Failure to take 
+          action will likely result in serious injury or loss of life.
+
+    - POTENTIAL IMPACTS: Devastating to Catastrophic
+        - Extreme flooding from rainfall may prompt numerous 
+          evacuations and rescues.
+        - Rivers and streams may overwhelmingly overflow their banks 
+          with deep moving water. Creeks and ditches will become 
+          severely flooded and contain strong currents.
+        - Flood waters may enter numerous structures, and some may 
+          become uninhabitable or washed away. Road scours or 
+          complete road failure is likely in many locations, along 
+          with the potential for sinkholes. Many streets and parking 
+          lots will flood, and may be impacted by swift, flowing 
+          water. Numerous road and low-lying bridge closures are 
+          likely with some weakened or washed away. Driving 
+          conditions will be very dangerous.
+        - The delivery of drinking water and sewer services may be 
+          interrupted. Flood waters may be polluted and contain 
+          hazardous materials.
+
+* TORNADO
+    - LATEST LOCAL FORECAST: 
+        - Situation is somewhat favorable for tornadoes
+
+    - POTENTIAL THREAT TO LIFE AND PROPERTY: Potential for a few 
+      tornadoes
+        - The tornado threat has remained nearly steady from the 
+          previous assessment.
+        - PLAN: Emergency plans should continue to include possible 
+          tornadoes.
+        - PREPARE: Stay within your shelter keeping informed of the 
+          latest tornado situation.
+        - ACT: Move quickly to the safest place within your shelter 
+          if a tornado warning is issued.
+
+    - POTENTIAL IMPACTS: Limited
+        - The occurrence of isolated tornadoes can hinder the 
+          execution of emergency plans during tropical events.
+        - A few places may experience tornado damage, along with 
+          power and communications disruptions.
+        - Tornadoes can cause damage to trees, vehicles, boats, and 
+          buildings. Unsecured mobile homes and poorly constructed 
+          structures are particularly vulnerable.
+
+* FOR MORE INFORMATION:
+    - http://www.weather.gov/ilm/Tropics
+    - http://ready.gov/hurricanes
+
+$$
+
+NCZ107-132300-
+/O.CON.KILM.SS.W.1006.000000T0000Z-000000T0000Z/
+/O.CON.KILM.HU.W.1006.000000T0000Z-000000T0000Z/
+Inland New Hanover-
+1055 AM EDT Thu Sep 13 2018
+
+...HURRICANE WARNING REMAINS IN EFFECT...
+...STORM SURGE WARNING REMAINS IN EFFECT...
+
+* LOCATIONS AFFECTED
+    - Wilmington
+    - Castle Hayne
+
+* WIND
+    - LATEST LOCAL FORECAST: Equivalent Cat 1 Hurricane force wind
+        - Peak Wind Forecast: 65-85 mph with gusts to 105 mph
+        - Window for Tropical Storm force winds: until Saturday 
+          afternoon
+        - Window for Hurricane force winds: early this evening until 
+          Friday afternoon
+
+    - POTENTIAL THREAT TO LIFE AND PROPERTY: Potential for wind 
+      greater than 110 mph
+        - The wind threat has remained nearly steady from the 
+          previous assessment.
+        - PLAN: Plan for extreme wind of equivalent CAT 3 hurricane 
+          force or higher due to possible forecast changes in track, 
+          size, or intensity.
+        - PREPARE: Last minute efforts should solely focus on 
+          protecting life. The area remains subject to catastrophic 
+          wind damage.
+        - ACT: Now is the time to shelter from life-threatening wind. 
+          Be ready to move to the safest place inside your shelter if 
+          necessary.
+
+    - POTENTIAL IMPACTS: Unfolding
+        - Potential impacts from the main wind event are unfolding.
+
+* STORM SURGE
+    - LATEST LOCAL FORECAST: Life-threatening storm surge possible
+        - Peak Storm Surge Inundation: The potential for 2-4 feet 
+          above ground somewhere within surge prone areas
+        - Window of concern: Begins late this morning
+
+    - POTENTIAL THREAT TO LIFE AND PROPERTY: Potential for storm 
+      surge flooding greater than 3 feet above ground
+        - The storm surge threat has increased from the previous 
+          assessment.
+        - PLAN: The threat of life-threatening storm surge is 
+          diminishing as flood waters recede.
+        - PREPARE: Do not return to evacuated areas until flood 
+          waters completely recede and the all-clear is given by 
+          local officials.
+        - ACT: Failure to practice safety may result in serious 
+          injury or loss of life. If you have a life-threatening 
+          emergency, dial 9 1 1.
+
+    - REALIZED IMPACTS: Being Assessed
+        - Little to no additional surge impacts expected. Community 
+          officials are now assessing the extent of actual surge 
+          impacts accordingly.
+
+* FLOODING RAIN
+    - LATEST LOCAL FORECAST: Flash Flood Watch is in effect
+        - Peak Rainfall Amounts: Additional More than two feet
+
+    - POTENTIAL THREAT TO LIFE AND PROPERTY: Potential for extreme 
+      flooding rain
+        - The flooding rain threat has increased from the previous 
+          assessment.
+        - PLAN: Emergency plans should include the potential for 
+          extreme flooding from heavy rain. Evacuations and rescues 
+          are likely.
+        - PREPARE: Urgently consider protective actions from extreme 
+          and widespread rainfall flooding.
+        - ACT: Heed any flood watches and warnings. Failure to take 
+          action will likely result in serious injury or loss of life.
+
+    - POTENTIAL IMPACTS: Devastating to Catastrophic
+        - Extreme flooding from rainfall may prompt numerous 
+          evacuations and rescues.
+        - Rivers and streams may overwhelmingly overflow their banks 
+          with deep moving water. Creeks and ditches will become 
+          severely flooded and contain strong currents.
+        - Flood waters may enter numerous structures, and some may 
+          become uninhabitable or washed away. Road scours or 
+          complete road failure is likely in many locations, along 
+          with the potential for sinkholes. Many streets and parking 
+          lots will flood, and may be impacted by swift, flowing 
+          water. Numerous road and low-lying bridge closures are 
+          likely with some weakened or washed away. Driving 
+          conditions will be very dangerous.
+        - The delivery of drinking water and sewer services may be 
+          interrupted. Flood waters may be polluted and contain 
+          hazardous materials.
+
+* TORNADO
+    - LATEST LOCAL FORECAST: 
+        - Situation is somewhat favorable for tornadoes
+
+    - POTENTIAL THREAT TO LIFE AND PROPERTY: Potential for a few 
+      tornadoes
+        - The tornado threat has remained nearly steady from the 
+          previous assessment.
+        - PLAN: Emergency plans should continue to include possible 
+          tornadoes.
+        - PREPARE: Stay within your shelter keeping informed of the 
+          latest tornado situation.
+        - ACT: Move quickly to the safest place within your shelter 
+          if a tornado warning is issued.
+
+    - POTENTIAL IMPACTS: Limited
+        - The occurrence of isolated tornadoes can hinder the 
+          execution of emergency plans during tropical events.
+        - A few places may experience tornado damage, along with 
+          power and communications disruptions.
+        - Tornadoes can cause damage to trees, vehicles, boats, and 
+          buildings. Unsecured mobile homes and poorly constructed 
+          structures are particularly vulnerable.
+
+* FOR MORE INFORMATION:
+    - http://www.weather.gov/ilm/Tropics
+    - http://ready.gov/hurricanes
+
+$$

@@ -1,0 +1,59 @@
+WTNT33 KNHC 131437
+TCPAT3
+
+BULLETIN
+Tropical Storm Helene Advisory Number  25
+NWS National Hurricane Center Miami FL       AL082018
+1100 AM AST Thu Sep 13 2018
+
+...HELENE WEAKENS TO A TROPICAL STORM WHILE MOVING NORTHWARD OVER
+THE NORTHEASTERN ATLANTIC...
+...INTERESTS IN THE AZORES SHOULD MONITOR THE PROGRESS OF HELENE...
+
+
+SUMMARY OF 1100 AM AST...1500 UTC...INFORMATION
+-----------------------------------------------
+LOCATION...24.8N 37.3W
+ABOUT 1135 MI...1825 KM SW OF LAJES AIR BASE IN THE AZORES
+MAXIMUM SUSTAINED WINDS...70 MPH...110 KM/H
+PRESENT MOVEMENT...N OR 355 DEGREES AT 14 MPH...22 KM/H
+MINIMUM CENTRAL PRESSURE...989 MB...29.21 INCHES
+
+
+WATCHES AND WARNINGS
+--------------------
+There are no coastal watches or warnings in effect.
+
+Interests in the Azores should monitor the progress of Helene.
+
+
+DISCUSSION AND OUTLOOK
+----------------------
+At 1100 AM AST (1500 UTC), the center of Tropical Storm Helene was
+located near latitude 24.8 North, longitude 37.3 West. Helene is
+moving toward the north near 14 mph (22 km/h).  The system should
+accelerate and turn toward the northeast by Sunday.  On the
+forecast track, Helene will be approaching the Azores late Saturday
+or Sunday.
+
+Maximum sustained winds have dropped to near 70 mph (110 km/h) with
+higher gusts.  Some continued weakening is forecast during the
+next 72 hours.
+
+Tropical-storm-force winds extend outward up to 140 miles (220 km)
+from the center.
+
+The estimated minimum central pressure is 989 mb (29.21 inches).
+
+
+HAZARDS AFFECTING LAND
+----------------------
+None
+
+
+NEXT ADVISORY
+-------------
+Next complete advisory at 500 PM AST.
+
+$$
+Forecaster Landsea

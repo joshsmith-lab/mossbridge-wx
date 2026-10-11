@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v96/);
+  assert.match(worker, /mbwx-shell-v97/);
   // the buoy's readings are data, so the worker never answers them from the shell's cache
   assert.match(worker, /u\.hostname\.includes\("weather\.gov"\)\|\|u\.hostname\.includes\("secoora\.org"\)\|\|/);
   // the clouds end in their own scallops: Josh loves the clouds and not the curly tail
@@ -144,7 +144,7 @@ test("loading, cached data and the hourly explorer tell the truth", async () => 
   assert.match(html, /revealChart\("hourly",hourlySvg,\{xa,xb,/);
   // The Tonight card never reads a missing hour as zero, or calls the minimum of an incomplete
   // run the night's low. Its weather remains independent of its temperature readings.
-  assert.match(html, /function tonightBrief\(dy,h,now\)/);
+  assert.match(html, /function tonightBrief\(dy,h,now,told=null\)/);
   assert.match(html, /const low=full&&temps\.length===slots\.length\?Math\.round\(Math\.min\(\.\.\.temps\)\):null;/);
   assert.doesNotMatch(html, /temp:Number\(h\.temp\[i\]\)/);
   assert.match(html, /class="tline"[^>]*vector-effect="non-scaling-stroke"/);
@@ -166,8 +166,9 @@ test("overnight copy follows the night the family is actually in", async () => {
   // after midnight the golden hour named is this morning's: the note takes the first gold band
   // on the chart that has not ended, and the Tonight card no longer says it a second time
   assert.match(html, /const nextLight=goldWindows\.find\(gw=>gw\.b>now\)\|\|null;/);
-  // Missing storm direction does not turn a moving system into a stationary one.
-  assert.match(html, /const motion=s\.spd>0\?\(s\.dirDeg!=null\?"moving "/);
+  // Missing storm direction does not turn a moving system into a stationary one: only the advisory's
+  // own STATIONARY says it is not moving.
+  assert.match(html, /spd:mov\?\+mov\[3\]:still\?0:null/);
 });
 
 test("the sunrise and sunset times stay readable on any sky", async () => {
@@ -265,8 +266,9 @@ test("the page agrees with itself", async () => {
   // Low odds never become a promise of dry weather, and a wet code still keeps its name.
   assert.doesNotMatch(html, /mostly dry \$\{when\}/i);
   // Ice and snow get their odds words from their own hours: likely from 60, otherwise possible.
-  assert.match(html, /let weather=ice\.length\?`Freezing rain \$\{likely\(ice\)\?"likely":"possible"\}`:/);
-  assert.match(html, /snow\.length\?`Snow \$\{likely\(snow\)\?"likely":"possible"\}`:/);
+  // (under a storm the card's own rain, snow and freezing rain are not said again: `card`)
+  assert.match(html, /let weather=ice\.length&&!card\("Freezing rain"\)\?`Freezing rain \$\{likely\(ice\)\?"likely":"possible"\}`:/);
+  assert.match(html, /snow\.length&&!card\("Snow"\)\?`Snow \$\{likely\(snow\)\?"likely":"possible"\}`:/);
   // inside a golden hour the note says how long it has left
   assert.match(html, /now>=nextLight\.a\?"until "\+clock\(nextLight\.b\):spanTxt\(nextLight\.a,nextLight\.b\)/);
   // the lit side of the moon is the light side on both themes
@@ -575,7 +577,8 @@ test("every motion is driven by a reading, not by decoration", async () => {
   // the first paint yields: picture, then the hourly pen, then the week pen, then the rest
   assert.match(html, /function paintSoon\(gen,fn\)\{requestAnimationFrame\(\(\)=>\{if\(gen===RENDER_GEN\)fn\(\)\}\)\}/);
   assert.match(html, /function paintAfter\(gen,fn\)\{requestAnimationFrame\(\(\)=>requestAnimationFrame\(\(\)=>requestAnimationFrame\(\(\)=>\{if\(gen===RENDER_GEN\)fn\(\)\}\)\)\)\}/);
-  assert.match(html, /savedAt=savedAt\|\|\(LAST\?\.d===d\?LAST\.savedAt:Date\.now\(\)\);\n  LAST=\{d,live,savedAt\};\n  sceneResume\(\);/);
+  // (and whose reading it is, so a refresh past the cache's six hours can fall back on the page's own)
+  assert.match(html, /savedAt=savedAt\|\|\(LAST\?\.d===d\?LAST\.savedAt:Date\.now\(\)\);\n  LAST=\{d,live,savedAt,loc:LOC\.id\};\n  sceneResume\(\);/);
   assert.match(html, /const base=R\.t0-performance\.now\(\)/);
   // the wipe animates the content of a static clip, never the clip itself
   assert.match(html, /<clipPath id="hourlyArea"><path d="\$\{area\}"\/><\/clipPath>/);
@@ -612,7 +615,7 @@ test("it snows in Shady Spring", async () => {
   assert.match(html, /code:wj\.hourly\.weather_code\.slice\(i0\)/);
   // and the odds word follows the odds: 35% snow is possible, not likely
   assert.match(html, /const likely=is=>is\.some\(i=>known\(h\.pop\?\.\[i\]\)&&\+h\.pop\[i\]>=60\)/);
-  assert.match(html, /snow\.length\?`Snow \$\{likely\(snow\)\?"likely":"possible"\}`:/);
+  assert.match(html, /snow\.length&&!card\("Snow"\)\?`Snow \$\{likely\(snow\)\?"likely":"possible"\}`:/);
   // and the weekend note calls a snowy Saturday's odds snow
   assert.match(html, /odds:wet\?`\$\{Math\.round\(\+P\[i\]\)\}%`:"",noun:wet\?isSnow\(w\)\?"snow":isIce\(w\)\?"ice":"rain":""/);
 });
@@ -1114,7 +1117,10 @@ test("plain-language and living-scene refinements stay in place", async () => {
   // the headline reads the whole run, so from five o'clock it can describe tomorrow's daylight: with the
   // 24-hour slice it said only "Tomorrow's high is 79°." until tomorrow's last daylight hour was inside
   // it. Its look-ahead is still capped at 24 hours inside dayStory (win), so nothing else changes
-  assert.match(html, /const dayRead=dayStory\(c,dy,full,now\);/);
+  // (under a storm the headline is the storm card's: stormStory, below)
+  // (and a thunderstorm overhead still leads the storm's headline: stormsOverhead, shared with dayStory)
+  assert.match(html, /const dayRead=stormDay\?stormStory\(sm,now,TZSHIFT,stormsOverhead\(c,now\)\):\(\(r\)=>sm\.tier&&stormGust\(sm\)!=null\?\{\.\.\.r,told:\[\.\.\.r\.told,\{kind:"Windy"\}\]\}:r\)\(dayStory\(c,dy,full,now\)\);/);
+  assert.match(html, /const overhead=stormsOverhead\(c,nd\);\n  if\(overhead\)return\{html:overhead,told:\[\]\};/);
   assert.match(html, /function coveredHours\(h,dy,now\)/);
   assert.doesNotMatch(html, /Best outside stretch:|bestOutsideWindow|windowLabel|best time to piddle|best time to head out|best window/);
   assert.match(html, /id="goldenband"/);
@@ -1135,7 +1141,7 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /const frogAt=/);
   assert.match(html, /const crabAt=/);
   assert.doesNotMatch(html, /marshDeer/);
-  assert.match(html, /const night=tonightBrief\(dy,full,now\);/);
+  assert.match(html, /const night=tonightBrief\(dy,full,now,stormDay\?dayRead\.told:null\);/);
   assert.doesNotMatch(html, /id="eveWind"/);
   assert.match(html, /function dailyBrief\(dy,i\)/);
   // the week is two lines, not a stack of bars: highs and lows on one scale, the range washed
@@ -2028,7 +2034,8 @@ test("Halloween's cobweb is strung across the corner of the app itself, clear of
   assert.match(html, /xpReset\(\);LAST=null;\n  paintCobweb\(\);\n\}/);
   // placed again when the alert strip opens and moves everything under it, and when the fonts land
   assert.match(html, /el\.setAttribute\("aria-expanded",open\?"true":"false"\);\n  \/\*[^\n]*\*\/\n  paintCobweb\(\);/);
-  assert.match(html, /document\.fonts\.ready\.then\(\(\)=>\{starsClearOfType\(\);paintCobweb\(\);moonNoteFit\(\)\}\)/);
+  // (and the storm card's quoted title is fitted again, in the face that has landed)
+  assert.match(html, /document\.fonts\.ready\.then\(\(\)=>\{starsClearOfType\(\);paintCobweb\(\);moonNoteFit\(\);keepView\(stormTitleFit\)\}\)/);
   // on the glass: out of the flow, over the rain, hidden from screen readers, and every tap goes
   // through it
   assert.match(html, /<div class="cobweb" id="cobweb" aria-hidden="true" hidden><\/div>\n<\/header>/);
@@ -2393,7 +2400,8 @@ test("the warning strip enters once and stays put through every repaint", async 
   const ctx = vm.createContext({ Date: Clock, LOC: { id: "mb" }, refresh: () => asked++,
     document: { hidden: false, getElementById: () => el },
     setTimeout: (fn, ms) => { timers.set(++tid, { fn, ms }); return tid; }, clearTimeout: (id) => timers.delete(id) });
-  vm.runInContext(clock12[0] + "\n" + code, ctx);
+  // (and the VTEC reader, for a product issued ahead of its start)
+  vm.runInContext(clock12[0] + "\n" + code + "\n" + html.slice(html.indexOf("function vtecOf("), html.indexOf("/* an alert as the page keeps it")), ctx);
   const svr = { event: "Severe Thunderstorm Warning", severity: "Severe", ends: "2026-09-13T21:15:00Z",
     desc: "* WHAT...Sixty mph wind gusts.\n\n* WHERE...Porters Neck.", inst: "Move to an interior room." };
 
@@ -2401,7 +2409,7 @@ test("the warning strip enters once and stays put through every repaint", async 
   const one = ctx.alertStrip([svr]), two = ctx.alertStrip([svr, { event: "Heat Advisory", severity: "Moderate" }]);
   assert.equal(ctx.alertStrip([]), null);
   assert.equal(one.lead, two.lead, "another alert joining does not change which alert the strip is");
-  assert.match(two.head, /\+1 more/);
+  assert.match(two.head, / ·\u00A0\+1\u00A0more/, "the dot rides with the words after it, so a wrapped strip never ends a line on it");
   assert.match(two.body, /also active: Heat Advisory/);
   assert.equal(ctx.alertStep(null, null), "none");
   assert.equal(ctx.alertStep(one, null), "off");
@@ -2444,6 +2452,15 @@ test("the warning strip enters once and stays put through every repaint", async 
   // it ends, and the strip comes down; the next one enters by coming on, and arrives closed
   ctx.renderAlerts([]);
   assert.equal(timers.size, 0, "no alert, no end to wait for");
+  // a storm card's own alerts end on the same clock, strip or none: a beach warning the strip never
+  // shows is due at its next advisory, and the forecast is asked for again a second after
+  ctx.renderAlerts([], { due: [{ event: "Tropical Storm Warning", ends: null, expires: "2026-09-13T23:00:00Z" }] });
+  assert.equal(timers.size, 1);
+  assert.equal([...timers.values()][0].ms, Date.parse("2026-09-13T23:00:00Z") - NOW + 1000);
+  ctx.renderAlerts([svr], { due: [{ event: "Tropical Cyclone Local Statement", expires: "2026-09-13T22:30:00Z" }] });
+  assert.equal([...timers.values()][0].ms, Date.parse(svr.ends) - NOW + 1000, "the earliest of them all");
+  timers.clear();
+  ctx.renderAlerts([]);
   assert.equal(el.className, "alert-strip");
   assert.equal(el.innerHTML, "");
   assert.equal(el.dataset.open, "0");
@@ -2455,6 +2472,23 @@ test("the warning strip enters once and stays put through every repaint", async 
   const shell = html.slice(html.indexOf("function paintLoadingState("), html.indexOf("function setLoc("));
   assert.match(shell, /renderAlerts\(null\);/);
   assert.doesNotMatch(html, /className="alert-strip on"/);
+  // and a product issued ahead of its start is asked for again a second after its VTEC begin as well, so an
+  // open page turns the storm's headline from "from noon" to under way at noon, and NOW to the warning
+  timers.clear();
+  const ahead = { event: "Winter Storm Warning", severity: "Moderate", ends: "2026-09-14T10:00:00Z", expires: "2026-09-14T10:00:00Z",
+    vtec: ["/O.NEW.KRLX.WS.W.0002.260913T2200Z-260914T1000Z/"] };
+  ctx.renderAlerts([ahead]);
+  assert.equal(timers.size, 1);
+  assert.equal([...timers.values()][0].ms, Date.parse("2026-09-13T22:00:00Z") - NOW + 1000, "at its start, before its end");
+  ctx.renderAlerts([{ ...ahead, vtec: ["/O.CON.KRLX.WS.W.0002.000000T0000Z-260914T1000Z/"] }]);
+  assert.equal([...timers.values()][0].ms, Date.parse(ahead.ends) - NOW + 1000, "once under way, its end alone");
+  ctx.renderAlerts([{ ...ahead, vtec: ["/O.NEW.KRLX.WS.W.0002.260913T1900Z-260914T1000Z/"] }]);
+  assert.equal([...timers.values()][0].ms, Date.parse(ahead.ends) - NOW + 1000, "a start already passed is no time to wait for");
+  ctx.renderAlerts([{ ...ahead, vtec: ["/O.UPG.KRLX.WS.W.0002.260913T2200Z-260914T1000Z/", "/O.EXA.KRLX.BZ.W.0001.260913T2300Z-260914T1000Z/"] }]);
+  assert.equal([...timers.values()][0].ms, Date.parse("2026-09-13T23:00:00Z") - NOW + 1000, "and an upgraded line's start is not the product's");
+  ctx.renderAlerts([], { due: [ahead] });
+  assert.equal([...timers.values()][0].ms, Date.parse("2026-09-13T22:00:00Z") - NOW + 1000, "the card's own alerts too");
+  timers.clear();
 });
 
 test("the water and the farm say what is there, and nothing is scored or picked", async () => {
@@ -2475,10 +2509,11 @@ test("the water and the farm say what is there, and nothing is scored or picked"
     lift(/const spanTxt=\(a,b\)=>\{[^\n]*\n[^\n]*\};/),
     lift(/const spokenAt=t=>[^\n]*;/),
     lift(/const sentence=s=>[^\n]*;/),
+    lift(/const NOT_OUTDOOR=[^\n]*\nfunction outdoorWarning\(alerts\)\{[\s\S]*?\n\}/),
     html.slice(start, end),
     html.slice(html.indexOf("const NORMALS={"), html.indexOf("function renderYear(")),
     lift(/const moonName=m=>\{[\s\S]*?\};/),
-    "Object.assign(globalThis,{coveredHours,waterGrade,waterTemp,buoyRow,levelGap,levelFeet,waterCard,waterNote,fishLine,fishWindows,farmCard,LOCS,NORMALS,yearCompare,doyOf,moonName});",
+    "Object.assign(globalThis,{coveredHours,waterGrade,waterTemp,buoyRow,levelGap,levelFeet,waterCard,waterNote,fishLine,fishWindows,farmCard,LOCS,NORMALS,yearCompare,doyOf,moonName,outdoorWarning});",
   ].join("\n"), ctx);
   // what the context returns is made again on this side, so deepEqual compares values, not realms
   const own = (r) => r == null || typeof r !== "object" ? r : JSON.parse(JSON.stringify(r));
@@ -2718,6 +2753,16 @@ test("the water and the farm say what is there, and nothing is scored or picked"
   assert.deepEqual(fsay({}, { warning: { event: "Severe Thunderstorm Warning" } }), ["Chores can wait.", "no", null]);
   assert.deepEqual(fsay({}, { warning: { event: "Winter Storm Warning" } }), ["Feed early and keep a path open.", "no", null]);
   assert.deepEqual(fsay({ code: 66, pop: 60 }, { warning: { event: "Ice Storm Warning" } }), ["Stay off the hill until it turns over.", "no", null]);
+  // a Freeze Warning is CAP Severe the way every one is, and it is about the garden: on a frosty fall
+  // night it printed "Feed early and keep a path open." in red and took the fishing times
+  const frost = [{ event: "Freeze Warning", severity: "Severe" }, { event: "Frost Advisory", severity: "Minor" }, { event: "Hard Freeze Warning", severity: "Severe" }];
+  assert.equal(ctx.outdoorWarning(frost), null, "a freeze or a frost keeps nobody in");
+  assert.deepEqual(fsay({ temp: 31, feels: 27 }, { warning: ctx.outdoorWarning(frost) }), [null, null, "3:30–5:30p · 9:30–10:30p"], "the fishing times stay");
+  assert.equal(ctx.outdoorWarning([...frost, { event: "High Wind Warning", severity: "Severe" }]).event, "High Wind Warning", "and a real warning still counts");
+  // what a storm's card or line says has no hour, and is said for every hour: the card says only what to do
+  assert.deepEqual(fsay({ gust: (i) => i < 3 ? 31 : 12 }, { told: [{ kind: "Windy" }] }), ["Chores can wait.", "no", null], "the storm's line gave the gusts");
+  assert.deepEqual(fsay({ gust: (i) => i === 1 ? 31 : 12 }, { told: [{ kind: "Windy" }] })[0], "Get the chores done early.");
+  assert.deepEqual(fsay({ code: 73, pop: 80 }, { told: [{ kind: "Snow" }] })[0], "Feed early and keep a path open.");
   assert.deepEqual(fsay({ code: (i) => i === 0 ? 95 : 1 }), ["Thunder nearby.", "no", null]);
   // freezing rain and snow are named with their hour, because the headline names only its first
   // wet stretch: a shower at two hid the freezing rain at five
@@ -2875,7 +2920,8 @@ test("the water and the farm say what is there, and nothing is scored or picked"
   assert.match(html, /return temp\|\|level\|\|buoy\?\{temp,level,pred:rows\(pr\?\.predictions\),buoy\}:null/);
   assert.match(html, /return say\(w\?\.temp,36e5\)\?\?say\(w\?\.buoy,BUOY_FRESH\);/);
   assert.match(html, /const BUOY_FRESH=54e5;/);
-  assert.match(html, /hourly:s,marine,tides,water,alerts,storms,nowcast/);
+  // (the house's list, or the last good one carried through a failed request: refresh, the storm card)
+  assert.match(html, /hourly:s,marine,tides,water,alerts:alerts\?\?carry,storms,nowcast/);
   // and a marine run with no reading in it is no seas, never a default
   assert.match(html, /w\.some\(v=>v!=null&&Number\.isFinite\(\+v\)\)\?\{time:t,wave:w\}:null;\s*\}\)\.catch\(\(\)=>null\):Promise\.resolve\(null\)/);
   // the boat season waits for Josh
@@ -2914,6 +2960,8 @@ test("out-of-order refreshes cannot repaint or stop a newer request", async () =
     render:(data,live)=>paints.push({temp:data.current.temperature_2m,live}),
     writeCache:(id,data)=>writes.push({id,temp:data.current.temperature_2m}),
     readCache:()=>null,paintLoadingState:()=>{node("stamp").textContent="loading";},
+    // the storm lane runs beside the forecast; here it has nothing to say and says it at once
+    stormLane:()=>Object.assign(Promise.resolve({storms:[],beach:null,wssi:null}),{beach:Promise.resolve(null),wssi:Promise.resolve(null)}),LAST:null,
   });
   vm.runInContext(code,ctx);
   const forecast = temp => ({
@@ -2944,6 +2992,72 @@ test("out-of-order refreshes cannot repaint or stop a newer request", async () =
   assert.equal(node("refreshBtn").classList.contains("spin"),false);
 });
 
+test("the beach's answer is every paint's, and a cached beach warning at its expiry waits for it", async () => {
+  // Debby's tropical storm warning was the beach's alone. Its expiry is only the next advisory's time,
+  // and the Weather Service has nearly always renewed it by then: refreshed at that expiry (the strip's
+  // timer, stormDue) on the cached beach, the card came down, the headline went back to "Raining now.",
+  // and both came back when the advisories landed. And a first open with the advisories slow painted
+  // without the beach's warning it already had. STORM_WAIT is cut short here
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const code = html.slice(html.indexOf("let REFRESH_ID=0;"), html.indexOf("\nconst SWAP=")).replace("const STORM_WAIT=3000;", "const STORM_WAIT=80;");
+  assert.ok(code.includes("const STORM_WAIT=80;"));
+  const T = Date.parse("2024-08-07T15:40:00Z"), tsw = (expires) => ({ id: "tsw", event: "Tropical Storm Warning", expires, vtec: ["/O.CON.KILM.TR.W.1004.000000T0000Z-000000T0000Z/"] });
+  const ffa = { id: "ffa", event: "Flood Watch", ends: "2024-08-09T08:00:00-04:00", vtec: ["/O.CON.KILM.FA.A.0006.000000T0000Z-240809T1200Z/"] };
+  const run = async ({ last, kept, cache = kept, beach, point = [] }) => {
+    const paints = [], nodes = new Map(), node = (id) => { if (!nodes.has(id)) { const c = new Set(), a = new Map(); nodes.set(id, { textContent: "", classList: { add: (v) => c.add(v), remove: (v) => c.delete(v), contains: (v) => c.has(v) }, setAttribute: (k, v) => a.set(k, v) }); } return nodes.get(id); };
+    class Clock extends Date { constructor(...a) { super(...(a.length ? a : [T])); } static now() { return T; } }
+    const forecast = { current: { time: "2024-08-07T11:00", temperature_2m: 78 }, daily: {}, hourly: Object.fromEntries(["time", "temperature_2m", "apparent_temperature", "precipitation_probability", "weather_code", "wind_speed_10m", "wind_gusts_10m", "uv_index"].map((k) => [k, [k === "time" ? "2024-08-07T11:00" : 1]])) };
+    const t0 = performance.now();
+    const ctx = vm.createContext({ Date: Clock, setTimeout, LOC: { id: "mb", kind: "coast", lat: 34, lon: -77, tz: "America/New_York" }, document: { getElementById: node }, navigator: { onLine: true },
+      fetchJSON: (url) => url.includes("open-meteo.com") ? Promise.resolve(forecast) : url.includes("alerts/active?point") ? Promise.resolve({ features: point }) : Promise.reject(new Error("none")),
+      alertRow: (f) => f, alertLive: () => true, isTropical: (a) => /^TR\./.test(a.vtec[0].slice(3)) || /\.TR\./.test(a.vtec[0]), stormLive: (a, now) => !(Date.parse(a.ends || a.expires || "") <= now),
+      stormWaits: (L, al, b) => (al || []).length > 0 || (b || []).length > 0, render: (d) => paints.push({ beach: d.beach, seen: d.seen, storms: d.storms, ms: performance.now() - t0 }), writeCache: () => {},
+      readCache: () => (cache ? { data: cache, savedAt: T - 6e5 } : null), paintLoadingState: () => {}, PAINT: Promise.resolve(), LAST: last,
+      // the advisories are slow (they never land here); the beach answers in 20ms, or never
+      stormLane: () => Object.assign(new Promise(() => {}), { beach: beach === undefined ? new Promise(() => {}) : new Promise((r) => setTimeout(() => r(beach), 20)), wssi: Promise.resolve(null) }) });
+    vm.runInContext(code, ctx);
+    await ctx.refresh();
+    return paints;
+  };
+  const renewed = tsw("2024-08-07T17:00:00-04:00"), stale = tsw("2024-08-07T11:00:00-04:00");
+  // refreshed at the beach warning's expiry, with the warning renewed: the paint is the renewed warning's,
+  // never the cached one painted as ended
+  const kept = { beach: [stale], storms: [], seen: { point: T - 6e5, beach: T - 6e5 } };
+  const here = (d, savedAt = T - 6e5) => ({ d, savedAt, loc: "mb" });
+  let p = await run({ last: here(kept), kept, beach: [renewed] });
+  assert.equal(p.length, 1);
+  assert.deepEqual(p[0].beach.map((a) => a.expires), [renewed.expires], "the beach's renewed warning, so the card stays up");
+  assert.ok(Math.abs(p[0].seen.beach - T) < 1e3 && p[0].seen.point === T, "both lists fetched now");
+  // a beach that never answers is waited for STORM_WAIT at most, and the cache is what there is: its
+  // list, with when it was fetched, so the warning still stands until the beach decides (stormRead)
+  p = await run({ last: here(kept), kept, beach: undefined });
+  assert.deepEqual(p[0].beach.map((a) => a.expires), [stale.expires]);
+  assert.equal(p[0].seen.beach, T - 6e5, "the cached beach keeps its own time");
+  assert.ok(p[0].ms >= 70, "it waited for the beach: " + p[0].ms);
+  // a cached beach still in date is painted at once, as it always was
+  const fresh = { beach: [renewed], storms: [] };
+  p = await run({ last: here(fresh), kept: fresh, beach: undefined });
+  assert.ok(p[0].ms < 60, "nothing to wait for: " + p[0].ms);
+  // Debby's own timings: refreshed at 11:40, the beach's warning ran out at 7 pm, and the strip's timer
+  // refreshed then, 7h20m on, with the cache past its six hours. The page's own reading for this place
+  // stands in for it: the wait runs, and the paint keeps the page's storms
+  const old = { beach: [stale], storms: [{ name: "Debby" }], seen: { point: T - 7.3 * 36e5, beach: T - 7.3 * 36e5 } };
+  p = await run({ last: here(old, T - 7.3 * 36e5), kept: null, beach: [renewed] });
+  assert.deepEqual(p[0].beach.map((a) => a.expires), [renewed.expires], "with the cache aged out, the renewed beach");
+  assert.deepEqual(p[0].storms, [{ name: "Debby" }], "and the page's own storms until the advisories land");
+  p = await run({ last: here(old, T - 7.3 * 36e5), kept: null, beach: undefined });
+  assert.ok(p[0].ms >= 70, "the stale beach is waited for: " + p[0].ms);
+  assert.deepEqual(p[0].beach.map((a) => a.expires), [stale.expires]);
+  // and another place's reading is never this one's
+  p = await run({ last: { ...here(old, T - 7.3 * 36e5), loc: "sp" }, kept: null, beach: undefined });
+  assert.ok(p[0].ms < 60, "the farm's reading is not the coast's: " + p[0].ms);
+  assert.equal(p[0].beach, null);
+  // a first open, Debby's Flood Watch at the house, the advisories slow and the beach fast: the beach's
+  // warning is in the first paint, which waited STORM_WAIT for the advisories
+  p = await run({ last: null, kept: null, beach: [renewed], point: [ffa] });
+  assert.deepEqual(p.map((x) => x.beach && x.beach.map((a) => a.id)), [["tsw"]], "the card is in the first frame");
+});
+
 test("the page reads top down: now, today, the week, and nothing it has already said", async () => {
   const html = await readFile(new URL("index.html", root), "utf8");
   const lift = (re) => { const m = html.match(re); assert.ok(m, `${re} should be extractable`); return m[0]; };
@@ -2954,8 +3068,8 @@ test("the page reads top down: now, today, the week, and nothing it has already 
   // Every section is one shape (a title with one short note, the picture, its labels) and both
   // places run in the same order: the moon at the farm sits where the tide sits at the coast, the
   // sentences are cards, and the year is at the foot
-  const order = ['<header class="sky"', "<b>Next 24 hours</b>", '<div class="week">', '<section id="moonSection"', '<section id="tideSection">',
-    '<section id="stormSection"', '<div class="cards">', '<div class="card wide" id="sayCard"', '<div class="card" id="sunCard">', '<section id="yearSection"', '<p class="foot">'].map(at);
+  const order = ['<header class="sky"', '<section id="stormSection" hidden>', "<b>Next 24 hours</b>", '<div class="week">', '<section id="moonSection"', '<section id="tideSection">',
+    '<section id="stormLine" hidden aria-label="Storm">', '<section id="stormDebug"', '<div class="cards">', '<div class="card wide" id="sayCard"', '<div class="card" id="sunCard">', '<section id="yearSection"', '<p class="foot">'].map(at);
   assert.deepEqual([...order].sort((a, b) => a - b), order, "sections run in page order");
   assert.match(html, /\.week\{padding:28px 20px 0\}/);
   // and the charts draw in down the page in the same order: REVEAL's keys are that order, and
@@ -2975,7 +3089,7 @@ test("the page reads top down: now, today, the week, and nothing it has already 
 
   // The wind chip is the speed and an arrow into the wind; the compass point is only spoken,
   // and calm air gets no arrow at all, though gusts running 6 over it are still said (the
-  // burgee and the trees move to them). dirTxt stays for the tropics rows.
+  // burgee and the trees move to them). dirTxt stays for the storm card's compass points.
   const chips = html.slice(html.indexOf("const wNow=Math.round(c.wind_speed_10m)"), html.indexOf('document.getElementById("chips").innerHTML'));
   assert.match(chips, /\[vane\(c\.wind_direction_10m\),`<span class="sr-only">Wind from the \$\{dirLong\(c\.wind_direction_10m\)\}, <\/span>/);
   assert.match(chips, /wNow<1\?\[CI\.wind,gNow-wNow>=6\?`calm, gusts \$\{gNow\} mph`:"calm"\]/);
@@ -3007,7 +3121,7 @@ test("the page reads top down: now, today, the week, and nothing it has already 
     vm.runInContext([
       lift(/const SNOW=\[[\s\S]*?const isWet=w=>WETC\.includes\(w\);/),
       lift(/const clock=d=>\{[^\n]*\};/),
-      html.slice(html.indexOf("function renderNowcast("), html.indexOf("const SWIRL=")),
+      html.slice(html.indexOf("function renderNowcast("), html.indexOf("/* ── the storm card")),
       "globalThis.renderNowcast=renderNowcast;",
     ].join("\n"), nc);
     const slots = (p) => ({ time: p.map((_, i) => `2026-01-14T${String(16 + Math.floor((30 + i * 15) / 60)).padStart(2, "0")}:${String((30 + i * 15) % 60).padStart(2, "0")}`), precipitation: p });
@@ -3036,10 +3150,10 @@ test("the page reads top down: now, today, the week, and nothing it has already 
   }
   // code 99 is not a warning, so it does not borrow the NWS warning word
   assert.match(html, /96:"Storms with hail",99:"Storms, heavy hail"/);
-  // the tropics rows: the distance says how close, the count is the rows, and pressure and
-  // advisory numbers are forecaster detail
+  // the Tropics · Atlantic rows went with the storm card (October 10 2026): no list of every Atlantic
+  // system at any distance, no swirl turning for no reading, and nothing scored
   assert.doesNotMatch(html, /within 500 mi|active system|" mb":null|"adv "/);
-  assert.match(html, /const meta=\[s\.mph\?s\.mph\+" mph winds":null,motion\]/);
+  assert.doesNotMatch(html, /Tropics · Atlantic|storm-row|renderStorms|SWIRL|tropics:true/);
   // a failed first load still offers the timestamp as the retry
   assert.match(html, /"Couldn't load the weather\. Tap the timestamp to try again\."/);
 
@@ -3291,7 +3405,29 @@ test("the copy harness keeps looking at the days the water, the farm and the wee
   // the water blown out under the table, and every chart's words kept on the chart, off each other and off the bed
   assert.match(shots, /surge: -1\.6, waterTemp: 48,/);
   assert.match(shots, /level: "Running 1\.5 ft below the tide table\."/);
-  assert.match(shots, /\["hourlySvg", "weekSvg", "tideSvg", "moonSvg", "yearSvg"\]/);
+  assert.match(shots, /\["stormSvg", "hourlySvg", "weekSvg", "tideSvg", "moonSvg", "yearSvg"\]/);
+  // and the storm card's nine real cases, with the tier, the title, the named line and the headline held
+  for (const n of ["florence-coast", "debby-flood-coast", "blizzard-farm", "isaias-farm-today", "isaias-coast-today", "quiet-distant", "ice-farm", "snow-ice-farm", "long-quote-farm"]) assert.ok(shots.includes(`["${n}", { stormTier: `), n);
+  assert.match(shots, /headline: "Hurricane Florence is closest Friday morning\."/);
+  assert.match(shots, /stormLine: "Isaias's remnants pass 33 mi north Sunday evening · gusts to 50"/);
+  // a winter warning's title is its own sentence, never numbers rebuilt from it, and at the farm the card
+  // comes up only with WPC's index at Major or Extreme: RLX's January 2026 warning, Moderate, is the strip's
+  assert.match(shots, /stormTitle: "Winter storm warning remains in effect until 1 AM EST Sunday"/);
+  assert.match(shots, /\["snow-ice-farm", \{ stormTier: "storm", stormTitle: "Total snow accumulations between 4 and 10 inches and ice accumulations between one tenth and one half of an inch\."/);
+  assert.match(shots, /\["ice-farm", \{ stormTier: null, strip: /);
+  // a warning issued ahead of its start says its start, in the headline and the chart's spoken label
+  assert.match(shots, /headline: "Winter storm from noon until 6 a\.m\. Tuesday\.",/);
+  assert.match(shots, /stormWords: \/Snow and ice: Winter Storm Warning from noon until Tuesday at 6 am\//);
+  // and a sentence too long for three lines gives way to the warning's own shorter one, with the whole one
+  // under the chart: the corpus's 153 characters at 390, and January 2025's 113 at 320
+  assert.match(shots, /\["long-quote-farm", \{ stormTier: "storm", stormTitle: "Heavy mixed precipitation\.", stormNote: "",\n      stormFull: "Additional snow accumulations of 3 to 5 inches/);
+  assert.match(shots, /stormTitle320: "Heavy mixed precipitation expected\.", stormFull320: "Total snow accumulations between 4 and 10 inches/);
+  assert.match(shots, /\.\.\.await stripWrap\(page\), \.\.\.await stormTitleRule\(page\)\]/);
+  // every line that joins its parts with a dot is measured for a lone dot at every width, and today's
+  // coast strip stays on two lines at 320 (tying whole clauses together put it on three)
+  assert.match(shots, /const DOT_LINES = \{ "#alertStrip\.on \.alert-head": "the strip", "#stormWarns": "the storm card's warnings", "#stormAsOf": "the storm card's sources", "#stormLineText": "the named storm's line" \};/);
+  assert.match(shots, /strip: \/\^Flood Watch · until 11:00 am Sun · \\\+1 more\$\/, stripLines: 2 \}\]/);
+  assert.match(shots, /a TCV impacts word on the card/);
   assert.match(shots, /\{ w: 320, h: 1500, tag: "narrow" \}/);
   assert.match(shots, /runs into/);
   assert.match(shots, /sits on the bed/);
@@ -3352,23 +3488,26 @@ test("every line reads the same way: one machine, and readers that say only what
   assert.match(html, /xpPublish\("year",\{svg,W,x:ms\.map\(X\),y:ms\.map\(m=>\[Y\(N\.hi\[m\]\),Y\(N\.lo\[m\]\)\]\),t:ms,band:\[12,H-1\],start:m0,marks:\[m0,hiI,loI\]/);
   for (const l of ["Almanac fishing times, 15 minutes a step", "The year, month by month"])
     assert.ok(html.includes(`<input class="xp-key" type="range" min="0" max="0" step="1" value="0" disabled aria-label="${l}">`), l);
-  // one explorer per chart, set up in page order, and every one of them is a chart the entrance draws
+  // one explorer per chart, set up in page order, and every one of them but the storm card is a chart
+  // the entrance draws: the storm card comes up only when it is needed, and adds no motion
   const setups = [...html.matchAll(/xpSetup\("(\w+)"/g)].map((m) => m[1]);
-  assert.deepEqual(setups, ["hourly", "week", "tide", "moon", "year"]);
+  assert.deepEqual(setups, ["storm", "hourly", "week", "tide", "moon", "year"]);
   const revealKeys = Object.keys(Object.fromEntries([...html.match(/const REVEAL=\{([\s\S]*?)\};/)[1].matchAll(/(\w+):\{state/g)].map((m) => [m[1], 1])));
-  for (const k of setups) assert.ok(revealKeys.includes(k), `${k} is in REVEAL`);
-  assert.deepEqual(setups, revealKeys.filter((k) => setups.includes(k)), "in REVEAL's page order");
+  const drawnIn = setups.filter((k) => k !== "storm");
+  for (const k of drawnIn) assert.ok(revealKeys.includes(k), `${k} is in REVEAL`);
+  assert.deepEqual(drawnIn, revealKeys.filter((k) => setups.includes(k)), "in REVEAL's page order");
+  assert.match(html, /function revealFinish\(k\)\{\n  const R=REVEAL\[k\];\n  if\(!R\)return;/, "a reading on the storm card finishes no entrance");
   // one cursor slot per chart, over its line and under its words: in each chart's template it comes
   // before the first literal text and the labels, so their paper halos break the hairline
-  assert.equal(html.split('<g class="xp-cursor"').length - 1, 5);
-  for (const [fn, words] of [["function render(", "${dots}"], ["function renderWeek(", "${marks}"], ["function renderTides(", "${labels}"], ["function renderMoon(", "${labels}"], ["function renderYear(", "${marks}"]]) {
+  assert.equal(html.split('<g class="xp-cursor"').length - 1, 6);
+  for (const [fn, words] of [["function paintStormCard(", "${labels}"], ["function render(", "${dots}"], ["function renderWeek(", "${marks}"], ["function renderTides(", "${labels}"], ["function renderMoon(", "${labels}"], ["function renderYear(", "${marks}"]]) {
     const src = html.slice(html.indexOf(fn)), tpl = src.slice(src.indexOf("innerHTML=`"), src.indexOf("innerHTML=`") + 9000);
     const slot = tpl.indexOf('<g class="xp-cursor"'), firstText = tpl.indexOf("<text");
     assert.ok(slot > 0 && slot < tpl.indexOf(words) && (firstText < 0 || slot < firstText), `${fn} draws its cursor under its words`);
   }
-  // four range inputs, one per chart that is not already a row of buttons
-  assert.equal(html.split('<input class="xp-key" type="range"').length - 1, 4);
-  for (const l of ["Next 24 hours, hour by hour", "Water, 15 minutes a step", "Almanac fishing times, 15 minutes a step", "The year, month by month"])
+  // five range inputs, one per chart that is not already a row of buttons
+  assert.equal(html.split('<input class="xp-key" type="range"').length - 1, 5);
+  for (const l of ["The storm, hour by hour", "Next 24 hours, hour by hour", "Water, 15 minutes a step", "Almanac fishing times, 15 minutes a step", "The year, month by month"])
     assert.ok(html.includes(`aria-label="${l}">`), l);
   // the Sun bar is a scale, not a day, and has none
   assert.match(html, /The Sun bar has none: it is a scale, not\n   a day/);
@@ -3746,6 +3885,20 @@ test("Tonight uses its own hours, connected words, and honest missing readings",
   const dawn=run("2026-10-06T01:00",12);dawn.code[9]=95;dawn.pop[9]=90;
   assert.equal(ctx.tonightBrief(dy,dawn,new Date("2026-10-06T01:30")).text,"Down to 64° before morning.","a daytime storm after sunrise is outside the remaining night");
   assert.equal(ctx.tonightBrief({sunrise:[],sunset:[]},run(),new Date("2026-10-06T20:30")).text,"Forecast unavailable tonight.","no invented sunrise or nighttime interval");
+  // Under a storm the card's rain, snow and freezing rain are not said again, nothing is a warm night
+  // and nothing is green: under Florence it read "Rain likely tonight, with a low of 71°."
+  const storm=(h,told)=>ctx.tonightBrief(dy,h,new Date("2026-10-06T20:30"),told);
+  assert.deepEqual({...storm(raining,[{kind:"Rain"},{kind:"Windy"}])},{text:"Down to 59° tonight.",cls:""});
+  const warm=run();warm.temp=warm.temp.map(()=>78);
+  assert.equal(ctx.tonightBrief(dy,warm,new Date("2026-10-06T20:30")).text,"A warm night, with a low of 78°.");
+  assert.deepEqual({...storm(warm,[{kind:"Rain"}])},{text:"Down to 78° tonight.",cls:""},"no warm night under a hurricane");
+  const snowy=run();snowy.code[6]=73;snowy.pop[6]=80;
+  assert.equal(storm(snowy,[{kind:"Snow"}]).text,"Down to 59° tonight.","the blizzard's snow is the card's");
+  assert.equal(storm(thunder,[{kind:"Rain"}]).text,"Thunder possible tonight. Low unavailable.","thunder is not on the card, and is still said");
+  assert.equal(storm(unknown,[{kind:"Rain"}]).text,"Down to 59° tonight.");
+  // missing odds are unavailable, not dry, unless the card has said the rain: a High Wind Warning has not
+  assert.deepEqual({...storm(unknown,[{kind:"Windy"}])},{text:"Down to 59° tonight. Rain odds unavailable.",cls:"caution"});
+  assert.deepEqual({...storm(unknown,[])},{text:"Down to 59° tonight. Rain odds unavailable.",cls:"caution"});
 });
 
 
@@ -3768,7 +3921,7 @@ test("the real morning refresh keeps tomorrow's sunrise for Tonight and only 24 
       document:{getElementById:()=>node},navigator:{onLine:!offline},
       localStorage:{getItem:k=>store.get(k),setItem:(k,v)=>store.set(k,v)},
       fetchJSON:async url=>{if(offline)throw Error("offline");return url.includes("api.open-meteo.com")?response:{features:[]}},
-      paintLoadingState:()=>{},
+      paintLoadingState:()=>{},stormLane:()=>Object.assign(Promise.resolve({storms:[],beach:null,wssi:null}),{beach:Promise.resolve(null),wssi:Promise.resolve(null)}),LAST:null,
       render:(data,live,savedAt)=>{
         const projected=ctx.renderHours(data.hourly,data.current);
         paints.push({data,live,savedAt,...projected,night:ctx.tonightBrief(data.daily,projected.full,new Clock())});
@@ -3824,7 +3977,7 @@ test("the real morning refresh keeps tomorrow's sunrise for Tonight and only 24 
     now=+new Date("2026-10-08T00:10");assert.equal(ctx.readCache(id),null,"yesterday's forecast cannot survive midnight");
   }
   assert.match(html,/const c=d\.current,dy=d\.daily,m=d\.marine,\{full,h\}=renderHours\(d\.hourly,c\);/);
-  assert.match(html,/const night=tonightBrief\(dy,full,now\);/);
+  assert.match(html,/const night=tonightBrief\(dy,full,now,stormDay\?dayRead\.told:null\);/);
 });
 
 test("condition words follow daylight and the copy previews cover both family places", async () => {
@@ -3987,4 +4140,1476 @@ test("a paint says when it has landed, and the harnesses wait on it rather than 
   for (const id of ["hourlySvg", "weekSvg", "tideSvg", "moonSvg", "yearSvg", "uvSvg", "ncBars"]) assert.ok(clear.includes(`"${id}"`), `${id} is cleared on a switch`);
   assert.match(clear, /renderAlerts\(null\);/);
   assert.match(inter, /the coast's water is gone on the switch's first frame/);
+});
+
+/* ── the storm card ─────────────────────────────────── */
+// values made in the sandbox are compared as data, since its arrays are not this realm's
+const deq = (a, b, m) => assert.deepEqual(JSON.parse(JSON.stringify(a ?? null)), JSON.parse(JSON.stringify(b ?? null)), m);
+// The page's own storm block in a sandbox, with a clock and a fetch of its own: fetchStorms and the
+// beach lane run against tools/storm-fixtures.mjs, the real products each scenario serves the harnesses.
+async function stormSandbox(nowISO, fetchJSON = async () => { throw new Error("offline"); }) {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const lift = (re) => { const m = html.match(re); assert.ok(m, `${re} should be extractable`); return m[0]; };
+  const now = Date.parse(nowISO);
+  class Clock extends Date { constructor(...a) { super(...(a.length ? a : [now])); } static now() { return now; } }
+  const ctx = vm.createContext({ Date: Clock, location: { search: "" }, fetchJSON });
+  vm.runInContext([lift(/const LOCS=\{[\s\S]*?\n\};/), lift(/const toRad=x=>[^\n]*/), lift(/const distMi=[\s\S]*?asin\(Math\.sqrt\(a\)\)\};/),
+    lift(/const dirTxt=[^\n]*/), ...stormHelpers(html, lift), html.slice(html.indexOf("/* ── the storm card"), html.indexOf("/* ── tide ─")),
+    "globalThis.S={vtecOf,alertLive,alertRow,tcvRead,wwRead,inchesIn,hlsRead,tcpRead,tcmRead,namedIn,ssCat,stormRead,stormStrip,fetchStorms,stormLane,LOCS,"
+      + "stormStory,stormLineHtml,stormWarns,stormSay,stormStamps,stormHero,stormLead,stormPart,stCalm,relDay,peakSize,stormCover,stormGust,stormWaits,stormDue,ssMph,"
+      + "stormQuote,stormQuoteShort,winterKinds,winterLabel,wssiRead,wssiMajor,wssiOver,wsWindow,wsFor,wssiUrl,stormEvents,stormEmergency,stormPeak,stormAmount,stormDots,stormWhen,stormUntil};"].join("\n"), ctx);
+  return { S: ctx.S, now, html };
+}
+// what the storm block reads from the rest of the page: the strip's short-fuse list, the relative-day
+// reader, and the clock words
+const stormHelpers = (html, lift) => [lift(/const SAY_JUNK=[^\n]*/), lift(/const sayKeep=[^\n]*/), lift(/const SHORT_FUSE=[^\n]*/), lift(/const REL_DAYS=[^\n]*/), lift(/const REL_END=[\s\S]*?\};/),
+  html.slice(html.indexOf("function relDay("), html.indexOf("/* The strip enters when an alert arrives")),
+  lift(/const clock12=d=>\{[\s\S]*?ap\};/), lift(/const clock=d=>\{[^\n]*\};/), lift(/const spokenClock=[^\n]*/), lift(/const sentence=[^\n]*/), lift(/const esc=s=>[^\n]*/)];
+const STORM_FIX = () => import(new URL("tools/storm-fixtures.mjs", root));
+// a scenario read the way the page reads it: the point's alerts through alertRow and the VTEC drop, then
+// the storm lane (advisories and the beach zone), then the model
+async function stormScenario(name, edit = (st) => st, at) {
+  const { STORMS, stormAlerts, stormProducts, stormWssi } = await STORM_FIX();
+  const st = edit(structuredClone({ ...STORMS[name], o: undefined }));
+  const asked = [];
+  const fetchJSON = async (url) => { asked.push(url); const j = /\/alerts\//.test(url) ? { features: stormAlerts(st, url) } : /mapservices\.weather\.noaa\.gov/.test(url) ? stormWssi(st) : stormProducts(st, url); if (!j) throw new Error("404"); return j; };
+  const { S, now, html } = await stormSandbox(at || st.when, fetchJSON);
+  const L = S.LOCS[st.loc];
+  const point = (await fetchJSON("https://api.weather.gov/alerts/active?point=1,1")).features.map(S.alertRow).filter(S.alertLive);
+  const { storms, beach, wssi } = await S.stormLane(L, Promise.resolve(point));
+  return { S, L, st, point, storms, beach, wssi, now, html, asked, model: S.stormRead(L, point, beach, storms, now, { wssi }) };
+}
+
+test("the storm card's readers take the Weather Service's products as written", async () => {
+  const { S } = await stormSandbox("2026-10-10T20:20:00Z");
+  // VTEC: what happened, what it is, its event number and its times
+  const hu = S.vtecOf("/O.CON.KILM.HU.W.1006.000000T0000Z-000000T0000Z/");
+  deq({ ...hu }, { action: "CON", office: "KILM", phen: "HU", sig: "W", key: "HU.W", etn: 1006, begin: null, end: null });
+  assert.equal(S.vtecOf("/O.CON.KRLX.WI.Y.0008.261010T2100Z-261011T1500Z/").end, "2026-10-11T15:00:00Z");
+  assert.equal(S.vtecOf("/00000.0.ER.000000T0000Z.000000T0000Z.000000T0000Z.OO/"), null, "a hydrologic VTEC line is not a product");
+
+  // a cancelled advisory and an upgraded watch stay in the live feed, and go
+  const live = JSON.parse(await readFile(new URL("tools/storm-fixtures/feed/live-2026-10-10.json", root), "utf8")).features;
+  const row = (k) => S.alertRow(live[k]);
+  assert.equal(S.alertLive(row("cancelled")), false, "JAN's cancelled Wind Advisory");
+  assert.equal(S.alertLive(row("upgraded")), false, "MSO's upgraded Winter Storm Watch, a day after it was replaced");
+  assert.equal(S.alertLive(row("tornado-warning")), true);
+  assert.equal(S.alertLive({ event: "Special Weather Statement", vtec: [] }), true, "a product with no VTEC is not over");
+  assert.equal(S.alertLive({ vtec: ["/O.UPG.KMSO.WS.A.0005.261011T0000Z-261012T0000Z/", "/O.NEW.KMSO.WS.W.0004.261011T0000Z-261012T0000Z/"] }), true,
+    "a segment that upgrades one product and issues the next is live");
+  // and an alert keeps what the card needs: its VTEC, headline, AWIPS id, onset and damage tags
+  const torn = row("tornado-warning");
+  deq([...torn.vtec], ["/O.CON.KCHS.TO.W.0009.000000T0000Z-261010T2045Z/"]);
+  assert.equal(torn.par.tornadoDetection, "OBSERVED");
+  const wind = S.alertRow(JSON.parse(await readFile(new URL("tools/storm-fixtures/isaias/alerts-point-sp.json", root), "utf8")).features[0]);
+  assert.equal(wind.headline, "WIND ADVISORY REMAINS IN EFFECT FROM 5 PM THIS AFTERNOON TO 11 AM EDT SUNDAY");
+  assert.equal(wind.awips, "NPWRLX");
+  assert.equal(wind.onset, "2026-10-10T17:00:00-04:00");
+  assert.ok(wind.zones.includes("WVZ516"));
+
+  // the public advisory: the padded number of a full advisory reads (it did not, and the section blinked)
+  const { STORMS } = await STORM_FIX();
+  const tcp = (st, i = 0) => S.tcpRead(st.tcp[i].productText, st.tcp[i].issuanceTime);
+  const wpc = tcp(STORMS["isaias-farm-today"]);
+  deq({ ...wpc, headlines: [...wpc.headlines] }, { bin: "AT4", atcf: "AL092026", type: "Post-Tropical Cyclone", name: "Isaias", adv: "16",
+    issued: "2026-10-10T15:34:00+00:00", valid: "2026-10-10T15:00:00.000Z", local: "1000 AM CDT Sat Oct 10 2026", office: "WPC",
+    headlines: ["FLASH FLOODING RISK CONTINUES WITH ISAIAS"], lat: 32.8, lon: -86.8, mph: 35, dir: "NNW", dirDeg: 335, spd: 10, mb: 1006, final: false, handoff: false });
+  const nhc15 = tcp(STORMS["isaias-farm-today"], 2);
+  assert.equal(nhc15.adv, "15");
+  assert.equal(nhc15.handoff, true, "NHC's last advisory hands Isaias to WPC");
+  assert.equal(nhc15.final, false, "and so is not the last word on it");
+  const flo = STORMS["florence-coast"];
+  assert.equal(tcp(flo, 1).adv, "56A", "an intermediate keeps its letter");
+  assert.equal(tcp(flo, 3).adv, "24", "a corrected advisory reads as its number");
+  assert.equal(tcp(flo, 3).name, "Isaac");
+  const fake = (title, extra = "") => S.tcpRead(`\n000\nWTNT35 KNHC 061500\nTCPAT5\n \nBULLETIN\n${title}\nNWS National Hurricane Center Miami FL       AL052026\n1100 AM EDT Tue Oct 06 2026\n\nLOCATION...25.0N 70.0W\nMAXIMUM SUSTAINED WINDS...30 MPH...45 KM/H\n${extra}`, "2026-10-06T15:00:00+00:00");
+  assert.equal(fake("Tropical Depression Nine Advisory Number   1").adv, "1");
+  deq([fake("Remnants of Ida Advisory Number  30").type, fake("Remnants of Ida Advisory Number  30").name], ["Remnants", "Ida"]);
+  assert.equal(fake("Potential Tropical Cyclone Eight Advisory Number   2").name, "Eight");
+  assert.equal(fake("Hurricane Five Advisory Number   2", "PRESENT MOVEMENT...STATIONARY\n").spd, 0, "only STATIONARY is not moving");
+  assert.equal(fake("Hurricane Five Advisory Number   2").spd, null, "a missing movement is unknown, never stationary");
+  assert.equal(fake("Hurricane Five Advisory Number   2", "This is the last public advisory on this system.\n").final, true);
+  assert.equal(fake("Hurricane Five Advisory Number   2").final, false);
+  // a special advisory reads (most often a storm strengthening near landfall); it was dropped, and the
+  // card fell back on the advisory before it
+  assert.equal(fake("Hurricane Five Special Advisory Number   2").adv, "2");
+  assert.equal(fake("Hurricane Five Special Advisory Number   2").name, "Five");
+  const floSpecial = S.tcpRead(flo.tcp[0].productText.replace(/(Hurricane Florence) Advisory Number/, "$1 Special Advisory Number"), flo.tcp[0].issuanceTime);
+  deq([floSpecial.name, floSpecial.adv, floSpecial.mph], ["Florence", "57", 105], "Florence's 57 retitled a special advisory still reads");
+  assert.equal(S.tcmRead("TCMAT5 HURRICANE FIVE SPECIAL FORECAST/ADVISORY NUMBER   2 NWS NATIONAL HURRICANE CENTER MIAMI FL AL052026 CENTER LOCATED NEAR 25.0N 70.0W AT 06/1500Z MAX SUSTAINED WINDS 70 KT WITH GUSTS TO 85 KT.", "2026-10-06T15:00:00+00:00").adv, "2", "and its special forecast advisory");
+
+  // the forecast advisory: knots, and the forecast points on the advisory's own month
+  const tcm = S.tcmRead(flo.tcm[0].productText, flo.tcm[0].issuanceTime);
+  assert.equal(tcm.kt, 90);
+  assert.equal(tcm.gust, 110);
+  assert.equal(tcm.atcf, "AL062018");
+  deq({ ...tcm.track[0] }, { when: "2018-09-13T15:00:00.000Z", lat: 33.4, lon: -75.5, kt: 90 });
+  deq({ ...tcm.track[2] }, { when: "2018-09-14T12:00:00.000Z", lat: 34.2, lon: -77.8, kt: 85, note: "INLAND" });
+  const wpcTcm = S.tcmRead(STORMS["isaias-farm-today"].tcm[0].productText, STORMS["isaias-farm-today"].tcm[0].issuanceTime);
+  deq(wpcTcm.track.map((p) => [p.when, p.lat, p.lon, p.kt]), [["2026-10-10T15:00:00.000Z", 32.8, -86.8, 30], ["2026-10-11T00:00:00.000Z", 34, -87.4, 30],
+    ["2026-10-11T12:00:00.000Z", 36.7, -85.5, 25], ["2026-10-12T00:00:00.000Z", 38.3, -81, 20]], "and a DISSIPATED point is no point");
+  const turn = S.tcmRead("TCMAT1 CENTER LOCATED NEAR 30.0N 70.0W AT 30/1500Z MAX SUSTAINED WINDS 70 KT WITH GUSTS TO 85 KT. FORECAST VALID 01/0000Z 31.0N 71.0W MAX WIND 75 KT...GUSTS 90 KT.", "2026-09-30T14:50:00+00:00");
+  assert.equal(turn.track[1].when, "2026-10-01T00:00:00.000Z", "a point past the month's end is the next month's");
+  // the category is the knots', never the rounded miles an hour: 96 kt is a 3 that the advisory writes as 110 mph
+  deq([63, 64, 82, 83, 95, 96, 112, 113, 136, 137].map(S.ssCat), [null, 1, 1, 2, 2, 3, 3, 4, 4, 5]);
+
+  // a TCV segment, collapsed before it is read: the peaks, windows, threat lines and the impacts word
+  const seg = S.tcvRead(flo.point.find((f) => f.properties.event === "Hurricane Warning").properties.description);
+  assert.equal(seg.wind.peak, "65-85 mph with gusts to 105 mph");
+  deq(seg.wind.windows.map((w) => [w.label, w.text]), [["Window for Tropical Storm force winds", "until Saturday afternoon"],
+    ["Window for Hurricane force winds", "early this evening until Friday afternoon"]]);
+  assert.equal(seg.wind.threat, "Potential for wind greater than 110 mph");
+  deq([seg.wind.potential, seg.wind.realized, seg.wind.phase], ["Unfolding", null, "unfolding"]);
+  // the potential impacts and the realized ones are kept apart: Florence's house zone gave its surge
+  // only REALIZED IMPACTS: Being Assessed, a day before landfall, which is no level of the surge's
+  deq([seg.surge.potential, seg.surge.realized, seg.surge.phase], [null, "Being Assessed", "realized"], "REALIZED IMPACTS is the after, and kept apart");
+  assert.ok(!("level" in seg.wind), "no one impacts word stands for both");
+  // what to plan, prepare and act on, as written
+  assert.equal(seg.wind.act, "Now is the time to shelter from life-threatening wind. Be ready to move to the safest place inside your shelter if necessary.");
+  assert.equal(seg.wind.plan, "Plan for extreme wind of equivalent CAT 3 hurricane force or higher due to possible forecast changes in track, size, or intensity.");
+  assert.match(seg.wind.prepare, /^Last minute efforts should solely focus on protecting life\./);
+  assert.equal(seg.rain.act, "Heed any flood watches and warnings. Failure to take action will likely result in serious injury or loss of life.");
+  assert.equal(seg.tornado.act, "Move quickly to the safest place within your shelter if a tornado warning is issued.");
+  assert.equal(seg.rain.peak, "Additional More than two feet");
+  assert.equal(seg.rain.potential, "Devastating to Catastrophic");
+  assert.equal(seg.rain.trend, "increased");
+  assert.equal(seg.tornado.peak, "Situation is somewhat favorable for tornadoes");
+  // and the live CAP form, which wraps a key mid-phrase and can leave a forecast empty (TCVSGX, October 10 2026)
+  const sgx = S.tcvRead("* WIND\n- LATEST LOCAL FORECAST: Below tropical storm force wind\n- Peak Wind Forecast: 10-15 mph with gusts to 30 mph\n\n- THREAT TO LIFE AND PROPERTY THAT INCLUDES TYPICAL FORECAST\nUNCERTAINTY IN TRACK, SIZE AND INTENSITY: Potential for wind 39\nto 57 mph\n- The wind threat has remained nearly steady from the\nprevious assessment.\n\n- POTENTIAL IMPACTS: Limited\n- Damage to porches, awnings, carports, sheds, and unanchored\nmobile homes.\n\n* TORNADO\n- LATEST LOCAL FORECAST:\n- Situation is unfavorable for tornadoes\n\n- THREAT TO LIFE AND PROPERTY THAT INCLUDES TYPICAL FORECAST\nUNCERTAINTY IN TRACK, SIZE AND INTENSITY: Tornadoes not expected\n\n- POTENTIAL IMPACTS: Little to None");
+  assert.equal(sgx.wind.threat, "Potential for wind 39 to 57 mph");
+  assert.equal(sgx.wind.trend, "steady");
+  assert.equal(sgx.tornado.forecast, null);
+  assert.equal(sgx.tornado.peak, "Situation is unfavorable for tornadoes");
+  assert.equal(sgx.tornado.potential, "Little to None");
+  deq(Object.keys(S.tcvRead("* WHAT...Southeast winds 20 to 30 mph.")), [], "an ordinary product is no TCV");
+
+  // an ordinary warning's bullets, old and new, read as written: the old ones bullet by bullet, each
+  // value stopped at the next "* KEY..." (an empty ice bullet ran on into the snow's)
+  const blizz = STORMS["blizzard-farm"].point[0].properties.description;
+  assert.equal(S.wwRead(blizz)["SNOW ACCUMULATIONS"], "12 TO 18 INCHES.");
+  const empty = "* HAZARD TYPES...HEAVY SNOW.\n* ICE ACCUMULATIONS...\n* SNOW ACCUMULATIONS...4 TO 8 INCHES.\n* TIMING...THURSDAY.";
+  assert.equal(S.wwRead(empty)["ICE ACCUMULATIONS"], "", "RLX, February 13 2014: an empty bullet stays empty");
+  assert.equal(S.wwRead(empty)["SNOW ACCUMULATIONS"], "4 TO 8 INCHES.");
+  // the rain a TCV gives, in inches, so the beach's worse number rides beside the house's; an elevation is
+  // never an amount ("Heavy snow above 3000 feet" read as 36,000 inches)
+  assert.equal(S.inchesIn("Additional More than two feet"), 24);
+  assert.equal(S.inchesIn("Additional 4-8 inches, with locally higher amounts"), 8);
+  assert.equal(S.inchesIn("Additional 10 to 15 inches"), 15);
+  assert.equal(S.inchesIn("between 3 and 8 inches"), 8);
+  assert.equal(S.inchesIn("Heavy snow above 3000 feet"), null);
+  assert.equal(S.inchesIn("6 to 10 inches above 3,000 feet"), 10);
+  assert.equal(S.inchesIn("an additional .5 inches"), 0.5, "a bare decimal keeps its dot");
+
+  // A winter warning's snow and ice are never read as numbers (October 10 2026). Twelve winters of the
+  // offices' own warnings found a misreading in every grammar written for them, so the card quotes the
+  // warning's own sentence that carries the amounts, whole: the WHAT line's sentence that says
+  // "accumulation", else its first sentence, else the warning's headline, else nothing
+  const q = (desc, headline = null) => S.stormQuote({ desc, headline });
+  const jan26 = "* WHAT...Heavy mixed precipitation expected. Total snow and sleet\naccumulations between 3 and 8 inches and ice accumulations between\ntwo tenths and one half of an inch.\n\n* WHERE...Portions of southwest Virginia and southeast and southern\nWest Virginia.\n\n* WHEN...From 7 AM Saturday to 7 AM EST Monday.";
+  assert.equal(q(jan26), "Total snow and sleet accumulations between 3 and 8 inches and ice accumulations between two tenths and one half of an inch.", "RLX, January 23 2026");
+  assert.equal(q("* WHAT...Storm total of 3 to 5 inches. Locally higher amounts on ridgetops.\n\n* WHERE...Portions of central West Virginia."), "Storm total of 3 to 5 inches.", "RLX, December 8 2025: no accumulation, its first sentence");
+  assert.equal(q("* WHAT...Snow expected. Total snow accumulations of 1 to 3 inches through 7 a.m. Tuesday. Winds gusting as high as 35 mph."), "Total snow accumulations of 1 to 3 inches through 7 a.m. Tuesday.", "a clock's stops do not end a sentence");
+  assert.equal(q(blizz, "WINTER STORM WARNING REMAINS IN EFFECT UNTIL 1 AM EST SUNDAY"), "WINTER STORM WARNING REMAINS IN EFFECT UNTIL 1 AM EST SUNDAY", "an old product has no WHAT line: its headline");
+  assert.equal(q("* SNOW ACCUMULATIONS...12 TO 18 INCHES."), null, "with no WHAT line and no headline, nothing: the title is the warning's name");
+  assert.equal(q(""), null);
+  // and the shorter sentence the warning itself gives, for a title the accumulation sentence is too long
+  // for (stormTitleFit): its WHAT line's first sentence, when that is not the quote and is short
+  const sh = (desc) => S.stormQuoteShort({ desc });
+  assert.equal(sh(jan26), "Heavy mixed precipitation expected.", "RLX, January 23 2026");
+  assert.equal(sh("* WHAT...Storm total of 3 to 5 inches. Locally higher amounts on ridgetops."), null, "the first sentence is the quote itself");
+  assert.equal(sh(blizz), null, "no WHAT line, nothing shorter: the title is the warning's name");
+  assert.equal(sh("* WHAT...Heavy snow and blowing snow, with whiteout conditions at times on the higher ridges. Total snow accumulations of 6 to 10 inches."), null, "and nothing over 60 characters");
+  // and every text that a grammar misread is only ever quoted: "a few hundredths of an inch" read as an
+  // inch of ice, "3,000 feet" as an amount, an ellipsis as a decimal point, "of snow" taking the ice
+  // before it, "snow and sleet" said as snow, "over a foot" as a foot
+  for (const [what, why] of [
+    ["Total snow accumulations between 4 and 7 inches and ice accumulations of a light glaze to a few hundredths of an inch.", "RLX's own wording, 14 products from 2014 to 2026"],
+    ["Total snow accumulations ranging from 2 to 4 inches below 3,000 feet with 4 to 7 inches above 3,000 feet.", "LWX, December 11 2023"],
+    ["Additional ice accumulations around one quarter of an inch, with up to an inch of snow.", "PBZ, February 5 2025"],
+    ["Total ice accumulations up to one quarter to one third of an inch, along with less than an inch of snow and sleet.", "LWX, February 11 2025"],
+    ["Total snow and sleet accumulations between 12 and 18 inches.", "LWX, January 24 2026"],
+    ["Ice accumulations around one to a quarter inch.", "LWX, February 17 2021: an inverted range"],
+    ["Total snow accumulations of over a foot.", "over a foot"]]) {
+    const desc = `* WHAT...Heavy mixed precipitation expected. ${what}\n\n* WHERE...Somewhere.`;
+    assert.equal(q(desc), what, why);
+    assert.equal(S.stCalm(q(desc)), what, "mixed case is left as written");
+  }
+  assert.equal(S.stCalm("WINTER STORM WARNING REMAINS IN EFFECT UNTIL 1 AM EST SUNDAY"), "Winter storm warning remains in effect until 1 AM EST Sunday", "an old product's capitals in sentence case");
+  // what a winter warning is for, from its words, and never how much
+  const kinds = (desc, phen = "WS") => [...S.winterKinds(S.wwRead(desc), phen)];
+  deq(kinds(jan26), ["snow", "ice"]);
+  deq(kinds("* WHAT...Heavy snow expected. Total snow accumulations of 6 to 10 inches."), ["snow"]);
+  deq(kinds("* WHAT...Significant icing. Total ice accumulations of one quarter inch. Light snow possible.", "IS"), ["ice", "snow"], "an ice storm's ice comes first");
+  deq(kinds("* WHAT...Freezing rain. Additional ice accumulations of a light glaze.", "WW"), ["ice"]);
+  deq(kinds("* WHAT...Blizzard conditions. Total snow accumulations of 6 to 10 inches. Winds gusting as high as 50 mph.", "BZ"), ["snow", "wind"]);
+  deq(kinds("* HAZARD TYPES...FREEZING RAIN...SLEET...AND SNOW BECOMING ALL SNOW.\n* ICE ACCUMULATIONS...ONE QUARTER INCH OF ICE.\n* SNOW ACCUMULATIONS...4 TO 8 INCH STORM TOTAL."), ["snow", "ice"], "an old product's hazard bullets");
+  deq(kinds(blizz), ["snow"], "and its keys");
+  deq(kinds("* WHAT...Snow and ice pellets.", "WS"), ["snow"], "ice pellets are sleet, not ice");
+  deq(kinds("* WHAT...Winter storm conditions expected.", "IS"), ["ice"], "with no kind in its words, the product's own");
+  deq([["snow"], ["snow", "ice"], ["ice", "snow"], ["snow", "wind"], ["snow", "ice", "wind"]].map(S.winterLabel), ["Snow", "Snow and ice", "Ice and snow", "Snow and wind", "Snow, ice and wind"]);
+
+  // WPC's Winter Storm Severity Index at the farm's point, the farm's bar for a Winter Storm Warning (F3).
+  // The answers are the service's own: the farm's on October 11 2026 had no results, as every answer
+  // outside winter does, and a point in Montana that night lay in the Winter Weather Area, Minor, Moderate
+  // and Major areas on Day 1, which nest, so that day's reading is the highest, and in the Winter Weather
+  // Area and Minor on Day 2. Each of the three days is its own layer, and one identify request asks them all
+  const { WSSI_REAL, wssiAnswer } = await STORM_FIX();
+  assert.equal(S.wssiRead(WSSI_REAL.farm), null, "no results is no reading");
+  deq(S.wssiRead(WSSI_REAL.major), { impact: "MAJOR", issued: "2026-10-11T00:15:00.000Z", days: [
+    { day: 1, impact: "MAJOR", start: "2026-10-11T00:00:00.000Z", end: "2026-10-12T00:00:00.000Z" }, { day: 2, impact: "MINOR", start: "2026-10-12T00:00:00.000Z", end: "2026-10-13T00:00:00.000Z" }] });
+  deq(WSSI_REAL.major.results.filter((r) => r.layerId === 1).map((r) => r.attributes.impact), ["WINTER WEATHER AREA", "MINOR", "MODERATE", "MAJOR"], "the service's own impact words");
+  deq(WSSI_REAL.layer4.major.features.map((f) => f.attributes.impact), ["WINTER WEATHER AREA", "MINOR", "MODERATE", "MAJOR"], "the same words from the 72-hour layer the page asked until October 11");
+  assert.equal(S.wssiRead(WSSI_REAL.layer4.major), null, "whose three days at once are a shape the page no longer reads");
+  assert.equal(S.wssiRead(wssiAnswer("EXTREME", "2025-01-05T06:00:00Z")).impact, "EXTREME");
+  assert.equal(S.wssiRead(wssiAnswer(["WINTER WEATHER AREA", "MODERATE", "MODERATE"], "2026-01-24T00:00:00Z")).impact, "MODERATE");
+  for (const bad of [null, {}, { error: { code: 400 } }, { results: null }, { results: [{ layerId: 1, attributes: { impact: "SEVERE" } }] }, { results: [{}] },
+    { results: [{ layerId: 4, attributes: { impact: "MAJOR" } }] }, { features: [{ attributes: { impact: "MAJOR" } }] }])
+    assert.equal(S.wssiRead(bad), null, `${JSON.stringify(bad)} is no reading`);
+  // Major or Extreme on a day the warning is in effect: a day that overlaps what is left of its hours
+  const at = Date.parse("2026-10-11T12:00:00Z"), win = { begin: "2026-10-11T06:00:00Z", end: "2026-10-12T06:00:00Z" };
+  const day1 = (impact) => ({ impact, days: [{ day: 1, impact, start: "2026-10-11T00:00:00.000Z", end: "2026-10-12T00:00:00.000Z" }] });
+  deq(["WINTER WEATHER AREA", "MINOR", "MODERATE", "MAJOR", "EXTREME"].map((impact) => S.wssiMajor(day1(impact), at, win)), [false, false, false, true, true], "Major or Extreme");
+  assert.equal(S.wssiMajor({ impact: "MAJOR", days: [{ day: 1, impact: "MAJOR", start: "2026-10-10T00:00:00.000Z", end: "2026-10-11T06:00:00.000Z" }] }, at, win), false, "and not a day that is over");
+  assert.equal(S.wssiMajor({ impact: "MAJOR", days: [{ day: 1, impact: "MAJOR", start: null, end: null }] }, at, win), false, "nor a day with no times");
+  assert.equal(S.wssiMajor(null, at, win), false);
+  // a bigger storm on Day 3 never raises tonight's small warning, the way the 72-hour layer's maximum did;
+  // a Major on the warning's own day does
+  const tonight = { begin: "2026-10-11T22:00:00Z", end: "2026-10-12T12:00:00Z" };
+  const day3 = S.wssiRead(wssiAnswer(["MODERATE", null, "MAJOR"], "2026-10-11T00:00:00Z")), day1m = S.wssiRead(wssiAnswer(["MAJOR", "MINOR", null], "2026-10-11T00:00:00Z"));
+  deq([day3.impact, S.wssiOver(day3, at, tonight), S.wssiMajor(day3, at, tonight)], ["MAJOR", "MODERATE", false], "a Day-3 Major beside a Day-1 warning");
+  deq([S.wssiOver(day1m, at, tonight), S.wssiMajor(day1m, at, tonight)], ["MAJOR", true], "a Day-1 Major on the warning's own hours");
+  assert.equal(S.wssiMajor(day3, at, { begin: "2026-10-13T06:00:00Z", end: "2026-10-14T00:00:00Z" }), true, "and the Day-3 Major is a Day-3 warning's");
+  // the warning's own hours: its VTEC's begin and end, or its onset and ends
+  deq({ ...S.wsWindow({ vtec: ["/O.NEW.KRLX.WS.W.0002.250105T1700Z-250107T1100Z/"], onset: "2025-01-05T05:24:00-05:00", ends: null }) }, { begin: "2025-01-05T17:00:00Z", end: "2025-01-07T11:00:00Z" });
+  deq({ ...S.wsWindow({ vtec: ["/O.CON.KRLX.WS.W.0007.000000T0000Z-210219T1500Z/"], onset: "2021-02-17T22:04:00-05:00", ends: "2021-02-19T10:00:00-05:00" }) }, { begin: "2021-02-17T22:04:00-05:00", end: "2021-02-19T15:00:00Z" });
+  assert.equal(S.wssiUrl(S.LOCS.sp), "https://mapservices.weather.noaa.gov/vector/rest/services/outlooks/wpc_wssi/MapServer/identify?geometry=-80.9942,37.8215&geometryType=esriGeometryPoint&sr=4326&layers=all:1,2,3&tolerance=0&mapExtent=-81.0042,37.8115,-80.9842,37.8315&imageDisplay=100,100,96&returnGeometry=false&returnFieldName=true&f=json",
+    "one identify request for layers 1 to 3, Overall_Impact_Day_1, _2 and _3, at the farm's point, with the fields by name");
+  // a stormAmount past a decimal point starts at the number, never at the digits after the dot
+  deq([...S.stormAmount("an additional .05 inches", "inches|inch")], ["0.05", "inches"]);
+
+  // a storm named in an alert stands beside a storm word or "remnants": never a county, a town or a number
+  const sys = [{ name: "Isaias" }];
+  deq([...S.namedIn(wind.desc, sys)], ["Isaias"], "RLX's Wind Advisory: the remnants of Isaias");
+  const coast = JSON.parse(await readFile(new URL("tools/storm-fixtures/isaias/alerts-point-mb.json", root), "utf8")).features;
+  deq([...S.namedIn(coast.map((f) => f.properties.description).join(" "), sys)], [], "ILM's Flood Watch says tropical moisture");
+  deq([...S.namedIn("Rainfall from a very slow moving Tropical Cyclone Debby", [{ name: "Debby" }])], ["Debby"]);
+  deq([...S.namedIn("Darlington-Dillon-Florence-Marion", [{ name: "Florence" }])], []);
+  deq([...S.namedIn("Including the cities of Hurricane, Teays Valley", [{ name: "Ida" }])], []);
+  deq([...S.namedIn("Rainfall totals of up to eight inches. Eight remnants", [{ name: "Eight", ptc: true }])], []);
+  deq([...S.namedIn("Potential Tropical Cyclone Eight will bring", [{ name: "Eight", ptc: true }])], ["Eight"]);
+  deq([...S.namedIn("HURRICANE SANDY WILL COMBINE WITH AN UPPER LEVEL LOW", [{ name: "Sandy" }])], ["Sandy"]);
+
+  // the HLS: its headline, storm information, the watches it lists, and whether it is the last one
+  const hls = S.hlsRead(flo.point.find((f) => f.properties.event === "Tropical Cyclone Local Statement").properties.description);
+  assert.equal(hls.headline, "TROPICAL STORM FORCE WINDS HAVE REACHED THE NORTH CAROLINA COASTAL WATERS AND WILL MOVE ONSHORE THIS AFTERNOON");
+  assert.equal(hls.distance, "About 150 miles east-southeast of Wilmington NC or about 200 miles east of Myrtle Beach SC");
+  deq([hls.position, hls.intensity, hls.movement], ["33.4N 75.5W", "Storm Intensity 105 mph", "Movement Northwest or 315 degrees at 10 mph"]);
+  assert.equal(hls.current.length, 3);
+  assert.equal(hls.final, false);
+  assert.equal(S.hlsRead("HLSMOB\n\n**ALL HAZARDS HAVE ENDED. THEREFORE, THIS WILL BE THE FINAL STATEMENT FOR ISAIAS**").final, true);
+});
+
+test("the storm card comes up for a major storm and stays down otherwise", async () => {
+  // the six scenarios, through the page's own fetch path
+  const florence = await stormScenario("florence-coast");
+  const m = florence.model;
+  assert.equal(m.tier, "storm");
+  deq([...m.rules], ["C1", "N2", "N3"]);
+  assert.match(m.why, /^C1: a tropical watch or warning \(Storm Surge Warning at the point, Hurricane Warning at the point, Storm Surge Warning on the beach zone, Hurricane Warning on the beach zone\)$/);
+  deq({ name: m.storm.name, type: m.storm.type, category: m.storm.category, mph: m.storm.mph, kt: m.storm.kt, ATCF: m.storm.ATCF, adv: m.storm.adv },
+    { name: "Florence", type: "Hurricane", category: 2, mph: 105, kt: 90, ATCF: "AL062018", adv: "57" });
+  deq({ ...m.storm.nearest }, { miles: 7, dir: "S", when: "2018-09-14T12:00:00.000Z" }, "TCM 57's point for 8 a.m. Friday, at the house");
+  // The category is the forecast advisory's knots only while it is the public advisory's own and says
+  // what the public advisory's mph say: an intermediate 57A at 115 mph is a Category 3 that TCM 57's
+  // 90 knots called a 2, under a stamp naming 57A. Then it is the public advisory's mph, on NHC's steps
+  const S0 = florence.S;
+  const cat = (edit) => { const x = S0.stormRead(florence.L, florence.point, florence.beach, florence.storms.map((s) => s.name === "Florence" ? { ...s, ...edit(s) } : s), florence.now).storm; return [x.category, x.kt]; };
+  deq(cat(() => ({ adv: "57A", mph: 115 })), [3, null], "57A strengthened past the last full advisory's knots");
+  deq(cat(() => ({ adv: "57A", mph: 105 })), [2, 90], "an intermediate that changed nothing keeps the knots");
+  deq(cat(() => ({ adv: "58", mph: 105 })), [2, null], "a forecast advisory for another number is not this one's");
+  deq(cat((s) => ({ mph: 110, tcm: { ...s.tcm, kt: 96 } })), [3, 96], "96 knots is a 3 that the advisory writes as 110 mph");
+  deq([95, 96, 110, 111, 129, 130, 156, 157, 73, 74].map(S0.ssMph), [1, 2, 2, 3, 3, 4, 4, 5, null, 1]);
+  deq({ ...m.storm.now }, { miles: 145, dir: "ESE" });
+  assert.equal(m.storm.track.length, 8);
+  deq(m.hazards.map((h) => h.key), ["wind", "rain", "surge", "tornado"], "the worst first, the house's own segment");
+  assert.ok(m.hazards.every((h) => h.where === "point"));
+  assert.ok(m.alerts.filter((a) => /Hurricane|Storm Surge/.test(a.event)).every((a) => !("ends" in a)), "a tropical warning's end is never said");
+  assert.equal(m.alerts.find((a) => a.event === "Flash Flood Watch").ends, "2018-09-15T18:00:00-04:00");
+  // what to do is the TCV's own ACT line for the worst hazard, never the Flash Flood Watch's paragraph
+  // on what a watch means, which was the instruction until October 10 2026
+  assert.equal(m.instruction, "Now is the time to shelter from life-threatening wind. Be ready to move to the safest place inside your shelter if necessary.");
+  deq([m.instructionFrom, m.instructionAt], ["Hurricane Warning · TCVILM", "2018-09-13T10:55:00-04:00"]);
+  assert.equal(m.asOf, "2018-09-13T10:55:00-04:00", "the Weather Service's time is the TCV's, not the Flood Watch's 11:35");
+  assert.equal(m.storm.asOf, "2018-09-13T14:44:00+00:00", "and the advisory keeps its own");
+  // the beach's worse numbers ride beside the house's, labelled as the beach's
+  deq({ ...m.hazards.find((h) => h.key === "surge").beach }, { peak: "The potential for 6-9 feet above ground somewhere within surge prone areas", from: "Hurricane Warning · TCVILM", asOf: "2018-09-13T10:55:00-04:00" });
+  assert.equal(m.hazards[0].beach.peak, "70-90 mph with gusts to 115 mph");
+  assert.equal(m.hazards.find((h) => h.key === "rain").beach, undefined, "the same rain at both is said once");
+  assert.ok(m.hazards.every((h) => !("level" in h)), "no TCV impacts word stands as a level");
+  assert.equal(m.statement.intensity, "Storm Intensity 105 mph");
+  deq([m.statement.where, m.statement.asOf], ["point", "2018-09-13T11:08:00-04:00"]);
+  assert.equal(m.hazards[0].from, "Hurricane Warning · TCVILM", "the segment is said as its strongest product's");
+  deq(m.alerts.map((a) => a.vtec[0] || null), ["HU.W.1006", "SS.W.1006", "HU.W.1006", "SS.W.1006", "FF.A.0006", null], "warnings first, the house's before the beach's, the hurricane's before the surge's");
+  deq(m.systems.map((s) => s.name).sort(), ["Florence", "Helene", "Isaac", "Joyce"], "four systems out, one linked");
+  deq(m.told.slice(0, 1).map((t) => ({ ...t })), [{ kind: "Storm", name: "Florence" }]);
+  deq(m.told.filter((t) => t.kind !== "Alert" && t.kind !== "Storm").map((t) => t.kind), ["Windy", "Rain", "Surge", "Tornado"]);
+  // the strip keeps its job, less the storm statement the card takes in
+  const strip = florence.S.stormStrip(florence.point, m).map((a) => a.event);
+  deq(strip, ["Storm Surge Warning", "Hurricane Warning", "Flash Flood Watch"]);
+  assert.equal(florence.S.stormStrip(florence.point, { tier: null }).length, 4, "with no card the strip is as it was");
+  deq(florence.storms.map((s) => s.name), ["Isaac", "Florence", "Helene", "Joyce"], "newest advisory per storm, the correction over its original");
+  assert.equal(florence.beach.length, 2, "the beach zone gives its tropical warnings and nothing else");
+
+  const debby = (await stormScenario("debby-flood-coast")).model;
+  assert.equal(debby.tier, "storm");
+  assert.match(debby.why, /^C1: .*Tropical Storm Warning on the beach zone\)$/, "the warning was on the beach alone");
+  assert.equal(debby.hazards[0].key, "rain", "Debby's worst was the rain");
+  assert.equal(debby.hazards[0].peak, "Additional 4-8 inches, with locally higher amounts");
+  assert.equal(debby.hazards[0].where, "beach", "and it is said as the beach's");
+  assert.equal(debby.storm.category, null, "a tropical storm has no category");
+  assert.equal(debby.instruction, "Heed any flood watches and warnings. Failure to take action will likely result in serious injury or loss of life.", "the beach TCV's ACT line for the rain");
+
+  const farm = (await stormScenario("isaias-farm-today")).model;
+  assert.equal(farm.tier, "named");
+  deq([...farm.rules], ["N2", "N3"]);
+  deq({ ...farm.storm.nearest }, { miles: 33, dir: "N", when: "2026-10-12T00:00:00.000Z" }, "WPC's point for 8 p.m. Sunday");
+  assert.equal(farm.storm.category, null);
+  deq(farm.hazards.map((h) => [h.key, h.peak, h.window, h.from]), [["wind", "Southeast winds 20 to 30 mph with gusts up to 50 mph expected.", "From 5 PM this afternoon to 11 AM EDT Sunday.", "Wind Advisory"]]);
+  assert.equal(farm.alerts[0].ends, "2026-10-11T11:00:00-04:00");
+
+  const coast = (await stormScenario("isaias-coast-today")).model;
+  assert.equal(coast.tier, null, "the coast today: tropical moisture, an ordinary Coastal Flood Advisory, Isaias 329 miles off");
+  assert.equal(coast.why, "no rule: Isaias 329 mi at nearest, 2 alerts at the place");
+  deq(coast.alerts, []);
+  deq(coast.told, []);
+
+  const bz = await stormScenario("blizzard-farm"), blizzard = bz.model;
+  assert.equal(blizzard.tier, "storm");
+  deq([...blizzard.rules], ["F3"]);
+  assert.match(blizzard.why, /^F3: a winter storm warning with WPC's Winter Storm Severity Index at major here/);
+  assert.equal(blizzard.storm, null, "no storm advisory, and none invented");
+  deq([blizzard.hazards[0].key, blizzard.hazards[0].label, blizzard.hazards[0].peak], ["snow", "Snow", null], "what it is for, and never how much");
+  deq(JSON.parse(JSON.stringify(blizzard.held)), { "KRLX.WS.W.1": { rule: "F3", end: "2027-01-24T06:00:00Z" } }, "and the warning that raised it is held, with its end");
+  assert.equal(bz.asked.filter((u) => /mapservices\.weather\.noaa\.gov/.test(u)).length, 1, "the farm asks WPC's index once, with a Winter Storm Warning up");
+  // RLX's real January 5 2025 warning, with WPC's index at Major at the farm (its 06Z cycle), and its real
+  // January 23 2026 warning, with the index at Moderate there through the whole storm: the strip's alone
+  const jan25 = (await stormScenario("snow-ice-farm")).model;
+  deq([jan25.tier, ...jan25.rules, jan25.wssi.impact], ["storm", "F3", "MAJOR"]);
+  // its Major was Day 2's (Moderate on Day 1), a day the warning is in effect from its noon start
+  deq(jan25.wssi.days.map((d) => d.impact), ["MODERATE", "MAJOR", "WINTER WEATHER AREA"]);
+  assert.match(jan25.why, /^F3: a winter storm warning with WPC's Winter Storm Severity Index at major here while it stands/);
+  deq(jan25.hazards.map((h) => [h.key, h.label, h.peak, h.from]), [["snow", "Snow and ice", null, "Winter Storm Warning"]]);
+  deq(jan25.told.filter((t) => t.kind !== "Alert").map((t) => t.kind), ["Snow", "Freezing rain"], "the card has said the snow and the ice");
+  const jan26 = await stormScenario("ice-farm");
+  deq([jan26.model.tier, jan26.model.wssi.impact], [null, "MODERATE"], "a Winter Storm Warning with the index at Moderate stays the strip's");
+  assert.equal(jan26.S.stormStrip(jan26.point, jan26.model).map((a) => a.event).join(), "Winter Storm Warning", "and the strip still shows it");
+  const isaFarm = await stormScenario("isaias-farm-today");
+  assert.equal(isaFarm.asked.filter((u) => /mapservices/.test(u)).length, 0, "with no Winter Storm Warning the index is never asked for");
+
+  const quiet = (await stormScenario("quiet-distant")).model;
+  assert.equal(quiet.tier, null, "a Category 4 about 900 miles out, with nothing in effect at the house");
+  deq(quiet.systems.map((s) => [s.name, s.miles]), [["Erin", 326]]);
+});
+
+test("under a storm the page says it once, in plain words, and every source keeps its own time", async () => {
+  // a scenario's wall clock on this machine, whatever zone the tests run in (TZ=UTC as well)
+  const L = (s) => new Date(s).getTime();
+  const at = (sc, wall) => ({ shift: L(wall) - Date.parse(sc.st.when.slice(0, 16) === wall ? sc.st.when : wall + sc.st.when.slice(-6)), now: new Date(L(wall)) });
+  const flo = await stormScenario("florence-coast"), S = flo.S, m = flo.model, F = at(flo, "2018-09-13T11:45");
+  // the headline: the storm and when it is closest, from the card's model alone, and what the card
+  // says is handed down for the cards under it
+  const story = S.stormStory(m, F.now, F.shift);
+  assert.equal(story.html, "<em>Hurricane Florence</em> is closest Friday morning.");
+  deq(story.told.map((t) => t.kind), ["Windy", "Rain", "Surge", "Tornado"]);
+  assert.ok(story.told.every((t) => t.time == null), "what the card says has no hour");
+  // the warnings it stands on, named, with the hurricane's first
+  assert.equal(S.stormWarns(m), "Hurricane Warning · Storm Surge Warning");
+  // what to do, as written
+  assert.equal(S.stormSay(m.instruction, Date.parse(m.instructionAt) + F.shift, +F.now),
+    "Now is the time to shelter from life-threatening wind. Be ready to move to the safest place inside your shelter if necessary.");
+  // each source with its own time, never one joined stamp
+  deq([...S.stormStamps(m, F.now, F.shift)], ["Weather Service 10:55 am", "advisory 57 10:44 am"]);
+  deq([...S.stormStamps(m, new Date(L("2018-09-14T09:00")), F.shift)], ["Weather Service 10:55 am Thu", "advisory 57 10:44 am Thu"], "a day old, the day is said");
+  // and the card's joined lines keep each dot whole with the part after it, so a 320 phone breaks
+  // between the parts and never ends a line on a lone dot ("Weather Service 10:55 am ·" / "advisory 57")
+  const nb = (x) => x.replace(/\u00A0/g, " ");
+  assert.equal(nb(S.stormDots(S.stormStamps(m, F.now, F.shift))), "<span>Weather Service 10:55 am</span> <span>· advisory 57 10:44 am</span>");
+  assert.equal(S.stormDots(S.stormWarns(m).split(" · ")), "<span>Hurricane Warning</span> <span>· Storm Surge Warning</span>");
+  assert.equal(S.stormDots(["Winter Storm Warning"]), "<span>Winter Storm Warning</span>", "one part, no dot");
+  // a thunderstorm overhead still leads the headline under the storm: the cards under it leave a storm
+  // overhead to the headline, and "Head inside." was said nowhere. What the card says is still the told
+  const over = S.stormStory(m, F.now, F.shift, "<em>Storms overhead.</em> Head inside.");
+  assert.equal(over.html, "<em>Storms overhead.</em> Head inside. <em>Hurricane Florence</em> is closest Friday morning.");
+  deq(over.told, story.told);
+  // a storm closest now says so, and the remnants are plural
+  assert.equal(S.stormStory({ ...m, storm: { ...m.storm, nearest: { ...m.storm.nearest, when: m.storm.track[0].when } } }, F.now, F.shift).html, "<em>Hurricane Florence</em> is closest now.");
+
+  const deb = await stormScenario("debby-flood-coast"), D = at(deb, "2024-08-07T11:40");
+  assert.equal(S.stormStory(deb.model, D.now, D.shift).html, "<em>Tropical Storm Debby</em> is closest Thursday morning.");
+  assert.equal(S.stormWarns(deb.model), "Tropical Storm Warning at the beach", "the warning was the beach's alone");
+  // and every number Debby's card has is the beach zone's, said as the beach's: with the advisories
+  // down the title and the headline read as the house's
+  const debBare = S.stormRead(deb.L, deb.point, deb.beach, null, deb.now);
+  assert.equal(debBare.storm, null);
+  assert.equal(S.stormHero(debBare).text, "4–8 inches of rain at the beach");
+  assert.equal(S.stormStory(debBare, D.now, D.shift).html, "<em>Tropical Storm Warning</em> at the beach.");
+  deq(S.stormGust(deb.model), { mph: 45, beach: true });
+  deq(S.stormGust(m), { mph: 105, beach: false }, "Florence's gusts were the house's");
+  assert.match(S.stormLineHtml({ ...deb.model, tier: "named" }, D.now, D.shift).replace(/<[^>]+>/g, ""), /· gusts to 45 at the beach$/);
+  // the strip leaves the card's own alerts' words to it, and keeps Debby's Flood Watch at the house
+  deq([...S.stormCover(m)], ["Hurricane Warning", "Storm Surge Warning"]);
+  deq([...S.stormCover(deb.model)], ["Tropical Storm Warning"]);
+  assert.equal(S.stormSay(deb.model.instruction, Date.parse(deb.model.instructionAt) + D.shift, +D.now),
+    "Heed any flood watches and warnings. Failure to take action will likely result in serious injury or loss of life.");
+  deq([...S.stormStamps(deb.model, D.now, D.shift)], ["Weather Service 10:58 am", "advisory 21 10:55 am"]);
+
+  // a storm with no name: the warning's own sentence is its title, whole and never rebuilt into numbers,
+  // and the headline is the warning in plain words. RLX's old products have no WHAT line, so the 2016
+  // warning's is its headline, in sentence case
+  const bz = await stormScenario("blizzard-farm"), B = at(bz, "2027-01-22T13:30");
+  deq({ ...S.stormHero(bz.model, +B.now, B.shift), hz: undefined }, { text: "Winter storm warning remains in effect until 1 AM EST Sunday", quote: true, short: null, name: "Winter storm" },
+    "with no shorter sentence of its own, a title too long for three lines would be the warning's name");
+  const sif = await stormScenario("snow-ice-farm"), J = at(sif, "2025-01-05T05:40");
+  assert.equal(S.stormHero(sif.model, +J.now, J.shift).text, "Total snow accumulations between 4 and 10 inches and ice accumulations between one tenth and one half of an inch.");
+  assert.equal(S.stormHero(sif.model, +J.now, J.shift).short, "Heavy mixed precipitation expected.", "and its WHAT line's shorter first sentence, for a title the long one will not fit");
+  assert.equal(S.stormHero(sif.model).hz, sif.model.hazards[0], "its lane is the one the title speaks for");
+  // issued at 5:24 for noon, it says its start: "until 6 a.m. Tuesday" read as on now under a bar that
+  // started at noon. A start the next day takes its day, and a midnight is the day it ends
+  assert.equal(S.stormStory(sif.model, J.now, J.shift).html, "<em>Winter storm</em> from noon until 6 a.m. Tuesday.");
+  const sif13 = at(sif, "2025-01-05T13:10");
+  assert.equal(S.stormStory(sif.model, sif13.now, J.shift).html, "<em>Winter storm</em> until 6 a.m. Tuesday.", "once it has begun, until its end alone");
+  const begins = (b) => S.stormStory({ ...sif.model, alerts: sif.model.alerts.map((a) => ({ ...a, begin: b })) }, J.now, J.shift).html;
+  assert.equal(begins(new Date(L("2025-01-06T07:00") - J.shift).toISOString()), "<em>Winter storm</em> from 7 a.m. Monday until 6 a.m. Tuesday.");
+  assert.equal(begins(new Date(L("2025-01-06T00:00") - J.shift).toISOString()), "<em>Winter storm</em> from midnight until 6 a.m. Tuesday.", "Sunday's midnight, said on Sunday");
+  // The sentence ends on one period: a clock ending in "a.m." or "p.m." carries its own, and from midnight
+  // on a warning's last day the headline read "Winter storm until 6 a.m.." (sentence)
+  const real = (wall) => new Date(L(wall) - J.shift).toISOString();
+  const spans = (b, e, wall = "2025-01-05T05:40") => S.stormStory({ ...sif.model, alerts: sif.model.alerts.map((a) => ({ ...a, begin: b && real(b), ends: real(e) })) }, at(sif, wall).now, J.shift).html;
+  assert.equal(S.stormStory(sif.model, at(sif, "2025-01-07T00:30").now, J.shift).html, "<em>Winter storm</em> until 6 a.m.", "read after midnight on its last day");
+  assert.equal(S.stormStory(sif.model, at(sif, "2025-01-07T04:10").now, J.shift).html, "<em>Winter storm</em> until 6 a.m.");
+  assert.equal(spans("2025-01-05T12:00", "2025-01-05T16:00"), "<em>Winter storm</em> from noon until 4 p.m.", "an end later the same day");
+  assert.equal(spans("2025-01-05T12:00", "2025-01-05T19:30"), "<em>Winter storm</em> from noon until 7:30 p.m.");
+  assert.equal(spans(null, "2025-01-05T16:00", "2025-01-05T13:10"), "<em>Winter storm</em> until 4 p.m.");
+  assert.equal(spans("2025-01-05T12:00", "2025-01-06T02:00"), "<em>Winter storm</em> from noon until 2 a.m.", "an end after midnight, tonight's: the small hours are the night before's");
+  assert.equal(spans("2025-01-05T12:00", "2025-01-06T00:00"), "<em>Winter storm</em> from noon until midnight.");
+  for (const [b, e] of [["2025-01-05T12:00", "2025-01-05T16:00"], ["2025-01-05T12:00", "2025-01-06T02:00"], [null, "2025-01-07T06:00"]])
+    for (const wall of ["2025-01-05T05:40", "2025-01-05T13:10", "2025-01-06T01:00", "2025-01-07T00:30"])
+      assert.doesNotMatch(spans(b, e, wall), /\.\.$/, `${b} to ${e} read at ${wall}`);
+  // and a day is said once, the small hours tonight's: a 1 am Monday start read on Sunday morning said
+  // "from 1 a.m. Monday until noon Monday", Monday twice and Sunday night called Monday
+  assert.equal(spans("2025-01-06T01:00", "2025-01-06T12:00"), "<em>Winter storm</em> from 1 a.m. until noon Monday.", "1 am tonight, until noon Monday");
+  assert.equal(spans("2025-01-06T07:00", "2025-01-06T18:00"), "<em>Winter storm</em> from 7 a.m. until 6 p.m. Monday.", "Monday once");
+  assert.equal(spans("2025-01-07T01:00", "2025-01-07T12:00"), "<em>Winter storm</em> from 1 a.m. until noon Tuesday.", "Monday night's small hours, on the day they are named by, once");
+  assert.equal(spans("2025-01-06T01:00", "2025-01-06T12:00", "2025-01-05T02:30"), "<em>Winter storm</em> from 1 a.m. until noon Monday.",
+    "read in Saturday night's small hours, Sunday night's 1 am is named, once");
+  assert.equal(spans("2025-01-05T23:00", "2025-01-06T03:00"), "<em>Winter storm</em> from 11 p.m. until 3 a.m.", "the whole of it tonight");
+  assert.equal(spans("2025-01-05T23:00", "2025-01-06T03:00", "2025-01-04T13:00"), "<em>Winter storm</em> from 11 p.m. Sunday until 3 a.m. Monday.", "and read the day before, each its own day");
+  deq([S.stormUntil(L("2025-01-06T01:00"), L("2025-01-05T05:40")), S.stormUntil(L("2025-01-06T01:00"), L("2025-01-04T22:00")), S.stormUntil(L("2025-01-06T05:00"), L("2025-01-05T05:40"))],
+    ["1 a.m.", "1 a.m. Monday", "5 a.m. Monday"], "the small hours run to five, as stormPart's do");
+  // the long sentence's relative words take their day, the way the instruction's do: "Overnight" stays
+  // the product's own, and "this evening" read the next morning is the evening it meant
+  const evening = { ...sif.model, alerts: sif.model.alerts.map((a) => ({ ...a, quote: "Additional snow accumulations of 1 to 2 inches this evening." })) };
+  assert.equal(S.stormHero(evening, +J.now, J.shift).text, "Additional snow accumulations of 1 to 2 inches this evening.", "read the same day, as written");
+  assert.equal(S.stormHero(evening, +at(sif, "2025-01-06T07:30").now, J.shift).text, "Additional snow accumulations of 1 to 2 inches Sunday evening.", "read the next morning, its day named");
+  // with no sentence at all the title is the warning's name, said in plain words
+  assert.equal(S.stormHero({ ...sif.model, alerts: sif.model.alerts.map((a) => ({ ...a, quote: null })) }), null);
+  assert.equal(S.stormStory(bz.model, B.now, B.shift).html, "<em>Winter storm</em> until 1 a.m. Sunday.");
+  assert.equal(S.stormWarns(bz.model), "Winter Storm Warning");
+  // RLX's old capitals in sentence case, cut to the first instruction, and its own typo never shown
+  const bzSay = S.stormSay(bz.model.instruction, Date.parse(bz.model.instructionAt) + B.shift, +B.now);
+  assert.equal(bzSay, "Only travel in an emergency.");
+  assert.doesNotMatch(bzSay, /expect early third/i);
+  deq([...S.stormStamps(bz.model, B.now, B.shift)], ["Weather Service 12:49 pm"], "no advisory, none stamped");
+  assert.equal(S.stormHero(flo.model), null, "a named storm is its name");
+  // the storm's lead warning stands for a warning for the sentence cards, so they say only what to do
+  deq([S.stormLead(m).event, S.stormLead(bz.model).event, S.stormLead(deb.model).event], ["Hurricane Warning", "Winter Storm Warning", "Tropical Storm Warning"]);
+  assert.match(flo.html, /const warning=outdoorWarning\(alerts\)\|\|\(stormDay\?stormLead\(sm\):null\);/);
+  // and nothing green sits under a storm: the Sun card's sentence loses its green, Tonight is neutral
+  assert.match(flo.html, /ul\.className="lead "\+\(sunAdvice\?stormDay&&sunAdvice\.cls==="go"\?"":sunAdvice\.cls:""\);/);
+
+  // the named storm's one line: plain words, miles from WPC's track and the gusts from RLX's alert
+  const isa = await stormScenario("isaias-farm-today"), I = at(isa, "2026-10-10T16:20");
+  const line = S.stormLineHtml(isa.model, I.now, I.shift).replace(/<svg[\s\S]*?<\/svg>/, "").replace(/<[^>]+>/g, "").replace(/ /g, " ");
+  assert.equal(line, "Isaias's remnants pass 33 mi north Sunday evening · gusts to 50");
+  assert.doesNotMatch(S.stormLineHtml(isa.model, I.now, I.shift), /post-tropical/i);
+  assert.match(S.stormLineHtml(isa.model, I.now, I.shift), /<span class="nw">Sunday evening<\/span> <span class="nw">· gusts to 50<\/span>$/, "the dot rides with the gusts");
+  assert.equal(S.stormPart(L("2026-10-11T02:00"), new Date(L("2026-10-10T23:00"))), "tonight", "the small hours are tonight's");
+  assert.equal(S.stormPart(L("2026-10-11T02:00"), new Date(L("2026-10-10T09:00"))), "tonight", "and from the morning, still tonight's");
+  assert.equal(S.stormPart(L("2026-10-12T02:00"), new Date(L("2026-10-10T09:00"))), "Sunday night");
+  assert.equal(S.stormPart(L("2026-10-10T18:00"), new Date(L("2026-10-10T09:00"))), "this evening");
+
+  // what to do leaves out what is not an instruction
+  assert.equal(S.stormSay("Additional information can be found at https://www.weather.gov/rlx as well as on our X and Facebook pages."), null);
+  assert.equal(S.stormSay("Use extra caution when driving, especially if operating a high profile vehicle. Secure outdoor objects. Additional information can be found at https://www.weather.gov/rlx as well as on our X and Facebook pages."),
+    "Use extra caution when driving, especially if operating a high profile vehicle. Secure outdoor objects.");
+  assert.equal(S.stormSay("A Flash Flood Watch means that conditions may develop that lead to flash flooding."), null, "a sentence on what a product means is no instruction");
+  assert.equal(S.stCalm("ONLY TRAVEL IN AN EMERGENCY IN RALEIGH COUNTY ON SATURDAY."), "Only travel in an emergency in Raleigh County on Saturday.");
+});
+
+test("a product's relative words take their day once they would name the wrong one", async () => {
+  const { S } = await stormSandbox("2018-09-13T15:45:00Z");
+  const L = (s) => new Date(s).getTime(), thu = L("2018-09-13T10:55");
+  assert.equal(S.relDay("early this evening until Friday afternoon", thu, L("2018-09-13T11:45")), "early this evening until Friday afternoon", "the same day, said as written");
+  assert.equal(S.relDay("Begins late this morning", thu, L("2018-09-13T21:30")), "Begins late Thursday morning", "the stretch has passed");
+  assert.equal(S.relDay("Hurricane force early this evening", thu, L("2018-09-13T21:30")), "Hurricane force early Thursday evening");
+  assert.equal(S.relDay("until early this evening", thu, L("2018-09-14T08:00")), "until early Thursday evening", "read the next day");
+  assert.equal(S.relDay("Leave tonight. Return tomorrow afternoon.", thu, L("2018-09-14T08:00")), "Leave Thursday night. Return Friday afternoon.");
+  assert.equal(S.relDay("FROM 5 PM THIS AFTERNOON TO 11 AM EDT SUNDAY", thu, L("2018-09-13T21:00")), "FROM 5 PM THURSDAY AFTERNOON TO 11 AM EDT SUNDAY", "capitals stay capitals");
+  assert.equal(S.relDay("late tonight", thu, L("2018-09-14T08:00"), true), "late Thu night");
+  assert.equal(S.relDay("today", thu, L("2018-09-14T08:00")), "Thursday");
+  assert.equal(S.relDay("this evening", NaN, L("2018-09-14T08:00")), "this evening", "with no time written, nothing is changed");
+});
+
+test("the storm card's rules: high to come up, and never on distance, severity or a lone warning", async () => {
+  const { STORMS, wssiAnswer } = await STORM_FIX();
+  const flo = await stormScenario("florence-coast");
+  const { S, L: coastL } = flo, farmL = S.LOCS.sp;
+  const live = JSON.parse(await readFile(new URL("tools/storm-fixtures/feed/live-2026-10-10.json", root), "utf8")).features;
+  const row = (k, edit = (p) => p) => S.alertRow({ properties: edit(structuredClone(live[k].properties)) });
+  const at = Date.parse("2026-10-10T20:20:00Z");
+  const read = (L, alerts, storms = null, now = at, beach = null) => S.stormRead(L, alerts, beach, storms, now);
+  // a lone tornado warning, an observed one, is the strip's: no storm is linked
+  assert.equal(read(coastL, [row("tornado-warning")]).tier, null);
+  // with Florence seven miles off, the same warning is the full card (C4)
+  const nearFlo = row("tornado-warning", (p) => ({ ...p, ends: "2018-09-13T17:00:00-04:00", expires: "2018-09-13T17:00:00-04:00" }));
+  const c4 = S.stormRead(coastL, [nearFlo], [], flo.storms, flo.now);
+  deq([c4.tier, ...c4.rules], ["storm", "C4", "N3"]);
+  // and a farm: a High Wind Warning is enough (F2); a Freeze Warning, CAP Severe as it is, is nothing
+  deq([...read(farmL, [row("high-wind-warning")]).rules], ["F2"]);
+  assert.equal(read(farmL, [row("freeze-warning")]).tier, null);
+  assert.equal(read(farmL, [row("cancelled")]).tier, null);
+  // an upgraded watch never counts, a cached alert without VTEC never raises the card, nor an old storm
+  const hu = flo.point.find((a) => a.event === "Hurricane Warning");
+  assert.equal(S.stormRead(coastL, [{ ...hu, vtec: ["/O.CAN.KILM.HU.W.1006.000000T0000Z-000000T0000Z/"] }], [], [], flo.now).tier, null);
+  assert.equal(S.stormRead(coastL, [{ event: "Hurricane Warning", severity: "Extreme", ends: null, expires: "2018-09-13T19:00:00-04:00", desc: hu.desc, inst: "" }], [], [], flo.now).tier, null,
+    "an alert from a cache written before VTEC was kept");
+  assert.equal(S.stormRead(coastL, [], [], [{ type: "Hurricane", name: "Florence", adv: "57", lat: 34.2, lon: -77.8, mph: 105 }], flo.now).tier, null,
+    "a storm from the old tropics list has no advisory time");
+  // the beach zone counts only for its tropical products
+  const surf = S.alertRow(JSON.parse(await readFile(new URL("tools/storm-fixtures/isaias/alerts-zone-NCZ108.json", root), "utf8")).features.find((f) => f.properties.event === "High Surf Advisory"));
+  assert.equal(read(coastL, [], null, Date.parse("2026-10-10T20:20:00Z"), [surf]).tier, null);
+  // a tropical storm watch alone is the light card (N1); a warning on the beach the full one
+  const tsw = flo.beach.find((a) => a.event === "Hurricane Warning");
+  const watch = { ...tsw, event: "Tropical Storm Watch", vtec: ["/O.CON.KILM.TR.A.1006.000000T0000Z-000000T0000Z/"] };
+  const n1 = S.stormRead(coastL, [], [watch], [], flo.now);
+  deq([n1.tier, ...n1.rules], ["named", "N1"]);
+  // distance alone never: Florence seven miles off with nothing in effect, then any alert at all
+  assert.equal(S.stormRead(coastL, [], [], flo.storms, flo.now).tier, null);
+  const rip = { ...surf, event: "Rip Current Statement", vtec: ["/O.CON.KILM.RP.S.0019.000000T0000Z-181014T0000Z/"], ends: "2018-09-13T20:00:00-04:00", expires: "2018-09-13T20:00:00-04:00" };
+  deq([...S.stormRead(coastL, [rip], [], flo.storms, flo.now).rules], ["N3"]);
+  // an advisory from more than 12 hours ago links nothing: the farm the next morning
+  const farmNext = await stormScenario("isaias-farm-today", (st) => st, "2026-10-11T09:40:00Z");
+  assert.equal(farmNext.model.tier, null, "17 hours after WPC's advisory 16, the Wind Advisory alone");
+  // an emergency, by its damage tag or its words, and never by an emergency manager's report
+  // (its VTEC end the night after `at`, so a latch from it is this season's: one ended more than 30 days
+  // before now is last winter's, and is let go)
+  const ffw = (extra, par = {}) => ({ id: "x", event: "Flash Flood Warning", vtec: ["/O.EXT.KILM.FF.W.0014.000000T0000Z-261011T0600Z/"], ends: null, expires: null,
+    desc: "* Flash Flood Warning for... * At 805 PM EDT, Emergency management reported flash flooding. " + extra, inst: "", headline: null, par });
+  assert.equal(read(farmL, [ffw("")]).tier, null, "an ordinary flash flood warning");
+  deq([...read(coastL, [ffw("This is a FLASH FLOOD EMERGENCY FOR BLADENBORO.")]).rules], ["C2"]);
+  deq([...read(farmL, [ffw("", { flashFloodDamageThreat: "CATASTROPHIC" })]).rules], ["F1"]);
+  // Winter (October 10 2026). At the farm a Winter Storm Warning is the card only with WPC's Winter Storm
+  // Severity Index at Major or Extreme at the point (F3), and its words are never read for amounts: every
+  // grammar written for them misread another office's phrasing. At the coast any winter storm, blizzard,
+  // ice storm or high wind warning is the card (C3), titled in the warning's own sentence
+  // (the warning runs from 8 am October 10 to 8 am the 11th, inside Day 1 of the index's 18Z cycle)
+  const wsw = (what, extra = {}) => ({ id: "w", event: "Winter Storm Warning", vtec: ["/O.NEW.KRLX.WS.W.0002.261010T1200Z-261011T1200Z/"], ends: null, expires: null,
+    desc: `* WHAT...${what}\n\n* WHEN...From 8 AM Saturday to 8 AM EDT Sunday.`, inst: "", par: {}, ...extra });
+  const Wx = (level) => S.wssiRead(wssiAnswer(level, "2026-10-10T18:00:00Z"));
+  const farmAt = (alerts, wssi, held = null) => S.stormRead(farmL, alerts, null, null, at, { wssi, held });
+  const foot = wsw("Heavy snow expected. Total snow accumulations of 12 to 18 inches.");
+  assert.equal(farmAt([foot], null).tier, null, "a foot and a half in its words and no index: the strip's");
+  for (const lv of ["WINTER WEATHER AREA", "MINOR", "MODERATE"]) assert.equal(farmAt([foot], Wx(lv)).tier, null, lv);
+  for (const lv of ["MAJOR", "EXTREME"]) deq([...farmAt([foot], Wx(lv)).rules], ["F3"], lv);
+  deq([...farmAt([wsw("Heavy snow expected. Total snow accumulations of 2 to 4 inches.")], Wx("MAJOR")).rules], ["F3"], "the index decides, never the words");
+  assert.equal(S.stormRead(farmL, [{ ...foot, vtec: ["/O.NEW.KRLX.WS.W.0002.261010T1200Z-261015T1200Z/"] }], null, null, Date.parse("2026-10-13T18:30:00Z"), { wssi: Wx("MAJOR") }).tier, null,
+    "an index whose Major day is over is no reading, though the warning still stands");
+  // and a Major on Day 3 is another storm's: tonight's warning, Moderate on its own day, stays the strip's
+  assert.equal(farmAt([foot], S.wssiRead(wssiAnswer(["MODERATE", null, "MAJOR"], "2026-10-10T18:00:00Z"))).tier, null, "a Day-3 Major beside a Day-1 warning");
+  deq([...farmAt([foot], S.wssiRead(wssiAnswer(["MAJOR", null, "MODERATE"], "2026-10-10T18:00:00Z"))).rules], ["F3"], "a Day-1 Major on the warning's own day");
+  assert.equal(farmAt([{ ...foot, event: "Winter Weather Advisory", vtec: ["/O.NEW.KRLX.WW.Y.0002.270115T1200Z-270116T1200Z/"] }], Wx("EXTREME")).tier, null, "an advisory is not a warning");
+  deq([...read(coastL, [wsw("Heavy snow expected. Total snow accumulations of 2 to 4 inches.")]).rules], ["C3"], "at the coast any winter storm warning");
+  // every text a grammar misread, read as nothing but itself: never F3 without the index, and at the coast
+  // the title is the warning's own sentence ("An inch of ice", "000 feet of snow" and "0.18 to 24 inches"
+  // were the grammar's)
+  for (const what of ["Total snow accumulations between 4 and 7 inches and ice accumulations of a light glaze to a few hundredths of an inch.",
+    "Total snow accumulations ranging from 2 to 4 inches below 3,000 feet with 4 to 7 inches above 3,000 feet.",
+    "Additional ice accumulations around one quarter of an inch, with up to an inch of snow.",
+    "Total ice accumulations up to one quarter to one third of an inch, along with less than an inch of snow and sleet.",
+    "Total snow and sleet accumulations between 12 and 18 inches.", "Ice accumulations around one to a quarter inch.", "Total snow accumulations of over a foot."]) {
+    assert.equal(farmAt([wsw("Heavy mixed precipitation expected. " + what)], null).tier, null, what);
+    const c = read(coastL, [wsw("Heavy mixed precipitation expected. " + what)]);
+    deq([c.tier, ...c.rules, S.stormHero(c).text], ["storm", "C3", what]);
+    deq(c.hazards.map((h) => h.peak), [null], "and its lane says no number");
+  }
+  // Once a warning has raised the card it holds it while that same warning stands (its office, product
+  // and number), through NEW, CON, EXT, EXA, EXB and COR: the index steps down a level between updates
+  // of one warning, and RLX's January 2016 warning took the card down at the height of the snow when an
+  // update said "additional 3 to 6 inches". Until it is cancelled, runs out or is upgraded
+  const raised = farmAt([foot], Wx("MAJOR"));
+  deq(raised.held, { "KRLX.WS.W.2": { rule: "F3", end: "2026-10-11T12:00:00Z" } }, "held with the rule that raised it and its VTEC end");
+  const upd = (act, extra = {}) => wsw("Heavy snow. Additional snow accumulations of 3 to 6 inches.", { id: "w2", vtec: [`/O.${act}.KRLX.WS.W.0002.000000T0000Z-270116T1200Z/`], ...extra });
+  for (const act of ["CON", "EXT", "EXA", "EXB", "COR"]) {
+    const m = farmAt([upd(act)], Wx("MODERATE"), raised.held);
+    deq([m.tier, ...m.rules], ["storm", "F3"], `${act}: held`);
+    assert.match(m.why, /^F3: held while the same warning stands \(Winter Storm Warning at the point\)$/);
+    deq(m.held, { "KRLX.WS.W.2": { rule: "F3", end: "2027-01-16T12:00:00Z" } }, "and handed on, with the update's end");
+  }
+  deq([...farmAt([upd("CON")], null, raised.held).rules], ["F3"], "and through a failed index");
+  for (const [alerts, why] of [[[upd("CAN")], "cancelled"], [[upd("EXP")], "run out"], [[upd("UPG")], "upgraded"],
+    [[upd("CON", { ends: "2026-10-10T19:00:00Z" })], "past its end"], [[], "gone from the feed"],
+    [[upd("CON", { vtec: ["/O.CON.KRLX.WS.W.0003.000000T0000Z-270116T1200Z/"] })], "another warning"],
+    [[upd("CON", { vtec: ["/O.CON.KRLX.WS.A.0002.000000T0000Z-270116T1200Z/"] })], "a watch with the warning's number"],
+    [[upd("CON", { vtec: ["/O.CON.KJKL.WS.W.0002.000000T0000Z-270116T1200Z/"] })], "another office's"]]) {
+    const m = farmAt(alerts, Wx("MODERATE"), raised.held);
+    assert.equal(m.tier, null, why);
+    deq({ ...m.held }, {}, `${why}: and nothing is held`);
+  }
+  deq([...farmAt([upd("UPG"), wsw("Blizzard conditions.", { id: "bz", event: "Blizzard Warning", vtec: ["/O.NEW.KRLX.BZ.W.0001.270115T1200Z-270116T1200Z/"] })], null, raised.held).rules], ["F2"],
+    "upgraded to a blizzard, the blizzard's own card");
+  // A read with no point list (its request failed, alerts null) knows nothing of the house's warnings: what
+  // is held is handed on as it was, and only its own end takes it off. A single timed-out request under storm
+  // load wiped the latch, and the next update at Moderate took the card down at the height of the storm
+  const failed = farmAt(null, null, raised.held);
+  assert.equal(failed.tier, null, "with no list there is nothing to draw");
+  deq(failed.held, raised.held, "but the latch is handed on unchanged");
+  const back = farmAt([upd("CON")], Wx("MODERATE"), failed.held);
+  deq([back.tier, ...back.rules], ["storm", "F3"], "Major, a failed fetch, then the same warning CON at Moderate: the card stays up");
+  deq(S.stormRead(farmL, null, null, null, Date.parse("2026-10-11T12:30:00Z"), { held: raised.held }).held, {}, "past its VTEC end it is let go, list or none");
+  deq(farmAt(null, null, { "KRLX.WS.W.2": "F3" }).held, { "KRLX.WS.W.2": { rule: "F3", end: null } }, "a latch kept before its end was, handed on");
+  deq([...farmAt([upd("CON")], Wx("MODERATE"), { "KRLX.WS.W.2": "F3" }).rules], ["F3"], "and holding the card");
+  deq(farmAt([], Wx("MODERATE"), failed.held).held, {}, "and a newer good list without the event lets it go");
+  // an emergency held from an earlier update holds the card, and is never still said to be an emergency
+  const emerg = read(farmL, [ffw("", { flashFloodDamageThreat: "CATASTROPHIC" })]);
+  assert.equal(S.stormEmergency(emerg), true);
+  const calmer = S.stormRead(farmL, [ffw("")], null, null, at, { held: emerg.held });
+  deq([calmer.tier, ...calmer.rules, S.stormEmergency(calmer)], ["storm", "F1", false]);
+  // A tropical warning's expiry is only the next advisory's time. One in a list fetched while it stood
+  // still stands until a newer answer for that list decides, up to six hours past its own expiry: a cold
+  // open painted Debby's renewed beach warning as ended, with "Raining now." under a tropical storm, and so
+  // did the strip's timer at its 7 pm expiry, 7h20m after the 11:40 fetch, with the beach slower than
+  // STORM_WAIT or failing, while the window was measured from the fetch
+  const deb = await stormScenario("debby-flood-coast"), t0 = deb.now;
+  const stale = deb.beach.map((a) => (a.vtec.some((v) => /\.TR\.W\./.test(v)) ? { ...a, expires: new Date(t0 - 36e5).toISOString() } : a));
+  const debAt = (seen) => S.stormRead(coastL, deb.point, stale, deb.storms, t0, { seen }).tier;
+  assert.equal(debAt(null), "named", "past its expiry, with nothing to say when it was fetched, it is over");
+  assert.equal(debAt({ point: t0, beach: t0 - 2 * 36e5 }), "storm", "fetched two hours ago, while it stood: it stands");
+  assert.equal(debAt({ point: t0, beach: t0 - 7 * 36e5 }), "storm", "fetched seven hours ago, expired an hour ago: it stands, bounded by its own expiry and not by the fetch");
+  assert.equal(debAt({ point: t0, beach: t0 - (7 * 36e5 + 21 * 6e4) }), "storm", "Debby's own timings: fetched at 11:40, the strip's timer a minute past its 7 pm expiry");
+  const older = deb.beach.map((a) => (a.vtec.some((v) => /\.TR\.W\./.test(v)) ? { ...a, expires: new Date(t0 - 6.5 * 36e5).toISOString() } : a));
+  assert.equal(S.stormRead(coastL, deb.point, older, deb.storms, t0, { seen: { point: t0, beach: t0 - 8 * 36e5 } }).tier, "named", "six hours past its own expiry with no newer answer, it is over");
+  assert.equal(debAt({ point: t0, beach: t0 - 30 * 6e4 }), "named", "fetched after its expiry: the answer said it was over");
+  assert.equal(debAt({ point: t0 - 2 * 36e5, beach: t0 }), "named", "and only the list it came in counts");
+  const ffaPast = deb.point.map((a) => (/Flood Watch/.test(a.event) ? { ...a, ends: new Date(t0 - 36e5).toISOString() } : a));
+  assert.equal(S.stormRead(coastL, ffaPast, [], deb.storms, t0, { seen: { point: t0 - 2 * 36e5, beach: t0 } }).alerts.some((a) => /Flood Watch/.test(a.event)), false, "a watch with an end is over at its end");
+  // the farm's linked warnings: a severe thunderstorm warning while Isaias is linked to the farm is the card (F4)
+  const isa = await stormScenario("isaias-farm-today");
+  const svr = { id: "s", event: "Severe Thunderstorm Warning", vtec: ["/O.NEW.KRLX.SV.W.0101.261010T2100Z-261010T2145Z/"], ends: "2026-10-10T17:45:00-04:00",
+    expires: "2026-10-10T17:45:00-04:00", desc: "* WHAT...60 mph wind gusts.", inst: "", par: {} };
+  deq([...isa.S.stormRead(farmL, [svr], null, isa.storms, isa.now).rules], ["F4", "N3"], "a warning naming nothing, with Isaias's track 33 miles off: linked by the track, the full card");
+  deq([...isa.S.stormRead(farmL, [...isa.point, svr], null, isa.storms, isa.now).rules], ["F4", "N2", "N3"]);
+  assert.equal(isa.S.stormRead(farmL, [svr], null, [], isa.now).tier, null, "and with no storm out, the strip's alone");
+  // the ATCF number ties a tropical alert to its storm only in its own year
+  const old = { ...tsw, sent: "2019-09-05T10:55:00-04:00" };
+  const untied = S.stormRead(coastL, [], [old], flo.storms, flo.now);
+  assert.equal(untied.systems.find((s) => s.name === "Florence").tied, false);
+  assert.equal(STORMS["florence-coast"].expect.tier, "storm");
+});
+
+/* The winter backtest (October 10 2026): every winter storm, blizzard and ice storm warning RLX wrote for
+   Raleigh County and ILM for Inland New Hanover from January 2014 to October 10 2026, cut to the place's
+   own segment, from Iowa State's AFOS archive (tools/storm-corpus.mjs writes tools/storm-fixtures/corpus/),
+   each run through the page's own stormRead the moment it was issued, in order, the warnings that held the
+   card handed from one to the next. A winter warning's words are never read for amounts (every grammar
+   written for them misread another office), so they are only quoted: the title is the segment's own
+   sentence, or its headline, or nothing, and the farm's card never comes up on its words alone.
+
+   With WPC's Winter Storm Severity Index as WPC's own archive has it for the farm's grid cell
+   (tools/storm-corpus.mjs wssi writes corpus/wssi.json, from November 2020: 104 of the 176 segments since
+   then were issued in a cycle the archive does not keep, and read no index), each cycle's three days read
+   on their own and a Major counted only on a day the warning is in effect, the farm's card comes up for
+   one storm in six winters, RLX's WS.W.0002 of January 5 to 7 2025: Major on Day 2 of the cycle out at
+   10:24 UTC on the 5th (Moderate on Day 1), the first update the archive has a cycle for, and held through
+   its last. Its January 23 to 26 2026 warning
+   was Moderate at the farm through all eleven updates, and its February 2026 ones Minor. At the coast
+   every winter storm, blizzard or ice storm warning is the card (C3), and the index was Major there for
+   one of them, January 30 to February 1 2026 */
+test("the winter backtest: twelve winters of the offices' own warnings, quoted and never read for numbers", async () => {
+  const { corpus, WSSI_FILE } = await import(new URL("tools/storm-corpus.mjs", root));
+  const { alertsFrom } = await import(new URL("tools/storm-fixtures.mjs", root));
+  const { S } = await stormSandbox("2026-10-10T20:20:00Z");
+  const readings = JSON.parse(await readFile(WSSI_FILE, "utf8")).readings;
+  const all = corpus(), low = (x) => String(x || "").replace(/\s+/g, " ").trim().toLowerCase();
+  assert.ok(all.filter((e) => e.place === "farm").length >= 280 && all.filter((e) => e.place === "coast").length >= 40, `the corpus is all there: ${all.length} segments`);
+  assert.equal(Object.keys(readings).length, all.filter((e) => Date.parse(e.issued) >= Date.UTC(2020, 10, 1)).length, "an index reading, or its absence, for every segment since November 2020");
+  assert.ok(Object.values(readings).every((r) => r.missing || (Array.isArray(r.days) && r.days.length === 3)), "and each one archived has its three days");
+  const winter = (a) => a.vtec.some((v) => /\.(?:WS|BZ|IS)\.W\./.test(v)), fires = {}, list = [];
+  let held = {}, place = null, quoted = 0;
+  for (const e of all) {
+    const L = S.LOCS[e.loc], rows = alertsFrom(e.product, e.zone).map(S.alertRow).filter(S.alertLive), where = `${e.place} ${e.issued} ${e.zone}`, text = low(e.product.productText);
+    assert.ok(rows.some(winter), `${where}: its warning`);
+    for (const a of rows.filter(winter)) {
+      const q = S.stormQuote(a);
+      if (q == null) continue;
+      quoted++;
+      assert.ok(text.includes(low(q)), `${where}: "${q}" is the segment's own words`);
+      assert.ok(q.length >= 20 && q.length <= 200 && /^[A-Za-z0-9]/.test(q) && /[a-z]/i.test(q) && !/\*|\.\.\./.test(q), `${where}: never absurd: "${q}"`);
+      assert.doesNotMatch(q.replace(/[.!?]+$/, ""), /(?:^|\s)[\d.,/–-]+$/, `${where}: never cut at a number: "${q}"`);
+    }
+    const at = Date.parse(e.issued) + 6e4;
+    // on its words alone: never F3, and at the coast always the card
+    const bare = S.stormRead(L, rows, [], [], at);
+    assert.ok(!bare.rules.includes("F3"), `${where}: F3 never fires from the warning's words`);
+    if (e.place === "coast") deq(bare.rules, ["C3"], `${where}: at the coast any winter warning is the card`);
+    else assert.ok(bare.tier === null || bare.rules.join() === "F2", `${where}: ${bare.why}`);
+    const hero = S.stormHero(bare, at);
+    if (hero) assert.ok(text.includes(low(hero.text)) && !/\d\s*$/.test(hero.text), `${where}: the title is the warning's own words: "${hero.text}"`);
+    // and with the index as WPC archived it, the latch handed on
+    if (e.place !== place) { held = {}; place = e.place; }
+    // each of the cycle's three days as WPC archived it, the 24 hours ending 24, 48 and 72 hours after the cycle
+    const r = readings[`${e.place} ${e.issued}`], c0 = r && Date.parse(r.cycle.replace(/Z$/, ":00:00Z"));
+    const wssi = r?.days ? { impact: r.impact, days: r.days.map((impact, i) => impact && { day: i + 1, impact, start: new Date(c0 + i * 864e5).toISOString(), end: new Date(c0 + (i + 1) * 864e5).toISOString() }).filter(Boolean) } : null;
+    const m = S.stormRead(L, rows, [], [], at, { wssi, held });
+    held = m.held;
+    if (!m.rules.includes("F3")) continue;
+    const ev = rows.flatMap((a) => a.vtec).map((x) => x.match(/\.(WS\.W)\.(\d{4})\./)).find(Boolean), key = `${e.place} ${e.season}`, id = `${ev[1]}.${ev[2]}`;
+    if (!(fires[key] ||= []).includes(id)) fires[key].push(id);
+    list.push(`F3 ${e.issued.slice(0, 16)} ${id} ${r?.days?.join("/") || r?.missing && "no archived cycle" || "-"}${/held/.test(m.why) ? " (held)" : ""}  ${S.stormHero(m, at)?.text}`);
+  }
+  if (process.env.PORCH_CORPUS) console.log(list.join("\n"));
+  assert.ok(quoted >= 320, `nearly every segment has a sentence to quote: ${quoted}`);
+  deq(fires, { "farm 2024-25": ["WS.W.0002"] }, "the farm's card comes up for RLX's January 2025 storm and no other");
+  deq(list.map((x) => x.slice(3, 19)), ["2025-01-05T10:24", "2025-01-05T16:16", "2025-01-05T19:07", "2025-01-05T22:36", "2025-01-06T06:12", "2025-01-06T14:30", "2025-01-06T22:11", "2025-01-07T00:11", "2025-01-07T03:11", "2025-01-07T05:47"],
+    "from its first Major to its last update, held between");
+  // and the latch through RLX's biggest storm in the corpus, January 22 to 24 2016, whose card came and
+  // went as its updates said "additional": given a Major at its first update (no archive goes back that
+  // far), it stays up through every one of them
+  const seq = all.filter((e) => e.place === "farm" && e.season === "2015-16" && /\.CON\.KRLX\.WS\.W\.0001\.|\.EXA\.KRLX\.WS\.W\.0001\.|\.NEW\.KRLX\.WS\.W\.0001\./.test(e.product.productText));
+  assert.ok(seq.length >= 12, `${seq.length} updates`);
+  let h = {};
+  const ys = seq.map((e, i) => { const rows = alertsFrom(e.product, e.zone).map(S.alertRow).filter(S.alertLive);
+    const m = S.stormRead(S.LOCS.sp, rows, [], [], Date.parse(e.issued) + 6e4, { wssi: i ? null : { impact: "MAJOR", days: [{ day: 1, impact: "MAJOR", start: "2016-01-22T00:00:00Z", end: "2016-01-25T00:00:00Z" }] }, held: h }); h = m.held; return m.rules.includes("F3") ? "Y" : "n"; }).join("");
+  assert.equal(ys, "Y".repeat(seq.length), "the card stays up through the whole warning");
+});
+
+test("the storm card draws the Weather Service's hours as a timeline, and nothing it was not given", async () => {
+  // the page's clock helpers beside the storm block, so the pill reads the way every pill does
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const lift = (re) => { const m = html.match(re); assert.ok(m, `${re} should be extractable`); return m[0]; };
+  const helpers = [/const dirLong=[\s\S]*?%16\];/, /const clock=d=>\{[^\n]*\};/, /const xpClock=[^\n]*/, /const xpSpoken=[^\n]*/, /const xpOtherDay=[^\n]*/,
+    /const xpWhen=[^\n]*/, /const xpSayDay=[^\n]*/, /const xpSaid=[^\n]*/, /const xpSaidAt=[^\n]*/].map(lift).join("\n");
+  const src = html.slice(html.indexOf("/* ── the storm card"), html.indexOf("/* ── tide ─"));
+  const run = (nowISO) => { const now = Date.parse(nowISO); class Clock extends Date { constructor(...a) { super(...(a.length ? a : [now])); } static now() { return now; } }
+    const ctx = vm.createContext({ Date: Clock, location: { search: "" } });
+    vm.runInContext([lift(/const LOCS=\{[\s\S]*?\n\};/), lift(/const toRad=x=>[^\n]*/), lift(/const distMi=[\s\S]*?asin\(Math\.sqrt\(a\)\)\};/),
+      lift(/const dirTxt=[^\n]*/), helpers, ...stormHelpers(html, lift).filter((x) => !/^const clock=/.test(x)), src,
+      "globalThis.S={stormPhrase,stormWindow,stormAbs,stormPeak,stormLanes,readStorm,stormRead,alertRow,alertLive,stormLane,LOCS};"].join("\n"), ctx);
+    return ctx.S; };
+  const W = run("2018-09-13T15:45:00Z");
+  const L = (s) => new Date(s).getTime();                    // a wall-clock time, read as local
+  const thu = L("2018-09-13T10:55");                         // TCVILM 57A was written Thursday at 10:55
+  deq(W.stormPhrase("Saturday afternoon", thu), [L("2018-09-15T12:00"), L("2018-09-15T18:00")], "a part of a day is its whole stretch");
+  deq(W.stormPhrase("early this evening", thu), [L("2018-09-13T18:00"), L("2018-09-13T21:00")]);
+  deq(W.stormPhrase("late this morning", thu), [L("2018-09-13T09:00"), L("2018-09-13T12:00")]);
+  deq(W.stormPhrase("early Saturday morning", thu), [L("2018-09-15T00:00"), L("2018-09-15T06:00")]);
+  deq(W.stormPhrase("late tonight", thu), [L("2018-09-14T00:00"), L("2018-09-14T06:00")], "tonight is the product's night, never the reader's");
+  deq(W.stormPhrase("11 AM EDT Sunday", thu), [L("2018-09-16T11:00"), L("2018-09-16T11:00")], "a clock time is a hard edge");
+  assert.equal(W.stormPhrase("soon", thu), null, "a phrase it cannot read draws nothing");
+  deq(W.stormWindow("until Saturday afternoon", thu), { start: null, end: [L("2018-09-15T12:00"), L("2018-09-15T18:00")], from: null, until: "Saturday afternoon" });
+  deq(W.stormWindow("Begins late this morning", thu).end, null, "a window with no end has none");
+  deq(W.stormWindow("From 5 PM this afternoon to 11 AM EDT Sunday.", thu).start, [L("2018-09-13T17:00"), L("2018-09-13T17:00")]);
+  assert.equal(W.stormWindow("Through the weekend", thu), null);
+  // read the same day the words are as written, and opened the next day they take their day, so a
+  // statement opened tomorrow points at the evening it meant
+  assert.equal(W.stormAbs("early this evening", thu, false, L("2018-09-13T11:45")), "early this evening");
+  assert.equal(W.stormAbs("early this evening", thu, false, L("2018-09-14T08:00")), "early Thu evening");
+  assert.equal(W.stormAbs("late tonight", thu, true, L("2018-09-14T08:00")), "late Thursday night");
+  assert.equal(W.stormAbs("LATE THIS MORNING", thu, false, L("2018-09-13T21:30")), "late Thu morning", "and once the stretch has passed");
+  assert.equal(W.stormAbs("Saturday afternoon", thu), "Sat afternoon");
+  // each peak in the fewest of the Weather Service's own words
+  assert.equal(W.stormPeak({ key: "wind", peak: "65-85 mph with gusts to 105 mph" }), "gusts to 105 mph");
+  assert.equal(W.stormPeak({ key: "rain", peak: "Additional More than two feet" }), "more than two feet");
+  assert.equal(W.stormPeak({ key: "rain", peak: "Additional 4-8 inches, with locally higher amounts" }), "4–8 inches");
+  assert.equal(W.stormPeak({ key: "surge", peak: "The potential for 2-4 feet above ground somewhere within surge prone areas" }), "2–4 ft above ground");
+  assert.equal(W.stormPeak({ key: "tornado", peak: "Situation is somewhat favorable for tornadoes", threat: "Potential for a few tornadoes" }), "a few possible");
+  // a range keeps both ends and its words: "1 to 2 feet" and "up to 2 feet" of inundation were "2 ft"
+  assert.equal(W.stormPeak({ key: "surge", peak: "1 to 2 feet of inundation above ground level" }), "1 to 2 ft above ground");
+  assert.equal(W.stormPeak({ key: "surge", peak: "Up to 2 feet of inundation above ground level" }), "up to 2 ft above ground");
+  assert.equal(W.stormPeak({ key: "wind", peak: "Southeast winds 20 to 30 mph" }), "20 to 30 mph");
+  // a winter lane says what it is for and never how much: the numbers were rebuilt from the words, and
+  // read "a few hundredths of an inch" as an inch of ice
+  for (const [key, peak] of [["snow", "12 TO 18 INCHES."], ["snow", "Total snow and sleet accumulations between 3 and 8 inches"], ["ice", "ice accumulations between two tenths and one half of an inch"],
+    ["ice", "ice accumulations of a light glaze to a few hundredths of an inch"], ["snow", "Total snow accumulations of 6 to 10 inches above 3000 feet"]])
+    assert.equal(W.stormPeak({ key, peak }), null, peak);
+
+  // Florence a day out, at 11:45: the shift is what puts the place's wall clock on this machine's
+  const flo = await stormScenario("florence-coast");
+  const S = run(flo.st.when), shift = L("2018-09-13T11:45") - Date.parse("2018-09-13T11:45:00-04:00"), now = L("2018-09-13T11:45");
+  const tides = [{ t: "2018-09-13 14:10", v: "0.4", type: "L" }, { t: "2018-09-13 20:28", v: "5.1", type: "H" }, { t: "2018-09-18 09:00", v: "5", type: "H" }];
+  const T = S.stormLanes(flo.model, now, { shift, tides });
+  deq(T.lanes.map((l) => [l.key, l.peak, l.beach]), [["wind", "gusts to 105 mph", "gusts to 115 mph"], ["rain", "more than two feet", null], ["surge", "2–4 ft above ground", "6–9 ft above ground"]],
+    "the beach's worse numbers beside the house's");
+  deq(T.also.map((l) => [l.key, l.peak]), [["tornado", "a few possible"]], "the tornadoes have no hours, so no bar");
+  const [wind, rain, surge] = T.lanes;
+  deq(wind.segs.map((g) => [g.strong, g.a1, g.b0, g.b1]), [[0, L("2018-09-13T10:55"), L("2018-09-15T12:00"), L("2018-09-15T18:00")],
+    [1, L("2018-09-13T21:00"), L("2018-09-14T12:00"), L("2018-09-14T18:00")]], "tropical-storm winds until Saturday afternoon, hurricane force from early this evening until Friday afternoon");
+  deq(rain.segs.map((g) => [g.word, g.b0, g.b1]), [["Flash Flood Watch", L("2018-09-15T18:00"), L("2018-09-15T18:00")]], "the rain's hours are the watch's, to the minute");
+  assert.equal(surge.segs[0].open, true, "the surge has no end yet");
+  deq(surge.marks.map((m) => m.t), [L("2018-09-13T20:28")], "its high tides inside the chart");
+  deq({ ...T.closest }, { t: L("2018-09-14T08:00"), miles: 7, dir: "S" }, "the closest forecast point, Friday 8 a.m.");
+  assert.equal(T.t0, now);
+  assert.ok(T.t1 - T.t0 >= 48 * 36e5 && T.t1 - T.t0 <= 72 * 36e5, "two days at least, never past three");
+  assert.equal(T.beach, null, "the warnings are at the house");
+  // the pill: the words, with the day named, and the stretch where an edge is only a part of a day
+  const say = (t) => S.readStorm(T, L(t), now).parts.map((p) => p[0]);
+  deq(say("2018-09-14T08:00"), ["Fri 8a", "closest, 7 mi S", "hurricane-force wind", "Flash Flood Watch", "storm surge"]);
+  deq(say("2018-09-13T19:00"), ["7p", "hurricane-force wind from early this evening", "Flash Flood Watch", "storm surge"], "today goes unsaid");
+  deq(say("2018-09-13T20:28"), ["8:28p", "hurricane-force wind from early this evening", "Flash Flood Watch", "storm surge", "high tide 8:28p"]);
+  // and no TCV impacts word is ever said, on a pill or to a screen reader
+  const IMPACT = /unfolding|being assessed|devastating|catastrophic|extensive|significant|limited|little to none/i;
+  for (let t = T.t0; t <= T.t1; t += 36e5) { const r = S.readStorm(T, t, now); assert.doesNotMatch(r.parts.map((p) => p[0]).join(" ") + r.said, IMPACT); }
+  deq(say("2018-09-15T15:00"), ["Sat 3p", "tropical-storm wind until Sat afternoon", "Flash Flood Watch", "storm surge"]);
+  deq(say("2018-09-15T22:00"), ["Sat 10p", "storm surge"], "the watch's hours are over and the winds' window has closed");
+  assert.match(S.readStorm(T, L("2018-09-14T08:00"), now).said, /^Friday 8 am, the closest point on the forecast track, 7 miles south, hurricane-force wind/);
+  // A short-fuse warning issued during the storm is the strip's, never a lane's hours: a routine Flash
+  // Flood Warning to 5:30 made the two feet of rain end that evening, and a 35-minute Tornado Warning
+  // drew a red sliver at NOW on a row that still read "a few possible"
+  const fuse = (event, k, ends) => W.alertRow({ properties: { id: "urn:x:" + k, event, severity: "Severe", sent: "2018-09-13T11:40:00-04:00", onset: "2018-09-13T11:40:00-04:00",
+    ends, expires: ends, description: "* WHAT...Flash flooding caused by excessive rainfall.\n\n* WHEN...Until 530 PM EDT.", instruction: "Turn around, don't drown.",
+    parameters: { VTEC: [`/O.NEW.KILM.${k}.0031.180913T1540Z-180913T2130Z/`] } } });
+  for (const extra of [fuse("Flash Flood Warning", "FF.W", "2018-09-13T17:30:00-04:00"), fuse("Tornado Warning", "TO.W", "2018-09-13T12:15:00-04:00")]) {
+    const X = S.stormLanes(S.stormRead(flo.L, [...flo.point, extra], flo.beach, flo.storms, flo.now), now, { shift, tides });
+    deq(X.lanes.map((l) => l.key), ["wind", "rain", "surge"], extra.event);
+    deq(X.lanes[1].segs.map((g) => [g.word, g.b1]), [["Flash Flood Watch", L("2018-09-15T18:00")]], `${extra.event}: the rain keeps the watch's hours`);
+    deq(X.also.map((l) => [l.key, l.peak]), [["tornado", "a few possible"]], `${extra.event}: and the tornadoes no bar`);
+  }
+  // An areal or a river Flood Warning, or a Flood Advisory, is not the rain's hours either: a hazard from
+  // the TCV takes a flood or flash flood watch's, or else the longest-running product for it, and never
+  // the first warning's (an areal Flood Warning to 5:30 made the two feet of rain end that evening)
+  for (const extra of [fuse("Flood Warning", "FA.W", "2018-09-13T17:30:00-04:00"), fuse("Flood Warning", "FL.W", "2018-09-14T08:00:00-04:00"), fuse("Flood Advisory", "FA.Y", "2018-09-13T15:00:00-04:00")]) {
+    const X = S.stormLanes(S.stormRead(flo.L, [...flo.point, extra], flo.beach, flo.storms, flo.now), now, { shift, tides });
+    deq(X.lanes.filter((l) => l.key === "rain").map((l) => l.segs.map((g) => [g.word, g.b1])), [[["Flash Flood Watch", L("2018-09-15T18:00")]]], `${extra.vtec[0]}: the rain keeps the watch's hours`);
+  }
+  // With no watch, a hazard from the TCV takes no product's hours at all: a 3-hour Flood Advisory ended
+  // "more than two feet" at 2:30, an areal Flood Warning at 5:30, and a river's, whose end is its crest and
+  // not the rain, ran the bar a week past the chart. The rain is the quiet row with no bar
+  const unwatched = flo.point.filter((a) => !a.vtec.some((v) => /\.FF\.A\./.test(v)));
+  const weekLong = { ...fuse("Flood Warning", "FL.W", "2018-09-20T08:00:00-04:00"), vtec: ["/O.NEW.KILM.FL.W.0045.180913T1540Z-180920T1200Z/"] };
+  for (const extra of [[fuse("Flood Advisory", "FA.Y", "2018-09-13T14:30:00-04:00")], [fuse("Flood Warning", "FA.W", "2018-09-13T17:30:00-04:00")],
+    [fuse("Flood Warning", "FA.W", "2018-09-13T17:30:00-04:00"), weekLong]]) {
+    const U = S.stormLanes(S.stormRead(flo.L, [...unwatched, ...extra], flo.beach, flo.storms, flo.now), now, { shift, tides });
+    const why = extra.map((x) => x.vtec[0].slice(10, 14)).join(" and ");
+    assert.equal(U.lanes.some((l) => l.key === "rain" || l.key === "flood"), false, `${why}: no bar for the rain`);
+    deq(U.also.map((l) => [l.key, l.peak]), [["rain", "more than two feet"], ["tornado", "a few possible"]], `${why}: its row says it, with no hours`);
+  }
+  // A lane from a product's hours starts at the product's start, never when it was sent: a watch or
+  // warning issued ahead of its start drew from NOW (RLX's January 23 2026 warning, nine hours early).
+  // Florence's Flash Flood Watch, issued ahead of its 8 pm start, draws from 8 pm, and NOW reads no watch
+  const ahead = flo.point.map((a) => (a.vtec.some((v) => /\.FF\.A\./.test(v)) ? { ...a, onset: "2018-09-13T20:00:00-04:00", vtec: ["/O.NEW.KILM.FF.A.0006.180914T0000Z-180915T2200Z/"] } : a));
+  const AT = S.stormLanes(S.stormRead(flo.L, ahead, flo.beach, flo.storms, flo.now), now, { shift, tides });
+  deq(AT.lanes.find((l) => l.key === "rain").segs.map((g) => [g.word, g.a0, g.b1]), [["Flash Flood Watch", L("2018-09-13T20:00"), L("2018-09-15T18:00")]], "from its start");
+  assert.ok(!S.readStorm(AT, now, now).parts.some((p) => /Flash Flood Watch/.test(p[0])), "and NOW reads no watch");
+  // the VTEC begin stands in for an onset the alert does not carry
+  const AV = S.stormLanes(S.stormRead(flo.L, ahead.map((a) => (/Flash Flood/.test(a.event) ? { ...a, onset: null } : a)), flo.beach, flo.storms, flo.now), now, { shift, tides });
+  assert.equal(AV.lanes.find((l) => l.key === "rain").segs[0].a0, L("2018-09-13T20:00"));
+  // A winter warning is one lane, named by what it is for and with no number, on its own hours from its
+  // start: RLX's January 23 2026 warning, issued the evening before, starts at 7 Saturday morning
+  const jan = S.stormRead(S.LOCS.sp, [{ id: "rlx-jan26", event: "Winter Storm Warning", vtec: ["/O.CON.KRLX.WS.W.0001.260124T1200Z-260126T1200Z/"], sent: "2026-01-23T22:03:00-05:00",
+    onset: "2026-01-24T07:00:00-05:00", ends: "2026-01-26T07:00:00-05:00", expires: "2026-01-24T06:00:00-05:00", inst: "", par: {},
+    desc: "* WHAT...Heavy mixed precipitation expected. Total snow and sleet accumulations between 3 and 8 inches and ice accumulations between two tenths and one half of an inch.\n\n* WHEN...From 7 AM Saturday to 7 AM EST Monday." }],
+    [], [], Date.parse("2026-01-23T22:20:00-05:00"), { wssi: { impact: "MAJOR", days: [{ day: 1, impact: "MAJOR", start: "2026-01-24T00:00:00.000Z", end: "2026-01-25T00:00:00.000Z" }] } });
+  const JT = S.stormLanes(jan, L("2026-01-23T22:20"), { shift: L("2026-01-23T22:20") - Date.parse("2026-01-23T22:20:00-05:00") });
+  deq(JT.lanes.map((l) => [l.key, l.name, l.peak, l.hero, l.segs.map((g) => [g.word, g.a0, g.b1])]), [["snow", "Snow and ice", null, true, [["Winter Storm Warning", L("2026-01-24T07:00"), L("2026-01-26T07:00")]]]],
+    "one lane, the warning's, from its start");
+  // NOW, before it has begun, says it with its start, the way the headline does: it read "Now, no hours from
+  // the Weather Service", which sounds like nothing was given
+  const jNow = S.readStorm(JT, L("2026-01-23T22:20"), L("2026-01-23T22:20"));
+  deq([jNow.parts.map((p) => p[0]), jNow.said], [["now", "Winter Storm Warning from Sat 7a"], "Now, Winter Storm Warning from Saturday at 7 am"], "NOW names the warning and its start: it has not begun");
+  deq(S.readStorm(JT, L("2026-01-24T05:00"), L("2026-01-23T22:20")).parts.map((p) => p[0]), ["Sat 5a", "—"], "and an hour before it no window covers is still a dash");
+  deq(S.readStorm(JT, L("2026-01-24T08:00"), L("2026-01-23T22:20")).parts.map((p) => p[0]), ["Sat 8a", "Winter Storm Warning"]);
+  // and the real one: RLX's January 5 2025 warning, issued at 5:24 that morning for noon, through the
+  // page's own fetch path (the fixture's onset is its VTEC begin, as the API's is)
+  const sif = await stormScenario("snow-ice-farm"), SW = run(sif.st.when), sNow = L("2025-01-05T05:40");
+  const ST = SW.stormLanes(sif.model, sNow, { shift: sNow - Date.parse("2025-01-05T05:40:00-05:00") });
+  deq(ST.lanes.map((l) => [l.name, l.peak, l.segs.map((g) => [g.word, g.a0, g.b1])]), [["Snow and ice", null, [["Winter Storm Warning", L("2025-01-05T12:00"), L("2025-01-07T06:00")]]]]);
+  const sRead = SW.readStorm(ST, sNow, sNow);
+  deq([sRead.parts.map((p) => p[0]), sRead.said], [["now", "Winter Storm Warning from 12p"], "Now, Winter Storm Warning from noon"], "NOW reads the warning from noon, the pill and the spoken value");
+  assert.doesNotMatch(sRead.said, /no hours from the Weather Service/);
+  // and a start still to come is said, so the chart's spoken label is "from noon" and agrees with the bar:
+  // it read "Winter Storm Warning until Tuesday at 6 am", as on now
+  deq(ST.lanes[0].segs.map((g) => [g.from, g.fromSaid]), [["12p", "noon"]], "from noon");
+  deq(JT.lanes[0].segs.map((g) => [g.from, g.fromSaid]), [["Sat 7a", "Saturday at 7 am"]], "a start on another day names it");
+  deq(AT.lanes.find((l) => l.key === "rain").segs.map((g) => g.fromSaid), ["8 pm"], "Florence's Flash Flood Watch, from 8 pm");
+  deq(SW.stormLanes(sif.model, L("2025-01-05T13:00"), { shift: sNow - Date.parse("2025-01-05T05:40:00-05:00") }).lanes[0].segs.map((g) => g.fromSaid), [null], "and once it has begun, no start");
+  // an emergency's lane is still its own warning's hours: the card is that warning's
+  const emer = S.stormLanes(S.stormRead(flo.L, [{ ...fuse("Flash Flood Warning", "FF.W", "2018-09-13T17:30:00-04:00"), desc: "* WHAT...Flash flooding. This is a FLASH FLOOD EMERGENCY for Porters Neck.\n\n* WHEN...Until 530 PM EDT." }], [], [], flo.now), now, { shift });
+  deq(emer.lanes.map((l) => [l.key, l.segs[0].word, l.segs[0].b1]), [["flood", "Flash Flood Warning", L("2018-09-13T17:30")]]);
+
+  // Debby: the tropical storm warning is the beach's, the rain is the house's Flood Watch, and the
+  // wind and the tornadoes have no hours
+  const deb = await stormScenario("debby-flood-coast");
+  const D = run(deb.st.when).stormLanes(deb.model, L("2024-08-07T11:40"), { shift: L("2024-08-07T11:40") - Date.parse("2024-08-07T11:40:00-04:00") });
+  deq(D.lanes.map((l) => l.key), ["rain", "surge"]);
+  deq(D.also.map((l) => l.key), ["wind", "tornado"]);
+  assert.equal(D.beach, "Tropical Storm Warning");
+  // every number is the beach zone's, and its windows are said as the beach's on the pill; the rain's
+  // hours are the house's own Flood Watch, and say so
+  deq([...D.lanes, ...D.also].map((l) => [l.key, l.where, l.beach]), [["rain", "beach", null], ["surge", "beach", null], ["wind", "beach", null], ["tornado", "beach", null]]);
+  deq(run(deb.st.when).readStorm(D, L("2024-08-08T08:00"), L("2024-08-07T11:40")).parts.map((p) => p[0]), ["Thu 8a", "closest, 115 mi WSW", "Flood Watch", "storm surge at the beach"]);
+  assert.equal(D.lanes[0].segs[0].b1, L("2024-08-09T08:00"));
+  // the blizzard: the warning's own hours, and an hour no window covers is a dash
+  const bz = await stormScenario("blizzard-farm");
+  const B = run(bz.st.when), BT = B.stormLanes(bz.model, L("2027-01-22T13:30"), { shift: L("2027-01-22T13:30") - Date.parse("2027-01-22T13:30:00-05:00") });
+  // its lane says only SNOW, and the title is the warning's own words
+  deq(BT.lanes.map((l) => [l.key, l.name, l.peak, l.hero, l.segs[0].b1]), [["snow", "Snow", null, true, L("2027-01-24T01:00")]]);
+  assert.equal(BT.closest, null, "no storm, no track");
+  deq(B.readStorm(BT, L("2027-01-24T03:00"), L("2027-01-22T13:30")).parts.map((p) => p[0]), ["Sun 3a", "—"]);
+  // and the light tier and no tier draw no timeline
+  const isa = await stormScenario("isaias-farm-today");
+  assert.equal(run(isa.st.when).stormLanes(isa.model, Date.now()), null, "the named tier is one quiet line");
+  assert.equal(S.stormLanes({ tier: null }, now), null);
+  // it sits above the hours and the named line where the tropics list was; a shell takes both down
+  assert.match(html, /<\/header>\n\n<section id="stormSection" hidden>/);
+  assert.match(html, /renderAlerts\(stormStrip\(activeAlerts\(d\.alerts\),model\),\{card:model\?\.tier==="storm",cover:stormCover\(model\),due:stormDue\(d,model\)\}\);\n  paintStormDebug\(model\);/);
+  const shells = html.slice(html.indexOf("function paintLoadingState("), html.indexOf("function setLoc("));
+  assert.equal((shells.match(/paintStormCard\(null\);/g) || []).length, 2);
+  // the card adds no motion and no colour that is not the page's
+  const card = html.slice(html.indexOf("function paintStormCard("), html.indexOf("/* The hurricane centers' advisories"));
+  assert.doesNotMatch(card, /animation|@keyframes|Math\.random/);
+  // a window's ends are clean: each bar is clipped to a rounded rect, a part-of-a-day edge is a paler
+  // band ended square, and the one gradient on a bar is the fade of a window with no end yet
+  assert.match(card, /defs\+=`<clipPath id="\$\{id\}"><rect [^`]*rx="\$\{bh\/2\}"\/><\/clipPath>`;/);
+  assert.match(card, /if\(g\.open\)\{\n        defs\+=`<linearGradient id="\$\{id\}f"/);
+  assert.equal((card.match(/<linearGradient/g) || []).length, 2, "the open window's fade and the night band, nothing else");
+  // and the marks say what they are, on the chart rather than only in the slider
+  assert.match(card, /t:"hurricane force"/);
+  assert.match(card, /t:l\.marks\.length>1\?"high tides":"high tide"/);
+});
+
+test("the storm card reads in its own lane after the paint, at both places", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  // The advisories never hold the forecast: the lane starts beside it, at both places, joins the
+  // paint when it is in by then (and a first open waits STORM_WAIT for it, so the card is part of the
+  // first frame and never pushes the hours down after them), and otherwise lands after it
+  const refresh = html.slice(html.indexOf("async function refresh("), html.indexOf("\nconst SWAP="));
+  assert.doesNotMatch(refresh, /fetchStorms|stormsP|L\.tropics/);
+  // and the beach's answer is kept on its own the moment it is in (beachIn), for every paint, and so is
+  // the farm's WSSI (wssiIn), which the lane asks for once the point's alerts are in
+  assert.match(refresh, /const alertsP=fetchJSON\(`https:\/\/api\.weather\.gov\/alerts\/active\?point=\$\{L\.lat\},\$\{L\.lon\}`,6000\)\.then\(aj=>\(aj\.features\|\|\[\]\)\.map\(alertRow\)\.filter\(alertLive\)\)\.catch\(\(\)=>null\);\n[^\n]*\n  let pointAt=null;alertsP\.then\(a=>\{if\(a\)pointAt=Date\.now\(\)\}\);\n  const lane=stormLane\(L,alertsP\);let landed=null,beachIn,beachAt=null,wssiIn;\n  lane\.then\(g=>\{landed=g\},\(\)=>\{\}\);lane\.beach\.then\(b=>\{beachIn=b;beachAt=Date\.now\(\)\},\(\)=>\{\}\);lane\.wssi\.then\(w=>\{wssiIn=w\},\(\)=>\{\}\);\n  try\{/);
+  // and it waits only when a rule could fire: at the coast the beach's answer is looked at first
+  assert.match(refresh, /let wait=null;const waited=\(\)=>wait\|\|\(wait=new Promise\(r=>setTimeout\(r,STORM_WAIT\)\)\);\n    if\(!landed&&!LAST\)\{\n[\s\S]*?      if\(L\.kind==="coast"&&!stormWaits\(L,alerts,null\)\)await Promise\.race\(\[lane\.beach,waited\(\)\]\);\n      if\(stormWaits\(L,alerts,beachIn\)\)await Promise\.race\(\[lane,waited\(\)\]\);\n    \}/);
+  // a cached beach whose tropical warning has reached its expiry waits for the beach's own answer, and
+  // with the cache past its six hours the page's own reading for this place stands in for it
+  assert.match(refresh, /const cache=readCache\(L\.id\),own=LAST&&LAST\.loc===L\.id\?\{data:LAST\.d,savedAt:LAST\.savedAt\}:null,kept=\(cache\|\|own\)\?\.data,keptAt=\(cache\|\|own\)\?\.savedAt\?\?null;/);
+  assert.match(refresh, /if\(beachIn===undefined&&L\.kind==="coast"&&\(kept\?\.beach\|\|\[\]\)\.some\(a=>isTropical\(a\)&&!stormLive\(a,Date\.now\(\)\)\)\)await Promise\.race\(\[lane\.beach,waited\(\)\]\);/);
+  assert.match(refresh, /storms=landed\?\.storms\?\?kept\?\.storms\?\?null,beach=beachIn\?\?landed\?\.beach\?\?kept\?\.beach\?\?null;/);
+  // (the house's list is fetched when it came in, and a list whose request failed is the last good one,
+  // read against now, kept at its own fetch time and marked as carried)
+  assert.match(refresh, /const seen=\{point:alerts\?pointAt\?\?Date\.now\(\):carry\?kept\.seen\?\.point\?\?keptAt:null,beach:beachIn!=null\?beachAt:kept\?\.seen\?\.beach\?\?keptAt,\.\.\.\(carry\?\{carried:true\}:\{\}\)\};\n    const wssi=wssiIn!==undefined\?wssiIn:kept\?\.wssi\?\?latch\.wssi\?\?null;/);
+  assert.match(refresh, /const carry=!alerts&&Array\.isArray\(kept\?\.alerts\)\?kept\.alerts\.filter\(a=>activeAlerts\(\[a\]\)\.length>0\n      \|\|isTropical\(a\)&&!a\.ends&&Date\.parse\(a\.expires\|\|""\)\+STORM_STALE>Date\.now\(\)\):null;/);
+  // the latch and the last index are read out of this place's cache entry whatever its age, so a cold open
+  // the next morning keeps a card the cache can no longer vouch for (readLatch), and a paint with no point
+  // list carries them on
+  assert.match(refresh, /const latch=readLatch\(L\.id\);/);
+  assert.match(refresh, /,beach,wssi,seen,held:kept\?\.held\?\?latch\.held\?\?null\};/);
+  assert.match(refresh, /render\(data,true\);\n    writeCache\(L\.id,data\);\n    if\(!landed\)stormRun\(L,request,lane\);/);
+  assert.match(refresh, /if\(cached\)\{if\(beachIn\)\{cached\.data\.beach=beachIn;cached\.data\.seen=\{\.\.\.cached\.data\.seen,beach:beachAt\}\}render\(cached\.data,false,cached\.savedAt\);stormRun\(L,request,lane\)\}/);
+  assert.match(html, /const STORM_WAIT=3000;/);
+  assert.match(html, /\.then\(aj=>\(aj\.features\|\|\[\]\)\.map\(alertRow\)\.filter\(alertLive\)\)\.catch\(\(\)=>null\)/);
+  assert.match(html, /async function stormRun\(L,request,lane\)\{\n  try\{\n    const got=await lane;\n    await PAINT;\n    if\(L!==LOC\|\|request!==REFRESH_ID\|\|!LAST\)return;/);
+  // a late lane paints again only when it changes what the page says, and the card comes in with the
+  // reader's view held
+  assert.match(html, /const m=stormOf\(L,d,Date\.now\(\),LAST\.savedAt\);if\(Array\.isArray\(d\.alerts\)&&!d\.seen\?\.carried\)d\.held=m\.held;\n[^\n]*\n    if\(JSON\.stringify\(m\)!==was\)render\(d,LAST\.live,LAST\.savedAt\);/);
+  // (and a late lane with no answer at all, no point list to ask on, keeps the last index)
+  assert.match(html, /if\(got\.wssi!==undefined\)d\.wssi=got\.wssi;/);
+  // the warnings holding the card are kept in memory and with the reading, so its cache keeps them, and
+  // only a paint with a fresh point list writes them: a failed request wiped the latch, and a list carried
+  // through one is no newer word on them
+  assert.match(html, /const sm=stormOf\(LOC,d,Date\.now\(\),savedAt\),stormDay=sm\.tier==="storm";\n(?:[^\n]*\n){4}  if\(Array\.isArray\(d\.alerts\)&&!d\.seen\?\.carried\)\{STORM_HELD\[LOC\.id\]=sm\.held;d\.held=sm\.held\}/);
+  assert.match(html, /seen:\{point:at\("point"\),beach:at\("beach"\),carried:!!d\.seen\?\.carried\}\}\);/);
+  assert.match(html, /function paintStormCard\(model,d\)\{\n  const sec=document\.getElementById\("stormSection"\),line=document\.getElementById\("stormLine"\);\n  if\(!sec\|\|!line\)return;\n  keepView\(\(\)=>stormPaint\(model,d,sec,line\)\);/);
+  // the view is held on what the card pushes, the first thing on screen at or under it, never the sky:
+  // with the header's foot 150px down the screen, the hours under it jumped by the card
+  assert.match(html, /function viewHold\(\)\{\n  const app=document\.querySelector\("\.app"\),kids=app\?\[\.\.\.app\.children\]:\[\],from=kids\.indexOf\(document\.getElementById\("stormSection"\)\);\n/);
+  // the anchor is the first thing at or after the card whose top is on the screen or under it, never the
+  // card once its top has gone off the screen: a card that grew moved the hours under a reader inside it
+  assert.match(html, /const anchor=\(seen\.find\(\(\[,r\]\)=>r\.top>=0\)\|\|seen\.find\(\(\[e,r\]\)=>e\.id!=="stormSection"&&r\.bottom>0\)\|\|\[null\]\)\[0\];/);
+  assert.match(html, /function keepView\(fn\)\{const done=viewHold\(\);fn\(\);done\(\)\}/);
+  // and the headline turning to the storm's is held with the card: the hours moved 24px under a reader
+  // scrolled partway when only the card was
+  const rdr = html.slice(html.indexOf("function render(d,"), html.indexOf("/* The line boxes of the type in the header"));
+  assert.ok(rdr.indexOf("const held=viewHold();") < rdr.indexOf('document.getElementById("verdict").innerHTML=dayRead.html;')
+    && rdr.indexOf("paintStormCard(sm,d);\n  held();") > rdr.indexOf('document.getElementById("verdict").innerHTML=dayRead.html;'));
+  // A first open waits for the lane only when a rule could fire, and every rule needs an alert at the
+  // place: at the farm the point's, at the coast the point's or the beach zone's
+  const { S: W } = await stormSandbox("2026-10-10T20:20:00Z");
+  const at = Date.parse("2026-10-10T20:20:00Z"), farmL = W.LOCS.sp, coastL = W.LOCS.mb;
+  const advisory = { event: "Wind Advisory", ends: "2026-10-11T15:00:00Z", vtec: ["/O.CON.KRLX.WI.Y.0008.261010T2100Z-261011T1500Z/"] };
+  const tsw = { event: "Tropical Storm Warning", ends: null, expires: "2026-10-10T23:00:00Z", vtec: ["/O.CON.KILM.TR.W.1009.000000T0000Z-000000T0000Z/"] };
+  assert.equal(W.stormWaits(farmL, [], null, at), false, "the farm with nothing in effect waits for nothing");
+  assert.equal(W.stormWaits(farmL, null, null, at), false, "nor with the alerts down");
+  assert.equal(W.stormWaits(farmL, [advisory], null, at), true, "a Wind Advisory could be the named line (N2, N3)");
+  assert.equal(W.stormWaits(farmL, [{ ...advisory, ends: "2026-10-10T20:00:00Z" }], null, at), false, "an ended one could not");
+  assert.equal(W.stormWaits(farmL, [{ event: "Wind Advisory" }], null, at), false, "an alert without VTEC never raises the card");
+  assert.equal(W.stormWaits(coastL, [], null, at), false, "the coast with nothing at the point or the beach");
+  assert.equal(W.stormWaits(coastL, [], [tsw], at), true, "Debby's warning was the beach's alone");
+  assert.equal(W.stormWaits(farmL, [], [tsw], at), false, "the farm has no beach");
+  assert.equal(W.stormWaits(coastL, [advisory], null, at), true);
+  // and the beach's answer is kept on its own, so the coast can look at it before the advisories
+  assert.match(html, /const lane=Promise\.all\(\[fetchStorms\(\),beach,wssi\]\)\.then\(\(\[storms,beach,wssi\]\)=>\(\{storms,beach,wssi\}\)\);\n  lane\.beach=beach;lane\.wssi=wssi;\n  return lane;/);
+  // and the farm asks WPC's index only while a Winter Storm Warning stands at the point, and nothing else
+  // ever asks it
+  // (and the reading keeps when it was asked for and the warnings it was asked for, each with its hours)
+  assert.match(html, /const wssi=L\.kind!=="coast"\?Promise\.resolve\(alerts\)\.then\(al=>\{if\(!Array\.isArray\(al\)\)return undefined;\n      if\(!al\.some\(a=>stormLive\(a,Date\.now\(\)\)&&vtecLive\(a\)\.some\(v=>v\.key==="WS\.W"\)\)\)return null;\n      const at=Date\.now\(\),of=wsFor\(al\);\n      return fetchJSON\(wssiUrl\(L\),6000\)\.then\(j=>\{const r=wssiRead\(j\);return r&&\{\.\.\.r,at,for:of\}\}\)\.catch\(\(\)=>null\)\},\(\)=>undefined\):Promise\.resolve\(null\);/);
+  assert.equal((html.match(/wssiUrl\(/g) || []).length, 1);
+  // A quoted title is fitted in one place (stormTitleFit), on the paint and again when the fonts land: the
+  // ready hook beside moonNoteFit, and a face that lands later still, because fitted in the fallback face
+  // Bricolage reflowed it to a line more. Three lines at most, 18px at the least (17 under 360), and a
+  // sentence that will not fit gives way to the warning's shorter one, else its name, with the whole one
+  // under the chart (#stormFull), never cut
+  assert.match(html, /if\(hero\?\.quote\)\{nEl\.textContent="";stormTitleFit\(\)\}/);
+  assert.match(html, /document\.fonts\.addEventListener\("loadingdone",\(\)=>keepView\(stormTitleFit\)\)/);
+  assert.match(html, /const min=appW\(\)<360\?17:18,/);
+  assert.match(html, /for\(const most of \[2,3\]\)for\(let px=26;px>=min;px-=px>20\?2:1\)\{tEl\.style\.fontSize=px\+"px";if\(lines\(\)<=most\)return true\}/);
+  assert.match(html, /let shown=\[q\.text,q\.short\]\.filter\(Boolean\)\.find\(fits\);\n  if\(!shown\)\{head\.classList\.remove\("storm-quote"\);tEl\.style\.fontSize="";tEl\.textContent=shown=q\.name\}/);
+  assert.match(html, /<p class="storm-full" id="stormFull" hidden><\/p>\n  <p class="storm-warns" id="stormWarns" hidden><\/p>/);
+  // the lane, run: a Winter Storm Warning at the farm asks the index once, nothing else asks it, and a
+  // failed answer is no reading (the warning stays the strip's unless it already holds the card)
+  const { WSSI_REAL } = await STORM_FIX();
+  const ws = { event: "Winter Storm Warning", ends: "2026-10-11T15:00:00Z", vtec: ["/O.CON.KRLX.WS.W.0002.000000T0000Z-261011T1500Z/"] };
+  for (const [alerts, answer, want, asks, why] of [[[ws], () => WSSI_REAL.major, "MAJOR", 1, "a warning"], [[ws], () => { throw new Error("down"); }, null, 1, "a failed answer"],
+    [[ws], () => WSSI_REAL.farm, null, 1, "an empty answer"], [[{ ...ws, vtec: ["/O.CON.KRLX.WS.A.0002.000000T0000Z-261011T1500Z/"] }], () => WSSI_REAL.major, null, 0, "a watch"],
+    [[{ ...ws, ends: "2026-10-10T20:00:00Z" }], () => WSSI_REAL.major, null, 0, "an ended warning"], [null, () => WSSI_REAL.major, undefined, 0, "no point list (its request failed): no answer at all, and the last reading is kept"],
+    [[], () => WSSI_REAL.major, null, 0, "nothing in effect"]]) {
+    let n = 0;
+    const { S: X } = await stormSandbox("2026-10-10T20:20:00Z", async (url) => { if (/mapservices\.weather\.noaa\.gov/.test(url)) { n++; return answer(); } throw new Error("offline"); });
+    const got = await X.stormLane(X.LOCS.sp, Promise.resolve(alerts));
+    deq([got.wssi === undefined ? "undefined" : got.wssi?.impact ?? null, n], [want === undefined ? "undefined" : want, asks], why);
+    assert.equal((await X.stormLane(X.LOCS.mb, Promise.resolve(alerts))).wssi, null, "the coast never asks");
+    assert.equal(n, asks);
+  }
+  // Everything the card stands on can end with the app left open, and the card comes down with it:
+  // Debby's warning was the beach's, with the house's only timed alert two days longer. So the card's
+  // own alerts (the statement and the beach's, which the strip never shows) arm the strip's timer
+  const deb = await stormScenario("debby-flood-coast");
+  const due = deb.S.stormDue({ alerts: deb.point, beach: deb.beach }, deb.model, deb.now);
+  deq(due.map((a) => a.event).sort(), ["Flood Watch", "Tropical Cyclone Local Statement", "Tropical Storm Warning"]);
+  assert.equal(Math.min(...due.map((a) => Date.parse(a.ends || a.expires))), Date.parse("2024-08-07T19:00:00-04:00"), "the beach's warning is due first, at its next advisory");
+  deq(deb.S.stormDue({ alerts: deb.point, beach: deb.beach }, { tier: null }, deb.now), [], "with no card nothing is due");
+  deq(deb.S.stormDue({ alerts: deb.point, beach: deb.beach }, deb.model, Date.parse("2024-08-08T09:00:00-04:00")).map((a) => a.event), ["Flood Watch"], "and an end already past is never waited for");
+  // a tropical warning still standing a minute past its 7 pm expiry, the beach not yet answering (the
+  // stale window is its own expiry plus six hours), is due at 1 am, when it is over unless a newer answer
+  // has renewed it: a beach that never answers again cannot hold the card
+  const t1901 = Date.parse("2024-08-07T19:01:00-04:00"), standing = deb.S.stormRead(deb.L, deb.point, deb.beach, deb.storms, t1901, { seen: { point: t1901, beach: deb.now } });
+  assert.equal(standing.tier, "storm");
+  deq(deb.S.stormDue({ alerts: deb.point, beach: deb.beach }, standing, t1901).filter((a) => a.event === "Tropical Storm Warning").map((a) => a.expires), ["2024-08-08T05:00:00.000Z"]);
+  // the beach zone is the coast's, for its tropical products
+  assert.match(html, /beach:"NCZ108",/);
+  assert.match(html, /fetchJSON\(`https:\/\/api\.weather\.gov\/alerts\/active\?zone=\$\{L\.beach\}`,6000\)/);
+  // the fixed reading: three spaces before a padded number, and a bin seen only once it has parsed
+  assert.match(html, /Advisory Number\\\\s\+\(\\\\w\+\)/);
+  assert.match(html, /if\(!s\|\|seen\[s\.bin\]\)continue;\n      seen\[s\.bin\]=1;out\.push\(s\);/);
+  // the strip says no end for a tropical watch or warning, and the card's model is painted with it
+  assert.match(html, /const until=\(a\.vtec\|\|\[\]\)\.some\(v=>\/\\\.\(\?:HU\|TR\|SS\)\\\.\[WA\]\\\.\/\.test\(v\)\)\?null:a\.ends\|\|a\.expires;/);
+  // (with the view held: the storm statement leaving the strip as the card comes in is the header changing height)
+  assert.match(html, /  keepView\(\(\)=>paintStorm\(d,sm\)\);\n  renderNowcast\(d\.nowcast,c\.weather_code,h\);/);
+  // the card lands with the header, before the hours under it are drawn
+  const rd = html.slice(html.indexOf("function render(d,"), html.indexOf("/* The line boxes of the type in the header"));
+  assert.ok(rd.indexOf("paintStormCard(sm,d);") > rd.indexOf('document.getElementById("chips").innerHTML=') && rd.indexOf("paintStormCard(sm,d);") < rd.indexOf("/* hourly */"));
+  assert.match(html, /<section id="stormDebug" hidden>/);
+  const shells = html.slice(html.indexOf("function paintLoadingState("), html.indexOf("function setLoc("));
+  assert.equal((shells.match(/paintStormDebug\(null\);/g) || []).length, 2, "both shells take the model down");
+  // the strip in a sandbox: a hurricane warning with an expiry says no "until"
+  const clock12 = html.match(/const clock12=d=>\{[\s\S]*?ap\};/)[0];
+  const ctx = vm.createContext({});
+  vm.runInContext(clock12 + "\n" + html.slice(html.indexOf("function alertGist("), html.indexOf("function alertStep(")) + "\nglobalThis.alertStrip=alertStrip;", ctx);
+  const esc = (s) => String(s);
+  ctx.esc = esc;
+  assert.doesNotMatch(ctx.alertStrip([{ event: "Hurricane Warning", severity: "Extreme", ends: null, expires: "2026-10-11T20:00:00Z", vtec: ["/O.CON.KILM.HU.W.1006.000000T0000Z-000000T0000Z/"] }]).head, /until/);
+  assert.match(ctx.alertStrip([{ event: "Flood Watch", severity: "Severe", ends: "2026-10-11T15:00:00Z", vtec: ["/O.CON.KILM.FA.A.0002.000000T0000Z-261011T1500Z/"] }]).head, /until/);
+
+  // every end carries its day when it is not today, on the place's clock: "until 11:00 am" for a
+  // Sunday end, read on a Saturday afternoon, was a Saturday morning that had passed
+  const L = (s) => new Date(s).getTime(), shift = L("2026-10-10T16:20") - Date.parse("2026-10-10T16:20:00-04:00"), sat = Date.parse("2026-10-10T16:20:00-04:00");
+  const wind = { event: "Wind Advisory", severity: "Moderate", sent: "2026-10-10T11:49:00-04:00", ends: "2026-10-11T11:00:00-04:00", vtec: ["/O.CON.KRLX.WI.Y.0008.261010T2100Z-261011T1500Z/"],
+    desc: "* WHAT...Southeast winds 20 to 30 mph with gusts up to 50 mph expected.\n\n* WHEN...From 5 PM this afternoon to 11 AM EDT Sunday.", inst: "" };
+  const said = (x) => x.head.replace(/<[^>]+>/g, "");
+  assert.equal(said(ctx.alertStrip([wind], { now: sat, shift })), "Wind Advisory ·\u00A0until 11:00\u00A0am\u00A0Sun");
+  assert.equal(said(ctx.alertStrip([{ ...wind, ends: "2026-10-10T19:00:00-04:00" }], { now: sat, shift })), "Wind Advisory ·\u00A0until 7:00\u00A0pm", "today's goes unsaid");
+  // and the gist's relative words take their day once their stretch has passed
+  assert.match(ctx.alertStrip([wind], { now: sat, shift }).body, /From 5 PM this afternoon to 11 AM EDT Sunday/);
+  assert.match(ctx.alertStrip([wind], { now: Date.parse("2026-10-10T21:30:00-04:00"), shift }).body, /From 5 PM Saturday afternoon to 11 AM EDT Sunday/);
+  // While a storm card is up the strip leads with the strongest tropical warning, and its body says only
+  // what else is active, because the card carries the hazards and what to do
+  const tcv = (ev, k) => ({ event: ev, severity: "Extreme", sent: "2018-09-13T10:55:00-04:00", ends: null, expires: "2018-09-13T19:00:00-04:00",
+    vtec: [`/O.CON.KILM.${k}.1006.000000T0000Z-000000T0000Z/`], desc: "* WIND - LATEST LOCAL FORECAST: Equivalent Cat 1 Hurricane force wind", inst: "" });
+  const ffa = { event: "Flash Flood Watch", severity: "Severe", sent: "2018-09-13T11:35:00-04:00", ends: "2018-09-15T18:00:00-04:00",
+    vtec: ["/O.CON.KILM.FF.A.0006.000000T0000Z-180915T2200Z/"], desc: "* WHAT...Flash flooding", inst: "A Flash Flood Watch means that conditions may develop. Monitor later forecasts and be alert for possible Flash Flood Warnings." };
+  const flo = [tcv("Storm Surge Warning", "SS.W"), tcv("Hurricane Warning", "HU.W"), ffa], thu = Date.parse("2018-09-13T11:45:00-04:00");
+  const cover = ["Hurricane Warning", "Storm Surge Warning"], card = ctx.alertStrip(flo, { now: thu, shift, card: true, cover });
+  assert.match(card.head, /^Hurricane Warning ·\u00A0\+2\u00A0more/, "Florence's Hurricane Warning was in the strip's +2 more");
+  assert.doesNotMatch(card.body, /What to do|LATEST LOCAL FORECAST|conditions may develop/);
+  assert.match(card.body, /also active: Storm Surge Warning, Flash Flood Watch/);
+  assert.match(ctx.alertStrip(flo, { now: thu, shift }).head, /^Storm Surge Warning/, "with no card the strip is as it was");
+  // a short-fuse warning issued during the storm enters on its own, with its own words and instruction
+  const tor = { event: "Tornado Warning", severity: "Extreme", sent: "2018-09-13T12:10:00-04:00", ends: "2018-09-13T12:45:00-04:00",
+    vtec: ["/O.NEW.KILM.TO.W.0031.180913T1610Z-180913T1645Z/"], desc: "* WHAT...A tornado.\n\n* WHERE...Porters Neck.", inst: "TAKE COVER NOW! Move to a basement or an interior room on the lowest floor." };
+  const torn = ctx.alertStrip([...flo, tor], { now: thu, shift, card: true, cover });
+  assert.match(torn.head, /^Tornado Warning ·\u00A0until 12:45\u00A0pm ·\u00A0\+3\u00A0more/);
+  assert.match(torn.body, /What to do<\/b> TAKE COVER NOW!/);
+  assert.match(torn.body, /also active: Hurricane Warning, Storm Surge Warning, Flash Flood Watch/);
+  assert.notEqual(torn.lead, card.lead, "a new lead, so the strip enters again");
+  // and a lead the card does not speak for keeps its own words: Debby's Flood Watch at the house
+  const ffaLead = ctx.alertStrip([ffa], { now: thu, shift, card: true, cover: ["Tropical Storm Warning"] });
+  // (its instruction through the card's own filter: the sentence on what a watch means is not something to do)
+  assert.match(ffaLead.body, /What to do<\/b> Monitor later forecasts and be alert for possible Flash Flood Warnings\./);
+  assert.doesNotMatch(ffaLead.body, /means/);
+  // and an instruction that is only a link says nothing: the farm's Wind Advisory, October 10 2026, was
+  // RLX's "Additional information can be found at https://www.weather.gov/rlx as well as on our X and
+  // Facebook pages." and nothing else, so the strip has no "What to do" at all
+  const rlx = JSON.parse(await readFile(new URL("tools/storm-fixtures/isaias/alerts-point-sp.json", root), "utf8")).features[0].properties.instruction;
+  assert.match(rlx, /^Additional information can be found at https:\/\/www\.weather\.gov\/rlx/);
+  const linkOnly = ctx.alertStrip([{ ...wind, inst: rlx }], { now: sat, shift });
+  assert.doesNotMatch(linkOnly.body, /What to do|weather\.gov|Facebook/);
+  assert.match(linkOnly.body, /From 5 PM this afternoon to 11 AM EDT Sunday/, "the gist stays");
+  assert.match(ctx.alertStrip([{ ...wind, inst: "Use extra caution when driving. " + rlx }], { now: sat, shift }).body, /What to do<\/b> Use extra caution when driving\.<\/p>/);
+  // a midnight belongs to the day it ends: 00:00 Sunday read on Saturday is tonight's midnight, said
+  // with no day (it read "until 12:00 am Sun", a day late), and 00:00 Monday is Sunday's
+  assert.equal(said(ctx.alertStrip([{ ...wind, ends: "2026-10-11T00:00:00-04:00" }], { now: sat, shift })), "Wind Advisory ·\u00A0until midnight");
+  assert.equal(said(ctx.alertStrip([{ ...wind, ends: "2026-10-12T00:00:00-04:00" }], { now: sat, shift })), "Wind Advisory ·\u00A0until midnight\u00A0Sun");
+  assert.equal(said(ctx.alertStrip([{ ...wind, ends: "2026-10-11T00:30:00-04:00" }], { now: sat, shift })), "Wind Advisory ·\u00A0until 12:30\u00A0am\u00A0Sun", "half past is Sunday's");
+  // and every " · " rides with the words after it: the only places a strip can wrap are before a dot
+  // or inside the event's own name, so a wrapped line never ends on a lone dot
+  for (const x of [ctx.alertStrip([wind, ffa], { now: sat, shift }), torn]) {
+    const h = said(x);
+    assert.doesNotMatch(h, /· /, `no ordinary space after a dot: ${h}`);
+    assert.doesNotMatch(h, /\u00A0·/, `and none tying a dot to the words before it: ${h}`);
+    // only the dot is tied to its first word, and a clock to its am or pm and its day: the whole clause
+    // made unbreakable put today's coast strip on three lines at 320 ("FLOOD WATCH" / "· UNTIL 11:00 AM
+    // SUN" / "· +1 MORE"), where it had wrapped once, and a day of its own read "MON" alone on a line
+    assert.doesNotMatch(h, /until\u00A0/, `the until clause can still wrap after "until": ${h}`);
+  }
+  // and the strip reads at night: cream type on the deeper rust is 4.5:1 and more, every word of it
+  assert.match(html, /html\[data-theme=dark\] \.alert-strip\{background:#9A3317;/);
+  const lum = (h) => { const c = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((v) => (v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4)); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
+  const mixed = (a, b, t) => "#" + [1, 3, 5].map((i) => Math.round(parseInt(a.slice(i, i + 2), 16) * t + parseInt(b.slice(i, i + 2), 16) * (1 - t)).toString(16).padStart(2, "0")).join("");
+  for (const t of [1, .78]) { const c = (lum(mixed("#FFF7F3", "#9A3317", t)) + .05) / (lum("#9A3317") + .05); assert.ok(c >= 4.5, `night strip at ${t}: ${c.toFixed(2)}:1`); }
+});
+
+/* The latch through the page's own refresh (October 11 2026). RLX's January 5 2025 warning raised the
+   farm's card with WPC's index at Major on its second day. Two things took the card down for the rest of
+   the same warning: a single point-alerts request that failed (under storm load api.weather.gov times out
+   at six seconds), whose paint rewrote the latch as empty, and a cold open the next morning, when readCache
+   would not vouch for yesterday's forecast and the latch went with it. Both times the next update was a CON
+   with the index stepped down to Moderate, the step-down the latch is there for */
+test("the storm card's latch survives a failed alerts fetch and a cold open the next morning", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const code = html.slice(html.indexOf("let REFRESH_ID=0;"), html.indexOf("\nconst SWAP=")).replace("const STORM_WAIT=3000;", "const STORM_WAIT=80;");
+  const { corpus } = await import(new URL("tools/storm-corpus.mjs", root));
+  const { alertsFrom, wssiAnswer } = await STORM_FIX();
+  const seq = corpus().filter((e) => e.place === "farm" && e.season === "2024-25" && /KRLX\.WS\.W\.0002\./.test(e.product.productText));
+  const seg = (iso) => { const e = seq.find((x) => x.issued === iso); assert.ok(e, iso); return alertsFrom(e.product, e.zone); };
+  let level = null;
+  const { S } = await stormSandbox("2025-01-05T10:40:00Z", async (url) => { if (/mapservices\.weather\.noaa\.gov/.test(url)) return wssiAnswer(level, "2025-01-05T06:00:00Z"); throw new Error("offline"); });
+  const L = S.LOCS.sp, store = {};
+  const run = async (iso, { point, last = null, cache = null, wssi }) => {
+    const T = Date.parse(iso);
+    level = wssi;
+    class Clock extends Date { constructor(...a) { super(...(a.length ? a : [T])); } static now() { return T; } }
+    const forecast = { current: { time: "2025-01-05T05:00", temperature_2m: 23 }, daily: {}, hourly: Object.fromEntries(["time", "temperature_2m", "apparent_temperature", "precipitation_probability", "weather_code", "wind_speed_10m", "wind_gusts_10m", "uv_index"].map((k) => [k, [k === "time" ? "2025-01-05T05:00" : 1]])) };
+    const paints = [], node = () => ({ textContent: "", classList: { add() {}, remove() {}, contains: () => false }, setAttribute() {} });
+    let lane = null;
+    const ctx = vm.createContext({ Date: Clock, setTimeout, LOC: L, document: { getElementById: node }, navigator: { onLine: true },
+      fetchJSON: (url) => url.includes("open-meteo.com") ? Promise.resolve(forecast) : url.includes("alerts/active?point") ? (point === "fail" ? Promise.reject(new Error("503")) : Promise.resolve({ features: point })) : Promise.reject(new Error("none")),
+      alertRow: S.alertRow, alertLive: S.alertLive, isTropical: () => false, stormLive: (a, now) => !(Date.parse(a.ends || a.expires || "") <= now), stormWaits: S.stormWaits, STORM_STALE: 6 * 36e5,
+      stormLane: (Lx, alertsP) => (lane = S.stormLane(Lx, alertsP)),
+      /* render, as far as the latch goes: the model, and the latch written back only from a paint with a
+         point list (the source holds render() to that, in "the storm card reads in its own lane") */
+      render: (d) => { const m = S.stormRead(L, d.alerts, d.beach, d.storms, T, { wssi: d.wssi, held: d.held, seen: d.seen }); if (Array.isArray(d.alerts) && !d.seen?.carried) d.held = m.held; paints.push({ d, m }); },
+      writeCache: (id, d) => { store["mbwx-" + id] = JSON.stringify({ savedAt: T, data: d }); }, cacheKey: (id) => "mbwx-" + id,
+      localStorage: { getItem: (k) => store[k] ?? null }, readCache: () => cache, paintLoadingState: () => {}, PAINT: Promise.resolve(), LAST: last });
+    vm.runInContext(code + "\n" + html.slice(html.indexOf("function activeAlerts("), html.indexOf("/* A warning that keeps the family in.")), ctx);
+    await ctx.refresh();
+    assert.equal(paints.length, 1, iso);
+    /* and the lane landing after the paint, the way stormRun takes it in: the index's new answer (none at
+       all with no point list), the latch from a paint with a list, and the cache written again */
+    const got = await lane, d = paints[0].d;
+    if (got.wssi !== undefined) d.wssi = got.wssi;
+    const late = S.stormRead(L, d.alerts, d.beach, d.storms, T, { wssi: d.wssi, held: d.held, seen: d.seen });
+    if (Array.isArray(d.alerts) && !d.seen?.carried) d.held = late.held;
+    store["mbwx-sp"] = JSON.stringify({ savedAt: T, data: d });
+    return { ...paints[0], late };
+  };
+  // 5:40 am: the warning (issued 5:24 for noon), the index Major on its second day: the card, and the latch
+  const p1 = await run("2025-01-05T10:40:00Z", { point: seg("2025-01-05T10:24:00Z"), wssi: ["MODERATE", "MAJOR", "WINTER WEATHER AREA"] });
+  deq([p1.late.tier, ...p1.late.rules], ["storm", "F3"]);
+  deq(p1.d.held, { "KRLX.WS.W.2": { rule: "F3", end: "2025-01-07T11:00:00Z" } });
+  // an hour on, the point's alerts time out: the paint is on the last good list, carried at its own fetch
+  // time and marked so, and the latch and the last index are carried on unchanged, never rewritten as empty
+  const here = (p, savedAt) => ({ data: p.d, savedAt }), last = (p, savedAt) => ({ d: p.d, savedAt, loc: "sp" });
+  const p2 = await run("2025-01-05T11:40:00Z", { point: "fail", cache: here(p1, Date.parse("2025-01-05T10:40:00Z")), last: last(p1, Date.parse("2025-01-05T10:40:00Z")), wssi: "MODERATE" });
+  deq([p2.d.alerts.map((a) => a.id), p2.d.seen.carried, p2.d.seen.point], [p1.d.alerts.map((a) => a.id), true, p1.d.seen.point], "the last good list, carried");
+  deq(p2.d.held, p1.d.held, "the latch is carried through the failed request");
+  deq(p2.d.wssi, p1.d.wssi, "and so is the last index: with no list nobody asked for a new one");
+  deq([p2.m.tier, ...p2.m.rules, p2.late.tier], ["storm", "F3", "storm"], "the card stays up through the failed request, on the last good list");
+  assert.match(p2.m.why, /^F3: held while the same warning stands/, "held, and never raised anew from a carried list");
+  // the next good refresh: the same warning, CON, and the index stepped down to Moderate. The card stays up
+  const p3 = await run("2025-01-05T16:30:00Z", { point: seg("2025-01-05T16:16:00Z"), cache: here(p2, Date.parse("2025-01-05T11:40:00Z")), last: last(p2, Date.parse("2025-01-05T11:40:00Z")), wssi: "MODERATE" });
+  deq([p3.m.tier, ...p3.m.rules], ["storm", "F3"], "painted on the last index until the new one lands");
+  deq([p3.d.wssi.impact, p3.late.tier, ...p3.late.rules], ["MODERATE", "storm", "F3"], "Major, a failed fetch, then CON at Moderate: the card stays up");
+  assert.match(p3.late.why, /^F3: held while the same warning stands/);
+  // and the next morning, a cold open: the cache is yesterday's, so readCache will not vouch for it and the
+  // page has no reading of its own, but the latch is read out of the entry whatever its age
+  const cold = { point: seg("2025-01-06T06:12:00Z"), wssi: ["MODERATE", "MODERATE", null] };
+  const p4 = await run("2025-01-06T12:00:00Z", cold);
+  deq(p4.d.held, p3.d.held, "the latch from the cache entry, a day old");
+  deq([p4.m.tier, ...p4.m.rules, p4.late.tier, ...p4.late.rules], ["storm", "F3", "storm", "F3"], "a cold open the next morning with a CON update and a Moderate index keeps the card");
+  assert.match(p4.late.why, /^F3: held while the same warning stands/);
+  // without the entry, the card would have come down at the height of the storm
+  for (const k in store) delete store[k];
+  assert.equal((await run("2025-01-06T12:00:00Z", cold)).m.tier, null, "and with no entry at all, nothing to hold");
+});
+
+test("WPC's index raises only the warnings it was asked for, and a latch holds only this season's", async () => {
+  const { wssiAnswer } = await STORM_FIX();
+  const { S } = await stormSandbox("2025-01-05T15:00:00Z");
+  const farm = S.LOCS.sp;
+  const wsw = (vtec, ends, extra = {}) => ({ id: "w-" + vtec, event: "Winter Storm Warning", vtec: [vtec], ends, expires: ends, sent: "2025-01-05T10:24:00Z", onset: null,
+    desc: "* WHAT...Heavy snow expected.\n\n* WHEN...Through tonight.", inst: "", par: {}, ...extra });
+  // a reading as the lane keeps it: when it was asked for (`at`), and the warnings it was asked for, each with its hours
+  const reading = (levels, list, at, cycle = "2025-01-05T06:00:00Z") => ({ ...S.wssiRead(wssiAnswer(levels, cycle)), at, for: S.wsFor(list) });
+  const read = (list, wssi, now, seen, held = null) => S.stormRead(farm, list, null, null, now, { wssi, held, seen });
+  // the farm's warning tonight only, then the office extends it into WPC's Day 3 (07Z Tuesday to 06Z Wednesday)
+  const A = wsw("/O.NEW.KRLX.WS.W.0002.250105T1700Z-250106T0500Z/", "2025-01-06T05:00:00Z");
+  const A2 = wsw("/O.EXT.KRLX.WS.W.0002.250105T1700Z-250108T1100Z/", "2025-01-08T11:00:00Z", { sent: "2025-01-05T20:50:00Z" });
+  deq([...S.wsFor([A2])], ["KRLX.WS.W.2 2025-01-05T17:00:00.000Z 2025-01-08T11:00:00.000Z"], "an event with its hours");
+  const t1 = Date.parse("2025-01-05T15:00:00Z"), t2 = Date.parse("2025-01-05T21:00:00Z");
+  const R1 = reading(["MODERATE", "MODERATE", "MAJOR"], [A], t1);
+  const p1 = read([A], R1, t1, { point: t1 });
+  deq([p1.tier, { ...p1.held }], [null, {}], "a Day-3 Major beside tonight's warning: no card");
+  // the refresh paints the extended warning before the new cycle lands: the Major the last refresh's reading put
+  // on Day 3 raised it and latched it, and the new cycle's Moderate could not take it down
+  const p2 = read([A2], R1, t2, { point: t2 });
+  deq([p2.tier, { ...p2.held }], [null, {}], "a reading asked for the warning's old hours raises nothing for its new ones, and latches nothing");
+  deq([...read([A2], R1, t2, null).rules], ["F3"], "(handed over as this list's own, the same reading would have)");
+  const R2 = reading(["MODERATE", "MODERATE", "MODERATE"], [A2], t2 + 1500);
+  assert.equal(read([A2], R2, t2 + 1500, { point: t2 }).tier, null, "and the new cycle, Moderate on every day: no card");
+  // the lane's own reading raises it, by when it was asked (once this list was in) or by what it was asked for
+  deq([...read([A2], reading(["MODERATE", "MODERATE", "MAJOR"], [A2], t2 + 1500), t2 + 1500, { point: t2 }).rules], ["F3"], "the lane's own Major raises it when it lands");
+  deq([...read([A2], reading(["MODERATE", "MODERATE", "MAJOR"], [], t2), t2, { point: t2 }).rules], ["F3"], "asked once this list was in (seen.wssi at or after seen.point)");
+  deq([...read([A2], { ...reading(["MODERATE", "MODERATE", "MAJOR"], [A2], t2 - 9e5) }, t2, { point: t2 }).rules], ["F3"], "asked for this same warning with these same hours");
+  deq([...read([A2], reading(["MODERATE", "MODERATE", "MAJOR"], [A2], t2 - 9e5), t2, { point: t2, wssi: t2 }).rules], ["F3"], "seen.wssi, when given, is the reading's time");
+  assert.equal(read([A2], { ...R1, at: undefined, for: undefined }, t2, { point: t2 }).tier, null, "a reading that cannot say what it was asked for raises nothing");
+  // an older reading only keeps a warning already held
+  const heldA = { "KRLX.WS.W.2": { rule: "F3", end: "2025-01-06T05:00:00Z" } };
+  const kept = read([A2], R1, t2, { point: t2 }, heldA);
+  deq([kept.tier, ...kept.rules, { ...kept.held }], ["storm", "F3", { "KRLX.WS.W.2": { rule: "F3", end: "2025-01-08T11:00:00Z" } }], "a held warning, extended, stays up on the old reading");
+  assert.match(kept.why, /^F3: held while the same warning stands/);
+  // and a list carried through a failed request raises nothing new, even on the lane's own reading, and hands
+  // the latch on as it was
+  const carried = read([A2], reading(["MODERATE", "MODERATE", "MAJOR"], [A2], t2), t2, { point: t2 - 36e5, carried: true });
+  deq([carried.tier, { ...carried.held }], [null, {}], "a carried list raises nothing anew");
+  const carriedHeld = read([A2], R2, t2, { point: t2 - 36e5, carried: true }, heldA);
+  deq([carriedHeld.tier, ...carriedHeld.rules, { ...carriedHeld.held }], ["storm", "F3", heldA], "and keeps what is held, handed on as it was");
+  // yesterday's reading, Day 2 Major, beside a new warning this morning (WS.W.3, on what was yesterday's Day 2):
+  // a cold open painted on it raised and latched WS.W.3, and today's Moderate never took it down
+  const Y = reading(["MODERATE", "MAJOR", null], [A], Date.parse("2025-01-05T10:40:00Z"));
+  const W3 = wsw("/O.NEW.KRLX.WS.W.0003.250106T1700Z-250107T1100Z/", "2025-01-07T11:00:00Z", { sent: "2025-01-06T11:00:00Z" });
+  const t3 = Date.parse("2025-01-06T12:00:00Z");
+  const cold = read([W3], Y, t3, { point: t3 });
+  deq([cold.tier, { ...cold.held }], [null, {}], "yesterday's Day-2 Major beside today's new warning: no card, nothing latched");
+  deq([...read([W3], Y, t3, null).rules], ["F3"], "(as this list's own it would have)");
+  assert.equal(read([W3], reading(["MODERATE", "MODERATE", null], [W3], t3 + 4000, "2025-01-06T06:00:00Z"), t3 + 4000, { point: t3 }).tier, null, "and today's Moderate: none");
+
+  // VTEC event numbers restart every January. A latch from January 2025 beside RLX's next WS.W.0002 a year on,
+  // at Moderate: last winter's, more than 30 days past its end, and dropped
+  const last = { "KRLX.WS.W.2": { rule: "F3", end: "2025-01-07T11:00:00Z" } };
+  const W26 = wsw("/O.NEW.KRLX.WS.W.0002.260105T1700Z-260107T1100Z/", "2026-01-07T11:00:00Z", { sent: "2026-01-05T10:24:00Z" });
+  const n26 = Date.parse("2026-01-05T10:40:00Z"), R26 = reading(["MODERATE", "MODERATE", "MINOR"], [W26], n26, "2026-01-05T06:00:00Z");
+  const next = read([W26], R26, n26, { point: n26 }, last);
+  deq([next.tier, { ...next.held }], [null, {}], "last winter's latch: no card, and the entry is dropped");
+  const nextCon = read([{ ...W26, vtec: ["/O.CON.KRLX.WS.W.0002.000000T0000Z-260107T1100Z/"] }], R26, Date.parse("2026-01-05T20:00:00Z"), { point: Date.parse("2026-01-05T20:00:00Z") }, last);
+  deq([nextCon.tier, { ...nextCon.held }], [null, {}], "and through its updates");
+  deq([...read([W26], { ...R26, days: R26.days.map((d) => ({ ...d, impact: "MAJOR" })) }, n26, { point: n26 }, last).rules], ["F3"], "next winter's own Major is its own card");
+  // within 30 days, the year: a NEW in another year than the held one's end is a number used again, and an update
+  // carries the same warning across the New Year
+  const dec = { "KRLX.WS.W.2": { rule: "F3", end: "2025-12-31T23:00:00Z" } };
+  const jan1 = Date.parse("2026-01-01T03:00:00Z");
+  const ext = wsw("/O.EXT.KRLX.WS.W.0002.000000T0000Z-260101T1200Z/", "2026-01-01T12:00:00Z", { sent: "2026-01-01T02:50:00Z" });
+  deq([...read([ext], null, jan1, { point: jan1 }, dec).rules], ["F3"], "the same warning extended across the New Year keeps its latch");
+  const reused = wsw("/O.NEW.KRLX.WS.W.0002.260110T1700Z-260111T1100Z/", "2026-01-11T11:00:00Z", { sent: "2026-01-10T10:00:00Z" });
+  const jan10 = read([reused], null, Date.parse("2026-01-10T11:00:00Z"), { point: Date.parse("2026-01-10T11:00:00Z") }, dec);
+  deq([jan10.tier, { ...jan10.held }], [null, {}], "a NEW with a number used again, ten days into the new year, is another warning");
+  deq([...read([{ ...reused, vtec: ["/O.NEW.KRLX.WS.W.0002.251231T1700Z-251231T2300Z/"], ends: "2025-12-31T23:00:00Z", sent: "2025-12-31T16:00:00Z" }], null, Date.parse("2025-12-31T18:00:00Z"), { point: Date.parse("2025-12-31T18:00:00Z") }, dec).rules], ["F3"],
+    "(and the NEW that raised it, in its own year, is its own)");
+  // a bare "F3" kept before the end was has no age to judge, and is read as it always was
+  deq([...read([ext], null, jan1, { point: jan1 }, { "KRLX.WS.W.2": "F3" }).rules], ["F3"]);
+});
+
+/* The page's own refresh() and stormRun, with the storm card's block, in one sandbox on a clock the test moves:
+   the forecast, the point's alerts, the beach's, the advisories and WPC's index are the test's (a delay on the
+   index makes the lane slower than STORM_WAIT, which is 80 ms here), render is the page's own as far as the card
+   goes (its model and its latch, lifted from render, and the strip's alerts and the storm's headline), and the
+   cache is a store that a cold open, a new sandbox, reads again. A cold open paints the cache first when
+   readCache vouches for it, the way the page boots */
+async function pageRig(store = {}, loc = "sp") {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const lift = (re) => { const m = html.match(re); assert.ok(m, `${re} should be extractable`); return m[0]; };
+  const { stormProducts } = await STORM_FIX();
+  let T = 0;
+  class Clock extends Date { constructor(...a) { super(...(a.length ? a : [T])); } static now() { return T; } }
+  const net = { point: [], beach: [], wssi: null, wssiDelay: 0, products: null, asked: 0 };
+  const wall = () => new Date(T).toLocaleString("sv-SE", { timeZone: "America/New_York" }).replace(" ", "T").slice(0, 16);
+  const hourly = () => Object.fromEntries(["time", "temperature_2m", "apparent_temperature", "precipitation_probability", "weather_code", "wind_speed_10m", "wind_gusts_10m", "uv_index"].map((k) => [k, [k === "time" ? wall() : 1]]));
+  const fetchJSON = (url) => {
+    if (/open-meteo\.com/.test(url)) return Promise.resolve({ current: { time: wall(), temperature_2m: 23 }, daily: {}, hourly: hourly() });
+    if (/alerts\/active\?point/.test(url)) return net.point === "fail" ? Promise.reject(new Error("503")) : Promise.resolve({ features: structuredClone(net.point) });
+    if (/alerts\/active\?zone/.test(url)) return Promise.resolve({ features: structuredClone(net.beach) });
+    if (/mapservices\.weather\.noaa\.gov/.test(url)) { net.asked++; return new Promise((r) => setTimeout(() => r(structuredClone(net.wssi)), net.wssiDelay)); }
+    if (/api\.weather\.gov\/products/.test(url) && net.products) { const j = stormProducts(net.products, url); return j ? Promise.resolve(j) : Promise.reject(new Error("404")); }
+    return Promise.reject(new Error("404"));
+  };
+  const node = () => ({ textContent: "", classList: { add() {}, remove() {}, contains: () => false }, setAttribute() {} });
+  const ctx = vm.createContext({ Date: Clock, setTimeout, clearTimeout, location: { search: "" }, fetchJSON, navigator: { onLine: true },
+    document: { getElementById: node, hidden: false }, paintLoadingState: () => {},
+    localStorage: { getItem: (k) => store[k] ?? null, setItem: (k, v) => { store[k] = String(v); }, removeItem: (k) => { delete store[k]; } } });
+  const paint = [lift(/  const sm=stormOf\(LOC,d,Date\.now\(\),savedAt\),stormDay=sm\.tier==="storm";/),
+    lift(/  if\(Array\.isArray\(d\.alerts\)&&!d\.seen\?\.carried\)\{STORM_HELD\[LOC\.id\]=sm\.held;d\.held=sm\.held\}/)].join("\n");
+  vm.runInContext([lift(/const LOCS=\{[\s\S]*?\n\};/), lift(/const toRad=x=>[^\n]*/), lift(/const distMi=[\s\S]*?asin\(Math\.sqrt\(a\)\)\};/), lift(/const dirTxt=[^\n]*/), ...stormHelpers(html, lift),
+    html.slice(html.indexOf("function activeAlerts("), html.indexOf("/* A warning that keeps the family in.")),
+    html.slice(html.indexOf("/* ── the storm card"), html.indexOf("/* ── tide ─")),
+    lift(/const locToday=[^\n]*/), html.slice(html.indexOf("const cacheKey=id=>"), html.indexOf("async function fetchJSON(")),
+    html.slice(html.indexOf("let REFRESH_ID=0;"), html.indexOf("\nconst SWAP=")).replace("const STORM_WAIT=3000;", "const STORM_WAIT=80;"),
+    `var LOC=LOCS.${loc},LAST=null,PAINT=Promise.resolve(),__paints=[],__lane=null;
+     const __stormLane=stormLane;stormLane=(L,a)=>(__lane=__stormLane(L,a));
+     function render(d,live,savedAt=0){
+       savedAt=savedAt||(LAST?.d===d?LAST.savedAt:Date.now());
+       LAST={d,live,savedAt,loc:LOC.id};
+     ${paint}
+       const w=new Date(new Date(Date.now()).toLocaleString("sv-SE",{timeZone:LOC.tz}).replace(" ","T")),shift=w-Date.now();
+       __paints.push(JSON.parse(JSON.stringify({live,tier:sm.tier,rules:sm.rules,why:sm.why,held:sm.held,carried:!!d.seen?.carried,
+         alerts:Array.isArray(d.alerts)?d.alerts.map(a=>a.event):null,strip:(stormStrip(activeAlerts(d.alerts),sm)||[]).map(a=>a.event),
+         headline:stormDay?stormStory(sm,w,shift).html:null})));
+     }`].join("\n"), ctx);
+  const settle = async () => { await vm.runInContext("__lane", ctx)?.then(() => {}, () => {}); for (let i = 0; i < 6; i++) await new Promise((r) => setTimeout(r, 5)); };
+  return {
+    net, store,
+    /* the page opened at `iso`: the cached paint when readCache vouches for the entry, then the refresh */
+    async open(iso, n = {}) {
+      T = Date.parse(iso);
+      vm.runInContext("{const c=readCache(LOC.id);if(c)render(c.data,false,c.savedAt)}", ctx);
+      return this.refresh(iso, n, true);
+    },
+    async refresh(iso, n = {}, opening = false) {
+      T = Date.parse(iso); Object.assign(net, n);
+      const from = opening ? 0 : ctx.__paints.length;
+      await ctx.refresh();
+      await settle();
+      const entry = JSON.parse(store["mbwx-" + loc] || "null");
+      return { paints: ctx.__paints.slice(from), held: JSON.parse(JSON.stringify(vm.runInContext(`STORM_HELD.${loc}??null`, ctx))), entry };
+    },
+  };
+}
+
+test("on the page's own refresh, the index raises only its own list's warnings, and a failed alerts request keeps the card", async () => {
+  const { STORMS, wssiAnswer } = await STORM_FIX();
+  const SI = STORMS["snow-ice-farm"], f0 = SI.point[0];
+  const feature = (vtec, ends, extra = {}) => ({ ...f0, properties: { ...f0.properties, ...extra, ends, expires: ends, parameters: { ...f0.properties.parameters, VTEC: [vtec] } } });
+  const cards = (r) => r.paints.map((p) => p.tier);
+  // RLX's warning tonight only, with WPC's Day 3 Major (Tuesday), then extended into Day 3 with the new cycle
+  // at Moderate on every day
+  const A = feature("/O.NEW.KRLX.WS.W.0002.250105T1700Z-250106T0500Z/", "2025-01-06T00:00:00-05:00", { id: "urn:rig:A" });
+  const A2 = feature("/O.EXT.KRLX.WS.W.0002.250105T1700Z-250108T1100Z/", "2025-01-08T06:00:00-05:00", { id: "urn:rig:A2", messageType: "Update", sent: "2025-01-05T15:50:00-05:00" });
+  const W1 = wssiAnswer(["MODERATE", "MODERATE", "MAJOR"], "2025-01-05T06:00:00Z"), W2 = wssiAnswer(["MODERATE", "MODERATE", "MODERATE"], "2025-01-05T18:00:00Z");
+  for (const delay of [0, 1500]) {
+    // an in-app refresh never waits for the lane: its first paint is on the last refresh's reading
+    const store = {}, page = await pageRig(store);
+    const r1 = await page.open("2025-01-05T15:00:00Z", { point: [A], wssi: W1 });
+    deq(cards(r1), [null], "tonight's warning beside a Day-3 Major: no card");
+    const r2 = await page.refresh("2025-01-05T21:00:00Z", { point: [A2], wssi: W2, wssiDelay: delay });
+    assert.ok(r2.paints.length >= 1);
+    deq([...new Set(cards(r2))], [null], `extended into Day 3, the new cycle Moderate and ${delay} ms behind: no card in any paint`);
+    deq([r2.held, r2.entry.data.held], [{}, {}], "and nothing latched");
+    deq(r2.entry.data.wssi.days.map((d) => d.impact), ["MODERATE", "MODERATE", "MODERATE"], "the new cycle is the reading once it lands");
+  }
+  {
+    // a cold open inside six hours, with the lane slower than STORM_WAIT: the cache's paint, then the live one on
+    // the cache's reading, then the new cycle
+    const store = {};
+    await (await pageRig(store)).open("2025-01-05T15:00:00Z", { point: [A], wssi: W1 });
+    const cold = await (await pageRig(store)).open("2025-01-05T20:30:00Z", { point: [A2], wssi: W2, wssiDelay: 300 });
+    deq(cold.paints.slice(0, 2).map((p) => [p.live, p.alerts.length]), [[false, 1], [true, 1]], "the cached paint and the live one");
+    deq([...new Set(cards(cold))], [null], "a cold open with the lane slower than STORM_WAIT: no card in any paint");
+    deq(cold.held, {});
+  }
+  {
+    // the same from the start: a reading asked for tonight's warning, and the cold open the next day (the cache
+    // too old to vouch for, the latch and the index read out of the entry whatever its age) with the extended
+    // warning and the lane slower than STORM_WAIT
+    const store = {};
+    await (await pageRig(store)).open("2025-01-05T15:00:00Z", { point: [A], wssi: W1 });
+    const cold = await (await pageRig(store)).open("2025-01-06T08:00:00Z", { point: [A2], wssi: W2, wssiDelay: 300 });
+    deq([cold.paints[0].live, ...new Set(cards(cold))], [true, null], "no cached paint, and no card on the live one or after the index lands");
+    deq(cold.held, {});
+  }
+  {
+    // yesterday's reading, Day 2 Major, beside a new warning this morning on what was its Day 2, and today's index
+    // at Moderate four seconds behind
+    const store = {};
+    await (await pageRig(store)).open("2025-01-05T15:00:00Z", { point: [A], wssi: wssiAnswer(["MODERATE", "MAJOR", null], "2025-01-05T06:00:00Z") });
+    deq(JSON.parse(store["mbwx-sp"]).data.held, {}, "tonight's warning is not Day 2's");
+    const W3 = feature("/O.NEW.KRLX.WS.W.0003.250106T1700Z-250107T1100Z/", "2025-01-07T06:00:00-05:00", { id: "urn:rig:W3", sent: "2025-01-06T06:00:00-05:00", onset: "2025-01-06T12:00:00-05:00" });
+    const cold = await (await pageRig(store)).open("2025-01-06T12:00:00Z", { point: [W3], wssi: wssiAnswer(["MODERATE", "MODERATE", null], "2025-01-06T06:00:00Z"), wssiDelay: 300 });
+    deq([...new Set(cards(cold))], [null], "yesterday's Day-2 Major beside today's new WS.W.3, today's Moderate behind it: no card");
+    deq(cold.held, {}, "nothing latched");
+    // and the lane's own Major, as slow, raises it when it lands
+    const store2 = {};
+    await (await pageRig(store2)).open("2025-01-05T15:00:00Z", { point: [A], wssi: wssiAnswer(["MODERATE", "MAJOR", null], "2025-01-05T06:00:00Z") });
+    const raised = await (await pageRig(store2)).open("2025-01-06T12:00:00Z", { point: [W3], wssi: wssiAnswer(["MAJOR", "MODERATE", null], "2025-01-06T06:00:00Z"), wssiDelay: 300 });
+    deq(cards(raised), [null, "storm"], "the live paint without it, then the card when the lane's own reading lands");
+    deq(Object.keys(raised.held), ["KRLX.WS.W.3"]);
+  }
+  {
+    // A failed point request keeps the card, the strip and the storm's headline, on the last good list. The farm:
+    // RLX's January 5 2025 warning at Major, then the point's request times out an hour on
+    const store = {}, page = await pageRig(store);
+    const wind = feature("/O.NEW.KRLX.WI.Y.0004.250105T1100Z-250105T1700Z/", "2025-01-05T12:00:00-05:00", { id: "urn:rig:wind", event: "Wind Advisory", severity: "Moderate" });
+    const r1 = await page.open("2025-01-05T10:40:00Z", { point: [...SI.point, wind], wssi: SI.wssi });
+    const up = r1.paints.at(-1);
+    deq([up.tier, up.strip, up.headline], ["storm", ["Winter Storm Warning", "Wind Advisory"], "<em>Winter storm</em> from noon until 6 a.m. Tuesday."]);
+    const r2 = await page.refresh("2025-01-05T11:40:00Z", { point: "fail" });
+    deq(r2.paints.map((p) => [p.tier, p.carried, p.strip, p.headline]), [["storm", true, ["Winter Storm Warning", "Wind Advisory"], up.headline]],
+      "the farm: the card, the strip and the headline through the failed request");
+    deq([r2.entry.data.seen.carried, r2.entry.data.seen.point, r2.entry.data.alerts.length], [true, r1.entry.data.seen.point, 2], "the last good list, carried at its own fetch time, and cached so");
+    deq([r2.held, r2.entry.data.held], [up.held, up.held], "and the latch as it was");
+    assert.equal(page.net.asked, 1, "with no list, nobody asks the index");
+    // the outage runs past the advisory's end: it comes down, and the warning stays
+    const r3 = await page.refresh("2025-01-05T17:20:00Z", { point: "fail" });
+    deq(r3.paints.map((p) => [p.tier, p.strip]), [["storm", ["Winter Storm Warning"]]], "an alert whose end passes during the outage comes down");
+    // a reopen inside six hours paints the carried list from the cache, and it is still carried
+    const reopen = await (await pageRig(store)).open("2025-01-05T17:30:00Z", { point: "fail" });
+    deq(reopen.paints.map((p) => [p.live, p.tier, p.carried]), [[false, "storm", true], [true, "storm", true]], "a reopen with the point still failing keeps the card");
+    // and past the warning's own end, still failing, everything comes down
+    const ended = await page.refresh("2025-01-07T11:30:00Z", { point: "fail" });
+    deq(ended.paints.map((p) => [p.tier, p.strip, p.headline]), [[null, [], null]], "past the warning's end, nothing");
+    // the next good list is the latch's word again
+    const good = await page.refresh("2025-01-07T12:00:00Z", { point: [], wssi: null });
+    deq([good.paints.at(-1).carried, good.held], [false, {}]);
+  }
+  {
+    // the coast: Florence a day from landfall, the point's request failing an hour on with the beach answering.
+    // A Coastal Flood Advisory that ends during the outage comes down with it
+    const FL = STORMS["florence-coast"], store = {}, page = await pageRig(store, "mb");
+    const cfy = { ...FL.point[0], properties: { ...FL.point[0].properties, id: "urn:rig:cfy", event: "Coastal Flood Advisory", severity: "Minor", ends: "2018-09-13T12:30:00-04:00", expires: "2018-09-13T12:30:00-04:00",
+      parameters: { ...FL.point[0].properties.parameters, VTEC: ["/O.NEW.KILM.CF.Y.0031.180913T1500Z-180913T1630Z/"] } } };
+    const r1 = await page.open("2018-09-13T15:45:00Z", { point: [...FL.point, cfy], beach: FL.beach, products: FL });
+    const up = r1.paints.at(-1);
+    deq([up.tier, up.headline], ["storm", "<em>Hurricane Florence</em> is closest Friday morning."]);
+    assert.ok(up.strip.includes("Coastal Flood Advisory") && up.strip.includes("Hurricane Warning"), JSON.stringify(up.strip));
+    const r2 = await page.refresh("2018-09-13T16:15:00Z", { point: "fail" });
+    deq(r2.paints.map((p) => [p.tier, p.carried, p.headline, p.strip]), [["storm", true, up.headline, up.strip]], "the coast: the card, the strip and the headline through the failed request");
+    const r3 = await page.refresh("2018-09-13T16:45:00Z", { point: "fail" });
+    deq(r3.paints.map((p) => [p.tier, p.headline, p.strip.includes("Coastal Flood Advisory"), p.strip.includes("Hurricane Warning")]), [["storm", up.headline, false, true]],
+      "the advisory's end passing during the outage takes it down, and the card stays");
+  }
 });

@@ -511,6 +511,9 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .alert-strip{display:none;background:var(--marker);color:#FFF7F3;font-family:var(--mono);font-size:11.5px;
   letter-spacing:.11em;text-transform:uppercase;padding:10px 13px;border-radius:11px;margin-bottom:15px;
   box-shadow:0 6px 22px -8px rgba(199,67,31,.75);position:relative;overflow:hidden}
+/* at night the page's marker is a light salmon for type on dark paper, and cream type on it read at
+   about 2.7:1; the strip keeps a deeper rust of its own, 4.5:1 and more for every word on it */
+html[data-theme=dark] .alert-strip{background:#9A3317;box-shadow:0 6px 22px -8px rgba(0,0,0,.6)}
 .alert-strip.on{display:block;animation:alertIn .5s var(--ease) both}
 @keyframes alertIn{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:none}}
 .alert-strip::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 20%,rgba(255,255,255,.28) 50%,transparent 80%);
@@ -673,16 +676,35 @@ html:not([data-theme=dark]) .rv-core{display:none}
 /* canopies are heavier than grass: same wind, half the throw, slower */
 @keyframes swayTree{from{transform:skewX(var(--tsway-neg,-.3deg))}to{transform:skewX(var(--tsway,.3deg))}}
 
-.storm-row{display:grid;grid-template-columns:1fr auto;gap:3px 12px;padding:12px 0;
-  border-bottom:1px solid var(--line);align-items:baseline}
-.storm-row:last-child{border-bottom:none}
-.storm-row .s-name{font-weight:600;font-size:16.5px;letter-spacing:-.012em;display:flex;align-items:center;gap:7px}
-.storm-row .swirl{color:var(--marker);flex:0 0 auto;display:flex}
-.storm-row .swirl svg{display:block;animation:spin 9s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.storm-row .s-dist{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);text-align:right;white-space:nowrap}
-.storm-row .s-dist.storm-near{color:var(--marker);font-weight:600}
-.storm-row .s-meta{grid-column:1/-1;font-family:var(--mono);font-size:11.5px;color:var(--ink-soft)}
+/* the storm card's model as plain text, shown with ?storm=debug until the card is drawn */
+#stormDebug pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.4 var(--mono);color:var(--ink-soft)}
+/* The storm card, when there is one, is the first thing under the sky: the next two or three days
+   as a timeline on the hourly chart's own axis, one lane for each hazard the Weather Service has put
+   a time on, and the storm's closest forecast point as a marked moment. A named storm with nothing
+   major here is one quiet line where the tropics list used to sit */
+.storm-svg{display:block;width:100%;height:auto;overflow:visible}
+#stormDays{margin-top:2px}
+/* a storm with no name has its biggest number for its title, in the display face */
+#stormHead.storm-hero b{font-family:var(--disp);font-size:clamp(20px,5.6vw,26px);line-height:1.15;font-weight:650;letter-spacing:-.02em;text-transform:none;text-wrap:balance}
+/* a winter warning's own sentence: whole, sized to two lines where it can be, and a number never broken */
+#stormHead.storm-quote b{flex-basis:100%;text-wrap:pretty}
+#stormHead b i{font-style:normal;white-space:nowrap}
+/* and when it is too long for three lines, the whole sentence under the chart, in the card's own type */
+.storm-full{margin-top:14px;font-size:16px;line-height:1.42;font-weight:500;letter-spacing:-.01em;color:var(--ink);text-wrap:pretty}
+.storm-full i{font-style:normal;white-space:nowrap}
+/* under the labels, the card's own words: the warnings it stands on, what to do, and each source's time */
+.storm-warns{margin-top:15px;font-family:var(--mono);font-size:10.5px;line-height:15px;letter-spacing:.09em;text-transform:uppercase;font-weight:600;color:var(--ink);text-wrap:balance}
+.storm-warns span{white-space:nowrap}
+@media (max-width:359px){.storm-warns{letter-spacing:.04em}}
+.storm-say{margin-top:6px;font-size:16px;line-height:1.42;font-weight:550;letter-spacing:-.01em;color:var(--ink);text-wrap:pretty}
+.storm-asof{margin-top:8px;font-family:var(--mono);font-size:10px;line-height:14px;color:var(--ink-faint);letter-spacing:.02em;text-wrap:pretty}
+.storm-asof span{white-space:nowrap}
+/* the named storm: one quiet sentence, its little mark in the faint ink */
+#stormLine{padding-top:26px}
+.storm-line{font-size:15.5px;line-height:1.42;font-weight:500;color:var(--ink-soft);letter-spacing:-.005em;text-wrap:pretty}
+.storm-line b{color:var(--ink);font-weight:650}
+.storm-line .nw{white-space:nowrap}
+.storm-glyph{display:inline-block;vertical-align:-2px;margin-right:7px;color:var(--ink-faint)}
 
 /* ── cards ──────────────────────────────────────────── */
 .cards{display:grid;grid-template-columns:1fr;column-gap:34px;padding:26px 20px 0}
@@ -877,6 +899,20 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   <div class="cobweb" id="cobweb" aria-hidden="true" hidden></div>
 </header>
 
+<section id="stormSection" hidden>
+  <div class="eyebrow" id="stormHead"><b id="stormTitle">Storm</b><span id="stormNote"></span></div>
+  <div class="xp" id="stormExplore">
+    <svg id="stormSvg" class="storm-svg" viewBox="0 0 350 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The storm, hour by hour"></svg>
+    <input class="xp-key" type="range" min="0" max="0" step="1" value="0" disabled aria-label="The storm, hour by hour">
+    <div class="xp-peek" aria-hidden="true" hidden></div>
+    <div class="hr-labels" id="stormDays" aria-hidden="true"></div>
+  </div>
+  <p class="storm-full" id="stormFull" hidden></p>
+  <p class="storm-warns" id="stormWarns" hidden></p>
+  <p class="storm-say" id="stormSay" hidden></p>
+  <p class="storm-asof" id="stormAsOf" hidden></p>
+</section>
+
 <section>
   <div class="eyebrow"><b>Next 24 hours</b><span id="hourlyNote"></span></div>
   <div class="hourly-scroll">
@@ -917,9 +953,13 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   </div>
 </section>
 
-<section id="stormSection" style="display:none">
-  <div class="eyebrow"><b>Tropics · Atlantic</b></div>
-  <div id="stormRows"></div>
+<section id="stormLine" hidden aria-label="Storm">
+  <p class="storm-line" id="stormLineText"></p>
+</section>
+
+<section id="stormDebug" hidden>
+  <div class="eyebrow"><b>Storm card · model</b><span id="stormDebugNote"></span></div>
+  <pre id="stormDebugPre"></pre>
 </section>
 
 <div class="cards">
@@ -960,7 +1000,10 @@ const LOCS={
       lat:34.2982,lon:-77.7896,scene:"marsh",kind:"coast",
       tz:"America/New_York",tzLabel:"ET",
       sceneLabel:"Sun and moon over the marsh horizon",
-      marine:{lat:34.26,lon:-77.68},tide:8658163,tropics:true,
+      marine:{lat:34.26,lon:-77.68},tide:8658163,
+      /* the beach's NWS zone, Coastal New Hanover, read for its tropical watches and warnings alone:
+         Debby's and PTC Eight's tropical storm warnings were on the beach and not at the house */
+      beach:"NCZ108",
       /* the Masonboro Inlet buoy's water temperature, for when the tide station's has nothing:
          its dataset on SECOORA's ERDDAP (see waterTemp) */
       buoy:"41110-ilm2wave-ilm2w-5-miles-",
@@ -4966,9 +5009,38 @@ function activeAlerts(alerts,now=Date.now()){
     return !Number.isFinite(end)||end>now;
   });
 }
+/* A warning that keeps the family in. A Freeze Warning or a Frost Advisory is CAP Severe the way
+   every Freeze Warning is, and it is about the garden: on a frosty fall night at the farm it printed
+   "Feed early and keep a path open." in red and took the fishing times */
+const NOT_OUTDOOR=/^(?:Hard )?Freeze Warning$|\bFrost\b/i;
 function outdoorWarning(alerts){
-  const warnings=alerts.filter(a=>/warning/i.test(a.event||""));
+  const warnings=alerts.filter(a=>/warning/i.test(a.event||"")&&!NOT_OUTDOOR.test(a.event||""));
   return warnings.find(a=>a.severity==="Extreme")||warnings.find(a=>a.severity==="Severe")||null;
+}
+/* A product's relative words are its own day's: "this evening" in a statement written Thursday is
+   Thursday evening. Read on a later day, or once the stretch it names is over, a phrase takes its day
+   ("late this morning" read at 9:30 at night is "late Thursday morning"); read the same day before
+   then, it is said as written, because today goes unsaid. `issued` and `now` are wall-clock
+   milliseconds (the place's clock fields on this phone's Date). Pure */
+const REL_DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const REL_END={morning:{early:9,mid:11,late:12,"":12},afternoon:{early:15,mid:16,late:18,"":18},evening:{early:21,late:24,"":24},
+  night:{early:24,late:30,"":30},today:{late:18,"":18}};
+function relDay(text,issued,now,short=false){
+  const t=String(text??"");
+  if(!t||!Number.isFinite(issued)||!Number.isFinite(now))return t;
+  const d0=new Date(issued);d0.setHours(0,0,0,0);
+  const n0=new Date(now);n0.setHours(0,0,0,0);
+  const later=n0>d0,day=k=>{const x=new Date(d0);x.setDate(x.getDate()+k);const w=REL_DAYS[x.getDay()];return short?w.slice(0,3):w};
+  const ends=(k,part,mod)=>{const x=new Date(d0);x.setDate(x.getDate()+k);const e=REL_END[part]?.[mod]??REL_END[part]?.[""]??24;
+    x.setHours(Math.floor(e),0,0,0);return x.getTime()};
+  return t.replace(/\b(?:(early|mid|late) )?(this (morning|afternoon|evening)|tonight|today|tomorrow(?: (morning|afternoon|evening|night))?)\b/gi,
+    (m,mod,phrase,thisPart,tomPart)=>{
+      const low=phrase.toLowerCase(),k=/^tomorrow/.test(low)?1:0;
+      const part=thisPart?thisPart.toLowerCase():low==="tonight"?"night":low==="today"?"today":(tomPart||"").toLowerCase();
+      if(!later&&(k||now<ends(k,part,(mod||"").toLowerCase())))return m;
+      const said=(mod?mod+" ":"")+day(k)+(part&&part!=="today"?" "+part:"");
+      return m===m.toUpperCase()?said.toUpperCase():/^[A-Z]/.test(m)&&mod?said[0].toUpperCase()+said.slice(1):said;
+    });
 }
 /* The strip enters when an alert arrives, and then it stays put. The cache paints first and the
    live forecast lands a moment later, and a resize, a foreground and the hour turning over all
@@ -4978,21 +5050,45 @@ function outdoorWarning(alerts){
    way writes nothing. An update (the warning extended, another alert joining it) changes the words
    in place, so an open strip keeps its body. A different alert taking the lead plays the entrance
    again. An alert ending takes the strip down, and the next one to arrive enters. Both are pure and
-   test.mjs runs them. */
-function alertStrip(alerts){
+   test.mjs runs them.
+   While a storm card is up (`card`), the strip leads with the strongest tropical warning, and when
+   the card speaks for the lead (`cover`, the alerts it is drawn from) the strip's body says only what
+   else is active, because the card already carries the hazards and what to do.
+   A short-fuse warning issued during the storm (SHORT_FUSE) leads it instead, enters on its own and
+   keeps its own words and instruction: it is minutes away, and it is never folded into the card.
+   Every end carries its day when it is not today, on the place's clock: "until 11:00 am" for a
+   Sunday end, read on Saturday, was a Saturday morning that had passed. A midnight is "midnight" and
+   belongs to the day it ends, so Saturday's is "until midnight" and never "until 12:00 am Sun". Each
+   " · " rides with the words after it, so a strip that wraps starts its second line "· until ..." and
+   never leaves a lone dot at the end of the first */
+/* what a product says that is not something to do: a link, "Additional information can be found ...", a
+   sentence on what a warning means. The storm card's instruction and the strip's "What to do" both leave
+   them out, sentence by sentence (sayKeep): the farm's Wind Advisory on October 10 2026 gave only RLX's link */
+const SAY_JUNK=/https?:\/\/|\bwww\.|\badditional information\b|\bfor (?:more|additional|further) information\b|\bcan be (?:found|obtained)\b|\b(?:warning|watch|advisory|statement|emergency)\b[^.]*?\bmeans\b|\b(?:X|Twitter|Facebook) pages?\b/i;
+const sayKeep=t=>String(t||"").replace(/\s+/g," ").trim().split(/(?<=[.!?])\s+(?=["'(]?[A-Z0-9])/).map(x=>x.trim()).filter(x=>x&&!SAY_JUNK.test(x));
+const SHORT_FUSE=["TO.W","FF.W","EW.W","SV.W"],STRIP_TROP=["HU.W","TR.W","SS.W","HU.A","SS.A","TR.A"];
+const stripKeys=a=>(a.vtec||[]).map(v=>(String(v).match(/(?:^|\.)([A-Z]{2}\.[A-Z])\.\d{4}(?:\.|$)/)||[])[1]).filter(Boolean);
+function alertStrip(alerts,{now=Date.now(),shift=typeof TZSHIFT==="number"?TZSHIFT:0,card=false,cover=[]}={}){
   if(!alerts||!alerts.length)return null;
   const sev={Extreme:0,Severe:1,Moderate:2,Minor:3};
-  const sorted=[...alerts].sort((x,y)=>(sev[x.severity]??4)-(sev[y.severity]??4));
-  const a=sorted[0];
-  const until=a.ends||a.expires;
+  const fuse=a=>stripKeys(a).some(k=>SHORT_FUSE.includes(k));
+  const order=x=>{const s=(sev[x.severity]??4)/10,tr=stripKeys(x).map(v=>STRIP_TROP.indexOf(v)).filter(i=>i>=0);
+    return !card?s:fuse(x)?s:tr.length?1+Math.min(...tr)/10:2+s};
+  const sorted=[...alerts].sort((x,y)=>order(x)-order(y));
+  const a=sorted[0],wall=x=>{const v=Date.parse(x||"");return Number.isFinite(v)?v+shift:NaN},nowW=now+shift;
+  /* a tropical watch or warning has no end, and its expiry is only when the next advisory is due */
+  const until=(a.vtec||[]).some(v=>/\.(?:HU|TR|SS)\.[WA]\./.test(v))?null:a.ends||a.expires;
   let t=a.event;
-  if(until)t+="\u00A0· until\u00A0"+clock12(new Date(until));
-  if(alerts.length>1)t+=" · +"+(alerts.length-1)+" more";
-  const gist=alertGist(a);
+  if(until){const u=new Date(wall(until)),mid=!u.getHours()&&!u.getMinutes(),day=mid?new Date(+u-6e4):u;
+    t+=" ·\u00A0until "+(mid?"midnight":clock12(u))+(day.toDateString()===new Date(nowW).toDateString()?"":"\u00A0"+day.toLocaleDateString("en-US",{weekday:"short"}))}
+  if(alerts.length>1)t+=" ·\u00A0+"+(alerts.length-1)+"\u00A0more";
+  /* the card speaks for the storm's own alerts; a short-fuse warning speaks for itself */
+  const own=!card||fuse(a)||!cover.includes(a.event),rel=s=>relDay(s,wall(a.sent),nowW);
+  const gist=own?alertGist(a).map(g=>({...g,v:rel(g.v)})):[],inst=own&&a.inst?rel(sayKeep(a.inst).join(" ")):"";
   const others=sorted.slice(1).map(o=>o.event);
-  const body=gist.length||others.length||a.inst
+  const body=gist.length||others.length||inst
     ?`${gist.map(g=>`<p>${g.k?`<b>${g.k}</b> `:""}${esc(g.v)}</p>`).join("")}
-       ${a.inst?`<p><b>What to do</b> ${esc(a.inst)}</p>`:""}
+       ${inst?`<p><b>What to do</b> ${esc(inst)}</p>`:""}
        ${others.length?`<p class="alert-more">also active: ${esc(others.join(", "))}</p>`:""}`
     :"";
   return{lead:a.event+"|"+(a.severity||""),head:esc(t)+(body?'<span class="alert-caret" aria-hidden="true"></span>':""),body};
@@ -5005,20 +5101,25 @@ function alertStep(was,next){
 }
 /* It goes when the alert ends, not at the next paint after it: with the app open in front, nothing
    else paints at the coast until something is touched. The forecast is asked for again a second
-   after the end, so a warning the Weather Service has extended stays up with its new words */
+   after the end, so a warning the Weather Service has extended stays up with its new words. And at a
+   live product's start when it was issued ahead of it (its VTEC begin), so an open page turns the storm's
+   headline from "from noon" to under way at noon, and NOW to the warning */
 let ALERT_SHOWN=null,ALERT_TIMER=0;
 function alertTimer(alerts){
   clearTimeout(ALERT_TIMER);ALERT_TIMER=0;
-  const end=Math.min(...(alerts||[]).map(a=>Date.parse(a.ends||a.expires||"")).filter(Number.isFinite));
+  const at=Date.now(),begins=a=>(a.vtec||[]).map(vtecOf).filter(v=>v&&!DEAD_VTEC.includes(v.action)&&v.begin).map(v=>Date.parse(v.begin)).filter(t=>t>at);
+  const end=Math.min(...(alerts||[]).flatMap(a=>[Date.parse(a.ends||a.expires||""),...begins(a)]).filter(Number.isFinite));
   if(!Number.isFinite(end))return;
   const id=LOC.id;
   ALERT_TIMER=setTimeout(()=>{ALERT_TIMER=0;if(!document.hidden&&LOC.id===id)refresh()},Math.min(2147483647,Math.max(20,end-Date.now()+1000)));
 }
-function renderAlerts(alerts){
-  const el=document.getElementById("alertStrip"),next=alertStrip(alerts);
+function renderAlerts(alerts,opts={}){
+  const el=document.getElementById("alertStrip"),next=alertStrip(alerts,opts);
   const step=alertStep(el.classList.contains("on")?ALERT_SHOWN:null,next);
   ALERT_SHOWN=next;
-  alertTimer(next&&alerts);
+  /* the storm card's own alerts end on the same clock as the strip's (`due`: the storm statement and the
+     beach's tropical warnings, which the strip never shows), so the card comes down with them */
+  alertTimer([...(next&&alerts||[]),...(opts.due||[])]);
   if(step==="keep")return;
   if(!next){el.className="alert-strip";el.innerHTML="";el.removeAttribute("role");el.removeAttribute("tabindex");el.removeAttribute("aria-expanded");el.dataset.open="0";return}
   const body=el.querySelector(".alert-body");
@@ -5071,51 +5172,1260 @@ function renderNowcast(mins,code,h){
   [...bars.children].forEach((b,i)=>{b.style.height=Math.max(2,Math.round(p[i]/mx*22))+"px";b.style.opacity=p[i]>=th?".9":".25"});
   el.className="nowcast on";
 }
-const SWIRL=`<svg width="15" height="15" viewBox="0 0 16 16"><path d="M8 8c0-2.6 2.1-4.7 4.7-4.7M8 8c0 2.6-2.1 4.7-4.7 4.7M8 8c2.2 0 4 1.8 4 4M8 8c-2.2 0-4-1.8-4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><circle cx="8" cy="8" r="1.2" fill="currentColor"/></svg>`;
-function renderStorms(storms){
-  const sec=document.getElementById("stormSection");
-  if(!storms||!storms.length){sec.style.display="none";return}
-  document.getElementById("stormRows").innerHTML=storms.map(s=>{
-    const d=Math.round(distMi(LAT,LON,s.lat,s.lon)),near=d<500;
-    const motion=s.spd>0?(s.dirDeg!=null?"moving "+dirTxt(s.dirDeg)+" "+s.spd+" mph":"moving "+s.spd+" mph"):"stationary";
-    /* the distance says how close it is, and pressure and advisory numbers are forecaster detail */
-    const meta=[s.mph?s.mph+" mph winds":null,motion].filter(Boolean).join(" · ");
-    return `<div class="storm-row">
-      <div class="s-name"><span class="swirl">${SWIRL}</span>${s.type} ${s.name}</div>
-      <div class="s-dist ${near?'storm-near':''}">${d.toLocaleString()} mi away</div>
-      <div class="s-meta">${meta}</div>
-    </div>`;
-  }).join("");
-  sec.style.display="";
+/* ── the storm card ─────────────────────────────────── */
+/* A major storm gets a card of its own, and only then (Josh, October 10 2026: "high threshold to
+   appear"). It takes the place of the tropics list under the water, which named any Atlantic system at any
+   distance and, through a slip in reading the advisory's title, showed one only in the three hours
+   after an intermediate advisory. Everything in it is the Weather Service's or the hurricane centers'
+   own: the watches and warnings at the house (and at the coast the beach zone's tropical ones, because
+   Debby's and PTC Eight's tropical storm warnings were on the beach alone), the advisory that names
+   the storm, and its forecast track. Nothing is scored. It comes up in two strengths:
+   - storm, the full card. At the coast: a hurricane warning or watch, a tropical storm warning or a
+     storm surge warning or watch at the house or on the beach, or an extreme wind warning (C1); a flash
+     flood or tornado emergency (C2); a winter storm, blizzard, ice storm or high wind warning (C3); a
+     flash flood, tornado or coastal flood warning while a storm is linked to the place (C4). At the
+     farm: an emergency (F1); a blizzard, ice storm or high wind warning (F2); a winter storm warning
+     with WPC's Winter Storm Severity Index at Major or Extreme at the farm (F3), never its own words; a
+     flash flood, flood, high wind, tornado or severe thunderstorm warning while a storm is linked to the
+     place (F4). A warning that has raised the card holds it while that same warning stands.
+   - named, the light one: a tropical storm watch alone (N1), a storm named in an alert at the place
+     (N2), or one whose center or forecast track comes within 300 miles of the coast or 250 of the farm
+     while any alert is up there (N3).
+   A storm is linked to the place when its advisory is from the last 12 hours and the place's own
+   alerts carry its event number (TR.W.1006 is the Atlantic's sixth storm), name it, or it comes that
+   close while one of them is up. Distance alone, CAP severity, an advisory, an ordinary watch or a
+   lone warning with no storm linked never raise it. stormRead and every reader under it are pure and
+   test.mjs runs them; tools/storm-fixtures.mjs serves real archived products for each case. */
+
+/* a VTEC line: what happened to the product (its action), what it is (phenomena and significance,
+   HU.W is a hurricane warning) and its event number, which for a tropical one is 1000 plus the
+   storm's own number */
+function vtecOf(s){
+  const m=String(s||"").match(/([OTEX])\.([A-Z]{3})\.([A-Z]{4})\.([A-Z]{2})\.([A-Z])\.(\d{4})\.(\d{6}T\d{4}Z)-(\d{6}T\d{4}Z)/);
+  if(!m)return null;
+  const at=x=>/^0{6}/.test(x)?null:`20${x.slice(0,2)}-${x.slice(2,4)}-${x.slice(4,6)}T${x.slice(7,9)}:${x.slice(9,11)}:00Z`;
+  return{action:m[2],office:m[3],phen:m[4],sig:m[5],key:m[4]+"."+m[5],etn:+m[6],begin:at(m[7]),end:at(m[8])};
 }
+/* The feed keeps an alert that was cancelled, ran out or was upgraded for a while, with its VTEC
+   saying so: an upgraded watch sat beside its own warning for a day, and the strip read "+1 more" for
+   it. An alert goes when every VTEC line it carries is over */
+const DEAD_VTEC=["CAN","EXP","UPG"];
+const alertLive=a=>{const v=(a?.vtec||[]).map(vtecOf).filter(Boolean);return !v.length||v.some(x=>!DEAD_VTEC.includes(x.action))};
+/* an alert as the page keeps it: what the strip has always read, and what the storm card needs to tie
+   it to a storm and say it in the Weather Service's words. A cache written before these were kept has
+   no vtec, and an alert without one never raises the card */
+const CAP_KEEP=["flashFloodDamageThreat","tornadoDamageThreat","thunderstormDamageThreat","tornadoDetection","flashFloodDetection"];
+function alertRow(f){
+  const p=f?.properties||{},q=p.parameters||{},par={};
+  for(const k of CAP_KEEP)if(Array.isArray(q[k])&&q[k].length)par[k]=String(q[k][0]);
+  return{id:p.id||"",event:p.event||"",severity:p.severity,onset:p.onset||null,ends:p.ends,expires:p.expires,sent:p.sent||null,
+    desc:p.description||"",inst:p.instruction||"",headline:(q.NWSheadline||[])[0]||null,awips:(q.AWIPSidentifier||[])[0]||null,
+    vtec:Array.isArray(q.VTEC)?q.VTEC.map(String):[],zones:(p.affectedZones||[]).map(z=>String(z).split("/").pop()),par};
+}
+const flat=s=>String(s||"").replace(/\s+/g," ").trim();
+const vtecLive=a=>(a?.vtec||[]).map(vtecOf).filter(v=>v&&!DEAD_VTEC.includes(v.action));
+const isTropical=a=>vtecLive(a).some(v=>["HU","TR","SS"].includes(v.phen));
+const HLS_EVENT="Tropical Cyclone Local Statement";
+
+/* A TCV segment, the office's own read of one zone hazard by hazard, arrives as the description of
+   that zone's tropical watch or warning. Its words are kept as written: the peak, the windows, the
+   threat line, what to PLAN, PREPARE and ACT on, and the impacts words. The potential impacts and
+   the realized ones are kept apart: Florence's house zone said REALIZED IMPACTS: Being Assessed for
+   its surge a day before landfall, and read as the surge's level that was "unknown". Neither is ever
+   printed: they are the office's vocabulary (Unfolding, Devastating to Catastrophic), and only rank
+   the hazards. CAP strips the indentation and wraps a key mid-phrase, so the whitespace is
+   collapsed before anything is read */
+const TCV_SECT={"WIND":"wind","STORM SURGE":"surge","FLOODING RAIN":"rain","TORNADO":"tornado"};
+const TCV_PEAK={wind:"peak wind forecast",surge:"peak storm surge inundation",rain:"peak rainfall amounts"};
+function tcvRead(desc){
+  const out={},txt=flat(desc);
+  if(!/LATEST LOCAL FORECAST/i.test(txt))return out;
+  for(const chunk of txt.split(/(?:^|\s)\*\s+/)){
+    const items=chunk.split(/\s+-\s+/),key=TCV_SECT[items[0].replace(/:$/,"").trim().toUpperCase()];
+    if(!key||out[key])continue;
+    const h={key,forecast:null,peak:null,windows:[],threat:null,potential:null,realized:null,phase:"potential",trend:null,plan:null,prepare:null,act:null};
+    for(const it of items.slice(1)){
+      const c=it.indexOf(":"),k=c>0?it.slice(0,c).trim():"",v=c>0?it.slice(c+1).trim():"";
+      if(/^LATEST LOCAL FORECAST$/i.test(k))h.forecast=v||null;
+      else if(TCV_PEAK[key]&&k.toLowerCase()===TCV_PEAK[key])h.peak=v||null;
+      else if(/^Window (?:for|of)\b/i.test(k))h.windows.push({label:k,text:v});
+      else if(/THREAT TO LIFE AND PROPERTY/i.test(k))h.threat=v||null;
+      else if(/^(PLAN|PREPARE|ACT)$/.test(k))h[k.toLowerCase()]=v||null;
+      else if(/^POTENTIAL IMPACTS$/i.test(k))h.potential=v||null;
+      else if(/^REALIZED IMPACTS$/i.test(k))h.realized=v||null;
+      else if(!k&&key==="tornado"&&!h.peak&&/^Situation is\b/i.test(it))h.peak=it;
+      else if(!k&&!h.trend){const m=it.match(/threat has (increased|decreased|remained nearly steady)/i);
+        if(m)h.trend=/steady/i.test(m[1])?"steady":m[1].toLowerCase()}
+    }
+    /* while it happens the potential impacts are Unfolding; after, only the realized ones are given */
+    h.phase=/^unfolding$/i.test(h.potential||"")?"unfolding":!h.potential&&h.realized?"realized":"potential";
+    out[key]=h;
+  }
+  return out;
+}
+/* how high a TCV's threat line sits on the Weather Service's own five steps (none, low, elevated,
+   high, extreme), so the card leads with the worst hazard: for Debby the rain, for Florence the wind */
+const TCV_STEP=[[/greater than 110|\bextreme\b|greater than 9 feet|outbreak/i,4],[/74 to 110|\bmajor\b|greater than 6 feet|many tornadoes/i,3],
+  [/58 to 73|\bmoderate\b|greater than 3 feet|several tornadoes/i,2],[/39 to 57|localized|greater than 1 foot|a few tornadoes/i,1]];
+const tcvStep=h=>(TCV_STEP.find(([re])=>re.test(h?.threat||""))||[0,0])[1];
+const impactStep=s=>!s?0:/unfolding/i.test(s)?6:/catastrophic|devastating/i.test(s)?5:/extensive/i.test(s)?4:/significant/i.test(s)?3:/limited/i.test(s)?2:/assessed/i.test(s)?1:0;
+
+/* the bullets of an ordinary watch or warning, keyed the way the Weather Service wrote them: WHAT,
+   WHERE, WHEN and IMPACTS now, and before about 2019 HAZARDS, SNOW ACCUMULATIONS, TIMING and WINDS.
+   A warning's HAZARD... line has no bullet. Each value stops at the next "* KEY...", even one that
+   comes straight after the dots: RLX's February 2014 warning left "* ICE ACCUMULATIONS..." empty, its
+   value ran on through the snow's bullet, and the 8 inches of snow read as 8 inches of ice */
+function wwRead(desc){
+  const t=flat(desc).replace(/\s*PRECAUTIONARY\/PREPAREDNESS ACTIONS\.\.\..*$/i,""),out={};
+  for(const m of t.matchAll(/(?<=^|\s)\*\s*([A-Z][A-Z \/]*?)\.\.\.\s*(.*?)(?=\s*\*\s*[A-Z][A-Z \/]*?\.\.\.|$)/g)){
+    const k=m[1].trim();if(!(k in out))out[k]=m[2].trim();
+  }
+  const hz=t.match(/\bHAZARD\.\.\.\s*(.*?)(?=\s[A-Z]{4,}\.\.\.|$)/);
+  if(hz&&!out.HAZARD)out.HAZARD=hz[1].trim();
+  return out;
+}
+/* An elevation is never an amount: "Heavy snow above 3000 feet" read as 36,000 inches of snow */
+const ELEV=/\b(?:(?:above|below|elevations?(?: of| above| below)?)\s+\d[\d,]*|\d{1,2},\d{3}|\d{3,})\s*(?:feet|foot|ft)\b/gi;
+const noElev=s=>String(s||"").replace(ELEV," ").replace(/\s+/g," ").trim();
+
+/* ── the winter warnings: what they are for, and the bar ──
+   A winter warning's snow and ice are never read as numbers. Twelve winters of RLX's and ILM's warnings
+   were run through every amount grammar that could be written for them (October 10 2026), and each round
+   found another office's phrasing that it misread: "a few hundredths of an inch" as an inch of ice, "below
+   3,000 feet" as an amount, "PIEDMONT...18 TO 24 INCHES" as 0.18, "an inch of snow" taking the ice before
+   it, a warning whose card came and went as its updates said "additional". A wrong number on the storm
+   card is worse than none. So the card quotes the warning's own sentence (stormQuote), its lanes say what
+   it is for (winterKinds), and the farm's bar (F3) is the Weather Prediction Center's own judgement of the
+   impact (wssiRead) */
+
+/* The most a rain peak says, in inches, so the beach's worse number can ride beside the house's: the
+   TCV's "Additional 4-8 inches, with locally higher amounts", "Additional More than two feet", "between
+   10 and 15 inches". Rain only: the tropical side's numbers are the TCV's own. Pure */
+const RAIN_WORD={one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,fifteen:15,twenty:20};
+const RAIN_N=`(?:\\d+(?:\\.\\d+)?|\\.\\d+|${Object.keys(RAIN_WORD).join("|")})`;
+const RAIN_AMT=new RegExp(`(?<![\\w.])(${RAIN_N})(?:\\s?(?:-|–|to|and)\\s?(${RAIN_N}))?\\s(inch(?:es)?|foot|feet)\\b`,"g");
+function inchesIn(s){
+  if(!s)return null;
+  let max=null;
+  for(const m of noElev(s).toLowerCase().matchAll(RAIN_AMT)){
+    const n=x=>RAIN_WORD[x]??+x,hi=n(m[2]??m[1])*(m[3][0]==="f"?12:1);
+    if(Number.isFinite(hi)&&(max==null||hi>max))max=hi;
+  }
+  return max;
+}
+const readable=n=>n!=null&&n<=120?n:null;
+
+/* The farm's bar for a Winter Storm Warning (F3) is the Weather Prediction Center's Winter Storm Severity
+   Index at the farm's own point, Major or Extreme on a day the warning is in effect. The service gives each
+   of its three days on its own layer (Overall_Impact_Day_1, _2 and _3, 24 hours each from the cycle), and
+   one identify request asks all three. Each day's answer lists every impact area the point lies in, and they
+   nest (a Major point is in the Winter Weather Area, Minor, Moderate and Major areas), so a day's reading is
+   the highest of them. Its 72-hour layer (Overall_Impact_Days_1-3) was the bar until October 11 2026, and a
+   bigger storm on Day 3 raised and held tonight's small warning. Anything else is no reading and no F3, the
+   strip still showing the warning: no results (every answer outside winter), a failed request, or a shape it
+   does not know. Its times are WPC's own ("2026-10-11 0015Z", "00Z 10/14/26"). Pure */
+const WSSI_STEP={"WINTER WEATHER AREA":1,MINOR:2,MODERATE:3,MAJOR:4,EXTREME:5};
+const wssiTime=s=>{const t=String(s||"").trim();let m;
+  if((m=t.match(/^(\d{4})-(\d\d)-(\d\d) (\d\d)(\d\d)Z$/)))return new Date(Date.UTC(+m[1],m[2]-1,+m[3],+m[4],+m[5])).toISOString();
+  if((m=t.match(/^(\d\d)Z (\d\d)\/(\d\d)\/(\d\d)$/)))return new Date(Date.UTC(2000+Number(m[4]),m[2]-1,+m[3],+m[1])).toISOString();
+  return null};
+const wssiImpact=a=>{const k=String(a?.impact||"").toUpperCase();return WSSI_STEP[k]?k:null};
+function wssiRead(j){
+  const rows=(Array.isArray(j?.results)?j.results:[]).filter(r=>[1,2,3].includes(r?.layerId)&&wssiImpact(r.attributes));
+  if(!rows.length)return null;
+  const days=[1,2,3].map(day=>{
+    const of=rows.filter(r=>r.layerId===day).map(r=>r.attributes);
+    if(!of.length)return null;
+    const top=of.reduce((m,a)=>WSSI_STEP[wssiImpact(a)]>WSSI_STEP[wssiImpact(m)]?a:m),span=String(top.valid_time||"").split(/\s+-\s+/);
+    return{day,impact:wssiImpact(top),start:wssiTime(top.start_time)||wssiTime(span[0]),end:wssiTime(top.end_time)||wssiTime(span[1])};
+  }).filter(Boolean);
+  const top=days.reduce((m,d)=>!m||WSSI_STEP[d.impact]>WSSI_STEP[m.impact]?d:m,null);
+  return{impact:top.impact,issued:wssiTime(rows[0].attributes.issue_time),days};
+}
+/* the highest reading on a day the warning is still in effect: a day that overlaps what is left of its
+   hours (from its start, or from now once it has begun, to its end), and none for a day with no times */
+function wssiOver(w,now,win={}){
+  const from=Math.max(now,Date.parse(win.begin||"")||-Infinity),to=Date.parse(win.end||"")||Infinity;
+  let top=null;
+  for(const d of w?.days||[]){
+    const a=Date.parse(d.start||""),b=Date.parse(d.end||"");
+    if(Number.isFinite(a)&&Number.isFinite(b)&&a<to&&b>from&&(!top||WSSI_STEP[d.impact]>WSSI_STEP[top]))top=d.impact;
+  }
+  return top;
+}
+/* a reading that clears the bar: Major or Extreme on one of the warning's days */
+const wssiMajor=(w,now,win)=>(WSSI_STEP[wssiOver(w,now,win)]||0)>=4;
+/* a winter storm warning's own hours, its VTEC's begin (or its onset) to its VTEC's end (or its ends) */
+const wsWindow=a=>{const v=vtecLive(a).find(x=>x.key==="WS.W");return{begin:v?.begin||a?.onset||null,end:v?.end||a?.ends||null}};
+/* the winter storm warnings in a list, each event with its hours ("KRLX.WS.W.2 2025-01-05T17:00:00.000Z
+   2025-01-07T11:00:00.000Z"): a reading keeps the ones it was asked for (`for`), and is the judge of those
+   alone (stormRead's F3) */
+const wsFor=list=>(list||[]).flatMap(a=>{const w=wsWindow(a),iso=x=>{const t=Date.parse(x||"");return Number.isFinite(t)?new Date(t).toISOString():"-"};
+  return vtecLive(a).filter(v=>v.key==="WS.W").map(v=>`${v.office}.${v.key}.${v.etn} ${iso(w.begin)} ${iso(w.end)}`)});
+const wssiUrl=L=>`https://mapservices.weather.noaa.gov/vector/rest/services/outlooks/wpc_wssi/MapServer/identify?geometry=${L.lon},${L.lat}&geometryType=esriGeometryPoint&sr=4326&layers=all:1,2,3&tolerance=0&mapExtent=${[L.lon-.01,L.lat-.01,L.lon+.01,L.lat+.01].map(n=>n.toFixed(4)).join(",")}&imageDisplay=100,100,96&returnGeometry=false&returnFieldName=true&f=json`;
+
+/* A storm with no name is titled by the warning's own sentence that carries the amounts, quoted as
+   written from that alert's description: the sentence of its WHAT line that says "accumulation", else
+   that line's first sentence, else its NWSheadline. A sentence ends at a stop with a space after it, so
+   "0.25" and "7 a.m." never end one, and nothing is ever cut. Null with none of them, and the title is the
+   warning's name. Pure */
+function stormQuote(a){
+  const what=flat(wwRead(a?.desc).WHAT||"");
+  if(what){
+    const ss=what.split(/(?<=[.!?])(?<!\b[ap]\.m\.)\s+(?=[A-Z0-9"(])/).map(x=>x.trim()).filter(Boolean);
+    const q=ss.find(x=>/accumulation/i.test(x))||ss[0];
+    if(q)return q;
+  }
+  return flat(a?.headline||"").replace(/^\.+\s*|\s*\.+$/g,"")||null;
+}
+/* and the shorter sentence the warning itself gives, for a title the accumulation sentence is too long
+   for: its WHAT line's first sentence, when that is not the quote and is short ("Heavy mixed
+   precipitation."). Null without one, and the title is the warning's name. Pure */
+const STORM_SHORT=60;
+function stormQuoteShort(a){
+  const what=flat(wwRead(a?.desc).WHAT||"");
+  const first=what.split(/(?<=[.!?])(?<!\b[ap]\.m\.)\s+(?=[A-Z0-9"(])/).map(x=>x.trim()).filter(Boolean)[0]||"";
+  return first&&first!==stormQuote(a)&&first.length<=STORM_SHORT&&/[a-z]/i.test(first)?first:null;
+}
+/* What a winter warning is for, from its WHAT words (before 2019, its hazard bullets and its keys): snow,
+   ice or both, and a blizzard's wind, never how much. An ice storm's ice comes first. Pure */
+const WINTER_NAME={snow:"Snow",ice:"Ice",wind:"Wind"};
+function winterKinds(w,phen){
+  const t=flat(w?.WHAT||[w?.["HAZARD TYPES"],w?.HAZARDS,w?.HAZARD,...Object.keys(w||{}).filter(k=>/ACCUMULATION/.test(k))].filter(Boolean).join(" ")).replace(/ice pellets/gi,"sleet");
+  const iceFirst=["IS","ZR"].includes(phen),k=[];
+  const snow=/\b(?:snow|sleet|blizzard)/i.test(t),ice=/\b(?:ice|icing|freezing rain|freezing drizzle|glaze)\b/i.test(t)||iceFirst;
+  if(ice&&iceFirst)k.push("ice");
+  if(snow||!ice)k.push("snow");
+  if(ice&&!iceFirst)k.push("ice");
+  if(phen==="BZ")k.push("wind");
+  return k;
+}
+const winterLabel=k=>{const w=k.map((x,i)=>i?WINTER_NAME[x].toLowerCase():WINTER_NAME[x]);return w.length>1?w.slice(0,-1).join(", ")+" and "+w[w.length-1]:w[0]};
+
+/* An HLS, the office's statement on the storm as a whole, arrives as the alert "Tropical Cyclone
+   Local Statement". Its impact paragraphs are prose over regions, so they are not read for one house:
+   what is read is its headline, its STORM INFORMATION, the watches and warnings it lists, and whether
+   it is the last one. The card takes it in and the strip leaves it out */
+function hlsRead(desc){
+  const t=flat(desc);
+  const sec=name=>{const m=t.match(new RegExp("\\*\\s*"+name+":\\s*(.*?)(?=\\s\\*\\s*[A-Z][A-Z ]+:|\\s[A-Z][A-Z ]{6,}\\s-{4,}|$)"));
+    return m?m[1].split(/\s+-\s+/).map(x=>x.replace(/^-\s*/,"").trim()).filter(Boolean):[]};
+  const info=sec("STORM INFORMATION");
+  return{headline:(t.match(/\*\*\s*(.+?)\s*\*\*/)||[])[1]||null,
+    distance:info.find(x=>/\bmiles\b/i.test(x))||null,
+    position:info.find(x=>/^\d+(?:\.\d+)?[NS]\s+\d+(?:\.\d+)?[EW]$/.test(x))||null,
+    intensity:info.find(x=>/^Storm Intensity\b/i.test(x))||null,
+    movement:info.find(x=>/^Movement\b/i.test(x))||null,
+    current:sec("CURRENT WATCHES AND WARNINGS"),
+    final:/\b(?:last|final) (?:local )?statement\b/i.test(t)};
+}
+
+/* A hurricane center's public advisory (TCP). The title pads a full advisory's number to three
+   places, "Advisory Number  16", and reading it with one space found only the intermediates. A special
+   advisory ("Hurricane Five Special Advisory Number 2", most often for strengthening near landfall)
+   is read too, or the card fell back on the advisory before it. The second line carries the ATCF id
+   (AL062018), which ties the storm to the VTEC event numbers */
+const TC_KIND="Potential Tropical Cyclone|Post-Tropical Cyclone|Subtropical Depression|Subtropical Storm|Tropical Depression|Tropical Storm|Hurricane|Remnants [Oo]f";
+function tcpRead(text,issued){
+  const t=String(text||""),head=t.slice(0,700),sum=t.search(/\nSUMMARY OF /),intro=sum>0?t.slice(0,sum):head;
+  const bin=(t.match(/\bTCP(AT\d)\b/)||[])[1];
+  const m=head.match(new RegExp(`(${TC_KIND}) ([A-Za-z][A-Za-z\\-]*)(?: Special| Intermediate)* Advisory Number\\s+(\\w+)`));
+  const loc=t.match(/LOCATION\.\.\.([\d.]+)([NS])\s+([\d.]+)([EW])/);
+  if(!bin||!m||!loc)return null;
+  const wind=t.match(/MAXIMUM SUSTAINED WINDS\.\.\.(\d+) MPH/);
+  const mov=t.match(/PRESENT MOVEMENT\.\.\.([A-Z]+) OR (\d+) DEGREES AT (\d+) MPH/),still=/PRESENT MOVEMENT\.\.\.STATIONARY/.test(t);
+  const pres=t.match(/MINIMUM CENTRAL PRESSURE\.\.\.(\d+) MB/);
+  /* the position is the one in the SUMMARY OF ... UTC line, which is the synoptic time (11 AM's is
+     1500 UTC), a few minutes after the advisory goes out */
+  const syn=t.match(/SUMMARY OF [^\n]*?(\d{2})(\d{2}) UTC/),t0=Date.parse(issued);
+  let valid=issued||null;
+  if(syn&&Number.isFinite(t0)){const d=new Date(t0);let v=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),+syn[1],+syn[2]);
+    if(v-t0>12*36e5)v-=864e5;else if(t0-v>12*36e5)v+=864e5;valid=new Date(v).toISOString()}
+  const last=t.search(/This is the last public advisory/i);
+  const handoff=last>=0&&/(?:Future|Additional) (?:information|advisories)[\s\S]{0,200}?(?:Weather Prediction Center|Central Pacific Hurricane Center)/i.test(t.slice(last,last+500));
+  return{bin,atcf:(head.match(/\b((?:AL|EP|CP)\d{6})\b/)||[])[1]||null,
+    type:/^Remnants/i.test(m[1])?"Remnants":m[1],name:m[2],adv:m[3],issued:issued||null,valid,
+    local:(head.match(/\n(\d{3,4} [AP]M [A-Z]{3,4} [A-Z][a-z]{2} [A-Z][a-z]{2} \d{1,2} \d{4})/)||[])[1]||null,
+    office:/Weather Prediction Center/i.test(head)?"WPC":"NHC",
+    headlines:[...flat(intro.slice(intro.search(/\n\d{3,4} [AP]M [A-Z]{3,4} /)+1).replace(/^[^\n]*\n/,"")).matchAll(/\.\.\.(.+?)\.\.\./g)].map(x=>x[1].trim()),
+    lat:(loc[2]==="S"?-1:1)*+loc[1],lon:(loc[4]==="W"?-1:1)*+loc[3],
+    mph:wind?+wind[1]:null,dir:mov?mov[1]:null,dirDeg:mov?+mov[2]:null,spd:mov?+mov[3]:still?0:null,mb:pres?+pres[1]:null,
+    final:last>=0&&!handoff,handoff};
+}
+/* Its forecast advisory (TCM) says the winds in knots, which is where the category comes from, and
+   gives the forecast points: the track the card measures home against. The points are day/hour Z of
+   the advisory's own month, or the next one's across a month end */
+function tcmRead(text,issued){
+  const t=flat(text),ref=new Date(issued||NaN);
+  if(!Number.isFinite(+ref))return null;
+  const at=(dd,hh,mm)=>{let y=ref.getUTCFullYear(),mo=ref.getUTCMonth();if(dd<ref.getUTCDate()-15){mo++;if(mo>11){mo=0;y++}}
+    return new Date(Date.UTC(y,mo,dd,hh,mm)).toISOString()};
+  const ll=(a,ns,b,ew)=>({lat:(ns==="S"?-1:1)*+a,lon:(ew==="W"?-1:1)*+b});
+  const cur=t.match(/CENTER LOCATED NEAR ([\d.]+)([NS]) ([\d.]+)([EW]) AT (\d\d)\/(\d\d)(\d\d)Z/);
+  const max=t.match(/MAX SUSTAINED WINDS\s+(\d+) KT WITH GUSTS TO\s+(\d+) KT/);
+  const track=[];
+  if(cur)track.push({when:at(+cur[5],+cur[6],+cur[7]),...ll(cur[1],cur[2],cur[3],cur[4]),kt:max?+max[1]:null});
+  for(const f of t.matchAll(/(?:FORECAST|OUTLOOK) VALID (\d\d)\/(\d\d)(\d\d)Z ([\d.]+)([NS]) ([\d.]+)([EW])(?:\.\.\.([A-Z\/ -]+?))? MAX WIND\s+(\d+) KT\.\.\.GUSTS\s+(\d+) KT/g))
+    track.push({when:at(+f[1],+f[2],+f[3]),...ll(f[4],f[5],f[6],f[7]),kt:+f[9],note:f[8]?f[8].trim():null});
+  return{bin:(t.match(/\bTCM(AT\d)\b/)||[])[1]||null,atcf:(t.match(/\b((?:AL|EP|CP)\d{6})\b/)||[])[1]||null,
+    adv:(t.match(/(?:SPECIAL )?FORECAST\/ADVISORY NUMBER\s+(\w+)/)||[])[1]||null,issued,kt:max?+max[1]:null,gust:max?+max[2]:null,track};
+}
+/* A storm named in an alert's own words, the way RLX wrote "the remnants of Isaias". The name comes
+   only from a live advisory's title, and it has to stand beside a storm word or "remnants": Florence
+   is a county, Hurricane is a town in Putnam County, and a potential tropical cyclone's name is a
+   number that rainfall amounts are written in */
+const TC_WORD="(?:Hurricane|Tropical Storm|Tropical Depression|Tropical Cyclone|Post-Tropical Cyclone|Potential Tropical Cyclone|Subtropical Storm|Subtropical Depression)";
+function namedIn(text,systems){
+  const t=flat(text);
+  return(systems||[]).filter(s=>{
+    const n=String(s.name||"").replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+    if(!n)return false;
+    const pats=[`\\b${TC_WORD} ${n}\\b`,`\\bremnant(?:s| low| circulation| moisture)? of (?:${TC_WORD} )?${n}\\b`,
+      `\\b(?:moisture|plume|circulation) (?:from|of) (?:${TC_WORD} )?${n}\\b`];
+    if(!s.ptc)pats.push(`\\b${n}(?:'s)? remnants?\\b`);
+    return pats.some(p=>new RegExp(p,"i").test(t));
+  }).map(s=>s.name);
+}
+/* the Saffir-Simpson category, from the advisory's knots, never from its rounded miles an hour */
+const ssCat=kt=>kt==null?null:kt>=137?5:kt>=113?4:kt>=96?3:kt>=83?2:kt>=64?1:null;
+/* and from the public advisory's mph, on the hurricane center's own mph steps, when its knots are not the card's */
+const ssMph=mph=>mph==null?null:mph>=157?5:mph>=130?4:mph>=111?3:mph>=96?2:mph>=74?1:null;
+const bearingTo=(la1,lo1,la2,lo2)=>{const y=Math.sin(toRad(lo2-lo1))*Math.cos(toRad(la2)),
+  x=Math.cos(toRad(la1))*Math.sin(toRad(la2))-Math.sin(toRad(la1))*Math.cos(toRad(la2))*Math.cos(toRad(lo2-lo1));
+  return(Math.atan2(y,x)*180/Math.PI+360)%360};
+/* where the storm is now (the public advisory's, which is newer than the forecast advisory's after an
+   intermediate) and the forecast points still ahead of it */
+function stormTrack(s){
+  const at=s.valid||s.issued,t0=Date.parse(at),tcm=s.tcm&&s.tcm.atcf===s.atcf?s.tcm:null;
+  const now={when:at,lat:s.lat,lon:s.lon,kt:tcm&&String(s.adv)===String(tcm.adv)?tcm.kt:null};
+  return[now,...(tcm?.track||[]).filter(p=>Date.parse(p.when)>t0)];
+}
+const STORM_HOURS=12,STORM_REACH={coast:300,farm:250};
+const SIG_STEP={W:0,A:1,Y:2,S:3};
+const alertStep0=a=>Math.min(4,...vtecLive(a).map(v=>SIG_STEP[v.sig]??3));
+const tropRank=a=>Math.min(9,...vtecLive(a).map(v=>["HU.W","TR.W","SS.W","HU.A","SS.A","TR.A"].indexOf(v.key)).filter(i=>i>=0));
+/* what each product is about. A flood watch is the rain that might flood; a flood warning is the
+   flooding */
+const VTEC_HAZ={HW:"wind",WI:"wind",EW:"wind",SV:"wind",HU:"wind",TR:"wind",TO:"tornado",FF:"flood",FA:"flood",FL:"flood",
+  CF:"surge",SS:"surge",WS:"snow",BZ:"snow",WW:"snow",LE:"snow",IS:"ice",ZR:"ice"};
+const TOLD_KIND={wind:"Windy",rain:"Rain",flood:"Rain",snow:"Snow",ice:"Freezing rain",tornado:"Tornado",surge:"Surge"};
+/* the winter products, which say what they are for and never how much (winterKinds): a winter storm,
+   blizzard or ice storm warning, a winter weather or freezing rain advisory, a lake effect snow warning */
+const WINTER_PHEN=["WS","BZ","IS","WW","ZR","LE"];
+/* The card's model for one place: its tier, why, the storm, the hazards worst first, the alerts it
+   speaks for, the instruction as the Weather Service wrote it, and what it has told, for the headline,
+   the strip and the cards. `now` is a real instant. Each place speaks for itself. Three readings ride
+   beside the alerts: `wssi`, the farm's Winter Storm Severity Index (wssiRead), with when it was asked
+   for and the warnings it was asked for (`at` and `for`, stormLane); `held`, the warnings that have
+   already raised the card ({"KRLX.WS.W.1": {"rule": "F3", "end": ...}}), which the page keeps in memory and
+   in its cache; and `seen`, when the house's and the beach's lists were fetched, and whether the house's
+   is the last good one carried through a failed request (`carried`) */
+const stormLive=(a,now)=>!!a&&Array.isArray(a.vtec)&&alertLive(a)&&!(Date.parse(a.ends||a.expires||"")<=now);
+/* a warning's event: its office, product and number, the same through every update of it */
+const stormEvents=a=>vtecLive(a).map(v=>`${v.office}.${v.key}.${v.etn}`);
+const STORM_STALE=6*36e5;
+function stormRead(L,alerts,beachAlerts,storms,now=Date.now(),{wssi=null,held=null,seen=null}={}){
+  const coast=L?.kind==="coast",reach=STORM_REACH[coast?"coast":"farm"];
+  /* A tropical watch or warning's expiry is only when the next advisory is due, and it is nearly always
+     renewed by then. One in a list fetched while it still stood (a cached paint, a beach that has not
+     answered yet, or answered slower than STORM_WAIT, or failed) still stands until a newer answer for that
+     list decides, up to six hours past its own expiry: a cold open and a place switch painted Debby's renewed
+     warning as ended, with "Raining now." under a tropical storm, and so did the strip's timer at its 7 pm
+     expiry, 7h20m after the 11:40 fetch, when the window was measured from the fetch */
+  const standing=(a,at)=>{const ex=Date.parse(a.expires||"");
+    return Number.isFinite(at)&&isTropical(a)&&!a.ends&&Array.isArray(a.vtec)&&alertLive(a)&&ex>at&&now-ex<=STORM_STALE};
+  const live=w=>a=>stormLive(a,now)||standing(a,seen?.[w]);
+  const point=(alerts||[]).filter(live("point")).map(a=>({...a,where:"point"}));
+  const beach=coast?(beachAlerts||[]).filter(a=>live("beach")(a)&&isTropical(a)&&!point.some(p=>p.id&&p.id===a.id)).map(a=>({...a,where:"beach"})):[];
+  const all=[...point,...beach];
+  const is=(a,...ks)=>vtecLive(a).some(v=>ks.includes(v.key));
+  const of=(list,...ks)=>list.filter(a=>is(a,...ks));
+  const emergency=a=>is(a,"FF.W","TO.W")&&(/CATASTROPHIC/i.test([a.par?.flashFloodDamageThreat,a.par?.tornadoDamageThreat].join(" "))
+    ||/\b(?:FLASH FLOOD|TORNADO) EMERGENCY\b|DAMAGE THREAT\.\.\.CATASTROPHIC/i.test((a.headline||"")+" "+flat(a.desc)));
+  /* the storms with an advisory from the last 12 hours, and how each is tied to this place */
+  const systems=(storms||[]).filter(s=>s&&s.name&&s.bin&&Number.isFinite(s.lat)&&Number.isFinite(Date.parse(s.issued))
+      &&now-Date.parse(s.issued)<=STORM_HOURS*36e5&&Date.parse(s.issued)<=now+9e5).map(s=>{
+    const pts=stormTrack(s).map(p=>({...p,miles:Math.round(distMi(L.lat,L.lon,p.lat,p.lon)),dir:dirTxt(bearingTo(L.lat,L.lon,p.lat,p.lon))}));
+    const nearest=pts.reduce((m,p)=>!m||p.miles<m.miles?p:m,null);
+    const num=/^AL\d{6}$/.test(s.atcf||"")?+s.atcf.slice(2,4):null,yr=s.atcf?s.atcf.slice(4):null;
+    const tied=num==null?[]:all.filter(a=>vtecLive(a).some(v=>["HU","TR","SS"].includes(v.phen)&&v.etn===1000+num)&&(!a.sent||String(a.sent).slice(0,4)===yr));
+    const named=all.filter(a=>namedIn([a.headline,a.desc,a.inst].filter(Boolean).join(" "),[{name:s.name,ptc:/^Potential/.test(s.type)}]).length);
+    const near=!!nearest&&nearest.miles<=reach&&all.length>0;
+    return{s,pts,nearest,tied,named,near,linked:tied.length>0||named.length>0||near};
+  });
+  const linked=systems.filter(x=>x.linked).sort((a,b)=>(b.tied.length>0)-(a.tied.length>0)||(b.named.length>0)-(a.named.length>0)||a.nearest.miles-b.nearest.miles);
+  const fired=[],add=(rule,text,list)=>{if(list.length)fired.push({rule,text,list})};
+  if(coast){
+    add("C1","a tropical watch or warning",[...of(all,"HU.W","HU.A","TR.W","SS.W","SS.A"),...of(point,"EW.W")]);
+    add("C2","a flash flood or tornado emergency",point.filter(emergency));
+    add("C3","a winter storm, blizzard, ice storm or high wind warning",of(point,"WS.W","BZ.W","IS.W","HW.W"));
+    if(linked.length)add("C4",`a warning with ${linked[0].s.name} linked`,of(point,"FF.W","TO.W","CF.W"));
+  }else{
+    add("F1","a flash flood or tornado emergency",point.filter(emergency));
+    add("F2","a blizzard, ice storm or high wind warning",of(point,"BZ.W","IS.W","HW.W"));
+    /* the Weather Prediction Center's Winter Storm Severity Index at the farm, Major or Extreme on a day
+       the warning is in effect (wssiRead, wssiOver): the warning's own words are never read for amounts, a
+       bigger storm on Day 3 never raises tonight's warning, and with no reading the card stays down and the
+       warning is the strip's */
+    const ws=of(point,"WS.W"),over=ws.map(a=>wssiOver(wssi,now,wsWindow(a))).sort((x,y)=>(WSSI_STEP[y]||0)-(WSSI_STEP[x]||0))[0];
+    /* and only the list's own reading raises one: a reading asked for once this list was in (seen.wssi, the
+       reading's own `at`, at or after seen.point), or asked for this same warning with these same hours (its
+       `for`). A reading asked for an earlier list is carried until the lane's own answer lands, and it only
+       keeps a warning already held (below): a paint on the last refresh's Day-2 Major raised and latched a
+       warning just extended into Day 2 before the new cycle's Moderate landed, and a cold open on yesterday's
+       Major did the same for a new warning. A list carried through a failed request (`seen.carried`) raises
+       nothing new at all. With no `seen` the reading is the caller's own, for this list */
+    const wssiAt=seen?.wssi??wssi?.at??null;
+    const own=a=>!seen||!seen.carried&&(wssiAt>=seen.point&&Number.isFinite(wssiAt)&&Number.isFinite(seen.point)||wsFor([a]).every(k=>(wssi?.for||[]).includes(k)));
+    add("F3",`a winter storm warning with WPC's Winter Storm Severity Index at ${over?.toLowerCase()||"no reading"} here while it stands`,ws.filter(a=>own(a)&&wssiMajor(wssi,now,wsWindow(a))));
+    if(linked.length)add("F4",`a warning with ${linked[0].s.name} linked`,of(point,"FF.W","FA.W","FL.W","HW.W","TO.W","SV.W"));
+  }
+  /* Once a warning has raised the card it holds it while that same warning stands (its event, through
+     NEW, CON, EXT, EXA, EXB and COR), until it is cancelled, runs out or is upgraded: the WSSI steps down
+     a level between updates of one warning, and RLX's January 2016 warning took a card down at the height
+     of the snow. What raised it rides out in the model (`held`, each event with the rule and its end) and
+     comes back in the next read. A read with no point list (its request failed) knows nothing of the
+     house's warnings, so what is held is handed on as it was, and only its own end takes it off: a single
+     timed-out request under storm load wiped the latch, and the next update at Moderate took the card down.
+     With a list, an event it no longer carries live (cancelled, run out, upgraded or gone) is let go.
+     VTEC event numbers restart every January, so with a list a held entry is the live event's only while it
+     is this season's: one whose own end is more than 30 days gone is last winter's and is dropped (no warning
+     runs that long, and every paint with the event live writes its end again), and one ended in another year
+     than the live event's is a number used again, unless the live product continues it (CON, EXT and the
+     rest carry one across the New Year; a new event comes as NEW). A latch from January 2025 raised RLX's
+     next WS.W.0002 a year on, at Moderate */
+  const heldOut={},heldRule=k=>{const h=held?.[k];return typeof h==="string"?h:h?.rule||null};
+  const heldOld=36e5*24*30,yearOf=t=>{const v=Date.parse(t||"");return Number.isFinite(v)?new Date(v).getUTCFullYear():null};
+  const heldFor=(k,ev)=>{
+    const rule=heldRule(k),h=held?.[k],end=typeof h==="string"?null:h?.end;
+    if(!rule)return null;
+    if(Date.parse(end||"")<now-heldOld)return null;
+    const y0=yearOf(end),y1=yearOf(ev.end||ev.sent);
+    return y0!=null&&y1!=null&&y0!==y1&&ev.action==="NEW"?null:rule;
+  };
+  /* each event with its own end: its VTEC line's, else the alert's (a tropical one has none) */
+  const events=a=>vtecLive(a).map(v=>({k:`${v.office}.${v.key}.${v.etn}`,end:v.end||(!["HU","TR","SS"].includes(v.phen)&&a.ends)||null,action:v.action,sent:a.sent}));
+  for(const f of fired)for(const a of f.list)for(const {k,end} of events(a))heldOut[k]??={rule:f.rule,end};
+  for(const a of all)for(const ev of events(a)){
+    const {k,end}=ev,rule=heldFor(k,ev);
+    if(!rule||heldOut[k])continue;
+    heldOut[k]={rule,end};
+    const f=fired.find(x=>x.rule===rule);
+    if(f)f.list.push(a);else fired.push({rule,text:"held while the same warning stands",list:[a],held:true});
+  }
+  /* (and a list carried through a failed request is no newer word on them than no list: the page never
+     writes the latch from it, and what the model hands out is the latch as it was) */
+  if(!Array.isArray(alerts)||seen?.carried)for(const k of Object.keys(held||{})){
+    const end=typeof held[k]==="string"?null:held[k]?.end;
+    if((!heldOut[k]||seen?.carried)&&heldRule(k)&&!(Date.parse(end||"")<=now))heldOut[k]=typeof held[k]==="string"?{rule:held[k],end:null}:held[k];
+  }
+  const strong=fired.length>0;
+  if(coast)add("N1","a tropical storm watch",of(all,"TR.A"));
+  for(const x of linked)if(x.named.length)add("N2",`${x.s.name} named in an alert`,x.named);
+  for(const x of linked)if(x.near)add("N3",`${x.s.name} within ${x.nearest.miles} miles`,all);
+  const tier=strong?"storm":fired.length?"named":null;
+  const where=a=>a.where==="beach"?"on the beach zone":"at the point";
+  const why=fired.length?`${fired[0].rule}: ${fired[0].text} (${[...new Set(fired[0].list.map(a=>a.event+" "+where(a)))].join(", ")})`
+    :`no rule: ${systems.length?systems.map(x=>`${x.s.name} ${x.nearest.miles} mi at nearest${x.named.length?", named":""}`).join(", "):"no storm advisory in 12 hours"}, ${all.length?all.length+" alert"+(all.length>1?"s":"")+" at the place":"no alerts at the place"}`;
+  const systemsOut=systems.map(x=>({name:x.s.name,type:x.s.type,adv:x.s.adv,miles:x.nearest.miles,when:x.nearest.when,tied:x.tied.length>0,named:x.named.length>0,near:x.near}));
+  if(!tier)return{tier:null,why,rules:[],storm:null,hazards:[],alerts:[],instruction:null,instructionFrom:null,instructionAt:null,statement:null,told:[],asOf:null,systems:systemsOut,held:heldOut,wssi};
+
+  const pick=linked[0]||null;
+  let storm=null;
+  if(pick){
+    /* The category is the forecast advisory's knots only while that advisory is the public one's own (57
+       for 57 or 57A) and its knots say what the public advisory's mph say: an intermediate 57A at 115 mph
+       is a Category 3 that the last full advisory's 90 knots called a 2, under a stamp naming 57A. Then
+       it is the public advisory's own mph, on the hurricane center's mph steps */
+    const s=pick.s,own=s.tcm&&s.tcm.atcf===s.atcf&&String(s.adv).replace(/[A-Z]+$/i,"")===String(s.tcm.adv)
+      &&(s.mph==null||ssCat(s.tcm.kt)===ssCat(Math.round(s.mph/1.15078))),kt=own?s.tcm.kt:null;
+    storm={name:s.name,type:s.type,category:/^Hurricane$/.test(s.type)?(own?ssCat(kt):ssMph(s.mph)):null,mph:s.mph,kt,ATCF:s.atcf,adv:s.adv,asOf:s.issued,
+      final:!!s.final,office:s.office,headlines:s.headlines||[],moving:s.spd==null?null:{toward:s.dir,mph:s.spd},
+      nearest:{miles:pick.nearest.miles,dir:pick.nearest.dir,when:pick.nearest.when},
+      now:{miles:pick.pts[0].miles,dir:pick.pts[0].dir},
+      track:pick.pts.map(p=>({lat:p.lat,lon:p.lon,when:p.when,kt:p.kt}))};
+  }
+  /* the hazards, worst first: the TCV's at the house, then the beach's for what the house's does not
+     have, then the house's own warnings, watches and advisories in that order for anything left. A
+     hazard the house has keeps the beach's number beside it when the beach's is worse, because the
+     family is on the water: Florence's surge was 2 to 4 feet at the house and 6 to 9 on the beach */
+  const hazards=[];
+  for(const w of ["point","beach"]){
+    /* one segment carries the zone's hurricane and surge warnings both, and it is said as the strongest's */
+    const src=all.filter(a=>a.where===w&&isTropical(a)).sort((x,y)=>tropRank(x)-tropRank(y)).map(a=>({a,t:tcvRead(a.desc)})).find(x=>Object.keys(x.t).length);
+    if(!src)continue;
+    for(const h of Object.values(src.t)){
+      const had=hazards.find(z=>z.key===h.key);
+      if(had){
+        if(w==="beach"&&had.where==="point"&&h.peak&&peakSize(h.key,h.peak)>peakSize(h.key,had.peak))
+          had.beach={peak:h.peak,from:src.a.event+(src.a.awips?" · "+src.a.awips:""),asOf:src.a.sent};
+        continue;
+      }
+      hazards.push({key:h.key,peak:h.peak,window:h.windows[0]?.text||null,windows:h.windows,potential:h.potential,realized:h.realized,threat:h.threat,
+        forecast:h.forecast,phase:h.phase,trend:h.trend,act:h.act,from:src.a.event+(src.a.awips?" · "+src.a.awips:""),where:w,asOf:src.a.sent,tcv:true,
+        rank:tcvStep(h)*10+impactStep(h.potential)});
+    }
+  }
+  for(const a of [...point].sort((x,y)=>alertStep0(x)-alertStep0(y))){
+    if(a.event===HLS_EVENT)continue;
+    const w=wwRead(a.desc),sig=alertStep0(a),dmg=a.par?.flashFloodDamageThreat||a.par?.tornadoDamageThreat||a.par?.thunderstormDamageThreat||null;
+    const rank=emergency(a)?45:sig===0?30:sig===1?15:10,base={window:w.WHEN||w.TIMING||null,from:a.event,alert:a.id||null,where:"point",asOf:a.sent,rank};
+    for(const v of vtecLive(a)){
+      /* a winter product says what it is for and never how much (winterKinds): its snow and its ice are
+         one lane, named by kind, on the warning's own hours */
+      if(WINTER_PHEN.includes(v.phen)){
+        const kinds=winterKinds(w,v.phen),key=kinds[0];
+        if(!hazards.some(z=>z.key===key||(z.kinds||[]).includes(key)))hazards.push({key,kinds,label:winterLabel(kinds),peak:null,...base,level:null});
+        continue;
+      }
+      const key=(["FF","FA","FL"].includes(v.phen)&&v.sig==="A")?"rain":VTEC_HAZ[v.phen];
+      if(!key||hazards.some(z=>z.key===key))continue;
+      const peak=w.WHAT||w.WINDS||w.HAZARD||null;
+      if(!peak)continue;
+      hazards.push({key,peak,...base,level:emergency(a)?"EMERGENCY":dmg});
+    }
+  }
+  hazards.sort((x,y)=>y.rank-x.rank);
+  for(const h of hazards)delete h.rank;
+  /* the alerts it speaks for, warnings first. A tropical one's end is never said: its expiry is only
+     when the next advisory is due */
+  const cardAlerts=[...all].sort((x,y)=>alertStep0(x)-alertStep0(y)||(x.where==="beach")-(y.where==="beach")||tropRank(x)-tropRank(y)).map(a=>{
+    const o={id:a.id,event:a.event,headline:a.headline||null,instruction:a.inst?flat(a.inst):null,onset:a.onset||null,sent:a.sent||null,where:a.where,
+      vtec:vtecLive(a).map(v=>`${v.key}.${String(v.etn).padStart(4,"0")}`)};
+    /* its start as its VTEC gives it (a warning issued ahead of its start), and a winter one's own sentence */
+    const begin=vtecLive(a).map(v=>v.begin).filter(Boolean).sort()[0];if(begin)o.begin=begin;
+    if(vtecLive(a).some(v=>WINTER_PHEN.includes(v.phen))){o.quote=stormQuote(a);const sh=stormQuoteShort(a);if(sh)o.quoteShort=sh}
+    if(!isTropical(a)&&a.ends)o.ends=a.ends;
+    return o;
+  });
+  /* What to do, in the Weather Service's words: the TCV's own ACT line for the worst hazard, else the
+     instruction of the first warning that has one. Never a watch's: under Florence that was the Flash
+     Flood Watch's paragraph on what a watch means. And never a short-fuse warning's, which the strip
+     carries on its own (stormStrip) */
+  const shortFuse=a=>(a.vtec||[]).some(v=>SHORT_FUSE.includes(v.slice(0,4)));
+  const act=hazards[0]?.act?{text:hazards[0].act,from:hazards[0].from,asOf:hazards[0].asOf}:null;
+  const warned=cardAlerts.find(a=>a.instruction&&!shortFuse(a)&&(a.vtec||[]).some(v=>/\.W\./.test(v)))||null;
+  const say=act||(warned?{text:warned.instruction,from:warned.event,asOf:warned.sent}:null);
+  const hls=all.find(a=>a.event===HLS_EVENT);
+  const statement=hls?{...hlsRead(hls.desc),asOf:hls.sent||null,where:hls.where}:null;
+  const told=[...(storm?[{kind:"Storm",name:storm.name}]:[]),...cardAlerts.map(a=>({kind:"Alert",event:a.event,id:a.id})),
+    ...[...new Set(hazards.flatMap(h=>(h.kinds||[h.key]).map(k=>TOLD_KIND[k])).filter(Boolean))].map(kind=>({kind}))];
+  /* Each source keeps its own time. The Weather Service's is when the product the card reads its
+     hazards from was written (Florence's TCV at 10:55), the advisory's is the hurricane center's
+     (advisory 57 at 10:44): one stamp joining the newest of them put the Flood Watch's 11:35 beside
+     an advisory written fifty minutes before it */
+  const asOf=hazards[0]?.asOf||cardAlerts.find(a=>a.sent)?.sent||null;
+  return{tier,why,rules:fired.map(f=>f.rule),storm,hazards,alerts:cardAlerts,instruction:say?say.text:null,
+    instructionFrom:say?say.from:null,instructionAt:say?say.asOf:null,statement,told,asOf,systems:systemsOut,held:heldOut,wssi,
+    /* an emergency is one the alerts say now, never one held from an earlier update */
+    emergency:fired.some(f=>!f.held&&(f.rule==="C2"||f.rule==="F1"))};
+}
+/* how big a hazard's peak is, to tell whether the beach's is worse than the house's: the top gust
+   for the wind, the top of the surge in feet, the most rain in inches */
+function peakSize(key,peak){
+  const p=flat(peak);if(!p)return -1;
+  if(key==="wind"){const g=p.match(/gusts? (?:up )?to (\d+)/i);if(g)return +g[1];const n=[...p.matchAll(/(\d+)\s*(?=mph|to|-)/gi)].map(m=>+m[1]);return n.length?Math.max(...n):-1}
+  if(key==="surge"){const n=[...p.matchAll(/(\d+(?:\.\d+)?)(?=\s*(?:-\s*\d+\s*)?(?:feet|foot|ft)\b)|-\s*(\d+(?:\.\d+)?)\s*(?:feet|foot|ft)\b/gi)].map(m=>+(m[2]||m[1]));return n.length?Math.max(...n):-1}
+  if(key==="rain")return inchesIn(p)??-1;
+  return -1;
+}
+/* When the card or the line is up, everything it stands on can end with the app left open, and the
+   page has to come down then, not when something is touched: Debby's tropical storm warning was the
+   beach's alone, and the house's only timed alert ran two days longer. So the alerts it is read from,
+   the house's (the storm statement too) and the beach's, still to end, arm the strip's timer (alertTimer) */
+function stormDue(d,model,now=Date.now()){
+  if(!model?.tier)return[];
+  const all=[...(d?.alerts||[]),...(d?.beach||[])],shown=a=>(model.alerts||[]).some(x=>x.id&&x.id===a.id);
+  /* and a tropical one still standing past its expiry (stormRead) is due six hours on, when it is over
+     unless a newer answer has renewed it, so a beach that never answers again cannot hold the card */
+  return[...all.filter(a=>Date.parse(a.ends||a.expires||"")>now),
+    ...all.filter(a=>shown(a)&&isTropical(a)&&!a.ends&&Date.parse(a.expires||"")<=now&&Date.parse(a.expires)+STORM_STALE>now)
+      .map(a=>({...a,expires:new Date(Date.parse(a.expires)+STORM_STALE).toISOString()}))];
+}
+/* the strip keeps its own job while a card is up, less the storm statement the card takes in */
+function stormStrip(alerts,model){
+  return model&&model.tier?(alerts||[]).filter(a=>a.event!==HLS_EVENT):alerts;
+}
+/* A reading's model, with what rides beside its alerts: the farm's WSSI, the warnings already holding
+   the card (STORM_HELD in memory, and the reading's own `held`, which goes into its cache, so a reopen
+   keeps them), and when the house's and the beach's lists were fetched (a cache's own time when it
+   predates `seen`) */
+const STORM_HELD={};
+function stormOf(L,d,now=Date.now(),savedAt=0){
+  const at=k=>d.seen?.[k]??(savedAt||null);
+  return stormRead(L,d.alerts,d.beach,d.storms,now,{wssi:d.wssi||null,held:{...(d.held||{}),...(STORM_HELD[L.id]||{})},seen:{point:at("point"),beach:at("beach"),carried:!!d.seen?.carried}});
+}
+/* The model is kept in STORM_NOW for the harnesses, and shown as plain text with ?storm=debug on the
+   address, for whoever is working on the card */
+const STORM_DEBUG=typeof location!=="undefined"&&/[?&]storm=debug\b/.test(location.search||"");
+let STORM_NOW=null;
+function paintStormDebug(model){
+  STORM_NOW=model||null;
+  const sec=document.getElementById("stormDebug");
+  if(!sec)return;
+  sec.hidden=!(STORM_DEBUG&&model);
+  document.getElementById("stormDebugNote").textContent=model?model.tier||"none":"";
+  document.getElementById("stormDebugPre").textContent=STORM_DEBUG&&model?JSON.stringify(model,null,1):"";
+}
+/* the strip and the model's text, painted in render()'s last stage the way the strip always was; the
+   card itself lands with the header (paintStormCard), so the hours are never pushed down after them */
+function paintStorm(d,model=stormOf(LOC,d)){
+  renderAlerts(stormStrip(activeAlerts(d.alerts),model),{card:model?.tier==="storm",cover:stormCover(model),due:stormDue(d,model)});
+  paintStormDebug(model);
+  return model;
+}
+
+/* ── the storm card, drawn ──────────────────────────── */
+/* The Weather Service gives a hazard's hours in words, on its own clock when it wrote them ("early
+   this evening until Friday afternoon"). The card draws those words and nothing finer: each one is
+   the stretch of day it names, so a window that ends "Friday afternoon" fades out across Friday noon
+   to six, and an hour the product gives exactly (a watch's end) is a hard edge. This, today and
+   tonight are read against the product's own issue time, never against now, so a statement opened
+   the next morning still points at the evening it meant. A phrase it cannot read draws nothing */
+const STORM_PART={morning:[6,12],afternoon:[12,18],evening:[18,24],night:[18,30],tonight:[18,30],overnight:[24,30],today:[6,18]};
+const STORM_MOD={morning:{early:[0,6],mid:[8,11],late:[9,12]},afternoon:{early:[12,15],mid:[13,16],late:[15,18]},
+  evening:{early:[18,21],late:[21,24]},night:{late:[24,30]},tonight:{late:[24,30]},today:{late:[15,18]}};
+const STORM_DAYS=["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+/* one phrase to the stretch it names, [from, to], in the place's wall-clock milliseconds */
+function stormPhrase(s,issued){
+  const t=String(s||"").toLowerCase().replace(/[^a-z0-9: ]+/g," ").replace(/\s+/g," ").trim();
+  if(!t||!Number.isFinite(issued))return null;
+  const at=(d,h)=>{const x=new Date(issued);x.setHours(0,0,0,0);x.setDate(x.getDate()+d);return x.getTime()+h*36e5};
+  let day=null,m;
+  if(/\btomorrow\b/.test(t))day=1;
+  else if((m=t.match(/\b(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/)))day=(STORM_DAYS.indexOf(m[1])-new Date(issued).getDay()+7)%7;
+  else if(/\b(?:this|today|tonight)\b/.test(t))day=0;
+  const clk=t.match(/\b(\d{1,2})(?::(\d\d))? ?([ap])m\b/);
+  const h=clk?(+clk[1]%12)+(clk[3]==="p"?12:0)+(+clk[2]||0)/60:/\bnoon\b/.test(t)?12:/\bmidnight\b/.test(t)?24:null;
+  if(h!=null){let x=at(day??0,h);if(day==null&&x<issued)x=at(1,h);return[x,x]}
+  const part=/\bafter midnight\b/.test(t)?"overnight":(t.match(/\b(morning|afternoon|evening|overnight|night|tonight|today)\b/)||[])[1];
+  if(!part)return null;
+  const mod=(t.match(/\b(early|mid|late)\b/)||[])[1],r=(mod&&STORM_MOD[part]?.[mod])||STORM_PART[part];
+  return[at(day??0,r[0]),at(day??0,r[1])];
+}
+/* a TCV window: "until X" has begun, "Begins X" has no end yet, "X until Y" is both */
+function stormWindow(s,issued){
+  const t=flat(s).replace(/\.+$/,"");
+  let m=t.match(/^(?:from )?(.+?) (?:until|to|through|thru) (.+)$/i);
+  if(m&&!/^(?:until|through|thru|to)\b/i.test(t)){const a=stormPhrase(m[1],issued),b=stormPhrase(m[2],issued);
+    if(a&&b&&b[1]>=a[0])return{start:a,end:b,from:m[1],until:m[2]}}
+  if((m=t.match(/^(?:until|through|thru) (.+)$/i))){const b=stormPhrase(m[1],issued);if(b)return{start:null,end:b,from:null,until:m[1]}}
+  if((m=t.match(/^(?:begins?|beginning|starting) (.+)$/i))){const a=stormPhrase(m[1],issued);if(a)return{start:a,end:null,from:m[1],until:null}}
+  return null;
+}
+/* the same words, with their day named once they would name the wrong one (relDay): "this evening"
+   opened tomorrow is the wrong evening, and the same evening it is said as written */
+function stormAbs(s,issued,long=false,now=issued){
+  return relDay(flat(s),issued,now)
+    .replace(/\b(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)\b/gi,w=>long?w[0].toUpperCase()+w.slice(1).toLowerCase():w[0].toUpperCase()+w.slice(1,3).toLowerCase())
+    .replace(/\b(EARLY|LATE|MID|THIS|TONIGHT|MORNING|AFTERNOON|EVENING|NIGHT)\b/g,w=>w.toLowerCase());
+}
+/* An old product shouts in capitals. A reading made only of numbers and units is said in the page's
+   own case; anything else stays as the Weather Service wrote it */
+const STORM_QUIET=/^(?:to|and|of|up|an?|half|quarter|inch(?:es)?|feet|foot|mph|with|gusts?|around|over|near|less|than|more|tenths?|one|two|three|four|five|six)$/i;
+const stormQuiet=s=>{const t=flat(s).replace(/\.+$/,"");return /[a-z]/.test(t)||!t.split(/[\s,]+/).every(w=>!w||/^[\d.\-–]+$/.test(w)||STORM_QUIET.test(w))?t:t.toLowerCase()};
+const stormDash=s=>String(s).replace(/(\d)\s?-\s?(\d)/g,"$1–$2");
+/* An amount as the product gives it, both ends and its words kept: "between 3 and 8 inches" is "3 to 8
+   inches" (it was "8 inches", the top alone), "1 to 2 feet" and "up to 2 feet" of inundation stay a
+   range and an "up to" (they were "2 ft"), and a hyphen is an en dash. The units are the caller's */
+const STORM_N="(?:\\d+(?:\\.\\d+)?|\\.\\d+)";
+function stormAmount(s,units){
+  const m=String(s||"").match(new RegExp(`(?<![\\w.])(?:between (${STORM_N}) and (${STORM_N})|((?:more than |up to |over |around |near )?${STORM_N}(?:\\s?(?:-|to)\\s?${STORM_N})?)) (${units})\\b`,"i"));
+  if(!m)return null;
+  return[stormDash(m[1]?`${m[1]} to ${m[2]}`:m[3]).replace(/(^|[^\d])\.(\d)/g,"$10.$2").toLowerCase(),m[4].toLowerCase()];
+}
+/* each hazard's peak in the fewest of the Weather Service's own words, or nothing */
+function stormPeak(hz){
+  const p=stormQuiet(hz.peak||""),th=flat(hz.threat||"");
+  let m;
+  if(hz.key==="wind")return(m=p.match(/gusts? (?:up )?to (\d+) mph/i))?`gusts to ${m[1]} mph`
+    :(m=stormAmount(p,"mph"))?m[0]+" mph":null;
+  if(hz.key==="surge")return(m=stormAmount(p,"feet|foot|ft"))?m[0]+" ft above ground":null;
+  if(hz.key==="tornado")return(m=th.match(/\b(a few|several|many) tornadoes/i))?m[1].toLowerCase()+" possible":null;
+  /* a winter lane says what it is for and never how much (winterKinds) */
+  if(hz.key!=="rain")return null;
+  let s=noElev(p).replace(/^additional\s+/i,"").replace(/,?\s*with locally higher amounts/i,"");
+  const am=stormAmount(s,"inches|inch|feet|foot");
+  /* what is left of an elevation with no amount beside it ("snow above 3000 feet") says nothing */
+  if(am?readable(inchesIn(am.join(" ")))==null:noElev(p)!==p)return null;
+  s=stormDash(am?am.join(" "):s);
+  if(/^[A-Z][a-z]/.test(s))s=s[0].toLowerCase()+s.slice(1);
+  return s&&s.length<=30?s:null;
+}
+const STORM_NAME={wind:"Wind",rain:"Rain",flood:"Flooding",surge:"Surge",tornado:"Tornadoes",snow:"Snow",ice:"Ice"};
+const STORM_PHEN={wind:["HW","WI","EW"],rain:["FF","FA","FL"],flood:["FF","FA","FL"],surge:["CF"],tornado:["TO"],snow:["WS","BZ","WW","LE"],ice:["IS","ZR"]};
+/* The card's picture, worked out from stormRead's model: the lanes, worst first, each a hazard the
+   Weather Service has put hours on. A TCV window is its own words; a hazard with none takes the
+   house's own watch or warning for it (Florence's rain is the Flash Flood Watch's hours), to the
+   minute. One with no hours anywhere is said on the last line with no bar, because a bar would be a
+   time nobody gave. The span is the next two days, longer to show a window close, never past three.
+   Times are the place's wall clock (`shift` is TZSHIFT); `now` is wall time too. Pure */
+function stormLanes(model,now,{shift=0,tides=null}={}){
+  if(!model||model.tier!=="storm")return null;
+  const wall=x=>{const v=Date.parse(x);return Number.isFinite(v)?v+shift:null};
+  /* the line starts at now, the way the hourly's starts at NOW, so what is already under way starts at the edge */
+  const t0=now,alerts=model.alerts||[],hero0=stormHero(model)?.hz||null;
+  const lanes=[],also=[],kin=k=>k==="flood"?"rain":k;
+  for(const hz of model.hazards||[]){
+    const key=hz.key;
+    if([...lanes,...also].some(l=>kin(l.key)===kin(key))||!STORM_NAME[key])continue;
+    const issued=wall(hz.asOf)??now,segs=[];
+    for(const w of hz.windows||[]){
+      const win=stormWindow(w.text,issued);if(!win)continue;
+      const hur=/hurricane/i.test(w.label),ts=/tropical storm/i.test(w.label);
+      /* a window from the beach's statement is the beach's, and the pill says so */
+      segs.push({a0:win.start?win.start[0]:issued,a1:win.start?win.start[1]:issued,b0:win.end?win.end[0]:Infinity,b1:win.end?win.end[1]:Infinity,
+        open:!win.end,strong:hur?1:0,word:(hur?"hurricane-force wind":ts?"tropical-storm wind":key==="surge"?"storm surge":STORM_NAME[key].toLowerCase())+(hz.where==="beach"?" at the beach":""),
+        from:win.from&&stormAbs(win.from,issued,false,now),until:win.until&&stormAbs(win.until,issued,false,now),
+        fromSaid:win.from&&stormAbs(win.from,issued,true,now),untilSaid:win.until&&stormAbs(win.until,issued,true,now)});
+    }
+    if(!segs.length){
+      /* no hours in the statement: the house's own watch or warning for it, if one is up. A hazard read
+         from a product (a Winter Storm Warning's snow and ice) takes that product's hours. One from a TCV
+         takes a flood or flash flood watch's or none: a routine Flash Flood Warning to 5:30 under Florence
+         made two feet of rain end that evening, a 35-minute Tornado Warning drew a red sliver at NOW, an
+         areal Flood Warning or a 3-hour Flood Advisory ended "more than two feet" that afternoon, and a
+         river's, whose end is its crest and not the rain, ran the bar off the chart. With no watch the rain
+         is the quiet row with no bar. A short-fuse warning is the strip's, unless the hazard is that
+         warning's own (an emergency) */
+      const mine=x=>x.where==="point"&&x.ends&&(x.vtec||[]).some(v=>(STORM_PHEN[key]||[]).includes(v.slice(0,2)));
+      const a=hz.alert?alerts.find(x=>x.id===hz.alert&&x.where==="point"&&x.ends)||null
+        :hz.tcv?alerts.find(x=>mine(x)&&!fuseOf(x)&&(x.vtec||[]).some(v=>/^(?:FF|FA)\.A\./.test(v)))||null
+        :alerts.find(x=>mine(x)&&(!fuseOf(x)||x.event===hz.from))||null;
+      /* from its start, never from when it was sent: a watch or warning issued ahead of its start drew
+         from NOW, nine hours early. The start is its VTEC's begin, else its onset, and one still to come is
+         said ("Winter Storm Warning from noon until Tuesday at 6 am"): the bar started at noon while its
+         label read as on now */
+      const s=a?wall(a.begin)??wall(a.onset)??wall(a.sent)??t0:null,e=a?wall(a.ends):null,ahead=a&&s>now;
+      if(a&&e)segs.push({a0:s,a1:s,b0:e,b1:e,open:false,strong:0,word:a.event,from:ahead?xpWhen(s,now):null,until:null,
+        fromSaid:ahead?xpSaidAt(s,now).replace(/^at /,""):null,ends:e});
+    }
+    /* the hazard the card's title already says in big type (a storm with no name: "12 to 18 inches of
+       snow") is not said again on its lane, and the beach's worse number rides beside the house's */
+    const live=segs.filter(s=>s.open||s.b1>t0),name=hz.label||STORM_NAME[key],hero=hero0===hz,peak=hero?null:stormPeak(hz);
+    const beach=hz.beach?stormPeak({...hz,peak:hz.beach.peak}):null;
+    if(live.length)lanes.push({key,name,peak,beach,hero,where:hz.where,segs:live.sort((a,b)=>a.strong-b.strong),marks:[]});
+    else if(!segs.length&&peak)also.push({key,name,peak,beach,where:hz.where});
+  }
+  const ends=lanes.flatMap(l=>l.segs.filter(s=>!s.open).map(s=>s.b1));
+  const near=model.storm?.nearest,close=near?wall(near.when):null;
+  const end=new Date(Math.min(t0+72*36e5,Math.max(t0+48*36e5,...ends.map(e=>e+3*36e5),close>t0?close+6*36e5:0)));
+  end.setMinutes(0,0,0);while(end.getHours()%6)end.setHours(end.getHours()+1);
+  const t1=Math.min(t0+72*36e5,end.getTime());
+  /* the surge runs highest on top of the tide, so its high tides are marked on its lane */
+  const surge=lanes.find(l=>l.key==="surge");
+  if(surge)for(const p of tides||[]){
+    if(p.type!=="H")continue;
+    const t=new Date(String(p.t).replace(" ","T")).getTime();
+    if(t>=now&&t<=t1&&surge.segs.some(s=>t>=s.a0&&(s.open||t<=s.b1)))surge.marks.push({t,v:+p.v});
+  }
+  const trop=alerts.filter(a=>(a.vtec||[]).some(v=>/^(?:HU|TR|SS)\./.test(v)));
+  return{t0,t1,now,lanes,also,
+    closest:close!=null&&close>=now&&close<=t1?{t:close,miles:near.miles,dir:near.dir}:null,
+    asOf:wall(model.asOf),beach:trop.length&&trop.every(a=>a.where==="beach")?trop[0].event:null};
+}
+/* One stop on the timeline: when, what the storm's track says there, and each lane that is on, in
+   the Weather Service's words with the day named. Where a window's edge is only a stretch of day,
+   the pill says the stretch instead of pretending to an hour. Pure */
+function readStorm(T,t,now){
+  const parts=[[xpWhen(t,now),""]],said=[],far=d=>dirLong(Math.max(0,STORM_DIRS.indexOf(d))*22.5);
+  if(T.closest&&Math.abs(t-T.closest.t)<=30*6e4){parts.push([`closest, ${T.closest.miles} mi ${T.closest.dir}`,"b"]);
+    said.push(`the closest point on the forecast track, ${T.closest.miles} miles ${far(T.closest.dir)}`)}
+  for(const l of T.lanes){
+    const s=[...l.segs].sort((a,b)=>b.strong-a.strong).find(s=>t>=s.a0&&(s.open||t<=s.b1));
+    if(s){
+      const edge=t<s.a1&&s.from?[` from ${s.from}`,` from ${s.fromSaid}`]:!s.open&&t>s.b0&&s.until?[` until ${s.until}`,` until ${s.untilSaid}`]:["",""];
+      parts.push([s.word+edge[0],parts.length===1?"b":""]);said.push(s.word+edge[1]);
+    }
+    const tide=l.marks.find(m=>Math.abs(m.t-t)<=5*6e4);
+    if(tide){parts.push([`high tide ${xpClock(new Date(tide.t))}`,""]);said.push(`high tide at ${xpSpoken(new Date(tide.t))}`)}
+  }
+  /* at now, with nothing under way, a window still to come is said with its start, the way the headline says
+     it ("Now, Winter Storm Warning from noon"): a warning issued ahead of its start read "Now, no hours from
+     the Weather Service", which sounds like nothing was given */
+  if(parts.length===1&&t<=now){
+    const next=T.lanes.flatMap(l=>l.segs).filter(s=>s.a0>t&&s.from).sort((a,b)=>a.a0-b.a0)[0];
+    if(next){parts.push([`${next.word} from ${next.from}`,"b"]);said.push(`${next.word} from ${next.fromSaid}`)}
+  }
+  /* an hour no window covers is a dash, the way every pill says a missing reading */
+  if(parts.length===1)parts.push(["—","faint"]);
+  return{parts,said:`${xpSaid(t,now)}, ${said.length?said.join(", "):"no hours from the Weather Service"}`};
+}
+const STORM_DIRS=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+/* a compass point in a plain word, for a sentence: "33 mi north" */
+const STORM_WAY={N:"north",NNE:"north",NNW:"north",NE:"northeast",ENE:"east",E:"east",ESE:"east",SE:"southeast",
+  SSE:"south",S:"south",SSW:"south",SW:"southwest",WSW:"west",W:"west",WNW:"west",NW:"northwest"};
+/* The storm's name the way the card says it: the advisory's own, except that a post-tropical cyclone
+   or the remnants of one are said as remnants, because "post-tropical" means nothing to the family */
+const stormRemnant=s=>/^(?:Post-Tropical Cyclone|Remnants)$/.test(s?.type||"");
+const stormTitle=s=>stormRemnant(s)?`Remnants of ${s.name}`:`${s.type} ${s.name}`;
+const stormWho=s=>stormRemnant(s)?`${s.name}'s remnants`:`${s.type} ${s.name}`;
+/* without a storm the card is the warning's, said in plain words */
+const STORM_PLAIN=[[/Blizzard/,"Blizzard"],[/Ice Storm/,"Ice storm"],[/Winter Storm/,"Winter storm"],[/High Wind|Extreme Wind/,"High wind"],
+  [/Flash Flood/,"Flash flooding"],[/Tornado/,"Tornadoes"],[/Coastal Flood/,"Coastal flooding"],[/Flood/,"Flooding"]];
+const stormPlain=(ev,emergency)=>emergency?String(ev||"").replace(/ Warning$/,"").replace(/^Flash Flood$/,"Flash flood emergency").replace(/^Tornado$/,"Tornado emergency")
+  :(STORM_PLAIN.find(([re])=>re.test(ev||""))||[0,ev||"Storm"])[1];
+const stormEmergency=model=>model?.emergency??(model?.rules||[]).some(r=>r==="C2"||r==="F1");
+const fuseOf=a=>(a?.vtec||[]).some(v=>SHORT_FUSE.includes(String(v).slice(0,4)));
+/* the warning a storm with no name is said by: the emergency when there is one, else the first of the
+   storm's own that is not a short-fuse warning (those are the strip's) */
+function stormLead(model){
+  const al=model?.alerts||[];
+  return(stormEmergency(model)?al.find(fuseOf):null)||al.find(a=>!fuseOf(a)&&a.event!==HLS_EVENT)||al[0]||null;
+}
+/* A storm with no name leads with its biggest number, in big type. A winter warning's is the
+   warning's own sentence that carries the amounts (stormQuote), in sentence case, whole: never numbers
+   rebuilt from it, which titled RLX's March 2014 warning "25 inch of ice" and read "a few hundredths of an
+   inch" as an inch. With no sentence the title is the warning's name. A rain amount is said when the
+   Weather Service gives one short enough to read at a glance. Otherwise the title is the warning */
+function stormHero(model,now=Date.now(),shift=0){
+  if(!model||model.storm)return null;
+  const lead=stormLead(model);
+  if(lead&&(lead.vtec||[]).some(v=>WINTER_PHEN.includes(String(v).slice(0,2)))){
+    const hz=(model.hazards||[]).find(h=>h.alert&&h.alert===lead.id)||null;
+    /* its relative words take their day the way the card's instruction's do (relDay): "Overnight snow
+       accumulations ..." read the next morning */
+    const at=Date.parse(lead.sent||"")+shift,say=q=>relDay(stCalm(q),at,now);
+    return lead.quote?{hz,text:say(lead.quote),quote:true,short:lead.quoteShort?say(lead.quoteShort):null,name:stormPlain(lead.event,stormEmergency(model))}:null;
+  }
+  const hz=(model.hazards||[])[0];
+  if(hz?.key!=="rain")return null;
+  const peak=stormPeak(hz);
+  /* the beach's number is said as the beach's: Debby's 4 to 8 inches were the beach zone's */
+  return peak&&peak.length<=22&&/\d/.test(peak)?{hz,text:`${peak} of rain${hz.where==="beach"?" at the beach":""}`}:null;
+}
+const STORM_WEEK=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const stormSameDay=(a,b)=>new Date(a).toDateString()===new Date(b).toDateString();
+/* A moment as part of a day, the way a sentence says one: the small hours are the night before's,
+   today is this morning, this afternoon, this evening or tonight, and any other day is named, which
+   in a storm is plainer than "tomorrow" said after midnight. Wall clock in, words out */
+function stormPart(t,now){
+  const at=new Date(t),h=at.getHours(),eve=d=>{const x=new Date(d);if(x.getHours()<5)x.setDate(x.getDate()-1);return x};
+  if(h<5||h>=21)return stormSameDay(eve(at),eve(now))?"tonight":STORM_WEEK[eve(at).getDay()]+" night";
+  const part=h<12?"morning":h<17?"afternoon":"evening";
+  return stormSameDay(at,now)?"this "+part:STORM_WEEK[at.getDay()]+" "+part;
+}
+/* A moment the way a sentence says one, its clock and the day it is said with ("1 a.m." and "Sunday"), the
+   day null when it goes unsaid: today's, and the small hours of tonight, because the small hours are the
+   night before's (read on Sunday morning a 1 am Monday start is "1 a.m.", tonight's, and never "1 a.m.
+   Monday"). Any other day is named, the small hours by their own day ("1 a.m. Sunday" read on Friday), and
+   a midnight belongs to the day it ends */
+function stormWhen(t,now){
+  const d=new Date(t),eve=x=>{const y=new Date(x);if(y.getHours()<5)y.setDate(y.getDate()-1);return y};
+  const day=!d.getHours()&&!d.getMinutes()?new Date(+d-6e4):d;
+  const unsaid=d.getHours()<5?stormSameDay(eve(d),eve(now)):stormSameDay(d,now);
+  return{clock:spokenClock(d),day:unsaid?null:STORM_WEEK[day.getDay()]};
+}
+/* an end said alone, "1 a.m. Sunday" or "noon" */
+function stormUntil(t,now){const w=stormWhen(t,now);return w.clock+(w.day?" "+w.day:"")}
+/* The headline under a storm is the storm's, read from the card's model alone, in the headline's own
+   voice: the storm and when it is closest ("Hurricane Florence is closest Friday morning."), or with
+   no storm named the warning in plain words and when it ends ("Winter storm until 1 a.m. Sunday.").
+   Every hazard it could name is on the card under it, and the forecast's own sentence sat cheerful
+   over a hurricane: "Raining now. Keep the rain gear close." `told` is what the card says, handed to
+   the cards below so they say only what to do. Wall clock in. Pure */
+function stormStory(model,now,shift=0,first=null){
+  const s=model.storm,n=new Date(now),wall=x=>{const v=Date.parse(x||"");return Number.isFinite(v)?new Date(v+shift):null};
+  let html;
+  if(s){
+    const near=wall(s.nearest?.when),when=near&&s.track?.[0]?.when!==s.nearest.when&&near>n?stormPart(near,n):"now";
+    html=`<em>${esc(stormWho(s))}</em> ${stormRemnant(s)?"are":"is"} closest ${when}.`;
+  }else{
+    /* and a warning issued ahead of its start says its start: "Winter storm from noon until 6 a.m.
+       Tuesday." read as on now at 5:40 in the morning, under a card whose bar started at noon. A day is
+       said once ("from 1 a.m. until noon Monday", never Monday twice), and the sentence ends on one period:
+       a clock ending in "a.m." carries its own, and "until 6 a.m.." was the headline from midnight on a
+       warning's last day (sentence) */
+    const a=stormLead(model),end=wall(a?.ends),start=wall(a?.begin)??wall(a?.onset);
+    const f=start&&start>n?stormWhen(start,n):null,u=end&&end>n?stormWhen(end,n):null,said=w=>w.clock+(w.day?" "+w.day:"");
+    html=sentence(`<em>${esc(stormPlain(a?.event,stormEmergency(model)))}</em>${a?.where==="beach"?" at the beach":""}${f?" from "+(u&&f.day&&f.day===u.day?f.clock:said(f)):""}${u?" until "+said(u):""}`);
+  }
+  return{html:first?first+" "+html:html,told:(model.told||[]).filter(t=>t.kind!=="Alert"&&t.kind!=="Storm")};
+}
+const STORM_MARK=`<svg class="storm-glyph" width="15" height="15" viewBox="-10 -10 20 20" aria-hidden="true"><path d="M0-4.2C2.4-7.4 6-8 8.6-6.1M0 4.2C-2.4 7.4-6 8-8.6 6.1" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle r="4.2" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>`;
+/* the top gust the Weather Service gives, and whether it is the beach's */
+const stormGust=model=>{const w=(model?.hazards||[]).find(h=>h.key==="wind"),m=w&&flat(w.peak).match(/gusts? (?:up )?to (\d+)/i);return m?{mph:+m[1],beach:w.where==="beach"}:null};
+/* The named storm, in one quiet line where the tropics list was: who, how near it comes in miles from
+   the forecast track and when, and the gusts the Weather Service's own alert gives. "Isaias's
+   remnants pass 33 mi north Sunday evening · gusts to 50". Pure */
+function stormLineHtml(model,now,shift=0){
+  const s=model?.storm;
+  if(!s){const a=(model?.alerts||[])[0];return a?`${STORM_MARK}<b>${esc(a.event)}</b> ${a.where==="beach"?"at the beach":"at the house"}`:""}
+  const many=stormRemnant(s),n=s.nearest,way=STORM_WAY[n?.dir]||"",near=n?new Date(Date.parse(n.when)+shift):null;
+  const here=!near||s.track?.[0]?.when===n.when||near<=now;
+  const where=!n?"":here?` ${many?"are":"is"} ${n.miles} mi ${way}`
+    :` ${many?"pass":"passes"} ${n.miles} mi ${way} <span class="nw">${esc(stormPart(near,now))}</span>`;
+  const g=stormGust(model);
+  return`${STORM_MARK}<b>${esc(stormWho(s))}</b>${where}${g?` <span class="nw">· gusts to ${g.mph}${g.beach?" at the beach":""}</span>`:""}`;
+}
+/* the alerts the card speaks for, whose words the strip leaves to it: the tropical ones, the one its
+   instruction is from, and a storm with no name's own warning. Debby's Flood Watch at the house was
+   none of them, and kept its words on the strip */
+function stormCover(model){
+  if(model?.tier!=="storm")return[];
+  const lead=model.storm?null:stormLead(model);
+  return[...new Set((model.alerts||[]).filter(a=>(a.vtec||[]).some(v=>/^(?:HU|TR|SS)\./.test(v))||a===lead
+    ||model.instructionFrom&&model.instructionFrom.split(" · ")[0]===a.event).map(a=>a.event))];
+}
+/* the warnings the card stands on, named: the house's first, then any only the beach has. The strip
+   above can lead with only one of them, and Florence's Hurricane Warning sat in its "+2 more". A
+   short-fuse warning is the strip's own and not the card's. With no warning, the tropical watches */
+function stormWarns(model){
+  const al=(model?.alerts||[]).filter(a=>!fuseOf(a)&&a.event!==HLS_EVENT);
+  const rank=a=>{const k=(a.vtec||[]).map(v=>STRIP_TROP.indexOf(String(v).slice(0,4))).filter(i=>i>=0);return k.length?Math.min(...k):9};
+  const W=al.filter(a=>(a.vtec||[]).some(v=>/^[A-Z]{2}\.W\./.test(v)));
+  const list=[...(W.length?W:al.filter(a=>(a.vtec||[]).some(v=>/^(?:HU|TR|SS)\.A\./.test(v))))].sort((x,y)=>rank(x)-rank(y));
+  const house=[...new Set(list.filter(a=>a.where!=="beach").map(a=>a.event))];
+  const beach=[...new Set(list.filter(a=>a.where==="beach").map(a=>a.event))].filter(e=>!house.includes(e));
+  return[...house,...(beach.length?[beach.join(" · ")+" at the beach"]:[])].join(" · ");
+}
+/* An old product shouts in capitals. A line in capitals is set in sentence case, its days, months,
+   states and the places' own names kept capitalized; a line in mixed case is left as it came */
+const ST_PROPER=/\b(sunday|monday|tuesday|wednesday|thursday|friday|saturday|january|february|april|june|july|august|september|october|november|december|north carolina|south carolina|west virginia|virginia|wilmington|porters neck|new hanover|cape fear|wrightsville beach|shady spring|beckley|raleigh county|national weather service)\b/g;
+function stCalm(s,names=[]){
+  s=flat(s);
+  if(!/[A-Z]/.test(s)||/[a-z]/.test(s))return s;
+  s=s.toLowerCase().replace(ST_PROPER,w=>w.replace(/\b[a-z]/g,c=>c.toUpperCase()))
+    .replace(/\b(nws|edt|est|cdt|cst|i-\d+)\b/g,w=>w.toUpperCase()).replace(/(\d) (am|pm)\b/g,(m,d,ap)=>d+" "+ap.toUpperCase())
+    .replace(/(^|[.!?]\s+)([a-z])/g,(m,p,c)=>p+c.toUpperCase());
+  for(const n of names)if(/^[A-Za-z]+$/.test(n||""))s=s.replace(new RegExp(`\\b${n}\\b`,"gi"),n);
+  return s;
+}
+/* What to do, as the Weather Service wrote it: the TCV's ACT line for the worst hazard, or the lead
+   warning's instruction (stormRead picks it). A link, "Additional information can be found ..." and a
+   product's sentence on what a warning means are left out. A clean instruction keeps its first two
+   sentences; a messy one (all capitals, or a list run together with "...") is cut to its first
+   instruction, because RLX's January 2016 warning opened "CONDITIONS ARE EXPECT EARLY THIRD OR
+   OCCURRING", its own typo, which on the card read as the app's. Its relative words take their day
+   (relDay). Wall clock in. Pure */
+const SAY_DO=/^(?:only|do not|don't|never|avoid|stay|move|take|be|keep|leave|heed|turn|use|secure|travel|prepare|make|check|follow|listen|monitor|go|get|if you|now is the time|seek|shelter|remain|plan|consider|have|bring|charge|fill|evacuate|protect)\b/i;
+function stormSay(text,issued,now){
+  const t=flat(text);if(!t)return null;
+  const messy=!/[a-z]/.test(t)||/\w\s?\.\.\.\s?\w/.test(t);
+  const keep=sayKeep(t);
+  if(!keep.length)return null;
+  let out=[];
+  if(messy)out=[keep.find(x=>SAY_DO.test(x)&&!/\.\.\./.test(x))||keep.find(x=>!/\.\.\./.test(x))||keep[0]];
+  else for(const x of keep){if(out.length&&(out.length>=2||out.join(" ").length+x.length>170))break;out.push(x)}
+  const said=relDay(stCalm(out.join(" ")),issued,now).replace(/\.{3,}\s*$/,".");
+  return /[.!?]$/.test(said)?said:said+".";
+}
+/* each source with its own time: the Weather Service's product, and the hurricane center's advisory */
+function stormStamps(model,now,shift=0){
+  const at=x=>{const v=Date.parse(x||"");if(!Number.isFinite(v))return"";const d=new Date(v+shift);
+    return clock12(d)+(stormSameDay(d,now)?"":" "+d.toLocaleDateString("en-US",{weekday:"short"}))};
+  const nws=at(model?.asOf),adv=model?.storm?.adv?at(model.storm.asOf):"";
+  return[nws?"Weather Service "+nws:"",adv?`advisory ${model.storm.adv} ${adv}`:""].filter(Boolean);
+}
+/* A card that comes in or changes above where the reader is would push the page under them. So the
+   page is anchored the way a browser anchors its scroll (which WebKit does not), on what the card
+   pushes: the first thing on screen at or under the card stays where it is. At the top of the page the
+   sky stays put and only what is under the card moves. Scrolled at all, what is on screen under the
+   card holds still, even with part of the sky still showing above it: anchored on the sky, a reader
+   with the header's foot 150px down the screen watched the hours under it jump by the card. The card
+   does not come alone: the headline turns to the storm's and the storm statement leaves the strip, both
+   in the header above it, so render() holds the view across the header's words as well as the card
+   (viewHold), and across the strip. The anchor is the first thing at or after the card whose top is on
+   the screen or under it, never the card itself once its top has gone up off the screen: a card that
+   grows (its title "Hurricane Warning" becoming "Hurricane Florence" when the advisories land) held its
+   own top, and moved the hours under a reader whose screen starts inside it. In a browser that anchors
+   on its own the second look finds nothing left to do */
+function viewHold(){
+  const app=document.querySelector(".app"),kids=app?[...app.children]:[],from=kids.indexOf(document.getElementById("stormSection"));
+  const seen=scrollY>0&&from>=0?kids.slice(from).filter(e=>!e.hidden).map(e=>[e,e.getBoundingClientRect()]).filter(([,r])=>r.height>0):[];
+  /* and with nothing's top on the screen (a reader inside the year), the one the screen starts in */
+  const anchor=(seen.find(([,r])=>r.top>=0)||seen.find(([e,r])=>e.id!=="stormSection"&&r.bottom>0)||[null])[0];
+  const top=anchor?anchor.getBoundingClientRect().top:0;
+  return()=>{
+    if(!anchor||!anchor.isConnected)return;
+    const dy=anchor.getBoundingClientRect().top-top;
+    if(Math.abs(dy)>.5)scrollBy(0,dy);
+  };
+}
+function keepView(fn){const done=viewHold();fn();done()}
+/* parts joined with a dot that rides with the part after it, each part kept whole */
+const stormDots=parts=>parts.map((w,i)=>`<span>${i?"· ":""}${esc(w)}</span>`).join(" ");
+/* A winter warning's own sentence as the title, whole: as large as it can be on two lines, on three if it
+   must, and never a number broken across them ("4-8 inches" stays on one line), at 18px at the least (17 on
+   a phone under 360). One that will not fit three lines at that size gives way to the shorter sentence the
+   warning itself gives (its WHAT line's first, "Heavy mixed precipitation."), else to the warning's name,
+   and the whole sentence is then said under the chart in the card's own type (#stormFull): never cut, and
+   never a number rebuilt from it. RLX's 153-character sentence of February 2021 ran to five lines at 16px
+   on a 320 phone and pushed the hours off the first screen. Measured, so it runs again when the fonts land
+   (the fonts.ready hook): fitted in the fallback face, Bricolage reflowed it to a line more */
+let STORM_FIT=null;
+const STORM_NUM=/\d[\d.,\/]*(?:\s?[-–]\s?\d[\d.,\/]*)?(?:\s(?:inch(?:es)?|feet|foot|mph)\b)?/g;
+const stormNums=t=>esc(t).replace(STORM_NUM,m=>`<i>${m}</i>`);
+function stormTitleFit(){
+  const q=STORM_FIT,head=document.getElementById("stormHead"),tEl=document.getElementById("stormTitle"),full=document.getElementById("stormFull");
+  if(!q||!head||!tEl||!full||document.getElementById("stormSection").hidden)return;
+  const min=appW()<360?17:18,lh=()=>parseFloat(getComputedStyle(tEl).lineHeight)||1;
+  const lines=()=>Math.round(tEl.getBoundingClientRect().height/lh());
+  const fits=t=>{tEl.innerHTML=stormNums(t);
+    for(const most of [2,3])for(let px=26;px>=min;px-=px>20?2:1){tEl.style.fontSize=px+"px";if(lines()<=most)return true}
+    return false};
+  head.classList.add("storm-quote");
+  let shown=[q.text,q.short].filter(Boolean).find(fits);
+  if(!shown){head.classList.remove("storm-quote");tEl.style.fontSize="";tEl.textContent=shown=q.name}
+  const whole=shown===q.text;
+  full.innerHTML=whole?"":stormNums(q.text);full.hidden=whole;
+  /* the chart's spoken label starts with the title it sits under */
+  const svg=document.getElementById("stormSvg");
+  if(q.rest)svg.setAttribute("aria-label",[shown.replace(/[.!?]+$/,""),...q.rest].filter(Boolean).join(". ")+".");
+}
+function paintStormCard(model,d){
+  const sec=document.getElementById("stormSection"),line=document.getElementById("stormLine");
+  if(!sec||!line)return;
+  keepView(()=>stormPaint(model,d,sec,line));
+}
+function stormPaint(model,d,sec,line){
+  const nowD=wallNow(),now=nowD.getTime(),shift=TZSHIFT;
+  /* the named storm: one quiet line where the tropics list was */
+  const lt=model&&model.tier==="named"?stormLineHtml(model,nowD,shift):"",lp=document.getElementById("stormLineText");
+  line.hidden=!lt;
+  if(lp.innerHTML!==lt)lp.innerHTML=lt;
+  const T=model&&d?stormLanes(model,now,{shift,tides:d.tides}):null,svg=document.getElementById("stormSvg");
+  sec.hidden=!T;
+  if(!T){xpPublish("storm",null);svg.innerHTML="";STORM_FIT=null;for(const id of ["stormDays","stormWarns","stormSay","stormAsOf","stormFull"])document.getElementById(id).innerHTML="";
+    document.getElementById("stormFull").hidden=true;return}
+  /* a card with nothing to draw (an emergency whose warning gives no hours) is its words alone */
+  const blank=!T.lanes.length&&!T.also.length&&!T.closest;
+  document.getElementById("stormExplore").hidden=blank;
+  const s=model.storm,hero=s?null:stormHero(model,now,shift);
+  const head=document.getElementById("stormHead"),tEl=document.getElementById("stormTitle"),nEl=document.getElementById("stormNote");
+  head.classList.toggle("storm-hero",!!hero);
+  const strength=s?(s.category?`Category ${s.category}`:s.mph!=null?`${s.mph} mph`:""):"";
+  /* the note is the storm's strength and where it is now (the chart is where it will be). A storm with
+     no name has its number for its title and no note: the headline says until when, and the chart
+     shows it. On a 320 phone the note says less rather than drop under the title */
+  const ways=s?[[stormTitle(s),[strength,s.now?`${s.now.miles} mi ${s.now.dir}`:""].filter(Boolean).join(" · ")],[stormTitle(s),strength],[s.name,strength]]
+    :[[hero?hero.text:stormPlain(stormLead(model)?.event,stormEmergency(model)),""]];
+  head.classList.toggle("storm-quote",!!hero?.quote);tEl.style.fontSize="";
+  STORM_FIT=hero?.quote?{text:hero.text,short:hero.short,name:hero.name,rest:null}:null;
+  if(hero?.quote){nEl.textContent="";stormTitleFit()}
+  else{document.getElementById("stormFull").hidden=true;document.getElementById("stormFull").innerHTML="";
+    for(const [t,n] of ways){tEl.textContent=t;nEl.textContent=n;if(!n||nEl.getBoundingClientRect().top-tEl.getBoundingClientRect().top<4)break}}
+  const dark=document.documentElement.dataset.theme==="dark",cs=getComputedStyle(document.documentElement),v=k=>cs.getPropertyValue(k).trim();
+  const ink={ink:v("--ink"),soft:v("--ink-soft"),faint:v("--ink-faint"),paper:v("--paper"),water:v("--water"),wink:v("--water-ink"),marker:v("--marker"),
+    snow:dark?"#A9BCE0":"#5F78A8"};
+  /* each lane in the page's own inks, the stronger window darker; at night the light inks are held
+     down, or a hurricane's hours glare off the page */
+  const LANE_INK={wind:["ink",dark?.2:.24,dark?.52:.74],rain:["water",.4,.7],flood:["water",.55,.8],surge:["wink",dark?.66:.72,.85],
+    tornado:["marker",.6,.85],snow:["snow",.6,.85],ice:["snow",.6,.85]};
+  const W=appW()-40,pad=CHART_IN,span=T.t1-T.t0,X=t=>pad+clamp((t-T.t0)/span,0,1)*(W-2*pad);
+  /* the top row holds the storm's closest point when there is one, and the moons */
+  const top=T.closest?24:16,LANE=36,BAR=8,LEG=9;
+  let y=top,body="",labels="",defs="",gi=0;const boxes=[];
+  const halo=`paint-order="stroke" stroke="${ink.paper}" stroke-width="3.2" stroke-linejoin="round"`;
+  const mono=`font-family="Spline Sans Mono,ui-monospace,monospace"`,disp=`font-family="Bricolage Grotesque,-apple-system,system-ui,sans-serif"`;
+  const nameW=n=>n.length*10.5*.68+2,peakW=(p,k=13.5)=>p.length*k*.56;
+  /* a peak too long for the row loses its last words to an ellipsis rather than run off the page */
+  const fit=(name,peak,room,k=13.5)=>{if(!peak)return peak;let p=peak;
+    while(p&&nameW(name)+7+p.length*k*.56>room){const cut=p.replace(/\s*\S+$/,"");p=cut===p||!cut?"":cut+"…";if(p==="…")p=""}
+    return p||null};
+  /* A lane's words: its name, its peak, and the beach's worse number beside it, labelled as the
+     beach's ("gusts to 105 mph · at the beach 115"). A number only the beach has is said as the beach's
+     the same way ("SURGE at the beach 1–3 ft above ground"): every one of Debby's was the beach zone's,
+     and read as the house's. Where a row is short every lane says less the same way ("2–4 ft · beach
+     6–9 ft", "beach 1–3 ft"), so one card never says it two ways, and a row that cannot hold the
+     beach's number at all keeps the house's and loses its last words to an ellipsis */
+  const only=l=>!l.beach&&l.where==="beach"&&!!l.peak;
+  const beachWays=l=>{const short=l.peak&&l.peak.replace(/ above ground$/,"");
+    if(only(l))return[["at the beach "+l.peak,null],["at the beach "+short,null],["beach "+short,null]];
+    const bs=l.beach.replace(/ above ground$/,"").replace(/^gusts to (\d+) mph$/,"$1");
+    return[[l.peak,"at the beach "+bs],[short,"at the beach "+bs],[short,"beach "+bs]]};
+  const fits=(l,p,b,room,k)=>nameW(l.name)+(p?7+peakW(p,k):0)+(b?peakW((p?" · ":"")+b,k-1):0)<=room;
+  const way=Math.max(0,...[...T.lanes.map(l=>[l,13.5]),...T.also.map(l=>[l,12.5])].filter(([l])=>l.beach||only(l))
+    .map(([l,k])=>{const i=beachWays(l).findIndex(([p,b])=>fits(l,p,b,W-2*pad,k));return i<0?3:i}));
+  const words=(l,room,k=13.5)=>{
+    if(!l.beach&&!only(l))return[fit(l.name,l.peak,room,k),null];
+    const w=beachWays(l)[way];
+    return w&&fits(l,w[0],w[1],room,k)?w:[fit(l.name,only(l)?beachWays(l)[2][0]:l.peak,room,k),null];
+  };
+  const wordsW=(l,p,b,k=13.5)=>nameW(l.name)+(p||b?7:0)+(p?peakW(p,k):0)+(b?peakW((p?" · ":"")+b,k-1):0);
+  const said=(p,b,k,fill,wt)=>`${p?esc(p):""}${b?`<tspan font-size="${k-1}" font-weight="550" fill="${ink.faint}">${p?" · ":""}${esc(b)}</tspan>`:""}`;
+  for(const l of T.lanes){
+    const [ck,lo,hi]=LANE_INK[l.key]||LANE_INK.wind,col=ink[ck],by=y+18;
+    const [pk,bt]=words(l,W-2*pad);
+    for(const g of l.segs){
+      const xa0=X(g.a0),xa1=X(g.a1),xb0=X(g.open?T.t1:g.b0),xb1=X(g.open?T.t1:g.b1);
+      if(xb1-xa0<1.5)continue;
+      /* the stronger window swells the lane, the way a heavier stroke reads as more. Its ends are
+         clean: an edge the Weather Service gives as a part of a day ("until Saturday afternoon") is
+         that stretch in a paler band, ended square, and only a window with no end yet fades, off the
+         chart's right edge where it carries on */
+      const op=g.strong?hi:lo,bh=g.strong?BAR+5:BAR,ry=(by-(bh-BAR)/2).toFixed(1),id="sg"+(gi++),pale=(op*.42).toFixed(3);
+      const rect=(a,b,fill)=>b-a>.2?`<rect x="${a.toFixed(1)}" y="${ry}" width="${(b-a).toFixed(1)}" height="${bh}" ${fill}/>`:"";
+      defs+=`<clipPath id="${id}"><rect x="${xa0.toFixed(1)}" y="${ry}" width="${(xb1-xa0).toFixed(1)}" height="${bh}" rx="${bh/2}"/></clipPath>`;
+      let r=rect(xa0,xa1,`fill="${col}" fill-opacity="${pale}"`);
+      if(g.open){
+        defs+=`<linearGradient id="${id}f" gradientUnits="userSpaceOnUse" x1="${xa1.toFixed(1)}" x2="${xb1.toFixed(1)}" y1="0" y2="0"><stop offset="0" stop-color="${col}" stop-opacity="${op}"/><stop offset="${clamp(1-18/Math.max(1,xb1-xa1),0,1).toFixed(3)}" stop-color="${col}" stop-opacity="${op}"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient>`;
+        r+=rect(xa1,xb1,`fill="url(#${id}f)"`);
+      }else r+=rect(xa1,xb0,`fill="${col}" fill-opacity="${op}"`)+rect(xb0,xb1,`fill="${col}" fill-opacity="${pale}"`);
+      body+=`<g clip-path="url(#${id})">${r}</g>`;
+    }
+    for(const m of l.marks)body+=`<circle cx="${X(m.t).toFixed(1)}" cy="${by+BAR/2}" r="3.4" fill="${ink.wink}" stroke="${ink.paper}" stroke-width="1.6"/>`;
+    /* the name and the peak go over the lane where it starts on the chart, pulled in from the right edge */
+    const first=Math.min(...l.segs.map(g=>g.a0)),w=wordsW(l,pk,bt);
+    const fx=X(Math.max(T.t0,first)),lx=clamp(fx-pad<24?pad:fx,pad,Math.max(pad,W-pad-w)),ly=y+12;
+    boxes.push([lx-2,ly-11,lx+w+2,ly+4]);
+    labels+=`<text x="${lx.toFixed(1)}" y="${ly}" ${mono} font-size="10.5" font-weight="600" letter-spacing=".08em" fill="${ink.ink}" ${halo}>${esc(l.name.toUpperCase())}</text>`;
+    if(pk||bt)labels+=`<text x="${(lx+nameW(l.name)+7).toFixed(1)}" y="${ly}" ${disp} font-size="13.5" font-weight="600" fill="${ink.soft}" ${halo}>${said(pk,bt,13.5)}</text>`;
+    /* and what the picture's own marks are, said on it rather than left to the slider: the thicker
+       stretch is the hurricane-force wind, and the dots on the surge are the high tides it rides on */
+    const hs=l.segs.find(g=>g.strong),leg=hs?{x:(X(hs.a1)+X(hs.open?T.t1:hs.b0))/2,t:"hurricane force"}
+      :l.marks.length?{x:X(l.marks[0].t),t:l.marks.length>1?"high tides":"high tide"}:null;
+    if(leg){
+      const lw=leg.t.length*(9*.6+.36),lx2=clamp(leg.x-lw/2,pad,W-pad-lw),ly2=by+BAR+13;
+      boxes.push([lx2-2,ly2-8,lx2+lw+2,ly2+2]);
+      labels+=`<text class="storm-leg" x="${lx2.toFixed(1)}" y="${ly2}" ${mono} font-size="9" letter-spacing=".04em" fill="${ink.faint}" ${halo}>${leg.t}</text>`;
+    }
+    y+=LANE+(leg?LEG:0);
+  }
+  if(T.also.length){
+    /* what has no hours: its name and peak in the quieter ink, and no bar, because a bar would be
+       hours nobody gave. They share a row while they fit and wrap when they do not */
+    let x=pad,ly=y+12;
+    for(const a of T.also){
+      const [pk,bt]=words(a,W-2*pad,12.5);if(!pk)continue;
+      const w=wordsW(a,pk,bt,12.5);
+      if(x>pad&&x+w>W-pad){x=pad;ly+=20;y+=20}
+      boxes.push([x-2,ly-11,x+w+2,ly+4]);
+      labels+=`<text x="${x.toFixed(1)}" y="${ly}" ${mono} font-size="10.5" font-weight="600" letter-spacing=".08em" fill="${ink.faint}" ${halo}>${esc(a.name.toUpperCase())}</text>
+        <text x="${(x+nameW(a.name)+7).toFixed(1)}" y="${ly}" ${disp} font-size="12.5" font-weight="550" fill="${ink.faint}" ${halo}>${said(pk,bt,12.5)}</text>`;
+      x+=w+18;
+    }
+    y+=20;
+  }
+  const H=y+2;
+  /* night, the hourly chart's own bands off the real sunsets and sunrises */
+  const dy=d.daily||{},bands=[];
+  for(let i=0;i<(dy.sunset||[]).length;i++){
+    const set=new Date(dy.sunset[i]).getTime(),rise=new Date(dy.sunrise?.[i+1]||NaN).getTime();
+    const a=Math.max(T.t0,set),b=Math.min(T.t1,Number.isFinite(rise)?rise:T.t1);
+    if(Number.isFinite(set)&&b>a)bands.push([a,b]);
+  }
+  const rise0=new Date(dy.sunrise?.[0]||NaN).getTime();
+  if(Number.isFinite(rise0)&&T.t0<rise0)bands.unshift([T.t0,Math.min(rise0,T.t1)]);
+  /* a night that only begins at the chart's last pixels is a sliver that reads as a mistake, so it is left off */
+  let nb=bands.filter(([a,b])=>X(b)-X(a)>=12).map(([a,b])=>`<rect x="${X(a).toFixed(1)}" y="2" width="${(X(b)-X(a)).toFixed(1)}" height="${H-4}" fill="url(#stormNight)" rx="4"/>`).join("");
+  /* the storm's closest point on its forecast track, a moment marked through every lane */
+  let mark="";
+  if(T.closest){
+    const cx=X(T.closest.t),hur=s&&/^Hurricane/.test(s.type),txt=`${T.closest.miles} mi ${T.closest.dir}`,tw=txt.length*11*.6;
+    const right=cx+14+tw<=W;
+    /* the dashes step round the words, so a name or a peak is never struck through */
+    const cut=boxes.filter(b=>b[0]<=cx+1.5&&b[2]>=cx-1.5).map(b=>[b[1],b[3]]).sort((a,b)=>a[0]-b[0]);
+    let y0=19;for(const [a,b] of [...cut,[H-2,H-2]]){if(a-y0>3)mark+=`<line x1="${cx.toFixed(1)}" x2="${cx.toFixed(1)}" y1="${y0.toFixed(1)}" y2="${a.toFixed(1)}"/>`;y0=Math.max(y0,b)}
+    mark=`<g stroke="${ink.soft}" stroke-width="1.1" stroke-dasharray="2 3" opacity=".8">${mark}</g>
+      <g transform="translate(${cx.toFixed(1)} 9.5)" fill="none" stroke="${ink.ink}" stroke-width="1.9" stroke-linecap="round">
+        <path d="M-1.6 -3.6C2 -6.6 7 -6.3 9 -2.4M1.6 3.6C-2 6.6 -7 6.3 -9 2.4"/>
+        <circle r="3.6" fill="${hur?ink.ink:ink.paper}"/></g>
+      <text x="${(right?cx+14:cx-14).toFixed(1)}" y="13.5" text-anchor="${right?"start":"end"}" ${mono} font-size="11" font-weight="600" fill="${ink.ink}" ${halo}>${esc(txt)}</text>`;
+  }
+  /* and the moon on each night it can sit on, the hourly chart's sign for dark, clear of the storm's mark */
+  const markBox=T.closest?(()=>{const cx=X(T.closest.t),tw=`${T.closest.miles} mi ${T.closest.dir}`.length*6.6;return cx+14+tw<=W?[cx-15,cx+22+tw]:[cx-22-tw,cx+15]})():null;
+  for(const [a,b] of bands){
+    const x0=X(a),x1=X(b);if(x1-x0<22)continue;
+    /* centred on its night if it can be, otherwise slid along it, and left off a night with no clear spot */
+    let mx=null;const lo=x0+9,hi=x1-9,mid=(x0+x1)/2;
+    for(let st=0;st<=hi-lo&&mx==null;st+=4)for(const c0 of st?[mid-st,mid+st]:[mid])
+      if(c0>=lo&&c0<=hi&&!(markBox&&c0+7>markBox[0]&&c0-7<markBox[1])){mx=c0;break}
+    if(mx==null)continue;
+    nb+=`<g transform="translate(${mx.toFixed(1)},11)" fill="${ink.faint}" opacity=".85"><path d="M 4.6 0 a 4.6 4.6 0 1 1-4.6-4.6 A 3.6 3.6 0 0 0 4.6 0 Z"/></g>`;
+  }
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  svg.innerHTML=`<defs>${defs}<linearGradient id="stormNight" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="${dark?"#000":ink.ink}" stop-opacity="0"/><stop offset=".04" stop-color="${dark?"#000":ink.ink}" stop-opacity="${dark?.26:.055}"/>
+      <stop offset=".96" stop-color="${dark?"#000":ink.ink}" stop-opacity="${dark?.26:.055}"/><stop offset="1" stop-color="${dark?"#000":ink.ink}" stop-opacity="0"/></linearGradient></defs>
+    ${nb}${body}${mark}<g class="xp-cursor"></g>${labels}`;
+  /* the hours under it, the hourly chart's quiet axis: now, then each day at its noon */
+  const days=[`<span class="mark" style="left:${(X(now)/W*100).toFixed(3)}%">NOW</span>`];
+  for(let t=new Date(T.t0).setHours(12,0,0,0)+864e5;t<T.t1;t+=864e5){
+    const n=new Date(t);n.setHours(12,0,0,0);
+    if(X(n.getTime())-X(now)<40||X(n.getTime())>W-pad)continue;
+    days.push(`<span style="left:${(X(n.getTime())/W*100).toFixed(3)}%">${n.toLocaleDateString("en-US",{weekday:"short"}).toUpperCase()}</span>`);
+  }
+  document.getElementById("stormDays").innerHTML=days.join("");
+  /* under the labels, the card's own words: the warnings it stands on, what to do in the Weather
+     Service's words, and each source with its own time. Each part keeps its own words together and its
+     dot goes with it (stormDots), so a 320 phone breaks between them and never ends a line on a lone dot:
+     "Weather Service 10:55 am ·" / "advisory 57 10:44 am" was the sources line at 320 and 330 */
+  const warns=stormWarns(model),act=stormSay(model.instruction,Date.parse(model.instructionAt||"")+shift,now),stamps=stormStamps(model,nowD,shift);
+  const put=(id,html)=>{const el=document.getElementById(id);el.innerHTML=html;el.hidden=!html};
+  put("stormWarns",warns?stormDots(warns.split(" · ")):"");put("stormSay",act?esc(act):"");put("stormAsOf",stormDots(stamps));
+  /* said: the whole picture in one go, the way the pill says one stop */
+  const at=l=>only(l)?"at the beach ":"";
+  const sayL=T.lanes.map(l=>`${l.name}${l.peak?", "+at(l)+l.peak:""}${l.beach?", at the beach "+l.beach:""}: ${l.segs.slice().reverse().map(g=>g.word+(g.fromSaid?" from "+g.fromSaid:"")+(g.untilSaid?" until "+g.untilSaid:g.ends?" until "+xpSaidAt(g.ends,now).replace(/^at /,""):g.open?", no end given":"")).join(", ")}${l.marks.length?`, high tides at ${l.marks.map(m=>xpSpoken(new Date(m.t))).join(" and ")}`:""}`);
+  const rest=[...sayL,...T.also.map(a=>`${a.name}, ${at(a)}${a.peak}${a.beach?", at the beach "+a.beach:""}, no hours given`),T.closest?`Closest ${xpSaidAt(T.closest.t,now)}, ${T.closest.miles} miles ${dirLong(Math.max(0,STORM_DIRS.indexOf(T.closest.dir))*22.5)}`:""];
+  const strong=s?(s.category?`, category ${s.category}`:s.mph!=null?`, ${s.mph} miles an hour`:"")+(s.now?`, now ${s.now.miles} miles ${dirLong(Math.max(0,STORM_DIRS.indexOf(s.now.dir))*22.5)}`:""):"";
+  if(STORM_FIT)STORM_FIT.rest=rest;
+  svg.setAttribute("aria-label",[tEl.textContent.replace(/[.!?]+$/,"")+strong,...rest].filter(Boolean).join(". ")+".");
+  /* every hour from now, and the moments it names */
+  const named2=[now,T.closest?.t,...T.lanes.flatMap(l=>l.marks.map(m=>m.t))].filter(Number.isFinite);
+  const h0=new Date(T.t0).setMinutes(0,0,0);
+  const stops=[...new Set([...Array.from({length:Math.floor((T.t1-h0)/36e5)+1},(_,i)=>h0+i*36e5).filter(t=>t>=now&&t<=T.t1&&!named2.some(k=>Math.abs(k-t)<=5*6e4)),...named2])].sort((a,b)=>a-b);
+  const idx=t=>stops.indexOf(t);
+  if(blank){xpPublish("storm",null);return}
+  /* no ring and nothing standing over a stop, so the pill sits at the chart's top and never climbs into
+     the title */
+  xpPublish("storm",{svg,W,x:stops.map(X),y:stops.map(()=>[]),t:stops,band:[top-6,H-2],start:0,
+    marks:[0,...named2.map(idx)].filter(i=>i>=0),snap:named2.map(idx).filter(i=>i>0),noRing:[],read:i=>readStorm(T,stops[i],now)});
+}
+/* The hurricane centers' advisories, read in their own lane after the paint so the forecast never
+   waits on them, at both places. Each storm is its newest public advisory that reads (a bin is marked
+   seen only once one has), with its newest forecast advisory beside it */
 async function fetchStorms(){
   try{
-    const lj=await fetchJSON("https://api.weather.gov/products/types/TCP",4500);
-    const cutoff=Date.now()-9*3.6e6;
-    const items=(lj["@graph"]||[]).filter(p=>
-      new Date(p.issuanceTime).getTime()>cutoff&&String(p.wmoCollectiveId||"").startsWith("WTNT")
-    ).slice(0,10);
-    const products=await Promise.allSettled(items.map(it=>
-      fetchJSON("https://api.weather.gov/products/"+it.id,3500)
-    ));
+    const since=Date.now()-STORM_HOURS*36e5;
+    const recent=(lj,pre)=>(lj?.["@graph"]||[]).filter(p=>Date.parse(p.issuanceTime)>since&&String(p.wmoCollectiveId||"").startsWith(pre))
+      .sort((a,b)=>Date.parse(b.issuanceTime)-Date.parse(a.issuanceTime));
+    const [tl,ml]=await Promise.all([fetchJSON("https://api.weather.gov/products/types/TCP",4500),
+      fetchJSON("https://api.weather.gov/products/types/TCM",4500).catch(()=>null)]);
+    const get=items=>Promise.allSettled(items.map(it=>fetchJSON("https://api.weather.gov/products/"+it.id,3500).then(p=>({it,p}))));
     const seen={},out=[];
-    for(const result of products){
-      if(result.status!=="fulfilled")continue;
-      const t=result.value.productText||"";
-      const bin=(t.match(/TCPAT(\d)/)||[])[1];
-      if(!bin||seen[bin])continue;
-      seen[bin]=1;
-      const m=t.match(/(Hurricane|Tropical Storm|Tropical Depression|Post-Tropical Cyclone|Subtropical Storm|Subtropical Depression|Potential Tropical Cyclone) ([A-Za-z][A-Za-z\-]*)(?: Intermediate)? Advisory Number (\w+)/);
-      const loc=t.match(/LOCATION\.\.\.([\d.]+)N\s+([\d.]+)W/);
-      const wind=t.match(/MAXIMUM SUSTAINED WINDS\.\.\.(\d+) MPH/);
-      const mov=t.match(/PRESENT MOVEMENT\.\.\.[A-Z]+ OR (\d+) DEGREES AT (\d+) MPH/);
-      const pres=t.match(/MINIMUM CENTRAL PRESSURE\.\.\.(\d+) MB/);
-      if(!m||!loc)continue;
-      out.push({type:m[1],name:m[2],adv:m[3],lat:+loc[1],lon:-loc[2],
-        mph:wind?+wind[1]:null,dirDeg:mov?+mov[1]:null,spd:mov?+mov[2]:null,mb:pres?+pres[1]:null});
+    for(const r of await get(recent(tl,"WTNT3").slice(0,10))){
+      if(r.status!=="fulfilled")continue;
+      const s=tcpRead(r.value.p.productText,r.value.it.issuanceTime);
+      if(!s||seen[s.bin])continue;
+      seen[s.bin]=1;out.push(s);
+    }
+    const want=[];
+    for(const it of recent(ml,"WTNT2"))if(out.some(s=>"WTNT2"+s.bin.slice(2)===it.wmoCollectiveId)&&!want.some(w=>w.wmoCollectiveId===it.wmoCollectiveId))want.push(it);
+    for(const r of await get(want)){
+      if(r.status!=="fulfilled")continue;
+      const m=tcmRead(r.value.p.productText,r.value.it.issuanceTime),s=m&&out.find(x=>x.atcf&&x.atcf===m.atcf);
+      if(s&&!s.tcm)s.tcm=m;
     }
     return out;
   }catch(e){return null}
+}
+/* and at the coast the beach zone, for its tropical watches and warnings alone: its surf, rip current
+   and beach flooding products stay off Moss Bridge Ct's strip. The beach's answer is also kept on its
+   own (`lane.beach`), because a first open looks at it before it waits on the advisories (stormWaits) */
+function stormLane(L,alerts=Promise.resolve(null)){
+  const beach=L.beach?fetchJSON(`https://api.weather.gov/alerts/active?zone=${L.beach}`,6000)
+      .then(aj=>(aj.features||[]).map(alertRow).filter(a=>alertLive(a)&&isTropical(a))).catch(()=>null):Promise.resolve(null);
+  /* and away from the coast the Weather Prediction Center's Winter Storm Severity Index at the point (F3,
+     wssiRead), its three days in one request, asked for only while a Winter Storm Warning stands there:
+     any other day it says nothing. A failed or empty answer is no reading. With no point list (its request
+     failed) nobody knows whether a warning stands, so there is no answer at all (undefined), and the last
+     reading is kept. A reading keeps when it was asked for (`at`) and the warnings it was asked for, each
+     with its hours (`for`, wsFor), because it is only ever the judge of that list's warnings (stormRead) */
+  const wssi=L.kind!=="coast"?Promise.resolve(alerts).then(al=>{if(!Array.isArray(al))return undefined;
+      if(!al.some(a=>stormLive(a,Date.now())&&vtecLive(a).some(v=>v.key==="WS.W")))return null;
+      const at=Date.now(),of=wsFor(al);
+      return fetchJSON(wssiUrl(L),6000).then(j=>{const r=wssiRead(j);return r&&{...r,at,for:of}}).catch(()=>null)},()=>undefined):Promise.resolve(null);
+  const lane=Promise.all([fetchStorms(),beach,wssi]).then(([storms,beach,wssi])=>({storms,beach,wssi}));
+  lane.beach=beach;lane.wssi=wssi;
+  return lane;
+}
+/* Whether a first open should wait for the lane at all: only when a rule could raise the card or the
+   line, which every one of them needs an alert at the place for. At the farm that is the point's own
+   alerts; at the coast the point's or the beach zone's. With none, the advisories cannot change the
+   page, and a slow api.weather.gov held the first paint for STORM_WAIT for nothing. Pure */
+function stormWaits(L,alerts,beach,now=Date.now()){
+  return(alerts||[]).some(a=>stormLive(a,now))||L?.kind==="coast"&&(beach||[]).some(a=>stormLive(a,now));
 }
 
 /* ── tide ───────────────────────────────────────────── */
@@ -5953,8 +7263,11 @@ function farmCard(L,h,c,dy,warning,storm,now,told){
   const live=cov.now?+c.weather_code:NaN;
   /* What the headline has already named is not said again: thunder and wind at that very hour,
      rain, freezing rain and snow at that hour or earlier inside the hours this card speaks for,
-     so tonight's 2 a.m. snow is not tomorrow's 10 a.m. snow. */
-  const named=(kind,i)=>(told||[]).some(x=>x.kind===kind&&(kind==="Thunder"||kind==="Windy"?x.time===h.time[i]
+     so tonight's 2 a.m. snow is not tomorrow's 10 a.m. snow. What a storm's card or line says has no
+     hour (`time` is unset) and is said for every hour: Isaias's line gave the gusts, and the card
+     under it said "Too windy until about 5 p.m." as well */
+  const stormSaid=kind=>(told||[]).some(x=>x.kind===kind&&x.time==null);
+  const named=(kind,i)=>stormSaid(kind)||(told||[]).some(x=>x.kind===kind&&x.time!=null&&(kind==="Thunder"||kind==="Windy"?x.time===h.time[i]
     :x.time<=h.time[i]&&x.time>=h.time[hrs[0]]&&x.time.slice(0,10)===h.time[i].slice(0,10)));
   /* A sentence is what is coming, when the headline has not said it, then what to do. What is
      coming carries its hour and its day. When it goes unsaid, what to do carries the day, so a
@@ -5980,7 +7293,7 @@ function farmCard(L,h,c,dy,warning,storm,now,told){
   if(galeI===0){
     let T=gs.length;while(T>0&&known(gs[T-1])&&gs[T-1]<30)T--;
     const lays=k<0&&gs.length-T>=2?" until about "+spokenAt(h.time[hrs[T]]):"";
-    return say([lays||!named("Windy",hrs[0])?`Too windy${lays}${tom}`:"",thunder],CHORES,"no",true);
+    return say([!stormSaid("Windy")&&(lays||!named("Windy",hrs[0]))?`Too windy${lays}${tom}`:"",thunder],CHORES,"no",true);
   }
   /* Thunder still to come. A gale before it is said with its hour, and stay in. Thunder within the
      hour, or behind hours whose gusts the run does not carry, is stay in too. Rain before it is
@@ -6036,9 +7349,8 @@ function dayStory(c,dy,h,now){
      hour's code is the observed one, the way the readout's now hour is (liveHour), so the headline
      never calls a cloudy now sunny off the top-of-hour forecast */
   const codeAt=i=>fresh&&i===nowI&&has(code)?+code:has(h.code?.[i])?+h.code[i]:NaN;
-  if(fresh&&[95,96,99].includes(+code))
-    return{html:LOC.boatSeason&&inSeason(today,LOC.boatSeason)?"<em>Storms overhead.</em> Stay off the water."
-                              :"<em>Storms overhead.</em> Head inside.",told:[]};
+  const overhead=stormsOverhead(c,nd);
+  if(overhead)return{html:overhead,told:[]};
 
   const di=(dy.time||[]).indexOf(today),hi=dy.temperature_2m_max?.[di],high=has(hi)?Math.round(+hi):null;
   /* In the afternoon the high may already be behind us. Read the warmth still to come. */
@@ -6169,6 +7481,14 @@ function dayStory(c,dy,h,now){
   else if(feels!=null&&feels<=25)second+=(second?" ":"")+"Bundle up.";
   return{html:[first,second].filter(Boolean).join(" "),told};
 }
+/* a thunderstorm in the current reading, said in the headline's first words: on the water in the boat
+   season, off it; anywhere else, inside. A cached reading belongs to its own hour, so only a fresh one */
+function stormsOverhead(c,now){
+  const nd=new Date(now||c.time),fresh=new Date(c.time).setMinutes(0,0,0)===new Date(nd).setMinutes(0,0,0);
+  if(!fresh||![95,96,99].includes(+c.weather_code))return null;
+  const p=v=>String(v).padStart(2,"0"),today=nd.getFullYear()+"-"+p(nd.getMonth()+1)+"-"+p(nd.getDate());
+  return LOC.boatSeason&&inSeason(today,LOC.boatSeason)?"<em>Storms overhead.</em> Stay off the water.":"<em>Storms overhead.</em> Head inside.";
+}
 /* Both places get the sun's actual hours, without reminders about what to put on.
    Only the hours still to come count. No hourly reading means no invented schedule. */
 function ridgeSunLine(c,dy,h,now){
@@ -6209,8 +7529,11 @@ function comfortAdvice(c,h){
 }
 /* Tonight uses only the hours between sunset and sunrise, or those left before morning.
    Temperature gaps cannot erase weather, and a day's rain odds cannot stand in for a night.
-   A low needs the whole remaining night: the minimum of half a run is not tonight's low. */
-function tonightBrief(dy,h,now){
+   A low needs the whole remaining night: the minimum of half a run is not tonight's low.
+   Under a storm (`told`, what the storm card says) the night's rain, snow or freezing rain is the
+   card's and is not said again, nothing is called a warm night, and nothing is green: under a
+   hurricane it read "Rain likely tonight, with a low of 71°." */
+function tonightBrief(dy,h,now,told=null){
   const rise=new Date(dy.sunrise?.[0]),set=new Date(dy.sunset?.[0]);
   const before=now<rise,when=before?"before morning":"tonight";
   const start=before||now>=set?new Date(now):new Date(set);
@@ -6234,18 +7557,23 @@ function tonightBrief(dy,h,now){
   const thunder=hrs.filter(i=>[95,96,99].includes(+h.code?.[i]));
   const rain=hrs.filter(i=>isWet(+h.code?.[i]));
   const likely=is=>is.some(i=>known(h.pop?.[i])&&+h.pop[i]>=60);
-  let weather=ice.length?`Freezing rain ${likely(ice)?"likely":"possible"}`:
-    snow.length?`Snow ${likely(snow)?"likely":"possible"}`:
+  const card=k=>!!told&&told.some(t=>t.kind===k);
+  let weather=ice.length&&!card("Freezing rain")?`Freezing rain ${likely(ice)?"likely":"possible"}`:
+    snow.length&&!card("Snow")?`Snow ${likely(snow)?"likely":"possible"}`:
     thunder.length?`Thunder ${likely(thunder)?"likely":"possible"}`:
+    card("Rain")||ice.length||snow.length?"":
     pop>=60?"Rain likely":pop>=35?"A chance of rain":rain.length?"Rain possible":"";
-  if(thunder.length&&(ice.length||snow.length))weather+=" and thunder possible";
+  if(thunder.length&&(ice.length&&!card("Freezing rain")||snow.length&&!card("Snow")))weather+=" and thunder possible";
   const lowText=low==null?"Low unavailable":`a low of ${low}°`;
   let text=weather?`${weather} ${when}${low==null?". Low unavailable.":`, with ${lowText}.`}`:
     low==null?`Low unavailable ${when}.`:
-    low>=74?(before?`Staying warm until morning, with ${lowText}.`:`A warm night, with ${lowText}.`):
+    low>=74&&!told?(before?`Staying warm until morning, with ${lowText}.`:`A warm night, with ${lowText}.`):
     `Down to ${low}° ${when}.`;
-  if(!weather&&!oddsKnown)text+=" Rain odds unavailable.";
-  return{text,cls:weather||!oddsKnown||low==null?"caution":"go"};
+  /* missing odds are unavailable, not dry, unless the card has said the rain: a High Wind Warning says
+     nothing about it */
+  const unknown=!weather&&!oddsKnown&&!card("Rain");
+  if(unknown)text+=" Rain odds unavailable.";
+  return{text,cls:told?(weather||low==null||unknown?"caution":""):weather||!oddsKnown||low==null?"caution":"go"};
 }
 function dailyBrief(dy,i){
   const known=v=>v!=null&&v!==""&&Number.isFinite(+v);
@@ -6800,6 +8128,7 @@ function revealApply(k){
 }
 function revealFinish(k){
   const R=REVEAL[k];
+  if(!R)return;                                     /* the storm card has no entrance */
   clearTimeout(R.end);
   if(R.state!=="done"){
     R.state="done";
@@ -7201,11 +8530,21 @@ function render(d,live,savedAt=0){
   /* fixed before the first yield: a resize while the picture is still landing retries
      this reading, and a boundary timer from the previous paint stands down */
   savedAt=savedAt||(LAST?.d===d?LAST.savedAt:Date.now());
-  LAST={d,live,savedAt};
+  LAST={d,live,savedAt,loc:LOC.id};
   sceneResume();
   const c=d.current,dy=d.daily,m=d.marine,{full,h}=renderHours(d.hourly,c);
-  const alerts=activeAlerts(d.alerts),warning=outdoorWarning(alerts);
+  const alerts=activeAlerts(d.alerts);
   syncClock();
+  /* the storm card's model, read first: under a storm the headline is the storm's, the cards below say
+     only what to do (the storm's lead warning stands for a warning there, so the farm says "Chores can
+     wait." and the boat "Stay off the water."), and what the card says is handed down as `told` */
+  const sm=stormOf(LOC,d,Date.now(),savedAt),stormDay=sm.tier==="storm";
+  /* the warnings holding the card, kept in memory and with the reading, which goes into the cache. A paint
+     with no fresh point list (its request failed, and the list is the last good one carried, or none) knows
+     nothing new of the house's warnings, so it never writes them: the reading carries the last ones on
+     (refresh) */
+  if(Array.isArray(d.alerts)&&!d.seen?.carried){STORM_HELD[LOC.id]=sm.held;d.held=sm.held}
+  const warning=outdoorWarning(alerts)||(stormDay?stormLead(sm):null);
   const now=wallNow(), sunrise=new Date(dy.sunrise[0]), sunset=new Date(dy.sunset[0]);
   const sp=sunPos(now), altDeg=sp.alt*180/Math.PI;
   const wet=isWet(c.weather_code);
@@ -7259,7 +8598,11 @@ function render(d,live,savedAt=0){
 
   document.getElementById("themeColor").setAttribute("content",stops[0]);
 
-  const dayRead=dayStory(c,dy,full,now);
+  /* under a storm the headline is the storm's; a named storm's line leaves the headline alone, and the
+     gusts it gives are the line's, so the farm's card does not say the wind too. A thunderstorm overhead
+     under the storm still leads it ("Storms overhead. Head inside."), because the cards under it leave a
+     storm overhead to the headline and the one thing to do now was said nowhere */
+  const dayRead=stormDay?stormStory(sm,now,TZSHIFT,stormsOverhead(c,now)):((r)=>sm.tier&&stormGust(sm)!=null?{...r,told:[...r.told,{kind:"Windy"}]}:r)(dayStory(c,dy,full,now));
   const farm=LOC.kind==="farm"?farmCard(LOC,h,c,dy,warning,storm,now,dayRead.told):null;
   const allowedFishWins=LOC.fish&&farm?.fish?fishWindows(h,now):[];
   renderSkyFx(altDeg,c.cloud_cover,c.wind_direction_10m,wet,storm,c.wind_speed_10m,c.weather_code);
@@ -7277,6 +8620,8 @@ function render(d,live,savedAt=0){
     water:cs.getPropertyValue("--water").trim(),wink:cs.getPropertyValue("--water-ink").trim(),paper:cs.getPropertyValue("--paper").trim(),
     wash:cs.getPropertyValue("--wash").trim(),marker:cs.getPropertyValue("--marker").trim()};
 
+  /* the header's words and the storm card under them change together, so the view is held across both */
+  const held=viewHold();
   document.getElementById("stamp").textContent=live?"live · "+clock12(new Date(c.time))+" "+LOC.tzLabel:cacheAgeText(savedAt||new Date(c.time).getTime());
   document.getElementById("refreshBtn").classList.toggle("cached",!live);
   document.getElementById("refreshBtn").classList.remove("unavailable");
@@ -7307,6 +8652,10 @@ function render(d,live,savedAt=0){
     :[vane(c.wind_direction_10m),`<span class="sr-only">Wind from the ${dirLong(c.wind_direction_10m)}, </span>${wNow}${gNow-wNow>=6?`, gusts ${gNow}`:""} mph`]);
   if(sunAdvice&&Number(c.uv_index)>=3)chipData.push([CI.uv,`uv ${Number(c.uv_index).toFixed(1)}`]);
   document.getElementById("chips").innerHTML=chipData.map(([ic,t])=>`<span class="chip">${ic}${t}</span>`).join("");
+  /* the storm card is the first thing under the sky, so it lands with the header, before the hours
+     under it are drawn: painted later it pushed them down after their pen had started */
+  paintStormCard(sm,d);
+  held();
 
   /* the charts' entrance waits for the live forecast, or for a moment when there is only the cache */
   if(live){REVEAL_READY=true;clearTimeout(REVEAL_WAIT);REVEAL_WAIT=0}
@@ -7552,9 +8901,10 @@ function render(d,live,savedAt=0){
     document.getElementById("tideNote").textContent=tide?waterNote(water,tide):[waterNote(water,null),"tide data unavailable"].filter(Boolean).join(" · ");
     document.getElementById("tideSvg").setAttribute("aria-label",tide?"Tide curve, next 27 hours"+(water&&water.level?". "+water.level:""):"Tide data unavailable");
   }else xpPublish("tide",null);
-  renderAlerts(alerts);
+  /* the strip, less what a storm card takes in, and the card's model, with the view held: the storm
+     statement leaving the strip when the card comes in is the header changing height */
+  keepView(()=>paintStorm(d,sm));
   renderNowcast(d.nowcast,c.weather_code,h);
-  renderStorms(d.storms);
 
   /* the note names the gold band, which the picture cannot do on its own; the bars and the
      headline already say whether it rains */
@@ -7587,7 +8937,8 @@ function render(d,live,savedAt=0){
   document.getElementById("sunTitle").textContent=comfort?"What to wear":"Sun";
   const ul=document.getElementById("uvLead");
   ul.textContent=sunAdvice?sunAdvice.text:"";
-  ul.className="lead "+(sunAdvice?sunAdvice.cls:"");
+  /* nothing green sits under a storm */
+  ul.className="lead "+(sunAdvice?stormDay&&sunAdvice.cls==="go"?"":sunAdvice.cls:"");
   const fin=v=>v!=null&&Number.isFinite(+v)?+v:null;
   /* The pin is the reading the header shows, cached or not. The peak still to come is searched
      from the hour now is in: a cache opened at 1:40 still starts at the 9a it was written in, and
@@ -7613,7 +8964,7 @@ function render(d,live,savedAt=0){
   if(N)renderYear(N,dy,css);else xpPublish("year",null);
 
   /* one connected sentence, from tonight's own hours */
-  const night=tonightBrief(dy,full,now);
+  const night=tonightBrief(dy,full,now,stormDay?dayRead.told:null);
   document.getElementById("eveLead").textContent=night.text;
   document.getElementById("eveLine").className="lead tonight-line "+night.cls;
   document.getElementById("moonTxt").innerHTML=moonPhaseIcon(scene.moon);
@@ -7660,7 +9011,9 @@ function starsClearOfType(){
     st.style.display=lines.some(r=>x>r.left-8&&x<r.right+8&&y>r.top-4&&y<r.bottom+4)?"none":"";
   }
 }
-document.fonts&&document.fonts.ready.then(()=>{starsClearOfType();paintCobweb();moonNoteFit()});
+document.fonts&&document.fonts.ready.then(()=>{starsClearOfType();paintCobweb();moonNoteFit();keepView(stormTitleFit)});
+/* and a face that lands later still (display=swap, and the service worker does not keep the fonts) refits the storm's title */
+document.fonts&&document.fonts.addEventListener&&document.fonts.addEventListener("loadingdone",()=>keepView(stormTitleFit));
 
 /* ── Halloween's cobweb, on the glass ───────────────────────────────────────────────────
    Josh, October 3 2026: "maybe cobwebs a corner of the app that breaks the fourth wall". So for the
@@ -7847,16 +9200,58 @@ async function fetchJSON(url,timeoutMs=7000){
   }finally{clearTimeout(timer)}
 }
 let REFRESH_ID=0;
+/* The storm lane (the advisories, and the coast's beach zone) starts with the forecast and runs
+   beside it, so the forecast never waits on it. When it is in by the time the forecast lands it joins
+   that paint and its cache, and the card is part of the first frame. A first open (nothing on screen
+   yet but the shell) waits for it a moment longer, STORM_WAIT, because a card arriving after the
+   hours would push them down. One that lands later still goes into this reading and its cache, which
+   keeps its own age, and paints the page again only when it changes what the page says: the card then
+   comes in with the view held (keepView), so nothing the reader is looking at moves */
+const STORM_WAIT=3000;
+/* The warnings holding the storm card (`held`) and the farm's last WSSI reading, read straight out of
+   this place's cache entry whatever its age. readCache refuses a forecast past its six hours or from
+   another day, and with it went the latch: an overnight snowstorm's card, raised at 5:30 pm, was gone on a
+   cold open at 7 the next morning under the same warning with the index at Moderate. Neither raises
+   anything on its own: a held event applies only while that same event is live in the alert list (and is
+   this season's), and a reading only on a day a live warning is in effect, and only for a warning it was
+   asked for: yesterday's reading only keeps what is held (stormRead) */
+function readLatch(id){
+  try{const c=JSON.parse(localStorage.getItem(cacheKey(id))||"null"),d=c?.data;
+    return{held:d?.held&&typeof d.held==="object"?d.held:null,wssi:d?.wssi||null}}catch(e){return{held:null,wssi:null}}
+}
+async function stormRun(L,request,lane){
+  try{
+    const got=await lane;
+    await PAINT;
+    if(L!==LOC||request!==REFRESH_ID||!LAST)return;
+    const d=LAST.d,was=JSON.stringify(stormOf(L,d,Date.now(),LAST.savedAt));
+    if(got.storms)d.storms=got.storms;
+    if(got.beach){d.beach=got.beach;d.seen={...d.seen,beach:Date.now()}}
+    /* no answer at all (no point list to ask on) keeps the last reading */
+    if(got.wssi!==undefined)d.wssi=got.wssi;
+    const m=stormOf(L,d,Date.now(),LAST.savedAt);if(Array.isArray(d.alerts)&&!d.seen?.carried)d.held=m.held;
+    try{localStorage.setItem(cacheKey(L.id),JSON.stringify({savedAt:LAST.savedAt,data:d}))}catch(e){}
+    if(JSON.stringify(m)!==was)render(d,LAST.live,LAST.savedAt);
+  }catch(e){}
+}
 async function refresh(){
   const request=++REFRESH_ID,L=LOC,btn=document.getElementById("refreshBtn");
   btn.classList.add("spin");
   btn.setAttribute("aria-busy","true");
   btn.setAttribute("aria-label","Refreshing weather");
+  /* the storm lane, in its own lane beside the forecast, and the beach's answer kept on its own the
+     moment it is in (beachIn), for every paint, the first one too: a first open whose advisories were
+     slow painted without the beach's tropical storm warning it already had. The farm's WSSI is asked for
+     once the point's alerts say a Winter Storm Warning stands, and kept the same way (wssiIn) */
+  const alertsP=fetchJSON(`https://api.weather.gov/alerts/active?point=${L.lat},${L.lon}`,6000).then(aj=>(aj.features||[]).map(alertRow).filter(alertLive)).catch(()=>null);
+  /* when the house's list came in, before the lane asks the index on it (the reading's `at`) */
+  let pointAt=null;alertsP.then(a=>{if(a)pointAt=Date.now()});
+  const lane=stormLane(L,alertsP);let landed=null,beachIn,beachAt=null,wssiIn;
+  lane.then(g=>{landed=g},()=>{});lane.beach.then(b=>{beachIn=b;beachAt=Date.now()},()=>{});lane.wssi.then(w=>{wssiIn=w},()=>{});
   try{
     const yest=new Date(Date.now()-864e5);
     const bd=yest.toLocaleDateString("en-CA",{timeZone:L.tz}).replace(/-/g,"");
-    const stormsP=L.tropics?fetchStorms():Promise.resolve(null);
-    const [wj,marine,tides,water,alerts,storms]=await Promise.all([
+    const [wj,marine,tides,water,alerts]=await Promise.all([
       fetchJSON(`https://api.open-meteo.com/v1/forecast?latitude=${L.lat}&longitude=${L.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,wind_speed_10m_max,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=${encodeURIComponent(L.tz)}&forecast_days=8&minutely_15=precipitation&forecast_minutely_15=12`,10000),
       /* the seas every day of the year, hour by hour for two days, because after dark the boat's
          sentence speaks for tomorrow */
@@ -7877,8 +9272,7 @@ async function refresh(){
         .then(([wt,wl,pr,buoy])=>{const rows=a=>Array.isArray(a)?a.map(r=>({t:r.t,v:r.v})):null;
           const temp=rows(wt?.data)?.[0]||null,level=rows(wl?.data);
           return temp||level||buoy?{temp,level,pred:rows(pr?.predictions),buoy}:null}):Promise.resolve(null),
-      fetchJSON(`https://api.weather.gov/alerts/active?point=${L.lat},${L.lon}`,6000).then(aj=>(aj.features||[]).map(f=>({event:f.properties.event,severity:f.properties.severity,ends:f.properties.ends,expires:f.properties.expires,desc:f.properties.description||"",inst:f.properties.instruction||""}))).catch(()=>null),
-      stormsP
+      alertsP
     ]);
     const nowcast=wj.minutely_15||null;
     const hi=wj.hourly.time.findIndex(t=>t>=wj.current.time.slice(0,13)+":00");
@@ -7887,14 +9281,54 @@ async function refresh(){
       feels:wj.hourly.apparent_temperature?.slice(i0),
       pop:wj.hourly.precipitation_probability.slice(i0),code:wj.hourly.weather_code.slice(i0),wind:wj.hourly.wind_speed_10m.slice(i0),
       gust:wj.hourly.wind_gusts_10m.slice(i0),uv:wj.hourly.uv_index.slice(i0)};
-    const data={current:wj.current,daily:wj.daily,hourly:s,marine,tides,water,alerts,storms,nowcast};
+    /* the storms from their lane when it is in, and a first open waits a moment for it; until it
+       lands, the last ones this place had */
+    let wait=null;const waited=()=>wait||(wait=new Promise(r=>setTimeout(r,STORM_WAIT)));
+    if(!landed&&!LAST){
+      /* only when the card could come up: at the coast the beach's answer is looked at first, and the
+         advisories are waited on only when the point or the beach has an alert. The wait is STORM_WAIT
+         in all */
+      if(L.kind==="coast"&&!stormWaits(L,alerts,null))await Promise.race([lane.beach,waited()]);
+      if(stormWaits(L,alerts,beachIn))await Promise.race([lane,waited()]);
+    }
+    /* the last reading this place had: the cache when it can vouch for it, else the page's own (LAST). The
+       strip's timer refreshes at a warning's expiry, and Debby's beach warning ran out at 7 pm, 7h20m after
+       the 11:40 refresh: the cache had aged out, and the card came down until the advisories landed */
+    const cache=readCache(L.id),own=LAST&&LAST.loc===L.id?{data:LAST.d,savedAt:LAST.savedAt}:null,kept=(cache||own)?.data,keptAt=(cache||own)?.savedAt??null;
+    /* and the latch and the last index, whatever the cache's age (readLatch) */
+    const latch=readLatch(L.id);
+    /* A cached beach whose tropical warning has reached its expiry is stale, not over: the expiry is only
+       when the next advisory is due, and the Weather Service has nearly always renewed it by then. Painted
+       as it was, the card came down at every advisory's expiry and came back when the beach answered, so
+       the beach's own answer is waited for first, up to STORM_WAIT */
+    if(beachIn===undefined&&L.kind==="coast"&&(kept?.beach||[]).some(a=>isTropical(a)&&!stormLive(a,Date.now())))await Promise.race([lane.beach,waited()]);
+    const storms=landed?.storms??kept?.storms??null,beach=beachIn??landed?.beach??kept?.beach??null;
+    /* A house's list whose request failed is the last good one this place had (the cache's or the page's),
+       less what has ended by now, and every paint reads it against now as it reads any list, so an alert
+       whose end passes during the outage still comes down. It is marked as carried, not freshly seen
+       (`seen.carried`, with the time it was fetched): a single timed-out request under storm load took the
+       card, the strip and the storm's headline down for that paint, and a reopen inside six hours showed no
+       card, though the warning stood. A carried list never writes the latch and never raises F3 anew
+       (stormRead, render, stormRun) */
+    const carry=!alerts&&Array.isArray(kept?.alerts)?kept.alerts.filter(a=>activeAlerts([a]).length>0
+      ||isTropical(a)&&!a.ends&&Date.parse(a.expires||"")+STORM_STALE>Date.now()):null;
+    /* when each list was fetched: the house's when it came in, a beach that has not answered is the last
+       one's, which still stands until it does (stormRead), and the farm's WSSI is the lane's answer once it
+       is in, the last reading until then, and the last reading too when the point's list failed (no answer
+       at all). A reading carried from an earlier list only keeps a warning already held, and the lane's own
+       raises the card when it lands (stormRun). The warnings holding the card are the last ones: a paint
+       with no fresh point list never rewrites them (render) */
+    const seen={point:alerts?pointAt??Date.now():carry?kept.seen?.point??keptAt:null,beach:beachIn!=null?beachAt:kept?.seen?.beach??keptAt,...(carry?{carried:true}:{})};
+    const wssi=wssiIn!==undefined?wssiIn:kept?.wssi??latch.wssi??null;
+    const data={current:wj.current,daily:wj.daily,hourly:s,marine,tides,water,alerts:alerts??carry,storms,nowcast,beach,wssi,seen,held:kept?.held??latch.held??null};
     if(L!==LOC||request!==REFRESH_ID)return; /* a newer refresh or location change won */
     render(data,true);
     writeCache(L.id,data);
+    if(!landed)stormRun(L,request,lane);
   }catch(e){
     if(L!==LOC||request!==REFRESH_ID)return;
     const cached=readCache(L.id);
-    if(cached)render(cached.data,false,cached.savedAt);
+    if(cached){if(beachIn){cached.data.beach=beachIn;cached.data.seen={...cached.data.seen,beach:beachAt}}render(cached.data,false,cached.savedAt);stormRun(L,request,lane)}
     else{
       paintLoadingState();
       btn.classList.add("unavailable");
@@ -7969,7 +9403,7 @@ function paintLoadingState(){
   document.getElementById("nowcast").className="nowcast";document.getElementById("ncBars").innerHTML="";
   /* the strip goes with the reading it belonged to, the way an ended alert takes it down */
   renderAlerts(null);
-  document.getElementById("stormSection").style.display="none";
+  paintStormDebug(null);paintStormCard(null);
   /* a place with no reading yet shows both cards as skeletons, not the last place's absence */
   document.getElementById("sunCard").hidden=false;document.getElementById("eveCard").classList.remove("wide");
   /* the bar is drawn only from a reading, so its scale goes with it: the words floated under an
@@ -7995,7 +9429,7 @@ function clearPlaceReadings(){
   weekBrief(null);xpReset();
   document.getElementById("nowcast").className="nowcast";document.getElementById("ncBars").innerHTML="";
   renderAlerts(null);
-  document.getElementById("stormSection").style.display="none";
+  paintStormDebug(null);paintStormCard(null);
   document.getElementById("uvDetails").style.display="none";
 }
 function setLoc(id){
@@ -8017,6 +9451,7 @@ function setLoc(id){
 paintAddr();
 paintLocationShell();
 /* one explorer per chart, in page order */
+xpSetup("storm");
 xpSetup("hourly",{view:".hourly-scroll"});
 xpSetup("week",{pick:true,release:weekPick});
 xpSetup("tide");

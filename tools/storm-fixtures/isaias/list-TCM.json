@@ -1,0 +1,125 @@
+{
+ "@context": {
+  "@version": "1.1",
+  "@vocab": "https://api.weather.gov/ontology#"
+ },
+ "@graph": [
+  {
+   "@id": "https://api.weather.gov/products/a33501d3-3816-47fe-9012-ab657be79f6f",
+   "id": "a33501d3-3816-47fe-9012-ab657be79f6f",
+   "wmoCollectiveId": "WTNT24",
+   "issuingOffice": "KWNH",
+   "issuanceTime": "2026-10-10T15:34:00+00:00",
+   "productCode": "TCM",
+   "productName": "Marine/Aviation Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/5d06e402-5c66-4af3-b926-0b6f49f3bd8b",
+   "id": "5d06e402-5c66-4af3-b926-0b6f49f3bd8b",
+   "wmoCollectiveId": "WTNT24",
+   "issuingOffice": "KWNH",
+   "issuanceTime": "2026-10-10T14:57:00+00:00",
+   "productCode": "TCM",
+   "productName": "Marine/Aviation Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/c7d15095-8b84-4cfe-9958-0c1d63fecc1f",
+   "id": "c7d15095-8b84-4cfe-9958-0c1d63fecc1f",
+   "wmoCollectiveId": "WTPZ25",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T14:53:00+00:00",
+   "productCode": "TCM",
+   "productName": "Marine/Aviation Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/4ba3514d-92fa-46da-8fb3-68dab291e525",
+   "id": "4ba3514d-92fa-46da-8fb3-68dab291e525",
+   "wmoCollectiveId": "WTPZ23",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T14:52:00+00:00",
+   "productCode": "TCM",
+   "productName": "Marine/Aviation Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/9abe5ac6-61f4-40d9-91aa-d0205d07d6b0",
+   "id": "9abe5ac6-61f4-40d9-91aa-d0205d07d6b0",
+   "wmoCollectiveId": "WTPZ23",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T08:51:00+00:00",
+   "productCode": "TCM",
+   "productName": "Marine/Aviation Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/0aaaf586-5ba5-416b-9761-a8d4a2529170",
+   "id": "0aaaf586-5ba5-416b-9761-a8d4a2529170",
+   "wmoCollectiveId": "WTNT24",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T08:43:00+00:00",
+   "productCode": "TCM",
+   "productName": "Marine/Aviation Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/f91911fe-6938-47c1-bff9-5ff622eff928",
+   "id": "f91911fe-6938-47c1-bff9-5ff622eff928",
+   "wmoCollectiveId": "WTPZ25",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T08:35:00+00:00",
+   "productCode": "TCM",
+   "productName": "Marine/Aviation Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/ddea58fd-1c2c-44db-8078-7d1e954657e4",
+   "id": "ddea58fd-1c2c-44db-8078-7d1e954657e4",
+   "wmoCollectiveId": "WTPZ23",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T02:45:00+00:00",
+   "productCode": "TCM",
+   "productName": "Marine/Aviation Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/820a349a-ddea-4aaf-acae-980c0b878b43",
+   "id": "820a349a-ddea-4aaf-acae-980c0b878b43",
+   "wmoCollectiveId": "WTNT24",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T02:45:00+00:00",
+   "productCode": "TCM",
+   "productName": "Marine/Aviation Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/846e0f2b-5f07-4276-957e-b1afd72a35c4",
+   "id": "846e0f2b-5f07-4276-957e-b1afd72a35c4",
+   "wmoCollectiveId": "WTPZ25",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T02:36:00+00:00",
+   "productCode": "TCM",
+   "productName": "Marine/Aviation Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/8ee79a05-e4d6-4fc1-a86d-25b54d4bc61c",
+   "id": "8ee79a05-e4d6-4fc1-a86d-25b54d4bc61c",
+   "wmoCollectiveId": "WTNT24",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-09T20:51:00+00:00",
+   "productCode": "TCM",
+   "productName": "Marine/Aviation Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/e9f76243-2a3e-4f33-9a51-92e5c116aa37",
+   "id": "e9f76243-2a3e-4f33-9a51-92e5c116aa37",
+   "wmoCollectiveId": "WTPZ25",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-09T20:45:00+00:00",
+   "productCode": "TCM",
+   "productName": "Marine/Aviation Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/17cc698a-cc1f-4efc-8f0e-939df228e4ce",
+   "id": "17cc698a-cc1f-4efc-8f0e-939df228e4ce",
+   "wmoCollectiveId": "WTPZ23",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-09T20:43:00+00:00",
+   "productCode": "TCM",
+   "productName": "Marine/Aviation Tropical Cyclone Advisory"
+  }
+ ]
+}

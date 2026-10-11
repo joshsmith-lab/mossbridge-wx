@@ -1,0 +1,280 @@
+# ILM, Inland New Hanover (NCZ107): winter storm, blizzard and ice storm warnings, the 2017-18 winter, verbatim from Iowa State's AFOS archive (tools/storm-corpus.mjs)
+%% WSWILM 2018-01-02T20:20:00Z NCZ107
+WWUS42 KILM 022020
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+320 PM EST Tue Jan 2 2018
+
+NCZ087-096-099-105>110-SCZ024-032-033-031000-
+/O.UPG.KILM.WS.A.0001.180103T1100Z-180104T1100Z/
+/O.NEW.KILM.WS.W.0001.180103T1600Z-180104T1100Z/
+Robeson-Bladen-Columbus-Inland Pender-Coastal Pender-
+Inland New Hanover-Coastal New Hanover-Inland Brunswick-
+Coastal Brunswick-Dillon-Florence-Marion-
+Including the cities of Lumberton, Elizabethtown, Bladenboro, 
+Whiteville, Tabor City, Chadbourn, Lake Waccamaw, Burgaw, 
+Surf City, Wilmington, Masonboro, Myrtle Grove, Ogden, 
+Carolina Beach, Seagate, Boiling Spring Lakes, Leland, Shallotte,
+Oak Island, Long Beach, Southport, Sunset Beach, Dillon, 
+Florence, Marion, and Mullins
+320 PM EST Tue Jan 2 2018
+
+...WINTER STORM WARNING IN EFFECT FROM 11 AM WEDNESDAY TO 6 AM
+EST THURSDAY...
+
+* WHAT...Significant snow and ice are expected. Plan on difficult
+  travel conditions. Total snow accumulations of 2 to 3 inches 
+  and a light glaze of ice are expected.
+
+* WHERE...Portions of northeast South Carolina and southeast 
+  North Carolina.
+
+* WHEN...From 11 AM Wednesday to 6 AM EST Thursday.
+
+* ADDITIONAL DETAILS...Be prepared for significant reductions in 
+  visibility at times in snow.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of snow, sleet
+and ice are expected. This will make travel very hazardous or
+impossible. The latest road conditions for the state you are
+calling from can be obtained by calling 5 1 1.
+
+$$
+
+%% WSWILM 2018-01-03T02:45:00Z NCZ107
+WWUS42 KILM 030245
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+945 PM EST Tue Jan 2 2018
+
+NCZ087-096-099-105>110-SCZ024-032-033-031100-
+/O.CON.KILM.WS.W.0001.180103T1600Z-180104T1100Z/
+Robeson-Bladen-Columbus-Inland Pender-Coastal Pender-
+Inland New Hanover-Coastal New Hanover-Inland Brunswick-
+Coastal Brunswick-Dillon-Florence-Marion-
+Including the cities of Lumberton, Elizabethtown, Bladenboro, 
+Whiteville, Tabor City, Chadbourn, Lake Waccamaw, Burgaw, 
+Surf City, Wilmington, Masonboro, Myrtle Grove, Ogden, 
+Carolina Beach, Seagate, Boiling Spring Lakes, Leland, Shallotte,
+Oak Island, Long Beach, Southport, Sunset Beach, Dillon, 
+Florence, Marion, and Mullins
+945 PM EST Tue Jan 2 2018
+
+...WINTER STORM WARNING REMAINS IN EFFECT FROM 11 AM WEDNESDAY TO
+6 AM EST THURSDAY...
+
+* WHAT...Significant snow and ice are expected. Plan on difficult
+  travel conditions. Total snow accumulations of 2 to 4 inches 
+  and a light glaze of ice are expected.
+
+* WHERE...Portions of northeast South Carolina and southeast 
+  North Carolina.
+
+* WHEN...From 11 AM Wednesday to 6 AM EST Thursday.
+
+* ADDITIONAL DETAILS...Be prepared for significant reductions in 
+  visibility at times in snow.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of snow, sleet
+and ice are expected. This will make travel very hazardous or
+impossible. The latest road conditions for the state you are
+calling from can be obtained by calling 5 1 1.
+
+$$
+
+%% WSWILM 2018-01-03T08:27:00Z NCZ107
+WWUS42 KILM 030827
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+327 AM EST Wed Jan 3 2018
+
+NCZ087-096-099-105>110-SCZ024-032-033-032100-
+/O.CON.KILM.WS.W.0001.180103T1600Z-180104T1100Z/
+Robeson-Bladen-Columbus-Inland Pender-Coastal Pender-
+Inland New Hanover-Coastal New Hanover-Inland Brunswick-
+Coastal Brunswick-Dillon-Florence-Marion-
+Including the cities of Lumberton, Elizabethtown, Bladenboro, 
+Whiteville, Tabor City, Chadbourn, Lake Waccamaw, Burgaw, 
+Surf City, Wilmington, Masonboro, Myrtle Grove, Ogden, 
+Carolina Beach, Seagate, Boiling Spring Lakes, Leland, Shallotte,
+Oak Island, Long Beach, Southport, Sunset Beach, Dillon, 
+Florence, Marion, and Mullins
+327 AM EST Wed Jan 3 2018
+
+...WINTER STORM WARNING REMAINS IN EFFECT FROM 11 AM THIS MORNING
+TO 6 AM EST THURSDAY...
+
+* WHAT...Heavy mixed precipitation expected. Plan on difficult
+  travel conditions. Total snow accumulations of 1 to 4 inches 
+  and ice accumulations of a light glaze are expected.
+
+* WHERE...Portions of northeast South Carolina and southeast 
+  North Carolina.
+
+* WHEN...From 11 AM this morning to 6 AM EST Thursday.
+
+* ADDITIONAL DETAILS...Be prepared for significant reductions in 
+  visibility at times.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of snow, sleet
+and ice are expected. This will make travel very hazardous or
+impossible. The latest road conditions for the state you are
+calling from can be obtained by calling 5 1 1.
+
+$$
+
+%% WSWILM 2018-01-03T11:06:00Z NCZ107
+WWUS42 KILM 031106
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+606 AM EST Wed Jan 3 2018
+
+NCZ087-096-099-105>110-SCZ024-032-033-032100-
+/O.CON.KILM.WS.W.0001.180103T1600Z-180104T1100Z/
+Robeson-Bladen-Columbus-Inland Pender-Coastal Pender-
+Inland New Hanover-Coastal New Hanover-Inland Brunswick-
+Coastal Brunswick-Dillon-Florence-Marion-
+Including the cities of Lumberton, Elizabethtown, Bladenboro, 
+Whiteville, Tabor City, Chadbourn, Lake Waccamaw, Burgaw, 
+Surf City, Wilmington, Masonboro, Myrtle Grove, Ogden, 
+Carolina Beach, Seagate, Boiling Spring Lakes, Leland, Shallotte,
+Oak Island, Long Beach, Southport, Sunset Beach, Dillon, 
+Florence, Marion, and Mullins
+606 AM EST Wed Jan 3 2018
+
+...WINTER STORM WARNING REMAINS IN EFFECT FROM 11 AM THIS MORNING
+TO 6 AM EST THURSDAY...
+
+* WHAT...Heavy mixed precipitation expected. Plan on difficult 
+  travel conditions. Total snow accumulations of 1 to 3 inches 
+  and ice accumulations of around one tenth are expected.
+
+* WHERE...Portions of northeast South Carolina and southeast 
+  North Carolina.
+
+* WHEN...From 11 AM this morning to 6 AM EST Thursday.
+
+* ADDITIONAL DETAILS...Strong winds of 10 to 20 mph with gusts of
+  25 to 30 mph, highest along the coast, may down weak trees and
+  result in isolated power outages as ice begins to build on
+  exposed surfaces. 
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of snow, sleet
+and ice are expected. This will make travel very hazardous or
+impossible. The latest road conditions for the state you are
+calling from can be obtained by calling 5 1 1.
+
+$$
+
+%% WSWILM 2018-01-03T20:11:00Z NCZ107
+WWUS42 KILM 032011
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+311 PM EST Wed Jan 3 2018
+
+NCZ087-096-099-105>110-SCZ024-032-033-040415-
+/O.CON.KILM.WS.W.0001.000000T0000Z-180104T1100Z/
+Robeson-Bladen-Columbus-Inland Pender-Coastal Pender-
+Inland New Hanover-Coastal New Hanover-Inland Brunswick-
+Coastal Brunswick-Dillon-Florence-Marion-
+Including the cities of Lumberton, Elizabethtown, Bladenboro, 
+Whiteville, Tabor City, Chadbourn, Lake Waccamaw, Burgaw, 
+Surf City, Wilmington, Masonboro, Myrtle Grove, Ogden, 
+Carolina Beach, Seagate, Boiling Spring Lakes, Leland, Shallotte,
+Oak Island, Long Beach, Southport, Sunset Beach, Dillon, 
+Florence, Marion, and Mullins
+311 PM EST Wed Jan 3 2018
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 6 AM EST
+THURSDAY...
+
+* WHAT...Freezing rain and sleet should change over to snow this
+  evening. Plan on difficult travel conditions. Additional snow
+  accumulations of 2 to 4 inches and ice accumulations of less
+  than one tenth of an inch are expected.
+
+* WHERE...Portions of northeast South Carolina and southeast 
+  North Carolina.
+
+* WHEN...Until 6 AM EST Thursday.
+
+* ADDITIONAL DETAILS...Be prepared for significant reductions in 
+  visibility at times during heavy snow.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning means significant amounts of snow, sleet
+and ice are occurring. This will make travel very hazardous or
+impossible. The latest road conditions for the state you are
+calling from can be obtained from http://DriveNC.gov.
+
+$$
+
+%% WSWILM 2018-01-04T02:48:00Z NCZ107
+WWUS42 KILM 040248
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+948 PM EST Wed Jan 3 2018
+
+NCZ087-096-099-105>110-SCZ024-032-033-041100-
+/O.CON.KILM.WS.W.0001.000000T0000Z-180104T1100Z/
+Robeson-Bladen-Columbus-Inland Pender-Coastal Pender-
+Inland New Hanover-Coastal New Hanover-Inland Brunswick-
+Coastal Brunswick-Dillon-Florence-Marion-
+Including the cities of Lumberton, Elizabethtown, Bladenboro, 
+Whiteville, Tabor City, Chadbourn, Lake Waccamaw, Burgaw, 
+Surf City, Wilmington, Masonboro, Myrtle Grove, Ogden, 
+Carolina Beach, Seagate, Boiling Spring Lakes, Leland, Shallotte,
+Oak Island, Long Beach, Southport, Sunset Beach, Dillon, 
+Florence, Marion, and Mullins
+948 PM EST Wed Jan 3 2018
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 6 AM EST
+THURSDAY...
+
+* WHAT...Light to Moderate snow occasionally heavy at times near
+  the coast, will mix with sleet at times along the immediate 
+  coast. Plan on difficult travel conditions. Total snow 
+  accumulations of 2 to 4 inches with isolated 5 inch amounts 
+  possible. Total Ice accumulations of one tenth of an inch near 
+  the coast.
+
+* WHERE...Portions of northeast South Carolina and southeast 
+  North Carolina.
+
+* WHEN...Until 6 AM EST Thursday.
+
+* ADDITIONAL DETAILS...Be prepared for significant reductions in
+  visibility at times due to moderate to heavy snow. Roadways will
+  remain treacherous to travel overnight especially with snow
+  covering any ice that accumulated earlier in the day. 
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+A Winter Storm Warning for snow means severe winter weather
+conditions are occurring. If you must travel, keep an extra
+flashlight, food and water in your vehicle in case of an
+emergency. The latest road conditions for the state you are
+calling from can be obtained from http://DriveNC.gov.
+
+$$

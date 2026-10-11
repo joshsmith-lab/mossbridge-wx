@@ -1,0 +1,306 @@
+# ILM, Inland New Hanover (NCZ107): winter storm, blizzard and ice storm warnings, the 2025-26 winter, verbatim from Iowa State's AFOS archive (tools/storm-corpus.mjs)
+%% WSWILM 2026-01-30T05:46:00Z NCZ107
+WWUS42 KILM 300546
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+1246 AM EST Fri Jan 30 2026
+
+NCZ087-096-099-105>110-SCZ017-023-024-032-033-039-054>056-058-059-
+301915-
+/O.UPG.KILM.WS.A.0002.260131T0600Z-260201T2100Z/
+/O.NEW.KILM.WS.W.0001.260131T0600Z-260201T2100Z/
+Robeson-Bladen-Columbus-Inland Pender-Coastal Pender-Inland New
+Hanover-Coastal New Hanover-Inland Brunswick-Coastal Brunswick-
+Marlboro-Darlington-Dillon-Florence-Marion-Williamsburg-Coastal
+Horry-Inland Georgetown-Coastal Georgetown-Central Horry-Northern
+Horry-
+Including the cities of Boiling Spring Lakes, Lake Waccamaw,
+Kingstree, Carolina Beach, Andrews, Murrells Inlet, Mullins,
+McColl, Garden City, Elizabethtown, Dillon, Little River,
+Wilmington, Myrtle Grove, Marion, Whiteville, Ogden,
+Bennettsville, North Hartsville, Oak Island, Lumberton, Long
+Beach, Chadbourn, Shallotte, Burgaw, Hartsville, Aynor, Myrtle
+Beach, Green Sea, Loris, Leland, Southport, Georgetown, Florence,
+Conway, Darlington, Sunset Beach, Surf City, North Myrtle Beach,
+Socastee, Longs, Tabor City, Bucksport, Seagate, Masonboro, and
+Bladenboro
+1246 AM EST Fri Jan 30 2026
+
+...WINTER STORM WARNING IN EFFECT FROM 1 AM SATURDAY TO 4 PM EST 
+SUNDAY...
+
+* WHAT...Total snow accumulations between 5 and 8 inches with 
+  locally higher amounts possible.
+
+* WHERE...Portions of southeast North Carolina and northeast South 
+  Carolina.
+
+* WHEN...From 1 AM Saturday to 4 PM EST Sunday.
+
+* IMPACTS...Travel could be very difficult.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in 
+your vehicle in case of an emergency. The latest road conditions for 
+the state you are calling from can be obtained by calling 5 1 1.
+
+&&
+
+$$
+
+%% WSWILM 2026-01-30T17:07:00Z NCZ107
+WWUS42 KILM 301707
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+1207 PM EST Fri Jan 30 2026
+
+NCZ087-096-099-105>110-SCZ017-023-024-032-033-039-054>056-058-059-
+310700-
+/O.CON.KILM.WS.W.0001.260131T0600Z-260201T2100Z/
+Robeson-Bladen-Columbus-Inland Pender-Coastal Pender-Inland New
+Hanover-Coastal New Hanover-Inland Brunswick-Coastal Brunswick-
+Marlboro-Darlington-Dillon-Florence-Marion-Williamsburg-Coastal
+Horry-Inland Georgetown-Coastal Georgetown-Central Horry-Northern
+Horry-
+Including the cities of Socastee, McColl, Long Beach, Burgaw,
+Little River, Loris, Elizabethtown, Tabor City, Murrells Inlet,
+Southport, Masonboro, Shallotte, Oak Island, North Hartsville,
+Sunset Beach, Aynor, Kingstree, Bucksport, Marion, Darlington,
+Hartsville, Longs, Leland, Garden City, Conway, Wilmington,
+Bennettsville, Whiteville, Lake Waccamaw, Andrews, Mullins,
+Bladenboro, Florence, Lumberton, Chadbourn, Georgetown, Seagate,
+Ogden, Myrtle Beach, Green Sea, Boiling Spring Lakes, Dillon,
+Myrtle Grove, North Myrtle Beach, Carolina Beach, and Surf City
+1207 PM EST Fri Jan 30 2026
+
+...WINTER STORM WARNING REMAINS IN EFFECT FROM 1 AM SATURDAY TO 4 PM 
+EST SUNDAY...
+
+* WHAT...Total snow accumulations between 4 and 8 inches and ice 
+  accumulations around a light glaze.
+
+* WHERE...Portions of southeast North Carolina and northeast South 
+  Carolina.
+
+* WHEN...From 1 AM Saturday to 4 PM EST Sunday.
+
+* IMPACTS...Travel could be very difficult.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in 
+your vehicle in case of an emergency. The latest road conditions for 
+the state you are calling from can be obtained by calling 5 1 1.
+
+&&
+
+$$
+
+%% WSWILM 2026-01-31T00:57:00Z NCZ107
+WWUS42 KILM 310057
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+757 PM EST Fri Jan 30 2026
+
+NCZ087-096-099-105>110-SCZ017-023-024-032-033-039-054>056-058-059-
+311200-
+/O.CON.KILM.WS.W.0001.260131T0600Z-260201T2100Z/
+Robeson-Bladen-Columbus-Inland Pender-Coastal Pender-Inland New
+Hanover-Coastal New Hanover-Inland Brunswick-Coastal Brunswick-
+Marlboro-Darlington-Dillon-Florence-Marion-Williamsburg-Coastal
+Horry-Inland Georgetown-Coastal Georgetown-Central Horry-Northern
+Horry-
+Including the cities of Garden City, Southport, Myrtle Beach, Oak
+Island, McColl, Lake Waccamaw, Darlington, Loris, Ogden, Surf
+City, Dillon, Bladenboro, Shallotte, Hartsville, Kingstree,
+Murrells Inlet, Carolina Beach, Bucksport, Sunset Beach,
+Socastee, Whiteville, Myrtle Grove, North Hartsville, Mullins,
+Georgetown, Tabor City, Green Sea, Lumberton, Burgaw, Long Beach,
+Elizabethtown, Florence, Wilmington, North Myrtle Beach, Aynor,
+Marion, Longs, Little River, Bennettsville, Boiling Spring Lakes,
+Andrews, Conway, Chadbourn, Leland, Seagate, and Masonboro
+757 PM EST Fri Jan 30 2026
+
+...WINTER STORM WARNING REMAINS IN EFFECT FROM 1 AM SATURDAY TO 4 PM 
+EST SUNDAY...
+
+* WHAT...Total snow accumulations between 5 and 8 inches  with 
+  localized amounts of 10 inches. The precipitation may start as a 
+  mix of sleet and freezing rain at the coast.
+
+* WHERE...Portions of southeast North Carolina and northeast South 
+  Carolina.
+
+* WHEN...From 1 AM Saturday to 4 PM EST Sunday.
+
+* IMPACTS...Travel will be very difficult.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in 
+your vehicle in case of an emergency. The latest road conditions for 
+the state you are calling from can be obtained by calling 5 1 1.
+
+&&
+
+$$
+
+%% WSWILM 2026-01-31T05:57:00Z NCZ107
+WWUS42 KILM 310557
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+1257 AM EST Sat Jan 31 2026
+
+NCZ087-096-099-105>110-SCZ017-023-024-032-033-039-054>056-058-059-
+312000-
+/O.CON.KILM.WS.W.0001.260131T0600Z-260201T2100Z/
+Robeson-Bladen-Columbus-Inland Pender-Coastal Pender-Inland New
+Hanover-Coastal New Hanover-Inland Brunswick-Coastal Brunswick-
+Marlboro-Darlington-Dillon-Florence-Marion-Williamsburg-Coastal
+Horry-Inland Georgetown-Coastal Georgetown-Central Horry-Northern
+Horry-
+Including the cities of Garden City, Bladenboro, Myrtle Grove,
+Oak Island, Bucksport, Chadbourn, Darlington, Ogden, Burgaw, Lake
+Waccamaw, Southport, Elizabethtown, Shallotte, Long Beach,
+Leland, Loris, Tabor City, Little River, Murrells Inlet, Longs,
+Florence, Seagate, Whiteville, Marion, Myrtle Beach, Aynor,
+Socastee, Carolina Beach, Sunset Beach, Dillon, Kingstree,
+Georgetown, Wilmington, Lumberton, McColl, North Hartsville,
+Andrews, Green Sea, Mullins, Conway, Hartsville, Masonboro,
+Boiling Spring Lakes, Bennettsville, Surf City, and North Myrtle
+Beach
+1257 AM EST Sat Jan 31 2026
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 4 PM EST SUNDAY...
+
+* WHAT...Total snow accumulations between 5 and 8 inches with 
+  localized amounts of 10 inches.
+
+* WHERE...Portions of southeast North Carolina and northeast South 
+  Carolina.
+
+* WHEN...Until 4 PM EST Sunday.
+
+* IMPACTS...Travel will be very difficult.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in 
+your vehicle in case of an emergency. The latest road conditions for 
+the state you are calling from can be obtained by calling 5 1 1.
+
+&&
+
+$$
+
+%% WSWILM 2026-01-31T17:46:00Z NCZ107
+WWUS42 KILM 311746
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+1246 PM EST Sat Jan 31 2026
+
+NCZ087-096-099-105>110-SCZ017-023-024-032-033-039-054>056-058-059-
+010715-
+/O.CON.KILM.WS.W.0001.000000T0000Z-260201T2100Z/
+Robeson-Bladen-Columbus-Inland Pender-Coastal Pender-Inland New
+Hanover-Coastal New Hanover-Inland Brunswick-Coastal Brunswick-
+Marlboro-Darlington-Dillon-Florence-Marion-Williamsburg-Coastal
+Horry-Inland Georgetown-Coastal Georgetown-Central Horry-Northern
+Horry-
+Including the cities of Darlington, Kingstree, Elizabethtown,
+Little River, Shallotte, Bucksport, Seagate, Mullins, Myrtle
+Beach, Dillon, Sunset Beach, Boiling Spring Lakes, Lake Waccamaw,
+Marion, Green Sea, Bennettsville, Conway, Socastee, Carolina
+Beach, McColl, Wilmington, Florence, North Myrtle Beach, Ogden,
+Surf City, Leland, Oak Island, Myrtle Grove, Loris, Burgaw,
+Lumberton, Georgetown, Southport, Long Beach, Bladenboro,
+Chadbourn, Hartsville, Longs, Tabor City, Aynor, Masonboro,
+Murrells Inlet, Garden City, North Hartsville, Whiteville, and
+Andrews
+1246 PM EST Sat Jan 31 2026
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 4 PM EST SUNDAY...
+
+* WHAT...Total snow accumulations between 5 and 8 inches with 
+  localized amounts of 10 inches.
+
+* WHERE...Portions of southeast North Carolina and northeast South 
+  Carolina.
+
+* WHEN...Until 4 PM EST Sunday.
+
+* IMPACTS...Travel could be very difficult.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in 
+your vehicle in case of an emergency. The latest road conditions for 
+the state you are calling from can be obtained by calling 5 1 1.
+
+&&
+
+$$
+
+%% WSWILM 2026-02-01T05:21:00Z NCZ107
+WWUS42 KILM 010521
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+1221 AM EST Sun Feb 1 2026
+
+NCZ087-096-099-105>110-SCZ017-023-024-032-033-039-054>056-058-059-
+012100-
+/O.CON.KILM.WS.W.0001.000000T0000Z-260201T2100Z/
+Robeson-Bladen-Columbus-Inland Pender-Coastal Pender-Inland New
+Hanover-Coastal New Hanover-Inland Brunswick-Coastal Brunswick-
+Marlboro-Darlington-Dillon-Florence-Marion-Williamsburg-Coastal
+Horry-Inland Georgetown-Coastal Georgetown-Central Horry-Northern
+Horry-
+Including the cities of Carolina Beach, Dillon, Conway, Myrtle
+Grove, Leland, Socastee, Mullins, Murrells Inlet, Elizabethtown,
+Myrtle Beach, Southport, Bucksport, Seagate, Marion, Wilmington,
+Masonboro, Darlington, Kingstree, Sunset Beach, Chadbourn,
+Burgaw, Hartsville, Loris, Shallotte, Little River, Ogden,
+Whiteville, Long Beach, North Hartsville, Garden City, Boiling
+Spring Lakes, Bennettsville, Lumberton, Aynor, Longs, Oak Island,
+Lake Waccamaw, Florence, North Myrtle Beach, Green Sea,
+Georgetown, McColl, Surf City, Andrews, Bladenboro, and Tabor
+City
+1221 AM EST Sun Feb 1 2026
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 4 PM EST THIS 
+AFTERNOON...
+
+* WHAT...Additional snow accumulations of 3 to 6 inches in 
+  southeastern NC and portions of extreme northeastern SC. 
+  Additional snow accumulations between 1 and 3 inches for inland 
+  areas and much of northeastern SC.
+
+* WHERE...Portions of southeast North Carolina and northeast South 
+  Carolina.
+
+* WHEN...Until 4 PM EST this afternoon.
+
+* IMPACTS...Travel will be very difficult.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in 
+your vehicle in case of an emergency. The latest road conditions for 
+the state you are calling from can be obtained by calling 5 1 1.
+
+&&
+
+$$

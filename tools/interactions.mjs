@@ -5,7 +5,9 @@
  */
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
-import { serve, stage, SEVERE, forecast, tides, marine, LOC_TZ } from "./fixtures.mjs";
+import { serve, stage, SEVERE, forecast, tides, marine, LOC_TZ, FONT_CSS } from "./fixtures.mjs";
+import { STORMS, alertsFrom, wssiAnswer } from "./storm-fixtures.mjs";
+import { corpus } from "./storm-corpus.mjs";
 
 /* the payload refresh() builds from a raw forecast, so it can be planted as a cache */
 const cachePayload=(t,o,loc)=>{
@@ -38,6 +40,11 @@ async function open(width,o=base,loc="sp",when=now){
    nothing (the tide measured 58px tall). PAINT settles when the latest paint's last stage has drawn,
    and a frame on everything it wrote has been laid out */
 const painted=page=>page.evaluate(async()=>{await PAINT;await new Promise(r=>requestAnimationFrame(r))});
+/* every frame's storm card, headline and strip, logged when one of them changes (window.__log) */
+const STORM_FRAMES=()=>{window.__log=[];const look=()=>{const s=document.getElementById("stormSection"),st=document.getElementById("stamp");
+  if(s&&st){const e={stamp:st.textContent,card:!s.hidden,v:document.getElementById("verdict").textContent,strip:document.querySelector("#alertStrip.on .alert-head")?.textContent||""};
+    const l=window.__log[window.__log.length-1];if(!l||l.card!==e.card||l.v!==e.v||l.strip!==e.strip||l.stamp!==e.stamp)window.__log.push({t:Math.round(performance.now()),...e})}
+  requestAnimationFrame(look)};requestAnimationFrame(look)};
 const load=async page=>{
   await page.goto(`http://localhost:${PORT}/`);
   await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
@@ -270,7 +277,7 @@ try{
     await p.evaluate(()=>refresh());await frames(24);
     let s=await state();
     assert.equal(s.alertIn,2,`${loc}: a different alert taking the lead enters`);
-    assert.match(s.head,/^Tornado Warning/);assert.match(s.head,/\+1 more/);
+    assert.match(s.head,/^Tornado Warning/);assert.match(s.head,/ ·\u00A0\+1\u00A0more/,"the dot rides with the words after it");
     /* it ends: the strip goes. The next one enters */
     features=[];
     await p.evaluate(()=>refresh());await frames(24);
@@ -519,7 +526,7 @@ try{
     let release;const gate=new Promise(r=>release=r);
     await page.route("**api.open-meteo.com**",async r=>{if(r.request().url().includes("marine-api"))return r.fallback();await gate;r.fallback()});
     await page.goto(`http://localhost:${PORT}/`,{waitUntil:"domcontentloaded"});
-    assert.deepEqual(await page.evaluate(()=>[...document.querySelectorAll(".xp-key")].map(k=>k.disabled)),[true,true,true,true],"no slider before a reading");
+    assert.deepEqual(await page.evaluate(()=>[...document.querySelectorAll(".xp-key")].map(k=>k.disabled)),[true,true,true,true,true],"no slider before a reading (the storm card's is off on an ordinary day too)");
     release();
     await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));await painted(page);
     const reached=[];
@@ -994,7 +1001,7 @@ try{
     await page.route("**api.open-meteo.com**",async r=>{if(r.request().url().includes("marine-api"))return r.fallback();await gate;r.fallback()});
     await page.goto(`http://localhost:${PORT}/`,{waitUntil:"domcontentloaded"});
     const off=()=>page.evaluate(()=>[...document.querySelectorAll(".xp-key")].filter(k=>k.disabled).map(k=>k.getAttribute("aria-valuetext")));
-    assert.deepEqual(await off(),[null,null,null,null],"the loading shell speaks no reading");
+    assert.deepEqual(await off(),[null,null,null,null,null],"the loading shell speaks no reading");
     release();
     await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));await painted(page);
     await page.unroute("**api.open-meteo.com**");
@@ -1011,7 +1018,461 @@ try{
     assert.deepEqual(await t.page.evaluate(()=>{const k=document.querySelector("#tideExplore .xp-key");return[k.disabled,k.getAttribute("aria-valuetext")]}),[true,null],"no tide table, no spoken tide");
     assert.deepEqual(t.errors,[]);await t.context.close();checks++;
   }
-  console.log(`${checks} interaction scenarios passed: matched chart heights, hourly and tide exploration, warnings, thunder coming at the farm, the farm's sections after the coast, the entrance across a cache-to-live paint and below the fold, offline recovery, and every line read by a real finger, the keys and a screen reader.`);
+  {
+    /* A first open in a storm whose card waits on the beach zone: Debby's tropical storm warning was the
+       beach's alone, so the house's own alerts raise nothing and the card is the lane's. The lane starts
+       beside the forecast. In time, the card is part of the first frame and the hours under it never
+       move. Late (past STORM_WAIT), the card comes in with the reader's view held: scrolled down to the
+       week, nothing on screen moves; scrolled partway, with the header's foot 150px down the screen,
+       the hours under it hold still (anchored on the header, they jumped by the card); at the top, the
+       sky and the headline stay where they are. And the storm is cached with the forecast, so the next
+       open shows the card on its cached paint */
+    const deb=STORMS["debby-flood-coast"],at=new Date(deb.when);
+    for(const [delay,scroll] of [[1200,false],[5200,true],[5200,"partial"],[5200,false]]){
+      const m=await phone(390,{...deb.o,storm:deb.name},deb.loc,{when:at});
+      let landed;const lane=new Promise(r=>landed=r);
+      await m.page.route(/alerts\/active\?zone=/,async r=>{await new Promise(res=>setTimeout(res,delay));landed();await r.fallback()});
+      await m.page.addInitScript(()=>{window.__first=null;const look=()=>{const st=document.getElementById("stamp");
+        if(!window.__first&&st&&st.textContent.includes("live")){const h=document.querySelector("#hourlyExplore").closest("section");
+          window.__first={card:!document.getElementById("stormSection").hidden,hours:h.getBoundingClientRect().top-document.getElementById("sky").getBoundingClientRect().bottom,verdict:document.getElementById("verdict").textContent}}
+        if(!window.__first)requestAnimationFrame(look)};requestAnimationFrame(look)});
+      const p=m.page,top=sel=>p.evaluate(s=>document.querySelector(s).getBoundingClientRect().top,sel);
+      await p.goto(`http://localhost:${PORT}/`);
+      await p.waitForFunction(()=>window.__first);await painted(p);
+      const first=await p.evaluate(()=>window.__first);
+      if(delay<3000){
+        assert.equal(first.card,true,"a lane in time is part of the first frame");
+        assert.match(first.verdict,/^Tropical Storm Debby is closest Thursday morning\.$/);
+        /* the strip and the rain-soon bars still land with the last stage, inside the header, as they
+           always have; between the header and the hours nothing moves after the first frame */
+        assert.equal(await p.evaluate(()=>document.querySelector("#hourlyExplore").closest("section").getBoundingClientRect().top-document.getElementById("sky").getBoundingClientRect().bottom),first.hours,"and the hours never move under it");
+        /* the next open, offline: the storm was cached with the forecast, and the cached paint shows it */
+        const q=await m.context.newPage();
+        await stage(q,{now:at,loc:deb.loc,o:{...deb.o,storm:deb.name},fontDir:FONT_DIR,port:PORT});
+        await q.route("**api.open-meteo.com**",r=>r.abort());await q.route("**api.weather.gov/**",r=>r.abort());
+        await q.goto(`http://localhost:${PORT}/`);
+        await q.waitForFunction(()=>/updated|ago/.test(document.getElementById("stamp").textContent));
+        await q.evaluate(async()=>{await PAINT});
+        assert.equal(await q.evaluate(()=>!document.getElementById("stormSection").hidden&&document.getElementById("stormTitle").textContent),"Tropical Storm Debby","the cached paint shows the card");
+        assert.equal(await q.locator("#stormWarns").innerText(),"TROPICAL STORM WARNING AT THE BEACH");
+        await q.close();
+      }else{
+        assert.equal(first.card,false,"a lane past STORM_WAIT is not waited for");
+        if(scroll==="partial")await p.evaluate(()=>scrollTo(0,document.getElementById("sky").getBoundingClientRect().bottom+scrollY-150));
+        else if(scroll)await p.evaluate(()=>scrollTo(0,document.getElementById("weekRows").getBoundingClientRect().top+scrollY-120));
+        await p.waitForTimeout(80);
+        const before={week:await top("#weekRows"),hours:await top("#hourlyExplore"),sky:await p.evaluate(()=>document.getElementById("sky").getBoundingClientRect().bottom),strip:await top("#alertStrip"),y:await p.evaluate(()=>scrollY)};
+        if(scroll==="partial")assert.ok(Math.abs(before.sky-150)<2,`the header's foot is 150px down the screen: ${before.sky}`);
+        await lane;
+        await p.waitForFunction(()=>!document.getElementById("stormSection").hidden);await painted(p);await p.waitForTimeout(60);
+        const card=await p.evaluate(()=>document.getElementById("stormSection").getBoundingClientRect().height);
+        if(scroll==="partial"){
+          /* the hours the reader is looking at hold still, and the part of the sky above them goes up */
+          assert.ok(Math.abs(await top("#hourlyExplore")-before.hours)<1,`scrolled partway, the hours under the late card hold still: ${before.hours} then ${await top("#hourlyExplore")}`);
+          assert.ok(Math.abs(await top("#weekRows")-before.week)<1,"and so does the week under them");
+          assert.ok(await p.evaluate(()=>scrollY)-before.y>card*.8,"the page scrolled by the card");
+        }else if(scroll){
+          assert.ok(Math.abs(await top("#weekRows")-before.week)<1,`scrolled down, the late card moves nothing on screen: ${before.week} then ${await top("#weekRows")}`);
+          /* the headline above changed to the storm's too, so the page scrolled by the card and that */
+          const dy=await p.evaluate(()=>scrollY)-before.y;
+          assert.ok(dy>card*.8&&dy<card*1.5,`the page scrolled once, by about the card's height, not twice: ${dy} for a card of ${card}`);
+        }else{
+          /* at the top the page does not scroll and the sky stays where it is: what moves is under the
+             card, and the storm's statement leaving the strip (the card takes it in) */
+          assert.equal(await top("#alertStrip"),before.strip,"at the top the sky stays where it is");
+          assert.equal(await p.evaluate(()=>scrollY),0);
+          assert.match((await p.locator("#alertStrip .alert-head").innerText()).replace(/ /g," "),/^FLOOD WATCH · UNTIL 8:00 AM FRI$/,"the card takes in the storm's statement, and the house's Flood Watch keeps its words");
+        }
+        assert.match(await p.locator("#verdict").innerText(),/^Tropical Storm Debby is closest Thursday morning\.$/,"and the page says the storm once it is in");
+      }
+      assert.deepEqual(m.errors,[]);await m.context.close();checks++;
+    }
+  }
+  {
+    /* A renewed beach warning (October 10 2026). Debby's tropical storm warning is the beach's alone, and
+       its expiry is only when the next advisory is due: with the app left open, the strip's timer asks for
+       the forecast a second after it, and by then the Weather Service has renewed it. The advisories are
+       slower than the forecast. Painted on the cached beach, the card came down and the headline went back
+       to "Raining now.", and both came back when the advisories landed. Every frame is watched */
+    const deb=STORMS["debby-flood-coast"],at=new Date(deb.when);
+    const beachTill=e=>deb.beach.map(f=>(f.properties.parameters.VTEC||[]).some(v=>/\.TR\.W\./.test(v))?{...f,properties:{...f.properties,expires:e.toISOString()}}:f);
+    const m=await phone(390,{...deb.o,storm:deb.name},deb.loc,{when:at});
+    let asked=0;
+    await m.page.route(/alerts\/active\?zone=/,r=>{asked++;r.fulfill({json:{features:beachTill(asked===1?new Date(+at+9000):new Date(+at+6*36e5))}})});
+    await m.page.route(/products\/types\/TCP/,async r=>{if(asked>1)await new Promise(res=>setTimeout(res,1500));await r.fallback()});
+    await m.page.addInitScript(()=>{window.__log=[];const look=()=>{const sec=document.getElementById("stormSection"),v=document.getElementById("verdict");
+      if(sec&&v)window.__log.push({hidden:sec.hidden,v:v.textContent,live:/live/.test(document.getElementById("stamp")?.textContent||"")});requestAnimationFrame(look)};requestAnimationFrame(look)});
+    const p=m.page;
+    await p.goto(`http://localhost:${PORT}/`);
+    await p.waitForFunction(()=>!document.getElementById("stormSection").hidden);
+    /* the expiry passes, the forecast is asked for again, the renewed beach lands, then the advisories */
+    await p.waitForFunction(()=>window.__log.length&&performance.now()>0,null,{timeout:2000});
+    await p.waitForTimeout(13500);
+    await painted(p);
+    assert.ok(asked>=2,`the strip's timer asked again at the beach's expiry: ${asked}`);
+    const log=await p.evaluate(()=>window.__log),from=log.findIndex(x=>!x.hidden);
+    assert.ok(from>=0&&log.length-from>200,"watched every frame: "+log.length);
+    assert.ok(log.slice(from).every(x=>!x.hidden),"the card never comes down across its warning's renewal");
+    assert.ok(log.slice(from).every(x=>/^Tropical Storm Debby is closest Thursday morning\.$/.test(x.v)),"and the headline never leaves the storm: "+[...new Set(log.slice(from).map(x=>x.v))].join(" | "));
+    assert.equal(await p.evaluate(()=>STORM_NOW&&STORM_NOW.tier),"storm");
+    assert.deepEqual(m.errors,[]);await m.context.close();checks++;
+  }
+  {
+    /* A first open with the advisories slow (3.7s, past STORM_WAIT) and the beach zone fast: the beach's
+       answer is in hand, so the card is in the first frame, said as the beach's warning, and only its title
+       changes when the advisories land. It was painted without it, then pushed the hours down after their
+       pen had started */
+    const deb=STORMS["debby-flood-coast"],at=new Date(deb.when);
+    const m=await phone(390,{...deb.o,storm:deb.name},deb.loc,{when:at});
+    await m.page.route(/products\/types\/TCP/,async r=>{await new Promise(res=>setTimeout(res,3700));await r.fallback()});
+    await m.page.addInitScript(()=>{window.__first=null;const look=()=>{const st=document.getElementById("stamp");
+      if(!window.__first&&st&&st.textContent.includes("live"))window.__first={card:!document.getElementById("stormSection").hidden,title:document.getElementById("stormTitle").textContent,verdict:document.getElementById("verdict").textContent,
+        hours:document.querySelector("#hourlyExplore").getBoundingClientRect().top};
+      if(window.__first)(window.__hid||=[]).push(document.getElementById("stormSection").hidden);
+      requestAnimationFrame(look)};requestAnimationFrame(look)});
+    const p=m.page;
+    await p.goto(`http://localhost:${PORT}/`);
+    await p.waitForFunction(()=>window.__first);
+    const first=await p.evaluate(()=>window.__first);
+    assert.equal(first.card,true,"the beach's warning is in the first frame");
+    assert.match(first.verdict,/^Tropical Storm Warning at the beach\.$/,"said as the beach's, before the advisories name it");
+    await p.waitForFunction(()=>document.getElementById("stormTitle").textContent==="Tropical Storm Debby",null,{timeout:8000});await painted(p);
+    assert.match(await p.locator("#verdict").innerText(),/^Tropical Storm Debby is closest Thursday morning\.$/);
+    assert.ok(await p.evaluate(()=>window.__hid.length>30&&window.__hid.every(h=>!h)),"and the card stays up while the advisories land: only its words change");
+    assert.deepEqual(m.errors,[]);await m.context.close();checks++;
+  }
+  {
+    /* A card that grows under a reader whose screen starts inside it. Florence's house Hurricane Warning
+       puts the card up on the first paint, titled "Hurricane Warning", with the advisories late (past
+       STORM_WAIT); when they land it becomes "Hurricane Florence" with its note and its closest point, and
+       grows. The view held on the card's own top, off the screen, and moved the hours under the reader */
+    const flo=STORMS["florence-coast"],at=new Date(flo.when);
+    for(const width of [320,390]){
+      const m=await phone(width,{...flo.o,storm:flo.name},"mb",{when:at});
+      let go;const gate=new Promise(r=>go=r);
+      await m.page.route(/products\/types\/TCP/,async r=>{await Promise.race([gate,new Promise(res=>setTimeout(res,4200))]);await r.fallback()});
+      const p=m.page,top=sel=>p.evaluate(s=>document.querySelector(s).getBoundingClientRect().top,sel);
+      await p.goto(`http://localhost:${PORT}/`);
+      await p.waitForFunction(()=>!document.getElementById("stormSection").hidden&&document.getElementById("stamp").textContent.includes("live"));await painted(p);
+      assert.equal(await p.locator("#stormTitle").innerText(),"HURRICANE WARNING","the house's warning puts the card up before the advisories");
+      const h0=await p.evaluate(()=>document.getElementById("stormSection").getBoundingClientRect().height);
+      await p.evaluate(()=>scrollTo(0,document.getElementById("stormSection").getBoundingClientRect().top+scrollY+100));
+      await p.waitForTimeout(60);
+      assert.ok(Math.abs(await top("#stormSection")+100)<2,"the card's top is 100px above the screen");
+      const before=await top("#hourlyExplore");
+      go();
+      await p.waitForFunction(()=>document.getElementById("stormTitle").textContent==="Hurricane Florence",null,{timeout:8000});await painted(p);await p.waitForTimeout(60);
+      const h1=await p.evaluate(()=>document.getElementById("stormSection").getBoundingClientRect().height);
+      assert.ok(h1-h0>2,`the card grew when the advisories landed: ${h0} then ${h1}`);
+      assert.ok(Math.abs(await top("#hourlyExplore")-before)<1,`at ${width} the hours under the reader hold still: ${before} then ${await top("#hourlyExplore")}`);
+      assert.deepEqual(m.errors,[]);await m.context.close();checks++;
+    }
+  }
+  {
+    /* A Tornado Warning issued under Florence's Hurricane Warning is minutes away: it takes the strip on
+       its own, enters, and keeps its own words and instruction, and it is never folded into the card.
+       When it ends the strip goes back to the hurricane, which leads it while the card is up */
+    const flo=STORMS["florence-coast"],at=new Date(flo.when);
+    const tor={properties:{id:"urn:fixture:TORILM",event:"Tornado Warning",severity:"Extreme",certainty:"Observed",urgency:"Immediate",
+      sent:"2018-09-13T11:40:00-04:00",onset:"2018-09-13T11:40:00-04:00",ends:"2018-09-13T12:15:00-04:00",expires:"2018-09-13T12:15:00-04:00",
+      description:"* WHAT...A tornado moving ashore from a waterspout.\n\n* WHERE...Porters Neck and Ogden.",
+      instruction:"TAKE COVER NOW! Move to a basement or an interior room on the lowest floor of a sturdy building.",
+      parameters:{VTEC:["/O.NEW.KILM.TO.W.0031.180913T1540Z-180913T1615Z/"],AWIPSidentifier:["TORILM"],tornadoDetection:["RADAR INDICATED"]}}};
+    let torn=true;
+    const m=await phone(390,{...flo.o,storm:flo.name},"mb",{when:at,motion:true});
+    await m.page.route(/alerts\/active\?point=/,r=>r.fulfill({json:{features:torn?[...flo.point,tor]:flo.point}}));
+    await m.page.addInitScript(()=>{window.__in=0;addEventListener("animationstart",e=>{if(e.animationName==="alertIn"&&e.target.id==="alertStrip")__in++},true)});
+    const p=m.page,head=async()=>(await p.locator("#alertStrip .alert-head").innerText()).replace(/ /g," ");
+    await p.goto(`http://localhost:${PORT}/`);
+    await p.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));await painted(p);
+    assert.equal(await head(),"TORNADO WARNING · UNTIL 12:15 PM · +3 MORE","the tornado leads the strip over the hurricane");
+    await p.locator("#alertStrip").click();
+    const body=await p.locator("#alertStrip .alert-body").innerText();
+    assert.match(body,/TAKE COVER NOW!/i,"with its own instruction");
+    assert.match(body,/also active: Hurricane Warning, Storm Surge Warning, Flash Flood Watch/i);
+    assert.equal(await p.locator("#stormTitle").innerText(),"HURRICANE FLORENCE","the card is the storm's");
+    assert.equal(await p.locator("#stormWarns").innerText(),"HURRICANE WARNING · STORM SURGE WARNING","and the tornado is not folded into it");
+    assert.match(await p.locator("#stormSay").innerText(),/^Now is the time to shelter from life-threatening wind\./);
+    const entered=await p.evaluate(()=>__in);
+    torn=false;await p.evaluate(()=>refresh());await painted(p);await p.waitForTimeout(100);
+    assert.equal(await head(),"HURRICANE WARNING · +2 MORE","once it ends the hurricane leads again");
+    assert.ok(await p.evaluate(()=>__in)>entered,"and the strip enters for it");
+    assert.deepEqual(m.errors,[]);await m.context.close();checks++;
+  }
+  {
+    /* Debby's own timings (October 10 2026). Refreshed at 11:40, the beach's tropical storm warning runs
+       out at 7 pm, and the strip's timer asks for the forecast then, 7h20m on, when the cache can no longer
+       vouch for itself (past its six hours). The page's own reading for this place stands in for it: the
+       stale beach is waited for, and the paint keeps the page's storms until the advisories land. With the
+       beach fast and slow (1.5 s) and the advisories slower still (2.5 s), every frame is watched: the card
+       never comes down, and its title and the headline stay the storm's. With only the cache to go on, the
+       title went to "4–8 inches of rain at the beach", or the card came down under "Raining now." And with
+       the beach slower than STORM_WAIT (4.5 s) or failing outright: the page's own beach, fetched 7h21m
+       before and a minute past its expiry, still stands, because the window is the warning's own expiry plus
+       six hours and not the fetch's age. It came down under "Raining now." until the next refresh */
+    const deb=STORMS["debby-flood-coast"],at=new Date(deb.when);
+    const renewed=deb.beach.map(f=>(f.properties.parameters.VTEC||[]).some(v=>/\.TR\.W\./.test(v))?{...f,properties:{...f.properties,expires:"2024-08-08T01:00:00-04:00"}}:f);
+    for(const beachMs of [0,1500,4500,"fail"]){
+      const m=await phone(390,{...deb.o,storm:deb.name},deb.loc,{when:at});
+      let later=false;
+      await m.page.route(/alerts\/active\?zone=/,async r=>{if(later&&beachMs==="fail")return r.fulfill({status:503,json:{title:"Service Unavailable"}});
+        if(later)await new Promise(res=>setTimeout(res,beachMs));r.fulfill({json:{features:later?renewed:deb.beach}})});
+      await m.page.route(/products\/types\/TCP/,async r=>{if(later)await new Promise(res=>setTimeout(res,2500));await r.fallback()});
+      const p=m.page;
+      await p.goto(`http://localhost:${PORT}/`);
+      await p.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live")&&!document.getElementById("stormSection").hidden);await painted(p);
+      assert.equal(await p.evaluate(()=>Math.min(...stormDue(LAST.d,STORM_NOW,Date.now()).map(a=>Date.parse(a.ends||a.expires)))),Date.parse("2024-08-07T19:00:00-04:00"),"the beach's warning is due at 7 pm");
+      /* 7h21m on, on the page's own clock, the way the strip's timer finds it */
+      await p.evaluate(()=>{const RD=Date,base=RD.now,jump=7*36e5+21*6e4;const F=function(...a){return a.length?new RD(...a):new RD(base()+jump)};
+        F.now=()=>base()+jump;F.parse=RD.parse;F.UTC=RD.UTC;F.prototype=RD.prototype;window.Date=F});
+      assert.equal(await p.evaluate(()=>readCache(LOC.id)),null,"the cache can no longer vouch");
+      await p.evaluate(()=>{window.__log=[];const look=()=>{window.__log.push({card:!document.getElementById("stormSection").hidden,title:document.getElementById("stormTitle").textContent,
+        v:document.getElementById("verdict").textContent});requestAnimationFrame(look)};requestAnimationFrame(look)});
+      later=true;
+      await p.evaluate(()=>refresh());
+      await p.waitForTimeout(beachMs===4500?6400:3600);await painted(p);
+      const log=await p.evaluate(()=>window.__log);
+      assert.ok(log.length>100,`watched every frame: ${log.length}`);
+      assert.ok(log.every(x=>x.card),`beach ${beachMs}ms: the card never comes down`);
+      assert.deepEqual([...new Set(log.map(x=>x.title))],["Tropical Storm Debby"],`beach ${beachMs}ms: the title stays the storm's`);
+      assert.ok(log.every(x=>/^Tropical Storm Debby is closest /.test(x.v)),`beach ${beachMs}ms: and so does the headline: ${[...new Set(log.map(x=>x.v))].join(" | ")}`);
+      assert.equal(await p.evaluate(()=>STORM_NOW.alerts.find(a=>a.where==="beach")&&LAST.d.beach.find(a=>/Tropical Storm Warning/.test(a.event)).expires),
+        beachMs==="fail"?"2024-08-07T19:00:00-04:00":"2024-08-08T01:00:00-04:00",beachMs==="fail"?"the beach failed: the page's own warning, a minute past its expiry, still stands":"the renewed warning, in the reading");
+      assert.deepEqual(m.errors,[]);await m.context.close();checks++;
+    }
+    /* A cold open on a cache two hours old, whose beach warning reached its expiry an hour ago and has been
+       renewed upstream (the beach answers in 1.5 s). The cached warning still stands until the live answer
+       decides, so the card is in the cached frame, and the hours never move once their pen has started.
+       Painted as ended, the cached frame said "Raining now. Keep the rain gear close." under a tropical
+       storm, and the card landed on the running pen 371px down. Once with the cache's own fetch times, and
+       once with a cache written before they were kept, which has only its own age */
+    for(const old of [false,true]){
+      const m=await phone(390,{...deb.o,storm:deb.name},deb.loc,{when:at,motion:true});
+      let ms=0;
+      await m.page.route(/alerts\/active\?zone=/,async r=>{await new Promise(res=>setTimeout(res,ms));r.fulfill({json:{features:renewed}})});
+      const p=m.page;
+      await p.goto(`http://localhost:${PORT}/`);
+      await p.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));await painted(p);
+      await p.evaluate(old=>{const k=cacheKey(LOC.id),c=JSON.parse(localStorage.getItem(k)),t0=Date.now();c.savedAt=t0-2*36e5;
+        if(old)delete c.data.seen;else c.data.seen={point:t0-2*36e5,beach:t0-2*36e5};
+        for(const a of c.data.beach||[])if(/Tropical Storm Warning/.test(a.event))a.expires=new Date(t0-36e5).toISOString();
+        localStorage.setItem(k,JSON.stringify(c))},old);
+      await p.addInitScript(()=>{window.__log=[];const look=()=>{const s=document.getElementById("stormSection"),st=document.getElementById("stamp"),h=document.querySelector("#hourlyExplore");
+        if(s&&st&&h&&typeof REVEAL!=="undefined")window.__log.push({stamp:st.textContent,card:!s.hidden,pen:REVEAL.hourly.state,v:document.getElementById("verdict").textContent,hours:h.getBoundingClientRect().top+scrollY});
+        requestAnimationFrame(look)};requestAnimationFrame(look)});
+      /* tall enough that the hours are on screen under the card, so their pen plays on the cached paint */
+      await p.setViewportSize({width:390,height:1500});
+      ms=1500;
+      await p.reload();
+      await p.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"),null,{timeout:8000});await p.waitForTimeout(1500);
+      const log=await p.evaluate(()=>window.__log),tag=old?"an older cache":"the cache";
+      const cached=log.filter(x=>/ago/.test(x.stamp));
+      assert.ok(cached.length>5&&cached.every(x=>x.card),`${tag}: the card is in the cached frame: ${JSON.stringify(cached.slice(0,2))}`);
+      assert.ok(log.every(x=>!/rain gear/i.test(x.v)),`${tag}: never "Raining now." under the storm`);
+      const from=log.findIndex(x=>x.pen==="running"||x.pen==="done");
+      assert.ok(from>=0&&from<log.findIndex(x=>/live/.test(x.stamp)),`${tag}: the pen started on the cached paint, before the beach answered`);
+      assert.ok(log.slice(from).every(x=>Math.abs(x.hours-log[from].hours)<1),`${tag}: and the hours never move after it starts: ${[...new Set(log.slice(from).map(x=>Math.round(x.hours)))].join(" → ")}`);
+      assert.ok(log.filter(x=>/live/.test(x.stamp)).every(x=>x.card),`${tag}: the live paint keeps it`);
+      assert.deepEqual(m.errors,[]);await m.context.close();checks++;
+    }
+  }
+  {
+    /* The latch on the page (October 11 2026). RLX's January 5 2025 warning raised the farm's card with WPC's
+       index at Major. One refresh then has the point's alerts fail (api.weather.gov times out under storm
+       load): that paint is on the last good list, carried, so the card stays up, and it never rewrites the
+       latch or the last index. The next refresh has the same warning back with the index stepped down to Moderate, and the card
+       stays up. It came down for the rest of the warning. Then a cold open the next morning, with the cache
+       a day old (readCache will not vouch for it), a CON update and the index at Moderate: the latch is read
+       out of the cache entry whatever its age, and the card is up from the first live paint */
+    const sif=STORMS["snow-ice-farm"],at=new Date(sif.when);
+    let mode="ok",level=["MODERATE","MAJOR","WINTER WEATHER AREA"];
+    const m=await phone(390,{...sif.o,storm:sif.name},sif.loc,{when:at});
+    await m.page.route(/alerts\/active\?point=/,r=>mode==="fail"?r.fulfill({status:503,json:{title:"Service Unavailable"}}):r.fulfill({json:{features:sif.point}}));
+    await m.page.route(/mapservices\.weather\.noaa\.gov/,r=>r.fulfill({json:wssiAnswer(level,"2025-01-05T06:00:00Z")}));
+    const p=m.page,state=()=>p.evaluate(()=>({card:!document.getElementById("stormSection").hidden,why:STORM_NOW?.why||"",held:JSON.stringify(STORM_HELD.sp||null),
+      dheld:JSON.stringify(LAST?.d?.held||null),wssi:LAST?.d?.wssi?.impact||null,alerts:Array.isArray(LAST?.d?.alerts),carried:!!LAST?.d?.seen?.carried}));
+    await p.goto(`http://localhost:${PORT}/`);
+    await p.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));await painted(p);await p.waitForTimeout(400);await painted(p);
+    const s1=await state();
+    assert.ok(s1.card&&/^F3: a winter storm warning/.test(s1.why),`the card, at Major: ${JSON.stringify(s1)}`);
+    assert.match(s1.held,/"KRLX\.WS\.W\.2":\{"rule":"F3"/);
+    mode="fail";await p.evaluate(()=>refresh());await p.waitForTimeout(1200);await painted(p);
+    const s2=await state();
+    assert.deepEqual([s2.alerts,s2.carried,s2.card],[true,true,true],"the point's alerts failed: the paint is on the last good list, carried, and the card stays up: "+JSON.stringify(s2));
+    assert.deepEqual([s2.held,s2.dheld,s2.wssi],[s1.held,s1.held,"MAJOR"],"a paint with no fresh point list leaves the latch and the last index as they were");
+    assert.equal(await p.evaluate(()=>JSON.parse(localStorage.getItem("mbwx-sp")).data.held&&JSON.stringify(JSON.parse(localStorage.getItem("mbwx-sp")).data.held)),s1.held,"and so does its cache");
+    mode="ok";level=["MODERATE","MODERATE",null];await p.evaluate(()=>refresh());await p.waitForTimeout(1500);await painted(p);
+    const s3=await state();
+    assert.equal(s3.wssi,"MODERATE","the index stepped down");
+    assert.ok(s3.card&&/^F3: held while the same warning stands/.test(s3.why),`Major, a failed fetch, then the same warning at Moderate: the card stays up: ${JSON.stringify(s3)}`);
+    assert.deepEqual(m.errors,[]);
+    /* the next morning, a cold open */
+    const con=corpus().find(e=>e.issued==="2025-01-06T06:12:00Z"&&e.zone==="WVZ516"),next=new Date("2025-01-06T07:00:00-05:00");
+    const q=await m.context.newPage(),qerr=[];q.on("pageerror",e=>qerr.push(String(e)));
+    await stage(q,{now:next,loc:sif.loc,o:{...sif.o,storm:sif.name},fontDir:FONT_DIR,port:PORT});
+    await q.route(/alerts\/active\?point=/,r=>r.fulfill({json:{features:alertsFrom(con.product,con.zone)}}));
+    await q.route(/mapservices\.weather\.noaa\.gov/,r=>r.fulfill({json:wssiAnswer(["MODERATE","MODERATE",null],"2025-01-06T06:00:00Z")}));
+    await q.addInitScript(()=>{window.__first=null;
+      document.addEventListener("DOMContentLoaded",()=>{window.__open={vouched:readCache("sp")!==null,held:JSON.stringify(JSON.parse(localStorage.getItem("mbwx-sp")||"null")?.data?.held||null)}});
+      const look=()=>{const st=document.getElementById("stamp");
+      if(!window.__first&&st&&st.textContent.includes("live"))window.__first={card:!document.getElementById("stormSection").hidden};
+      if(!window.__first)requestAnimationFrame(look)};requestAnimationFrame(look)});
+    await q.goto(`http://localhost:${PORT}/`);
+    await q.waitForFunction(()=>window.__first);await painted(q);await q.waitForTimeout(1500);await painted(q);
+    const first=await q.evaluate(()=>window.__first);
+    const opened=await q.evaluate(()=>window.__open);
+    assert.deepEqual([opened.vouched,opened.held],[false,s3.held],"the cache is yesterday's, which readCache will not vouch for, and it holds the latch");
+    assert.equal(first.card,true,"a cold open the next morning: the card is up from the first live paint");
+    const qs=await q.evaluate(()=>({card:!document.getElementById("stormSection").hidden,why:STORM_NOW?.why||"",wssi:LAST.d.wssi?.impact,title:document.getElementById("stormTitle").textContent}));
+    assert.ok(qs.card&&/^F3: held while the same warning stands/.test(qs.why)&&qs.wssi==="MODERATE",`and stays up with the CON update and the index at Moderate: ${JSON.stringify(qs)}`);
+    assert.deepEqual(qerr,[]);await m.context.close();checks++;
+  }
+  {
+    /* WPC's index is the judge only of the list it was asked for (October 11 2026). The farm's warning ran
+       tonight only and the index had Major on Day 3, so no card. The office then extends it into Day 3, and the
+       newer cycle has Day 3 at Moderate, 1.5 seconds behind the refresh: the refresh's first paint paired the
+       extended warning with the last refresh's Day-3 Major, raised the card and latched it, and the Moderate
+       never took it down. Then the next morning's cold open: a new warning, WS.W.3, on what was yesterday's
+       Day 2, which yesterday's index had at Major, and today's index at Moderate four seconds behind (slower
+       than STORM_WAIT). Every frame is watched, and none has the card */
+    const sif=STORMS["snow-ice-farm"],f0=sif.point[0];
+    const feature=(vtec,ends,extra={})=>({...f0,properties:{...f0.properties,...extra,ends,expires:ends,parameters:{...f0.properties.parameters,VTEC:[vtec]}}});
+    const A=feature("/O.NEW.KRLX.WS.W.0002.250105T1700Z-250106T0500Z/","2025-01-06T00:00:00-05:00",{id:"urn:int:A"});
+    const A2=feature("/O.EXT.KRLX.WS.W.0002.250105T1700Z-250108T1100Z/","2025-01-08T06:00:00-05:00",{id:"urn:int:A2",messageType:"Update",sent:"2025-01-05T15:50:00-05:00"});
+    const W3=feature("/O.NEW.KRLX.WS.W.0003.250106T1700Z-250107T1100Z/","2025-01-07T06:00:00-05:00",{id:"urn:int:W3",sent:"2025-01-06T06:00:00-05:00",onset:"2025-01-06T12:00:00-05:00"});
+    const net={point:[A],level:["MODERATE","MODERATE","MAJOR"],cycle:"2025-01-05T06:00:00Z",delay:0};
+    const wire=async page=>{
+      await page.route(/alerts\/active\?point=/,r=>r.fulfill({json:{features:net.point}}));
+      await page.route(/mapservices\.weather\.noaa\.gov/,async r=>{const l=net.level,c=net.cycle,d=net.delay;if(d)await new Promise(k=>setTimeout(k,d));r.fulfill({json:wssiAnswer(l,c)})});
+      await page.addInitScript(STORM_FRAMES)};
+    const cardless=async(page,tag)=>{const log=await page.evaluate(()=>window.__log);
+      assert.ok(log.length&&log.every(x=>!x.card),`${tag}: no frame has the card: ${JSON.stringify(log.filter(x=>x.card).slice(0,2))}`);
+      assert.equal(await page.evaluate(()=>JSON.stringify(STORM_HELD.sp||{})),"{}",`${tag}: nothing latched`)};
+    const m=await phone(390,{...sif.o,storm:sif.name},sif.loc,{when:new Date("2025-01-05T10:00:00-05:00")});
+    await wire(m.page);const p=m.page;
+    await p.goto(`http://localhost:${PORT}/`);
+    await p.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));await painted(p);await p.waitForTimeout(400);await painted(p);
+    await cardless(p,"tonight's warning beside a Day-3 Major");
+    Object.assign(net,{point:[A2],level:["MODERATE","MODERATE","MODERATE"],cycle:"2025-01-05T18:00:00Z",delay:1500});
+    await p.evaluate(()=>{window.__log=[];refresh()});await p.waitForTimeout(3300);await painted(p);
+    await cardless(p,"an in-app refresh after the warning is extended into Day 3, the new cycle at Moderate 1.5 s behind");
+    assert.deepEqual(await p.evaluate(()=>LAST.d.wssi.days.map(d=>d.impact)),["MODERATE","MODERATE","MODERATE"],"the new cycle landed");
+    assert.deepEqual(m.errors,[]);await m.context.close();
+    /* the next morning's cold open */
+    Object.assign(net,{point:[A],level:["MODERATE","MAJOR",null],cycle:"2025-01-05T06:00:00Z",delay:0});
+    const y=await phone(390,{...sif.o,storm:sif.name},sif.loc,{when:new Date("2025-01-05T10:00:00-05:00")});
+    await wire(y.page);
+    await y.page.goto(`http://localhost:${PORT}/`);
+    await y.page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));await painted(y.page);await y.page.waitForTimeout(400);await painted(y.page);
+    await cardless(y.page,"tonight's warning beside a Day-2 Major");
+    Object.assign(net,{point:[W3],level:["MODERATE","MODERATE",null],cycle:"2025-01-06T06:00:00Z",delay:4000});
+    const q=await y.context.newPage(),qerr=[];q.on("pageerror",e=>qerr.push(String(e)));
+    await stage(q,{now:new Date("2025-01-06T07:00:00-05:00"),loc:sif.loc,o:{...sif.o,storm:sif.name},fontDir:FONT_DIR,port:PORT});
+    await wire(q);
+    await q.goto(`http://localhost:${PORT}/`);
+    await q.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));await q.waitForTimeout(5000);await painted(q);
+    await cardless(q,"the next morning's cold open, yesterday's Day-2 Major beside a new WS.W.3 and today's Moderate 4 s behind");
+    assert.equal(await q.evaluate(()=>LAST.d.wssi.days.map(d=>d.impact).join()),"MODERATE,MODERATE","today's index landed");
+    assert.deepEqual([...y.errors,...qerr],[]);await y.context.close();checks++;
+  }
+  {
+    /* A failed point request keeps the card, the strip and the storm's headline (October 11 2026). The paint is
+       on the last good list this place had, carried (`seen.carried`), read against now like any list: one
+       timed-out request under storm load took all three down, and the family reads a card gone as the storm
+       over. At the farm (RLX's January 5 2025 warning at Major) and at the coast (Florence a day from landfall),
+       each with an advisory that ends 14 seconds in, while the point is still failing: the strip's timer asks
+       again a second after its end, the point fails again, and the advisory comes down with the card still up */
+    for(const [name,width] of [["snow-ice-farm",320],["florence-coast",390]]){
+      const sc=STORMS[name],at=new Date(sc.when),coastal=sc.loc==="mb";
+      const brief=new Date(at.getTime()+14e3).toISOString();
+      const extra={...sc.point[0],properties:{...sc.point[0].properties,id:"urn:int:brief",event:coastal?"Coastal Flood Advisory":"Wind Advisory",severity:"Minor",ends:brief,expires:brief,
+        parameters:{...sc.point[0].properties.parameters,VTEC:[coastal?"/O.NEW.KILM.CF.Y.0031.000000T0000Z-180913T1600Z/":"/O.NEW.KRLX.WI.Y.0004.000000T0000Z-250105T1100Z/"]}}};
+      let mode="ok";
+      const m=await phone(width,{...sc.o,storm:sc.name},sc.loc,{when:at});
+      await m.page.route(/alerts\/active\?point=/,r=>mode==="fail"?r.fulfill({status:503,json:{title:"Service Unavailable"}}):r.fulfill({json:{features:[...sc.point,extra]}}));
+      await m.page.addInitScript(STORM_FRAMES);
+      const p=m.page;
+      await p.goto(`http://localhost:${PORT}/`);
+      await p.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));await painted(p);await p.waitForTimeout(500);await painted(p);
+      const look=()=>p.evaluate(()=>({card:!document.getElementById("stormSection").hidden,v:document.getElementById("verdict").textContent,
+        strip:document.querySelector("#alertStrip.on .alert-head")?.textContent||"",carried:!!LAST?.d?.seen?.carried}));
+      const before=await look(),more=x=>+((x.match(/\+(\d+)\u00A0more/)||[0,0])[1]);
+      assert.ok(before.card&&more(before.strip)>=1,`${name}: the card, and the strip with the advisory: ${JSON.stringify(before)}`);
+      mode="fail";
+      await p.evaluate(()=>{window.__log=[];refresh()});await p.waitForTimeout(1500);await painted(p);
+      const log=await p.evaluate(()=>window.__log),after=await look();
+      assert.ok(log.every(x=>x.card&&x.v===before.v&&x.strip===before.strip),`${name}: through the failed request the card, the strip and the headline never change: ${JSON.stringify(log)}`);
+      assert.ok(after.carried,`${name}: painted on the last good list, carried`);
+      /* the advisory's end passes with the point still failing */
+      await p.waitForFunction(b=>Date.now()>Date.parse(b)+1200,brief,{timeout:20000});await p.waitForTimeout(1500);await painted(p);
+      const ended=await look();
+      assert.ok(ended.card&&ended.carried&&ended.v===before.v&&more(ended.strip)===more(before.strip)-1&&ended.strip.split(" ·")[0]===before.strip.split(" ·")[0],
+        `${name}: the advisory that ended during the outage comes down, and the card, the warning and the headline stay: ${JSON.stringify(ended)}`);
+      assert.deepEqual(m.errors,[]);await m.context.close();checks++;
+    }
+  }
+  {
+    /* The storm's sentences on the page (October 11 2026). A warning issued ahead of its start: NOW on its chart
+       reads the warning from noon, the pill and the spoken value, the way the headline does, and no longer "no
+       hours from the Weather Service". Left open in front past noon, the strip's timer asks again a second after
+       the warning's VTEC begin, and the headline turns to under way. And read after midnight on its last day the
+       headline ends on one period: "until 6 a.m.." */
+    const sif=STORMS["snow-ice-farm"];
+    const m=await phone(390,{...sif.o,storm:sif.name},sif.loc,{when:new Date("2025-01-05T11:59:50-05:00")});
+    const p=m.page;
+    await p.goto(`http://localhost:${PORT}/`);
+    await p.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));await painted(p);
+    const now0=await p.evaluate(()=>{const r=XP.storm.D.read(0);return{parts:r.parts.map(x=>x[0]),said:r.said,v:document.getElementById("verdict").textContent}});
+    assert.deepEqual([now0.parts,now0.said,now0.v],[["now","Winter Storm Warning from 12p"],"Now, Winter Storm Warning from noon","Winter storm from noon until 6 a.m. Tuesday."],JSON.stringify(now0));
+    const key=p.locator("#stormExplore .xp-key");await key.focus();await p.keyboard.press("End");await p.keyboard.press("Home");
+    const st0=await xpState(p,"storm");
+    assert.deepEqual([st0.text,st0.valuetext],["now Winter Storm Warning from 12p","Now, Winter Storm Warning from noon"],"the pill and the slider's spoken value at NOW");
+    await p.keyboard.press("Escape");await key.blur();
+    await p.waitForFunction(()=>Date.now()>Date.parse("2025-01-05T12:00:02-05:00"),null,{timeout:20000});
+    await p.waitForFunction(()=>document.getElementById("verdict").textContent==="Winter storm until 6 a.m. Tuesday.",null,{timeout:8000});await painted(p);
+    const now1=await p.evaluate(()=>XP.storm.D.read(0).parts.map(x=>x[0]));
+    assert.deepEqual(now1,["now","Winter Storm Warning"],"at noon, with nothing touched, the headline and NOW turn to under way");
+    assert.deepEqual(m.errors,[]);await m.context.close();
+    const n=await phone(390,{...sif.o,storm:sif.name},sif.loc,{when:new Date("2025-01-07T00:30:00-05:00")});
+    await load(n.page);
+    assert.equal(await n.page.evaluate(()=>STORM_NOW?.tier),"storm");
+    assert.equal(await n.page.locator("#verdict").textContent(),"Winter storm until 6 a.m.","after midnight on its last day, one period");
+    assert.deepEqual(n.errors,[]);await n.context.close();checks++;
+  }
+  {
+    /* The quoted title is fitted again when the fonts land (October 11 2026). On a real phone the fonts come
+       with display=swap and the service worker does not keep them, so the card can paint in the fallback face
+       and be fitted there; Bricolage then reflowed the sentence to a line more, and nothing fitted it again.
+       Here Bricolage is held back until the card has painted, with swap: the title is fitted on the paint, and once more
+       when the face lands, and then it obeys the rule (three lines at most, 18px at the least) and is what a
+       fit from scratch gives */
+    const sif=STORMS["snow-ice-farm"],at=new Date(sif.when);
+    const m=await phone(390,{...sif.o,storm:sif.name},sif.loc,{when:at});
+    let fontAt=0,release;const gate=new Promise(r=>release=r);
+    await m.page.route(/fonts\.googleapis\.com/,r=>r.fulfill({contentType:"text/css",body:FONT_CSS(PORT).replace(/font-display:block/g,"font-display:swap")}));
+    await m.page.route(/\/f\/bricolage\.woff2/,async r=>{await gate;fontAt=Date.now();r.fallback()});
+    await m.page.addInitScript(()=>{window.__fits=[];addEventListener("DOMContentLoaded",()=>{const f=window.stormTitleFit;
+      window.stormTitleFit=(...a)=>{window.__fits.push({at:performance.now(),face:document.fonts.check('650 26px "Bricolage Grotesque"')});return f(...a)}})});
+    const p=m.page,title=()=>p.evaluate(()=>{const t=document.getElementById("stormTitle"),cs=getComputedStyle(t);
+      return{text:t.textContent,px:parseFloat(cs.fontSize),lines:Math.round(t.getBoundingClientRect().height/parseFloat(cs.lineHeight)),full:!document.getElementById("stormFull").hidden}});
+    /* not to "load", which waits for the held face */
+    await p.goto(`http://localhost:${PORT}/`,{waitUntil:"domcontentloaded"});
+    await p.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live")&&!document.getElementById("stormSection").hidden);await painted(p);
+    assert.equal(await p.evaluate(()=>document.fonts.check('650 26px "Bricolage Grotesque"')),false,"the card painted before the display face landed");
+    assert.ok(await p.evaluate(()=>window.__fits.length>0&&window.__fits.every(f=>!f.face)),"and its title was fitted in the fallback face");
+    release();
+    await p.waitForFunction(()=>document.fonts.check('650 26px "Bricolage Grotesque"'),null,{timeout:8000});
+    await p.waitForTimeout(300);
+    const fits=await p.evaluate(()=>window.__fits);
+    assert.ok(fits.some(f=>f.face),`the title was fitted again once the face had landed: ${JSON.stringify(fits)}`);
+    const after=await title();
+    assert.ok(after.lines<=3&&after.px>=18,`and it keeps to three lines at 18px or more: ${JSON.stringify(after)}`);
+    await p.evaluate(()=>stormTitleFit());
+    assert.deepEqual(await title(),after,"and it is what a fit from scratch in that face gives");
+    assert.ok(fontAt>0);
+    assert.deepEqual(m.errors,[]);await m.context.close();checks++;
+  }
+  console.log(`${checks} interaction scenarios passed: matched chart heights, hourly and tide exploration, warnings, thunder coming at the farm, the farm's sections after the coast, the entrance across a cache-to-live paint and below the fold, offline recovery, a storm card on a cold open, with the beach fast and the advisories slow, through a renewed beach warning (and 7h20m on, with the cache aged out and the beach fast, slow, slower than STORM_WAIT and failing) and growing under a reader inside it, the farm's card held through a failed alerts fetch and a cold open the next morning, WPC's index raising only the warnings it was asked for (an extended warning on a refresh, a new one on a cold open), the card, the strip and the headline kept through a failed alerts request at both places with an advisory ending during it, NOW and the headline on a warning issued ahead of its start and turning at noon, one period after midnight, its quoted title fitted again when the fonts land, on a two-hour-old cache whose beach warning has passed its expiry, and a tornado under a hurricane, and every line read by a real finger, the keys and a screen reader.`);
 }finally{
   await browser.close();server.close();
 }

@@ -1,0 +1,152 @@
+WTUS82 KILM 071458
+TCVILM
+
+URGENT - IMMEDIATE BROADCAST REQUESTED
+Debby Local Watch/Warning Statement/Advisory Number 21
+National Weather Service Wilmington NC  AL042024
+1058 AM EDT Wed Aug 7 2024
+
+NCZ108-072300-
+/O.CON.KILM.TR.W.1004.000000T0000Z-000000T0000Z/
+Coastal New Hanover-
+1058 AM EDT Wed Aug 7 2024
+
+...TROPICAL STORM WARNING REMAINS IN EFFECT...
+
+* LOCATIONS AFFECTED
+    - Carolina Beach
+    - Wrightsville Beach
+
+* WIND
+    - LATEST LOCAL FORECAST: Below tropical storm force wind
+        - Peak Wind Forecast: 25-35 mph with gusts to 45 mph
+
+    - THREAT TO LIFE AND PROPERTY THAT INCLUDES TYPICAL FORECAST 
+      UNCERTAINTY IN TRACK, SIZE AND INTENSITY: Potential for wind 39 
+      to 57 mph
+        - The wind threat has remained nearly steady from the 
+          previous assessment.
+        - PLAN: Plan for hazardous wind of equivalent tropical storm 
+          force.
+        - PREPARE: Remaining efforts to protect property should be 
+          completed as soon as possible. Prepare for limited wind 
+          damage.
+        - ACT: Move to safe shelter before the wind becomes hazardous.
+
+    - POTENTIAL IMPACTS: Limited
+        - Damage to porches, awnings, carports, sheds, and unanchored 
+          mobile homes is possible. Unsecured lightweight objects may 
+          be blown about.
+        - Some large limbs may break from trees. A few shallow rooted 
+          or weak trees may snap or be knocked down. Some fences and 
+          roadway signs will be damaged.
+        - A few roads may become impassable due to debris, 
+          particularly within urban or heavily wooded places. 
+          Hazardous driving conditions are possible, especially for 
+          high profile vehicles on bridges and other elevated 
+          roadways.
+        - Scattered power and communications outages are possible.
+
+* STORM SURGE
+    - LATEST LOCAL FORECAST: Localized storm surge possible
+        - Peak Storm Surge Inundation: The potential for 1-3 feet 
+          above ground somewhere within surge prone areas
+        - Window of concern: through Friday morning
+
+    - THREAT TO LIFE AND PROPERTY THAT INCLUDES TYPICAL FORECAST 
+      UNCERTAINTY IN TRACK, SIZE AND INTENSITY: Potential for storm 
+      surge flooding greater than 1 foot above ground
+        - The storm surge threat has remained nearly steady from the 
+          previous assessment.
+        - PLAN: Plan for storm surge flooding greater than 1 foot 
+          above ground.
+        - PREPARE: Complete preparations for storm surge flooding, 
+          especially in low-lying vulnerable areas, before conditions 
+          become unsafe.
+        - ACT: Leave immediately if evacuation orders are given for 
+          your area.
+
+    - POTENTIAL IMPACTS: Limited
+        - Localized inundation and minor overwash are possible, 
+          mainly along immediate shorelines and other vulnerable 
+          low-lying areas along the coast. Low spots along waterways 
+          and tidal creeks may also be impacted.
+        - Some portions of near-shore roads and parking lots may 
+          become covered by surge water. Driving conditions may 
+          become hazardous in places where the surge covers the road.
+        - Moderate beach erosion is possible, mainly in vulnerable 
+          locations along the oceanfront.
+        - Minor damage to marinas, docks, boardwalks, and piers is 
+          possible. A few small craft may break away from moorings if 
+          not properly secured.
+        - Navigation may be difficult near inlets and waterways, as 
+          navigational aids may be off station or missing.
+
+* FLOODING RAIN
+    - LATEST LOCAL FORECAST: Flood Watch is in effect
+        - Peak Rainfall Amounts: Additional 4-8 inches, with locally 
+          higher amounts
+
+    - THREAT TO LIFE AND PROPERTY THAT INCLUDES TYPICAL FORECAST 
+      UNCERTAINTY IN TRACK, SIZE AND INTENSITY: Potential for extreme 
+      flooding rain
+        - The flooding rain threat has remained nearly steady from 
+          the previous assessment.
+        - PLAN: Emergency plans should include the potential for 
+          extreme flooding from heavy rain. Evacuations and rescues 
+          are likely.
+        - PREPARE: Urgently consider protective actions from extreme 
+          and widespread rainfall flooding.
+        - ACT: Heed any flood watches and warnings. Failure to take 
+          action will likely result in serious injury or loss of life.
+
+    - POTENTIAL IMPACTS: Devastating to Catastrophic
+        - Extreme flooding from rainfall may prompt numerous 
+          evacuations and rescues.
+        - Rivers and streams may overwhelmingly overflow their banks 
+          with deep moving water. Creeks and ditches will become 
+          severely flooded and contain strong currents.
+        - Flood waters may enter numerous structures, and some may 
+          become uninhabitable or washed away. Road scours or 
+          complete road failure is likely in many locations, along 
+          with the potential for sinkholes. Many streets and parking 
+          lots will flood, and may be impacted by swift, flowing 
+          water. Numerous road and low-lying bridge closures are 
+          likely with some weakened or washed away. Driving 
+          conditions will be very dangerous.
+        - The delivery of drinking water and sewer services may be 
+          interrupted. Flood waters may be polluted and contain 
+          hazardous materials.
+
+* TORNADO
+    - LATEST LOCAL FORECAST: 
+        - Situation is somewhat favorable for tornadoes
+
+    - THREAT TO LIFE AND PROPERTY THAT INCLUDES TYPICAL FORECAST 
+      UNCERTAINTY IN TRACK, SIZE AND INTENSITY: Potential for a few 
+      tornadoes
+        - The tornado threat has remained nearly steady from the 
+          previous assessment.
+        - PLAN: Emergency plans should include the potential for a 
+          few tornadoes.
+        - PREPARE: If your shelter is particularly vulnerable to 
+          tornadoes, prepare to relocate to safe shelter before 
+          hazardous weather arrives.
+        - ACT: If a tornado warning is issued, be ready to shelter 
+          quickly.
+
+    - POTENTIAL IMPACTS: Limited
+        - The occurrence of isolated tornadoes can hinder 
+          preparedness actions during tropical events.
+        - A few places may experience tornado damage, along with 
+          power and communications disruptions.
+        - Tornadoes can cause damage to trees, vehicles, boats, and 
+          buildings. Unsecured mobile homes and poorly constructed 
+          structures are particularly vulnerable.
+
+* FOR MORE INFORMATION:
+    - http://www.weather.gov/ilm/tropical
+    - http://ready.gov/hurricanes
+    - http://readyNC.gov
+
+$$
