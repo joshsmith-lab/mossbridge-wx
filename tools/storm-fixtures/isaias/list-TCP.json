@@ -1,0 +1,251 @@
+{
+ "@context": {
+  "@version": "1.1",
+  "@vocab": "https://api.weather.gov/ontology#"
+ },
+ "@graph": [
+  {
+   "@id": "https://api.weather.gov/products/edff68cf-d9e8-4a10-9853-26a91b104704",
+   "id": "edff68cf-d9e8-4a10-9853-26a91b104704",
+   "wmoCollectiveId": "WTPZ35",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T17:58:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/8129c2f0-25c3-4261-8c01-c208f462d57a",
+   "id": "8129c2f0-25c3-4261-8c01-c208f462d57a",
+   "wmoCollectiveId": "WTPZ33",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T17:39:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/4d6a2a28-b398-4fa7-aad6-1e60c6447953",
+   "id": "4d6a2a28-b398-4fa7-aad6-1e60c6447953",
+   "wmoCollectiveId": "WTPQ33",
+   "issuingOffice": "PGUM",
+   "issuanceTime": "2026-10-10T15:36:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/b36dca57-abf4-4af2-9a6b-f9eb8270ca07",
+   "id": "b36dca57-abf4-4af2-9a6b-f9eb8270ca07",
+   "wmoCollectiveId": "WTNT34",
+   "issuingOffice": "KWNH",
+   "issuanceTime": "2026-10-10T15:34:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/b8d40800-2049-4ce4-a141-18c51dad7fe4",
+   "id": "b8d40800-2049-4ce4-a141-18c51dad7fe4",
+   "wmoCollectiveId": "WTNT34",
+   "issuingOffice": "KWNH",
+   "issuanceTime": "2026-10-10T14:58:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/819c0f39-f4e6-4ea7-a4cc-ceb006e877dd",
+   "id": "819c0f39-f4e6-4ea7-a4cc-ceb006e877dd",
+   "wmoCollectiveId": "WTPZ35",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T14:54:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/4d60af2c-540f-49c8-838b-945deef6bbc3",
+   "id": "4d60af2c-540f-49c8-838b-945deef6bbc3",
+   "wmoCollectiveId": "WTPZ33",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T14:52:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/1932a2fe-9e5b-4b3c-b149-7f7bb5c82415",
+   "id": "1932a2fe-9e5b-4b3c-b149-7f7bb5c82415",
+   "wmoCollectiveId": "WTPZ35",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T11:53:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/b6e9ad7f-0365-4e7b-be1b-eb8524085bfc",
+   "id": "b6e9ad7f-0365-4e7b-be1b-eb8524085bfc",
+   "wmoCollectiveId": "WTPZ33",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T11:51:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/a20a7391-3a9a-4734-a0c7-e89dba94768b",
+   "id": "a20a7391-3a9a-4734-a0c7-e89dba94768b",
+   "wmoCollectiveId": "WTPQ33",
+   "issuingOffice": "PGUM",
+   "issuanceTime": "2026-10-10T09:22:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/1d1142de-7f8b-45e5-b46e-1729bf3075ba",
+   "id": "1d1142de-7f8b-45e5-b46e-1729bf3075ba",
+   "wmoCollectiveId": "WTPZ33",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T08:52:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/90c85a93-9823-4fd2-810c-5242a23b77b7",
+   "id": "90c85a93-9823-4fd2-810c-5242a23b77b7",
+   "wmoCollectiveId": "WTNT34",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T08:43:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/0cd9d446-e06c-4475-beb5-7c5cc3817e7c",
+   "id": "0cd9d446-e06c-4475-beb5-7c5cc3817e7c",
+   "wmoCollectiveId": "WTPZ35",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T08:36:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/86e50599-cd4c-4aef-875c-21155ec37d73",
+   "id": "86e50599-cd4c-4aef-875c-21155ec37d73",
+   "wmoCollectiveId": "WTPZ33",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T05:58:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/c657c84e-8c3f-470f-96ec-50a5014bdd34",
+   "id": "c657c84e-8c3f-470f-96ec-50a5014bdd34",
+   "wmoCollectiveId": "WTNT34",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T05:52:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/4040432f-f1e7-443f-babb-79b137aa66ad",
+   "id": "4040432f-f1e7-443f-babb-79b137aa66ad",
+   "wmoCollectiveId": "WTPZ35",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T05:46:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/69520872-6c9b-4f94-8dc6-007145a67898",
+   "id": "69520872-6c9b-4f94-8dc6-007145a67898",
+   "wmoCollectiveId": "WTPQ33",
+   "issuingOffice": "PGUM",
+   "issuanceTime": "2026-10-10T03:10:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/1f20e0b7-27f8-46f0-b5fa-9c32194a8ee1",
+   "id": "1f20e0b7-27f8-46f0-b5fa-9c32194a8ee1",
+   "wmoCollectiveId": "WTPZ33",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T02:47:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/782678fc-567f-4304-9239-141289f7fba7",
+   "id": "782678fc-567f-4304-9239-141289f7fba7",
+   "wmoCollectiveId": "WTNT34",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T02:45:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/412b0ace-ea96-4285-ab5a-57b4febca633",
+   "id": "412b0ace-ea96-4285-ab5a-57b4febca633",
+   "wmoCollectiveId": "WTPZ35",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-10T02:36:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/fc1642b0-1faf-41e0-8051-17a4c4d2663c",
+   "id": "fc1642b0-1faf-41e0-8051-17a4c4d2663c",
+   "wmoCollectiveId": "WTNT34",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-09T23:49:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/4b1370fd-cfe6-4cad-bf2d-1fb4c70823b8",
+   "id": "4b1370fd-cfe6-4cad-bf2d-1fb4c70823b8",
+   "wmoCollectiveId": "WTPZ35",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-09T23:47:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/c5f0e125-6089-4dcf-83ef-d7f80e6e272c",
+   "id": "c5f0e125-6089-4dcf-83ef-d7f80e6e272c",
+   "wmoCollectiveId": "WTPZ33",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-09T23:45:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/ae626567-35d8-448d-90c6-fe0ef64143c4",
+   "id": "ae626567-35d8-448d-90c6-fe0ef64143c4",
+   "wmoCollectiveId": "WTPQ33",
+   "issuingOffice": "PGUM",
+   "issuanceTime": "2026-10-09T21:13:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/0d97c01e-45a0-492b-bfe9-975a55022c09",
+   "id": "0d97c01e-45a0-492b-bfe9-975a55022c09",
+   "wmoCollectiveId": "WTNT34",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-09T20:52:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/eb6ff832-60ef-4964-93c8-6b6f373d39ae",
+   "id": "eb6ff832-60ef-4964-93c8-6b6f373d39ae",
+   "wmoCollectiveId": "WTPZ35",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-09T20:45:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  },
+  {
+   "@id": "https://api.weather.gov/products/f514ce3d-912b-449e-9eb3-b3c783e7680e",
+   "id": "f514ce3d-912b-449e-9eb3-b3c783e7680e",
+   "wmoCollectiveId": "WTPZ33",
+   "issuingOffice": "KNHC",
+   "issuanceTime": "2026-10-09T20:43:00+00:00",
+   "productCode": "TCP",
+   "productName": "Public Tropical Cyclone Advisory"
+  }
+ ]
+}

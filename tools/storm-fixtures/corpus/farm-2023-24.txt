@@ -1,0 +1,931 @@
+# RLX, Southeast Raleigh (WVZ516; Raleigh, WVZ035, before the split): winter storm, blizzard and ice storm warnings, the 2023-24 winter, verbatim from Iowa State's AFOS archive (tools/storm-corpus.mjs)
+%% WSWRLX 2024-01-14T19:17:00Z WVZ516
+WWUS41 KRLX 141917
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+217 PM EST Sun Jan 14 2024
+
+KYZ105-WVZ005-013>015-024>026-515>517-150330-
+/O.NEW.KRLX.WS.W.0001.240115T0600Z-240116T1200Z/
+Lawrence KY-Wayne-Lincoln-Putnam-Kanawha-Mingo-Logan-Boone-
+Northwest Raleigh-Southeast Raleigh-Northwest Fayette-
+Including the cities of Louisa, Yatesville Lake State Park, 
+Kenova, Ceredo, Wayne, Harts, Alum Creek, Hamlin, Teays Valley, 
+Hurricane, Charleston, South Charleston, Saint Albans, 
+Williamson, Logan, Chapmanville, Man, Madison, Bradley, 
+Prosperity, Sophia, Beckley, Oak Hill, Fayetteville, 
+and Montgomery
+217 PM EST Sun Jan 14 2024
+
+...WINTER STORM WARNING IN EFFECT FROM 1 AM MONDAY TO 7 AM EST
+TUESDAY...
+
+* WHAT...Heavy snow expected. Total snow accumulations of 3 to 6 
+  inches.
+
+* WHERE...Portions of northeast Kentucky and southeast, southern 
+  and western West Virginia.
+
+* WHEN...From 1 AM Monday to 7 AM EST Tuesday.
+
+* IMPACTS...Travel could be very difficult. The hazardous 
+  conditions could impact the morning or evening commute.
+
+* ADDITIONAL DETAILS...A lull in snowfall is expected late Monday
+  morning before heavier snowfall resumes Monday afternoon.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in
+your vehicle in case of an emergency. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2024-01-15T03:13:00Z WVZ516
+WWUS41 KRLX 150313
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+1013 PM EST Sun Jan 14 2024
+
+KYZ105-VAZ003-004-WVZ005-013>015-024>026-033-034-515>517-151115-
+/O.CON.KRLX.WS.W.0001.240115T0600Z-240116T1200Z/
+Lawrence KY-Dickenson-Buchanan-Wayne-Lincoln-Putnam-Kanawha-Mingo-
+Logan-Boone-McDowell-Wyoming-Northwest Raleigh-Southeast Raleigh-
+Northwest Fayette-
+Including the cities of Louisa, Yatesville Lake State Park, 
+Clintwood, Grundy, Vansant, Kenova, Ceredo, Wayne, Harts, 
+Alum Creek, Hamlin, Teays Valley, Hurricane, Charleston, 
+South Charleston, Saint Albans, Williamson, Logan, Chapmanville, 
+Man, Madison, Welch, Gary, War, Mullens, Oceana, Pineville, 
+Bradley, Prosperity, Sophia, Beckley, Oak Hill, Fayetteville, 
+and Montgomery
+1013 PM EST Sun Jan 14 2024
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 7 AM EST
+TUESDAY...
+
+* WHAT...Heavy snow expected. Total snow accumulations of 4 to 6 
+  inches.
+
+* WHERE...Portions of northeast Kentucky, southwest Virginia and 
+  southeast, southern and western West Virginia.
+
+* WHEN...Until 7 AM EST Tuesday.
+
+* IMPACTS...Travel could be very difficult. The hazardous
+  conditions could impact the morning or evening commute.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in
+your vehicle in case of an emergency. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2024-01-15T08:44:00Z WVZ516
+WWUS41 KRLX 150844
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+344 AM EST Mon Jan 15 2024
+
+KYZ105-VAZ003-004-WVZ005-013>015-024>026-033-034-515>517-151645-
+/O.EXT.KRLX.WS.W.0001.000000T0000Z-240116T1500Z/
+Lawrence KY-Dickenson-Buchanan-Wayne-Lincoln-Putnam-Kanawha-Mingo-
+Logan-Boone-McDowell-Wyoming-Northwest Raleigh-Southeast Raleigh-
+Northwest Fayette-
+Including the cities of Louisa, Yatesville Lake State Park, 
+Clintwood, Grundy, Vansant, Kenova, Ceredo, Wayne, Harts, 
+Alum Creek, Hamlin, Teays Valley, Hurricane, Charleston, 
+South Charleston, Saint Albans, Williamson, Logan, Chapmanville, 
+Man, Madison, Welch, Gary, War, Mullens, Oceana, Pineville, 
+Bradley, Prosperity, Sophia, Beckley, Oak Hill, Fayetteville, 
+and Montgomery
+344 AM EST Mon Jan 15 2024
+
+...WINTER STORM WARNING NOW IN EFFECT UNTIL 10 AM EST TUESDAY...
+
+* WHAT...Heavy snow. Additional snow accumulations of 4 to 6 
+  inches. Locally higher amounts possible.
+
+* WHERE...Portions of northeast Kentucky, southwest Virginia and 
+  southeast, southern and western West Virginia.
+
+* WHEN...Until 10 AM EST Tuesday.
+
+* IMPACTS...Travel could be very difficult. The hazardous 
+  conditions could impact the morning or evening commute.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in
+your vehicle in case of an emergency. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2024-01-15T15:32:00Z WVZ516
+WWUS41 KRLX 151532
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+1032 AM EST Mon Jan 15 2024
+
+KYZ105-VAZ003-004-WVZ005-006-008-013>016-018-024>030-033-034-039-
+040-515>526-160000-
+/O.CON.KRLX.WS.W.0001.000000T0000Z-240116T1500Z/
+Lawrence KY-Dickenson-Buchanan-Wayne-Cabell-Jackson WV-Lincoln-
+Putnam-Kanawha-Roane-Calhoun-Mingo-Logan-Boone-Clay-Braxton-
+Gilmer-Lewis-McDowell-Wyoming-Upshur-Barbour-Northwest Raleigh-
+Southeast Raleigh-Northwest Fayette-Southeast Fayette-
+Northwest Nicholas-Southeast Nicholas-Northwest Webster-
+Southeast Webster-Northwest Pocahontas-Southeast Pocahontas-
+Northwest Randolph-Southeast Randolph-
+Including the cities of Louisa, Yatesville Lake State Park, 
+Clintwood, Grundy, Vansant, Kenova, Ceredo, Wayne, Huntington, 
+Ravenswood, Ripley, Harts, Alum Creek, Hamlin, Teays Valley, 
+Hurricane, Charleston, South Charleston, Saint Albans, Spencer, 
+Grantsville, Williamson, Logan, Chapmanville, Man, Madison, Clay,
+Sutton, Gassaway, Burnsville, Glenville, Weston, Welch, Gary, 
+War, Mullens, Oceana, Pineville, Buckhannon, Philippi, Belington,
+Bradley, Prosperity, Sophia, Beckley, Oak Hill, Fayetteville, 
+Montgomery, Meadow Bridge, Summersville, Craigsville, 
+Birch River, Richwood, Holly River State, Webster Springs, Cowen,
+Snowshoe, Marlinton, Elkins, and Harman
+1032 AM EST Mon Jan 15 2024
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 10 AM EST
+TUESDAY...
+
+* WHAT...Heavy snow. Additional snow accumulations of 4 to 6 
+  inches. Locally higher amounts possible. 
+
+* WHERE...Portions of northeast Kentucky, southwest Virginia and 
+  southeast, southern and western West Virginia. 
+
+* WHEN...Until 10 AM EST Tuesday.
+
+* IMPACTS...Travel could be very difficult. The hazardous 
+  conditions could impact the morning or evening commute. 
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in
+your vehicle in case of an emergency.
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2024-01-15T16:45:00Z WVZ516
+WWUS41 KRLX 151645
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+1145 AM EST Mon Jan 15 2024
+
+KYZ105-VAZ003-004-WVZ005-006-008-013>016-018-024>030-033-034-039-
+040-515>526-160045-
+/O.CON.KRLX.WS.W.0001.000000T0000Z-240116T1500Z/
+Lawrence KY-Dickenson-Buchanan-Wayne-Cabell-Jackson WV-Lincoln-
+Putnam-Kanawha-Roane-Calhoun-Mingo-Logan-Boone-Clay-Braxton-
+Gilmer-Lewis-McDowell-Wyoming-Upshur-Barbour-Northwest Raleigh-
+Southeast Raleigh-Northwest Fayette-Southeast Fayette-
+Northwest Nicholas-Southeast Nicholas-Northwest Webster-
+Southeast Webster-Northwest Pocahontas-Southeast Pocahontas-
+Northwest Randolph-Southeast Randolph-
+Including the cities of Louisa, Yatesville Lake State Park, 
+Clintwood, Grundy, Vansant, Kenova, Ceredo, Wayne, Huntington, 
+Ravenswood, Ripley, Harts, Alum Creek, Hamlin, Teays Valley, 
+Hurricane, Charleston, South Charleston, Saint Albans, Spencer, 
+Grantsville, Williamson, Logan, Chapmanville, Man, Madison, Clay,
+Sutton, Gassaway, Burnsville, Glenville, Weston, Welch, Gary, 
+War, Mullens, Oceana, Pineville, Buckhannon, Philippi, Belington,
+Bradley, Prosperity, Sophia, Beckley, Oak Hill, Fayetteville, 
+Montgomery, Meadow Bridge, Summersville, Craigsville, 
+Birch River, Richwood, Holly River State, Webster Springs, Cowen,
+Snowshoe, Marlinton, Elkins, and Harman
+1145 AM EST Mon Jan 15 2024
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 10 AM EST
+TUESDAY...
+
+* WHAT...Heavy snow. Additional snow accumulations of 4 to 6 
+  inches. Locally higher amounts possible. 
+
+* WHERE...Portions of northeast Kentucky, southwest Virginia and 
+  southeast, southern and western West Virginia. 
+
+* WHEN...Until 10 AM EST Tuesday.
+
+* IMPACTS...Travel could be very difficult. The hazardous 
+  conditions could impact the morning or evening commute. 
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in
+your vehicle in case of an emergency.
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2024-01-15T23:57:00Z WVZ516
+WWUS41 KRLX 152357
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+657 PM EST Mon Jan 15 2024
+
+KYZ105-VAZ003-004-WVZ005-006-008-013>016-018-024>030-033-034-039-
+040-515>526-160800-
+/O.CON.KRLX.WS.W.0001.000000T0000Z-240116T1500Z/
+Lawrence KY-Dickenson-Buchanan-Wayne-Cabell-Jackson WV-Lincoln-
+Putnam-Kanawha-Roane-Calhoun-Mingo-Logan-Boone-Clay-Braxton-
+Gilmer-Lewis-McDowell-Wyoming-Upshur-Barbour-Northwest Raleigh-
+Southeast Raleigh-Northwest Fayette-Southeast Fayette-
+Northwest Nicholas-Southeast Nicholas-Northwest Webster-
+Southeast Webster-Northwest Pocahontas-Southeast Pocahontas-
+Northwest Randolph-Southeast Randolph-
+Including the cities of Louisa, Yatesville Lake State Park, 
+Clintwood, Grundy, Vansant, Kenova, Ceredo, Wayne, Huntington, 
+Ravenswood, Ripley, Harts, Alum Creek, Hamlin, Teays Valley, 
+Hurricane, Charleston, South Charleston, Saint Albans, Spencer, 
+Grantsville, Williamson, Logan, Chapmanville, Man, Madison, Clay,
+Sutton, Gassaway, Burnsville, Glenville, Weston, Welch, Gary, 
+War, Mullens, Oceana, Pineville, Buckhannon, Philippi, Belington,
+Bradley, Prosperity, Sophia, Beckley, Oak Hill, Fayetteville, 
+Montgomery, Meadow Bridge, Summersville, Craigsville, 
+Birch River, Richwood, Holly River State, Webster Springs, Cowen,
+Snowshoe, Marlinton, Elkins, and Harman
+657 PM EST Mon Jan 15 2024
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 10 AM EST
+TUESDAY...
+
+* WHAT...Heavy snow. Additional snow accumulations of 2 to 4
+  inches, bringing storm total snowfall to the 3 to 8 inch range.
+
+* WHERE...Portions of northeast Kentucky, southwest Virginia and 
+  central, northeast, northern, southeast, southern and western 
+  West Virginia.
+
+* WHEN...Until 10 AM EST Tuesday.
+
+* IMPACTS...Plan on slippery road conditions. The hazardous 
+  conditions could impact the morning commute.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in
+your vehicle in case of an emergency. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2024-01-16T07:40:00Z WVZ516
+WWUS41 KRLX 160740
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+240 AM EST Tue Jan 16 2024
+
+VAZ003-004-WVZ033-034-039-040-515>519-521-524-525-161545-
+/O.NEW.KRLX.WC.Y.0002.240116T2200Z-240117T1600Z/
+/O.CON.KRLX.WS.W.0001.000000T0000Z-240116T1500Z/
+Dickenson-Buchanan-McDowell-Wyoming-Upshur-Barbour-
+Northwest Raleigh-Southeast Raleigh-Northwest Fayette-
+Southeast Fayette-Northwest Nicholas-Northwest Webster-
+Southeast Pocahontas-Northwest Randolph-
+Including the cities of Clintwood, Grundy, Vansant, Welch, Gary, 
+War, Mullens, Oceana, Pineville, Buckhannon, Philippi, Belington,
+Bradley, Prosperity, Sophia, Beckley, Oak Hill, Fayetteville, 
+Montgomery, Meadow Bridge, Summersville, Craigsville, 
+Birch River, Holly River State, Webster Springs, Cowen, 
+Marlinton, and Elkins
+240 AM EST Tue Jan 16 2024
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 10 AM EST THIS
+MORNING...
+...WIND CHILL ADVISORY IN EFFECT FROM 5 PM THIS AFTERNOON TO
+11 AM EST WEDNESDAY...
+
+* WHAT...For the Winter Storm Warning, additional snow 
+  accumulations of up to one inch. For the Wind Chill Advisory, 
+  very cold wind chills expected. Wind chills as low as 20 below 
+  zero.
+
+* WHERE...Portions of southwest Virginia and northeast, 
+  northern, southeast and southern West Virginia.
+
+* WHEN...For the Winter Storm Warning, until 10 AM EST this 
+  morning. For the Wind Chill Advisory, from 5 PM this afternoon 
+  to 11 AM EST Wednesday.
+
+* IMPACTS...Plan on slippery road conditions. The hazardous 
+  conditions could impact the morning or evening commute. The 
+  cold wind chills could result in hypothermia if precautions 
+  are not taken.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in
+your vehicle in case of an emergency. 
+
+Use caution while traveling outside. Wear appropriate clothing, a
+hat, and gloves. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2024-01-18T08:28:00Z WVZ516
+WWUS41 KRLX 180828
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+328 AM EST Thu Jan 18 2024
+
+OHZ067-076-WVZ010-011-015>020-025>034-039-040-515>518-181630-
+/O.UPG.KRLX.WS.A.0002.240119T0000Z-240120T0600Z/
+/O.NEW.KRLX.WS.W.0002.240119T0000Z-240120T1500Z/
+Morgan-Washington-Pleasants-Tyler-Kanawha-Roane-Wirt-Calhoun-
+Ritchie-Doddridge-Logan-Boone-Clay-Braxton-Gilmer-Lewis-Harrison-
+Taylor-McDowell-Wyoming-Upshur-Barbour-Northwest Raleigh-
+Southeast Raleigh-Northwest Fayette-Southeast Fayette-
+Including the cities of McConnelsville, Stockport, Marietta, 
+Belpre, St. Marys, Belmont, Paden City, Sistersville, 
+Middlebourne, Charleston, South Charleston, Saint Albans, 
+Spencer, Elizabeth, Grantsville, Harrisville, Pennsboro, 
+West Union, Logan, Chapmanville, Man, Madison, Clay, Sutton, 
+Gassaway, Burnsville, Glenville, Weston, Clarksburg, Bridgeport, 
+Grafton, Welch, Gary, War, Mullens, Oceana, Pineville, 
+Buckhannon, Philippi, Belington, Bradley, Prosperity, Sophia, 
+Beckley, Oak Hill, Fayetteville, Montgomery, and Meadow Bridge
+328 AM EST Thu Jan 18 2024
+
+...WINTER STORM WARNING IN EFFECT FROM 7 PM THIS EVENING TO 10 AM
+EST SATURDAY...
+
+* WHAT...Heavy snow expected. Total snow accumulations of 4 to 8 
+  inches.
+
+* WHERE...Portions of southeast Ohio and central, northern, 
+  southeast and southern West Virginia.
+
+* WHEN...From 7 PM this evening to 10 AM EST Saturday.
+
+* IMPACTS...Travel could be very difficult to impossible. The 
+  hazardous conditions could impact the morning or evening 
+  commute.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in
+your vehicle in case of an emergency. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2024-01-18T15:07:00Z WVZ516
+WWUS41 KRLX 181507
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+1007 AM EST Thu Jan 18 2024
+
+OHZ067-076-WVZ008>011-015>020-024>034-039-040-515>518-190100-
+/O.CON.KRLX.WS.W.0002.240119T0000Z-240120T1500Z/
+Morgan-Washington-Jackson WV-Wood-Pleasants-Tyler-Kanawha-Roane-
+Wirt-Calhoun-Ritchie-Doddridge-Mingo-Logan-Boone-Clay-Braxton-
+Gilmer-Lewis-Harrison-Taylor-McDowell-Wyoming-Upshur-Barbour-
+Northwest Raleigh-Southeast Raleigh-Northwest Fayette-
+Southeast Fayette-
+Including the cities of McConnelsville, Stockport, Marietta, 
+Belpre, Ravenswood, Ripley, Parkersburg, Vienna, St. Marys, 
+Belmont, Paden City, Sistersville, Middlebourne, Charleston, 
+South Charleston, Saint Albans, Spencer, Elizabeth, Grantsville, 
+Harrisville, Pennsboro, West Union, Williamson, Logan, 
+Chapmanville, Man, Madison, Clay, Sutton, Gassaway, Burnsville, 
+Glenville, Weston, Clarksburg, Bridgeport, Grafton, Welch, Gary, 
+War, Mullens, Oceana, Pineville, Buckhannon, Philippi, Belington,
+Bradley, Prosperity, Sophia, Beckley, Oak Hill, Fayetteville, 
+Montgomery, and Meadow Bridge
+1007 AM EST Thu Jan 18 2024
+
+...WINTER STORM WARNING REMAINS IN EFFECT FROM 7 PM THIS EVENING
+TO 10 AM EST SATURDAY...
+
+* WHAT...Heavy snow expected. Total snow accumulations of 4 to 8 
+  inches.
+
+* WHERE...Portions of southeast Ohio and central, northern, 
+  southeast and southern West Virginia.
+
+* WHEN...From 7 PM this evening to 10 AM EST Saturday.
+
+* IMPACTS...Travel could be very difficult to impossible. The 
+  hazardous conditions could impact the morning or evening 
+  commute.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in
+your vehicle in case of an emergency.
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2024-01-18T18:54:00Z WVZ516
+WWUS41 KRLX 181854
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+154 PM EST Thu Jan 18 2024
+
+WVZ027-028-032-039-040-515>518-190300-
+/O.CON.KRLX.WS.W.0002.240119T0000Z-240120T1500Z/
+Clay-Braxton-Taylor-Upshur-Barbour-Northwest Raleigh-
+Southeast Raleigh-Northwest Fayette-Southeast Fayette-
+Including the cities of Clay, Sutton, Gassaway, Burnsville, 
+Grafton, Buckhannon, Philippi, Belington, Bradley, Prosperity, 
+Sophia, Beckley, Oak Hill, Fayetteville, Montgomery, 
+and Meadow Bridge
+154 PM EST Thu Jan 18 2024
+
+...WINTER STORM WARNING REMAINS IN EFFECT FROM 7 PM THIS EVENING
+TO 10 AM EST SATURDAY...
+
+* WHAT...Heavy snow expected. Total snow accumulations of 5 to 10
+  inches.
+
+* WHERE...Portions of southeast Ohio and central, northern, 
+  southeast and southern West Virginia.
+
+* WHEN...From 7 PM this evening to 10 AM EST Saturday.
+
+* IMPACTS...Travel could be very difficult to impossible. The 
+  hazardous conditions could impact the morning or evening 
+  commute.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in
+your vehicle in case of an emergency.
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2024-01-19T01:29:00Z WVZ516
+WWUS41 KRLX 190129
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+829 PM EST Thu Jan 18 2024
+
+WVZ027-028-032-039-040-515>518-190930-
+/O.CON.KRLX.WS.W.0002.000000T0000Z-240120T1500Z/
+Clay-Braxton-Taylor-Upshur-Barbour-Northwest Raleigh-
+Southeast Raleigh-Northwest Fayette-Southeast Fayette-
+Including the cities of Clay, Sutton, Gassaway, Burnsville, 
+Grafton, Buckhannon, Philippi, Belington, Bradley, Prosperity, 
+Sophia, Beckley, Oak Hill, Fayetteville, Montgomery, 
+and Meadow Bridge
+829 PM EST Thu Jan 18 2024
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 10 AM EST
+SATURDAY...
+
+* WHAT...Heavy snow expected. Total snow accumulations of 5 to 
+  10 inches.
+
+* WHERE...Portions of southeast Ohio and central, northern, 
+  southeast and southern West Virginia.
+
+* WHEN...From 7 PM this evening to 10 AM EST Saturday.
+
+* IMPACTS...Travel could be very difficult to impossible. The
+  hazardous conditions could impact the Friday morning and 
+  evening commute.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in
+your vehicle in case of an emergency.
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2024-01-19T08:53:00Z WVZ516
+WWUS41 KRLX 190853
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+353 AM EST Fri Jan 19 2024
+
+WVZ027-028-032-039-040-515>518-191830-
+/O.CON.KRLX.WS.W.0002.000000T0000Z-240120T1500Z/
+Clay-Braxton-Taylor-Upshur-Barbour-Northwest Raleigh-
+Southeast Raleigh-Northwest Fayette-Southeast Fayette-
+Including the cities of Clay, Sutton, Gassaway, Burnsville, 
+Grafton, Buckhannon, Philippi, Belington, Bradley, Prosperity, 
+Sophia, Beckley, Oak Hill, Fayetteville, Montgomery, 
+and Meadow Bridge
+353 AM EST Fri Jan 19 2024
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 10 AM EST
+SATURDAY...
+
+* WHAT...Heavy snow expected. Additional snow accumulations of 5 
+  to 10 inches and ice accumulations of a light glaze. Winds 
+  gusting as high as 35 mph.
+
+* WHERE...Portions of central, northern and southeast West 
+  Virginia.
+
+* WHEN...Until 10 AM EST Saturday.
+
+* IMPACTS...Travel could be very difficult to impossible. The 
+  hazardous conditions could impact the morning or evening 
+  commute. The cold wind chills as low as 10 below zero could 
+  result in hypothermia if precautions are not taken.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in
+your vehicle in case of an emergency. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2024-01-19T17:56:00Z WVZ516
+WWUS41 KRLX 191756
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+Issued by National Weather Service Pittsburgh PA
+1256 PM EST Fri Jan 19 2024
+
+WVZ027-028-032-039-040-515>518-200200-
+/O.CON.KRLX.WS.W.0002.000000T0000Z-240120T1500Z/
+Clay-Braxton-Taylor-Upshur-Barbour-Northwest Raleigh-
+Southeast Raleigh-Northwest Fayette-Southeast Fayette-
+Including the cities of Clay, Sutton, Gassaway, Burnsville, 
+Grafton, Buckhannon, Philippi, Belington, Bradley, Prosperity, 
+Sophia, Beckley, Oak Hill, Fayetteville, Montgomery, 
+and Meadow Bridge
+1256 PM EST Fri Jan 19 2024
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 10 AM EST
+SATURDAY...
+
+* WHAT...Snow. Additional snow accumulations of 2 to 5 inches. 
+  Winds gusting as high as 35 mph.
+
+* WHERE...Portions of central, northern and southeast West 
+  Virginia.
+
+* WHEN...Until 10 AM EST Saturday.
+
+* IMPACTS...Travel could be very difficult. The hazardous 
+  conditions could impact the evening commute. The cold wind 
+  chills as low as 10 below zero could result in hypothermia if 
+  precautions are not taken.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in
+your vehicle in case of an emergency.
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2024-01-19T19:35:00Z WVZ516
+WWUS41 KRLX 191935
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+Issued by National Weather Service Pittsburgh PA
+235 PM EST Fri Jan 19 2024
+
+WVZ027-028-032-039-040-515>518-200500-
+/O.CON.KRLX.WS.W.0002.000000T0000Z-240120T1500Z/
+Clay-Braxton-Taylor-Upshur-Barbour-Northwest Raleigh-
+Southeast Raleigh-Northwest Fayette-Southeast Fayette-
+Including the cities of Clay, Sutton, Gassaway, Burnsville, 
+Grafton, Buckhannon, Philippi, Belington, Bradley, Prosperity, 
+Sophia, Beckley, Oak Hill, Fayetteville, Montgomery, 
+and Meadow Bridge
+235 PM EST Fri Jan 19 2024
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 10 AM EST
+SATURDAY...
+
+* WHAT...Snow. Additional snow accumulations of 2 to 4 inches. 
+  Winds gusting as high as 35 mph.
+
+* WHERE...Portions of central, northern and southeast West 
+  Virginia.
+
+* WHEN...Until 10 AM EST Saturday.
+
+* IMPACTS...Plan on slippery road conditions. Patchy blowing 
+  snow could significantly reduce visibility.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in
+your vehicle in case of an emergency.
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2024-01-19T20:03:00Z WVZ516
+WWUS41 KRLX 192003
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+Issued by National Weather Service Pittsburgh PA
+303 PM EST Fri Jan 19 2024
+
+WVZ516-518-200415-
+/O.NEW.KRLX.WC.Y.0003.240120T0600Z-240121T1500Z/
+/O.CON.KRLX.WS.W.0002.000000T0000Z-240120T1500Z/
+Southeast Raleigh-Southeast Fayette-
+Including the cities of Beckley and Meadow Bridge
+303 PM EST Fri Jan 19 2024
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 10 AM EST
+SATURDAY...
+...WIND CHILL ADVISORY IN EFFECT FROM 1 AM SATURDAY TO 10 AM EST
+SUNDAY...
+
+* WHAT...Snow. Additional snow accumulations of 2 to 4 inches.
+  Winds gusting as high as 40 mph. Wind chills as low as 10 below
+  zero.
+
+* WHERE...Southeast Raleigh and Southeast Fayette Counties.
+
+* WHEN...For the Winter Storm Warning, until 10 AM EST Saturday. 
+  For the Wind Chill Advisory, from 1 AM Saturday to 10 AM EST 
+  Sunday.
+
+* IMPACTS...Travel could be very difficult. Patchy blowing snow 
+  could significantly reduce visibility. The cold wind chills 
+  could result in hypothermia if precautions are not taken.
+
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in
+your vehicle in case of an emergency. 
+
+Use caution while traveling outside. Wear appropriate clothing, a
+hat, and gloves. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2024-01-20T02:43:00Z WVZ516
+WWUS41 KRLX 200243
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+Issued by National Weather Service Pittsburgh PA
+943 PM EST Fri Jan 19 2024
+
+WVZ516-518-201100-
+/O.CON.KRLX.WS.W.0002.000000T0000Z-240120T1500Z/
+/O.CON.KRLX.WC.Y.0003.240120T0600Z-240121T1500Z/
+Southeast Raleigh-Southeast Fayette-
+Including the cities of Beckley and Meadow Bridge
+943 PM EST Fri Jan 19 2024
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 10 AM EST
+SATURDAY...
+...WIND CHILL ADVISORY REMAINS IN EFFECT FROM 1 AM SATURDAY TO
+10 AM EST SUNDAY...
+
+* WHAT...For the Winter Storm Warning, heavy snow. Additional 
+  snow accumulations of 1 to 3 inches. Winds gusting as high as 
+  35 mph. For the Wind Chill Advisory, very cold wind chills 
+  expected. Wind chills as low as 10 below zero.
+
+* WHERE...Southeast Raleigh and Southeast Fayette Counties.
+
+* WHEN...For the Winter Storm Warning, until 10 AM EST Saturday. 
+  For the Wind Chill Advisory, from 1 AM Saturday to 10 AM EST 
+  Sunday.
+
+* IMPACTS...Travel could be very difficult. Patchy blowing snow 
+  could significantly reduce visibility. The cold wind chills 
+  could result in hypothermia if precautions are not taken.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in
+your vehicle in case of an emergency. 
+
+Use caution while traveling outside. Wear appropriate clothing, a
+hat, and gloves. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2024-01-20T10:14:00Z WVZ516
+WWUS41 KRLX 201014
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+Issued by National Weather Service Pittsburgh PA
+514 AM EST Sat Jan 20 2024
+
+WVZ516-518-201500-
+/O.CON.KRLX.WS.W.0002.000000T0000Z-240120T1500Z/
+/O.CON.KRLX.WC.Y.0003.000000T0000Z-240121T1500Z/
+Southeast Raleigh-Southeast Fayette-
+Including the cities of Beckley and Meadow Bridge
+514 AM EST Sat Jan 20 2024
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 10 AM EST THIS
+MORNING...
+...WIND CHILL ADVISORY REMAINS IN EFFECT UNTIL 10 AM EST SUNDAY...
+
+* WHAT...For the Winter Storm Warning, heavy snow. Additional 
+  snow accumulations of 1 to 3 inches. Winds gusting as high as 
+  35 mph. For the Wind Chill Advisory, very cold wind chills 
+  expected. Wind chills as low as 10 below zero.
+
+* WHERE...Southeast Raleigh and Southeast Fayette Counties.
+
+* WHEN...For the Winter Storm Warning, until 10 AM EST Saturday. 
+  For the Wind Chill Advisory, from 1 AM Saturday to 10 AM EST 
+  Sunday.
+
+* IMPACTS...Travel could be very difficult. Patchy blowing snow
+  could significantly reduce visibility. The cold wind chills
+  could result in hypothermia if precautions are not taken.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in
+your vehicle in case of an emergency.
+
+Use caution while traveling outside. Wear appropriate clothing, a
+hat, and gloves.
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$
+
+%% WSWRLX 2024-01-20T12:02:00Z WVZ516
+WWUS41 KRLX 201202
+WSWRLX
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Charleston WV
+Issued by National Weather Service Pittsburgh PA
+702 AM EST Sat Jan 20 2024
+
+WVZ516-518-202015-
+/O.CON.KRLX.WS.W.0002.000000T0000Z-240120T1500Z/
+/O.CON.KRLX.WC.Y.0003.000000T0000Z-240121T1500Z/
+Southeast Raleigh-Southeast Fayette-
+Including the cities of Beckley and Meadow Bridge
+702 AM EST Sat Jan 20 2024
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 10 AM EST THIS
+MORNING...
+...WIND CHILL ADVISORY REMAINS IN EFFECT UNTIL 10 AM EST SUNDAY...
+
+* WHAT...For the Winter Storm Warning, heavy snow. Additional 
+  snow accumulations of up to one inch. For the Wind Chill 
+  Advisory, very cold wind chills. Wind chills as low as 15 
+  below zero.
+
+* WHERE...Southeast Raleigh and Southeast Fayette Counties.
+
+* WHEN...For the Winter Storm Warning, until 10 AM EST this 
+  morning. For the Wind Chill Advisory, until 10 AM EST Sunday.
+
+* IMPACTS...Plan on slippery road conditions. The cold wind 
+  chills could result in hypothermia if precautions are not 
+  taken.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in
+your vehicle in case of an emergency. 
+
+Use caution while traveling outside. Wear appropriate clothing, a
+hat, and gloves. 
+
+Additional information can be found at
+https://www.weather.gov/rlx as well as on our Facebook and
+Twitter pages.
+
+&&
+
+$$

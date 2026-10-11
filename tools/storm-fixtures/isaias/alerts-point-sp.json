@@ -1,0 +1,138 @@
+{
+ "@context": [
+  "https://geojson.org/geojson-ld/geojson-context.jsonld",
+  {
+   "@version": "1.1",
+   "wx": "https://api.weather.gov/ontology#",
+   "@vocab": "https://api.weather.gov/ontology#"
+  }
+ ],
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.6b670aa2beb0afba362a3a427387308388ee5373.001.1",
+   "type": "Feature",
+   "geometry": null,
+   "properties": {
+    "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.6b670aa2beb0afba362a3a427387308388ee5373.001.1",
+    "@type": "wx:Alert",
+    "id": "urn:oid:2.49.0.1.840.0.6b670aa2beb0afba362a3a427387308388ee5373.001.1",
+    "areaDesc": "Dickenson; Buchanan; McDowell; Wyoming; Northwest Raleigh; Southeast Raleigh; Northwest Fayette; Southeast Fayette; Northwest Nicholas; Southeast Nicholas; Northwest Webster; Southeast Webster; Northwest Pocahontas; Northwest Randolph; Southeast Randolph",
+    "geocode": {
+     "SAME": [
+      "051051",
+      "051027",
+      "054047",
+      "054109",
+      "054081",
+      "054019",
+      "054067",
+      "054101",
+      "054075",
+      "054083"
+     ],
+     "UGC": [
+      "VAZ003",
+      "VAZ004",
+      "WVZ033",
+      "WVZ034",
+      "WVZ515",
+      "WVZ516",
+      "WVZ517",
+      "WVZ518",
+      "WVZ519",
+      "WVZ520",
+      "WVZ521",
+      "WVZ522",
+      "WVZ523",
+      "WVZ525",
+      "WVZ526"
+     ]
+    },
+    "affectedZones": [
+     "https://api.weather.gov/zones/forecast/VAZ003",
+     "https://api.weather.gov/zones/forecast/VAZ004",
+     "https://api.weather.gov/zones/forecast/WVZ033",
+     "https://api.weather.gov/zones/forecast/WVZ034",
+     "https://api.weather.gov/zones/forecast/WVZ515",
+     "https://api.weather.gov/zones/forecast/WVZ516",
+     "https://api.weather.gov/zones/forecast/WVZ517",
+     "https://api.weather.gov/zones/forecast/WVZ518",
+     "https://api.weather.gov/zones/forecast/WVZ519",
+     "https://api.weather.gov/zones/forecast/WVZ520",
+     "https://api.weather.gov/zones/forecast/WVZ521",
+     "https://api.weather.gov/zones/forecast/WVZ522",
+     "https://api.weather.gov/zones/forecast/WVZ523",
+     "https://api.weather.gov/zones/forecast/WVZ525",
+     "https://api.weather.gov/zones/forecast/WVZ526"
+    ],
+    "references": [
+     {
+      "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.491d1e5e5de098d800055df5218b90df3ac9f971.001.1",
+      "identifier": "urn:oid:2.49.0.1.840.0.491d1e5e5de098d800055df5218b90df3ac9f971.001.1",
+      "sender": "w-nws.webmaster@noaa.gov",
+      "sent": "2026-10-10T05:14:00-04:00"
+     }
+    ],
+    "sent": "2026-10-10T11:49:00-04:00",
+    "effective": "2026-10-10T11:49:00-04:00",
+    "onset": "2026-10-10T17:00:00-04:00",
+    "expires": "2026-10-10T23:00:00-04:00",
+    "ends": "2026-10-11T11:00:00-04:00",
+    "status": "Actual",
+    "messageType": "Update",
+    "category": "Met",
+    "severity": "Moderate",
+    "certainty": "Likely",
+    "urgency": "Expected",
+    "event": "Wind Advisory",
+    "sender": "w-nws.webmaster@noaa.gov",
+    "senderName": "NWS Charleston WV",
+    "headline": "Wind Advisory issued October 10 at 11:49AM EDT until October 11 at 11:00AM EDT by NWS Charleston WV",
+    "description": "* WHAT...Southeast winds 20 to 30 mph with gusts up to 50 mph\nexpected.\n\n* WHERE...Portions of southwest Virginia and northeast, southeast,\nand southern West Virginia.\n\n* WHEN...From 5 PM this afternoon to 11 AM EDT Sunday.\n\n* IMPACTS...Gusty winds will blow around unsecured objects. Tree\nlimbs could be blown down and a few power outages may result.\n\n* ADDITIONAL DETAILS...A strong east to southeasterly wind field\naloft associated with the remnants of Isaias will move over the\nregion this afternoon into Sunday. Interaction with the higher\nterrain will help to transport these higher wind speeds to the\nsurface in a sporadic fashion. The strongest winds will be observed\nalong ridgelines and areas favored for enhanced downslope flow.",
+    "instruction": "Additional information can be found at https://www.weather.gov/rlx as\nwell as on our X and Facebook pages.",
+    "response": "Execute",
+    "note": null,
+    "parameters": {
+     "AWIPSidentifier": [
+      "NPWRLX"
+     ],
+     "WMOidentifier": [
+      "WWUS71 KRLX 101549"
+     ],
+     "NWSheadline": [
+      "WIND ADVISORY REMAINS IN EFFECT FROM 5 PM THIS AFTERNOON TO 11 AM EDT SUNDAY"
+     ],
+     "BLOCKCHANNEL": [
+      "EAS",
+      "NWEM",
+      "CMAS"
+     ],
+     "VTEC": [
+      "/O.CON.KRLX.WI.Y.0008.261010T2100Z-261011T1500Z/"
+     ],
+     "eventEndingTime": [
+      "2026-10-11T11:00:00-04:00"
+     ],
+     "expiredReferences": [
+      "w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.81a8f0e8682054712f8e20de1992962748b147c6.001.1,2026-10-09T22:20:00-04:00 w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.88771ea5f3bfc240619c017cfc6b186c9e1f32b8.001.1,2026-10-09T12:09:00-04:00"
+     ]
+    },
+    "scope": "Public",
+    "code": "IPAWSv1.0",
+    "language": "en-US",
+    "web": "http://www.weather.gov",
+    "eventCode": {
+     "SAME": [
+      "NWS"
+     ],
+     "NationalWeatherService": [
+      "WIY"
+     ]
+    }
+   }
+  }
+ ],
+ "title": "Current watches, warnings, and advisories for 37.8215 N, 80.9942 W",
+ "updated": "2026-10-10T20:15:00+00:00"
+}

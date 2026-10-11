@@ -1,0 +1,206 @@
+# ILM, Inland New Hanover (NCZ107): winter storm, blizzard and ice storm warnings, the 2024-25 winter, verbatim from Iowa State's AFOS archive (tools/storm-corpus.mjs)
+%% WSWILM 2025-01-21T07:43:00Z NCZ107
+WWUS42 KILM 210743
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+243 AM EST Tue Jan 21 2025
+
+NCZ099-105>110-SCZ039-054>056-058-059-212100-
+/O.UPG.KILM.WS.A.0001.250121T2000Z-250122T1300Z/
+/O.NEW.KILM.WS.W.0001.250122T0200Z-250122T1300Z/
+Columbus-Inland Pender-Coastal Pender-Inland New Hanover-Coastal
+New Hanover-Inland Brunswick-Coastal Brunswick-Williamsburg-
+Coastal Horry-Inland Georgetown-Coastal Georgetown-Central Horry-
+Northern Horry-
+Including the cities of North Myrtle Beach, Burgaw, Boiling
+Spring Lakes, Southport, Kingstree, Surf City, Oak Island,
+Bucksport, Myrtle Grove, Lake Waccamaw, Seagate, Little River,
+Shallotte, Myrtle Beach, Loris, Conway, Leland, Garden City,
+Carolina Beach, Ogden, Aynor, Longs, Wilmington, Masonboro,
+Murrells Inlet, Socastee, Georgetown, Andrews, Whiteville, Green
+Sea, Tabor City, Chadbourn, and Sunset Beach
+243 AM EST Tue Jan 21 2025
+
+...WINTER STORM WARNING IN EFFECT FROM 9 PM THIS EVENING TO 8 AM EST 
+WEDNESDAY...
+
+* WHAT...Snow expected. Total snow accumulations up to three inches. 
+  Locally higher amounts possible.
+
+* WHERE...Portions of southeast North Carolina and northeast South 
+  Carolina.
+
+* WHEN...From 9 PM this evening to 8 AM EST Wednesday.
+
+* IMPACTS...Plan on slippery road conditions. The hazardous 
+  conditions could impact the Tuesday evening and Wednesday morning 
+  commutes.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in 
+your vehicle in case of an emergency. Plan on slippery road 
+conditions. The hazardous conditions could impact the Wednesday 
+morning commute.
+
+&&
+
+$$
+
+%% WSWILM 2025-01-21T17:16:00Z NCZ107
+WWUS42 KILM 211716
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+1216 PM EST Tue Jan 21 2025
+
+NCZ099-105>110-SCZ039-054>056-058-059-220130-
+/O.CON.KILM.WS.W.0001.250122T0200Z-250122T1300Z/
+Columbus-Inland Pender-Coastal Pender-Inland New Hanover-Coastal
+New Hanover-Inland Brunswick-Coastal Brunswick-Williamsburg-
+Coastal Horry-Inland Georgetown-Coastal Georgetown-Central Horry-
+Northern Horry-
+Including the cities of Lake Waccamaw, Conway, Southport,
+Bucksport, Little River, Garden City, Georgetown, Longs, Seagate,
+Sunset Beach, Kingstree, Myrtle Grove, North Myrtle Beach,
+Masonboro, Green Sea, Carolina Beach, Ogden, Andrews, Burgaw,
+Surf City, Loris, Myrtle Beach, Wilmington, Oak Island, Aynor,
+Tabor City, Chadbourn, Whiteville, Socastee, Boiling Spring
+Lakes, Leland, Shallotte, and Murrells Inlet
+1216 PM EST Tue Jan 21 2025
+
+...WINTER STORM WARNING REMAINS IN EFFECT FROM 9 PM THIS EVENING TO 
+8 AM EST WEDNESDAY...
+
+* WHAT...Snow expected. Total snow accumulations between 2 and 4 
+  inches with locally higher amounts possible. Total snow 
+  accumulations between 3 and 5 inches near the coast with locally 
+  higher amounts possible.
+
+* WHERE...Portions of southeast North Carolina and northeast South 
+  Carolina.
+
+* WHEN...From 9 PM this evening to 8 AM EST Wednesday.
+
+* IMPACTS...Plan on slippery road conditions. The hazardous 
+  conditions will impact the Tuesday evening and Wednesday morning 
+  commute.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in 
+your vehicle in case of an emergency. The latest road conditions for 
+the state you are calling from can be obtained by calling 5 1 1.
+
+&&
+
+$$
+
+%% WSWILM 2025-01-21T21:17:00Z NCZ107
+WWUS42 KILM 212117
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+417 PM EST Tue Jan 21 2025
+
+NCZ087-096-099-105>110-SCZ017-023-024-032-033-039-054>056-058-059-
+220900-
+/O.CON.KILM.WS.W.0001.250122T0200Z-250122T1300Z/
+Robeson-Bladen-Columbus-Inland Pender-Coastal Pender-Inland New
+Hanover-Coastal New Hanover-Inland Brunswick-Coastal Brunswick-
+Marlboro-Darlington-Dillon-Florence-Marion-Williamsburg-Coastal
+Horry-Inland Georgetown-Coastal Georgetown-Central Horry-Northern
+Horry-
+Including the cities of Marion, McColl, Tabor City, North
+Hartsville, Green Sea, Oak Island, Elizabethtown, Boiling Spring
+Lakes, Aynor, Carolina Beach, Ogden, Chadbourn, Bucksport,
+Hartsville, Garden City, North Myrtle Beach, Myrtle Beach,
+Lumberton, Loris, Shallotte, Seagate, Andrews, Whiteville,
+Burgaw, Socastee, Surf City, Mullins, Conway, Florence, Longs,
+Sunset Beach, Little River, Southport, Bennettsville, Wilmington,
+Myrtle Grove, Leland, Georgetown, Lake Waccamaw, Darlington,
+Masonboro, Bladenboro, Murrells Inlet, Dillon, and Kingstree
+417 PM EST Tue Jan 21 2025
+
+...WINTER STORM WARNING REMAINS IN EFFECT FROM 9 PM THIS EVENING TO 
+8 AM EST WEDNESDAY...
+
+* WHAT...Heavy snow expected. Total snow accumulations between 2 and 
+  4 inches with locally higher amounts possible. Total snow 
+  accumulations between 3 and 5 inches near the coast with locally 
+  higher amounts possible.
+
+* WHERE...Portions of southeast North Carolina and northeast South 
+  Carolina.
+
+* WHEN...From 9 PM this evening to 8 AM EST Wednesday.
+
+* IMPACTS...Plan on slippery road conditions. The hazardous 
+  conditions could impact the Wednesday morning commute.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in 
+your vehicle in case of an emergency. The latest road conditions for 
+the state you are calling from can be obtained by calling 5 1 1.
+
+&&
+
+$$
+
+%% WSWILM 2025-01-22T09:00:00Z NCZ107
+WWUS42 KILM 220900
+WSWILM
+
+URGENT - WINTER WEATHER MESSAGE
+National Weather Service Wilmington NC
+400 AM EST Wed Jan 22 2025
+
+NCZ087-096-099-105>110-SCZ017-023-024-032-033-039-054>056-058-059-
+221300-
+/O.CON.KILM.WS.W.0001.000000T0000Z-250122T1300Z/
+Robeson-Bladen-Columbus-Inland Pender-Coastal Pender-Inland New
+Hanover-Coastal New Hanover-Inland Brunswick-Coastal Brunswick-
+Marlboro-Darlington-Dillon-Florence-Marion-Williamsburg-Coastal
+Horry-Inland Georgetown-Coastal Georgetown-Central Horry-Northern
+Horry-
+Including the cities of Myrtle Beach, Carolina Beach, McColl,
+Bucksport, Southport, Sunset Beach, Elizabethtown, Boiling Spring
+Lakes, Tabor City, Bladenboro, Loris, Conway, North Myrtle Beach,
+Surf City, Whiteville, Seagate, Leland, Garden City, Myrtle
+Grove, Dillon, Wilmington, Longs, North Hartsville, Ogden,
+Marion, Little River, Aynor, Mullins, Darlington, Socastee,
+Bennettsville, Georgetown, Burgaw, Hartsville, Kingstree,
+Florence, Oak Island, Murrells Inlet, Green Sea, Andrews,
+Masonboro, Shallotte, Lumberton, Chadbourn, and Lake Waccamaw
+400 AM EST Wed Jan 22 2025
+
+...WINTER STORM WARNING REMAINS IN EFFECT UNTIL 8 AM EST THIS 
+MORNING...
+
+* WHAT...Snow tapering off this morning. Additional snow 
+  accumulations up to one inch.
+
+* WHERE...Portions of southeast North Carolina and northeast South 
+  Carolina.
+
+* WHEN...Until 8 AM EST this morning.
+
+* IMPACTS...Plan on slippery road conditions. The hazardous 
+  conditions will impact the morning commute and may last through 
+  tonight as temperatures will struggle to get above freezing so not 
+  much melting will occur before it refreezes again tonight.
+
+PRECAUTIONARY/PREPAREDNESS ACTIONS...
+
+If you must travel, keep an extra flashlight, food, and water in 
+your vehicle in case of an emergency. The latest road conditions for 
+the state you are calling from can be obtained by calling 5 1 1.
+
+&&
+
+$$
