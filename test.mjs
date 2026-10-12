@@ -198,8 +198,11 @@ test("the sunrise and sunset times stay readable on any sky", async () => {
   assert.doesNotMatch(html, /stroke="\$\{dark\?"#0A1A22":"#F4F3EC"\}"/);
   // and the two numbers written on the sky are no longer at 70% of it
   assert.match(html, /font-weight="600" fill="currentColor" opacity="\.92"/);
-  // the override is cleared with the rest when a render bails out
-  assert.match(html, /"--sky3","--on-sky","--off-sky","--scrim"/);
+  // the loading shell paints the hour's paper over whatever the last place left inline
+  const mark = html.slice(html.indexOf("function paintLoadMark("), html.indexOf("function finishLoadMark("));
+  assert.match(mark, /rootEl\.setAttribute\("data-theme",dark\?"dark":"light"\);/);
+  assert.match(mark, /root\.setProperty\("--sky1",stops\[0\]\);root\.setProperty\("--sky2",stops\[1\]\);root\.setProperty\("--sky3",stops\[2\]\);/);
+  assert.match(mark, /root\.setProperty\("--on-sky",bright\?INK_ON:LIT_ON\);\n  root\.setProperty\("--off-sky",bright\?LIT_ON:INK_ON\);\n  root\.setProperty\("--scrim"/);
 });
 
 test("the rain chance bars can be read from across the room", async () => {
@@ -2043,7 +2046,7 @@ test("Halloween's cobweb is strung across the corner of the app itself, clear of
   // strung once there is a reading: the loading and error shell has none
   assert.match(html, /if\(holidayOn\(locToday\(\)\)\?\.id!=="halloween"\|\|!LAST\)return off\(\);/);
   assert.match(html, /LASTW=appW\(\);\n  fishSchedule\(allowedFishWins\);\n  paintCobweb\(\);\n  fishMotion\(\);\n  PAINT_DONE\(\);\n  \}\);\}\);\}\);\}\);\n\}/);
-  assert.match(html, /xpReset\(\);LAST=null;\n  paintCobweb\(\);\n\}/);
+  assert.match(html, /xpReset\(\);LAST=null;\n  paintCobweb\(\);\n  paintLoadMark\(\);\n\}/);
   // placed again when the alert strip opens and moves everything under it, and when the fonts land
   assert.match(html, /el\.setAttribute\("aria-expanded",open\?"true":"false"\);\n  \/\*[^\n]*\*\/\n  paintCobweb\(\);/);
   // (and the storm card's quoted title is fitted again, in the face that has landed)
