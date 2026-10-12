@@ -92,7 +92,7 @@ async function phone(width,o,loc,{motion=false,when=now,cache=null,gate=false}={
   await page.addInitScript(()=>{window.__cancels=0;addEventListener("pointercancel",()=>window.__cancels++,true)});
   let release=()=>{};
   if(gate){const g=new Promise(r=>release=r);
-    await page.route("**api.open-meteo.com**",async r=>{if(r.request().url().includes("marine-api"))return r.fallback();await g;r.fallback()})}
+    await page.route(/api\.open-meteo\.com/,async r=>{if(r.request().url().includes("marine-api"))return r.fallback();await g;r.fallback()})}
   const cdp=await context.newCDPSession(page);
   return{context,page,errors,cdp,release};
 }
@@ -194,7 +194,7 @@ try{
   {
     const {context,page,errors}=await open(390,{...base,code:1,popCurve:()=>5});
     let features=SEVERE(now);
-    await page.route("**api.weather.gov/alerts**",route=>route.fulfill({json:{features}}));
+    await page.route(/api\.weather\.gov\/alerts/,route=>route.fulfill({json:{features}}));
     await load(page);
     /* a warning at the farm is the family's action in red on the Piddling card, and no fishing time
        on the moon: the alert strip names the event and its instruction */
@@ -231,7 +231,7 @@ try{
     let features=SEVERE(now);
     const m=await phone(width,o,loc,{motion:true,gate:true,when:now,
       cache:{k:"mbwx-"+loc,v:{savedAt:t.getTime(),data:{...cachePayload(t,o,loc),alerts:asAlerts(features)}}}});
-    await m.page.route("**api.weather.gov/alerts**",route=>route.fulfill({json:{features}}));
+    await m.page.route(/api\.weather\.gov\/alerts/,route=>route.fulfill({json:{features}}));
     await m.page.addInitScript(()=>{
       window.__in={alertIn:0,briefIn:0};window.__writes=[];
       addEventListener("animationstart",e=>{if(e.target.closest?.("#alertStrip")&&e.animationName in __in)__in[e.animationName]++},true);
@@ -334,7 +334,7 @@ try{
     await page.addInitScript(c=>localStorage.setItem("mbwx-sp",JSON.stringify(c)),{savedAt:t.getTime(),data:cachePayload(t,o,"sp")});
     await load(page);
     let release;const gate=new Promise(r=>release=r);
-    await page.route("**api.open-meteo.com**",async r=>{if(r.request().url().includes("marine-api"))return r.fallback();await gate;r.fallback()});
+    await page.route(/api\.open-meteo\.com/,async r=>{if(r.request().url().includes("marine-api"))return r.fallback();await gate;r.fallback()});
     /* and on the very next frame nothing of the coast's is left under the farm's name: the cached
        paint lands in stages, and until its last stage the coast's week, its water and Wilmington's
        year sat there (about 70 to 130ms) */
@@ -375,7 +375,7 @@ try{
     await stage(page,{now:t,loc:"mb",o:live,fontDir:FONT_DIR,port:PORT});
     await page.addInitScript(c=>localStorage.setItem("mbwx-mb",JSON.stringify(c)),{savedAt:t.getTime(),data:cachePayload(t,cached,"mb")});
     let release;const gate=new Promise(r=>release=r);
-    await page.route("**api.open-meteo.com**",async r=>{if(r.request().url().includes("marine-api"))return r.fallback();await gate;r.fallback()});
+    await page.route(/api\.open-meteo\.com/,async r=>{if(r.request().url().includes("marine-api"))return r.fallback();await gate;r.fallback()});
     await page.goto(`http://localhost:${PORT}/`,{waitUntil:"domcontentloaded"});
     await page.evaluate(()=>document.fonts.ready);await painted(page);
     /* how much of each drawing is on screen, measured in the page */
@@ -410,7 +410,7 @@ try{
     page.on("pageerror",e=>errors.push(String(e)));
     await stage(page,{now:t,loc:"mb",o,fontDir:FONT_DIR,port:PORT});
     let release;const gate=new Promise(r=>release=r);
-    await page.route("**api.open-meteo.com**",async r=>{if(r.request().url().includes("marine-api"))return r.fallback();await gate;r.fallback()});
+    await page.route(/api\.open-meteo\.com/,async r=>{if(r.request().url().includes("marine-api"))return r.fallback();await gate;r.fallback()});
     await page.goto(`http://localhost:${PORT}/`,{waitUntil:"domcontentloaded"});
     await page.waitForTimeout(600);
     const tide=()=>page.evaluate(()=>{const b=document.getElementById("tideSvg").getBoundingClientRect();
@@ -431,7 +431,7 @@ try{
   {
     const {context,page,errors}=await open(390);
     let offline=true;
-    await page.route("**api.open-meteo.com**",route=>offline?route.abort():route.fallback());
+    await page.route(/api\.open-meteo\.com/,route=>offline?route.abort():route.fallback());
     await page.goto(`http://localhost:${PORT}/`);
     await page.waitForFunction(()=>document.getElementById("stamp").textContent==="unavailable");await painted(page);
     assert.match(await page.locator("#verdict").innerText(),/Tap the timestamp to try again/);
@@ -525,7 +525,7 @@ try{
        the reader's sentence. In the loading shell the sliders are off */
     const {context,page,errors}=await open(390,coast,"mb");
     let release;const gate=new Promise(r=>release=r);
-    await page.route("**api.open-meteo.com**",async r=>{if(r.request().url().includes("marine-api"))return r.fallback();await gate;r.fallback()});
+    await page.route(/api\.open-meteo\.com/,async r=>{if(r.request().url().includes("marine-api"))return r.fallback();await gate;r.fallback()});
     await page.goto(`http://localhost:${PORT}/`,{waitUntil:"domcontentloaded"});
     assert.deepEqual(await page.evaluate(()=>[...document.querySelectorAll(".xp-key")].map(k=>k.disabled)),[true,true,true,true,true],"no slider before a reading (the storm card's is off on an ordinary day too)");
     release();
@@ -675,7 +675,7 @@ try{
     const t=new Date(now.getTime()-age*3.6e6),o={...base,code:1,popCurve:()=>5};
     const {context,page,errors}=await open(width,o,"mb");
     await page.addInitScript(c=>localStorage.setItem("mbwx-mb",JSON.stringify(c)),{savedAt:t.getTime(),data:cachePayload(t,o,"mb")});
-    await page.route("**api.open-meteo.com**",r=>r.request().url().includes("marine-api")?r.fallback():r.abort());
+    await page.route(/api\.open-meteo\.com/,r=>r.request().url().includes("marine-api")?r.fallback():r.abort());
     await page.goto(`http://localhost:${PORT}/`);
     await page.waitForFunction(()=>/updated/.test(document.getElementById("stamp").textContent));await painted(page);
     await page.locator("#hourlyExplore .xp-key").focus();
@@ -717,7 +717,7 @@ try{
     data.hourly.temp[5]=null;
     const {context,page,errors}=await open(390,o,"mb");
     await page.addInitScript(c=>localStorage.setItem("mbwx-mb",JSON.stringify(c)),{savedAt:t.getTime(),data});
-    await page.route("**api.open-meteo.com**",r=>r.request().url().includes("marine-api")?r.fallback():r.abort());
+    await page.route(/api\.open-meteo\.com/,r=>r.request().url().includes("marine-api")?r.fallback():r.abort());
     await page.goto(`http://localhost:${PORT}/`);
     await page.waitForFunction(()=>/updated/.test(document.getElementById("stamp").textContent));await painted(page);
     const r=await page.evaluate(()=>{const h=LAST.d.hourly,known=h.temp.map((v,i)=>v==null?null:i===0&&LAST.d.current.temperature_2m!=null?LAST.d.current.temperature_2m:v).filter(v=>v!=null);
@@ -999,21 +999,21 @@ try{
        after the coast, and the water with no tide table */
     const {context,page,errors}=await open(390,coast,"mb");
     let release;const gate=new Promise(r=>release=r);
-    await page.route("**api.open-meteo.com**",async r=>{if(r.request().url().includes("marine-api"))return r.fallback();await gate;r.fallback()});
+    await page.route(/api\.open-meteo\.com/,async r=>{if(r.request().url().includes("marine-api"))return r.fallback();await gate;r.fallback()});
     await page.goto(`http://localhost:${PORT}/`,{waitUntil:"domcontentloaded"});
     const off=()=>page.evaluate(()=>[...document.querySelectorAll(".xp-key")].filter(k=>k.disabled).map(k=>k.getAttribute("aria-valuetext")));
     assert.deepEqual(await off(),[null,null,null,null,null],"the loading shell speaks no reading");
     release();
     await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));await painted(page);
-    await page.unroute("**api.open-meteo.com**");
-    await page.route("**api.open-meteo.com**",r=>r.request().url().includes("marine-api")?r.fallback():r.abort());
+    await page.unroute(/api\.open-meteo\.com/);
+    await page.route(/api\.open-meteo\.com/,r=>r.request().url().includes("marine-api")?r.fallback():r.abort());
     await page.evaluate(()=>{localStorage.removeItem("mbwx-sp");document.getElementById("locBtn").click()});
     await page.waitForFunction(()=>/unavailable/i.test(document.body.innerText));
     const shell=await off();
     assert.ok(shell.length>=3&&shell.every(v=>v==null),"the farm's unavailable shell speaks none of the coast's readings: "+JSON.stringify(shell));
     assert.deepEqual(errors,[]);await context.close();
     const t=await open(390,coast,"mb");
-    await t.page.route("**tidesandcurrents.noaa.gov**",r=>r.request().url().includes("interval=hilo")?r.abort():r.fallback());
+    await t.page.route(/tidesandcurrents\.noaa\.gov/,r=>r.request().url().includes("interval=hilo")?r.abort():r.fallback());
     await load(t.page);
     await t.page.waitForFunction(()=>/tide data unavailable/.test(document.getElementById("tideNote").textContent));
     assert.deepEqual(await t.page.evaluate(()=>{const k=document.querySelector("#tideExplore .xp-key");return[k.disabled,k.getAttribute("aria-valuetext")]}),[true,null],"no tide table, no spoken tide");
@@ -1050,7 +1050,7 @@ try{
         /* the next open, offline: the storm was cached with the forecast, and the cached paint shows it */
         const q=await m.context.newPage();
         await stage(q,{now:at,loc:deb.loc,o:{...deb.o,storm:deb.name},fontDir:FONT_DIR,port:PORT});
-        await q.route("**api.open-meteo.com**",r=>r.abort());await q.route("**api.weather.gov/**",r=>r.abort());
+        await q.route(/api\.open-meteo\.com/,r=>r.abort());await q.route("**api.weather.gov/**",r=>r.abort());
         await q.goto(`http://localhost:${PORT}/`);
         await q.waitForFunction(()=>/updated|ago/.test(document.getElementById("stamp").textContent));
         await q.evaluate(async()=>{await PAINT});
