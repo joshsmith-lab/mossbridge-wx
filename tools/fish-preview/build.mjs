@@ -49,7 +49,7 @@ for(const [name,cs] of Object.entries(spec)){
       return oldFetch(url,options);
     };
   </script>`;
-  html=replace(html,'<script>',init+'\n<script>');
+  html=replace(html,'<script id="loadShell">',init+'\n<script id="loadShell">');
   html=replace(html,'</body>',`<script>
     // Replay belongs only to the review gallery, never the family app.
     addEventListener('message',event=>{

@@ -399,8 +399,9 @@ try{
     assert.deepEqual(errors,[]);await context.close();checks++;
   }
   {
-    /* and the reason the entrance measures again: with no cache the loading shell has the tide on
-       a phone's first screen, and the live paint pushes it below the fold. It waits for the scroll */
+    /* and the reason the entrance measures again: the shell already holds the loaded chart
+       sizes, so the tide is where the page will put it (below a phone's first screen) and the
+       live paint does not jump it back on screen. It waits for the scroll */
     const t=new Date("2026-09-22T11:20:00-04:00");
     const o={baseTemp:80,nowTemp:82,feels:84,rh:60,isDay:1,code:1,cloud:20,nowWind:8,nowDir:200,nowGust:13,
       nowUv:6,uvMax:8,windAmp:7,gustAmp:10,popCurve:()=>5,dailyPop:p=>p.fill(10)};
@@ -415,12 +416,12 @@ try{
     const tide=()=>page.evaluate(()=>{const b=document.getElementById("tideSvg").getBoundingClientRect();
       return{state:REVEAL.tide.state,seen:REVEAL.tide.seen,top:Math.round(b.top),fold:innerHeight,pre:document.getElementById("tideSvg").classList.contains("rv-pre")}});
     const shell=await tide();
-    assert.ok(shell.top<shell.fold,"the loading shell has the tide on the first screen: "+JSON.stringify(shell));
+    assert.ok(shell.top>=shell.fold-40,"the loading shell holds the tide at its loaded place: "+JSON.stringify(shell));
     release();
     await page.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));await painted(page);
     await page.waitForTimeout(3500);
     const below=await tide();
-    assert.ok(below.top>=below.fold&&below.state==="armed","the tide below the fold waits to be seen: "+JSON.stringify(below));
+    assert.ok(below.top>=below.fold-40&&below.state==="armed"&&Math.abs(below.top-shell.top)<48,"the tide stays put and waits to be seen: "+JSON.stringify(below));
     await page.locator("#tideSvg").scrollIntoViewIfNeeded();
     await page.waitForTimeout(3800);
     const seen=await tide();

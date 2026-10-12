@@ -34,7 +34,19 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v97/);
+  assert.match(worker, /mbwx-shell-v98/);
+  // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
+  assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
+  assert.match(html, /id="loadMark"/);
+  assert.match(html, /id="loadShell"/);
+  assert.match(html, /function paintLoadMark\(\)\{/);
+  assert.match(html, /function finishLoadMark\(\)\{/);
+  assert.match(html, /function loadFrame\(\)\{/);
+  assert.match(html.slice(html.indexOf("function paintLoadingState("), html.indexOf("function setLoc(")), /paintLoadMark\(\);/);
+  assert.match(html.slice(html.indexOf('id="loadMark"'), html.indexOf('id="loadShell"')), /Reading the sky…/);
+  assert.doesNotMatch(html.slice(html.indexOf("<body>"), html.indexOf('id="loadShell"')), /class="skel"/);
+  assert.match(html, /held\(\);\n  finishLoadMark\(\);/);
+  assert.match(html, /Tap the timestamp to try again\.";\n      finishLoadMark\(\);/);
   // the buoy's readings are data, so the worker never answers them from the shell's cache
   assert.match(worker, /u\.hostname\.includes\("weather\.gov"\)\|\|u\.hostname\.includes\("secoora\.org"\)\|\|/);
   // the clouds end in their own scallops: Josh loves the clouds and not the curly tail
