@@ -2975,6 +2975,7 @@ test("out-of-order refreshes cannot repaint or stop a newer request", async () =
     render:(data,live)=>paints.push({temp:data.current.temperature_2m,live}),
     writeCache:(id,data)=>writes.push({id,temp:data.current.temperature_2m}),
     readCache:()=>null,paintLoadingState:()=>{node("stamp").textContent="loading";},
+    finishLoadMark:()=>{},
     // the storm lane runs beside the forecast; here it has nothing to say and says it at once
     stormLane:()=>Object.assign(Promise.resolve({storms:[],beach:null,wssi:null}),{beach:Promise.resolve(null),wssi:Promise.resolve(null)}),LAST:null,
   });
