@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v101/);
+  assert.match(worker, /mbwx-shell-v102/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -2208,11 +2208,12 @@ test("tide chart reads as depth over the bottom", async () => {
   // lows share one aligned row, and the skiff rocks with the chop
   assert.match(html, /lowY=H-9/);
   assert.match(html, /rockDeg=clamp\(2\.2\+g0\*\.13/);
-  assert.match(html, /const tide=renderTides\(d\.tides,css,c\.wind_gusts_10m,c\.wind_speed_10m,levelFeet\(d\.water,now\)\);/);
+  // (MOCK, option C: Beaufort's fishing water rides the same call as a sixth argument, null everywhere else)
+  assert.match(html, /const tide=renderTides\(d\.tides,css,c\.wind_gusts_10m,c\.wind_speed_10m,levelFeet\(d\.water,now\),LOC\.grass\?\{h:full,c,zone:d\.zone\|\|\[\]\}:null\);/);
   // the skiff rides the table's curve (Josh, September 28 2026: "I preferred the boat actually on
   // the tide line"), and when the gauge runs off the table the gap rides beside it as a tag. He
   // chose that over a mark at the real water and over the gauge's own line, so neither is drawn
-  assert.match(html, /function renderTides\(preds,css,gust,wind,gap=0\)\{/);
+  assert.match(html, /function renderTides\(preds,css,gust,wind,gap=0,day=null\)\{/);
   assert.match(html, /const nx=X\(now\.getTime\(\)\),ny=Y\(interp\(now\.getTime\(\)\)\);/);
   assert.doesNotMatch(html, /gy=Y\(wNow\)|const seen=gap|offMark|stroke-dasharray="1\.5 2\.5"/);
   // the tag is placed against the curve, not stamped: beside the bow, behind the stern, then over
@@ -5476,12 +5477,15 @@ async function pageRig(store = {}, loc = "sp") {
   const { stormProducts } = await STORM_FIX();
   let T = 0;
   class Clock extends Date { constructor(...a) { super(...(a.length ? a : [T])); } static now() { return T; } }
-  const net = { point: [], beach: [], wssi: null, wssiDelay: 0, products: null, asked: 0 };
+  const net = { point: [], beach: [], wssi: null, wssiDelay: 0, products: null, asked: 0, zone: [], zoneDelay: 0 };
   const wall = () => new Date(T).toLocaleString("sv-SE", { timeZone: "America/New_York" }).replace(" ", "T").slice(0, 16);
   const hourly = () => Object.fromEntries(["time", "temperature_2m", "apparent_temperature", "precipitation_probability", "weather_code", "wind_speed_10m", "wind_gusts_10m", "uv_index"].map((k) => [k, [k === "time" ? wall() : 1]]));
   const fetchJSON = (url) => {
-    if (/open-meteo\.com/.test(url)) return Promise.resolve({ current: { time: wall(), temperature_2m: 23 }, daily: {}, hourly: hourly() });
+    if (/open-meteo\.com/.test(url)) { const j = { current: { time: wall(), temperature_2m: 23 }, daily: {}, hourly: hourly() };
+      return net.forecastDelay ? new Promise((r) => setTimeout(() => r(j), net.forecastDelay)) : Promise.resolve(j); }
     if (/alerts\/active\?point/.test(url)) return net.point === "fail" ? Promise.reject(new Error("503")) : Promise.resolve({ features: structuredClone(net.point) });
+    /* Beaufort's coastal waters (AMZ362), slow or failing on their own */
+    if (/alerts\/active\?zone=AMZ/.test(url)) return new Promise((res, rej) => setTimeout(() => net.zone === "fail" ? rej(new Error("503")) : res({ features: structuredClone(net.zone) }), net.zoneDelay));
     if (/alerts\/active\?zone/.test(url)) return Promise.resolve({ features: structuredClone(net.beach) });
     if (/mapservices\.weather\.noaa\.gov/.test(url)) { net.asked++; return new Promise((r) => setTimeout(() => r(structuredClone(net.wssi)), net.wssiDelay)); }
     if (/api\.weather\.gov\/products/.test(url) && net.products) { const j = stormProducts(net.products, url); return j ? Promise.resolve(j) : Promise.reject(new Error("404")); }
@@ -5507,11 +5511,13 @@ async function pageRig(store = {}, loc = "sp") {
        const w=new Date(new Date(Date.now()).toLocaleString("sv-SE",{timeZone:LOC.tz}).replace(" ","T")),shift=w-Date.now();
        __paints.push(JSON.parse(JSON.stringify({live,tier:sm.tier,rules:sm.rules,why:sm.why,held:sm.held,carried:!!d.seen?.carried,
          alerts:Array.isArray(d.alerts)?d.alerts.map(a=>a.event):null,strip:(stormStrip(activeAlerts(d.alerts),sm)||[]).map(a=>a.event),
-         headline:stormDay?stormStory(sm,w,shift).html:null})));
+         headline:stormDay?stormStory(sm,w,shift).html:null,zone:d.zone===undefined?undefined:(d.zone||[]).map(a=>a.event)})));
      }`].join("\n"), ctx);
   const settle = async () => { await vm.runInContext("__lane", ctx)?.then(() => {}, () => {}); for (let i = 0; i < 6; i++) await new Promise((r) => setTimeout(r, 5)); };
   return {
     net, store,
+    /* every paint so far, the ones a lane landing after the refresh made too */
+    paints: () => JSON.parse(JSON.stringify(ctx.__paints)),
     /* the page opened at `iso`: the cached paint when readCache vouches for the entry, then the refresh */
     async open(iso, n = {}) {
       T = Date.parse(iso);
@@ -5838,4 +5844,370 @@ test("Beaufort is the third place: its readings, its scene in layers, its birds 
   assert.equal(BL({ ...AM, ground: () => S[1] - 20 }).open, 0, "and nothing of it shows");
   const half = bctx.bftDiscOpen(200, -150, 13, () => -150);
   assert.ok(half > .5 && half < .6, `the half under the far line is hidden (${half})`);
+});
+
+/* Beaufort's fishing water. Jen's family is "always looking at the tide for fishing and ... always looking at
+   the wind", and the family boater is "always checking the wind and the waves". Josh was shown three ways drawn into the page
+   and wrote "go with your pick." (October 16 2026): the fishing day, with the gusts line from the second drawing
+   put back, because the row alone read ←22 on a day gusting 34 */
+test("Beaufort's fishing water: the grass line, the stage of the water, the wind at the turns, the gusts where they matter, the offshore advisories and what is in season", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const pick = (a, b) => { const i = html.indexOf(a), j = html.indexOf(b, i); assert.ok(i >= 0 && j > i, `found ${a} … ${b}`); return html.slice(i, j); };
+  const ctx = vm.createContext({});
+  vm.runInContext([
+    html.match(/const dirLong=d=>[^\n]*\n[^\n]*/)[0],
+    html.match(/const mdOf=d=>[^\n]*/)[0], html.match(/const inSeason=\(d,r\)=>[^\n]*/)[0],
+    html.match(/const BOAT=\{[^\n]*/)[0],
+    pick("function vtecOf(s){", "/* The feed keeps an alert"), html.match(/const DEAD_VTEC=[^\n]*/)[0], html.match(/const vtecLive=[^\n]*/)[0],
+    pick("function floodSpans(", "/* The in-season row, under the chart"),
+    "Object.assign(globalThis,{floodSpans,floodSay,tideStage,windAt,windTimes,windWords,windSpoken,gustSpans,zoneBars,runsIn,runsTall,runNote,baitOpen,SHRIMP_BAIT,RUNS,MARINE_EVENT,BOAT});",
+  ].join("\n"), ctx);
+  const at = (s) => new Date(s).getTime();
+  const BFT = { grass: 8, bigFlood: 8.8, floodSeason: ["03-15", "11-30"] };
+  // NOAA 8667999's own table on October 27 2026, the season's top: 9.35 ft at 10:17 am between lows of 0.13 and 0.29
+  const P = [["2026-10-27T04:08", .13, "L"], ["2026-10-27T10:17", 9.35, "H"], ["2026-10-27T16:44", .29, "L"], ["2026-10-27T22:36", 8.10, "H"], ["2026-10-28T04:56", .07, "L"]]
+    .map(([t, v, type]) => ({ time: new Date(t), v, type }));
+  const interp = (t) => { let i = 0; while (i + 1 < P.length && P[i + 1].time.getTime() <= t) i++;
+    const a = P[i], b = P[Math.min(i + 1, P.length - 1)]; if (a === b) return a.v;
+    const f = Math.min(1, Math.max(0, (t - a.time.getTime()) / (b.time.getTime() - a.time.getTime()))); return a.v + (b.v - a.v) * (1 - Math.cos(Math.PI * f)) / 2; };
+
+  // ── the grass line and its flood tides
+  const spans = ctx.floodSpans(P, interp, at("2026-10-27T06:00"), at("2026-10-28T08:30"), 8);
+  assert.equal(spans.length, 2, "both highs top the grass line, and only the highs that do");
+  const hrs = (s) => (s.b - s.a) / 36e5;
+  // NOAA's six-minute predictions keep a 9.2 ft high over 8 ft about 3.4 hours and an 8.3 about 1.6
+  assert.ok(hrs(spans[0]) > 2.9 && hrs(spans[0]) < 3.6, `the big flood stands over the grass ${hrs(spans[0]).toFixed(2)} hours`);
+  assert.ok(hrs(spans[1]) > .5 && hrs(spans[1]) < 1.4, `the night's small flood ${hrs(spans[1]).toFixed(2)} hours`);
+  assert.ok(spans[0].a < at("2026-10-27T10:17") && spans[0].b > at("2026-10-27T10:17"));
+  assert.equal(ctx.floodSpans(P.map((p) => ({ ...p, v: p.type === "H" ? 7.96 : p.v })), interp, at("2026-10-27T06:00"), at("2026-10-28T08:30"), 8).length, 0, "7.96 is under the line");
+  // the slider's word for the grass, on the stop's own level and its own date: a flood tide in the guides'
+  // season, a big one from 8.8, and out of it only "in the grass", because the water is there all year
+  assert.equal(ctx.floodSay(9.35, at("2026-10-27T10:17"), BFT), "big flood tide");
+  assert.equal(ctx.floodSay(8.79, at("2026-10-27T09:00"), BFT), "flood tide", "the edge of a big flood is a flood tide");
+  assert.equal(ctx.floodSay(8, at("2026-10-27T08:50"), BFT), "flood tide", "8.0 is at the line, and in the grass");
+  assert.equal(ctx.floodSay(7.99, at("2026-10-27T08:45"), BFT), "", "under the line nothing");
+  assert.equal(ctx.floodSay(8.4, at("2026-11-30T23:30"), BFT), "flood tide", "a night flood on November 30 is in the season");
+  assert.equal(ctx.floodSay(8.4, at("2026-12-01T00:30"), BFT), "in the grass", "and the same water past midnight is not: the word is the guides' season's");
+  assert.equal(ctx.floodSay(9.2, at("2026-03-14T10:00"), BFT), "in the grass");
+  assert.equal(ctx.floodSay(9.2, at("2026-03-15T10:00"), BFT), "big flood tide");
+  assert.doesNotMatch(pick("const floodSay=", "function tideStage("), /tailing|biting|best|good fishing/i, "the word is the water's, never a call");
+
+  // ── the stage words from the table's turns, never "slack" (at the bridge the flood runs on past the high)
+  assert.equal(ctx.tideStage(at("2026-10-27T10:00"), P), "high water");
+  assert.equal(ctx.tideStage(at("2026-10-27T10:47"), P), "high water", "within half an hour after a turn");
+  assert.equal(ctx.tideStage(at("2026-10-27T08:40"), P), "last of the incoming");
+  assert.equal(ctx.tideStage(at("2026-10-27T12:00"), P), "first of the outgoing");
+  assert.equal(ctx.tideStage(at("2026-10-27T13:30"), P), "outgoing");
+  assert.equal(ctx.tideStage(at("2026-10-27T15:30"), P), "last of the outgoing");
+  assert.equal(ctx.tideStage(at("2026-10-27T17:00"), P), "low water");
+  assert.equal(ctx.tideStage(at("2026-10-27T18:30"), P), "first of the incoming");
+  assert.equal(ctx.tideStage(at("2026-10-28T08:00"), P), "", "past the table's last turn, nothing invented");
+  assert.doesNotMatch(pick("function tideStage(", "function windAt("), /slack|flood tide|ebb\b/, "the stage words are the incoming and the outgoing, and never slack");
+
+  // ── the wind: the chip's reading through the hour now is in, then the run's own hour, nothing past it
+  const h = { time: ["2026-10-16T13:00", "2026-10-16T14:00", "2026-10-16T15:00"], wind: [5.8, 6, 6.1], gust: [10.3, 9.6, 10.3], dir: [238, 231, 208] };
+  const c = { wind_speed_10m: 5.8, wind_gusts_10m: 10.3, wind_direction_10m: 238 };
+  const now = at("2026-10-16T13:05");
+  assert.deepEqual({ ...ctx.windAt(h, now, c, now) }, { w: 5.8, g: 10.3, d: 238 });
+  assert.deepEqual({ ...ctx.windAt(h, at("2026-10-16T15:20"), c, now) }, { w: 6.1, g: 10.3, d: 208 });
+  assert.equal(ctx.windAt(h, at("2026-10-16T17:00"), c, now), null, "past the run is no reading");
+  // a cache written before the direction was asked for has none: its marks are the speed with no arrow
+  assert.equal(ctx.windAt({ ...h, dir: undefined }, at("2026-10-16T14:30"), c, now).d, null, "a cache with no direction draws no vane");
+  assert.equal(ctx.windAt({ ...h, dir: undefined }, at("2026-10-16T14:30"), c, now).w, 6, "and still has its speed");
+  assert.equal(ctx.windAt({ ...h, wind: [5.8, null, 6.1] }, at("2026-10-16T14:30"), c, now), null, "a missing hour is no reading, never calm");
+  // said the chip's way: calm under 1 mph, and the gust only when it runs 6 or more over
+  assert.equal(ctx.windWords({ w: 5.8, g: 10.3 }), "6 mph");
+  assert.equal(ctx.windWords({ w: 19.7, g: 31.3 }), "20, gusts 31 mph");
+  assert.equal(ctx.windWords({ w: .4, g: 8 }), "calm, gusts 8 mph");
+  assert.equal(ctx.windWords(null), "wind –", "a missing hour is a dash");
+  assert.equal(ctx.windSpoken({ w: 19.7, g: 31.3, d: 357 }), "wind from the north 20 miles an hour, gusts 31");
+  assert.equal(ctx.windSpoken(null), "wind unavailable");
+  // the wind row speaks at now and at each turn of the table still ahead, and a turn too close gives way
+  assert.deepEqual(Array.from(ctx.windTimes(P, at("2026-10-27T08:40"), at("2026-10-28T10:40"), 3 * 36e5)),
+    [at("2026-10-27T08:40"), at("2026-10-27T16:44"), at("2026-10-27T22:36"), at("2026-10-28T04:56")], "now, then the turns; the 10:17 high, 1.6 hours after now, gives way to now");
+  assert.deepEqual(Array.from(ctx.windTimes(P, at("2026-10-27T08:40"), at("2026-10-28T10:40"), 36e5)),
+    [at("2026-10-27T08:40"), at("2026-10-27T10:17"), at("2026-10-27T16:44"), at("2026-10-27T22:36"), at("2026-10-28T04:56")], "with room, every turn ahead");
+  assert.deepEqual(Array.from(ctx.windTimes(P, at("2026-10-27T08:40"), at("2026-10-27T09:00"), 3 * 36e5)), [at("2026-10-27T08:40")], "no turn on the chart is now alone");
+  assert.deepEqual(Array.from(ctx.windTimes(P, at("2026-10-27T08:40"), at("2026-10-28T10:40"), 7 * 36e5)),
+    [at("2026-10-27T08:40"), at("2026-10-27T16:44"), at("2026-10-28T04:56")], "each turn is measured from the column kept before it");
+
+  // ── the gusts line: the hours whose gust reaches the boat's caution line (BOAT.iffyGust, 22) and runs 6 or more
+  // over the wind (the chip's own rule), each stretch with its top gust, on the whole mph the chip prints
+  assert.equal(ctx.BOAT.iffyGust, 22, "the boat's own caution line");
+  const run = (pairs) => ({ time: pairs.map((_, i) => `2026-04-18T${String(14 + i).padStart(2, "0")}:00`), wind: pairs.map((p) => p[0]), gust: pairs.map((p) => p[1]), dir: pairs.map(() => 250) });
+  const blowAt = at("2026-04-18T14:00"), end = at("2026-04-19T16:00");
+  const chip = (w, g) => ({ wind_speed_10m: w, wind_gusts_10m: g, wind_direction_10m: 250 });
+  const G = (pairs, ch = chip(...pairs[0]), t = blowAt, t1 = end) => Array.from(ctx.gustSpans(run(pairs), ch, t, t1), (s) => ({ a: new Date(s.a).getHours(), b: new Date(s.b).getHours(), top: s.top }));
+  assert.deepEqual(G([[22, 34], [21, 33], [15, 24], [11, 18], [10, 16]]), [{ a: 14, b: 17, top: 34 }], "the afternoon's blow, to 34, until 5");
+  assert.deepEqual(G([[10, 16], [9, 15], [10, 17]]), [], "an ordinary day has nothing");
+  assert.deepEqual(G([[25, 30], [24, 29]]), [], "a hard wind with gusts under 6 over it is said by the row, not the gusts line");
+  assert.deepEqual(G([[12, 21.6], [12, 21.4]]), [{ a: 14, b: 15, top: 22 }], "a 21.6 is the chip's 22, a 21.4 its 21");
+  assert.deepEqual(G([[12, 25], [null, 30], [12, 26]]), [{ a: 14, b: 15, top: 25 }, { a: 16, b: 17, top: 26 }], "an hour the run does not carry ends a stretch, and never carries one on");
+  assert.deepEqual(G([[12, 25], [12, 26], [12, 27]], chip(12, 25), blowAt, at("2026-04-18T15:30")), [{ a: 14, b: 15, top: 26 }], "cut at the chart's end");
+  assert.equal(new Date(ctx.gustSpans(run([[12, 25], [12, 26]]), chip(12, 25), blowAt, at("2026-04-18T15:30"))[0].b).getMinutes(), 30);
+  // the hour now is in is the chip's reading, and a stretch under way starts at now
+  assert.deepEqual(G([[12, 14], [12, 25]], chip(13, 27), at("2026-04-18T14:20")), [{ a: 14, b: 16, top: 27 }], "the chip's gust is the hour now is in");
+  assert.equal(ctx.gustSpans(run([[12, 14], [12, 25]]), chip(13, 27), at("2026-04-18T14:20"), end)[0].a, at("2026-04-18T14:20"));
+  // the rule is the boat's caution line and the chip's 6, no new threshold, and never the hourly's windy line
+  const gs = pick("function gustSpans(", "/* the coastal waters' advisories the wind row carries");
+  assert.match(gs, /g>=BOAT\.iffyGust&&g-s>=6/);
+  assert.doesNotMatch(gs.replace(/\/\*[\s\S]*?\*\//g, ""), /WINDY_GUST|\b(?:1\d|2\d|3\d)\b/, "no number of its own");
+
+  // ── the coastal waters' advisories: the forecaster's call for the ocean off the sounds, never the house's strip
+  for (const e of ["Small Craft Advisory", "Gale Watch", "Gale Warning", "Storm Warning", "Special Marine Warning", "Hurricane Force Wind Warning", "Hazardous Seas Watch"]) assert.match(e, ctx.MARINE_EVENT);
+  for (const e of ["Rip Current Statement", "Coastal Flood Advisory", "Wind Advisory", "Small Craft Advisory for Rough Bar", "Tropical Storm Warning"]) assert.doesNotMatch(e, ctx.MARINE_EVENT);
+  // their hours: from the VTEC begin (else the onset, else now), to `ends` (else the VTEC end), cut to the chart,
+  // and one with no end runs to the chart's edge and on; one that has ended is not drawn
+  const t0z = Date.parse("2026-10-16T13:05:00-04:00"), t1z = t0z + 26 * 36e5;
+  const zb = (z, shift = 0) => Array.from(ctx.zoneBars(z, t0z, t1z, shift), (b) => ({ ev: b.a.event, s: b.s, e: b.e, end: b.end, open: b.open }));
+  const sca = { event: "Small Craft Advisory", onset: "2026-10-17T05:00:00-04:00", ends: "2026-10-17T14:00:00-04:00", expires: "2026-10-17T14:00:00-04:00", vtec: ["/O.NEW.KCHS.SC.Y.0058.261017T0900Z-261017T1800Z/"] };
+  const gale = { event: "Gale Watch", onset: "2026-10-17T14:00:00-04:00", ends: "2026-10-20T03:00:00-04:00", expires: "2026-10-17T05:00:00-04:00", vtec: ["/O.NEW.KCHS.GL.A.0007.261017T1800Z-261020T0700Z/"] };
+  assert.deepEqual(zb([gale, sca]), [
+    { ev: "Small Craft Advisory", s: Date.parse(sca.onset), e: Date.parse(sca.ends), end: Date.parse(sca.ends), open: false },
+    { ev: "Gale Watch", s: Date.parse(gale.onset), e: t1z, end: Date.parse(gale.ends), open: true }], "in order, the watch running past the chart's edge, never stopped at its product's expiry");
+  const inEffect = { event: "Small Craft Advisory", onset: "2026-10-16T08:00:00-04:00", ends: "2026-10-16T22:00:00-04:00", vtec: ["/O.CON.KCHS.SC.Y.0058.000000T0000Z-261017T0200Z/"] };
+  assert.equal(zb([inEffect])[0].s, t0z, "one already under way starts at now");
+  const noEnd = { event: "Gale Warning", onset: "2026-10-16T14:00:00-04:00", ends: null, expires: "2026-10-16T17:00:00-04:00", vtec: ["/O.NEW.KCHS.GL.W.0012.261016T1800Z-000000T0000Z/"] };
+  assert.deepEqual(zb([noEnd])[0], { ev: "Gale Warning", s: Date.parse("2026-10-16T14:00:00-04:00"), e: t1z, end: null, open: true }, "no end given: to the edge and on, never the product's expiry");
+  assert.equal(zb([{ ...sca, onset: null }])[0].s, Date.parse("2026-10-17T09:00:00Z"), "the VTEC begin first");
+  assert.equal(zb([{ ...sca, ends: null }])[0].end, Date.parse("2026-10-17T18:00:00Z"), "and its end when the alert gives none");
+  assert.deepEqual(zb([{ ...inEffect, ends: "2026-10-16T13:00:00-04:00", vtec: [] }]), [], "an advisory that has ended is not drawn");
+  assert.deepEqual(zb([{ ...sca, event: "Rip Current Statement" }]), [], "and nothing but the zone's own marine products");
+  assert.equal(zb([sca], 36e5)[0].s, Date.parse(sca.onset) + 36e5, "on the chart's wall clock");
+
+  // ── what is in season: a calendar, never a bite, with cobia's May closure and SCDNR's 2026 shrimp baiting season said.
+  // Reds are in every month (SCDNR: year-round), bull reds from August to November, so a flood tide in the reds' season
+  // never sits over a row without them. The months are SCDNR's month-by-month check of October 16 2026
+  const names = (m) => Array.from(ctx.runsIn(ctx.RUNS.bft, m), (r) => r.name);
+  assert.deepEqual(names(1), ["reds", "trout"]);
+  assert.deepEqual(names(2), ["reds", "trout", "black drum"]);
+  assert.deepEqual(names(4), ["reds", "trout", "flounder", "black drum", "cobia"]);
+  assert.deepEqual(names(5), ["reds", "trout", "flounder", "sheepshead", "black drum", "cobia"]);
+  assert.deepEqual(names(6), ["reds", "flounder", "black drum", "cobia", "sharks"]);
+  assert.deepEqual(names(8), ["bull reds", "flounder", "tarpon", "sharks", "shrimp"]);
+  assert.deepEqual(names(10), ["bull reds", "trout", "flounder", "sheepshead", "shrimp"]);
+  assert.deepEqual(names(12), ["reds", "trout", "sheepshead"]);
+  const fish = Object.keys(vm.runInContext("(" + pick("const RUN_FISH={", "/* each one registers for the close-up").replace(/^const RUN_FISH=/, "").replace(/;\s*$/, "") + ")",
+    vm.createContext({ pBlob: () => 0, pTaper: () => 0, pDot: () => 0, runEye: () => [] })));
+  for (const r of ctx.RUNS.bft) {
+    assert.ok(fish.includes(r.id), `${r.name} is drawn`);
+    assert.ok(r.m.length && r.m.every((m) => Number.isInteger(m) && m >= 1 && m <= 12) && new Set(r.m).size === r.m.length, `${r.name}'s months are months`);
+    assert.ok(!r.closed || r.closed.every((m) => r.m.includes(m)), `${r.name} is closed only in its own months`);
+  }
+  // the baiting season, noon to noon on the place's clock (SCDNR's 2026-2027 guide: Sept. 11 (Noon) - Nov. 9 (Noon)),
+  // and nothing in a year SCDNR has not set
+  const W = (s) => new Date(s);
+  assert.equal(JSON.stringify(ctx.SHRIMP_BAIT), JSON.stringify({ 2026: ["2026-09-11T12:00", "2026-11-09T12:00"] }));
+  for (const [t, open] of [["2026-09-11T11:59", false], ["2026-09-11T12:00", true], ["2026-10-16T08:35", true], ["2026-11-09T11:59", true], ["2026-11-09T12:00", false], ["2027-10-01T12:00", false]])
+    assert.equal(ctx.baitOpen(W(t)), open, t);
+  const shrimp = ctx.RUNS.bft.find((r) => r.id === "shrimp");
+  assert.equal(ctx.runNote(shrimp, 10, W("2026-10-16T08:35")), "baiting");
+  assert.equal(ctx.runNote(shrimp, 11, W("2026-11-20T08:35")), "");
+  assert.equal(ctx.runNote(ctx.RUNS.bft.find((r) => r.id === "cobia"), 5, W("2026-05-10T08:00")), "closed");
+  const preload = (html.match(/bft:\{full:[^\n]*runsTall:\[([\d,]*)\],bait:(\[\[[^\]]*\]\])\}/) || []).slice(1);
+  assert.equal(preload.length, 2, "the preload holds the months and the baiting days whose row takes a second line");
+  assert.equal(JSON.stringify(JSON.parse(preload[1])), JSON.stringify(Object.values(ctx.SHRIMP_BAIT)), "the preload's baiting days are SHRIMP_BAIT's");
+  const mid = (m) => W(`2026-${String(m).padStart(2, "0")}-15T12:00`);
+  for (let m = 1; m <= 12; m++) {
+    assert.equal(names(m).filter((n) => /^(bull )?reds$/.test(n)).length, 1, `month ${m} has its reds, once`);
+    assert.equal(names(m).includes("bull reds"), m >= 8 && m <= 11, `month ${m}: bull reds only August to November`);
+    assert.ok(names(m).length >= 1 && names(m).length <= 6, `month ${m} fits one row`);
+    assert.equal(ctx.runsTall(ctx.RUNS.bft, m, W("2027-06-01T12:00")), m === 5, `month ${m}: only May says a closure out of the baiting season`);
+    assert.equal(preload[0].split(",").map(Number).includes(m), ctx.runsTall(ctx.RUNS.bft, m, W("2027-06-01T12:00")), `month ${m}: the preload's copy is runsTall's`);
+    assert.equal(ctx.runsTall(ctx.RUNS.bft, m, mid(m)), m === 5 || (m >= 9 && m <= 10), `month ${m} of 2026`);
+  }
+  assert.ok(ctx.runsIn(ctx.RUNS.bft, 5).find((r) => r.name === "cobia").closed.includes(5));
+  const rr = pick("function renderRuns(", "/* how tall the wind row");
+  assert.match(rr, /In season in \$\{MONTHS\[m-1\]\}: /);
+  assert.doesNotMatch(rr, /by SCDNR's calendar/, "SCDNR publishes no monthly calendar");
+  const cal = rr + pick("const RUNS={bft:", "/* the row's entries");
+  assert.doesNotMatch(cal, /biting|running now|best|>go<|bag limit \d/i);
+  // no bag limits, which change
+  assert.doesNotMatch(cal, /per person|per boat/i);
+  assert.doesNotMatch(html, /MOCK/);
+  // the row's place is held from the first frame (the preload, the shell), so its fish push nothing
+  assert.match(html, /<div class="runs" id="runsRow" hidden><\/div>/);
+  assert.match(html, /document\.getElementById\("runsRow"\)\.hidden=!L\.windRow;/);
+  assert.match(html, /\.runs\{display:flex;[^}]*min-height:54px;/);
+  assert.doesNotMatch(html, /getElementById\("runsRow"\)\?\.remove\(\)/);
+  // the white shrimp is raw, not pink
+  assert.doesNotMatch(pick("const RUN_FISH={", "/* each one registers for the close-up"), /shrimp:\{pal:\{body:"#D9A994"/);
+
+  // ── only Beaufort carries it: the grass line, the big flood, the season, the marine zone and the row are fields
+  // of LOCS.bft, and the coast's call passes null, so its chart is drawn exactly as before
+  const locs = pick("const LOCS={", "const LOC_ORDER=");
+  assert.match(locs, /grass:8,bigFlood:8\.8,floodSeason:\["03-15","11-30"\],marineZone:"AMZ362",runs:true,/);
+  assert.equal((locs.match(/grass:/g) || []).length, 1);
+  assert.equal((locs.match(/marineZone:/g) || []).length, 1);
+  // the one field asked of Open-Meteo, at every place, read only by Beaufort
+  assert.match(html, /hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&/);
+  assert.match(html, /\.\.\.\(Array\.isArray\(wj\.hourly\.wind_direction_10m\)\?\{dir:wj\.hourly\.wind_direction_10m\.slice\(i0\)\}:\{\}\)/);
+  const tide = pick("function renderTides(", "/* ── the moon over the farm");
+  assert.match(tide, /const grass=day\?LOC\.grass:null,vTopD=day\?Math\.max\(vTop,grass\+\.9\):vTop;/);
+  assert.match(tide, /tideSvg\.setAttribute\("viewBox",`0 0 \$\{W\} \$\{HT\}`\);/);
+  assert.match(tide, /let windRow="",HT=H,windSaid="";\n  if\(day\)\{/);
+  assert.match(tide, /band:\[topY-10,day\?HT-2:seaY\]/);
+  // the slider's flood word is floodSay's, on the stop's own level and date
+  assert.match(tide, /flood:floodSay\(v,t,LOC\)/);
+  assert.doesNotMatch(tide, /grass\+\.8/, "the big flood is LOC.bigFlood, named, not a number in the chart");
+  // no almanac windows on the tide: here they would be the tide by another name
+  assert.doesNotMatch(tide, /solunar|fishWindows|Almanac/);
+  // the flood tide's word is judged on each high's own date, not today's
+  assert.match(tide, /floodWord=t=>!!day&&inSeason\(new Date\(t\),LOC\.floodSeason\)/);
+  assert.doesNotMatch(tide, /inSeason\(locToday\(\),LOC\.floodSeason\)/);
+  // the moving water is the curve's own slope and the slider's stage words, never drawn a second time
+  assert.doesNotMatch(tide, /streaks|chevron/);
+  // the wind lane: one number a column at now and the turns, the gusts line under it on the boat's rule, and the
+  // advisories under that, named as offshore's, all in the page's own inks: no "g22" row, nothing in the
+  // marker's red, and the hourly's windy line nowhere in it
+  const wr = tide.slice(tide.indexOf("let windRow="), tide.indexOf("const tideSvg="));
+  assert.match(wr, /windTimes\(P,nt0,t1,/);
+  // now's column says the unit once, the chip's "mph", and gives it up rather than a turn of the tide
+  assert.match(wr, /const unit=!cols\[1\]\|\|X\(cols\[1\]\.t\)-pairW\/2>=c0R\+6\*fs\?" mph":"";/);
+  assert.doesNotMatch(wr, />g\$\{g\}<|css\.marker|WINDY_GUST|#[0-9A-F]{6}/i);
+  assert.match(wr, /HT=H\+windRowH\(W\);/);
+  assert.match(wr, /const gusts=gustSpans\(day\.h,day\.c,nt0,t1\),lfs=8\*fs,put=\[\];/);
+  assert.match(wr, /txt=`gusts to \$\{s\.top\}`/);
+  assert.match(wr, /fill="\$\{css\.soft\}" \$\{halo\}>\$\{p\.txt\}<\/text>/, "the gusts' words in the soft ink");
+  assert.match(wr, /stroke="\$\{css\.faint\}" stroke-width="1"/, "and their hairline in the faint");
+  assert.match(wr, /if\(put\.length\)HT\+=gustRowH\(W\);/, "a line only when it has something on it");
+  // placed, not stamped: the strongest first, three characters clear, its words' middle over its own hours
+  assert.match(wr, /\.sort\(\(p,q\)=>q\.top-p\.top\|\|p\.a-q\.a\)/);
+  assert.match(wr, /keep=3\*lfs\*\.6/);
+  // and a stretch's hairline is cut round its own words and well short of the next one's
+  assert.match(wr, /const m=q===p\?4:keep;/);
+  assert.match(wr, /const adv=zoneBars\(day\.zone,nt0,t1,TZSHIFT\);/);
+  assert.match(wr, /const words="offshore "\+/);
+  // said with the chart: every gusty stretch, the line's room or not
+  assert.match(wr, /\.\.\.gusts\.map\(s=>`gusts to \$\{s\.top\} miles an hour /);
+  assert.match(html, /const gustRowH=cw=>\{const f=\(cw<360\?1\.08:cw<520\?1\.16:1\)\*1\.22;return Math\.round\(8\*f\*1\.3\+4\*f\)\};/);
+  // and the band of a flood stops under its high's time, never through it, and the depth scale keeps out of it
+  // where it can, lightly, never onto the tide line for it (at the coast there is no flood, and the scale is
+  // placed as it always was)
+  assert.match(tide, /top=fh\?fh\.ty\+11\*fs\*\.22\+2:/);
+  assert.match(tide, /const washes=floods\.map\(f=>\[Math\.max\(X\(f\.a\),x0\),topY-10,Math\.min\(X\(f\.b\),xR\),bedY\]\);/);
+  assert.match(tide, /\.length\*100\+inWash\(b\)\};/);
+  assert.match(tide, /const floods=day\?floodSpans\(P,interp,t0,t1,grass\):\[\]/);
+  // the loading shell holds the wind row's height at Beaufort, and only there (the preload's copy is windRowH's)
+  assert.match(html, /box\("tideSvg",ch\+\(L\.windRow\?Math\.round\(13\*\(cw<360\?1\.08:cw<520\?1\.16:1\)\*1\.22\+3\):0\)\)/);
+  assert.match(html, /const windRowH=cw=>Math\.round\(13\*\(cw<360\?1\.08:cw<520\?1\.16:1\)\*1\.22\+3\);/);
+  assert.match(html, /box\("tideSvg",ch\+\(LOC\.grass\?windRowH\(cw\):0\)\)/);
+
+  // ── the zone's own lane: the forecast never waits on it, a late answer paints again with the view held, and a
+  // failed or timed-out request is no answer and no bar
+  const lanes = pick("/* Beaufort's coastal-waters advisories (AMZ362), in a lane of their own", "async function refresh(){");
+  assert.match(lanes, /const zoneLane=L=>L\.marineZone\?fetchJSON\(`https:\/\/api\.weather\.gov\/alerts\/active\?zone=\$\{L\.marineZone\}`,6000\)/);
+  assert.match(lanes, /\.filter\(a=>alertLive\(a\)&&MARINE_EVENT\.test\(a\.event\)\)\)\.catch\(\(\)=>null\)/);
+  assert.match(lanes, /if\(was===JSON\.stringify\(z\|\|\[\]\)\)return;\n    d\.zone=z;/, "a failed answer takes the last bars down; an unchanged one paints nothing");
+  const rf = pick("async function refresh(){", "const SWAP=");
+  assert.doesNotMatch(rf, /await zoneP|zoneP\]|,zoneP,/, "never in the forecast's Promise.all");
+  assert.ok(rf.indexOf("const zoneP=zoneLane(L)") < rf.indexOf("  try{"), "asked beside the forecast, before it");
+  assert.match(rf, /if\(L\.marineZone\)data\.zone=zoneIn!==undefined\?zoneIn:kept\?\.zone\?\?null;/);
+  assert.match(rf, /if\(L\.marineZone&&zoneIn===undefined\)zoneRun\(L,request,zoneP\);/);
+  assert.match(rf, /if\(cached&&L\.marineZone\)\{if\(zoneIn!==undefined\)cached\.data\.zone=zoneIn;else zoneRun\(L,request,zoneP\)\}\n    if\(cached\)\{/, "and the cached reading takes the zone's answer when the forecast fails");
+  // the chart's paint holds the view at Beaufort, where its height follows what the lane says, and nowhere else
+  const rn = pick("function render(d,live,savedAt=0){", "async function stormRun(");
+  assert.match(rn, /const tideHold=LOC\.tide&&LOC\.grass\?viewHold\(\):null;/);
+  assert.match(rn, /renderRuns\(LOC\.runs&&LOC\.tide\?RUNS\[LOC\.id\]:null,now\);\n  if\(tideHold\)tideHold\(\);/);
+  assert.match(rn, /const tide=renderTides\(d\.tides,css,c\.wind_gusts_10m,c\.wind_speed_10m,levelFeet\(d\.water,now\),LOC\.grass\?\{h:full,c,zone:d\.zone\|\|\[\]\}:null\);/);
+  // and the marine zone never reaches the house's strip
+  assert.doesNotMatch(rf.slice(rf.indexOf("const alertsP="), rf.indexOf("const alertsP=") + 400), /zone/);
+
+  // ── the slider says the stage, a flood tide in the grass's green and the wind at each stop, the gusts too, and
+  // the hours before now, which have no wind row, say no wind; a stop without them reads exactly as the coast's
+  const lift = (re) => html.match(re)[0];
+  const rctx = vm.createContext({});
+  vm.runInContext([lift(/const XP=\{\},XP_HOLD=[^\n]*/), lift(/const WMO=\{[^\n]*/), lift(/const SNOW=\[[\s\S]*?const isWet=w=>WETC\.includes\(w\);/),
+    lift(/const hh=t=>\{[^\n]*\};/), lift(/const dayName=s=>[^\n]*;/), lift(/const mmdd=s=>[^\n]*;/), lift(/const clock=d=>\{[^\n]*\};/),
+    html.slice(html.indexOf("const NORMALS={"), html.indexOf("const DOY=")),
+    html.slice(html.indexOf("const precipKind="), html.indexOf("/* where the moon crosses the chart's own horizon")),
+    lift(/const dirLong=d=>[^\n]*\n[^\n]*/), pick("const windWords=", "/* The gusty stretches the wind row says"),
+    "globalThis.readTide=readTide;"].join("\n"), rctx);
+  const read = (s, n) => JSON.parse(JSON.stringify(rctx.readTide(s, at(n), 0)));
+  const big = read({ t: at("2026-10-27T10:17"), depth: 9.354, turn: "H", now: false, dir: "falling", stage: "high water", flood: "big flood tide", wind: { w: 14.2, g: 23.1, d: 45 } }, "2026-10-27T08:40");
+  assert.deepEqual(big.parts, [["10:17a", ""], ["9.4 ft", "b"], ["high water", ""], ["big flood tide", "grass"], ["45", "vane"], ["14, gusts 23 mph", ""]]);
+  assert.equal(big.said, "High tide at 10:17 am, 9.4 feet, big flood tide, wind from the northeast 14 miles an hour, gusts 23");
+  const blow = read({ t: at("2026-10-17T14:00"), depth: 7.3, turn: null, now: false, dir: "rising", stage: "high water", flood: "", wind: { w: 19.9, g: 29.1, d: 358 } }, "2026-10-16T13:05");
+  assert.deepEqual(blow.parts, [["Sat 2p", ""], ["~7.3 ft", "b"], ["high water", ""], ["358", "vane"], ["20, gusts 29 mph", ""]]);
+  assert.equal(blow.said, "Saturday 2 pm, about 7.3 feet, high water, wind from the north 20 miles an hour, gusts 29");
+  // a cache's hour with no direction: the speed with no vane
+  assert.deepEqual(read({ t: at("2026-10-17T03:00"), depth: 5, turn: null, now: false, dir: "falling", stage: "outgoing", flood: "", wind: { w: 9, g: 12, d: null } }, "2026-10-16T13:05").parts.slice(3), [["9 mph", ""]]);
+  // calm has no direction to point, and a missing hour is a dash with no vane
+  assert.deepEqual(read({ t: at("2026-10-17T03:00"), depth: 5, turn: null, now: false, dir: "falling", stage: "outgoing", flood: "", wind: { w: .4, g: 3, d: 90 } }, "2026-10-16T13:05").parts.slice(3), [["calm", ""]]);
+  assert.deepEqual(read({ t: at("2026-10-17T03:00"), depth: 5, turn: null, now: false, dir: "falling", stage: "outgoing", flood: "", wind: null }, "2026-10-16T13:05").parts.slice(3), [["wind –", ""]]);
+  // the pill keeps a vane with its words, and the hourly's and the week's pills are untouched by it
+  const show = pick("function xpShow(X,i){", "function xpHide(");
+  assert.match(show, /c==="vane"\?"":a\[i-1\]\?\.\[1\]==="vane"\?`<span class="vane-p">\$\{vane\(a\[i-1\]\[0\]\)\}/);
+  const past = read({ t: at("2026-10-16T12:00"), depth: 6.9, turn: null, now: false, dir: "rising", stage: "last of the incoming", flood: "", wind: undefined }, "2026-10-16T13:05");
+  assert.deepEqual(past.parts, [["12p", ""], ["~6.9 ft", "b"], ["last of the incoming", ""]]);
+  assert.equal(past.said, "noon, about 6.9 feet, last of the incoming");
+  assert.deepEqual(read({ t: at("2026-10-16T18:15"), depth: 3.1, turn: null, now: false, dir: "falling" }, "2026-10-16T13:05").parts, [["6:15p", ""], ["~3.1 ft", "b"]]);
+
+  // ── shipping, not a mock: no drawing, comment or constant says it is one, and the new sentences keep Josh's words
+  assert.doesNotMatch(html, /\bMOCK\b|\bmock\b|option [ABC]\b/);
+  const fishing = pick("/* ── Beaufort's fishing water", "/* ── tide ───");
+  for (const s of (fishing.replace(/\/\*[\s\S]*?\*\//g, "").match(/`[^`]*`|"[^"]*"/g) || [])) assert.doesNotMatch(s, /;|—/, `no semicolon or em dash in the app's words: ${s}`);
+});
+
+test("Beaufort's coastal waters on the page's own refresh: never waited for, painted again when they land, and no bar when they fail", async () => {
+  const sca = { properties: { id: "urn:rig:sca", event: "Small Craft Advisory", severity: "Minor", onset: "2026-10-17T05:00:00-04:00", ends: "2026-10-17T14:00:00-04:00", expires: "2026-10-17T14:00:00-04:00",
+    description: "* WHAT...North winds 20 to 25 kt.", instruction: "", parameters: { VTEC: ["/O.NEW.KCHS.SC.Y.0058.261017T0900Z-261017T1800Z/"] }, affectedZones: [] } };
+  const rip = { properties: { ...sca.properties, id: "urn:rig:rip", event: "Rip Current Statement", parameters: { VTEC: ["/O.NEW.KCHS.RP.S.0040.261016T1500Z-261017T0000Z/"] } } };
+  const zones = (r) => r.paints.map((p) => p.zone);
+  {
+    // in time, the answer joins the first paint, and only the zone's own marine products are kept
+    const page = await pageRig({}, "bft");
+    const r = await page.open("2026-10-16T17:05:00Z", { zone: [sca, rip], forecastDelay: 30 });
+    await new Promise((res) => setTimeout(res, 40));
+    deq(zones(r), [["Small Craft Advisory"]], "one paint, the advisory in it");
+    deq(r.entry.data.zone.map((a) => a.event), ["Small Craft Advisory"], "and cached with the forecast");
+  }
+  const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+  {
+    // slow: the forecast paints without it, and the answer paints again, into the reading and its cache
+    const store = {}, page = await pageRig(store, "bft");
+    const r = await page.open("2026-10-16T17:05:00Z", { zone: [sca], zoneDelay: 150 });
+    deq(zones(r), [[]], "the forecast's paint never waits on the coastal waters");
+    await wait(260);
+    deq(page.paints().map((p) => p.zone), [[], ["Small Craft Advisory"]], "and the answer paints again when it lands");
+    deq(JSON.parse(store["mbwx-bft"]).data.zone.map((a) => a.event), ["Small Craft Advisory"]);
+    // a refresh with the same answer, late again: the last reading's bar stays up while it is out, and the answer
+    // that changes nothing paints nothing
+    const r2 = await page.refresh("2026-10-16T17:35:00Z", { zone: [sca], zoneDelay: 150 });
+    deq(zones(r2), [["Small Craft Advisory"]], "still out: the last reading's bar, by its own hours");
+    await wait(260);
+    assert.equal(page.paints().length, 3, "the same answer paints nothing");
+    // the next one fails, slowly: the bar the last reading carried comes down when it does
+    const r3 = await page.refresh("2026-10-16T18:05:00Z", { zone: "fail", zoneDelay: 150 });
+    deq(zones(r3), [["Small Craft Advisory"]]);
+    await wait(260);
+    deq(page.paints().at(-1).zone, [], "a zone that failed is no bar: the carried one comes down");
+    assert.equal(JSON.parse(store["mbwx-bft"]).data.zone, null, "and the cache says so");
+  }
+  {
+    // failing at once: the forecast's paint has no bar, and nothing else paints
+    const page = await pageRig({}, "bft");
+    const r = await page.open("2026-10-16T17:05:00Z", { zone: "fail" });
+    await wait(40);
+    deq(zones(r), [[]]);
+    assert.equal(page.paints().length, 1);
+  }
+  {
+    // a cold open on a cache that had the advisory, with the zone slow: the cached paint and the live one carry it,
+    // and the zone's own answer, the advisory over, takes it down
+    const store = {};
+    await (await pageRig(store, "bft")).open("2026-10-16T17:05:00Z", { zone: [sca] });
+    await wait(40);
+    const cold = await pageRig(store, "bft");
+    const r = await cold.open("2026-10-16T19:05:00Z", { zone: [], zoneDelay: 150 });
+    deq(r.paints.map((p) => [p.live, p.zone]), [[false, ["Small Craft Advisory"]], [true, ["Small Craft Advisory"]]]);
+    await wait(260);
+    deq(cold.paints().at(-1).zone, [], "the zone's own answer decides");
+  }
+  // the coast and the farm never ask
+  for (const loc of ["mb", "sp"]) {
+    const page = await pageRig({}, loc);
+    const r = await page.open("2026-10-16T17:05:00Z", { zone: [sca] });
+    assert.ok(r.paints.every((p) => p.zone === undefined), `${loc} reads no coastal waters`);
+  }
 });
