@@ -7,9 +7,11 @@
  *   TZ=America/New_York node tools/beaufort/scene.mjs noon night   # only the cases whose name matches
  *   PORCH_BFT_WIDTHS=390,430,760 ...                               # the widths to shoot (default 390,430)
  *   PORCH_BFT_PRM=1 ...                                            # under reduced motion (default: motion on, as on a phone)
+ *   PORCH_BFT_GRASS_TIDES=0,.05,.1 ...                             # the tides the grass check paints again at (default 0,.15,.5,.8,1)
  *
  * Writes tools/shots/beaufort/scene-<case>-<width>.png (the sky block, type and all) and
- * scene-<case>-<width>-scene.png (the picture alone), and prints any page errors.
+ * scene-<case>-<width>-scene.png (the picture alone), prints any page errors, and fails an animal overlap,
+ * more than 120 animations or a tuft of grass with nothing under its foot (grassCheck).
  */
 import { readFileSync, readdirSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -76,6 +78,21 @@ CASES.push(C("halloween-night", "2026-10-31T20:40:00", .4, "Halloween night: the
 CASES.push(C("november-morning", "2026-11-01T09:30:00", .5, "the morning of November 1: every decoration down",
   { baseTemp: 64, nowTemp: 60, feels: 60, rh: 70, isDay: 1, code: 1, cloud: 18, nowWind: 6, nowDir: 30, nowGust: 10, nowUv: 2, uvMax: 4, windAmp: 5, gustAmp: 8, sunrise: "06:41", sunset: "17:28", popCurve: () => 5, dailyPop: (p) => p.fill(8) }));
 
+/* the grass at every tide */
+/* the spartina stands on the marsh platform: on its wet mud when the water is down and in the river on a spring
+   high, and never over air or over water it is not standing in (the grass check below walks every tuft) */
+const MORNING = { baseTemp: 72, nowTemp: 70, feels: 76, rh: 88, isDay: 1, code: 1, cloud: 12, nowWind: 3, nowDir: 220, nowGust: 6, nowUv: 1.2, uvMax: 5, windAmp: 4, gustAmp: 6, popCurve: () => 5, dailyPop: (p) => p.fill(8) };
+CASES.push(C("this-morning", "2026-10-16T08:35:00", .15, "Josh's morning, October 16 2026 at 8:35: the sun low behind the oak, the tide near low, the flats out and the grass on its mud",
+  { ...MORNING, sunrise: "07:27", sunset: "18:48" }));
+CASES.push(C("grass-dead-low", "2026-09-20T10:30:00", 0, "dead low on a September morning: the flats all the way out, the grass on the marsh's wet mud edge",
+  { ...MORNING, baseTemp: 80, nowTemp: 79, feels: 82, rh: 74, nowUv: 5, uvMax: 7, sunrise: "07:09", sunset: "19:21" }));
+CASES.push(C("grass-mid-tide", "2026-09-20T13:30:00", .5, "half tide: the flats half out, the mud edge under the grass still wet",
+  { ...MORNING, baseTemp: 84, nowTemp: 83, feels: 87, rh: 64, nowUv: 7, uvMax: 7, sunrise: "07:09", sunset: "19:21" }));
+CASES.push(C("grass-flood-tide", "2026-09-20T15:20:00", .8, "the flood near the top: the flats nearly under, the river just under the grass, a strip of wet bank still out",
+  { ...MORNING, baseTemp: 84, nowTemp: 83, feels: 86, rh: 64, nowUv: 5, uvMax: 7, sunrise: "07:09", sunset: "19:21" }));
+CASES.push(C("grass-spring-high", "2026-09-20T16:40:00", 1, "a spring high: the river up around the grass's stems, the flats under",
+  { ...MORNING, baseTemp: 84, nowTemp: 82, feels: 85, rh: 66, nowUv: 3, uvMax: 7, sunrise: "07:09", sunset: "19:21" }));
+
 let chromium;
 try { ({ chromium } = await import("playwright")); } catch { console.error("playwright is not installed"); process.exit(1); }
 
@@ -89,6 +106,52 @@ const html = () => {
   if (!h.includes(mark)) throw new Error("no scene marker in index.html");
   return parts ? h.replace(mark, "const LOOK=BFT;\n" + parts + mark) : h;
 };
+
+/* The grass check. Every spartina tuft's foot, measured on the real page against what the still picture
+   draws under it (the shapes tagged data-ground: the river, the flats, the bank's mud and the land, the
+   topmost one at the point): the grass is rooted in the land or the mud, it stands in the river only from
+   BFT_GRASS_WET up (a spring high, the water up around its stems), and it is never over air. At or under
+   mean tide, with the water under every stem, the ground also has to stand over each foot, 1.5 units at
+   mean tide and 2.5 at dead low, so the foot is seen against the bank's own mud and never against the
+   river behind it, which is how the grass read as floating at low water. It is run at the
+   case's own tide and then at each of GRASS_TIDES, the page painted again at that tide (tideLevel stood in
+   for), at every width */
+const GRASS_TIDES = process.env.PORCH_BFT_GRASS_TIDES ? process.env.PORCH_BFT_GRASS_TIDES.split(",").map(Number) : [0, .15, .5, .8, 1];
+async function grassCheck(page) {
+  return page.evaluate(async (tides) => {
+    const measure = () => {
+      const fx = document.getElementById("sceneFx");
+      const grounds = ["sceneSvg", "sceneNear"].flatMap((id) => [...document.getElementById(id).querySelectorAll("[data-ground]")]);
+      const toScreen = fx.getScreenCTM();
+      const kind = (x, y) => {
+        const P = new DOMPoint(x, y).matrixTransform(toScreen);
+        let top = "air";
+        for (const g of grounds) if (g.isPointInFill(P.matrixTransform(g.getScreenCTM().inverse()))) top = g.dataset.ground;
+        return top;
+      };
+      const feet = [...fx.querySelectorAll("[data-grass] path[fill='url(#blade)']")]
+        .flatMap((p) => [...p.getAttribute("d").matchAll(/M (-?[\d.]+) (-?[\d.]+) Q/g)].map((m) => [+m[1] + .8, +m[2]]));
+      /* how much ground has to stand over a foot: none from mean tide up, 1.5 units at mean tide, 2.5 at dead low */
+      const t = SCENE_TIDE, wet = t >= BFT_GRASS_WET, need = t <= .5 ? 1.5 + (.5 - t) * 2 : 0, bad = [];
+      const ground = (k) => k === "land" || k === "mud";
+      for (const [x, y] of feet) {
+        const under = [-.7, 0, .7].map((dx) => kind(x + dx, y + .4));
+        if (!under.every((k) => ground(k) || (wet && k === "water"))) { bad.push(`(${x.toFixed(1)}, ${y.toFixed(1)}) over ${under.join("/")}`); continue; }
+        for (let h = .5; h <= need + 1e-6; h += .5) {
+          const behind = kind(x, y - h);
+          if (!ground(behind)) { bad.push(`(${x.toFixed(1)}, ${y.toFixed(1)}) seen against ${behind} ${h} over its foot`); break; }
+        }
+      }
+      return { tide: t, feet: feet.length, grounds: grounds.length, bad };
+    };
+    const out = [measure()];
+    const own = tideLevel;
+    try {
+      for (const t of tides) { tideLevel = () => t; render(LAST.d, LAST.live, LAST.savedAt); await PAINT; out.push(measure()); }
+    } finally { tideLevel = own; render(LAST.d, LAST.live, LAST.savedAt); await PAINT; }
+    return out;
+  }, GRASS_TIDES);
+}
 
 mkdirSync(OUT, { recursive: true });
 const server = await serve(PORT, FONT_DIR);
@@ -134,6 +197,14 @@ for (const cs of CASES.filter((c) => !ONLY.length || ONLY.some((o) => c.name.inc
     console.log(`${tag}: loc ${info.loc}, tide ${info.tide == null ? "—" : info.tide.toFixed(2)}, props [${[...new Set(info.props)].join(" ")}], animals [${info.species.join(" ")}], ${info.running} animations`);
     if (info.running > 120) errs.push(`${info.running} animations running, over the scenes' ceiling of 120`);
     if (info.loc !== "bft") { errs.push(`the page opened at ${info.loc}, not Beaufort`); }
+    /* the grass is rooted, at the case's tide and at every one of GRASS_TIDES */
+    const grass = await grassCheck(page).catch((e) => [{ tide: null, feet: 0, grounds: 0, bad: ["the grass check failed: " + e.message] }]);
+    for (const g of grass) {
+      const at = g.tide == null ? "—" : g.tide.toFixed(2);
+      if (!g.feet || !g.grounds) errs.push(`grass at tide ${at}: ${g.feet} feet and ${g.grounds} ground shapes to measure them against`);
+      if (g.bad.length) errs.push(`grass at tide ${at}: ${g.bad.length} of ${g.feet} feet floating: ${g.bad.slice(0, 6).join(", ")}${g.bad.length > 6 ? ", …" : ""}`);
+    }
+    console.log(`  grass: ${grass.map((g) => `${g.tide == null ? "—" : g.tide.toFixed(2)} ${g.bad.length ? g.bad.length + " floating" : "rooted"}`).join(" · ")} (${grass[0]?.feet ?? 0} feet)`);
     if (errs.length) { failed = true; console.log("  " + errs.join("\n  ")); }
     await ctx.close();
   }

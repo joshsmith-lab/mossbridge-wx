@@ -870,6 +870,26 @@ as the tide falls, with their oyster rakes and a wet edge, and go under on the f
 units under the deck at high water and seventeen at dead low, and the channel under it is the last thing
 wet. `tideLevel` reads the level off the station's own high and low predictions (`SCENE_TIDE`).
 
+**The grass stands on its bank.** Josh, on the morning of October 16 2026 with the tide near low: "the mud
+flat sim is excellent! let's look at that grass though, because at low tide like now, looks like it's
+floating." It was. The spartina stood on the banks' top lines with the river drawn straight behind its feet,
+at the water's own height, while the flats and the float said the water was down, and the tall grass at each
+bank's corner had water under its feet on the flood. Smooth cordgrass grows on the marsh platform from about
+mean tide up to the high-water line, so the bank it is rooted in now comes up out of the river as the tide
+falls (`bftGrassMud`): along each bank's river side, wet dark mud from the waterline down to just under the
+grass's feet, its top swelling and dipping a little along the bank (seeded) and kept under the dock's
+stringers so the walkway stands over the marsh, a darker wet band at the feet that fades into the grass, and
+a little wrack there. At each bank's corner the mud carries on under the tall grass and drops into the flat's
+own outline, in the flat's own colour, so the corner grass stands on the same mud the flat is. Four units of
+it at dead low, and none from `BFT_GRASS_WET` (.94) up, so a spring high is the picture it always was, the
+river up around the stems. It is the flats' own mud and ink on the still picture (over the flats, under the
+palmettos' trunks and the land), and it adds no animation. The grass keeps every one of its draws and stays
+on `#sceneFx`. `tools/beaufort/scene.mjs` measures every tuft's foot on the real page against the ground drawn
+under it (the shapes tagged `data-ground`), at the case's own tide and painted again at 0, .15, .5, .8 and 1,
+at every width: a foot is on the land or the mud, in the river only from `BFT_GRASS_WET`, never over air, and
+at or under mean tide the ground stands over it, 1.5 units at mean tide and 2.5 at dead low, so it is never
+seen against the river. The page as it was failed 7 of the 36 feet at 390 on Josh's morning and 13 at dead low.
+
 **The animals are their real sizes** against the oak, the boat and the dock (about two-thirds of a foot to
 a unit on the near banks), which Josh asked for, and none stands on another (`tools/beaufort/scene.mjs`
 fails an overlap). The white birds are in the oak, as Josh asked: great egrets and white ibis on the limbs
@@ -911,7 +931,10 @@ up the walkway, out from under the balloon's string.
 **Seeing it.** `node tools/beaufort/look.mjs <key>` shows any Beaufort drawing close up and at phone size
 (the keys are in `BFT`, the registry each drawing registers in), and `TZ=America/New_York node
 tools/beaufort/scene.mjs [cases]` renders the real page at Beaufort in every weather, tide and October
-case, and fails a page error, an animal overlap or more than 120 animations.
+case, and fails a page error, an animal overlap, a tuft of grass with nothing under its foot (see the grass
+above) or more than 120 animations. Its last cases are the grass at every tide: Josh's morning
+(`this-morning`, October 16 2026 at 8:35, the tide at .15), dead low, mid tide, the flood at .8 and a
+spring high.
 
 ## Deploying
 
