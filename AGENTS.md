@@ -991,13 +991,144 @@ gale; and a plastic yard skeleton stands at the boat's helm waiting to go fishin
 the boat's rock, waving now and then and glowing a little after dark. The trick-or-treater stands further
 up the walkway, out from under the balloon's string.
 
+**The fishing water (October 16 2026).** Jen's family told Josh what they open a weather app for: "they're
+always looking at the tide for fishing and they're always looking at the wind", the family boater is "always checking the
+wind and the waves" for his deep sea trips, and they "would be interested in... fish run". Three versions of
+Beaufort's water chart were drawn into copies of the page (branches mock/bft-water-A, -B and -C): A put the
+flood tide and the fish on the chart with a row of the wind and a gusts line under it, B drew the wind as a lane
+on a fixed scale, and C, "the fishing day", the grass line, the wind at the tide's turns and the offshore
+advisories. Josh saw them on an approval page, wrote "go with your pick." and then "ship when ready. nice
+job!" (October 16 2026). The pick was C with A's gusts line put back, because C alone read ←22 on a day gusting
+34. All of it is Beaufort's alone: `LOCS.bft`'s `grass`, `bigFlood`, `floodSeason`, `marineZone` and `runs`, and
+`renderTides`' last argument (`day`), which is null at the coast, so Porters Neck's water is drawn exactly as it
+was. Nothing in it is a score, a grade or red.
+
+- **The grass line** is NOAA's own mean higher high water at 8667999, 7.98 ft over MLLW, rounded to 8
+  (`grass`): a thin solid green line with a tuft of spartina and `8 ft`, on the chart's own datum scale, which
+  always reaches it, so a neap day's highs are seen to fall short. The short marsh grass stands about there, and
+  every guide's flood height, put onto this station's table, lands at about 7.9 to 8.2: John Holbrook's and LoCo
+  Fly's 7.5 at the Savannah River entrance, the Charleston rule of 6 ft at the harbor, Bay Street Outfitters'
+  7.8 to 9 and Owen Plair's 7.5 to 8.5 on a Fort Pulaski-like table. At 8 the 2026 table gives Plair's "10-15"
+  floods a month. It is a fact about the table, never a claim about one flat: every flat floods at its own
+  height. Its words are placed like the depth scale's: over the line with room round it, under it, a size
+  smaller, `8 ft` alone, then the tuft alone. The depth scale keeps out of a flood's band where it can (at 760
+  it stood inside the wash as one column), but lightly, because a word on the wash still reads and one on the
+  tide line does not.
+- **A flood tide** is a high at or over the line. The hours the table stands over it (`floodSpans`: about 1.6
+  hours on an 8.3 ft high and 3.4 on a 9.2, NOAA's six-minute predictions) are a pale green band from just under
+  the high's time to the bed, the water over the line goes green, and the high's time prints in the grass's
+  green. In the guides' season, mid-March to the end of November (`floodSeason`, the tailing season of Bay
+  Street, Plair and Indigo Charters: under about 65° water the fiddlers go down and the reds stop tailing), the
+  words `flood tide` go once over the first flood high with room, judged on that high's own date. Out of it the
+  line, the band and the green stay, because the water is still in the grass, and only the words go. The slider
+  says `flood tide`, `big flood tide` from 8.8 ft (`bigFlood`, LoCo Fly's "really big tide (8.5-9')" at Fort
+  Pulaski put on this table), and out of season `in the grass`, each on the stop's own level and its own date
+  (`floodSay`), so the edge of a 9 ft flood is a flood tide. It is the table: the station is predictions only,
+  so nothing on the chart says how much a northeaster has piled in (see the gauge, below).
+- **The stage words** are the slider's, the way the guides talk (`tideStage`): `high water` or `low water`
+  within half an hour of a turn, `last of the incoming` and `first of the outgoing` within two hours of one, and
+  `incoming` or `outgoing` between. Never `slack`: at the swing bridge NOAA predicts the flood running on about
+  two hours past the table's high. The moving water itself is not drawn. The slope of the curve is the current
+  (NOAA's current predictions in the Coosaw by Sams Point turn within 5 to 12 minutes of this table), and the
+  streaks and chevrons the drawings tried said the slope twice.
+- **The wind row** sits under the lows on the tide's own clock: at now, the chip's own reading, and at each high
+  and low still ahead (`windTimes`), the house's vane pointing into the wind and its mph, one number a column,
+  about six hours apart, a turn too close to the column before it giving way. Now's column says `mph` once
+  where there is room. Calm has no arrow and a missing hour is a dash. The direction is Open-Meteo's hourly
+  `wind_direction_10m`, the one field added to the forecast request (asked at every place, read only here), at
+  the house's own point, never a sea cell's, a buoy's or the airfield's. A cache written before it was asked for
+  has no direction: its marks are the speed with no arrow but now's (the chip's reading always had one) until
+  the live forecast lands. The row's height is held from the first frame (`windRowH`, and its copy in the
+  preload), and a cached place switch holds the chart at the new place's empty height.
+- **The gusts line** is under the row, only where the gusts matter to a small boat (`gustSpans`): the hours
+  whose gust reaches the boat's caution line (`BOAT.iffyGust`, 22, where the boat's sentence turns to "Choppy"
+  and the water card grades its gusts) and runs 6 or more over the wind (the chip's own rule for saying
+  a gust at all), judged on the whole mph the chip prints. No new threshold, and on an ordinary day nothing.
+  Each stretch is `gusts to 34` over its hours with a faint hairline either side of the words for the rest of
+  the stretch, the words in the soft ink. It is placed, not stamped: the strongest stretch goes down first, and
+  each next one at the nearest spot to its own middle that keeps the middle of its words over its own hours and
+  stands three characters clear of the words already down, because `gusts to 25 gusts to 31` a space apart
+  read as one run on, and each hairline ends as far short of the next stretch's words, so two stretches never
+  read as one chain. One with no room is left to the slider and the chart's spoken label, which say every
+  stretch with its hours (`gusts to 25 miles an hour from Saturday at 5 am until 9 am`). Its line is there only
+  on a gusty day (`gustRowH`), with air under it, so an advisory's bar under it reads as the advisory's and never
+  as the gusts' underline. The slider says each hour's gusts the chip's way (`20, gusts 29 mph`).
+- **The offshore advisories** are the forecaster's own call for the ocean off the sounds: the active alerts
+  for marine zone AMZ362 (coastal waters from Edisto Beach SC to Savannah GA out 20 nm, Charleston's), a Small
+  Craft Advisory, a Gale, Storm or Hurricane Force Wind Watch or Warning, a Hazardous Seas Watch or Warning or a
+  Special Marine Warning (`MARINE_EVENT`). This is the family boater's gate for going outside. The house, the river and the
+  inner sound are in no marine zone, so the words are named as offshore's, `offshore small craft advisory · gale
+  watch`, under a bar over each one's own hours (`zoneBars`: from its VTEC begin, else its onset, else now, to
+  its `ends`, else its VTEC end, cut to the chart, a watch paler, square where it runs on past the chart's
+  edge). One with no end given runs on, because a product's expiry is only when the next forecast is due:
+  Charleston's Gale Watch of October 16 2026 expired at 5 am Saturday and ran from 2 pm Saturday to Tuesday. It
+  never goes on the house's strip.
+- **Its own lane.** The zone is asked first and beside the forecast (`zoneLane`), and the forecast never waits
+  on it. An answer in by the paint joins it. One still out leaves the last reading's bars up, by their own
+  hours, until it answers, the storm lane's way with the beach. A late answer goes into the reading and its
+  cache and paints the page again only when it changes what the chart shows (`zoneRun`), and the chart's paint
+  holds the view the storm card's way (`tideHold`, `viewHold`): scrolled so the chart's top is off the screen,
+  nothing on screen under the chart moves; with its top on the screen the chart holds and only what is under the
+  bar moves. A request that fails or times out (six seconds) is no answer and no bar, and takes the last
+  reading's down, because an advisory nobody could confirm is not said. When the forecast fails the cached
+  reading takes the zone's answer too (Open-Meteo unreachable while api.weather.gov answers is the known way).
+- **In season** is a quiet row under the chart: `IN SEASON` and the month's fish and shrimp drawn small in the
+  Storybook way (`RUN_FISH`, each about 32px nose to tail, carrying the one mark that tells it), with their
+  names. SCDNR publishes no monthly calendar, so `RUNS` is read from its own pages (the species pages, the MRRI
+  natural history reports on red drum, seatrout, flounder and sheepshead, the SeaScience pages, its 2025
+  snapshots and Technical Report 89 on cobia), each window's comment naming where it comes from, and the local
+  guides only where SCDNR gives no months (tarpon into September, the surf's bull reds into November). SCDNR's
+  month-by-month check of October 16 2026 set them: reds every month (year-round), named bull reds from August to
+  November when the adults come into the sounds and inlets to spawn, trout from October into May (the fall
+  fishery, winter trout in the upper rivers, spring on the flats), flounder April to November, sheepshead in May
+  and from October into December (on the offshore reefs to spawn from January), black drum February to July,
+  cobia mid-April into June with `closed` under them in May (all of South Carolina south of Jeremy Inlet, the
+  Southern Cobia Management Zone, SC Code 50-5-1713), tarpon July to September, sharks June to September and
+  the fall white shrimp August to November, gone from the creeks at about 60 to 65°. Under the shrimp,
+  `baiting` while SCDNR's shrimp baiting season is open, noon to noon on the place's clock (`SHRIMP_BAIT`,
+  `baitOpen`): in 2026 noon Friday September 11 to noon Monday November 9, from SCDNR's 2026-2027 Hunting and
+  Fishing Laws and Regulations Guide (Regs2627.pdf). SC Code 50-5-1100(B) only allows SCDNR sixty days between
+  September 1 and November 15, and SCDNR counts them inclusive (2025's ran to noon Monday November 10), so
+  each year's dates are SCDNR's to set and a year with no row says nothing: add the next from its guide
+  when it is out. It says in season, never biting or running now: a calendar, not a report, and it reads no
+  temperature into it (the buoy's is in the note beside the title). No bag limits, which change and would go
+  stale on the page (red drum's changed on July 1 2026). Its height is held from the first frame, a second
+  line too for May's `closed` and the baiting days (`runsTall`, and the preload's `runsTall` and `bait`,
+  which test.mjs holds to the app's).
+- **Left out, and why.** The almanac's fishing times: at Beaufort high water follows the moon by a nearly fixed
+  interval, so every moon transit fell on the falling tide and every moonrise or moonset on the rising one (115
+  of 115 and 116 of 116, September and October 2026), and they would be the tide by another name. They stay a
+  farm feature. The airfield's wind (MCAS Beaufort's METAR, for the family pilot): it is the airfield's reading, not the
+  river's, and the section has one shape. The next step, offered to Josh and not
+  built: the USGS gauge on the Beaufort River at Beaufort (02176603, about 0.4 mi from the NOAA site, gage height
+  plus 4.43 ft is MLLW, open to a browser, about 30 minutes late). It ran a mean 0.59 ft over the table from
+  August 17 to October 16 2026 and 1.5 ft over on October 10, so it would let the level tag beside the skiff
+  work here and catch the floods the table under-reports.
+- **What checks it.** `TZ=America/New_York node tools/beaufort/scene.mjs` has ten water cases on NOAA's real
+  2026 table (`tools/beaufort/fixtures/tides-8667999-2026.json`): an August noon, a hard April blow with a Small
+  Craft Advisory, a raw January morning, an October afternoon, the October 27 king tide, a May evening with the
+  cobia closed, an October night, today on the real Open-Meteo run with the Small Craft Advisory and Gale Watch
+  of October 16 (`open-meteo-bft-2026-10-16.json`, the advisories re-typed in the alerts API's shape, not the
+  archived products), that run's Saturday night with a Gale Warning that gives no end, and an August sea breeze
+  gusting to 25. At every width it writes the water section (`scene-<case>-<width>-water.png`) and fails a word
+  or a line off the chart or on another, a gusts' hairline or an advisory's bar within 2px of a word or 3px of
+  each other, a gusts' hairline within 10px of another stretch's words, a bar nearer the gusts' words than its
+  own, an in-season row that wraps or outgrows its held
+  height in any month, and a case whose gusts, advisory or spoken label are not its own (`LANES`).
+  `tools/interactions.mjs` reads every stop of the king tide at 320, 390 and 900 and by a finger; opens the April
+  blow with the zone 5.2 seconds late and the page's own scroll anchoring off, scrolled under the chart and onto
+  it; and opens it on a cache that had the advisory and no wind direction with the zone failing. test.mjs runs
+  every reader above, holds the rules and the calendar's shape, and runs the page's own refresh with the zone in
+  time, slow, unchanged, failing at once and failing late, and carried on a cold open.
+
 **Seeing it.** `node tools/beaufort/look.mjs <key>` shows any Beaufort drawing close up and at phone size
-(the keys are in `BFT`, the registry each drawing registers in), and `TZ=America/New_York node
-tools/beaufort/scene.mjs [cases]` renders the real page at Beaufort in every weather, tide and October
-case, and fails a page error, an animal overlap, a tuft of grass with nothing under its foot (see the grass
-above) or more than 120 animations. Its last cases are the grass at every tide: Josh's morning
-(`this-morning`, October 16 2026 at 8:35, the tide at .15), dead low, mid tide, the flood at .8 and a
-spring high.
+(the keys are in `BFT`, the registry each drawing registers in, the in-season fish among them as `run-reds`
+and the rest), and `TZ=America/New_York node tools/beaufort/scene.mjs [cases]` renders the real page at
+Beaufort in every weather, tide and October case and the ten water cases, and fails a page error, an animal
+overlap, a tuft of grass with nothing under its foot (see the grass above), more than 120 animations, or
+anything in the water section the fishing water's checks above catch. Among its cases are the grass at every
+tide: Josh's morning (`this-morning`, October 16 2026 at 8:35, the tide at .15), dead low, mid tide, the
+flood at .8 and a spring high.
 
 ## Deploying
 
@@ -1141,7 +1272,9 @@ compositor, so it never paid for the sky's live blur, and every browser on an iP
 which repaints a moving SVG part on every frame. It drives a WKWebView on the Mac
 (`tools/webkit.swift`, built with swiftc into tools/shots/ on first use) at 390 CSS pixels and
 3x, off the screen, so it runs with the screen locked, and counts frames in the page: the coast
-and the farm on October nights, a rainy coast day and an ordinary afternoon, idle for 10 seconds
+and the farm on October nights, a rainy coast day and an ordinary afternoon, and Beaufort's October
+afternoon (`beaufort-afternoon`: its five layers, Halloween's props and the water's grass line, wind lane and
+in-season row on NOAA's real table), idle for 10 seconds
 and opening for 6. On October 9 2026, with the clouds baked, every case held 59 to 60 frames a
 second idle and 58 to 60 opening, where the live blur had held them to 10 to 23. Its GPU process
 still spends one to two of the Mac's cores at idle repainting the scene's moving parts, and no one
@@ -1184,10 +1317,10 @@ If you add a location, give it a `tz` and a `tzLabel`. Nothing else needs to kno
 
 ## On file size
 
-`index.html` is about 1.1 MB of source (October 15 2026, with NOAA's daily normals, the Halloween cast, the storm card's readers and Beaufort's whole cast baked in), and an early plan set
+`index.html` is about 1.2 MB of source (October 16 2026, with NOAA's daily normals, the Halloween cast, the storm card's readers, Beaufort's whole cast, its oak lit from behind and its fishing water baked in), and an early plan set
 160 KB as a ceiling. That number was about the source file and it is not the
 number that matters. GitHub Pages serves the file gzipped, so what a phone
-actually downloads is **about 385 KB** (it was about 275 KB before Beaufort), once, and the service worker caches it
+actually downloads is **about 440 KB** (it was about 275 KB before Beaufort, and about 420 KB before its fishing water), once, and the service worker caches it
 after that. Measure both rather than trusting this paragraph: `wc -c index.html`
 for the source and `gzip -6c index.html | wc -c` for roughly what is sent.
 
@@ -2150,7 +2283,7 @@ order, hourly, week, tide, moon, sun, year, and so is `RV_OF`, the observer's ma
   dash, the tails, the tip and the fill stay the same. Reduced motion still yields the paint
   and never arms the pen.
 
-`tools/interactions.mjs` runs forty-six scenarios: every pill kept inside its chart at both edges
+`tools/interactions.mjs` runs sixty-five scenarios: every pill kept inside its chart at both edges
 at 320, 390 and 900, keyboard navigation, location switching, snow/ice labels, a warning at the farm that is `Chores can
 wait.` in red and takes the fishing times until it expires (the moon's note saying `weather warning`
 while it does), source instructions, a warning strip
@@ -2173,7 +2306,13 @@ and renewal with the advisories slower than the forecast (every frame watched: t
 down and the headline never leaves the storm); Florence with the advisories late and the card's top
 100px above the screen at 320 and 390 (the card grows, the hours hold); and a Tornado Warning under Florence's Hurricane Warning, which
 leads the strip with its own instruction, is never folded into the card, and hands the strip back to
-the hurricane when it ends. Then the explorer
+the hurricane when it ends. At Beaufort it reads every stop of the October 27 king tide at 320, 390 and
+900 and by a finger (the stage words, the flood tide in the grass's green, the wind with the chip's vane),
+opens a hard April blow with the coastal waters 5.2 seconds late and the page's own scroll anchoring off
+(the forecast is never held, the gusts line is there from the first paint, and the late advisory moves
+nothing on screen under the chart, scrolled under it or onto it), and opens it on a cache that had the
+advisory and no wind direction with the zone failing (the cached speeds with only now's arrow, then every
+arrow and no bar). Then the explorer
 with a real finger (CDP touch in a phone context, because a synthetic dispatchEvent skips the
 browser's gesture handling, which is how the hourly chart's freeze went unseen): a sideways slide on
 every chart at 390 that keeps the finger, follows it and rings the published point, a vertical drag
