@@ -182,7 +182,7 @@ try{
     assert.ok(await page.evaluate(()=>XP.tide.D.x.every((_,i)=>!/table/.test(XP.tide.D.read(i).said))),"no gap, no table");
     assert.deepEqual(errors,[]);await context.close();checks++;
   }
-  /* Beaufort's water (MOCK, option C) on NOAA's real table for October 27 2026, the season's 9.35 ft flood
+  /* Beaufort's water on NOAA's real table for October 27 2026, the season's 9.35 ft flood
      at 10:17 am with a northeast wind on it: every stop's pill keeps inside the chart at 320, 390 and 900,
      the keys and the spoken value are the coast's, and each stop says the stage of the water, the flood tide
      in the grass's green and, from now on, the wind with the chip's vane. A real finger slides it at 390 */
@@ -248,6 +248,97 @@ try{
     await page.waitForTimeout(2700);
     assert.equal((await xpState(page,"tide")).shown,false,"Beaufort's tide: gone by 2.7s");
     assert.deepEqual(errors,[]);await context.close();checks++;
+  }
+  /* Beaufort's wind lane under the tide, on April 18 2026's real table and a hard west-southwesterly blow,
+     22 gusting 34, with a Small Craft Advisory offshore: the gusts line is the forecast's own and is there
+     from the first paint; the coastal waters' advisories come in a lane of their own. A zone that answers
+     late is never waited for, and its bar comes in with the view held: with the page's own scroll
+     anchoring off, the way WebKit has none, scrolled so the chart's top is off the screen, nothing on screen
+     under the chart moves; scrolled so it is on the screen, the chart holds and only what is under the bar
+     moves. The slider says the gusts where they run. A zone that fails shows no bar and takes the last
+     reading's down, and a cache written before the wind's direction was asked for paints the row's speeds
+     with only now's arrow (the chip's own reading has always carried one), and nothing throws */
+  {
+    const T26=JSON.parse(readFileSync(new URL("./beaufort/fixtures/tides-8667999-2026.json",import.meta.url),"utf8")).predictions;
+    const ramp=pts=>i=>{let a=pts[0],b=pts[pts.length-1];for(let k=0;k+1<pts.length;k++)if(i>=pts[k][0]&&i<=pts[k+1][0]){a=pts[k];b=pts[k+1];break}
+      const f=b[0]>a[0]?Math.min(1,Math.max(0,(i-a[0])/(b[0]-a[0]))):0;return Math.round(a[1]+(b[1]-a[1])*f)};
+    const sca={id:"fixture-sca-0418",event:"Small Craft Advisory",severity:"Minor",onset:"2026-04-18T08:00:00-04:00",ends:"2026-04-18T22:00:00-04:00",expires:"2026-04-18T22:00:00-04:00",
+      description:"* WHAT...Southwest winds 20 to 25 kt with gusts up to 30 kt and seas 4 to 6 ft.",instruction:"",parameters:{VTEC:["/O.CON.KCHS.SC.Y.0031.000000T0000Z-260419T0200Z/"]},affectedZones:[]};
+    const blowO={baseTemp:74,nowTemp:75,feels:75,rh:45,isDay:1,code:1,cloud:20,nowWind:22,nowDir:250,nowGust:34,nowUv:7,uvMax:8,windAmp:12,gustAmp:18,
+      popCurve:()=>5,dailyPop:p=>p.fill(8),sunrise:"06:48",sunset:"19:52",tideTable:T26,waterTemp:null,buoyTemp:68,buoyAge:22,wave:4.6,
+      windCurve:ramp([[0,9],[8,14],[12,20],[14,22],[17,21],[20,15],[24,11],[30,9],[34,12],[38,13],[48,8]]),
+      gustCurve:ramp([[0,15],[8,22],[12,31],[14,34],[17,33],[20,24],[24,18],[30,15],[34,19],[38,20],[48,13]]),
+      dirCurve:ramp([[0,230],[12,245],[16,255],[20,270],[26,295],[32,320],[40,330],[48,335]]),marineAlerts:()=>[{properties:sca}]};
+    const blowAt=new Date("2026-04-18T14:00:00-04:00");
+    const lane=p=>p.evaluate(()=>({gusts:[...document.querySelectorAll('#tideSvg [data-lane="gusts"] text')].map(t=>t.textContent),
+      zone:document.querySelector('#tideSvg text[data-lane="zone"]')?.textContent||"",bars:document.querySelectorAll('#tideSvg rect[data-lane="zone"],#tideSvg path[data-lane="zone"]').length,
+      vanes:document.querySelectorAll("#tideSvg [data-vane]").length,cols:document.querySelectorAll('#tideSvg [data-lane="wind"]').length,said:document.getElementById("tideSvg").getAttribute("aria-label")}));
+    const noAnchor=()=>document.addEventListener("DOMContentLoaded",()=>{const st=document.createElement("style");st.textContent="html,body{overflow-anchor:none}";document.head.appendChild(st)});
+    for(const scroll of ["under","chart"]){
+      const m=await phone(390,blowO,"bft",{when:blowAt}),p=m.page;
+      let landed;const zoneIn=new Promise(r=>landed=r);
+      await p.route(/alerts\/active\?zone=AMZ362/,async r=>{await new Promise(res=>setTimeout(res,5200));landed();await r.fallback()});
+      await p.addInitScript(noAnchor);
+      const t0=Date.now();
+      await p.goto(`http://localhost:${PORT}/`);
+      await p.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));
+      const took=Date.now()-t0;
+      await p.evaluate(()=>document.fonts.ready);await painted(p);
+      assert.ok(took<4200,`Beaufort: the forecast's paint never waits on the coastal waters: live in ${took}ms`);
+      const first=await lane(p);
+      assert.equal(first.bars,0,"Beaufort: no advisory's bar before the zone answers");
+      assert.deepEqual(first.gusts,["gusts to 34"],"Beaufort: the gusts line is the forecast's own, there from the first paint");
+      assert.match(first.said,/gusts to 34 miles an hour until 10 pm/,"and the chart's label says it");
+      assert.equal(first.vanes,first.cols,"Beaufort: every column with a wind has its vane");
+      const top=sel=>p.evaluate(s=>document.querySelector(s).getBoundingClientRect().top,sel);
+      await p.evaluate(sc=>{const t=document.getElementById("tideSection").getBoundingClientRect();scrollTo(0,scrollY+t.top+(sc==="under"?70:-40))},scroll);
+      await p.waitForTimeout(80);
+      const before={runs:await top("#runsRow"),title:await top("#waterTitle"),cards:await top("#sunCard"),y:await p.evaluate(()=>scrollY),h:await p.evaluate(()=>document.getElementById("tideSvg").getBoundingClientRect().height)};
+      await zoneIn;
+      await p.waitForFunction(()=>document.querySelectorAll('#tideSvg [data-lane="zone"]').length>0);await painted(p);await p.waitForTimeout(60);
+      const after=await lane(p),grew=await p.evaluate(()=>document.getElementById("tideSvg").getBoundingClientRect().height)-before.h;
+      assert.equal(after.zone,"offshore small craft advisory","Beaufort: the late zone's advisory, named as offshore's");
+      assert.match(after.said,/an offshore Small Craft Advisory now until 10 pm/);
+      assert.ok(grew>8,`the chart grew by the advisory's line: ${grew}`);
+      if(scroll==="under"){
+        assert.ok(Math.abs(await top("#runsRow")-before.runs)<1,`Beaufort, the chart's top off the screen: the late bar moves nothing on screen under it: ${before.runs} then ${await top("#runsRow")}`);
+        assert.ok(Math.abs(await top("#sunCard")-before.cards)<1,"and the cards under it hold still");
+        assert.ok(Math.abs(await p.evaluate(()=>scrollY)-before.y-grew)<1.5,"the page scrolled by the bar's line, once");
+      }else{
+        assert.ok(Math.abs(await top("#waterTitle")-before.title)<1,`Beaufort, the chart's top on the screen: the chart holds still: ${before.title} then ${await top("#waterTitle")}`);
+        assert.equal(await p.evaluate(()=>scrollY),before.y,"and the page does not scroll");
+      }
+      /* the slider says the gusts where they run: three hours on from now, inside the stretch */
+      await p.locator("#tideExplore .xp-key").focus();await p.keyboard.press("Home");await p.keyboard.press("PageDown");
+      for(let i=0;i<12;i++)await p.keyboard.press("ArrowRight");
+      const at5=await xpState(p,"tide");
+      assert.match(at5.text,/^5p .*2\d, gusts 3\d mph$/,`Beaufort at 5p: the pill says the gusts: ${at5.text}`);
+      assert.match(at5.said,/wind from the (west-southwest|west) 2\d miles an hour, gusts 3\d$/);
+      await fitsIn(p,"tide");
+      assert.deepEqual(m.errors,[]);await m.context.close();checks++;
+    }
+    {
+      /* a cache from twenty minutes ago, written before the direction was asked for and with the advisory
+         in it, then a zone request that fails: the cached paint shows its bar and the speeds with only
+         now's arrow; the live paint has every arrow and no bar */
+      const t=new Date(blowAt.getTime()-20*6e4);
+      const row={id:sca.id,event:sca.event,severity:sca.severity,onset:sca.onset,ends:sca.ends,expires:sca.expires,sent:null,desc:sca.description,inst:"",headline:null,awips:null,vtec:sca.parameters.VTEC,zones:[],par:{}};
+      const m=await phone(390,blowO,"bft",{when:blowAt,gate:true,cache:{k:"mbwx-bft",v:{savedAt:t.getTime(),data:{...cachePayload(t,blowO,"bft"),zone:[row]}}}}),p=m.page;
+      await p.route(/alerts\/active\?zone=AMZ362/,r=>r.abort());
+      await p.goto(`http://localhost:${PORT}/`);
+      await p.waitForFunction(()=>/updated|ago/.test(document.getElementById("stamp").textContent));await painted(p);
+      const cached=await lane(p);
+      assert.equal(cached.zone,"offshore small craft advisory","the cached paint is the cached reading, its advisory and all");
+      assert.ok(cached.cols>=3&&cached.vanes===1,`a cache with no direction: the speeds, and only now's arrow: ${cached.vanes} of ${cached.cols}`);
+      m.release();
+      await p.waitForFunction(()=>document.getElementById("stamp").textContent.includes("live"));await painted(p);
+      const live=await lane(p);
+      assert.equal(live.bars,0,"a zone that failed shows no bar, and takes the cached one down");
+      assert.equal(live.zone,"");
+      assert.equal(live.vanes,live.cols,"the live forecast brings every arrow");
+      assert.doesNotMatch(live.said,/offshore/);
+      assert.deepEqual(m.errors,[]);await m.context.close();checks++;
+    }
   }
   for(const [code,kind] of [[75,"snow"],[67,"freezing rain"]]){
     const {context,page,errors}=await open(320,{...base,code,nowTemp:-3,baseTemp:-5,feels:-12});
@@ -1541,7 +1632,7 @@ try{
     assert.ok(fontAt>0);
     assert.deepEqual(m.errors,[]);await m.context.close();checks++;
   }
-  console.log(`${checks} interaction scenarios passed: matched chart heights, hourly and tide exploration, warnings, thunder coming at the farm, the farm's sections after the coast, the entrance across a cache-to-live paint and below the fold, offline recovery, a storm card on a cold open, with the beach fast and the advisories slow, through a renewed beach warning (and 7h20m on, with the cache aged out and the beach fast, slow, slower than STORM_WAIT and failing) and growing under a reader inside it, the farm's card held through a failed alerts fetch and a cold open the next morning, WPC's index raising only the warnings it was asked for (an extended warning on a refresh, a new one on a cold open), the card, the strip and the headline kept through a failed alerts request at both places with an advisory ending during it, NOW and the headline on a warning issued ahead of its start and turning at noon, one period after midnight, its quoted title fitted again when the fonts land, on a two-hour-old cache whose beach warning has passed its expiry, and a tornado under a hurricane, Beaufort's water read stop by stop at three widths and by a finger, and every line read by a real finger, the keys and a screen reader.`);
+  console.log(`${checks} interaction scenarios passed: matched chart heights, hourly and tide exploration, warnings, thunder coming at the farm, the farm's sections after the coast, the entrance across a cache-to-live paint and below the fold, offline recovery, a storm card on a cold open, with the beach fast and the advisories slow, through a renewed beach warning (and 7h20m on, with the cache aged out and the beach fast, slow, slower than STORM_WAIT and failing) and growing under a reader inside it, the farm's card held through a failed alerts fetch and a cold open the next morning, WPC's index raising only the warnings it was asked for (an extended warning on a refresh, a new one on a cold open), the card, the strip and the headline kept through a failed alerts request at both places with an advisory ending during it, NOW and the headline on a warning issued ahead of its start and turning at noon, one period after midnight, its quoted title fitted again when the fonts land, on a two-hour-old cache whose beach warning has passed its expiry, and a tornado under a hurricane, Beaufort's water read stop by stop at three widths and by a finger, its gusts line from the first paint, a late offshore advisory coming in with the view held, a failed one coming down, a cache with no wind direction, and every line read by a real finger, the keys and a screen reader.`);
 }finally{
   await browser.close();server.close();
 }

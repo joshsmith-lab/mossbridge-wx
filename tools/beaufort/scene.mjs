@@ -9,9 +9,10 @@
  *   PORCH_BFT_PRM=1 ...                                            # under reduced motion (default: motion on, as on a phone)
  *
  * Writes tools/shots/beaufort/scene-<case>-<width>.png (the sky block, type and all),
- * scene-<case>-<width>-scene.png (the picture alone) and scene-<case>-<width>-water.png (the water section,
- * with option C's grass line, wind row and in-season row), and with PORCH_BFT_FULL=1 the whole page too, and
- * prints any page errors, any animal standing on another, and any word in the water section off its chart.
+ * scene-<case>-<width>-scene.png (the picture alone) and scene-<case>-<width>-water.png (the water section:
+ * the grass line, the wind row, the gusts line, the offshore advisories and the in-season row), and with
+ * PORCH_BFT_FULL=1 the whole page too, and prints any page errors, any animal standing on another, and any
+ * word or line in the water section off its chart or on another.
  */
 import { readFileSync, readdirSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -77,9 +78,9 @@ const CASES = [
       gustCurve: ramp([[0, 15], [8, 22], [12, 31], [14, 34], [17, 33], [20, 24], [24, 18], [30, 15], [34, 19], [38, 20], [48, 13]]),
       dirCurve: ramp([[0, 230], [12, 245], [16, 255], [20, 270], [26, 295], [32, 320], [40, 330], [48, 335]]),
       buoyTemp: 68, wave: 4.6,
-      /* MOCK: a Small Craft Advisory for AMZ362 the way Charleston writes one on a day like this, in the
-         alerts API's shape. Not an archived product: the page does not fetch the zone yet */
-      marineAlerts: (now) => [{ properties: { id: "mock-sca", event: "Small Craft Advisory", severity: "Minor",
+      /* a Small Craft Advisory for AMZ362 the way Charleston writes one on a day like this, in the alerts
+         API's shape. Made up, not an archived product */
+      marineAlerts: (now) => [{ properties: { id: "fixture-sca-0418", event: "Small Craft Advisory", severity: "Minor",
         onset: "2026-04-18T08:00:00-04:00", ends: "2026-04-18T22:00:00-04:00", expires: "2026-04-18T22:00:00-04:00",
         description: "* WHAT...Southwest winds 20 to 25 kt with gusts up to 30 kt and seas 4 to 6 ft.\n\n* WHERE...Coastal waters from Edisto Beach SC to Savannah GA out 20 NM.\n\n* WHEN...Until 10 PM EDT this evening.",
         instruction: "Inexperienced mariners, especially those operating smaller vessels, should avoid navigating in these conditions.",
@@ -131,8 +132,10 @@ CASES.push(C("water-night", "2026-10-23T21:30:00", .5, "an October night on the 
 /* Today, from the real forecast: Open-Meteo's run at the house (fetched 7 am October 16 2026, wind direction
    and all), NOAA's table, the Fripp buoy's 77.2°, Open-Meteo's 1.3 ft of seas, and the Small Craft Advisory
    and Gale Watch Charleston had up for AMZ362 that morning (Sat 5 am to 2 pm, then Sat 2 pm to Tue 3 am),
-   written here in the alerts API's shape. It is read at 1:05 pm, so the run's own 1 pm hour stands in
-   for the reading the page would have then */
+   re-typed here in the alerts API's shape from the times posted, not the archived products. It is read at
+   1:05 pm, so the run's own 1 pm hour stands in for the reading the page would have then. Its Saturday is
+   two gusty stretches, 5 to 9 am to 25 and from 11 am to 31: where the line has room for one, it is the
+   stronger */
 const OM_TODAY = JSON.parse(readFileSync(path.join(HERE, "fixtures", "open-meteo-bft-2026-10-16.json"), "utf8"));
 const at13 = OM_TODAY.hourly.time.indexOf("2026-10-16T13:00"), hr13 = (k) => OM_TODAY.hourly[k][at13];
 CASES.push(C("today", "2026-10-16T13:05:00", .5, "today, on the real forecast: light southwest, the northerly surge coming Saturday",
@@ -141,16 +144,56 @@ CASES.push(C("today", "2026-10-16T13:05:00", .5, "today, on the real forecast: l
       uv_index: hr13("uv_index"), is_day: 1, cloud_cover: 6, relative_humidity_2m: 58 },
     baseTemp: 76, nowTemp: hr13("temperature_2m"), feels: hr13("apparent_temperature"), code: 0, popCurve: () => 0, buoyTemp: 77.2, wave: 1.3,
     marineAlerts: () => [
-      { properties: { id: "mock-sca-1016", event: "Small Craft Advisory", severity: "Minor", onset: "2026-10-17T05:00:00-04:00", ends: "2026-10-17T14:00:00-04:00", expires: "2026-10-17T14:00:00-04:00",
+      { properties: { id: "fixture-sca-1016", event: "Small Craft Advisory", severity: "Minor", onset: "2026-10-17T05:00:00-04:00", ends: "2026-10-17T14:00:00-04:00", expires: "2026-10-17T14:00:00-04:00",
         description: "* WHAT...North winds 20 to 25 kt with gusts up to 30 kt and seas 3 to 4 ft.", instruction: "", parameters: { VTEC: ["/O.NEW.KCHS.SC.Y.0058.261017T0900Z-261017T1800Z/"] }, affectedZones: [] } },
-      { properties: { id: "mock-gale-1016", event: "Gale Watch", severity: "Moderate", onset: "2026-10-17T14:00:00-04:00", ends: "2026-10-20T03:00:00-04:00", expires: "2026-10-17T05:00:00-04:00",
+      { properties: { id: "fixture-gale-1016", event: "Gale Watch", severity: "Moderate", onset: "2026-10-17T14:00:00-04:00", ends: "2026-10-20T03:00:00-04:00", expires: "2026-10-17T05:00:00-04:00",
         description: "* WHAT...Northeast winds 30 kt with gusts up to 40 kt and seas 5 to 9 ft possible.", instruction: "", parameters: { VTEC: ["/O.NEW.KCHS.GL.A.0007.261017T1800Z-261020T0700Z/"] }, affectedZones: [] } }] })));
+/* The same real run on Saturday night, the northeaster's gusts to 35 in the dark: the gusts line and the
+   advisory bar in the night's inks, and a Gale Warning with no end given (made up, in the alerts API's shape),
+   which runs to the chart's edge square, because a product's expiry is never the end of the wind. The run's
+   own 9 pm hour is the reading, and its days start at Saturday */
+const omAt = (om, iso) => { const day = iso.slice(0, 10), k = om.daily.time.indexOf(day), at = om.hourly.time.indexOf(iso.slice(0, 13) + ":00");
+  const daily = Object.fromEntries(Object.entries(om.daily).map(([key, v]) => [key, v.slice(k)]));
+  const hr = (key) => om.hourly[key]?.[at];
+  return { forecast: { ...om, daily }, current: { time: iso.slice(0, 13) + ":00", temperature_2m: hr("temperature_2m"), apparent_temperature: hr("apparent_temperature"),
+    weather_code: hr("weather_code"), wind_speed_10m: hr("wind_speed_10m"), wind_direction_10m: hr("wind_direction_10m"), wind_gusts_10m: hr("wind_gusts_10m"),
+    uv_index: hr("uv_index"), relative_humidity_2m: hr("relative_humidity_2m") ?? 70, cloud_cover: hr("cloud_cover") ?? 20, is_day: hr("is_day") ?? 0 }, nowTemp: hr("temperature_2m"), feels: hr("apparent_temperature") }; };
+CASES.push(C("gale-night", "2026-10-17T21:30:00", .5, "Saturday night on the real forecast: the northeaster gusting to 35, a gale offshore",
+  REAL({ ...omAt(OM_TODAY, "2026-10-17T21:30"), baseTemp: 66, isDay: 0, code: 3, popCurve: () => 10, buoyTemp: 76.8, wave: 5.4,
+    marineAlerts: () => [
+      { properties: { id: "fixture-gale-1017", event: "Gale Warning", severity: "Moderate", onset: "2026-10-17T14:00:00-04:00", ends: null, expires: "2026-10-18T05:00:00-04:00",
+        description: "* WHAT...Northeast winds 30 to 35 kt with gusts up to 40 kt and seas 7 to 9 ft.", instruction: "", parameters: { VTEC: ["/O.UPG.KCHS.GL.A.0007.261017T1800Z-261020T0700Z/", "/O.NEW.KCHS.GL.W.0012.261017T1800Z-000000T0000Z/"] }, affectedZones: [] } }] })));
+/* A summer afternoon sea breeze with gusts to 25 and nothing offshore: the gusts line alone under the row */
+CASES.push(C("sea-breeze", "2026-08-09T14:30:00", .5, "an August afternoon, the sea breeze gusting to 25, nothing offshore",
+  REAL({ baseTemp: 86, nowTemp: 90, feels: 99, rh: 60, isDay: 1, code: 1, cloud: 20, nowWind: 15, nowDir: 190, nowGust: 24, nowUv: 8.8, uvMax: 10, windAmp: 6, gustAmp: 9, popCurve: () => 8, dailyPop: (p) => p.fill(12),
+    windCurve: ramp([[0, 6], [8, 5], [11, 9], [14, 15], [17, 16], [20, 10], [24, 6], [32, 5], [35, 9], [38, 14], [48, 7]]),
+    gustCurve: ramp([[0, 10], [8, 9], [11, 15], [14, 24], [17, 25], [19, 19], [24, 10], [32, 9], [35, 15], [38, 22], [48, 11]]),
+    dirCurve: ramp([[0, 230], [10, 215], [14, 190], [18, 170], [22, 200], [30, 230], [36, 200], [40, 175], [48, 210]]), buoyTemp: 85.2, wave: 2.4 })));
 CASES.push(C("october-moon", "2026-10-24T21:30:00", .5, "the carved week under a moon a night short of full: the lantern lit, the bats out, the witch crossing the moon, eyes in the grass",
   { baseTemp: 66, nowTemp: 64, feels: 64, rh: 75, isDay: 0, code: 0, cloud: 6, nowWind: 6, nowDir: 30, nowGust: 10, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8, sunrise: "07:35", sunset: "18:36", popCurve: () => 5, dailyPop: (p) => p.fill(8) }));
 CASES.push(C("halloween-night", "2026-10-31T20:40:00", .4, "Halloween night: the trick-or-treater on the walkway",
   { baseTemp: 65, nowTemp: 63, feels: 63, rh: 80, isDay: 0, code: 0, cloud: 8, nowWind: 7, nowDir: 30, nowGust: 12, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8, sunrise: "07:40", sunset: "18:29", popCurve: () => 5, dailyPop: (p) => p.fill(8) }));
 CASES.push(C("november-morning", "2026-11-01T09:30:00", .5, "the morning of November 1: every decoration down",
   { baseTemp: 64, nowTemp: 60, feels: 60, rh: 70, isDay: 1, code: 1, cloud: 18, nowWind: 6, nowDir: 30, nowGust: 10, nowUv: 2, uvMax: 4, windAmp: 5, gustAmp: 8, sunrise: "06:41", sunset: "17:28", popCurve: () => 5, dailyPop: (p) => p.fill(8) }));
+
+/* what each water case's wind lane has to say: the gusts' words (an ordinary day none), the offshore
+   advisory's words and whether its bar runs on past the chart, and the chart's spoken label */
+const LANES = {
+  "noon-summer": { gusts: [], zone: "" },
+  "winter-morning": { gusts: [], zone: "" },
+  "october-afternoon": { gusts: [], zone: "" },
+  "may-evening": { gusts: [], zone: "" },
+  "water-night": { gusts: [], zone: "" },
+  "king-tide": { gusts: ["gusts to 24"], zone: "", said: ["gusts to 24 miles an hour from 9 am until 5 pm"] },
+  "windy-clear": { gusts: ["gusts to 34"], zone: "offshore small craft advisory", open: false,
+    said: ["Wind now from the west-southwest 22 miles an hour, gusts 34", "gusts to 34 miles an hour until 10 pm", "an offshore Small Craft Advisory now until 10 pm"] },
+  "today": { gusts: ["gusts to 31"], zone: "offshore small craft advisory · gale watch", open: true,
+    said: ["gusts to 25 miles an hour from Saturday at 5 am until 9 am", "gusts to 31 miles an hour from Saturday at 11 am,",
+      "an offshore Small Craft Advisory from Saturday at 5 am until 2 pm", "an offshore Gale Watch from Saturday at 2 pm until Tuesday 3 am"] },
+  "gale-night": { gusts: ["gusts to 35"], zone: "offshore gale warning", open: true, said: ["gusts to 35 miles an hour until Sunday 11 am", "an offshore Gale Warning now"] },
+  "sea-breeze": { gusts: ["gusts to 25"], zone: "", said: ["gusts to 25 miles an hour until 7 pm"] },
+};
+for (const c of CASES) if (LANES[c.name]) c.lane = LANES[c.name];
 
 let chromium;
 try { ({ chromium } = await import("playwright")); } catch { console.error("playwright is not installed"); process.exit(1); }
@@ -214,6 +257,35 @@ for (const cs of CASES.filter((c) => !ONLY.length || ONLY.some((o) => c.name.inc
         const a = T[i].r, b = T[j].r, w = Math.min(a.right, b.right) - Math.max(a.left, b.left), h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
         if (w > 1 && h > 2) out.push(`"${T[i].s}" on "${T[j].s}"`);
       }
+      /* the wind lane under the lows: the gusts' hairlines and the advisories' bars touch no word and no
+         other line, stay inside the chart's CHART_IN edges, and a bar sits nearer its own words under it
+         than the gusts' words over it, so it never reads as their underline */
+      const shapes = [...svg.querySelectorAll("[data-lane] line, line[data-lane], rect[data-lane], path[data-lane]")]
+        .map((e) => ({ k: e.closest("[data-lane]").dataset.lane, r: e.getBoundingClientRect() })).filter((e) => e.r.width > 0);
+      const k = sr.width / svg.viewBox.baseVal.width, inset = 16 * k;
+      /* against a line a word is its ink, cap height over the baseline to its descenders, not the font's
+         whole line box, which runs a few pixels over the capitals */
+      const ink = [...svg.querySelectorAll("text")].filter((t) => t.getBoundingClientRect().width > 0).map((t) => {
+        const r = t.getBoundingClientRect(), y = sr.top + +t.getAttribute("y") * k, f = +t.getAttribute("font-size") * k;
+        return { s: t.textContent, r: { left: r.left, right: r.right, top: y - .76 * f, bottom: y + .24 * f } }; });
+      for (const s of shapes) {
+        if (s.r.left < sr.left + inset - 1 || s.r.right > sr.right - inset + 1) out.push(`a ${s.k} line runs past the chart's edge`);
+        for (const t of ink) { const w = Math.min(s.r.right, t.r.right) - Math.max(s.r.left, t.r.left), h = Math.min(s.r.bottom, t.r.bottom) - Math.max(s.r.top, t.r.top);
+          if (w > .5 && h > -2) out.push(`a ${s.k} line comes within 2px of "${t.s}"`); }
+        for (const o of shapes) if (o !== s && o.k !== s.k) { const w = Math.min(s.r.right, o.r.right) - Math.max(s.r.left, o.r.left), h = Math.min(s.r.bottom, o.r.bottom) - Math.max(s.r.top, o.r.top);
+          if (w > .5 && h > -3) out.push(`a ${s.k} line comes within 3px of a ${o.k} line`); }
+      }
+      /* one stretch's hairline ends well short of the next stretch's words, so two never read as one chain */
+      const groups = [...svg.querySelectorAll('[data-lane="gusts"]')];
+      for (const g of groups) for (const l of g.querySelectorAll("line")) { const lr = l.getBoundingClientRect();
+        for (const o of groups) if (o !== g) { const tr = o.querySelector("text").getBoundingClientRect(), gap = Math.max(tr.left - lr.right, lr.left - tr.right);
+          if (gap < 10) out.push(`a gusts hairline runs within ${gap.toFixed(1)}px of "${o.querySelector("text").textContent}"`); } }
+      const gustWords = ink.filter((t) => /^gusts to \d+$/.test(t.s)), zoneWords = ink.filter((t) => /^offshore /.test(t.s)), bars = shapes.filter((s) => s.k === "zone");
+      if (bars.length && gustWords.length && zoneWords.length) {
+        const barTop = Math.min(...bars.map((b) => b.r.top)), barBot = Math.max(...bars.map((b) => b.r.bottom));
+        const up = barTop - Math.max(...gustWords.map((t) => t.r.bottom)), down = zoneWords[0].r.top - barBot;
+        if (!(up > down)) out.push(`the advisory's bar sits nearer the gusts' words (${up.toFixed(1)}px) than its own (${down.toFixed(1)}px)`);
+      }
       const row = document.getElementById("runsRow");
       if (row && !row.hidden) {
         /* every month's row, not only this case's: the busiest (April and May, six of them) has to fit a
@@ -234,6 +306,18 @@ for (const cs of CASES.filter((c) => !ONLY.length || ONLY.some((o) => c.name.inc
       return out;
     });
     if (waterFit.length) errs.push("water: " + waterFit.join(", "));
+    /* what the wind lane says, printed so a change in it is reviewable as text, and held to the case's own
+       `lane` where it has one (the gusts' words, and the advisory's) */
+    const lane = await page.evaluate(() => ({ gusts: [...document.querySelectorAll('#tideSvg [data-lane="gusts"] text')].map((t) => t.textContent),
+      zone: document.querySelector('#tideSvg text[data-lane="zone"]')?.textContent || "",
+      open: !!document.querySelector('#tideSvg path[data-lane="zone"]'), said: document.getElementById("tideSvg").getAttribute("aria-label") || "" }));
+    if (cs.lane) {
+      for (const g of cs.lane.gusts || []) if (!lane.gusts.includes(g)) errs.push(`the gusts line is missing "${g}": [${lane.gusts.join(", ")}]`);
+      if (cs.lane.gusts && !cs.lane.gusts.length && lane.gusts.length) errs.push(`an ordinary day has a gusts line: [${lane.gusts.join(", ")}]`);
+      if (cs.lane.zone != null && lane.zone !== cs.lane.zone) errs.push(`the advisory reads "${lane.zone}", not "${cs.lane.zone}"`);
+      if (cs.lane.open != null && lane.open !== cs.lane.open) errs.push(`the advisory's bar ${lane.open ? "runs on" : "ends"} where it should not`);
+      for (const w of cs.lane.said || []) if (!lane.said.includes(w)) errs.push(`the chart's spoken label does not say "${w}"`);
+    }
     const tag = `${cs.name}-${width}`;
     await page.locator(".sky").screenshot({ path: path.join(OUT, `scene-${tag}.png`) }).catch((e) => errs.push("sky shot: " + e.message));
     await page.locator("#sceneSvg").screenshot({ path: path.join(OUT, `scene-${tag}-scene.png`) }).catch((e) => errs.push("scene shot: " + e.message));
@@ -242,6 +326,8 @@ for (const cs of CASES.filter((c) => !ONLY.length || ONLY.some((o) => c.name.inc
     /* and the whole page, when asked (PORCH_BFT_FULL=1), to see the water section in its place */
     if (process.env.PORCH_BFT_FULL) await page.screenshot({ path: path.join(OUT, `scene-${tag}-page.png`), fullPage: true }).catch((e) => errs.push("page shot: " + e.message));
     console.log(`${tag}: loc ${info.loc}, tide ${info.tide == null ? "—" : info.tide.toFixed(2)}, props [${[...new Set(info.props)].join(" ")}], animals [${info.species.join(" ")}], ${info.running} animations`);
+    if (lane.gusts.length || lane.zone) console.log(`  wind lane: [${lane.gusts.join(", ")}]${lane.zone ? ` · ${lane.zone}${lane.open ? " (runs on)" : ""}` : ""}`);
+    if (process.env.PORCH_BFT_SAID) console.log(`  said: ${lane.said}`);
     if (info.running > 120) errs.push(`${info.running} animations running, over the scenes' ceiling of 120`);
     if (info.loc !== "bft") { errs.push(`the page opened at ${info.loc}, not Beaufort`); }
     if (errs.length) { failed = true; console.log("  " + errs.join("\n  ")); }
