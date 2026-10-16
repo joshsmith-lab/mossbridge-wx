@@ -165,6 +165,21 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes sway{from{transform:skewX(var(--sway-neg,-.55deg))}to{transform:skewX(var(--sway,.55deg))}}
 /* spanish moss hangs, so it pivots from the top and swings further than what holds it */
 .moss{transform-box:fill-box;transform-origin:50% 0;animation:sway var(--md,7s) ease-in-out infinite alternate}
+/* Beaufort's layers (lowcountryScene), laid over the still picture so WebKit repaints only what moves:
+   the moss on its own, the still oak and the dock in front of it, and everything else that moves; and the
+   joints its moving parts turn at: the palmetto crowns, the boat, the flag and the sock */
+.scene .scene-layer{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;will-change:transform}
+.scene-layer :is(.bft-palm-crown,.bft-palm-frond-a,.bft-palm-frond-b,.bft-boat-rock,.bft-flag,.bft-sock,.bft-sock-tail,.bft-balloon,.bft-bones-wave){transform-box:view-box;transform-origin:0 0}
+.scene-layer :is(.bft-palm-crown,.bft-palm-frond-a,.bft-palm-frond-b)[style]{animation:bftTurn var(--md,6s) ease-in-out infinite alternate}
+@keyframes bftTurn{from{transform:rotate(var(--sway-neg,-.6deg))}to{transform:rotate(var(--sway,.6deg))}}
+.scene-layer .bft-boat-rock[style]{animation:bftRock var(--rd,4s) ease-in-out infinite alternate}
+@keyframes bftRock{from{transform:rotate(calc(var(--rk,1deg) * -1)) translateY(.25px)}to{transform:rotate(var(--rk,1deg)) translateY(-.25px)}}
+.scene-layer .bft-flag[style]{animation:bftFlag var(--fd,1.4s) ease-in-out infinite alternate}
+@keyframes bftFlag{from{transform:skewY(calc(var(--fs,2deg) * -1))}to{transform:skewY(var(--fs,2deg))}}
+.scene-layer :is(.bft-sock,.bft-sock-tail)[style]{animation:bftFlutter var(--fd,1.6s) ease-in-out infinite alternate}
+.scene-layer .bft-flyover{animation:bftFlyover 300s linear infinite;opacity:0}
+@keyframes bftFlyover{0%{transform:translateX(0);opacity:1}7%{transform:translateX(var(--j1,420px));opacity:1}7.01%,100%{transform:translateX(var(--j1,420px));opacity:0}}
+@keyframes bftFlutter{from{transform:rotate(calc(var(--fa,1.5deg) * -1))}to{transform:rotate(var(--fa,1.5deg))}}
 .flight-wing{transform-box:fill-box;animation:wingBeat var(--fd,7.4s) ease-in-out infinite}
 .wing-l{transform-origin:100% 60%;--rest:0deg;--lift:9deg;--press:-5deg}.wing-r{transform-origin:0 60%;--rest:0deg;--lift:-9deg;--press:5deg}
 /* gulls and hawks glide. One shallow beat inside a long rest reads as a bird;
@@ -276,15 +291,15 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
    half-beat now and then as it turns. The outer group hunts a jinking loop round its own patch of
    sky, banked into its turns, carried downwind across it (--dr, off the real wind) and beating
    back, and leaning with the wind (--ln). Three loops, so the colony never flies in step. */
-#sceneSvg .bat-wing,#sceneSvg .bat-fly{transform-box:view-box;transform-origin:0 0}
-#sceneSvg .bat-wing{animation:batFlap .6s ease-in-out infinite}
+:is(#sceneSvg,.scene-layer) .bat-wing,:is(#sceneSvg,.scene-layer) .bat-fly{transform-box:view-box;transform-origin:0 0}
+:is(#sceneSvg,.scene-layer) .bat-wing{animation:batFlap .6s ease-in-out infinite}
 @keyframes batFlap{0%,100%{transform:rotate(calc(var(--wd)*-34deg)) scaleX(.74)}13%{transform:rotate(calc(var(--wd)*30deg)) scaleX(1)}
   27%{transform:rotate(calc(var(--wd)*-30deg)) scaleX(.78)}41%{transform:rotate(calc(var(--wd)*36deg)) scaleX(1)}
   55%{transform:rotate(calc(var(--wd)*-24deg)) scaleX(.82)}67%{transform:rotate(calc(var(--wd)*20deg)) scaleX(1)}
   80%{transform:rotate(calc(var(--wd)*-8deg)) scaleX(.95)}89%{transform:rotate(calc(var(--wd)*12deg)) scaleX(1)}}
-#sceneSvg .bat-a{animation:batHuntA var(--bd,4.6s) linear infinite}
-#sceneSvg .bat-b{animation:batHuntB var(--bd,4.6s) linear infinite}
-#sceneSvg .bat-c{animation:batHuntC var(--bd,4.6s) linear infinite}
+:is(#sceneSvg,.scene-layer) .bat-a{animation:batHuntA var(--bd,4.6s) linear infinite}
+:is(#sceneSvg,.scene-layer) .bat-b{animation:batHuntB var(--bd,4.6s) linear infinite}
+:is(#sceneSvg,.scene-layer) .bat-c{animation:batHuntC var(--bd,4.6s) linear infinite}
 @keyframes batHuntA{0%,100%{transform:translate(0px,0px) rotate(var(--ln))}
   9%{transform:translate(calc(var(--rx)*.45 + var(--dr)*.1),calc(var(--ry)*-.6)) rotate(calc(var(--ln) + var(--sx)*-12deg))}
   17%{transform:translate(calc(var(--rx)*.9 + var(--dr)*.2),calc(var(--ry)*-.45)) rotate(calc(var(--ln) + var(--sx)*8deg))}
@@ -380,31 +395,31 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
    set per render off the wind (candleK), and in a calm it gets no animation at all. A flame
    ducks fast and comes back slower. Each cycle has two deep ducks, the second shallower than
    the first (--c0, then --c2), among smaller flutters (--c1) */
-#sceneSvg .candle.flicker{animation:candle 2.4s ease-in-out infinite}
+:is(#sceneSvg,.scene-layer) .candle.flicker{animation:candle 2.4s ease-in-out infinite}
 @keyframes candle{0%,100%{opacity:1}7%{opacity:var(--c1,.9)}12%{opacity:.98}27%{opacity:var(--c1,.9)}31%{opacity:var(--c0,.8)}44%{opacity:1}60%{opacity:.97}66%{opacity:var(--c1,.9)}74%{opacity:var(--c2,.85)}79%{opacity:var(--c1,.9)}90%{opacity:1}}
 /* the witch crosses once in each cycle, in the first 22% of it, and spends the rest of it off the
    frame's edge; the bob and the cape's flutter come off the gusts (see witchFly in the script).
    They pivot on her middle and on her shoulders, so their origin is the joint's own 0 0 */
-#sceneSvg .witch-cross{animation:witchCross var(--wd,60s) linear infinite}
+:is(#sceneSvg,.scene-layer) .witch-cross{animation:witchCross var(--wd,60s) linear infinite}
 @keyframes witchCross{0%{transform:translate(var(--wx0,-40px),var(--wy0,60px))}22%,100%{transform:translate(var(--wx1,440px),var(--wy1,50px))}}
-#sceneSvg .witch-bob,#sceneSvg .witch-cape{transform-box:view-box;transform-origin:0 0}
-#sceneSvg .witch-bob{animation:witchBob var(--wbd,3s) ease-in-out infinite alternate}
+:is(#sceneSvg,.scene-layer) .witch-bob,:is(#sceneSvg,.scene-layer) .witch-cape{transform-box:view-box;transform-origin:0 0}
+:is(#sceneSvg,.scene-layer) .witch-bob{animation:witchBob var(--wbd,3s) ease-in-out infinite alternate}
 @keyframes witchBob{from{transform:translateY(var(--wba,1px)) rotate(var(--wbr,1deg))}to{transform:translateY(calc(var(--wba,1px) * -1)) rotate(calc(var(--wbr,1deg) * -1))}}
-#sceneSvg .witch-cape{animation:witchCape var(--wcd,1s) ease-in-out infinite alternate}
+:is(#sceneSvg,.scene-layer) .witch-cape{animation:witchCape var(--wcd,1s) ease-in-out infinite alternate}
 @keyframes witchCape{from{transform:rotate(var(--wc,2deg))}to{transform:rotate(calc(var(--wc,2deg) * -.7))}}
 /* More Halloween (October only). The black cat's tail is its own joint at the root and flicks now and
    then: a long sit, then two quick flicks and a settle. The cheesecloth ghost hangs from its knot and
    swings as far as the gusts say, inside the hardwood's own sway. The eyes in the dark open, look,
    blink once and go, each pair on its own clock. The marsh lights drift and dim, slowly. All of
    them pivot on their own joint's 0 0, and all of them are transforms and opacity */
-#sceneSvg .cat-tail,#sceneSvg .ghost-swing,#sceneSvg .dark-eyes{transform-box:view-box;transform-origin:0 0}
-#sceneSvg .cat-tail{animation:catTail 23s ease-in-out infinite}
+:is(#sceneSvg,.scene-layer) .cat-tail,:is(#sceneSvg,.scene-layer) .ghost-swing,:is(#sceneSvg,.scene-layer) .dark-eyes{transform-box:view-box;transform-origin:0 0}
+:is(#sceneSvg,.scene-layer) .cat-tail{animation:catTail 23s ease-in-out infinite}
 @keyframes catTail{0%,70%,100%{transform:rotate(0)}73.5%{transform:rotate(-17deg)}77%{transform:rotate(4deg)}80.5%{transform:rotate(-11deg)}85%{transform:rotate(0)}}
-#sceneSvg .ghost-swing{animation:ghostSwing var(--gd,3s) ease-in-out infinite alternate}
+:is(#sceneSvg,.scene-layer) .ghost-swing{animation:ghostSwing var(--gd,3s) ease-in-out infinite alternate}
 @keyframes ghostSwing{from{transform:rotate(var(--gs,3deg))}to{transform:rotate(calc(var(--gs,3deg) * -.8))}}
-#sceneSvg .dark-eyes{animation:darkEyes var(--ed,29s) ease-in-out infinite}
+:is(#sceneSvg,.scene-layer) .dark-eyes{animation:darkEyes var(--ed,29s) ease-in-out infinite}
 @keyframes darkEyes{0%,9%{opacity:0;transform:scaleY(1)}15%{opacity:1}43%{transform:scaleY(1)}44.5%{transform:scaleY(.08)}46%{transform:scaleY(1)}61%{opacity:1}68%,100%{opacity:0;transform:scaleY(1)}}
-#sceneSvg .wisp{opacity:.7;animation:wisp var(--wd,13s) ease-in-out infinite}
+:is(#sceneSvg,.scene-layer) .wisp{opacity:.7;animation:wisp var(--wd,13s) ease-in-out infinite}
 @keyframes wisp{0%,100%{transform:translate(0,0);opacity:.35}28%{transform:translate(var(--wx1,4px),var(--wy1,-1px));opacity:.9}52%{opacity:.5}74%{transform:translate(var(--wx2,-3px),var(--wy2,1px));opacity:.85}}
 .city-beacon{opacity:.15;animation:cityBeacon var(--beacon-d,7s) ease-in-out infinite}
 @keyframes cityBeacon{0%,78%,100%{opacity:.12}82%,87%{opacity:.82}91%{opacity:.12}}
@@ -833,12 +848,12 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
 /* Storybook ink rigs pivot on the real joint. Each moving group sits inside a wrapper whose own
    origin is the joint (joint() in the script), so its origin is simply 0 0 in its own units and
    redrawing a part can never walk the pivot off the shoulder the way a fill-box percentage does */
-#sceneSvg .heron-lunge,#sceneSvg .heron-strike,#sceneSvg .heron-scan,#sceneSvg .heron-leg,#sceneSvg .heron-tarsus,#sceneSvg .egret-wing-stretch,
-#sceneSvg .wildlife.deer .deer-head,#sceneSvg .wildlife.deer .deer-nod,#sceneSvg .wildlife.deer .deer-ear,
-#sceneSvg .wildlife.deer .deer-leg,#sceneSvg .wildlife.deer .deer-tail,#sceneSvg .shore-head,#sceneSvg .corm-neck,
-#sceneSvg .corm-wing,#sceneSvg .raccoon-head,#sceneSvg .raccoon-paw,#sceneSvg .crab-claw,#sceneSvg .crab-leg,#sceneSvg .owl-head,
-#sceneSvg .owl-eyes,#sceneSvg .frog-throat,#sceneSvg .hen-peck,#sceneSvg .hen-tip,#sceneSvg .hen-look,
-#sceneSvg .hen-scratch,#sceneSvg .wildlife.cardinal .perch-head,#sceneSvg .fox-head,#sceneSvg .fox-tail{transform-box:view-box;transform-origin:0 0}
+:is(#sceneSvg,.scene-layer) .heron-lunge,:is(#sceneSvg,.scene-layer) .heron-strike,:is(#sceneSvg,.scene-layer) .heron-scan,:is(#sceneSvg,.scene-layer) .heron-leg,:is(#sceneSvg,.scene-layer) .heron-tarsus,:is(#sceneSvg,.scene-layer) .egret-wing-stretch,
+:is(#sceneSvg,.scene-layer) .wildlife.deer .deer-head,:is(#sceneSvg,.scene-layer) .wildlife.deer .deer-nod,:is(#sceneSvg,.scene-layer) .wildlife.deer .deer-ear,
+:is(#sceneSvg,.scene-layer) .wildlife.deer .deer-leg,:is(#sceneSvg,.scene-layer) .wildlife.deer .deer-tail,:is(#sceneSvg,.scene-layer) .shore-head,:is(#sceneSvg,.scene-layer) .corm-neck,
+:is(#sceneSvg,.scene-layer) .corm-wing,:is(#sceneSvg,.scene-layer) .raccoon-head,:is(#sceneSvg,.scene-layer) .raccoon-paw,:is(#sceneSvg,.scene-layer) .crab-claw,:is(#sceneSvg,.scene-layer) .crab-leg,:is(#sceneSvg,.scene-layer) .owl-head,
+:is(#sceneSvg,.scene-layer) .owl-eyes,:is(#sceneSvg,.scene-layer) .frog-throat,:is(#sceneSvg,.scene-layer) .hen-peck,:is(#sceneSvg,.scene-layer) .hen-tip,:is(#sceneSvg,.scene-layer) .hen-look,
+:is(#sceneSvg,.scene-layer) .hen-scratch,:is(#sceneSvg,.scene-layer) .wildlife.cardinal .perch-head,:is(#sceneSvg,.scene-layer) .fox-head,:is(#sceneSvg,.scene-layer) .fox-tail{transform-box:view-box;transform-origin:0 0}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
@@ -940,7 +955,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   <p class="verdict" id="verdict">Reading the sky…</p>
   <div class="chips" id="chips"></div>
   <div class="nowcast" id="nowcast"><span id="ncText"></span><span class="nc-bars" id="ncBars"></span></div>
-  <div class="scene"><svg id="sceneSvg" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-label="Sun and moon over the marsh horizon"></svg></div>
+  <div class="scene"><svg id="sceneSvg" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-label="Sun and moon over the marsh horizon"></svg><svg id="sceneSky" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneMoss" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneNear" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneFx" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg></div>
   <div class="cobweb" id="cobweb" aria-hidden="true" hidden></div>
 </header>
 
@@ -990,7 +1005,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
 </section>
 
 <section id="tideSection">
-  <div class="eyebrow"><b>Water · Wrightsville Beach</b><span id="tideNote"></span></div>
+  <div class="eyebrow"><b id="waterTitle">Water · Wrightsville Beach</b><span id="tideNote"></span></div>
   <div class="tide-explore xp" id="tideExplore">
     <svg id="tideSvg" class="tide-svg" viewBox="0 0 760 158" xmlns="http://www.w3.org/2000/svg" aria-label="Tide curve, next 27 hours"></svg>
     <input class="xp-key" type="range" min="0" max="0" step="1" value="0" disabled aria-label="Water, 15 minutes a step">
@@ -1118,14 +1133,16 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   };
   var PLACES={
     mb:{full:"Moss Bridge Ct · Porters Neck",short:"Porters Neck",lat:34.2982,lon:-77.7896,scene:"marsh",tide:true,fish:false,year:"The year · Wilmington",airport:"Wilmington",label:"Sun and moon over the marsh horizon",snowy:false},
-    sp:{full:"Bob Plumley Rd · Shady Spring",short:"Shady Spring",lat:37.8215,lon:-80.9942,scene:"ridge",tide:false,fish:true,year:"The year · Shady Spring",airport:"Beckley",label:"Sun and moon over Appalachian ridgelines and the farm pond",snowy:true}
+    sp:{full:"Bob Plumley Rd · Shady Spring",short:"Shady Spring",lat:37.8215,lon:-80.9942,scene:"ridge",tide:false,fish:true,year:"The year · Shady Spring",airport:"Beckley",label:"Sun and moon over Appalachian ridgelines and the farm pond",snowy:true},
+    bft:{full:"Coosaw Club Dr · Beaufort",short:"Beaufort",lat:32.4938,lon:-80.6151,scene:"lowcountry",tide:true,fish:false,year:"The year · Beaufort",airport:"Beaufort MCAS",water:"Beaufort River",label:"Sun and moon over the Beaufort River, the swing bridge and a live oak hung with moss",snowy:false}
   };
   var id="mb";
-  try{var saved=localStorage.getItem("mbwx-loc");if(saved==="mb"||saved==="sp")id=saved}catch(e){}
+  try{var saved=localStorage.getItem("mbwx-loc");if(PLACES[saved])id=saved}catch(e){}
   var L=PLACES[id];
   var swap='<svg width="10" height="10" viewBox="0 0 12 12"><path d="M2.5 4.2h6.2L6.8 2.3M9.5 7.8H3.3l1.9 1.9" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   document.getElementById("locBtn").innerHTML='<span class="addr-full">'+L.full+'</span><span class="addr-short">'+L.short+"</span>"+swap;
   document.getElementById("tideSection").style.display=L.tide?"":"none";
+  document.getElementById("waterTitle").textContent="Water \u00B7 "+(L.water||"Wrightsville Beach");
   document.getElementById("moonSection").hidden=!L.fish;
   var year=document.getElementById("yearTitle");
   year.textContent=L.year;
@@ -1205,12 +1222,30 @@ const LOCS={
   den:{id:"den",addrFull:"Next up · Denver",addrShort:"Denver",
       lat:39.7392,lon:-104.9903,scene:"front-range",kind:"trip",
       tz:"America/Denver",tzLabel:"MT",
-      sceneLabel:"Sun and moon over Denver and the Front Range"}
+      sceneLabel:"Sun and moon over Denver and the Front Range"},
+  /* Beaufort, South Carolina: Jen's family's place, Kate's sister, the third place (October 15 2026) */
+  /* Jen's family is on Coosaw Club Dr in Coosaw Point, on Lady's Island across the river from downtown,
+     which is the side the scene looks from. The point is the middle of the street */
+  bft:{id:"bft",addrFull:"Coosaw Club Dr · Beaufort",addrShort:"Beaufort",
+      lat:32.4938,lon:-80.6151,scene:"lowcountry",kind:"coast",
+      tz:"America/New_York",tzLabel:"ET",
+      /* NOAA's Beaufort station on the Beaufort River (8667999), a harmonic station by the swing bridge:
+         its predictions, every six minutes and high and low, and no gauge or thermometer, so the level
+         beside the skiff never shows here. Mean range about 7.4 ft */
+      tide:8667999,water:"Beaufort River",
+      /* the seas off Fripp Inlet, and the water temperature from CORMP's wave buoy there (41067) */
+      marine:{lat:32.28,lon:-80.40},buoy:"41067-frp2wave-4-nm-southeast-of",
+      /* Beaufort County is one zone (SCZ148) with its beaches, so the point's own alerts carry the
+         tropical watches and warnings and there is no separate beach zone. The beach's surf and rip
+         current products come with it, and stay off the strip on Lady's Island (quietAlerts) */
+      quietAlerts:["Rip Current Statement","High Surf Advisory","Beach Hazards Statement"],
+      boatSeason:null,
+      sceneLabel:"Sun and moon over the Beaufort River, the swing bridge and a live oak hung with moss"}
 };
 /* The trip is over, so Denver is parked: still in LOCS as the template for the next travel
    scene, but out of the rotation. A phone last left on Denver has to open at home rather
    than on a place nobody can tap back to, so a saved id only counts while it is in the order. */
-const LOC_ORDER=["mb","sp"];
+const LOC_ORDER=["mb","sp","bft"];
 /* A season (the boat's, a holiday's) is a pair of month-days on the location's own calendar, and
    it may wrap the new year. No pair is no season. */
 const mdOf=d=>typeof d==="string"?d.slice(5,10):String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
@@ -1745,7 +1780,7 @@ document.addEventListener("visibilitychange",()=>{
   if(document.hidden||!WITCH_RUN)return;
   WITCH_RUN.t0=WITCH_RUN.open=Date.now()+2400;
   /* back to the front: set her going again from where she waits, with no repaint needed */
-  const a=document.querySelector("#sceneSvg .witch-cross")?.getAnimations().find(x=>x.animationName==="witchCross");
+  const a=document.querySelector("#sceneSvg .witch-cross,.scene-layer .witch-cross")?.getAnimations().find(x=>x.animationName==="witchCross");
   if(a){const D=WITCH_RUN.C*1e3;a.currentTime=((D-2400+(a.effect.getTiming().delay||0))%D+D)%D}
 });
 
@@ -1856,6 +1891,9 @@ function inkUnit(parts,pal,o={}){
   const id=`ik${++inkUid}`;
   const silG=`<g id="${id}">${sil.map(p=>`<path d="${p.d}"/>`).join("")}</g>`;
   const fills=f=>parts.filter(f).map(p=>`<path d="${p.d}" fill="${col(p.role)}"${p.op?` opacity="${p.op}"`:""}/>`).join("");
+  /* a unit with nothing in its silhouette (the moss's curtains, a sheen) has no edge to ink and no
+     form to shade, and an empty box would make masks of a negative size */
+  if(!sil.length)return fills(p=>!INK_LAST.has(p.role))+fills(p=>INK_LAST.has(p.role));
   const heavy=o.heavy??.55,shade=o.shade??2,lit=o.lit??1,ink=pal.ink;
   const shadeOp=pal.shadeOp??o.shadeOp??.36,litOp=pal.litOp??o.litOp??.5;
   const box=pathBox(sil.map(p=>p.d)),bx=`x="${f1(box[0]-8)}" y="${f1(box[1]-8)}" width="${f1(box[2]+16)}" height="${f1(box[3]+16)}"`;
@@ -3534,6 +3572,21 @@ function tideTrend(preds){
   }
   return 0;
 }
+/* How full the river is now, 0 at the run's lowest low and 1 at its highest high, between the two
+   predictions either side of now on a half cosine, the shape a tide keeps. Beaufort's runs seven or
+   eight feet, so the lowcountry scene shows it: the mud and the oyster rakes along the banks, the
+   float and its gangway, the wet band on the pilings. null when the table does not cover now */
+function tideLevel(preds,now=wallNow().getTime()){
+  if(!preds||preds.length<2)return null;
+  const P=preds.map(p=>({t:new Date(String(p.t).replace(" ","T")).getTime(),v:+p.v})).filter(p=>Number.isFinite(p.t)&&Number.isFinite(p.v));
+  const vs=P.map(p=>p.v),lo=Math.min(...vs),hi=Math.max(...vs);
+  if(!(hi>lo))return null;
+  for(let i=0;i<P.length-1;i++){const a=P[i],b=P[i+1];
+    if(now>=a.t&&now<=b.t){const k=(1-Math.cos(Math.PI*(now-a.t)/(b.t-a.t)))/2;return clamp((a.v+(b.v-a.v)*k-lo)/(hi-lo),0,1)}}
+  return null;
+}
+/* the river's level for the scene that draws it, set beside each paint's tideDir */
+let SCENE_TIDE=null;
 /* The picture is expensive to build and a refresh rebuilds it from scratch, which is the
    hitch under the pen and the rain. Skip that write when the inputs that change the
    picture still match, and keep the last sun and moon reading to hand back. Cleared
@@ -3556,7 +3609,7 @@ function scenePictureKey(now,weather,dark,tideDir,fishWins){
     temp<=34,temp<42,temp<48,temp<50,temp>=40,temp>=45,temp>=60,
     cloud>=10,cloud>40,cloud<=85,cloud>75,cloud<30,mp.alt>-.05);
   const fish=fishWins.map(w=>Math.round(w.start/6e4)+"-"+Math.round(w.end/6e4)).join(",");
-  return [LOC.id,q(appW()),PRM?1:0,dark?1:0,tideDir|0,THUNDER|0,
+  return [LOC.id,q(appW()),PRM?1:0,dark?1:0,tideDir|0,SCENE_TIDE==null?"":Math.round(SCENE_TIDE*20),THUNDER|0,
     weather.weather_code|0,q(cloud/5)*5,q(wind),q((+weather.wind_direction_10m||0)/5)*5,q(gust),q(temp),
     q((+weather.relative_humidity_2m||0)/5)*5,q(weather.uv_index),
     Math.round(sun*2)/2,Math.round(malt*2)/2,q(maz/2)*2,now.getHours(),locToday(),
@@ -3783,14 +3836,15 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
        The glow sits round the face, and the face is in the flame's colour.
      The candle stands low in the pumpkin, behind the grin, and all of it is measured from there. */
   const silOf=ps=>ps.filter(p=>!INK_INNER.has(p.role)&&!p.soft&&!p.noSil);
-  const pumpkinAt=(x,y,s,{w=10,h=7,carved:cv=false,seed=1,white=false,lights=[],refl=null}={})=>{
+  const pumpkinAt=(x,y,s,{w=10,h=7,carved:cv=false,seed=1,white=false,lights=[],refl=null,sheltered=false}={})=>{
     const parts=propPumpkin(w,h,{carved:cv,seed}),lit=cv&&candles;
     const paint=inkAt(x,y,s,1,inkUnit(parts,decorPal(white?INK.lumina:INK.pumpkin,.04,lit),{s,light:lightAt(x,y-h*s)}));
     let flame="";
     if(lit){
       const id=`cn${++inkUid}`,cy=y-h*s*.3,W0=w*s;
       /* how hard the candle works: nothing below 3 mph of gust, all it has by 27 */
-      const candleK=clamp((gust-3)/24,0,1),flick=!PRM&&candleK>.04;
+      /* one under a roof (Beaufort's dock house) is out of the wind until it gusts ten */
+      const candleK=clamp((gust-(sheltered?10:3))/24,0,1),flick=!PRM&&candleK>.04;
       const st=flick?` style="--c0:${(1-.55*candleK).toFixed(2)};--c2:${(1-.4*candleK).toFixed(2)};--c1:${(1-.25*candleK).toFixed(2)};animation-duration:${(3.4-2.2*candleK).toFixed(2)}s;animation-delay:-${(seed*.61%1*2).toFixed(2)}s"`:"";
       let spill="";
       if(lights.length){
@@ -4274,6 +4328,8 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
   const sceneGen=RENDER_GEN;
   requestAnimationFrame(()=>{
   if(sceneGen!==RENDER_GEN)return;
+  /* the moving layer is Beaufort's alone; every other scene draws in one sheet */
+  if(LOC.scene!=="lowcountry")for(const id of ["sceneSky","sceneMoss","sceneNear","sceneFx"])document.getElementById(id).innerHTML="";
   if(LOC.scene==="front-range"){
     /* ── Denver: high plains foreground, the Front Range, cottonwood and city edge ── */
     const ink=dark?"#07161B":"#173029",base=GY+10,g=mulberry(5280);
@@ -4798,6 +4854,15 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     andThen(commit({sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05}));return;
   }
 
+  if(LOC.scene==="lowcountry"){
+    lowcountryScene({W,H,GY,sp,mp,mph,sunAltDeg,localHour,month,cloud,wind,gust,code,wet,snowing,storm,fog,humid,temp,dark,tideDir,
+      skyS,goldK,rising,nightK,gloom,tone,hazeC,air,lineC,inkAir,shadeC,texOn,paperK,arc,goldArc,sunBody,moonBody,sunTimes,
+      glintX,glintCol,glintOp,sunXY,moonXY,moonR,veil,lightAt,litC,litK,shadeK,inkPal,castShadow,flatParts,phase,
+      chopK,wDur,windFrom,downwind,BANDS,bandAmp,waveDelay,bandOf,specular,rainK,cloudShadows,ringAt,flightBird,showFlies,flyCount,crabAt,thunder:THUNDER,
+      halloween,carved,candles,trickOrTreat,nightEyes,batN,batColony,batKeep,witchPlan,witchFly,pumpkinAt,catAt,kidAt,darkEyes,hallowDefs,candleDefs,moonR});
+    andThen(commit({sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05}));return;
+  }
+
   /* marsh: hazy maritime treeline, loblollies, live oak, spartina bank, dock, heron */
   const base=GY+10;
   const g=mulberry(991);
@@ -5157,6 +5222,344 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
 
   andThen(commit({sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05}));return;
   });
+}
+
+/* ── the lowcountry: Beaufort, South Carolina ───────────────────────────────────────────────────
+   The Beaufort River from the town's side. Back to front: Lady's Island's low maritime wood on the far
+   line, the Woods Memorial swing bridge standing across the river on that line, the river itself, broad
+   and tidal, the near-left bank and its grand live oak hung with moss, the near-right bank with its
+   palmettos and the dock running out to a covered pierhead, a float and the family's boat. Beaufort's
+   tide runs seven or eight feet, so the water's level is drawn: the mud aprons and their oyster rakes
+   come out at low water and go under at high, the float rides down its gangway, the pilings show their
+   wet band. The light is renderScene's, handed over whole (c), so every colour here is lit the way the
+   marsh's and the ridge's are. */
+function lowcountryScene(c){
+  const{W,H,GY,sunAltDeg,localHour,month,cloud,wind,gust,code,wet,snowing,storm,fog,humid,temp,dark,tideDir,
+    skyS,goldK,nightK,gloom,tone,hazeC,air,lineC,inkAir,shadeC,texOn,paperK,arc,goldArc,sunBody,moonBody,sunTimes,
+    glintX,sunXY,veil,lightAt,litC,litK,shadeK,inkPal,castShadow,flatParts,phase,
+    chopK,wDur,windFrom,downwind,BANDS,bandAmp,waveDelay,bandOf,specular,rainK,cloudShadows,ringAt,flightBird,showFlies,flyCount}=c;
+  const tide=SCENE_TIDE==null?.55:SCENE_TIDE;
+  const yFar=GY-21;                 /* the far shore's waterline, the river's horizon */
+  const yWater=GY+12;               /* the near water, where what floats near the foot floats */
+  const bankY=GY+7;                 /* the top of the near banks: low enough to stand the oak on, high enough to leave the flats room */
+  const g=mulberry(32431);
+  /* the river's own colour under the sky: tea-green tidal water, the horizon's light at the far edge */
+  const waterTop=mix(mix(skyS[2],skyS[1],.25),"#8FA8A0",.15),waterBot=mix(mix(mix(skyS[1],skyS[0],.5),"#1F3F52",.2),"#3E5E52",.32);
+  /* gusts push the throw past what the steady wind alone would give, as on the marsh */
+  const swayDur=clamp(9.2-wind*.26,2.4,9.2),swayAmt=clamp(.5+wind*.095+(gust-wind)*.055,.5,3.9),treeDur=swayDur*1.45;
+  const treeAt=x=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;--tsway:${(swayAmt*.42*bandAmp[bandOf(x)]).toFixed(2)}deg;--tsway-neg:${(-swayAmt*.42*bandAmp[bandOf(x)]).toFixed(2)}deg;animation:swayTree ${treeDur.toFixed(1)}s ease-in-out ${waveDelay(bandOf(x),treeDur).toFixed(2)}s infinite alternate"`;
+  const swayAt=(dl,amt=swayAmt)=>PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;--sway:${amt.toFixed(2)}deg;--sway-neg:${(-amt).toFixed(2)}deg;animation:sway ${swayDur.toFixed(1)}s ease-in-out ${dl.toFixed(2)}s infinite alternate"`;
+  const bandAt=i=>swayAt(waveDelay(i,swayDur),swayAmt*bandAmp[i]);
+  /* a drawing at a place and a distance: its colours fade into the air and its line lightens */
+  const palAt=(pal,d,keep=[])=>{const o={};for(const[k,v]of Object.entries(pal||{}))o[k]=typeof v==="string"&&v[0]==="#"&&!["ink","shade","lit"].includes(k)&&!keep.includes(k)?air(v,d):v;
+    return Object.assign(o,{ink:inkAir(d),shade:shadeC,lit:litC,litOp:(pal?.litOp??.5)*litK,shadeOp:(pal?.shadeOp??.32)*shadeK})};
+  const asLayers=r=>r&&r[0]&&(r[0].parts||r[0].layers)?r:[{parts:r}];
+  /* Every Beaufort drawing was made and judged in tools/beaufort/look.mjs, at the scale and with the
+     line it is registered with in BFT (s, o, dist). It is placed here exactly that way: k is how many
+     screen pixels a scene unit is, so a line is the width on the phone it was judged at */
+  const k=appW()/W;
+  const look=(key,st,x,y,{flip=1,d,keep,attrs="",scale=1,o={}}={})=>{const L=BFT[key];if(!L)return"";
+    const s=(L.s??1)*scale;
+    return inkAt(x,y,s,flip,inkRig(asLayers(L.draw(st||{})),palAt(L.pal,d??L.dist??.1,keep),{s:s*k,flip,light:lightAt(x,y-20),...(L.o||{}),...o}),attrs)};
+  const show=(typeof window!=="undefined"&&window.BFT_SHOW)||{};
+  /* the moss and the crowns sway with the wind, each on its own beat, off the wall clock */
+  const beats=(svg,cls,amtK,seed)=>{const r=mulberry(seed);return PRM?svg:svg.replace(new RegExp(`<g class="${cls}"`,"g"),()=>{const amt=swayAmt*amtK*(.8+r()*.5);
+    return `<g class="${cls}" style="--sway:${amt.toFixed(2)}deg;--sway-neg:${(-amt).toFixed(2)}deg;--md:${(swayDur*(.7+r()*.55)).toFixed(1)}s;animation-delay:-${((Date.now()/1000+r()*9)%9).toFixed(1)}s"`})};
+
+  /* ── the far shore, seen from the waterway east of the bridge: Lady's Island's low wood on the left, and
+     on the right, beyond the bridge's town end, Beaufort's waterfront oaks with St. Helena's green spire and
+     the Baptist church's white needle standing out of them (bftSkyline). It runs low behind the swing span,
+     so the truss keeps the sky. At low water a thin line of mud shows under it */
+  const farC=air("#6E8C82",.62),farLine=mix(inkAir(.62),farC,.45),farMud=(1-tide)*1.8;
+  const bftSky=bftSkyline({W,brX:W*.6,yFar,seed:32431,bridge:{left:Math.max(70,W*.6-W*.27),right:W-W*.6+30},clear:W*.19+98});
+  const farShore=bftSteepleMarkup(bftSky,{farC,farLine,steeple:(n,x,y,sc)=>look("steeple-"+n,{},x,y,{scale:sc*1.3,d:.5}),tex:texOn?"url(#paper)":"",texOp:(.7*paperK).toFixed(2)})
+    +(farMud>.25?`<rect x="0" y="${f1(yFar+.4)}" width="${W}" height="${farMud.toFixed(2)}" fill="${air("#6B5A45",.6)}" opacity=".8"/>`:"");
+
+  /* ── the swing bridge on the far line, its pivot a little right of centre, its left end lost
+     behind the oak's crown and its right running off the frame. After sunset its street lights, the
+     tender's window and the span's red lights come on, and lay their light down the river */
+  const brX=W*.6,brY=yFar,brL=Math.max(70,brX-W*.27),brR=W-brX+30,night=sunAltDeg< -.83;
+  const bridgeLayers=asLayers(propBftBridge({left:brL,right:brR,lit:night,foot:.6+(1-tide)*1.8}));
+  const bridgeLit=`<g data-prop="swing-bridge">${inkAt(brX,brY,1,1,inkRig(bridgeLayers,palAt(INK.bftBridge,.55),{s:k,light:lightAt(brX,brY-12),...BFT_BRIDGE_INK}))}</g>`;
+  const reflC=mix(lineC,skyS[0],.35);
+  const bridgeRefl=`<g clip-path="url(#lcwater)" fill="${reflC}" opacity="${(.2*(fog?.4:1)).toFixed(2)}"><g transform="translate(${f1(brX)} ${f1(brY+.3)}) scale(1 -.42)">${flatParts(bridgeLayers).map(p=>`<path d="${p.d}"/>`).join("")}</g></g>`;
+  const bridgeGlow=night?`<g transform="translate(${f1(brX)} ${f1(brY)})" opacity="${fog?.45:1}">${bftBridgeGlow({left:brL,right:brR,k:clamp(nightK*1.4,.35,1)})}</g>`:"";
+
+  /* ── the near banks and the flats. Each bank is grass land; at its river edge a mud flat comes out as
+     the tide falls, grows toward the channel and goes under again on the flood, with its oyster rakes
+     and a bright wet edge where the water laps it. At high water there is no flat, and the spartina
+     stands in the river. The channel between the flats, under the float, is the last thing wet. The
+     water's level is the dock's: the float rides it, seven units under the deck at high water and
+     seventeen at dead low (bftDockWater) */
+  const lEdge=W*.33,rEdge=W*.75;
+  const dockX=W*.66,deckY=GY-.5,yTide=deckY+bftDockWater(tide);
+  const ebb=Math.pow(1-tide,.85);
+  const xL=lEdge+ebb*W*.19,xR=rEdge-ebb*W*.085;              /* each flat's toe, toward the channel */
+  const flatTop=(x,x0,x1,dy)=>bankY+.6+clamp((x-x0)/(x1-x0||1),0,1)*dy;
+  const mudY=x=>x<=lEdge?bankY+.6:flatTop(x,lEdge-8,xL,4.6);
+  const mudC=air("#6A5640",.06),mudWet=air("#4E4234",.06),landC=air(SEASON_BLADE[month][2],.08),landFoot=air("#4A5236",.06);
+  const flatL=ebb>.06?`M ${f1(lEdge-8)} ${H+2} L ${f1(lEdge-8)} ${f1(bankY+.6)} Q ${f1((lEdge+xL)/2)} ${f1(bankY+2.2)} ${f1(xL-3)} ${f1(bankY+5.2)} C ${f1(xL+2)} ${f1(bankY+6.4)} ${f1(xL+3)} ${f1(H-6)} ${f1(xL+6)} ${H+2} Z`:"";
+  const flatR=ebb>.06?`M ${f1(rEdge+8)} ${H+2} L ${f1(rEdge+8)} ${f1(bankY+.6)} Q ${f1((rEdge+xR)/2)} ${f1(bankY+2)} ${f1(xR+3)} ${f1(bankY+4.6)} C ${f1(xR-2)} ${f1(bankY+5.8)} ${f1(xR-3)} ${f1(H-6)} ${f1(xR-6)} ${H+2} Z`:"";
+  const wetEdge=(x,dir)=>`<path d="M ${f1(x-dir*3)} ${f1(bankY+5.6)} C ${f1(x+dir*2)} ${f1(bankY+6.8)} ${f1(x+dir*3)} ${f1(H-6)} ${f1(x+dir*6)} ${H+2}" fill="none" stroke="${mix(waterTop,"#FFFFFF",.4)}" stroke-width=".8" opacity="${(.6*(1-gloom)).toFixed(2)}"/>`;
+  const landL=`M -12 ${H+2} L -12 ${bankY-1.4} Q ${f1(W*.1)} ${bankY-3.6} ${f1(W*.2)} ${bankY-1.2} Q ${f1(lEdge-12)} ${bankY+.2} ${f1(lEdge)} ${bankY+1.4} C ${f1(lEdge+4)} ${bankY+5} ${f1(lEdge-2)} ${H-4} ${f1(lEdge-8)} ${H+2} Z`;
+  const landR=`M ${W+12} ${H+2} L ${W+12} ${bankY-1.8} Q ${f1(W*.9)} ${bankY-3.2} ${f1(W*.82)} ${bankY-1.4} Q ${f1(rEdge+10)} ${bankY+.2} ${f1(rEdge)} ${bankY+1.4} C ${f1(rEdge-4)} ${bankY+5} ${f1(rEdge+2)} ${H-4} ${f1(rEdge+8)} ${H+2} Z`;
+  /* oyster rakes: grey shell clumps on the flats, each out only once the flat has reached it */
+  const rakeAt=(x,y,w,seed)=>`<path d="${scallop(x,y,w,1.6,9,seed,{flat:.85,bulge:.75})}" fill="${air("#8C8274",.06)}" stroke="${lineC}" stroke-width=".35" opacity=".95"/>`
+    +`<g fill="${air("#EDE3CF",.06)}" opacity=".7">${[-.6,-.2,.2,.6].map((kk,i)=>`<ellipse cx="${f1(x+kk*w)}" cy="${f1(y-.5-(i%2)*.4)}" rx=".9" ry=".4" transform="rotate(${i%2?16:-12} ${f1(x+kk*w)} ${f1(y-.5)})"/>`).join("")}</g>`;
+  const rakes=[[W*.44,H-8,6,11],[W*.49,H-3,5,17],[W*.37,H-5,4,23]].filter(([x])=>x<xL-4).map(([x,y,w,sd])=>rakeAt(x,y,w,sd)).join("")
+    +[[W*.7,H-4,4,29]].filter(([x])=>x>xR+4).map(([x,y,w,sd])=>rakeAt(x,y,w,sd)).join("");
+  const flats=(flatL?`<path d="${flatL}" fill="url(#lcmud)" stroke="${lineC}" stroke-width=".5"/>${wetEdge(xL,1)}`:"")
+    +(flatR?`<path d="${flatR}" fill="url(#lcmud)" stroke="${lineC}" stroke-width=".5"/>${wetEdge(xR,-1)}`:"")
+    +(texOn&&(flatL||flatR)?`<path d="${flatL} ${flatR}" fill="url(#paper)" opacity="${(.5*paperK).toFixed(2)}"/>`:"")+rakes;
+
+  /* spartina along each bank's grass edge, inked by band the way the marsh's is */
+  const blade=(bx,by,ht,lean)=>`M ${f1(bx-.8)} ${f1(by)} Q ${f1(bx+lean*.3-.4)} ${f1(by-ht*.62)} ${f1(bx+lean)} ${f1(by-ht)} Q ${f1(bx+lean*.38+.6)} ${f1(by-ht*.46)} ${f1(bx+.8)} ${f1(by)} Z `;
+  const bladeC=SEASON_BLADE[month].map(cc=>air(cc,.06)),grassLine=mix(lineC,bladeC[2],.25);
+  const tufts=Array.from({length:BANDS},()=>"");
+  const tuftRun=(x0,x1,by,hMin,hRng)=>{for(let x=x0;x<x1;){const cnt=4+Math.floor(g()*4),xs=x;let t="";
+    for(let k=0;k<cnt&&x<x1;k++){t+=blade(x,by+g()*1.2,hMin+g()*hRng,(3+g()*6)*(g()<.5?-1:1));x+=2+g()*2.4}
+    tufts[bandOf(xs)]+=t;x+=6+g()*14}};
+  tuftRun(-6,W*.22,bankY+.5,5,8);tuftRun(W*.25,lEdge+2,bankY+1.5,8,12);tuftRun(rEdge-2,W*.79,bankY+1.5,8,12);tuftRun(W*.84,W+8,bankY,5,8);
+
+  /* ── the grand live oak, on the left bank, its crown spanning the left half and its moss in curtains.
+     The moss is drawn behind the limbs, so every curtain hangs from under one */
+  const oakX=W*.19,oakY=bankY-.4,oakD=fog?.32:.14;
+  /* The oak is drawn back to front: the far moss, the back leaves, the moss off the limbs and the crown's
+     ends, the wood, the front leaves and the veil over them (bftOakDraw). Only the front curtains sway, the
+     ones off the limbs and the crown's ends in the open; the far curtains and the veil inside the crown
+     hold still, half hidden. The oak is cut into three sheets at the front curtains (see the layers
+     below), so a curtain that moves repaints only the moss and never the leaves and wood over it */
+  const oakL=bftOakDraw({grad:true,side:lightAt(oakX,oakY-50)[0]<0?-1:1,mossInk:inkAir(oakD+.25)});
+  const mossBack=bftOakMossLayers("back",1,"#000").length,mossFront=bftOakMossLayers("front",1,"#000").length;
+  const oakAt=layers=>inkAt(oakX,oakY,1,1,inkRig(layers,palAt(INK.bftOak,oakD,["leaf"]),{s:k,light:lightAt(oakX,oakY-20)}));
+  const oakBack=oakAt(oakL.slice(0,mossBack+1)).replace(/<g class="moss"/g,'<g class="moss-still"');
+  const oakMoss=beats(oakAt(oakL.slice(mossBack+1,mossBack+1+mossFront)),"moss",1.7,5521);
+  const oakFront=oakAt(oakL.slice(mossBack+1+mossFront)).replace(/<g class="moss"/g,'<g class="moss-still"');
+
+  /* ── the palmettos on the right bank, the tallest behind. Each is drawn in three parts: the fronds
+     behind the trunk, the trunk, and the fronds in front. The trunks stand still in the picture; the
+     crowns sway with the wind on the moving layer over it (see the two layers below), with a copy of
+     each trunk's top over the back fronds, cut off well above the dock */
+  const palmWind=bftPalmWind(gust,downwind);
+  const PALMS=[[W*.815,4,72,-.06,.4],[W*.88,5,58,.12,.5],[W*.945,6,46,.2,.55]];
+  const palmRig=([x,seed,h,lean,boots])=>rigBftPalmetto(seed,{h,lean,boots,wind:palmWind});
+  const palmInk=(x,h,layers)=>inkAt(x,bankY-.6,1,1,inkRig(layers,palAt(INK.bftPalm,.1),{s:k,light:lightAt(x,bankY-h),...BFT_PALM_O}));
+  const palmTrunks=PALMS.map(P=>`<g data-prop="palmetto">${palmInk(P[0],P[2],[palmRig(P)[1]])}</g>`).join("");
+  /* the crowns always move with the wind; the fronds in them flutter on their own once it gusts twenty */
+  const palmCrowns0=beats(PALMS.map(P=>{const L=palmRig(P);
+    return palmInk(P[0],P[2],[L[0]])+`<g clip-path="url(#fxPalmTop)">${palmInk(P[0],P[2],[L[1]])}</g>`+palmInk(P[0],P[2],[L[2]])}).join(""),"bft-palm-crown",.55,61);
+  const palmCrowns=gust>=20?beats(beats(palmCrowns0,"bft-palm-frond-a",1.1,62),"bft-palm-frond-b",1.1,63):palmCrowns0;
+
+  /* ── the dock: the walkway from the right edge to the dock house, the float riding the tide below. The
+     boat alongside rocks with the chop, and the SC flag on the ridge and the windsock on the float's guide
+     piling fly downwind as hard as the wind says, so those three are on the moving layer */
+  const dockPal=palAt({...INK.bftBoat,...INK.bftDock},.04);
+  /* the dock house's light is on after sunset, as the bridge's are */
+  const dockLamp=sunAltDeg< -.83;
+  const dock=`<g data-prop="dock">${inkAt(dockX,deckY,1,1,inkRig(propBftDock(tide,{len:W-dockX+8,poles:true,lamp:dockLamp}),dockPal,{s:k,light:lightAt(dockX,deckY-10),...BFT_DOCK_O}))}</g>`
+    +(dockLamp?`<circle cx="${f1(dockX+BFT_DOCK_POLES.lamp.x)}" cy="${f1(deckY+BFT_DOCK_POLES.lamp.y)}" r="${BFT_DOCK_POLES.lamp.glow}" fill="url(#lclamp)" opacity="${fog?.6:.9}"/>`:"");
+  const boatAt=BFT_DOCK_BOAT(tide),rock=clamp(.5+chopK*2.6+(gust-wind)*.04,.5,3.4);
+  const boatRig=rigBftBoat();
+  const boatSvg=inkRig(boatRig,palAt(INK.bftBoat,.04),{s:k,light:lightAt(dockX+boatAt.x,deckY+boatAt.y-8),...BFT_BOAT_O});
+  const bones=c.halloween&&typeof rigBftBones==="function"&&typeof BFT_BONES_AT!=="undefined"
+    ?inkAt(BFT_BONES_AT.x,BFT_BONES_AT.y,BFT_BONES_AT.s??.1,1,inkRig(rigBftBones(),palAt(INK.bftBones,.04),{s:(BFT_BONES_AT.s??.1)*k,line:.6,heavy:.3,shade:.8,lit:.5,light:lightAt(dockX+boatAt.x,deckY+boatAt.y-8)}),` class="decor" data-decor="skeleton"`):"";
+  const boat=`<g data-prop="boat" transform="translate(${f1(dockX+boatAt.x)} ${f1(deckY+boatAt.y)})">${(PRM?boatSvg:boatSvg.replace('<g class="bft-boat-rock">',`<g class="bft-boat-rock" style="--rk:${rock.toFixed(2)}deg;--rd:${clamp(5.6-chopK*2.6,2.8,5.6).toFixed(1)}s;animation-delay:-${(Date.now()/1000%5).toFixed(1)}s">`)).replace(/<\/g><\/g><\/g>$/,bones+"</g></g></g>")}</g>`;
+  const kt=gust*.869,dirX=downwind;
+  const PO=BFT_DOCK_POLES,flagPal=palAt(INK.bftFlags,.04);
+  const fm=bftFlagMotion(wind,gust),sm=bftSockMotion(wind*.869,kt);
+  const flagSvg=inkRig(rigBftFlag(gust,dirX,{staff:12}),flagPal,{s:.1*k,light:lightAt(dockX+PO.flag.x,deckY-20),...BFT_FLAG_INK});
+  const sockSvg=inkRig(rigBftWindsock(kt,dirX,{pole:17.8}),flagPal,{s:.1*k,light:lightAt(dockX+PO.windsock.x,deckY-12),...BFT_FLAG_INK});
+  const flag=`<g data-prop="sc-flag">${inkAt(dockX+PO.flag.x,deckY+PO.flag.y,.1,1,PRM||!fm?flagSvg:flagSvg.replace('<g class="bft-flag"',`<g class="bft-flag" style="--fs:${fm.skewDeg.toFixed(2)}deg;--fd:${fm.dur.toFixed(2)}s"`))}</g>`;
+  const sock=`<g data-prop="windsock">${inkAt(dockX+PO.windsock.x,deckY+PO.windsock.y,.1,1,PRM||!sm?sockSvg:sockSvg.replace('<g class="bft-sock"',`<g class="bft-sock" style="--fa:${sm.sockDeg.toFixed(2)}deg;--fd:${sm.sockDur.toFixed(2)}s"`).replace('<g class="bft-sock-tail"',`<g class="bft-sock-tail" style="--fa:${sm.tailDeg.toFixed(2)}deg;--fd:${sm.tailDur.toFixed(2)}s"`))}</g>`;
+
+  /* ── the Bengals' crab-pot buoy, out in the river off the dock, leaning with the tide's run */
+  const buoyX=W*.535,buoyLean=(tideDir||0)*(2+14*Math.sin(Math.PI*tide));
+  const buoy=`<g data-prop="tiger-buoy">${look("buoy",{lean:buoyLean},buoyX,yFar+9.5,{d:.08,scale:.55})}</g>`;
+  /* ── the cast, at the sizes they really are against the oak, the boat and the dock (about two-thirds of
+     a foot to a scene unit on the near banks), and a little larger the nearer the foot of the frame
+     they are. Nothing stands on anything else: each is placed off the bank, the flat or a limb, and the
+     birds off each other.
+     The white birds are in the oak. Great egrets and white ibis roost there at night and loaf there by
+     day, more of them when the tide is up and the flats are covered, fewer at low water when most are out
+     feeding; in a storm every one of them sits it out in the tree. Which limbs they take is the day's own
+     draw, so a refresh does not move them. */
+  const day=sunAltDeg>-2;
+  const depth=y=>clamp((y-yFar)/(H-yFar),0,1),near=y=>.62+.55*depth(y);
+  const birdDraw=mulberry(Number(locToday().replaceAll("-",""))^0xB1F7);
+  const PERCH=[[0,58],[0,67],[0,76],[5,36],[5,47],[5,58],[5,69],[1,-28],[1,-41],[1,-54],[1,-66]].map(([k2,x])=>{const[cx,cy,cw]=bftOakOn(k2,x);return[cx,cy-cw/2+.2]});
+  const roostN=storm||dark?8:tide>=.62?6:tide>=.3?4:3;
+  const order=PERCH.map((p,i)=>[birdDraw(),i]).sort((a2,b2)=>a2[0]-b2[0]).map(([,i])=>i);
+  const taken=[];
+  for(const i of order){if(taken.length>=roostN)break;const[x]=PERCH[i];if(taken.every(j=>Math.abs(PERCH[j][0]-x)>=9))taken.push(i)}
+  const egretPal={...palAt(INK.egret,oakD),shadeOp:.24*shadeK,litOp:.42*litK},ibisPal=palAt(INK.bftIbis,oakD);
+  const treeBirds=taken.map((i,n)=>{const[x,y]=PERCH[i],X=oakX+x,Y=oakY+y,fl=birdDraw()<.5?1:-1,egret=n%2===0;
+    const asleep=dark||storm;
+    return egret?inkAt(X,Y,.22,fl,inkRig(rigEgret(phase,asleep||n%4===0,false),egretPal,{s:.22*k,flip:fl,line:.42,heavy:.15,shade:.55,lit:.35,light:lightAt(X,Y)}),` data-species="great-egret" data-perch="${f1(x)},${f1(y)}"`)
+      :inkAt(X,Y,.25,fl,inkRig(rigBftIbis("roost",phase,{sleep:asleep}),ibisPal,{s:.25*k,flip:fl,...BFT_IBIS_O,line:.5,heavy:.2,shade:.6,lit:.4,light:lightAt(X,Y)}),` data-species="white-ibis" data-perch="${f1(x)},${f1(y)}"`)}).join("");
+  /* the gator is out on warm days: floating in the channel near the foot of the frame, or hauled out on
+     the left flat at low water, and only its eyes and snout after dark. An eleven-foot gator is about
+     sixteen units here */
+  const gatorOut=temp>=68&&!storm&&rainK<.65;
+  const bask=gatorOut&&day&&tide<.32;
+  const gatorX=bask?lEdge+20:W*.49,gatorY=bask?mudY(lEdge+20)+.1:H-12;
+  const gator=gatorOut?`<g data-species="american-alligator">${look(bask?"gator-bask":dark?"gator-night":"gator-float",bask?{gape:temp>=85&&cloud<20}:{},gatorX,gatorY,{scale:(bask?.3:.5)*near(gatorY)/near(H-12)})}</g>`:"";
+  const fair=!wet&&!storm&&!fog;
+  const soar=fair&&sunAltDeg>=15&&cloud<85&&gust<32;
+  const perch=fair&&!soar&&day;
+  const soarer=soar?`<g class="hawk-circle" style="--cx:${(W*.07).toFixed(0)}px;--cy:-8px;--cy2:-14px;${phase(160)}"><g data-species="bald-eagle">${look("eagle-soar",{},W*.74,GY-98,{scale:.42})}</g></g>`:"";
+  const perched=perch?`<g data-species="bald-eagle">${look("eagle-perch",{},W*.815-.1,bankY-.6-72-9.5,{scale:.26,flip:-1})}</g>`:"";
+  /* the fiddler comes out of its burrow in the rain, onto the left flat when the water is off it: a crab
+     is inches across, so even drawn a little large it is a fleck with a claw */
+  const crabX=lEdge+46,crabY=crabX<xL-6?mudY(crabX)+.6:bankY+1.6;
+  const crab=(wet||storm)&&temp>=48&&![65,82].includes(+code)?c.crabAt(crabX,crabY,.16,1):"";
+  /* the options Josh is choosing between */
+  const dolphin=show.dolphin?`<g data-species="bottlenose-dolphin">${look("dolphin",{},W*.475,yFar+8,{d:.2,scale:.3})}</g>`:"";
+  const horse=show.horse?`<g data-species="marsh-tacky">${look(show.horse==="stand"?"horse-stand":"horse-graze",{},W*.3,bankY+.6,{flip:-1,scale:.42})}</g>`:"";
+  /* The family flies, and their airframe is the Marine F/A-18A Hornet: one crosses high over the river
+     now and then on a clear day, in about twenty seconds, which is how slowly a jet at altitude seems to
+     go, and is gone the rest of a five-minute cycle, off the wall clock so a repaint does not restart it.
+     Not at night, in rain, fog or thunder, under heavy cloud, or under reduced motion */
+  const jetUp=!PRM&&sunAltDeg>5&&!wet&&!storm&&!fog&&cloud<70&&(c.thunder|0)<1;
+  const jet=jetUp?`<g class="bft-flyover" style="--j1:${f1(W+60)}px;${phase(300)}"><g data-species="fa-18a-hornet">${look("jet",{},-30,GY-126,{flip:-1})}</g></g>`:"";
+  const shrimp=show.shrimp?`<g data-prop="shrimp-boat">${look(show.shrimp==="out"?"shrimpboat-out":"shrimpboat-up",{},W*.74,yFar+2.5,{scale:.6})}</g>`:"";
+
+  /* ── Halloween at Beaufort, on the same calendar as the other two places (October, on the place's own
+     date, gone the morning of November 1). The moon is the scene's own, so it is already Halloween's. Over
+     the river: the bats from sunset, keeping over the oak, the palmettos, the bridge and the steeples, and
+     the witch crossing the moon. On the dock: a pumpkin at the dock house's river end, carved and lit from
+     the 24th, and a little one at its landward post; the black cat on the walkway; the red balloon tied to
+     the rail; a skeleton at the boat's helm waiting to go fishing; and on Halloween night the
+     trick-or-treater on the walkway. Eyes in the dark in the spartina */
+  const hw=c.halloween;
+  const tops=hw&&sunAltDeg< -.83?[[oakX-92,oakX+100,oakY-96],...PALMS.map(([x,,h])=>[x-22,x+22,bankY-h-22]),[brX-30,brX+30,brY-24],
+    ...bftSky.steeples.map(st=>[st.x-5,st.x+5,st.y-36])]:[];
+  const witch=hw?c.witchPlan(17,GY-70,(x,y)=>y<GY-34&&tops.every(([a2,b2,t])=>x+c.moonR<a2||x-c.moonR>b2||y+c.moonR<t),tops):null;
+  const bats=hw&&c.batN?c.batColony(8,(x0,x1)=>Math.min(yFar-24,...tops.filter(([a2,b2])=>x1>a2&&x0<b2).map(t=>t[2])),c.batKeep(witch)):"";
+  const halloDock=hw?(()=>{
+    const P=[];
+    P.push(c.pumpkinAt(dockX+3.6,deckY,1,{w:8.4,h:6.3,carved:c.carved,seed:3,sheltered:true}));
+    P.push(c.pumpkinAt(dockX+28.6,deckY,1,{w:5.6,h:4.2,seed:8}));
+    if(!wet&&!storm&&!(temp<48&&!dark))P.push(c.catAt(dockX+40,deckY+.25).svg);
+    if(c.trickOrTreat)P.push(c.kidAt(dockX+52,deckY).svg);
+    if(typeof rigBftBalloon==="function"&&!storm){const bx=dockX+(typeof BFT_BALLOON_AT!=="undefined"?BFT_BALLOON_AT.x:31),by=deckY+(typeof BFT_BALLOON_AT!=="undefined"?BFT_BALLOON_AT.y:-5.6);
+      P.push(`<g class="decor" data-decor="red-balloon">${look("balloon",{mph:gust,dir:dirX},bx,by)}</g>`)}
+    return P.join("")})():"";
+  const eyes=c.nightEyes?c.darkEyes([[W*.27,bankY-5,"gold",2.6,27,3],[W*.79,bankY-4.5,"green",2.4,33,17]]):"";
+
+  /* ── light on the water, the reflections, the weather on it */
+  const glint=specular(glintX,yFar+3,tideDir<0?2.4:tideDir>0?-1.6:0);
+  let sparkle="";
+  for(let i=0;i<4;i++)sparkle+=`<rect x="${f1(20+g()*(W-40))}" y="${f1(yFar+4+g()*(H-yFar-10))}" width="${f1(6+g()*14)}" height="1" rx=".5" fill="#FFFFFF" opacity="${(.07+g()*.08).toFixed(2)}"/>`;
+  let waterFx="";
+  if(wet&&!snowing&&!PRM){const wr=mulberry(7139),rings=4+Math.round(rainK*6);
+    for(let i=0;i<rings;i++)waterFx+=`<ellipse class="water-ring" cx="${f1(18+wr()*(W-36))}" cy="${f1(yFar+5+wr()*(H-yFar-12))}" rx="${f1(3.4+wr()*5)}" ry="${f1(1+wr()*.9)}" fill="none" stroke="${dark?'#B7D6E1':'#183C4B'}" stroke-width=".7" style="animation-delay:-${(wr()*3.8).toFixed(1)}s"/>`}
+  {const ww=mulberry(4421),count=3+Math.round(chopK*8);
+    for(let i=0;i<count;i++){const x=16+ww()*(W-64),y=yFar+4+ww()*(H-yFar-12),w=(8+ww()*18)*(.55+chopK*.9);
+      const o1=(.05+chopK*.17).toFixed(2),o0=(.02+chopK*.06).toFixed(2);
+      const st=PRM?"":` style="--wx:${(.8+chopK*2.6).toFixed(1)}px;--o0:${o0};--o1:${o1};--wd:${(wDur*(.62+ww()*.5)).toFixed(1)}s;animation-delay:-${(ww()*11).toFixed(1)}s"`;
+      waterFx+=`<path class="wmove" d="M ${f1(x)} ${f1(y)} h ${f1(w)}" stroke="${dark?'#C9E2EB':'#153845'}" stroke-width=".7" stroke-linecap="round" opacity="${o1}"${st}/>`}}
+  let curls="";
+  {const cw=mulberry(78),wc=dark?"#9FB8E0":"#FFF1DC";
+    for(let i=0;i<8;i++){const x=10+cw()*(W-20),y=yFar+6+cw()*(H-yFar-14),w=5+cw()*9;
+      curls+=`<path d="M ${f1(x)} ${f1(y)} q ${f1(w/2)} -1.5 ${f1(w)} 0" fill="none" stroke="${wc}" stroke-width=".8" stroke-linecap="round" opacity="${(.5*(1-gloom)).toFixed(2)}"/>`}}
+  /* morning mist and fog lie on the river in drifting veils */
+  const morningMist=(localHour<11&&sunAltDeg>-8&&sunAltDeg<14&&humid>=82)||fog,mistK=fog?1:.5;
+  const mistVeil=(cx,cy,rx,ry,o,m0,m1,dur,dl)=>`<ellipse class="mist-band" cx="${f1(cx)}" cy="${f1(cy)}" rx="${f1(rx)}" ry="${ry}" opacity="${(o*mistK).toFixed(3)}" style="--m0:${m0}px;--m1:${m1}px;--mo0:${(o*mistK*.5).toFixed(3)};--mo1:${(o*mistK*1.55).toFixed(3)};animation-duration:${dur}s;animation-delay:-${dl}s"/>`;
+  const mist=morningMist&&!storm?`<g fill="#F5F3E8">${mistVeil(W*.34,yFar-4,W*.32,7,.16,-9,11,15,0)}${mistVeil(W*.66,yFar+6,W*.36,5,.14,8,-9,21,7)}${mistVeil(W*.5,bankY-6,W*.46,4.5,.11,-5,7,27,13)}</g>`:"";
+
+  /* storybook clouds, as on the marsh: only when there are clouds to draw */
+  let sceneClouds="";
+  if(cloud>=10&&cloud<=85&&!wet&&!storm&&!fog){const rush=clamp(1+wind/11,1,4.2),rev=windFrom>180?"alternate-reverse":"alternate";
+    for(const[fx,y,s,sd]of[[.42,GY-82,.92,4],[.74,GY-100,.7,11]].slice(0,cloud>40?2:1))
+      sceneClouds+=`<g class="drift" style="animation:drift ${(110/rush).toFixed(0)}s ease-in-out infinite ${rev};${phase(Math.round(110/rush)*2)}">${inkAt(W*fx,y,s,sd%2?-1:1,
+        inkUnit(propCloud(sd),{body:"url(#cloudInk)",ink:mix(lineC,skyS[1],.45),shade:mix(shadeC,skyS[1],.4),lit:litC,litOp:.5*litK,shadeOp:.28},{s,light:[0,-1],line:.9,heavy:.4}))}</g>`}
+  const lowSun=sunXY&&sunAltDeg<14&&veil<.7;
+  const bloom=lowSun?`<ellipse cx="${f1(sunXY[0])}" cy="${f1(sunXY[1]-4)}" rx="${(W*.46).toFixed(0)}" ry="72" fill="url(#bloom)" opacity="${(.5*(1-veil)).toFixed(2)}"/>`:"";
+  let flies="";
+  if(showFlies){const fr=mulberry(80127);for(let i=0;i<flyCount;i++){const cx=10+fr()*(W-20),cy=bankY-6-fr()*34;
+    flies+=`<g class="wildlife ff" style="--fy:${(-2-fr()*4).toFixed(1)}px;animation-duration:${(3.5+fr()*3.5).toFixed(1)}s;animation-delay:-${(fr()*6).toFixed(1)}s"><circle cx="${f1(cx)}" cy="${f1(cy)}" r="5" fill="url(#flyglow)"/><circle cx="${f1(cx)}" cy="${f1(cy)}" r="1.2" fill="#F8F7B0"/></g>`}}
+  const tex=texOn?"url(#paper)":"";
+
+  /* Two layers. WebKit, which draws every iPhone browser, repaints an SVG as one sheet, and repaints all
+     of it under anything that moves; this picture's oak, moss and bridge are too heavy to paint sixty
+     times a second (it ran at 33 frames on a WKWebView, where the marsh runs at 60). So the still
+     picture and the moss, which is woven through the oak's limbs and leaves, are #sceneSvg, and
+     everything else that moves (the clouds, the water's ripples and rings, the mist, the palmetto
+     crowns, the boat, the flag and the windsock, the grass, the birds in the sky, the bats and the
+     witch, the lit pumpkins, the fireflies) is #sceneFx, a layer of its own laid over it. Each only
+     repaints itself. Nothing on the moving layer is behind anything on the still one */
+  const svg=document.getElementById("sceneSvg"),skyL=document.getElementById("sceneSky"),mossL=document.getElementById("sceneMoss"),nearL=document.getElementById("sceneNear"),fx=document.getElementById("sceneFx");
+  for(const l of [svg,skyL,mossL,nearL,fx])l.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  svg.innerHTML=`
+    <defs>
+      <radialGradient id="sunglow"><stop offset="0" stop-color="#FFD86E" stop-opacity=".55"/><stop offset=".42" stop-color="#FFCB55" stop-opacity=".22"/><stop offset="1" stop-color="#FFC94F" stop-opacity="0"/></radialGradient>
+      <radialGradient id="moonglow"><stop offset="0" stop-color="#EAF2FF" stop-opacity=".42"/><stop offset="1" stop-color="#EAF2FF" stop-opacity="0"/></radialGradient>
+      <linearGradient id="lcwaterband" gradientUnits="userSpaceOnUse" x1="0" y1="${yFar}" x2="0" y2="${H}">
+        <stop offset="0" stop-color="${waterTop}" stop-opacity=".94"/><stop offset="1" stop-color="${waterBot}" stop-opacity=".98"/></linearGradient>
+      <linearGradient id="fogveil" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity="0"/><stop offset=".55" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity=".34"/><stop offset="1" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity=".06"/></linearGradient>
+      <linearGradient id="lcland" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${landC}"/><stop offset="1" stop-color="${landFoot}"/></linearGradient>
+      <linearGradient id="lcmud" gradientUnits="userSpaceOnUse" x1="0" y1="${bankY}" x2="0" y2="${H}"><stop offset="0" stop-color="${mudC}"/><stop offset="1" stop-color="${mudWet}"/></linearGradient>
+      <linearGradient id="lcOakLeaf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${air("#94B25C",oakD)}"/><stop offset="1" stop-color="${air("#4F6E40",oakD)}"/></linearGradient>
+      <radialGradient id="bloom"><stop offset="0" stop-color="${litC}" stop-opacity=".55"/><stop offset=".5" stop-color="${litC}" stop-opacity=".16"/><stop offset="1" stop-color="${litC}" stop-opacity="0"/></radialGradient>
+      <radialGradient id="lclamp"><stop offset="0" stop-color="#FFD27A" stop-opacity=".6"/><stop offset="1" stop-color="#FFD27A" stop-opacity="0"/></radialGradient>
+      <clipPath id="lcwater"><rect x="0" y="${yFar+.5}" width="${W}" height="${H-yFar}"/></clipPath>
+      ${tex?`<pattern id="paper" width="160" height="160" patternUnits="userSpaceOnUse"><image href="${paperTex()}" width="160" height="160"/></pattern>`:""}
+    </defs>
+    <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
+    ${goldArc}
+    ${sunBody}${moonBody}
+    <rect x="0" y="${yFar}" width="${W}" height="${H-yFar}" fill="url(#lcwaterband)"/>
+    ${tex?`<rect x="0" y="${yFar}" width="${W}" height="${H-yFar}" fill="${tex}" opacity="${(.55*paperK).toFixed(2)}"/>`:""}
+    ${farShore}
+    ${shrimp}
+    ${bridgeRefl}${bridgeLit}${bridgeGlow}
+    ${fog?`<rect x="0" y="${f1(yFar-40)}" width="${W}" height="48" fill="url(#fogveil)"/>`:""}
+    ${sparkle}${curls}
+    ${dolphin}
+    ${palmTrunks}
+    ${flats}
+    <path d="${landL}" fill="url(#lcland)" stroke="${grassLine}" stroke-width=".9" stroke-linejoin="round"/>
+    <path d="${landR}" fill="url(#lcland)" stroke="${grassLine}" stroke-width=".9" stroke-linejoin="round"/>
+    ${tex?`<path d="${landL}" fill="${tex}" opacity="${(.6*paperK).toFixed(2)}"/><path d="${landR}" fill="${tex}" opacity="${(.6*paperK).toFixed(2)}"/>`:""}
+    <g data-prop="live-oak">${oakBack}</g>`;
+  /* what moves in the sky goes behind the oak and the palmettos, which is where it is */
+  skyL.innerHTML=`
+    <defs>
+      <linearGradient id="cloudInk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${tone(mix("#FFFFFF",skyS[1],.25))}"/><stop offset=".6" stop-color="${tone(mix("#FFF4E6",skyS[2],.35))}"/><stop offset="1" stop-color="${mix(tone("#FFF4E6"),litC,.5*litK)}"/></linearGradient>
+    </defs>
+    ${sceneClouds}
+    ${bats}
+    ${c.witchFly(witch)}
+    ${soarer}${jet}`;
+  mossL.innerHTML=`<g data-prop="moss">${oakMoss}</g>`;
+  nearL.innerHTML=`
+    <g data-prop="live-oak">${oakFront}${treeBirds}</g>
+    ${buoy}
+    ${dock}
+    ${horse}
+    ${gator}
+    ${bloom}
+    ${sunTimes}`;
+  fx.innerHTML=`
+    <defs>
+      <linearGradient id="blade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${bladeC[0]}"/><stop offset=".45" stop-color="${bladeC[1]}"/><stop offset="1" stop-color="${bladeC[2]}"/></linearGradient>
+      <radialGradient id="flyglow"><stop offset="0" stop-color="#F8F7B0" stop-opacity=".7"/><stop offset=".45" stop-color="#F8F7B0" stop-opacity=".18"/><stop offset="1" stop-color="#F8F7B0" stop-opacity="0"/></radialGradient>
+      <radialGradient id="cshade"><stop offset="0" stop-color="#0A1E26" stop-opacity=".55"/><stop offset="1" stop-color="#0A1E26" stop-opacity="0"/></radialGradient>
+      <clipPath id="fxPalmTop"><rect x="0" y="0" width="${W}" height="${f1(deckY-16)}"/></clipPath>
+      ${c.candles?c.candleDefs:""}${c.hallowDefs||""}
+    </defs>
+    ${glint}${waterFx}
+    ${mist}
+    ${palmCrowns}
+    ${boat}${flag}${sock}
+    ${halloDock}
+    ${eyes}
+    ${crab}
+    ${tufts.map((d,i)=>d?`<g${bandAt(i)}><path d="${d}" fill="${grassLine}" stroke="${grassLine}" stroke-width=".9" stroke-linejoin="round"/><path d="${d}" fill="url(#blade)"/></g>`:"").join("")}
+    ${cloudShadows(bankY-30,36)}
+    ${perched}
+    ${flies}`;
 }
 
 /* ── smooth path through points ─────────────────────── */
@@ -7066,7 +7469,13 @@ const NORMALS={
   sp:{place:"Beckley",name:"Shady Spring",hi:[40.5,44.2,52.5,64.4,71.5,77.8,80.7,79.9,74.4,64.3,53.2,43.9],
     lo:[24.0,26.6,33.1,42.6,51.1,58.7,62.4,61.1,55.0,44.2,34.7,28.0],
     rain:[3.13,3.12,4.03,3.58,4.68,4.30,5.00,3.68,3.20,2.73,2.80,3.29],snow:[15.5,15.2,8.9,1.5,0,0,0,0,0,1.4,2.3,11.1],
-    dhi:[409,408,407,406,405,405,404,403,403,402,402,401,401,401,401,401,401,402,402,403,403,404,405,405,406,407,409,410,411,412,414,415,417,418,420,422,424,426,427,429,431,433,436,438,440,442,444,446,449,451,453,456,458,460,463,465,468,470,473,474,476,478,481,484,487,490,493,496,499,502,505,508,512,515,519,522,526,530,533,537,541,545,549,553,558,562,566,570,575,579,583,588,592,597,601,605,610,614,618,622,626,630,634,638,642,646,649,653,656,659,663,666,669,672,674,677,679,682,684,686,688,690,692,694,696,697,699,701,702,704,705,707,708,710,711,713,714,716,717,719,720,722,724,726,728,730,732,734,736,738,740,742,745,747,749,752,754,757,759,762,764,767,769,772,774,777,779,781,783,786,788,790,792,793,795,797,798,800,801,802,803,804,805,806,807,807,808,808,808,809,809,809,809,809,809,809,808,808,808,808,807,807,807,807,806,806,806,805,805,805,805,805,804,804,804,804,804,804,804,803,803,803,803,803,803,802,802,802,801,801,800,800,799,798,798,797,796,794,793,792,791,789,787,786,784,782,780,778,775,773,770,768,765,762,760,757,754,751,748,744,741,738,735,731,728,725,721,718,714,711,708,704,701,697,694,690,687,684,680,677,674,670,667,664,660,657,654,650,647,643,640,637,633,630,626,623,619,616,612,609,605,602,598,594,591,587,583,579,576,572,568,564,560,556,552,549,545,541,537,533,529,526,522,518,514,511,507,503,500,496,493,490,486,483,480,477,473,470,467,464,462,459,456,453,451,448,446,443,441,439,437,434,432,430,428,426,424,423,421,419,418,416,415,413,412,411],dlo:[251,250,248,247,246,245,243,242,241,240,239,238,238,237,237,236,236,236,236,235,236,236,236,236,237,238,238,239,240,241,242,243,244,246,247,248,250,252,253,255,257,258,260,262,264,266,268,270,272,274,276,278,280,282,284,286,288,290,293,294,295,297,299,301,303,306,308,310,312,315,317,319,322,324,327,329,332,334,337,340,343,345,348,351,354,357,361,364,367,370,373,377,380,384,387,390,394,397,401,404,408,411,415,418,422,425,429,432,435,439,442,445,448,452,455,458,461,463,466,469,472,475,477,480,482,485,487,490,492,495,497,499,502,504,506,509,511,513,515,518,520,523,525,527,530,532,535,537,540,542,545,548,550,553,556,558,561,564,567,569,572,575,577,580,583,585,588,590,593,595,597,599,602,604,606,608,609,611,613,614,616,617,618,619,621,621,622,623,624,624,625,625,626,626,626,626,626,626,626,626,626,626,625,625,625,625,624,624,624,623,623,622,622,621,621,621,620,620,619,619,618,618,617,616,616,615,614,614,613,612,611,610,609,608,607,606,605,603,602,600,599,597,595,593,591,589,587,585,582,580,577,575,572,569,566,563,560,557,554,551,547,544,541,537,534,530,526,523,519,515,512,508,504,500,497,493,489,485,482,478,474,470,467,463,459,456,452,448,445,441,438,434,431,427,424,420,417,413,410,407,403,400,397,394,391,387,384,381,378,375,372,369,366,363,361,358,355,352,350,347,344,342,339,337,334,332,329,327,325,322,320,318,316,314,311,309,307,305,303,301,299,297,295,293,291,289,287,285,283,281,279,278,276,274,272,270,268,267,265,263,261,260,258,256,255,253]}};
+    dhi:[409,408,407,406,405,405,404,403,403,402,402,401,401,401,401,401,401,402,402,403,403,404,405,405,406,407,409,410,411,412,414,415,417,418,420,422,424,426,427,429,431,433,436,438,440,442,444,446,449,451,453,456,458,460,463,465,468,470,473,474,476,478,481,484,487,490,493,496,499,502,505,508,512,515,519,522,526,530,533,537,541,545,549,553,558,562,566,570,575,579,583,588,592,597,601,605,610,614,618,622,626,630,634,638,642,646,649,653,656,659,663,666,669,672,674,677,679,682,684,686,688,690,692,694,696,697,699,701,702,704,705,707,708,710,711,713,714,716,717,719,720,722,724,726,728,730,732,734,736,738,740,742,745,747,749,752,754,757,759,762,764,767,769,772,774,777,779,781,783,786,788,790,792,793,795,797,798,800,801,802,803,804,805,806,807,807,808,808,808,809,809,809,809,809,809,809,808,808,808,808,807,807,807,807,806,806,806,805,805,805,805,805,804,804,804,804,804,804,804,803,803,803,803,803,803,802,802,802,801,801,800,800,799,798,798,797,796,794,793,792,791,789,787,786,784,782,780,778,775,773,770,768,765,762,760,757,754,751,748,744,741,738,735,731,728,725,721,718,714,711,708,704,701,697,694,690,687,684,680,677,674,670,667,664,660,657,654,650,647,643,640,637,633,630,626,623,619,616,612,609,605,602,598,594,591,587,583,579,576,572,568,564,560,556,552,549,545,541,537,533,529,526,522,518,514,511,507,503,500,496,493,490,486,483,480,477,473,470,467,464,462,459,456,453,451,448,446,443,441,439,437,434,432,430,428,426,424,423,421,419,418,416,415,413,412,411],dlo:[251,250,248,247,246,245,243,242,241,240,239,238,238,237,237,236,236,236,236,235,236,236,236,236,237,238,238,239,240,241,242,243,244,246,247,248,250,252,253,255,257,258,260,262,264,266,268,270,272,274,276,278,280,282,284,286,288,290,293,294,295,297,299,301,303,306,308,310,312,315,317,319,322,324,327,329,332,334,337,340,343,345,348,351,354,357,361,364,367,370,373,377,380,384,387,390,394,397,401,404,408,411,415,418,422,425,429,432,435,439,442,445,448,452,455,458,461,463,466,469,472,475,477,480,482,485,487,490,492,495,497,499,502,504,506,509,511,513,515,518,520,523,525,527,530,532,535,537,540,542,545,548,550,553,556,558,561,564,567,569,572,575,577,580,583,585,588,590,593,595,597,599,602,604,606,608,609,611,613,614,616,617,618,619,621,621,622,623,624,624,625,625,626,626,626,626,626,626,626,626,626,626,625,625,625,625,624,624,624,623,623,622,622,621,621,621,620,620,619,619,618,618,617,616,616,615,614,614,613,612,611,610,609,608,607,606,605,603,602,600,599,597,595,593,591,589,587,585,582,580,577,575,572,569,566,563,560,557,554,551,547,544,541,537,534,530,526,523,519,515,512,508,504,500,497,493,489,485,482,478,474,470,467,463,459,456,452,448,445,441,438,434,431,427,424,420,417,413,410,407,403,400,397,394,391,387,384,381,378,375,372,369,366,363,361,358,355,352,350,347,344,342,339,337,334,332,329,327,325,322,320,318,316,314,311,309,307,305,303,301,299,297,295,293,291,289,287,285,283,281,279,278,276,274,272,270,268,267,265,263,261,260,258,256,255,253]},
+  /* Beaufort: Marine Corps Air Station Beaufort (USW00093831), the nearest station with the normals
+     the year draws, 9.6 km west of the house on Lady's Island. Snow is nil there, so no snow strip */
+  bft:{place:"Beaufort MCAS",name:"Beaufort",hi:[60.3,63.7,69.9,77.0,84.0,88.9,91.8,90.3,85.7,78.1,69.3,62.7],
+    lo:[40.1,42.8,48.7,56.0,64.3,71.3,74.5,74.1,69.5,59.0,48.4,42.9],
+    rain:[2.90,2.91,3.11,3.06,2.50,4.99,5.57,6.50,4.03,3.77,2.51,3.17],snow:[0,0,0,0,0,0,0,0,0,0,0,0],
+    dhi:[607,606,605,604,604,603,603,602,601,601,601,600,600,600,600,600,600,600,600,601,601,602,602,603,604,604,605,606,608,609,610,611,613,614,616,617,619,621,623,625,627,629,631,633,635,637,639,642,644,646,648,650,653,655,657,659,662,664,666,667,668,670,673,675,677,679,681,683,685,687,689,691,693,695,697,699,701,703,705,707,709,711,713,715,717,719,721,724,726,728,730,733,735,737,740,742,745,747,750,752,755,758,760,763,766,768,771,774,777,779,782,785,787,790,793,795,798,801,803,806,808,811,813,815,818,820,822,824,826,828,830,832,834,836,838,840,841,843,845,846,848,850,851,853,854,856,857,859,860,862,863,865,866,868,870,871,873,874,876,877,879,881,882,884,885,887,889,890,892,893,895,896,898,899,901,902,904,905,906,908,909,910,911,912,913,914,915,916,917,917,918,918,919,919,920,920,920,920,920,921,921,920,920,920,920,920,919,919,919,918,918,917,916,916,915,915,914,913,913,912,911,910,909,909,908,907,906,905,904,903,902,901,900,899,898,897,895,894,893,892,890,889,888,886,885,883,882,880,878,877,875,873,871,869,868,866,864,862,859,857,855,853,851,849,846,844,842,839,837,834,832,829,827,824,822,819,817,814,811,809,806,804,801,798,795,793,790,787,784,782,779,776,773,770,767,765,762,759,756,753,750,747,744,741,738,735,732,729,726,723,720,717,714,711,708,705,702,699,696,693,691,688,685,682,679,677,674,672,669,666,664,662,659,657,655,652,650,648,646,644,642,640,638,637,635,633,632,630,628,627,625,624,622,621,620,619,617,616,615,614,613,612,611,610,609,608],dlo:[409,408,407,406,405,404,403,402,401,401,400,399,399,398,398,398,398,398,397,398,398,398,398,399,399,400,400,401,402,403,404,405,407,408,409,411,412,414,415,417,419,420,422,424,426,428,430,432,434,436,438,440,442,444,446,448,450,452,454,455,456,458,460,462,464,466,468,470,472,474,476,478,481,483,485,487,489,491,493,495,497,499,501,503,506,508,510,512,515,517,519,522,524,527,529,532,534,537,539,542,545,547,550,553,555,558,561,564,566,569,572,575,578,581,583,586,589,592,595,597,600,603,606,609,611,614,617,620,622,625,628,630,633,636,638,641,643,646,649,651,654,656,659,661,664,666,669,671,674,676,679,681,684,686,688,691,693,695,697,700,702,704,706,708,710,712,714,716,718,719,721,723,724,726,727,729,730,732,733,734,735,736,737,738,739,740,741,742,742,743,744,744,745,745,745,746,746,746,747,747,747,747,747,748,748,748,748,748,748,748,748,748,747,747,747,747,747,747,746,746,746,746,745,745,745,744,744,743,743,742,741,741,740,739,739,738,737,736,735,734,733,731,730,729,727,726,724,722,721,719,717,715,713,711,709,706,704,702,699,697,694,691,688,685,682,679,676,673,670,667,663,660,656,653,649,645,642,638,634,630,626,622,618,615,610,606,602,598,594,590,586,582,578,574,570,566,562,558,554,550,546,542,538,534,531,527,523,520,516,513,509,506,503,500,497,494,491,488,485,482,480,477,475,473,470,468,466,464,462,460,458,456,454,453,451,449,448,446,445,443,442,441,439,438,437,435,434,433,431,430,429,427,426,425,424,422,421,420,419,417,416,415,414,412,411,410]}};
 const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const DOY=[0,31,60,91,121,152,182,213,244,274,305,335],doyOf=s=>DOY[+s.slice(5,7)-1]+ +s.slice(8,10)-1;
 /* This week against normal: the forecast's own days, each against NOAA's normal for that day, on the
@@ -8792,6 +9201,7 @@ function render(d,live,savedAt=0){
   renderSkyFx(altDeg,c.cloud_cover,c.wind_direction_10m,wet,storm,c.wind_speed_10m,c.weather_code);
   /* The picture lands on its own frame. The header follows in that same frame, then the
      hourly chart, its pen, the week and its pen, then everything below. */
+  SCENE_TIDE=LOC.scene==="lowcountry"&&LOC.tide?tideLevel(d.tides,now.getTime()):null;
   renderScene(sunrise,sunset,now,c,dark,LOC.tide?tideTrend(d.tides):0,allowedFishWins,scene=>{
   if(gen!==RENDER_GEN)return;
   /* the scene settles in the first time the app paints, and never on the refresh, resize
@@ -9428,7 +9838,10 @@ async function refresh(){
      moment it is in (beachIn), for every paint, the first one too: a first open whose advisories were
      slow painted without the beach's tropical storm warning it already had. The farm's WSSI is asked for
      once the point's alerts say a Winter Storm Warning stands, and kept the same way (wssiIn) */
-  const alertsP=fetchJSON(`https://api.weather.gov/alerts/active?point=${L.lat},${L.lon}`,6000).then(aj=>(aj.features||[]).map(alertRow).filter(alertLive)).catch(()=>null);
+  /* a place can keep the products that are not its own off its strip (Beaufort's county zone carries the
+     beach's surf and rip current products to a house on Lady's Island) */
+  const quiet=L.quietAlerts||[];
+  const alertsP=fetchJSON(`https://api.weather.gov/alerts/active?point=${L.lat},${L.lon}`,6000).then(aj=>(aj.features||[]).map(alertRow).filter(a=>alertLive(a)&&!quiet.includes(a.event))).catch(()=>null);
   /* when the house's list came in, before the lane asks the index on it (the reading's `at`) */
   let pointAt=null;alertsP.then(a=>{if(a)pointAt=Date.now()});
   const lane=stormLane(L,alertsP);let landed=null,beachIn,beachAt=null,wssiIn;
@@ -9539,6 +9952,9 @@ function paintAddr(){
 }
 function paintLocationShell(){
   document.getElementById("tideSection").style.display=LOC.tide?"":"none";
+  /* the water is named for where its readings come from: Wrightsville Beach at Porters Neck, the
+     Beaufort River at Beaufort */
+  document.getElementById("waterTitle").textContent="Water · "+(LOC.water||"Wrightsville Beach");
   /* this place's shape before any reading: the same sections in the same order, each with its
      title and no picture yet, and no sentence card until there is something to say */
   document.getElementById("moonSection").hidden=!LOC.fish;
@@ -9657,7 +10073,7 @@ function paintLoadingState(){
   for(const id of ["feels","hiNow","loNow"])document.getElementById(id).textContent="—";
   document.getElementById("feelsRow").hidden=false;
   document.getElementById("verdict").textContent="Reading the sky…";
-  for(const id of ["chips","skyFx","rainFx","sceneSvg","hourlySvg","hrLabels","weekRows","weekSvg","moonTxt","uvSvg","moonSvg","yearSvg"])
+  for(const id of ["chips","skyFx","rainFx","sceneSvg","sceneSky","sceneMoss","sceneNear","sceneFx","hourlySvg","hrLabels","weekRows","weekSvg","moonTxt","uvSvg","moonSvg","yearSvg"])
     document.getElementById(id).innerHTML="";
   document.getElementById("weekRows").style.minHeight="";
   SCENE_KEY="";SCENE_META=null;RAIN_KEY="";
