@@ -10,8 +10,10 @@ A single-file, build-free PWA. `index.html` is the whole application,
 
 Production is <https://joshsmith-lab.github.io/mossbridge-wx/>, served from
 `main`, and it is shared with family. The `LOCS` table holds
-`mb` (Moss Bridge Ct, Porters Neck NC, coastal, gets the water + tides + the beach zone's tropical warnings)
-and `sp` (Bob Plumley Rd, Shady Spring WV, inland), the permanent family places.
+`mb` (Moss Bridge Ct, Porters Neck NC, coastal, gets the water + tides + the beach zone's tropical warnings),
+`sp` (Bob Plumley Rd, Shady Spring WV, inland) and `bft` (Coosaw Club Dr, Lady's Island, Beaufort SC,
+the third place since October 15 2026, Jen's family, coastal, with its own "lowcountry" scene; see
+Beaufort below), the permanent family places, in that order in `LOC_ORDER`.
 `den` was the travel entry for the Denver trip. The trip is over, so it is
 **parked**: still in `LOCS`, with its Front Range scene and the "What to wear" card,
 as the template for the next trip, but out of `LOC_ORDER`, so nobody can tap to it.
@@ -820,6 +822,95 @@ Each is a transform or nothing, and each holds perfectly still under reduced mot
   is a decoration (`data-decor`, `blood-moon` or `harvest-moon`), and its disc (`data-disc`, with
   `moonR`) is what the bats keep off and the witch crosses.
 
+## Beaufort
+
+Josh added a third place on October 15 2026, and shipped it the same night: Beaufort, South Carolina,
+for Jen's family (Kate's sister) on Coosaw Club Dr in Coosaw Point, on Lady's Island across the river
+from downtown. He worked the scene out with Jen ("live oaks... larger, grander Spanish moss, more
+prevalent. Palmetto... moon type look... the white birds... the water, the swing bridge... an alligator
+probably in the body of water that's out sometimes... eagles... a crab that comes out when it's
+raining... a boiled peanut somewhere... a non-corny aviation nod... the Bengals"), saw it drawn, sent
+it back once, and then said "make it live... give it the halloween treatment too".
+
+**Where the readings come from.** `LOCS.bft` is the middle of the street (32.4938,-80.6151). The tide is
+NOAA's Beaufort station on the Beaufort River (8667999), by the swing bridge: a harmonic station with
+predictions only (high and low, and every six minutes), no gauge and no thermometer, so the level beside
+the skiff never shows here, which is honest. Its range is about 7.4 ft, twice Wrightsville's. The water
+temperature is CORMP's wave buoy 41067 off Fripp Inlet on SECOORA's ERDDAP (it posts within about eight
+minutes of each hourly reading, inside `BUOY_FRESH`), and the seas are Open-Meteo's marine model at the
+same spot (32.28,-80.40). The water section's title is the place's own (`LOCS.*.water`, "Water · Beaufort
+River"). Beaufort County became one NWS zone with its beaches (SCZ148, Charleston's April 2026 renumbering),
+so the point's own alerts carry the tropical watches and warnings and there is no `beach` zone; the beach's
+rip current, high surf and beach hazards products come with it, and `quietAlerts` keeps them off a strip
+on Lady's Island. The year is NOAA's 1991-2020 normals at Marine Corps Air Station Beaufort (USW00093831),
+`NORMALS.bft`, built from NCEI's data and checked against its CSVs. `boatSeason` is null.
+
+**The scene, and what Josh decided.** `lowcountryScene` draws it (renderScene hands it the whole light).
+Seen from the waterway east of the bridge: the far line is Lady's Island's low wood on the left and, past
+the bridge's town end, Beaufort's waterfront oaks with St. Helena's green copper spire and the Baptist
+Church of Beaufort's white needle standing out of them (`bftSkyline`, `propBftSteeple`). Josh asked for the
+steeples in place of a tree line that "steals [the bridge's] silhouette", so the far line runs low behind
+the swing span and the truss keeps open sky. The Woods Memorial swing bridge (`propBftBridge`) is the real
+one: a Pratt through truss swing span with a polygonal top chord, the tender's house at its peak, the
+approaches on bents, its street lights, the tender's window and the span's red lights on after sunset
+(`bftBridgeGlow`). The grand live oak (`propBftOak`, `bftOakDraw`) has no curls at its branch ends and far
+more Spanish moss than Porters Neck's, in three depths (the far curtains behind the back leaves, the front
+curtains off the limbs, the veil over the crown), both of which Josh asked for ("it's critical"). Three
+palmettos (`rigBftPalmetto`), the SC state tree, stand on the right bank. A long Lowcountry dock runs out
+to a covered dock house (`propBftDock`) with a float that rides the tide down its gangway and the family's
+center console alongside (`rigBftBoat`). On the dock house flies the South Carolina flag (`rigBftFlag`), Jen's
+"palmetto, moon type look", and on the float's guide piling stands an aviation windsock (`rigBftWindsock`),
+the non-corny aviation nod: it fills the way an FAA sock does, straight out at 15 knots, and agrees with the
+flag. A crab-pot buoy painted in tiger stripes (`propBftBuoy`) is the Bengals nod. The boiled peanut sign
+was drawn and Josh dropped it. The Marine F/A-18A Hornet is the family's airframe ("F18A (USMC)"), and
+crosses high on a clear day now and then.
+
+**The tide is drawn.** The water's level is the dock's (`bftDockWater`): mud flats come out from both banks
+as the tide falls, with their oyster rakes and a wet edge, and go under on the flood, the float rides seven
+units under the deck at high water and seventeen at dead low, and the channel under it is the last thing
+wet. `tideLevel` reads the level off the station's own high and low predictions (`SCENE_TIDE`).
+
+**The animals are their real sizes** against the oak, the boat and the dock (about two-thirds of a foot to
+a unit on the near banks), which Josh asked for, and none stands on another (`tools/beaufort/scene.mjs`
+fails an overlap). The white birds are in the oak, as Josh asked: great egrets and white ibis on the limbs
+(`bftOakOn` perches), more at night and at high water, fewer at low water when they would be out feeding,
+every one in a storm, the day's own draw so a refresh does not move them. The gator is out on warm days
+(68° and up, no thunder, nothing heavier than a light rain): a log in the channel, hauled out on the left
+flat at low water, eyes and snout after dark. The bald eagle soars on a fair midday and sits the tallest
+palmetto early and late. A fiddler comes out on the flat in the rain. Options drawn and not taken (a
+dolphin, a Marsh Tacky, a shrimp trawler) are in git history on feature/beaufort-scene.
+
+**Five layers, for the iPhone.** WebKit repaints an SVG as one sheet, and all of it under anything that
+moves. This picture's oak, moss, bridge and palmettos are too heavy to repaint every frame (the first
+build ran at 33 frames a second in `tools/webkit.mjs`'s WKWebView, where the marsh runs at 60), so
+Beaufort alone paints into five stacked SVGs in `.scene`, each its own layer (`.scene-layer`,
+`will-change:transform`): `#sceneSvg` the still picture to the oak's back leaves; `#sceneSky` what moves
+in the sky (clouds, the soaring eagle, the bats, the witch, the Hornet), behind the trees; `#sceneMoss`
+the front moss alone, the only moss that sways; `#sceneNear` the still oak wood and crown, the veil, the
+birds in the oak, the dock and what stands on the near water; `#sceneFx` everything else that moves (the
+water's ripples, the mist, the palmetto crowns, the boat, the flag and the sock, the grass, the Halloween
+dock). Nothing on a higher layer is behind anything on a lower one. Every other scene clears the four
+overlays and paints in one sheet as before. The palmettos' fronds flutter on their own only from 20 mph
+of gust, and the jack-o'-lantern under the dock house roof gutters only from 10, both because they are
+sheltered and because each saved the frames. Measured on October 15 2026 (`tools/webkit.mjs`'s WKWebView, 390 at 3x): noon and
+rain 60, a hard blow 58, an October night with the bats, the witch and the lantern 54.5 with no frame
+over 34ms (the coast's and the farm's nights hold 60).
+
+**Halloween at Beaufort** is on the same calendar as the other two places (`holidayOn`, `locToday()`), and
+all of it comes down the morning of November 1: the blood moon and the cobweb are shared, the bats keep
+over the oak, the palmettos, the bridge and the steeples, the witch crosses the moon, a pumpkin stands at
+the dock house's river end (carved and lit from the 24th) with a little one at its landward post, the
+black cat sits on the walkway, eyes open in the spartina, the trick-or-treater comes out on the walkway on
+Halloween night, and two touches are drawn for it and come in their own change, each only while the October
+night still holds its frames: a red balloon tied to the rail (the nod to "It", `rigBftBalloon`) and a
+plastic skeleton at the boat's helm waiting to go fishing (`rigBftBones`). Until they are in the cast the
+scene leaves them out (`typeof`).
+
+**Seeing it.** `node tools/beaufort/look.mjs <key>` shows any Beaufort drawing close up and at phone size
+(the keys are in `BFT`, the registry each drawing registers in), and `TZ=America/New_York node
+tools/beaufort/scene.mjs [cases]` renders the real page at Beaufort in every weather, tide and October
+case, and fails a page error, an animal overlap or more than 120 animations.
+
 ## Deploying
 
 GitHub CLI (`gh`) is installed on WorkMacPro and signed in as `joshsmith-lab`.
@@ -1005,10 +1096,10 @@ If you add a location, give it a `tz` and a `tzLabel`. Nothing else needs to kno
 
 ## On file size
 
-`index.html` is about 750 KB of source (October 2026, with NOAA's daily normals, the Halloween cast and the storm card's readers baked in), and an early plan set
+`index.html` is about 1.1 MB of source (October 15 2026, with NOAA's daily normals, the Halloween cast, the storm card's readers and Beaufort's whole cast baked in), and an early plan set
 160 KB as a ceiling. That number was about the source file and it is not the
 number that matters. GitHub Pages serves the file gzipped, so what a phone
-actually downloads is **about 255 KB**, once, and the service worker caches it
+actually downloads is **about 385 KB** (it was about 275 KB before Beaufort), once, and the service worker caches it
 after that. Measure both rather than trusting this paragraph: `wc -c index.html`
 for the source and `gzip -6c index.html | wc -c` for roughly what is sent.
 

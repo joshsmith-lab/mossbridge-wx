@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v98/);
+  assert.match(worker, /mbwx-shell-v99/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -511,7 +511,7 @@ test("every motion is driven by a reading, not by decoration", async () => {
   // own origin is the joint, and the scene CSS gives those classes view-box and 0 0. Lose either
   // and every rig falls back to pivoting on a bounding-box corner
   assert.match(html, /const joint=\(jx,jy,open,inner\)=>`<g transform="translate\(\$\{f1\(jx\)\} \$\{f1\(jy\)\}\)">\$\{open\}<g transform="translate\(\$\{f1\(-jx\)\} \$\{f1\(-jy\)\}\)">/);
-  assert.match(html, /#sceneSvg \.fox-head,#sceneSvg \.fox-tail\{transform-box:view-box;transform-origin:0 0\}/);
+  assert.match(html, /:is\(#sceneSvg,\.scene-layer\) \.fox-head,:is\(#sceneSvg,\.scene-layer\) \.fox-tail\{transform-box:view-box;transform-origin:0 0\}/);
   // the scene never runs an SVG filter: the picture repaints every frame something moves, so the
   // paper grain is a baked tile and nothing in renderScene carries filter=
   const scene = html.slice(html.indexOf("function renderScene("), html.indexOf("/* ── smooth path through points"));
@@ -533,7 +533,7 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /const CLOUD_BLUR=9,CLOUD_BOX=5,CLOUD_PX=2\*CLOUD_BLUR\/CLOUD_BOX,/);
   // clouds are drawn in the scene only when there are clouds to draw, and they really drift:
   // two direction keywords in one animation shorthand made Chrome drop it and nothing moved
-  assert.equal(html.split("cloud>=10&&cloud<=85&&!wet&&!storm&&!fog").length - 1, 2);
+  assert.equal(html.split("cloud>=10&&cloud<=85&&!wet&&!storm&&!fog").length - 1, 3);
   assert.doesNotMatch(html, /(reverse|normal) infinite alternate/);
   // the barn lamps come on once the sun is down, not before the sunset time on the arc
   assert.match(html, /const lamps=sunAltDeg< -\.83/);
@@ -1411,8 +1411,8 @@ test("Denver is a parked travel scene: kept as the template, out of the rotation
 
   assert.match(html, /den:\{id:"den",addrFull:"Next up · Denver"/);
   assert.match(html, /lat:39\.7392,lon:-104\.9903,scene:"front-range",kind:"trip"/);
-  // the trip is over: only the two family places are in the rotation
-  assert.match(html, /const LOC_ORDER=\["mb","sp"\]/);
+  // the trip is over: only the family places are in the rotation, the coast, the farm and Beaufort
+  assert.match(html, /const LOC_ORDER=\["mb","sp","bft"\]/);
   // a phone last left on a parked place opens at home, not on a place it cannot tap back to
   assert.match(html, /LOC=LOC_ORDER\.includes\(saved\)\?LOCS\[saved\]:LOCS\.mb/);
   assert.match(html, /const nextLoc=\(\)=>LOC_ORDER\[\(LOC_ORDER\.indexOf\(LOC\.id\)\+1\)%LOC_ORDER\.length\]/);
@@ -1459,8 +1459,9 @@ test("the scenes dress for the holidays and take it all down when they pass", as
   // the candle is lit with the barn lamps, and not in the rain
   assert.match(html, /const candles=carved&&sunAltDeg< -\.83&&!wet&&!storm/);
   // it gutters as hard as the gusts say, and in a calm or under reduced motion not at all
-  assert.match(html, /const candleK=clamp\(\(gust-3\)\/24,0,1\),flick=!PRM&&candleK>\.04/);
-  assert.match(html, /#sceneSvg \.candle\.flicker\{animation:candle/);
+  // (one under a roof, Beaufort's dock house, is out of the wind until it gusts ten)
+  assert.match(html, /const candleK=clamp\(\(gust-\(sheltered\?10:3\)\)\/24,0,1\),flick=!PRM&&candleK>\.04/);
+  assert.match(html, /:is\(#sceneSvg,\.scene-layer\) \.candle\.flicker\{animation:candle/);
   assert.match(html, /@keyframes candle\{0%,100%\{opacity:1\}/);
   // its two deep ducks in a cycle are not the same depth
   assert.match(html, /31%\{opacity:var\(--c0,\.8\)\}[^\n]*74%\{opacity:var\(--c2,\.85\)\}/);
@@ -1655,7 +1656,7 @@ test("a black cat sits on the dock and on the farm's top rail in October, and go
   // a tail flick now and then, off the wall clock, a transform at the tail's own root
   assert.match(html, /layers=propBlackCat\(phase\(23\)\)/);
   assert.deepEqual(keyframes("catTail"), ["transform"]);
-  assert.match(html, /#sceneSvg \.cat-tail\{animation:catTail 23s ease-in-out infinite\}/);
+  assert.match(html, /:is\(#sceneSvg,\.scene-layer\) \.cat-tail\{animation:catTail 23s ease-in-out infinite\}/);
   // drawn with the kit: the tail its own joint, then the body with two ears, two eyes and their
   // slits; about eight across and twelve tall, drawn at ten units to the unit
   const units = ctx.cat();
@@ -1952,7 +1953,7 @@ test("a witch flies over both scenes on October nights, on the wind, across the 
   assert.ok(html.includes("const witch=witchPlan(17,GY-63,(x,y)=>y<GY-26&&skyTops.every(([a,b,t])=>x+moonR<a||x-moonR>b||y+moonR<t),skyTops);\n  const bats=batN?batColony(8,"), "the coast's witch keeps above the oak, the pines and the heron");
   assert.ok(html.includes("const witch=witchPlan(17,base-rTop-11,(x,y)=>y<crestY(0,x)-13);\n    const bats=batColony(8,"), "the farm's witch is planned before its bats");
   assert.match(html, /const batKeep=wp=>wp&&wp\.box\?\[\.\.\.timeBoxes,wp\.box\]:timeBoxes;/);
-  assert.equal(html.split("batKeep(witch)").length, 3, "both places' bats keep off the still witch");
+  assert.equal(html.split("batKeep(witch)").length, 4, "every place's bats keep off the still witch");
   assert.ok(html.includes("${witchFly(witch)}\n    <path d=\"${tl}\""), "the coast's witch flies behind the far treeline");
   assert.ok(html.includes("${hawk}${soarer}\n      ${witchFly(witch)}"), "the farm's witch flies in front of the folds");
   assert.match(html, /&&tops\.every\(\(\[a,b,t\]\)=>under\(y0,y1,a,b,t-6\)\)/);
@@ -2348,7 +2349,8 @@ test("light, motion and alerts stay tuned", async () => {
   // the water is named for where every reading under it comes from, all year; the farm's wave is
   // the almanac's, and says so; the week is this week; the year names the airport its normals are
   // from. The parked trip has no card of its own
-  assert.match(html, /<b>Water · Wrightsville Beach<\/b>/);
+  assert.match(html, /<b id="waterTitle">Water · Wrightsville Beach<\/b>/);
+  assert.match(html, /document\.getElementById\("waterTitle"\)\.textContent="Water · "\+\(LOC\.water\|\|"Wrightsville Beach"\);/);
   assert.doesNotMatch(html, /On the water · Mason Inlet|Tide · Wrightsville Beach|<b>The week<\/b>/);
   assert.match(html, /<b>This week<\/b>/);
   assert.match(html, />Almanac fishing times<span class="sr-only">/);
@@ -2860,7 +2862,7 @@ test("the water and the farm say what is there, and nothing is scored or picked"
   assert.match(html, /const farm=LOC\.kind==="farm"\?farmCard\(LOC,h,c,dy,warning,storm,now,dayRead\.told\):null;/);
   // one shape for every section: nothing between a title and its chart. The water's readings are
   // its note and the level is on the chart, and said to a screen reader with it
-  assert.match(html, /<div class="eyebrow"><b>Water · Wrightsville Beach<\/b><span id="tideNote">[^<]*<\/span><\/div>\n  <div class="tide-explore xp"/);
+  assert.match(html, /<div class="eyebrow"><b id="waterTitle">Water · Wrightsville Beach<\/b><span id="tideNote">[^<]*<\/span><\/div>\n  <div class="tide-explore xp"/);
   assert.match(html, /document\.getElementById\("tideNote"\)\.textContent=tide\?waterNote\(water,tide\):\[waterNote\(water,null\),"tide data unavailable"\]\.filter\(Boolean\)\.join\(" · "\);/);
   assert.match(html, /tide\?"Tide curve, next 27 hours"\+\(water&&water\.level\?"\. "\+water\.level:""\):"Tide data unavailable"/);
   // the loading shell's empty pictures say what they will be, never the last place's
@@ -5111,7 +5113,7 @@ test("the storm card reads in its own lane after the paint, at both places", asy
   assert.doesNotMatch(refresh, /fetchStorms|stormsP|L\.tropics/);
   // and the beach's answer is kept on its own the moment it is in (beachIn), for every paint, and so is
   // the farm's WSSI (wssiIn), which the lane asks for once the point's alerts are in
-  assert.match(refresh, /const alertsP=fetchJSON\(`https:\/\/api\.weather\.gov\/alerts\/active\?point=\$\{L\.lat\},\$\{L\.lon\}`,6000\)\.then\(aj=>\(aj\.features\|\|\[\]\)\.map\(alertRow\)\.filter\(alertLive\)\)\.catch\(\(\)=>null\);\n[^\n]*\n  let pointAt=null;alertsP\.then\(a=>\{if\(a\)pointAt=Date\.now\(\)\}\);\n  const lane=stormLane\(L,alertsP\);let landed=null,beachIn,beachAt=null,wssiIn;\n  lane\.then\(g=>\{landed=g\},\(\)=>\{\}\);lane\.beach\.then\(b=>\{beachIn=b;beachAt=Date\.now\(\)\},\(\)=>\{\}\);lane\.wssi\.then\(w=>\{wssiIn=w\},\(\)=>\{\}\);\n  try\{/);
+  assert.match(refresh, /const alertsP=fetchJSON\(`https:\/\/api\.weather\.gov\/alerts\/active\?point=\$\{L\.lat\},\$\{L\.lon\}`,6000\)\.then\(aj=>\(aj\.features\|\|\[\]\)\.map\(alertRow\)\.filter\(a=>alertLive\(a\)&&!quiet\.includes\(a\.event\)\)\)\.catch\(\(\)=>null\);\n[^\n]*\n  let pointAt=null;alertsP\.then\(a=>\{if\(a\)pointAt=Date\.now\(\)\}\);\n  const lane=stormLane\(L,alertsP\);let landed=null,beachIn,beachAt=null,wssiIn;\n  lane\.then\(g=>\{landed=g\},\(\)=>\{\}\);lane\.beach\.then\(b=>\{beachIn=b;beachAt=Date\.now\(\)\},\(\)=>\{\}\);lane\.wssi\.then\(w=>\{wssiIn=w\},\(\)=>\{\}\);\n  try\{/);
   // and it waits only when a rule could fire: at the coast the beach's answer is looked at first
   assert.match(refresh, /let wait=null;const waited=\(\)=>wait\|\|\(wait=new Promise\(r=>setTimeout\(r,STORM_WAIT\)\)\);\n    if\(!landed&&!LAST\)\{\n[\s\S]*?      if\(L\.kind==="coast"&&!stormWaits\(L,alerts,null\)\)await Promise\.race\(\[lane\.beach,waited\(\)\]\);\n      if\(stormWaits\(L,alerts,beachIn\)\)await Promise\.race\(\[lane,waited\(\)\]\);\n    \}/);
   // a cached beach whose tropical warning has reached its expiry waits for the beach's own answer, and
@@ -5131,7 +5133,7 @@ test("the storm card reads in its own lane after the paint, at both places", asy
   assert.match(refresh, /render\(data,true\);\n    writeCache\(L\.id,data\);\n    if\(!landed\)stormRun\(L,request,lane\);/);
   assert.match(refresh, /if\(cached\)\{if\(beachIn\)\{cached\.data\.beach=beachIn;cached\.data\.seen=\{\.\.\.cached\.data\.seen,beach:beachAt\}\}render\(cached\.data,false,cached\.savedAt\);stormRun\(L,request,lane\)\}/);
   assert.match(html, /const STORM_WAIT=3000;/);
-  assert.match(html, /\.then\(aj=>\(aj\.features\|\|\[\]\)\.map\(alertRow\)\.filter\(alertLive\)\)\.catch\(\(\)=>null\)/);
+  assert.match(html, /\.then\(aj=>\(aj\.features\|\|\[\]\)\.map\(alertRow\)\.filter\(a=>alertLive\(a\)&&!quiet\.includes\(a\.event\)\)\)\.catch\(\(\)=>null\)/);
   assert.match(html, /async function stormRun\(L,request,lane\)\{\n  try\{\n    const got=await lane;\n    await PAINT;\n    if\(L!==LOC\|\|request!==REFRESH_ID\|\|!LAST\)return;/);
   // a late lane paints again only when it changes what the page says, and the card comes in with the
   // reader's view held
@@ -5628,4 +5630,53 @@ test("on the page's own refresh, the index raises only its own list's warnings, 
     deq(r3.paints.map((p) => [p.tier, p.headline, p.strip.includes("Coastal Flood Advisory"), p.strip.includes("Hurricane Warning")]), [["storm", up.headline, false, true]],
       "the advisory's end passing during the outage takes it down, and the card stays");
   }
+});
+
+test("Beaufort is the third place: its readings, its scene in layers, its birds in the oak, its Halloween", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  // Jen's family on Coosaw Club Dr, Lady's Island, in the rotation after the coast and the farm
+  assert.match(html, /bft:\{id:"bft",addrFull:"Coosaw Club Dr · Beaufort",addrShort:"Beaufort",\n      lat:32\.4938,lon:-80\.6151,scene:"lowcountry",kind:"coast",/);
+  assert.match(html, /const LOC_ORDER=\["mb","sp","bft"\];/);
+  // the loading shell knows it too, so a phone left on Beaufort opens on Beaufort
+  assert.match(html, /bft:\{full:"Coosaw Club Dr · Beaufort",short:"Beaufort",lat:32\.4938,lon:-80\.6151,scene:"lowcountry",tide:true,fish:false,year:"The year · Beaufort",airport:"Beaufort MCAS",water:"Beaufort River"/);
+  assert.match(html, /try\{var saved=localStorage\.getItem\("mbwx-loc"\);if\(PLACES\[saved\]\)id=saved\}catch\(e\)\{\}/);
+  // its readings: NOAA's Beaufort station (predictions only, no gauge or thermometer), the Fripp Inlet wave
+  // buoy's water temperature and the seas there, one county zone with the beach's surf products kept off
+  assert.match(html, /tide:8667999,water:"Beaufort River",/);
+  assert.match(html, /marine:\{lat:32\.28,lon:-80\.40\},buoy:"41067-frp2wave-4-nm-southeast-of",/);
+  assert.match(html, /quietAlerts:\["Rip Current Statement","High Surf Advisory","Beach Hazards Statement"\],/);
+  assert.doesNotMatch(html.slice(html.indexOf("bft:{id:\"bft\""), html.indexOf("const LOC_ORDER")), /beach:"/);
+  // its year: NOAA's 1991-2020 normals at Marine Corps Air Station Beaufort
+  assert.match(html, /bft:\{place:"Beaufort MCAS",name:"Beaufort",hi:\[60\.3,63\.7,69\.9,77\.0,84\.0,88\.9,91\.8,90\.3,85\.7,78\.1,69\.3,62\.7\],/);
+  // the river's level, read off the station's own table: 0 at a low, 1 at a high, null outside it
+  const tl = html.match(/function tideLevel\(preds,now=wallNow\(\)\.getTime\(\)\)\{[\s\S]*?\n\}/)[0];
+  const ctx = vm.createContext({ clamp: (v, a, b) => Math.min(b, Math.max(a, v)), wallNow: () => new Date(0) });
+  vm.runInContext(tl + ";this.tideLevel=tideLevel", ctx);
+  const preds = [{ t: "2026-10-15 06:00", v: "1.0", type: "L" }, { t: "2026-10-15 12:12", v: "8.0", type: "H" }, { t: "2026-10-15 18:24", v: "1.4", type: "L" }];
+  const at = (s) => new Date(s).getTime();
+  assert.equal(ctx.tideLevel(preds, at("2026-10-15T06:00")), 0);
+  assert.equal(ctx.tideLevel(preds, at("2026-10-15T12:12")), 1);
+  assert.ok(Math.abs(ctx.tideLevel(preds, at("2026-10-15T09:06")) - .5) < .01, "half way up the flood is half full");
+  assert.equal(ctx.tideLevel(preds, at("2026-10-15T05:00")), null);
+  // the scene: Beaufort alone paints into five stacked layers, so a moving thing repaints only its own
+  for (const id of ["sceneSky", "sceneMoss", "sceneNear", "sceneFx"]) assert.match(html, new RegExp(`<svg id="${id}" class="scene-layer"`));
+  assert.match(html, /\.scene \.scene-layer\{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;will-change:transform\}/);
+  assert.match(html, /if\(LOC\.scene!=="lowcountry"\)for\(const id of \["sceneSky","sceneMoss","sceneNear","sceneFx"\]\)document\.getElementById\(id\)\.innerHTML="";/);
+  assert.match(html, /mossL\.innerHTML=`<g data-prop="moss">\$\{oakMoss\}<\/g>`;/);
+  const lc = html.slice(html.indexOf("function lowcountryScene(c){"), html.indexOf("/* ── smooth path through points"));
+  // Josh's notes: the steeples behind the bridge, not a tree line; no curls; the white birds in the oak;
+  // real sizes and nobody standing on anybody; and no boiled peanut sign
+  assert.match(lc, /const bftSky=bftSkyline\(\{W,brX:W\*\.6,yFar,/);
+  assert.match(lc, /const PERCH=\[\[0,58\],\[0,67\],\[0,76\],\[5,36\],\[5,47\],\[5,58\],\[5,69\],\[1,-28\],\[1,-41\],\[1,-54\],\[1,-66\]\]\.map\(/);
+  assert.doesNotMatch(lc, /peanut|propBftSign/i);
+  assert.doesNotMatch(html, /bftOakCurl\(/);
+  // the tide is drawn: the flats come out as it falls, at the dock's own water
+  assert.match(lc, /const dockX=W\*\.66,deckY=GY-\.5,yTide=deckY\+bftDockWater\(tide\);/);
+  // the jack-o'-lantern under the dock house roof, and the rest of Halloween, on the shared calendar
+  assert.match(lc, /const hw=c\.halloween;/);
+  assert.match(lc, /carved:c\.carved,seed:3,sheltered:true/);
+  assert.match(lc, /c\.batColony\(8,/);
+  assert.match(lc, /c\.witchFly\(witch\)/);
+  // the Hornet crosses only on a clear day, and never under reduced motion
+  assert.match(lc, /const jetUp=!PRM&&sunAltDeg>5&&!wet&&!storm&&!fog&&cloud<70/);
 });

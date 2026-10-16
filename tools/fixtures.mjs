@@ -71,7 +71,7 @@ export const day = (d, tz) => {
  */
 export const DAYS = 8;
 /** Which clock each location's forecast is written on, mirroring LOCS in index.html. */
-export const LOC_TZ = { mb: "America/New_York", sp: "America/New_York", den: "America/Denver" };
+export const LOC_TZ = { mb: "America/New_York", sp: "America/New_York", den: "America/Denver", bft: "America/New_York" };
 
 /* Early-August sun for each place, so a Shady Spring scenario does not print Porters Neck's
    sunrise over a ridge whose sun is drawn from its own sky. A scenario can still set its own. */
