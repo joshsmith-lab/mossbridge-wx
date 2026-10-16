@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v100/);
+  assert.match(worker, /mbwx-shell-v101/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -5689,14 +5689,14 @@ test("Beaufort is the third place: its readings, its scene in layers, its birds 
   assert.match(lc, /const jetUp=!PRM&&sunAltDeg>5&&!wet&&!storm&&!fog&&cloud<70/);
 });
 
-test("MOCK option C: Beaufort's fishing water reads the grass line, the moving water and the wind, and the coast's is untouched", async () => {
+test("MOCK option C: Beaufort's fishing water reads the grass line, the stage of the water and the wind, and the coast's is untouched", async () => {
   const html = await readFile(new URL("index.html", root), "utf8");
-  const pick = (a, b) => html.slice(html.indexOf(a), html.indexOf(b));
+  const pick = (a, b) => { const i = html.indexOf(a), j = html.indexOf(b, i); assert.ok(i >= 0 && j > i, `found ${a} … ${b}`); return html.slice(i, j); };
   const ctx = vm.createContext({});
   vm.runInContext([
     html.match(/const dirLong=d=>[^\n]*\n[^\n]*/)[0],
-    pick("function floodSpans(", "/* the in-season row, under the chart"),
-    "Object.assign(globalThis,{floodSpans,tideStage,windAt,windWords,windSpoken,runsIn,RUNS,MARINE_EVENT});",
+    pick("function floodSpans(", "/* The in-season row, under the chart"),
+    "Object.assign(globalThis,{floodSpans,tideStage,windAt,windTimes,windWords,windSpoken,runsIn,runsTall,RUNS,MARINE_EVENT});",
   ].join("\n"), ctx);
   const at = (s) => new Date(s).getTime();
   // NOAA 8667999's own table on October 27 2026, the season's top: 9.35 ft at 10:17 am between lows of 0.13 and 0.29
@@ -5732,22 +5732,49 @@ test("MOCK option C: Beaufort's fishing water reads the grass line, the moving w
   assert.equal(ctx.windAt({ ...h, dir: undefined }, at("2026-10-16T14:30"), c, now).d, null, "a cache with no direction draws no vane");
   // said the chip's way: calm under 1 mph, and the gust only when it runs 6 or more over
   assert.equal(ctx.windWords({ w: 5.8, g: 10.3 }), "6 mph");
-  assert.equal(ctx.windWords({ w: 19.7, g: 31.3 }), "20 mph, gusts 31");
-  assert.equal(ctx.windWords({ w: .4, g: 8 }), "calm, gusts 8");
+  assert.equal(ctx.windWords({ w: 19.7, g: 31.3 }), "20, gusts 31 mph");
+  assert.equal(ctx.windWords({ w: .4, g: 8 }), "calm, gusts 8 mph");
   assert.equal(ctx.windWords(null), "wind –", "a missing hour is a dash");
   assert.equal(ctx.windSpoken({ w: 19.7, g: 31.3, d: 357 }), "wind from the north 20 miles an hour, gusts 31");
+  // the wind row speaks at now and at each turn of the table still ahead, about six hours apart, and a turn
+  // too close to the column before it gives way
+  assert.deepEqual(Array.from(ctx.windTimes(P, at("2026-10-27T08:40"), at("2026-10-28T10:40"), 3 * 36e5)),
+    [at("2026-10-27T08:40"), at("2026-10-27T16:44"), at("2026-10-27T22:36"), at("2026-10-28T04:56")], "now, then the turns; the 10:17 high, 1.6 hours after now, gives way to now");
+  assert.deepEqual(Array.from(ctx.windTimes(P, at("2026-10-27T08:40"), at("2026-10-28T10:40"), 36e5)),
+    [at("2026-10-27T08:40"), at("2026-10-27T10:17"), at("2026-10-27T16:44"), at("2026-10-27T22:36"), at("2026-10-28T04:56")], "with room, every turn ahead");
+  assert.deepEqual(Array.from(ctx.windTimes(P, at("2026-10-27T08:40"), at("2026-10-27T09:00"), 3 * 36e5)), [at("2026-10-27T08:40")], "no turn on the chart is now alone");
+  assert.deepEqual(Array.from(ctx.windTimes(P, at("2026-10-27T08:40"), at("2026-10-28T10:40"), 7 * 36e5)),
+    [at("2026-10-27T08:40"), at("2026-10-27T16:44"), at("2026-10-28T04:56")], "each turn is measured from the column kept before it");
+  // now's column says the unit once, the chip's "mph", and gives it up rather than a turn of the tide
+  const wr0 = html.slice(html.indexOf("let windRow="), html.indexOf("const tideSvg="));
+  assert.match(wr0, /const unit=!cols\[1\]\|\|X\(cols\[1\]\.t\)-pairW\/2>=c0R\+6\*fs\?" mph":"";/);
   // the coastal waters' own advisories, and nothing from the house's strip
   for (const e of ["Small Craft Advisory", "Gale Watch", "Gale Warning", "Storm Warning", "Special Marine Warning"]) assert.match(e, ctx.MARINE_EVENT);
   for (const e of ["Rip Current Statement", "Coastal Flood Advisory", "Wind Advisory"]) assert.doesNotMatch(e, ctx.MARINE_EVENT);
-  // what SCDNR's calendar has in season: a calendar, never a bite, and cobia's May closure said
+  // what SCDNR's calendar has in season: a calendar, never a bite, and cobia's May closure said. Reds are
+  // in every month (SCDNR: year-round), bull reds from August to November, so a flood tide in the reds'
+  // tailing season never sits over a row without them
   const names = (m) => Array.from(ctx.runsIn(ctx.RUNS.bft, m), (r) => r.name);
   assert.deepEqual(names(10), ["bull reds", "trout", "flounder", "sheepshead", "shrimp"]);
   assert.deepEqual(names(1), ["reds", "sheepshead"]);
+  assert.deepEqual(names(4), ["reds", "trout", "flounder", "sheepshead", "black drum", "cobia"]);
+  for (let m = 1; m <= 12; m++) {
+    assert.equal(names(m).filter((n) => /^(bull )?reds$/.test(n)).length, 1, `month ${m} has its reds, once`);
+    assert.equal(names(m).includes("bull reds"), m >= 8 && m <= 11, `month ${m}: bull reds only August to November`);
+    assert.ok(names(m).length >= 1 && names(m).length <= 6, `month ${m} fits one row`);
+    assert.equal(ctx.runsTall(ctx.RUNS.bft, m), m === 5, `month ${m}: only May says a closure`);
+  }
   assert.ok(ctx.runsIn(ctx.RUNS.bft, 5).find((r) => r.name === "cobia").closed.includes(5));
-  for (let m = 1; m <= 12; m++) assert.ok(names(m).length >= 1 && names(m).length <= 5, `month ${m} fits one row`);
   const rr = pick("function renderRuns(", "/* ── tide ───");
   assert.match(rr, /In season in \$\{MONTHS\[m-1\]\}, by SCDNR's calendar:/);
   assert.doesNotMatch(rr + pick("const RUNS={bft:", "/* the row's entries"), /biting|running now|best|>go</i);
+  // the row's place is held from the first frame (the preload, the shell), so its fish push nothing
+  assert.match(html, /<div class="runs" id="runsRow" hidden><\/div>/);
+  assert.match(html, /document\.getElementById\("runsRow"\)\.hidden=!L\.windRow;/);
+  assert.match(html, /\.runs\{display:flex;[^}]*min-height:54px;/);
+  assert.doesNotMatch(html, /getElementById\("runsRow"\)\?\.remove\(\)/);
+  // the white shrimp is raw, not pink
+  assert.doesNotMatch(pick("const RUN_FISH={", "/* each one registers for the close-up"), /shrimp:\{pal:\{body:"#D9A994"/);
   // only Beaufort carries it: the grass line, the marine zone and the row are fields of LOCS.bft, and the
   // coast's call passes null, so its chart is drawn exactly as before
   const locs = pick("const LOCS={", "const LOC_ORDER=");
@@ -5761,6 +5788,24 @@ test("MOCK option C: Beaufort's fishing water reads the grass line, the moving w
   assert.match(tide, /band:\[topY-10,day\?HT-2:seaY\]/);
   // no almanac windows on the tide: here they would be the tide by another name
   assert.doesNotMatch(tide, /solunar|fishWindows|Almanac/);
+  // the flood tide's word is judged on each high's own date, not today's
+  assert.match(tide, /floodWord=t=>!!day&&inSeason\(new Date\(t\),LOC\.floodSeason\)/);
+  assert.doesNotMatch(tide, /inSeason\(locToday\(\),LOC\.floodSeason\)/);
+  // the moving water is the curve's own slope and the slider's stage words, never drawn a second time
+  assert.doesNotMatch(tide, /streaks/);
+  // the wind row is one number a column, at now and the turns, in the page's own inks: no "g22" row,
+  // nothing in the marker's red, and the advisories named as offshore's, the ocean's and not the river's
+  const wr = tide.slice(tide.indexOf("let windRow="), tide.indexOf("const tideSvg="));
+  assert.match(wr, /windTimes\(P,nt0,t1,/);
+  assert.doesNotMatch(wr, />g\$\{g\}<|css\.marker|WINDY_GUST/);
+  assert.match(wr, /const words="offshore "\+/);
+  assert.match(wr, /HT=H\+windRowH\(W\);/);
+  // and the band of a flood stops under its high's time, never through it
+  assert.match(tide, /top=fh\?fh\.ty\+11\*fs\*\.22\+2:/);
+  // the advisories run in their own lane: the forecast never waits on them
+  const rf = pick("async function refresh(){", "function loadFrame(){");
+  assert.doesNotMatch(rf, /await zoneP/);
+  assert.match(rf, /if\(L\.marineZone&&zoneIn===undefined\)zoneRun\(L,request,zoneP\);/);
   // the slider says the stage, a flood tide in the grass's green and the wind at each stop, and the hours
   // before now, which have no wind row, say no wind; a stop without them reads exactly as the coast's
   const lift = (re) => html.match(re)[0];
@@ -5772,13 +5817,20 @@ test("MOCK option C: Beaufort's fishing water reads the grass line, the moving w
     lift(/const dirLong=d=>[^\n]*\n[^\n]*/), pick("const windWords=", "/* the coastal waters' advisories"),
     "globalThis.readTide=readTide;"].join("\n"), rctx);
   const read = (s, n) => JSON.parse(JSON.stringify(rctx.readTide(s, at(n), 0)));
-  const big = read({ t: at("2026-10-27T10:17"), depth: 9.354, turn: "H", now: false, dir: "falling", stage: "high water", flood: "big flood tide", wind: { w: 14.2, g: 23.1, d: 45 }, windy: false }, "2026-10-27T08:40");
-  assert.deepEqual(big.parts, [["10:17a", ""], ["9.4 ft", "b"], ["high water", ""], ["big flood tide", "grass"], ["14 mph, gusts 23", ""]]);
+  // the wind in the pill is the chip's: its vane into the wind, then the words, in the pill's own ink
+  const big = read({ t: at("2026-10-27T10:17"), depth: 9.354, turn: "H", now: false, dir: "falling", stage: "high water", flood: "big flood tide", wind: { w: 14.2, g: 23.1, d: 45 } }, "2026-10-27T08:40");
+  assert.deepEqual(big.parts, [["10:17a", ""], ["9.4 ft", "b"], ["high water", ""], ["big flood tide", "grass"], ["45", "vane"], ["14, gusts 23 mph", ""]]);
   assert.equal(big.said, "High tide at 10:17 am, 9.4 feet, big flood tide, wind from the northeast 14 miles an hour, gusts 23");
-  const blow = read({ t: at("2026-10-17T14:00"), depth: 7.3, turn: null, now: false, dir: "rising", stage: "high water", flood: "", wind: { w: 19.9, g: 29.1, d: 358 }, windy: true }, "2026-10-16T13:05");
-  assert.deepEqual(blow.parts, [["Sat 2p", ""], ["~7.3 ft", "b"], ["high water", ""], ["20 mph, gusts 29", "windy"]]);
+  const blow = read({ t: at("2026-10-17T14:00"), depth: 7.3, turn: null, now: false, dir: "rising", stage: "high water", flood: "", wind: { w: 19.9, g: 29.1, d: 358 } }, "2026-10-16T13:05");
+  assert.deepEqual(blow.parts, [["Sat 2p", ""], ["~7.3 ft", "b"], ["high water", ""], ["358", "vane"], ["20, gusts 29 mph", ""]]);
   assert.equal(blow.said, "Saturday 2 pm, about 7.3 feet, high water, wind from the north 20 miles an hour, gusts 29");
-  const past = read({ t: at("2026-10-16T12:00"), depth: 6.9, turn: null, now: false, dir: "rising", stage: "last of the incoming", flood: "", wind: undefined, windy: false }, "2026-10-16T13:05");
+  // calm has no direction to point, and a missing hour is a dash with no vane
+  assert.deepEqual(read({ t: at("2026-10-17T03:00"), depth: 5, turn: null, now: false, dir: "falling", stage: "outgoing", flood: "", wind: { w: .4, g: 3, d: 90 } }, "2026-10-16T13:05").parts.slice(3), [["calm", ""]]);
+  assert.deepEqual(read({ t: at("2026-10-17T03:00"), depth: 5, turn: null, now: false, dir: "falling", stage: "outgoing", flood: "", wind: null }, "2026-10-16T13:05").parts.slice(3), [["wind –", ""]]);
+  // the pill keeps a vane with its words, and the hourly's and the week's pills are untouched by it
+  const show = pick("function xpShow(X,i){", "function xpHide(");
+  assert.match(show, /c==="vane"\?"":a\[i-1\]\?\.\[1\]==="vane"\?`<span class="vane-p">\$\{vane\(a\[i-1\]\[0\]\)\}/);
+  const past = read({ t: at("2026-10-16T12:00"), depth: 6.9, turn: null, now: false, dir: "rising", stage: "last of the incoming", flood: "", wind: undefined }, "2026-10-16T13:05");
   assert.deepEqual(past.parts, [["12p", ""], ["~6.9 ft", "b"], ["last of the incoming", ""]]);
   assert.equal(past.said, "noon, about 6.9 feet, last of the incoming");
   assert.deepEqual(read({ t: at("2026-10-16T18:15"), depth: 3.1, turn: null, now: false, dir: "falling" }, "2026-10-16T13:05").parts, [["6:15p", ""], ["~3.1 ft", "b"]]);

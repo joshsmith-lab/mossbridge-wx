@@ -594,17 +594,24 @@ section{padding:28px 20px 0}
 .xp-peek .faint{color:var(--ink-faint)}.xp-peek .warm{color:#974607}.xp-peek .cold{color:var(--water-ink)}
 html[data-theme=dark] .xp-peek .warm{color:var(--heat)}
 .xp-peek .gold{color:#785015}html[data-theme=dark] .xp-peek .gold{color:#E8BC69}
-/* MOCK (option C): Beaufort's flood tide is the grass's green, a gust from the windy line the marker's */
+/* MOCK (option C): Beaufort's flood tide is the grass's green, the one colour the grass line brings. The
+   wind is a reading and is in the pill's own inks, with the chip's vane in front of it */
 .xp-peek .grass{color:#4B6C27;font-weight:600}html[data-theme=dark] .xp-peek .grass{color:#AFCB80}
-.xp-peek .windy{color:var(--marker);font-weight:600}
-/* and what SCDNR's calendar has in season, drawn, in one quiet row under the chart's labels */
-.runs{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:center;gap:4px 13px;margin-top:10px;padding:0 4px;
+.xp-peek .vane-p{display:inline-flex;align-items:baseline;gap:3px}.xp-peek .vane-p .vane{align-self:center;color:var(--ink-soft);opacity:.9}
+/* and what SCDNR's calendar has in season, drawn, in one quiet row under the chart's labels. Its height is
+   held from the first frame (the loading shell and a cached place switch), so nothing under it moves when
+   the fish land; each drawing sits in a box of one height, so the names stand on one line */
+.runs{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:center;gap:3px 13px;margin-top:8px;min-height:54px;
   font-family:var(--mono);font-size:10px;line-height:12px;color:var(--ink-soft)}
+.runs[hidden]{display:none}
 .runs .rk{flex-basis:100%;text-align:center;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:1px}
 .runs .run{display:flex;flex-direction:column;align-items:center;gap:2px;white-space:nowrap}
+.runs .run .g{display:flex;align-items:center;justify-content:center;height:24px}
 .runs .run svg{display:block}
-.runs .run i{display:block;font-style:normal;font-size:9px;line-height:10px;text-align:center;color:var(--marker)}
-@media (max-width:359px){.runs{gap:4px 9px;font-size:9.5px}.runs .rk{letter-spacing:.06em}}
+.runs .run i{display:block;font-style:normal;line-height:10px;text-align:center;color:var(--ink-faint)}
+/* a month with a closure says it under the name (cobia, May), and holds the line for it from the start */
+.runs.tall{min-height:64px}
+@media (max-width:359px){.runs{gap:3px 7px;font-size:9px}.runs .rk{letter-spacing:.06em}.runs .run .g{height:21px}.runs{min-height:51px}.runs.tall{min-height:61px}}
 .xp-peek[hidden]{display:none}
 .xp-cursor{pointer-events:none}
 .xp-cursor line{stroke:var(--ink-soft);stroke-width:1;opacity:.7}
@@ -1026,6 +1033,8 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
     <input class="xp-key" type="range" min="0" max="0" step="1" value="0" disabled aria-label="Water, 15 minutes a step">
     <div class="xp-peek" aria-hidden="true" hidden></div>
   </div>
+  <!-- MOCK (option C): Beaufort's in-season row, under the chart's labels; hidden at every other place -->
+  <div class="runs" id="runsRow" hidden></div>
 </section>
 
 <section id="stormLine" hidden aria-label="Storm">
@@ -1208,7 +1217,12 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   var W=Math.max(320,aw/1.22),H=Math.round((L.scene==="marsh"?150:168)+(760-W)*.10),cw=aw-40,ch=Math.round(165+(760-cw)*.09);
   document.getElementById("sceneSvg").setAttribute("viewBox","0 0 "+W+" "+H);
   var box=function(el,h){document.getElementById(el).setAttribute("viewBox","0 0 "+cw+" "+h)};
-  box("hourlySvg",ch-18);box("tideSvg",ch+(L.windRow?Math.round(26*(cw<360?1.08:cw<520?1.16:1)*1.22):0));box("moonSvg",ch+16);box("yearSvg",138+34+(L.snowy?46:0));
+  /* Beaufort's tide chart carries its wind row under the lows, and its in-season row under that (MOCK,
+     option C): both are held from the first frame (windRowH in the app) */
+  box("hourlySvg",ch-18);box("tideSvg",ch+(L.windRow?Math.round(13*(cw<360?1.08:cw<520?1.16:1)*1.22+3):0));box("moonSvg",ch+16);box("yearSvg",138+34+(L.snowy?46:0));
+  document.getElementById("runsRow").hidden=!L.windRow;
+  /* (May's row says cobia are closed to keeping on a second line: RUNS, runsTall) */
+  if(L.windRow&&new Date().toLocaleDateString("en-CA",{timeZone:"America/New_York"}).slice(5,7)==="05")document.getElementById("runsRow").classList.add("tall");
   document.getElementById("weekRows").style.minHeight="218px";
 })();
 </script>
@@ -7597,25 +7611,35 @@ const RUN_FISH={
       pBlob([[-9,.6],[-3,1.5],[4,2],[11,1.4],[15,.5],[13.4,1.2],[8,2.6],[0,3],[-6,2]],"mark"),
       ...[9.2,10.1,11].map(x=>pTaper([[x,-1.1,.14],[x-.2,.3,.3],[x,1.3,.12]],"detail")),pDot(12.8,-1,.62,"eye")]},
     {parts:[pBlob([[5,2.2],[2.2,6.4],[3.6,6.8],[7.6,2.8]],"fin")]}]},
-  shrimp:{pal:{body:"#D9A994",mark:"#F2D5C6",tail:"#C78E78",detail:"#9A6553"},box:[-11,-12,28.4,22.4],rig:()=>[
-    {parts:[pTaper([[11,-1.6,.22],[14.4,-6,.18],[11,-10.6,.14],[3.6,-11.4,.08]],"detail"),pTaper([[11.4,-1,.2],[15.8,-3.2,.16],[16.6,-7.8,.12],[13.6,-11.2,.06]],"detail"),
-      /* the walking legs under the head, and the swimmerets along the inside of the curl */
-      ...[[8.6,-1.6],[6.6,-1.4],[4.4,-1.6],[1.8,-1.6],[-.8,-1.2],[-3,.1]].map(([x,y],i)=>pTaper([[x,y,.5],[x-.4-i*.15,y+1.6,.34],[x-.9-i*.3,y+2.6,.12]],"detail"))]},
-    {parts:[pBlob([[-5,5.4],[-8.8,6.4],[-9.6,8.4],[-7.8,9.6],[-5.4,9.8],[-3.2,9.2],[-2.4,7.6],[-3.4,6]],"tail")]},
-    {parts:[pTaper([[11.4,-1.8,2.6],[8.6,-3.3,3.4],[4.6,-4,3.6],[.4,-3.7,3.5],[-3.4,-2.4,3.2],[-6.2,.2,2.8],[-6.8,3.2,2.2],[-5.2,5.8,1.5]],"body"),
-      ...[[4.6,-3.9],[.4,-3.6],[-3.4,-2.3],[-6.2,.2],[-6.8,3.2]].map(([x,y],i,a)=>{const n=a[i+1]||[x+1,y+1],dx=n[0]-x,dy=n[1]-y,l=Math.hypot(dx,dy),px=-dy/l,py=dx/l;
-        return pTaper([[x+px*1.4,y+py*1.4,.12],[x-px*1.4,y-py*1.4,.12]],"detail")}),
-      pTaper([[11.6,-2.3,.4],[14.4,-3.2,.24],[16,-3.4,.08]],"detail"),pDot(10.2,-3.3,.75,"eye")]}]},
+  /* white shrimp, the fall crop, raw: a pale grey-cream shell (a pink one read as cooked), the curled
+     tail and its fan, the shell's segments, the horn and the long feelers swept back over its back.
+     Option A's drawing, which read as a shrimp at row size where this one's blob of a tail did not */
+  shrimp:{pal:{body:"#DCD3C3",mark:"#ECE6DA",fin:"#C8BFAE",tail:"#B4BCA6",band:"#9A8E7C",detail:"#A39785",eyeRing:"#3A3030",eye:"#1B1720"},box:[-13.2,-10.6,33.4,22],rig:()=>{
+    const C=[[13.4,-1.4,5],[9.4,-3,6.2],[4.6,-3.6,6.4],[.2,-3.2,6],[-4,-1.8,5.4],[-7.4,.8,4.7],[-8.8,4,4],[-8,6.9,3.2],[-6,8.6,2.4]];
+    return[{parts:[pTaper([[13.6,-2.6,.32],[6,-8.6,.26],[-4,-9.6,.18],[-12.4,-6.8,.1]],"detail"),
+        pTaper([[14,-1.8,.3],[8,-6.6,.24],[-1,-8,.15],[-8.4,-6,.08]],"detail"),
+        ...[[7.6,2.2],[4.8,2.6],[2,2.4],[-.8,1.8],[-3.4,.8]].map(([x,y])=>pTaper([[x,y,.5],[x-.5,y+2,.3],[x-1.2,y+3.1,.12]],"fin")),
+        pBlob([[-6.6,7.4],[-4,6.6],[-1,6.4],[-1.6,7.8],[-4,9],[-6.2,9.6]],"tail"),
+        pBlob([[-6.4,8.4],[-3.6,9],[-1.8,10.4],[-4.6,10.6],[-6.6,9.8]],"tail")]},
+      {parts:[pTaper(C,"body",{capStart:true,capEnd:true}),
+        pTaper([[15.4,-2.6,.9],[17.4,-3.6,.5],[19.2,-4.3,.12]],"body"),
+        ...[[2,-6.4,1.6,.2],[-2,-5.6,-1.4,1.4],[-5.4,-3.8,-3.8,3],[-8,-1.2,-5.8,4.8],[-9.4,2.6,-6.8,6.6]].map(([a,b,c,d])=>pTaper([[a,b,.2],[(a+c)/2,(b+d)/2,.42],[c,d,.2]],"detail")),
+        pTaper([[7.2,-6.4,.22],[6.6,-3,.4],[7,.4,.2]],"detail",undefined,{op:.7}),
+        pDot(13.4,-2.6,1,"eye")]}]}},
 };
 /* each one registers for the close-up: node tools/beaufort/look.mjs run-reds */
 for(const[k,f]of Object.entries(RUN_FISH))BFT["run-"+k]={pal:{...RUN_INK,...f.pal},box:f.box,s:.65,dist:0,ground:false,draw:f.rig,o:{line:.8,heavy:.32,shade:1.1,lit:.6}};
-/* one small drawing, as inline SVG for the row: day colours, the ink at the page's chart weight */
+/* one small drawing, as inline SVG for the row: day colours, the ink at the page's chart weight. Each is
+   sized by its length nose to tail (`len` pixels), the way the fish are sized against each other, so the
+   deep sheepshead and black drum are as long as the trout and not shrunk to a slim fish's height: at 13
+   pixels tall they were twenty long and read as any fish. A drawing taller than its box (`maxH`) is
+   brought down to it */
 const RUN_SVG={};
-function runGlyph(id,px=13){
+function runGlyph(id,len=32,maxH=Infinity){
   const f=RUN_FISH[id];if(!f)return"";
-  const key=id+"@"+px;if(RUN_SVG[key])return RUN_SVG[key];
-  const [bx,by,bw,bh]=f.box,s=px/bh;
-  return RUN_SVG[key]=`<svg viewBox="${bx} ${by} ${bw} ${bh}" width="${(bw*s).toFixed(1)}" height="${px}" aria-hidden="true">${inkRig(f.rig(),{...RUN_INK,...f.pal},{s,line:.8,heavy:.32,shade:1.1,lit:.6,light:[-.5,-1]})}</svg>`;
+  const key=id+"@"+len+"/"+maxH;if(RUN_SVG[key])return RUN_SVG[key];
+  const [bx,by,bw,bh]=f.box,s=Math.min(len/bw,maxH/bh);
+  return RUN_SVG[key]=`<svg viewBox="${bx} ${by} ${bw} ${bh}" width="${(bw*s).toFixed(1)}" height="${(bh*s).toFixed(1)}" aria-hidden="true">${inkRig(f.rig(),{...RUN_INK,...f.pal},{s,line:.8,heavy:.32,shade:1.1,lit:.6,light:[-.5,-1]})}</svg>`;
 }
 
 /* ── the scene: arc, sun / moon, marsh horizon ──────── */
@@ -11241,20 +11265,21 @@ function stormWaits(L,alerts,beach,now=Date.now()){
 
 /* ── Beaufort's fishing water (MOCK, option C: the fishing day) ─────────────────────────────
    Jen's family reads the tide for fishing and the wind for the boat and the airfield (the Granola talk,
-   October 15 2026), so at Beaufort the water section carries three things the coast's does not, all on
-   the tide's own time axis or under it, and none of them a grade:
+   October 15 2026), so at Beaufort the water section carries what the coast's does not, all on the tide's
+   own time axis or under it, and none of it a grade:
    - the grass line, NOAA's own mean higher high water at the station, with the hours a high stands over
-     it washed in spartina green and named "flood tide" in the guides' season (floodSpans);
-   - the moving water: two faint speed lines inside the water on each flank, where the table runs fastest,
-     longer the faster it runs and none at the turns, because the steepest part of the curve is the
-     strongest current at the house (NOAA's current predictions in the Coosaw by Sams Point turn within 5 to
-     12 minutes of this table); the slider names the stage, high or low water, the first or the last of the
-     incoming or the outgoing;
-   - the wind row under the lows, the house's vane and the run's own mph every few hours from now, the gust
-     when it runs 6 over (the chip's rule), and the coastal waters' advisories as a bar over their hours.
-   Then, under the chart, what SCDNR's calendar has in season this month, drawn. The almanac's solunar times
-   stay a farm feature: here every moon transit falls on the ebb and every moonrise on the flood, so they
-   would be the tide by another name. */
+     it washed in spartina green and named "flood tide" in the guides' season, judged on that high's own
+     date (floodSpans);
+   - the wind row under the lows: the house's vane and the run's own mph at now (the chip's reading) and
+     at each turn of the table still ahead, the highs and the lows the family fishes by, about six hours
+     apart (windTimes). The gusts are the pill's, said the chip's way, and the coastal waters' advisories
+     are a bar over their hours, named as offshore's.
+   The moving water is the slope of the curve itself, the steepest part the strongest current at the house
+   (NOAA's current predictions in the Coosaw by Sams Point turn within 5 to 12 minutes of this table), so it
+   is not drawn twice: the slider names the stage, high or low water, the first or the last of the incoming
+   or the outgoing. Then, under the chart, what SCDNR's calendar has in season this month, drawn. The
+   almanac's solunar times stay a farm feature: here every moon transit falls on the ebb and every moonrise
+   on the flood, so they would be the tide by another name. */
 /* The hours the table stands at or over the grass line around each high that reaches it. NOAA's 8667999
    stays over 8 ft about 1.6 hours on an 8.3 ft high and 3.4 on a 9.2 (its six-minute predictions), and
    the half cosine between the turns gives the same within a few minutes. Pure */
@@ -11297,9 +11322,20 @@ function windAt(h,t,c,now){
   if(i<0||!fin(h.wind?.[i]))return null;
   return{w:+h.wind[i],g:fin(h.gust?.[i])?+h.gust[i]:null,d:fin(h.dir?.[i])?+h.dir[i]:null};
 }
-/* the wind in the pill, the chip's way: calm under 1 mph, and the gust when it runs 6 or more over. Pure */
+/* When the wind row speaks: now, which is the chip's reading, and each turn of the table still on the
+   chart, the highs and the lows the family fishes by, about six hours apart. A turn closer than `gap` to
+   the column before it gives way, so the row never crowds itself (a turn within two or three hours of
+   now, at a phone's width). Pure */
+function windTimes(P,now,t1,gap){
+  const out=[now];
+  for(const p of P){const t=p.time.getTime();if(t<=now||t>t1)continue;
+    if(t-out[out.length-1]>=gap)out.push(t)}
+  return out;
+}
+/* the wind in the pill in the chip's own words: calm under 1 mph, and the gust when it runs 6 or more over,
+   the unit once at the end ("20, gusts 29 mph"). Pure */
 const windWords=x=>{if(!x)return"wind –";const w=Math.round(x.w),g=x.g==null?null:Math.round(x.g),gs=g!=null&&g-w>=6?`, gusts ${g}`:"";
-  return w<1?"calm"+gs:`${w} mph${gs}`};
+  return w<1?(gs?`calm${gs} mph`:"calm"):`${w}${gs} mph`};
 const windSpoken=x=>{if(!x)return"wind unavailable";const w=Math.round(x.w),g=x.g==null?null:Math.round(x.g),gs=g!=null&&g-w>=6?`, gusts ${g}`:"";
   return w<1?"calm"+gs:`wind${x.d==null?"":" from the "+dirLong(x.d)} ${w} miles an hour${gs}`};
 /* the coastal waters' advisories the wind row carries: the forecaster's call for the ocean off the
@@ -11310,11 +11346,12 @@ const MARINE_EVENT=/^(?:Small Craft Advisory|Gale (?:Watch|Warning)|Storm (?:Wat
    Each window is SCDNR's own unless it says otherwise, and the row says "in season", never "running" or
    "biting": it is a calendar, not a report. MOCK: check every window with SCDNR before it ships */
 const RUNS={bft:[
-  /* adults come into the sounds and inlets in late summer and fall to spawn (SCDNR); late August to
-     November in the Port Royal Sound and the Hunting Island surf (guides) */
+  /* reds all year: the juveniles and slot fish stay in the creeks and the marsh, tail on the flood tides
+     from mid-March to the end of November, and in winter school on the low-tide mud flats in clear water
+     (SCDNR). From August to November the adults come into the sounds and inlets to spawn (SCDNR), the bull
+     reds of Port Royal Sound and the Hunting Island surf (guides), and that is those months' name */
   {id:"reds",name:"bull reds",big:true,m:[8,9,10,11]},
-  /* in winter the reds school on the low-tide mud flats in clear water (SCDNR) */
-  {id:"reds",name:"reds",m:[12,1,2]},
+  {id:"reds",name:"reds",m:[1,2,3,4,5,6,7,8,9,10,11,12]},
   /* spring, April and May, and fall, October and November (SCDNR's 2025 snapshot) */
   {id:"trout",name:"trout",m:[4,5,10,11]},
   /* in the estuaries spring through fall, and out to sea on the falling water of late fall (SCDNR); spring
@@ -11330,25 +11367,37 @@ const RUNS={bft:[
   /* in from April and peaking July and August (SCDNR); July to September (Beaufort guides) */
   {id:"tarpon",name:"tarpon",m:[7,8,9]},
   /* spring to fall in the estuaries, peaking in summer (SCDNR); in at 66 to 68° in spring and starting
-     offshore once the water is under 79° in fall (SCDNR MRRI). The row gives them their summer, so May
-     still fits one row */
+     offshore once the water is under 79° in fall (SCDNR MRRI). The row gives them their summer, so April
+     and May still fit one row at 320 */
   {id:"sharks",name:"sharks",m:[6,7,8,9]},
   /* the fall whites, August to December, the landings peaking in September and October (SCDNR) */
   {id:"shrimp",name:"shrimp",m:[8,9,10,11,12]},
 ]};
-/* the row's entries for a month, each species once, in the table's order. Pure */
-const runsIn=(list,m)=>{const seen=new Set();return(list||[]).filter(r=>r.m.includes(m)&&!seen.has(r.name)&&seen.add(r.name))};
-/* the in-season row, under the chart and its labels: drawn, quiet, and said in one sentence */
+/* the row's entries for a month, each animal once (the first name the table gives it that month, so bull
+   reds from August to November and reds the rest of the year), in the table's order. Pure */
+const runsIn=(list,m)=>{const seen=new Set();return(list||[]).filter(r=>r.m.includes(m)&&!seen.has(r.id)&&seen.add(r.id))};
+/* whether a month's row says a closure under a name, and so takes a second line (the preload has its own
+   copy: cobia in May). Pure */
+const runsTall=(list,m)=>runsIn(list,m).some(r=>r.closed?.includes(m));
+/* The in-season row, under the chart and its labels: drawn, quiet, and said in one sentence. Its place is
+   in the page from the first frame at Beaufort (the preload, paintLocationShell) with its height held, so
+   the fish landing push nothing under them, and it is hidden at every place without a calendar */
 function renderRuns(list,now){
-  let el=document.getElementById("runsRow");
+  const el=document.getElementById("runsRow");if(!el)return;
+  el.hidden=!list;
   const m=new Date(now).getMonth()+1,items=list?runsIn(list,m):[];
-  if(!items.length){if(el)el.remove();return}
-  if(!el){el=document.createElement("div");el.id="runsRow";el.className="runs";document.getElementById("tideExplore").after(el)}
+  el.classList.toggle("tall",runsTall(list,m));
+  if(!items.length){el.innerHTML="";return}
+  /* each drawing about 32 pixels nose to tail (36 for a bull red), a little less on a 320 phone */
+  const narrow=appW()-40<360,maxH=narrow?21:24,len=r=>Math.round((r.big?36:r.id==="shrimp"?34:32)*(narrow?.86:1));
   const names=items.map(r=>r.name+(r.closed?.includes(m)?" (closed to keeping)":""));
   el.innerHTML=`<span class="sr-only">In season in ${MONTHS[m-1]}, by SCDNR's calendar: ${names.join(", ")}.</span>`
     +`<span class="rk" aria-hidden="true">in season</span>`
-    +items.map(r=>`<span class="run${r.big?" big":""}" aria-hidden="true">${runGlyph(r.id,r.big?15:r.id==="shrimp"?17:13)}<span>${r.name}${r.closed?.includes(m)?` <i>closed</i>`:""}</span></span>`).join("");
+    +items.map(r=>`<span class="run${r.big?" big":""}" aria-hidden="true"><span class="g">${runGlyph(r.id,len(r),maxH)}</span><span>${r.name}${r.closed?.includes(m)?` <i>closed</i>`:""}</span></span>`).join("");
 }
+/* how tall the wind row under the tide's lows is, so the loading shell holds it (the preload's own copy
+   is inline): one line of the vane and the mph */
+const windRowH=cw=>Math.round(13*(cw<360?1.08:cw<520?1.16:1)*1.22+3);
 
 /* ── tide ───────────────────────────────────────────── */
 function renderTides(preds,css,gust,wind,gap=0,day=null){
@@ -11386,9 +11435,10 @@ function renderTides(preds,css,gust,wind,gap=0,day=null){
   const path=spline(pts);
   const area=path+` L ${X(t1).toFixed(1)} ${seaY} L ${X(t0).toFixed(1)} ${seaY} Z`;
   const sand=mix(css.faint,"#C2A268",.55);
-  /* Beaufort: the flood tides on the chart, and the word for them only in the guides' season. Spartina
+  /* Beaufort: the flood tides on the chart, and the word for them only in the guides' season, judged on
+     the date of the high itself (a night high on November 30 is in it, the next morning's is not). Spartina
      green, a shade the paper's small inks read at */
-  const floods=day?floodSpans(P,interp,t0,t1,grass):[],floodWord=!!day&&inSeason(locToday(),LOC.floodSeason);
+  const floods=day?floodSpans(P,interp,t0,t1,grass):[],floodWord=t=>!!day&&inSeason(new Date(t),LOC.floodSeason);
   const GR=day?(document.documentElement.getAttribute("data-theme")==="dark"?{ink:"#AFCB80",wash:"#8FB463"}:{ink:"#4B6C27",wash:"#73A043"}):null;
   /* the skiff rides the table's curve at now. When the station's gauge runs off the table the gap
      rides beside the boat as a tag, "+2 ft" or "−1.5 ft": the boat is the table, the tag is what the
@@ -11452,7 +11502,7 @@ function renderTides(preds,css,gust,wind,gap=0,day=null){
     const ty=high?Math.max(12*fs,y-lift):lowY;times.push([lx,ty-11*fs*.78-2,lx+lw,ty+3]);
     /* at Beaufort a high that tops the grass line is printed in the grass's green */
     const flooded=high&&grass!=null&&p.v>=grass;
-    if(flooded)floodHighs.push({x,anchor,ty,lx,lw,v:p.v});
+    if(flooded)floodHighs.push({x,anchor,ty,lx,lw,v:p.v,t:tm});
     labels+=`<text x="${x.toFixed(1)}" y="${ty.toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(11*fs).toFixed(1)}" font-weight="600" fill="${high?flooded?GR.ink:css.ink:css.soft}" ${halo}${rvAt(anchor==="start"?x+20*fs:anchor==="end"?x-20*fs:x,"label")}>${clock(p.time)}</text>`;
     /* the low's tick is drawn under the tag and the boat, whose halos break it */
     if(!high)ticks+=`<line x1="${x.toFixed(1)}" y1="${(y+1).toFixed(1)}" x2="${x.toFixed(1)}" y2="${(bedY+2).toFixed(1)}" stroke="${css.line}" stroke-width="1"${rvAt(x,"fade")}/>`;
@@ -11460,9 +11510,10 @@ function renderTides(preds,css,gust,wind,gap=0,day=null){
   /* Beaufort: in the guides' season a flood high's green time carries the words over it, "flood tide",
      where there is room under the chart's top and off the other times; out of it the green says enough */
   let floodLab="";
-  /* said once, over the first flood high that has room: the next ones are already green */
-  if(floodWord)for(const f of floodHighs){
+  /* said once, over the first flood high in the season that has room: the next ones are already green */
+  for(const f of floodHighs){
     if(floodLab)break;
+    if(!floodWord(f.t))continue;
     const ffs=8.8*fs,txt="flood tide",w=txt.length*ffs*.6+2,by=f.ty-11*fs*.78-4;
     const cx=f.anchor==="start"?f.lx+f.lw/2:f.anchor==="end"?f.lx+f.lw/2:f.x,a=cx<x0+w/2?"start":cx>W-padX-w/2?"end":"middle";
     const lx=a==="start"?x0:a==="end"?W-padX-w:cx-w/2,bx=[lx,by-ffs*.78-1,lx+w,by+1];
@@ -11533,109 +11584,108 @@ function renderTides(preds,css,gust,wind,gap=0,day=null){
   const shared=spots.find(s=>grids.every(g=>!gHits(g,s)));
   let grid="";const gridBoxes=[];
   /* the grass line's words go down after the depth scale's, at the first spot clear of everything and of
-     the scale's own words; where "8 ft" has no room the tuft stands alone, since the line is the scale's */
+     the scale's own words: over the line, then under it with the tuft still standing on it (at 320 the
+     times at both ends and the boat took every spot over it, and the tuft stood alone), and only then the
+     tuft alone, since the line is the scale's own 8 */
   const grassG=grass!=null?[{ft:grass,y:Y(grass),w:(grass+" ft").length*gfs*.6+tuftW,grass:true}]:[];
   for(const g of [...grids,...grassG]){
     let s;
     if(g.grass){
-      const hitsG=q=>{const b=gBox(g,q);return gHits(g,q)+[...gridBoxes,...times].filter(o=>o[0]<b[2]+8&&o[2]>b[0]-8&&o[1]<b[3]+2&&o[3]>b[1]-2).length*100};
-      s=spots.find(q=>!hitsG(q));
-      if(!s){g.w=tuftW;g.bare=true;s=spots.find(q=>!hitsG(q))||spots.reduce((a,q)=>hitsG(q)<hitsG(a)?q:a,spots[0])}
-    }else s=shared||spots.find(q=>!gHits(g,q))||spots.reduce((a,q)=>gHits(g,q)<gHits(g,a)?q:a,spots[0]);
-    gridBoxes.push(gBox(g,s));
+      /* tried in order: over the line with room round it, so it never reads as one run with a high's
+         time beside it; under it, with the tuft still standing on it; both again a size smaller with less
+         room (a 320 phone's line between the boat, a high's time and the next); then "8 ft" alone, which
+         the green line still carries; then the tuft alone, the line being the scale's own 8 */
+      const tries=[[1,0,16,1],[1,1,16,1],[1,1,8,1],[1,0,8,1],[.86,0,5,1],[.86,1,5,1],[.86,0,4,0],[.86,1,4,0],[0,0,4,1]];
+      const wOf=([z,,,tuft])=>{const f=Math.max(10,gfs*z);return z?(grass+" ft").length*f*.6+(tuft?f*1.05:0):tuftW};
+      const boxAt=([a,x],t)=>{const f=Math.max(10,gfs*t[0]),w=wOf(t),lx=a==="end"?x-w:x,c=f*.74;
+        return t[1]?[lx,g.y-(t[3]?f:1),lx+w,g.y+3+c]:[lx,g.y-3-c,lx+w,g.y-1]};
+      /* `m` is the room kept from a high's or a low's time (and the flood tide's words); everything else
+         keeps the depth scale's own */
+      const near=(o,b,m)=>o[0]<b[2]+m&&o[2]>b[0]-m&&o[1]<b[3]+2&&o[3]>b[1]-2;
+      const bHits=(b,m)=>b[0]<x0-.1||b[2]>xR+.1?Infinity:pts.filter(([px,py])=>px>b[0]-5&&px<b[2]+5&&py>b[1]-5&&py<b[3]+5).length
+        +(times.filter(o=>near(o,b,m)).length+[...solid.slice(times.length),...gridBoxes].filter(o=>near(o,b,Math.min(m,6))).length)*100;
+      let tr=null;
+      for(const t of tries){s=spots.find(q=>!bHits(boxAt(q,t),t[2]));if(s){tr=t;break}}
+      if(!s){tr=tries[tries.length-1];s=spots.reduce((a,q)=>bHits(boxAt(q,tr),4)<bHits(boxAt(a,tr),4)?q:a,spots[0])}
+      g.under=!!tr[1];g.bare=!tr[0];g.tuft=!!tr[3];g.f=Math.max(10,gfs*(tr[0]||1));g.w=wOf(tr);
+      gridBoxes.push(boxAt(s,tr));
+    }else{s=shared||spots.find(q=>!gHits(g,q))||spots.reduce((a,q)=>gHits(g,q)<gHits(g,a)?q:a,spots[0]);gridBoxes.push(gBox(g,s))}
     if(g.grass){
       /* the grass line: solid and green where the others are dotted, with its tuft standing on it */
-      const lx=s[0]==="end"?s[1]-g.w:s[1],tx=lx+tuftW,bx=lx+tuftW*.45,by=g.y-.4,k=gfs/10;
+      const tw2=g.tuft?g.f*1.05:0,lx=s[0]==="end"?s[1]-g.w:s[1],tx=lx+tw2,bx=lx+tw2*.45,by=g.y-.4,k=g.f/10;
       /* a tuft of spartina: five tapered blades fanning from one root, the middle one tallest */
       const blade=(ang,h,bend)=>{const a=ang*Math.PI/180,ex=bx+Math.sin(a)*h*k,ey=by-Math.cos(a)*h*k,mx=bx+Math.sin(a)*h*.55*k+bend*k,my=by-Math.cos(a)*h*.55*k;
         return pTaper([[bx+ang*.02*k,by,1.5*k],[mx,my,1*k],[ex,ey,.15]],"blade").d};
       grid+=`<line x1="${x0}" y1="${g.y.toFixed(1)}" x2="${xR}" y2="${g.y.toFixed(1)}" stroke="${GR.wash}" stroke-width="1.2" opacity=".7"/>
-    <path d="${[blade(-42,6,-.6),blade(-18,8.4,-.3),blade(3,9.6,.4),blade(24,7.8,.5),blade(46,5.6,.6)].join(" ")}" fill="${GR.ink}"/>
-    ${g.bare?"":`<text x="${tx.toFixed(1)}" y="${(g.y-3).toFixed(1)}" text-anchor="start" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${gfs.toFixed(1)}" font-weight="600" fill="${GR.ink}">${g.ft} ft</text>`}`;
+    ${g.tuft?`<path d="${[blade(-42,6,-.6),blade(-18,8.4,-.3),blade(3,9.6,.4),blade(24,7.8,.5),blade(46,5.6,.6)].join(" ")}" fill="${GR.ink}"/>`:""}
+    ${g.bare?"":`<text x="${tx.toFixed(1)}" y="${(g.under?g.y+2+g.f*.74:g.y-3).toFixed(1)}" text-anchor="start" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${g.f.toFixed(1)}" font-weight="600" fill="${GR.ink}" ${halo}>${g.ft} ft</text>`}`;
       continue;
     }
     grid+=`<line x1="${x0}" y1="${g.y.toFixed(1)}" x2="${xR}" y2="${g.y.toFixed(1)}" stroke="${css.line}" stroke-width="1" stroke-dasharray="2 7"/>
     <text x="${s[1].toFixed(1)}" y="${(g.y-3).toFixed(1)}" text-anchor="${s[0]}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${gfs.toFixed(1)}" fill="${css.faint}">${g.ft} ft</text>`;
   }
-  /* Beaufort: the flood bands behind everything, the water over the grass line green inside them, and
-     the moving water's streaks, which run where the table runs fast and thin out to nothing at the turns.
-     A streak is in the water only, and clear of the depth scale's words */
-  let floodBands="",floodCap="",streaks="";
+  /* Beaufort: the flood bands behind everything, and the water over the grass line green inside them. A
+     band runs from just under its high's time, never through it or the words over it, down to the bed */
+  let floodBands="",floodCap="";
   if(day){
     for(const f of floods){const a=Math.max(X(f.a),x0),b=Math.min(X(f.b),xR);if(b-a<.5)continue;
-      floodBands+=`<rect x="${a.toFixed(1)}" y="${(topY-10).toFixed(1)}" width="${(b-a).toFixed(1)}" height="${(bedY-topY+10).toFixed(1)}" rx="3" fill="${GR.wash}" opacity=".16"${rvAt((a+b)/2,"fade")}/>`}
+      /* (a high past the chart's edge has no time printed, and its band starts just over the curve) */
+      const fh=floodHighs.find(q=>q.t===f.t),top=fh?fh.ty+11*fs*.22+2:Math.max(topY-10,Y(Math.max(interp(clamp(f.t,t0,t1)),grass))-8);
+      floodBands+=`<rect x="${a.toFixed(1)}" y="${top.toFixed(1)}" width="${(b-a).toFixed(1)}" height="${(bedY-top).toFixed(1)}" rx="3" fill="${GR.wash}" opacity=".16"${rvAt((a+b)/2,"fade")}/>`}
     floodCap=`<rect x="${x0}" y="0" width="${(xR-x0).toFixed(1)}" height="${Y(grass).toFixed(1)}" fill="${GR.wash}" opacity=".62"/>`;
-    /* the moving water: on each flank, at the middle of the run between two turns where the table runs
-       fastest, two short lines follow the curve just inside the water, the way a speed line follows a
-       thing that moves, longer the faster it runs; none near a turn, where the water stands */
-    for(let i=0;i+1<P.length;i++){
-      const ta=P[i].time.getTime(),tb=P[i+1].time.getTime(),tm=(ta+tb)/2;
-      if(tm<t0+36e5*.4||tm>t1-36e5*.4)continue;
-      const sp=Math.abs(interp(tm+45e4)-interp(tm-45e4))/.25,k=clamp((sp-.6)/1.3,0,1);
-      if(k<.15)continue;
-      const half=(.45+.55*k)*.18*(tb-ta);
-      for(const[off,len,op]of[[5.2,1,.55],[9.6,.62,.38]]){
-        const q=[];
-        for(let j=0;j<=10;j++){const t=tm-half*len+2*half*len*j/10,x=X(t),y=Y(interp(t)),e=9e4;
-          const dx=X(t+e)-X(t-e),dy=Y(interp(t+e))-Y(interp(t-e)),l=Math.hypot(dx,dy)||1;
-          let nx2=-dy/l,ny2=dx/l;if(ny2<0){nx2=-nx2;ny2=-ny2}
-          q.push([x+nx2*off*fs*.8,y+ny2*off*fs*.8])}
-        if(q.some(([x,y])=>gridBoxes.some(b=>x>b[0]-3&&x<b[2]+3&&y>b[1]-3&&y<b[3]+3)))continue;
-        streaks+=`<path d="${spline(q)}" fill="none" stroke="${css.wink}" stroke-width="${(1.3*fs*.8).toFixed(2)}" stroke-linecap="round" opacity="${(op*(.6+.4*k)).toFixed(2)}"${rvAt(X(tm),"fade")}/>`;
-      }
-    }
   }
-  /* Beaufort's wind row, under the lows on the tide's own clock: from now, the reading the chip shows,
-     then every few hours of the run (as many as stand apart at this width), each the house's vane
-     pointing into the wind with its mph beside it, and under it the gust when it runs 6 or more over
-     the wind, in the marker's ink from the headline's windy line. Calm has no arrow. Under that, a bar
-     over the hours of each of the coastal waters' advisories, named at its start */
+  /* Beaufort's wind row, under the lows on the tide's own clock: at now, the reading the chip shows, and at
+     each turn of the table still to come (windTimes), the house's vane pointing into the wind with its mph
+     beside it, the reading in the page's own inks. One number a column: the gusts are the chip's and the
+     pill's, said in words, because a second row of "g22" was the heaviest ink on the page and shorthand
+     only a pilot reads. Calm has no arrow. Under that, a bar over the hours of each of the coastal waters'
+     advisories, the forecaster's own call for the ocean off the sounds, named as offshore's: the house and
+     the river are in no marine zone */
   let windRow="",HT=H,windSaid="";
   if(day){
-    const nt0=now.getTime(),pxH=X(t0+36e5)-X(t0),wfs=9.6*fs,gfs2=8.4*fs,vw=8.2*fs;
-    const pairW=vw+1.5+2*wfs*.6,step=[1,2,3,4,6].find(s=>s*pxH>=pairW+3*fs)||6;
-    /* the columns stand every `step` hours from now, so they are evenly spaced from the boat, each the
-       run's hour it falls in */
-    const cols=[{t:nt0,x:nx,now:true}];
-    for(let t=nt0+step*36e5;t<=t1;t+=step*36e5){
-      const x=X(t);if(x-nx<pairW+3*fs||x>xR-pairW/2+2)continue;
-      cols.push({t,x});
-    }
-    const vy=H+7*fs,gy=vy+14*fs;
-    let anyGust=false;
+    const nt0=now.getTime(),pxH=X(t0+36e5)-X(t0),wfs=9.6*fs,vw=8.2*fs,mono=`font-family="Spline Sans Mono,ui-monospace,monospace"`;
+    /* a column is the vane and two digits, and two stand that and a little more apart. The first, now's,
+       says the unit once ("6 mph", the chip's own words) so the row reads as the wind, where that leaves
+       room before the next column: the turns come first, and on a 320 phone the unit gives way to them */
+    const pairW=vw+1.5+2*wfs*.6;
+    const cols=windTimes(P,nt0,t1,(pairW+5*fs)/pxH*36e5).map((t,i)=>({t,x:i?X(t):nx,now:!i}));
+    const unitW=4*wfs*.6,c0R=clamp(nx-(pairW+unitW)/2,x0,xR-pairW-unitW)+pairW+unitW;
+    const unit=!cols[1]||X(cols[1].t)-pairW/2>=c0R+6*fs?" mph":"";
+    const vy=H+7*fs;
     for(const col of cols){
       const wd=windAt(day.h,col.t,day.c,nt0);col.wd=wd;
-      if(!wd){windRow+=`<text x="${col.x.toFixed(1)}" y="${(vy+wfs*.36).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${wfs.toFixed(1)}" fill="${css.faint}">–</text>`;continue}
-      const w=Math.round(wd.w),g=wd.g==null?null:Math.round(wd.g),gusty=g!=null&&g-w>=6,windy=wd.g!=null&&wd.g>=WINDY_GUST;
       const ink=col.now?css.ink:css.soft,fade=rvAt(col.x,"fade");
-      if(w<1)windRow+=`<text x="${col.x.toFixed(1)}" y="${(vy+wfs*.34).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(wfs*.82).toFixed(1)}" font-weight="600" fill="${ink}" ${halo}${fade}>calm</text>`;
-      else{
-        const tw=String(w).length*wfs*.6,x0p=col.x-(vw+1.5+tw)/2,vx=x0p+vw/2,k=vw/10,deg=Math.round(((wd.d??0)%360+360)%360);
-        windRow+=`<g${fade}>${wd.d==null?"":`<g transform="translate(${vx.toFixed(1)} ${vy.toFixed(1)}) rotate(${deg}) scale(${k.toFixed(3)})"><path d="M0 -4.6 L0 4.6 M-2.5 -1.8 L0 -4.6 L2.5 -1.8" stroke="${ink}" stroke-width="1.55" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>`}
-          <text x="${(x0p+vw+1.5).toFixed(1)}" y="${(vy+wfs*.36).toFixed(1)}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${wfs.toFixed(1)}" font-weight="600" fill="${ink}" ${halo}>${w}</text></g>`;
-      }
-      if(gusty){anyGust=true;
-        windRow+=`<text x="${col.x.toFixed(1)}" y="${gy.toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${gfs2.toFixed(1)}"${windy?` font-weight="600" fill="${css.marker}"`:` fill="${css.faint}"`} ${halo}${fade}>g${g}</text>`}
+      /* each column centred on its moment, and stepped in from the chart's edges where it would run off */
+      const at=w=>clamp(col.x-w/2,x0,xR-w);
+      if(!wd){windRow+=`<text x="${(at(wfs*.6)+wfs*.3).toFixed(1)}" y="${(vy+wfs*.36).toFixed(1)}" text-anchor="middle" ${mono} font-size="${wfs.toFixed(1)}" fill="${css.faint}">–</text>`;continue}
+      const w=Math.round(wd.w);
+      if(w<1){const cw2=4*wfs*.82*.6;
+        windRow+=`<text x="${(at(cw2)+cw2/2).toFixed(1)}" y="${(vy+wfs*.34).toFixed(1)}" text-anchor="middle" ${mono} font-size="${(wfs*.82).toFixed(1)}" font-weight="600" fill="${ink}" ${halo}${fade}>calm</text>`;continue}
+      const txt=String(w)+(col.now?unit:""),tw=txt.length*wfs*.6,vane=wd.d!=null,tot=(vane?vw+1.5:0)+tw,x0p=at(tot),vx=x0p+vw/2,k=vw/10,deg=Math.round(((wd.d??0)%360+360)%360);
+      windRow+=`<g${fade}>${vane?`<g transform="translate(${vx.toFixed(1)} ${vy.toFixed(1)}) rotate(${deg}) scale(${k.toFixed(3)})"><path d="M0 -4.6 L0 4.6 M-2.5 -1.8 L0 -4.6 L2.5 -1.8" stroke="${ink}" stroke-width="1.55" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>`:""}
+        <text x="${(x0p+tot-tw).toFixed(1)}" y="${(vy+wfs*.36).toFixed(1)}" ${mono} font-size="${wfs.toFixed(1)}" font-weight="600" fill="${ink}" ${halo}>${w}${col.now&&unit?`<tspan font-weight="400">${unit}</tspan>`:""}</text></g>`;
     }
-    HT=Math.round(gy+(anyGust?5*fs:-4*fs));
+    /* the row's height is the loading shell's (windRowH), so the chart lands at the height it was held at */
+    HT=H+windRowH(W);
     /* the advisories, as the forecaster wrote their hours */
     const adv=(day.zone||[]).map(a=>({a,s:Math.max(Date.parse(a.onset||a.sent||"")||nt0,nt0),e:Math.min(Date.parse(a.ends||a.expires||"")||t1,t1)})).filter(v=>v.e>v.s&&v.s<t1).sort((p,q)=>p.s-q.s);
     if(adv.length){
-      /* each bar over its own hours, a watch paler than an advisory or a warning; the names in one run
-         from the first one's start, as far left as they need to fit, because two in a row (a Small Craft
-         Advisory, then a Gale Watch behind it) would otherwise print over each other */
-      const by=HT+2,lfs=8.4*fs,bh=2.6*fs;
+      /* each bar over its own hours in the soft ink, a watch paler than an advisory or a warning; the names
+         in one run from the first one's start, as far left as they need to fit (two in a row, a Small Craft
+         Advisory and then a Gale Watch behind it, would print over each other), "offshore" said once in
+         front, and the run a size smaller where a 320 phone needs it */
+      const by=HT,bh=2.4*fs;
       for(const v of adv){const a=X(v.s),b=X(v.e);
-        windRow+=`<rect x="${a.toFixed(1)}" y="${by.toFixed(1)}" width="${Math.max(2,b-a).toFixed(1)}" height="${bh.toFixed(1)}" rx="${(bh/2).toFixed(1)}" fill="${css.marker}" opacity="${/watch/i.test(v.a.event)?.42:.82}"${rvAt(a,"fade")}/>`}
-      const words=[...new Set(adv.map(v=>v.a.event.toLowerCase()))].join(" · "),tw=words.length*lfs*.6;
-      const lx=clamp(X(adv[0].s),x0,Math.max(x0,xR-tw));
-      windRow+=`<text x="${lx.toFixed(1)}" y="${(by+bh+lfs*.95).toFixed(1)}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${lfs.toFixed(1)}" font-weight="600" fill="${css.marker}" ${halo}${rvAt(lx,"label")}>${words}</text>`;
+        windRow+=`<rect x="${a.toFixed(1)}" y="${by.toFixed(1)}" width="${Math.max(2,b-a).toFixed(1)}" height="${bh.toFixed(1)}" rx="${(bh/2).toFixed(1)}" fill="${css.soft}" opacity="${/watch/i.test(v.a.event)?.28:.6}"${rvAt(a,"fade")}/>`}
+      const words="offshore "+[...new Set(adv.map(v=>v.a.event.toLowerCase()))].join(" · ");
+      const lfs=Math.min(8*fs,(xR-x0)/(words.length*.6)),tw=words.length*lfs*.6,lx=clamp(X(adv[0].s),x0,Math.max(x0,xR-tw));
+      windRow+=`<text x="${lx.toFixed(1)}" y="${(by+bh+lfs*.95).toFixed(1)}" ${mono} font-size="${lfs.toFixed(1)}" fill="${css.soft}" ${halo}${rvAt(lx,"label")}>${words}</text>`;
       HT=Math.round(by+bh+lfs*1.3);
     }
     const peak=cols.filter(c=>c.wd).reduce((m,c)=>!m||(c.wd.g??c.wd.w)>(m.wd.g??m.wd.w)?c:m,null);
     windSaid=[cols[0].wd?`Wind now ${windSpoken(cols[0].wd).replace(/^wind /,"")}`:"",
       peak&&peak!==cols[0]?`the strongest on the chart ${windSpoken(peak.wd).replace(/^wind /,"")} ${xpSaidAt(new Date(peak.t).setMinutes(0,0,0),nt0)}`:"",
-      ...adv.map(v=>`a ${v.a.event} from ${xpSaidAt(v.s,nt0).replace(/^at /,"")}`)].filter(Boolean).join(", ");
+      ...adv.map(v=>`an offshore ${v.a.event} from ${xpSaidAt(v.s,nt0).replace(/^at /,"")}`)].filter(Boolean).join(", ");
   }
   const tideSvg=document.getElementById("tideSvg"),waterTop=Math.min(...pts.map(p=>p[1]));
   tideSvg.setAttribute("viewBox",`0 0 ${W} ${HT}`);
@@ -11645,7 +11695,7 @@ function renderTides(preds,css,gust,wind,gap=0,day=null){
       <stop offset="1" stop-color="${css.water}" stop-opacity=".06"/></linearGradient>
       <clipPath id="tideArea"><path d="${area}"/></clipPath></defs>
     ${floodBands}${grid}
-    <g clip-path="url(#tideArea)">${day?`<g class="rv-fill"><rect x="${X(t0).toFixed(1)}" y="0" width="${(X(t1)-X(t0)).toFixed(1)}" height="${seaY}" fill="url(#tideFill)"/>${floodCap}</g>${streaks}`:`<rect class="rv-fill" x="${X(t0).toFixed(1)}" y="0" width="${(X(t1)-X(t0)).toFixed(1)}" height="${seaY}" fill="url(#tideFill)"/>`}</g>
+    <g clip-path="url(#tideArea)">${day?`<g class="rv-fill"><rect x="${X(t0).toFixed(1)}" y="0" width="${(X(t1)-X(t0)).toFixed(1)}" height="${seaY}" fill="url(#tideFill)"/>${floodCap}</g>`:`<rect class="rv-fill" x="${X(t0).toFixed(1)}" y="0" width="${(X(t1)-X(t0)).toFixed(1)}" height="${seaY}" fill="url(#tideFill)"/>`}</g>
     ${rv?[[10,.3,.24],[6.5,.6,.2],[4.4,1,.16]].map(([w,f,o])=>`<path class="rv-tail" data-f="${f}" data-o="${o}" d="${path}" fill="none" stroke="${css.water}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>`).join(""):""}
     <path class="wline" d="${path}" fill="none" stroke="${css.water}" stroke-width="2.4" stroke-linecap="round"/>
     <path d="M ${x0} ${seaY-.5} L ${W-padX} ${seaY-.5} L ${W-padX} ${bedY} Q ${(W*.72).toFixed(1)} ${bedY+2.5} ${((x0+W)/2).toFixed(1)} ${bedY-1} Q ${(W*.28).toFixed(1)} ${bedY-3.5} ${x0} ${bedY} Z" fill="${sand}" opacity=".55"/>
@@ -11665,7 +11715,7 @@ function renderTides(preds,css,gust,wind,gap=0,day=null){
   /* at Beaufort each stop also says the water's stage, a flood tide (the grass, out of season), and the wind */
   /* the hours before now have no wind row (the run starts at the hour now is in), so they say none */
   const dayStop=(t,v)=>{const past=t<new Date(nt).setMinutes(0,0,0),w=past?undefined:windAt(day.h,t,day.c,nt);
-    return{stage:tideStage(t,P),flood:v>=grass?(floodWord?(v>=grass+.8?"big flood tide":"flood tide"):"in the grass"):"",wind:w,windy:!!w&&w.g!=null&&w.g>=WINDY_GUST}};
+    return{stage:tideStage(t,P),flood:v>=grass?(floodWord(t)?(v>=grass+.8?"big flood tide":"flood tide"):"in the grass"):"",wind:w}};
   const stops=quarterStops(t0,t1,nt,turns.map(p=>p.time.getTime())).map(t=>{
     const p=turns.find(q=>q.time.getTime()===t),nextT=P.find(q=>q.time.getTime()>t);
     return{t,depth:t===nt?wNow:p?p.v:interp(t),turn:p&&t!==nt?p.type:null,now:t===nt,
@@ -11677,7 +11727,7 @@ function renderTides(preds,css,gust,wind,gap=0,day=null){
   xpPublish("tide",{svg:tideSvg,W,x:stops.map(s=>X(s.t)),y:stops.map(s=>[s.now?NaN:Y(s.depth)]),over:stops.map(s=>s.now?skiffTop:NaN),t:stops.map(s=>s.t),
     band:[topY-10,day?HT-2:seaY],start:ni,marks,snap:marks,noRing:[ni],read:i=>readTide(stops[i],nt,gap)});
   /* what Beaufort's additions show, for the chart's spoken label */
-  const said=day?[`The grass line at ${grass} feet, ${floods.length?floods.map(f=>`${floodWord?"a flood tide":"the water over it"} from ${xpSaidAt(f.a,nt).replace(/^at /,"")} to ${xpSpoken(new Date(f.b))}`).join(", then "):"and no high reaches it"}`,
+  const said=day?[`The grass line at ${grass} feet, ${floods.length?floods.map(f=>`${floodWord(f.t)?"a flood tide":"the water over it"} from ${xpSaidAt(f.a,nt).replace(/^at /,"")} to ${xpSpoken(new Date(f.b))}`).join(", then "):"and no high reaches it"}`,
     windSaid].filter(Boolean).join(". "):"";
   if(next){
     const rising=next.type==="H";
@@ -13328,12 +13378,16 @@ function readTide(s,now,gap){
   const feet=`${s.turn?"":"about "}${ft(s.depth).replace("−","minus ")} feet${by?" by the tide table":""}`;
   const off=s.now&&live?`, running ${Math.abs(gap)===.5?"half a foot":Math.abs(gap)+" ft"} ${gap>0?"above":"below"} the tide table`:"";
   /* Beaufort's stops carry the water's stage, a flood tide and the wind (renderTides): the stage
-     replaces rising and falling in the sentence, which the chart already shows */
+     replaces rising and falling in the sentence, which the chart already shows. The wind is the chip's:
+     its vane into the wind (a part the pill draws, as the row under the chart does), then the mph and the
+     gusts, in the pill's own ink; calm has no vane */
   const extra="stage" in s,more=[];
   if(extra){
     if(s.stage)parts.push([s.stage,""]);
     if(s.flood)parts.push([s.flood,"grass"]);
-    if(s.wind!==undefined){parts.push([windWords(s.wind),s.windy?"windy":""]);more.push(s.flood,windSpoken(s.wind))}
+    if(s.wind!==undefined){
+      if(s.wind&&s.wind.d!=null&&Math.round(s.wind.w)>=1)parts.push([String(Math.round(s.wind.d)),"vane"]);
+      parts.push([windWords(s.wind),""]);more.push(s.flood,windSpoken(s.wind))}
     else more.push(s.flood);
   }
   const tail=more.filter(Boolean).map(x=>", "+x).join("");
@@ -13495,7 +13549,11 @@ function xpShow(X,i){
   X.i=i;X.shown=true;
   if(X.k==="moon")fishMotion();
   const r=D.read(i);
-  X.peek.innerHTML=r.parts.map(([t,c])=>`<span${c?` class="${c}"`:""}>${esc(t)}</span>`).join("");
+  /* a part whose class is "vane" is the chip's vane at that bearing, held together with the words after
+     it, so a pill that wraps never leaves the arrow at the end of one line and its mph on the next
+     (Beaufort's water, MOCK option C) */
+  X.peek.innerHTML=r.parts.map(([t,c],i,a)=>c==="vane"?"":a[i-1]?.[1]==="vane"?`<span class="vane-p">${vane(a[i-1][0])}<span${c?` class="${c}"`:""}>${esc(t)}</span></span>`
+    :`<span${c?` class="${c}"`:""}>${esc(t)}</span>`).join("");
   X.peek.hidden=false;
   if(X.key){X.key.value=i;X.key.setAttribute("aria-valuetext",r.said)}
   /* drawn inside the chart, over the line and under the labels, whose paper halos break it */
@@ -14310,6 +14368,19 @@ async function stormRun(L,request,lane){
     if(JSON.stringify(m)!==was)render(d,LAST.live,LAST.savedAt);
   }catch(e){}
 }
+/* Beaufort's coastal-waters advisories landing after the paint (MOCK, option C): into the reading and its
+   cache, and a paint only when they change what the wind row shows. No answer keeps the last ones */
+async function zoneRun(L,request,zoneP){
+  try{
+    const z=await zoneP;
+    await PAINT;
+    if(z==null||L!==LOC||request!==REFRESH_ID||!LAST)return;
+    const d=LAST.d;if(JSON.stringify(d.zone||[])===JSON.stringify(z))return;
+    d.zone=z;
+    try{localStorage.setItem(cacheKey(L.id),JSON.stringify({savedAt:LAST.savedAt,data:d}))}catch(e){}
+    render(d,LAST.live,LAST.savedAt);
+  }catch(e){}
+}
 async function refresh(){
   const request=++REFRESH_ID,L=LOC,btn=document.getElementById("refreshBtn");
   btn.classList.add("spin");
@@ -14330,9 +14401,12 @@ async function refresh(){
   try{
     const yest=new Date(Date.now()-864e5);
     const bd=yest.toLocaleDateString("en-CA",{timeZone:L.tz}).replace(/-/g,"");
-    /* MOCK (option C): the coastal waters' own advisories, which never come with the house's point */
+    /* MOCK (option C): the coastal waters' own advisories, which never come with the house's point. Their
+       own lane, the way the beach's is: the forecast never waits on them. In by the paint, they join it
+       (zoneIn); later, they paint again when they change what the chart shows (zoneRun) */
     const zoneP=L.marineZone?fetchJSON(`https://api.weather.gov/alerts/active?zone=${L.marineZone}`,6000)
       .then(aj=>(aj.features||[]).map(alertRow).filter(a=>alertLive(a)&&MARINE_EVENT.test(a.event))).catch(()=>null):Promise.resolve(null);
+    let zoneIn;zoneP.then(z=>{zoneIn=z});
     const [wj,marine,tides,water,alerts]=await Promise.all([
       fetchJSON(`https://api.open-meteo.com/v1/forecast?latitude=${L.lat}&longitude=${L.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,wind_speed_10m_max,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=${encodeURIComponent(L.tz)}&forecast_days=8&minutely_15=precipitation&forecast_minutely_15=12`,10000),
       /* the seas every day of the year, hour by hour for two days, because after dark the boat's
@@ -14366,8 +14440,6 @@ async function refresh(){
       /* where each hour's wind comes from, for Beaufort's wind row under the tide (a cache written
          before it was asked for has none, and the row draws no vane there) */
       ...(Array.isArray(wj.hourly.wind_direction_10m)?{dir:wj.hourly.wind_direction_10m.slice(i0)}:{})};
-    /* and the marine zone's own advisories, for the wind row (Beaufort's AMZ362): none is no answer */
-    const zone=await zoneP;
     /* the storms from their lane when it is in, and a first open waits a moment for it; until it
        lands, the last ones this place had */
     let wait=null;const waited=()=>wait||(wait=new Promise(r=>setTimeout(r,STORM_WAIT)));
@@ -14408,12 +14480,14 @@ async function refresh(){
     const seen={point:alerts?pointAt??Date.now():carry?kept.seen?.point??keptAt:null,beach:beachIn!=null?beachAt:kept?.seen?.beach??keptAt,...(carry?{carried:true}:{})};
     const wssi=wssiIn!==undefined?wssiIn:kept?.wssi??latch.wssi??null;
     const data={current:wj.current,daily:wj.daily,hourly:s,marine,tides,water,alerts:alerts??carry,storms,nowcast,beach,wssi,seen,held:kept?.held??latch.held??null};
-    /* MOCK (option C): the coastal waters' advisories, the last ones when the zone did not answer */
-    if(L.marineZone)data.zone=zone??kept?.zone??null;
+    /* MOCK (option C): the coastal waters' advisories when they are in, the last ones until they are, and
+       the last ones when the zone did not answer */
+    if(L.marineZone)data.zone=zoneIn??kept?.zone??null;
     if(L!==LOC||request!==REFRESH_ID)return; /* a newer refresh or location change won */
     render(data,true);
     writeCache(L.id,data);
     if(!landed)stormRun(L,request,lane);
+    if(L.marineZone&&zoneIn===undefined)zoneRun(L,request,zoneP);
   }catch(e){
     if(L!==LOC||request!==REFRESH_ID)return;
     const cached=readCache(L.id);
@@ -14446,6 +14520,9 @@ function paintLocationShell(){
   /* the water is named for where its readings come from: Wrightsville Beach at Porters Neck, the
      Beaufort River at Beaufort */
   document.getElementById("waterTitle").textContent="Water · "+(LOC.water||"Wrightsville Beach");
+  /* Beaufort's in-season row holds its place, empty, until its fish land (MOCK, option C) */
+  const runs=document.getElementById("runsRow");runs.hidden=!(LOC.runs&&LOC.tide);runs.innerHTML="";
+  runs.classList.toggle("tall",!runs.hidden&&runsTall(RUNS[LOC.id],+locToday().slice(5,7)));
   /* this place's shape before any reading: the same sections in the same order, each with its
      title and no picture yet, and no sentence card until there is something to say */
   document.getElementById("moonSection").hidden=!LOC.fish;
@@ -14509,7 +14586,7 @@ function loadFrame(){
   document.getElementById("sceneSvg").setAttribute("viewBox",`0 0 ${W} ${H}`);
   const cw=aw-40,ch=chartH(cw),box=(id,h)=>document.getElementById(id).setAttribute("viewBox",`0 0 ${cw} ${h}`);
   /* Beaufort's tide chart carries its wind row under the lows (MOCK, option C), so its box is that much taller */
-  box("hourlySvg",ch-18);box("tideSvg",ch+(LOC.grass?Math.round(26*(cw<360?1.08:cw<520?1.16:1)*1.22):0));box("moonSvg",ch+16);
+  box("hourlySvg",ch-18);box("tideSvg",ch+(LOC.grass?windRowH(cw):0));box("moonSvg",ch+16);
   const N=NORMALS[LOC.id],snowy=!!(N&&N.snow.some(s=>s>=1));
   box("yearSvg",138+34+(snowy?46:0));
   document.getElementById("weekRows").style.minHeight="218px";
@@ -14576,7 +14653,7 @@ function paintLoadingState(){
   weekBrief(null);
   document.getElementById("tideSvg").innerHTML="";
   document.getElementById("tideNote").textContent="";
-  document.getElementById("runsRow")?.remove();
+  /* (paintLocationShell has emptied Beaufort's in-season row and holds its place) */
   document.getElementById("nowcast").className="nowcast";document.getElementById("ncBars").innerHTML="";
   /* the strip goes with the reading it belonged to, the way an ended alert takes it down */
   renderAlerts(null);
@@ -14604,8 +14681,8 @@ function clearPlaceReadings(){
     document.getElementById(id).innerHTML="";
   for(const id of ["hourlyNote","weekNote","tideNote"])document.getElementById(id).textContent="";
   for(const id of ["uvLead","eveLead"])document.getElementById(id).textContent="—";
-  /* Beaufort's in-season row goes with its chart (MOCK, option C) */
-  document.getElementById("runsRow")?.remove();
+  /* Beaufort's in-season row goes with its chart, its height held (MOCK, option C) */
+  document.getElementById("runsRow").innerHTML="";
   weekBrief(null);xpReset();
   document.getElementById("nowcast").className="nowcast";document.getElementById("ncBars").innerHTML="";
   renderAlerts(null);

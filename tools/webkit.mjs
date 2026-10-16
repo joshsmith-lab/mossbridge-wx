@@ -39,6 +39,12 @@ const CASES = [
   { name: "coast-afternoon", loc: "mb", when: "2026-10-10T15:30:00", note: "partly cloudy, the ordinary afternoon",
     o: { baseTemp: 71, nowTemp: 75, feels: 75, rh: 55, isDay: 1, code: 2, cloud: 45, nowWind: 9, nowDir: 40, nowGust: 15, nowUv: 3.4, uvMax: 5, windAmp: 6, gustAmp: 10,
       sunrise: "07:13", sunset: "18:44", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  /* Beaufort's five layers in October, on NOAA's real table, with the water's grass line, wind row and
+     in-season row (MOCK, option C) under them */
+  { name: "beaufort-afternoon", loc: "bft", when: "2026-10-10T15:30:00", note: "Beaufort in October: the five layers, Halloween's props, the water's flood tide and wind row",
+    o: { baseTemp: 74, nowTemp: 76, feels: 76, rh: 60, isDay: 1, code: 1, cloud: 18, nowWind: 9, nowDir: 40, nowGust: 15, nowUv: 3.4, uvMax: 5, windAmp: 6, gustAmp: 10,
+      sunrise: "07:21", sunset: "18:52", popCurve: () => 5, dailyPop: (p) => p.fill(8), waterTemp: null, buoyTemp: 78.4, buoyAge: 22,
+      tideTable: JSON.parse(readFileSync(path.join(ROOT, "tools", "beaufort", "fixtures", "tides-8667999-2026.json"), "utf8")).predictions } },
 ];
 
 const runner = path.join(ROOT, "tools", "shots", "webkit-runner"), source = path.join(ROOT, "tools", "webkit.swift");

@@ -4,6 +4,7 @@
  * Uses the same optional PORCH_CHROME_PATH as the visual harnesses.
  */
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { chromium } from "playwright";
 import { serve, stage, SEVERE, forecast, tides, marine, LOC_TZ, FONT_CSS } from "./fixtures.mjs";
 import { STORMS, alertsFrom, wssiAnswer } from "./storm-fixtures.mjs";
@@ -179,6 +180,73 @@ try{
     assert.equal((await xpState(page,"tide")).shown,false);
     /* with no surge on the gauge, no stop is said to be the table's */
     assert.ok(await page.evaluate(()=>XP.tide.D.x.every((_,i)=>!/table/.test(XP.tide.D.read(i).said))),"no gap, no table");
+    assert.deepEqual(errors,[]);await context.close();checks++;
+  }
+  /* Beaufort's water (MOCK, option C) on NOAA's real table for October 27 2026, the season's 9.35 ft flood
+     at 10:17 am with a northeast wind on it: every stop's pill keeps inside the chart at 320, 390 and 900,
+     the keys and the spoken value are the coast's, and each stop says the stage of the water, the flood tide
+     in the grass's green and, from now on, the wind with the chip's vane. A real finger slides it at 390 */
+  {
+    const T26=JSON.parse(readFileSync(new URL("./beaufort/fixtures/tides-8667999-2026.json",import.meta.url),"utf8")).predictions;
+    const bftO={baseTemp:66,nowTemp:63,feels:63,rh:68,isDay:1,code:1,cloud:12,nowWind:13,nowDir:45,nowGust:21,nowUv:1.6,uvMax:4.6,windAmp:6,gustAmp:10,
+      sunrise:"07:38",sunset:"18:33",popCurve:()=>5,dailyPop:p=>p.fill(6),tideTable:T26,waterTemp:null,buoyTemp:74.6,buoyAge:22,wave:3.1};
+    const bftAt=new Date("2026-10-27T08:40:00-04:00");
+    /* the pill as it is seen is its reader's parts, the vane drawn and not said */
+    const seen=r=>r.parts.filter(q=>q[1]!=="vane").map(q=>q[0]).join(" ");
+    for(const width of [320,390,900]){
+      const {context,page,errors}=await open(width,bftO,"bft",bftAt);
+      await load(page);
+      const box=await inView(page,"#tideSvg");
+      for(const x of [box.x+2,box.x+box.width-2]){await page.mouse.move(x,box.y+box.height/2);await fitsIn(page,"tide")}
+      await page.mouse.move(5,5);
+      await page.locator("#tideExplore .xp-key").focus();
+      await page.keyboard.press("Home");
+      const n=(await xpState(page,"tide")).n;
+      let sawVane=false,sawFlood=false;
+      for(let i=0;i<n;i++){
+        if(i)await page.keyboard.press("ArrowRight");
+        await fitsIn(page,"tide");
+        const s=await xpState(page,"tide"),r=await page.evaluate(i=>XP.tide.D.read(i),s.i);
+        assert.equal(s.i,i,"one step a stop");
+        assert.equal(s.valuetext,s.said,"the slider speaks the reader's sentence");
+        assert.equal(s.text,seen(r),"the pill is its reader's parts");
+        assert.doesNotMatch(s.said,/slack/,"never slack");
+        const past=s.t<new Date(bftAt).setMinutes(0,0,0);
+        if(past)assert.doesNotMatch(s.said,/mph|miles an hour|wind/,"the hours before now, which have no wind row, say no wind");
+        else assert.match(s.said,/wind from the (north|northeast|east|south|west)|calm/,"from now on each stop names the wind");
+        const vaneDrawn=await page.evaluate(()=>!!document.querySelector("#tideExplore .xp-peek .vane-p svg.vane"));
+        assert.equal(vaneDrawn,r.parts.some(q=>q[1]==="vane"),"the vane is drawn where the reader puts one");
+        if(vaneDrawn)sawVane=true;
+        if(/flood tide/.test(s.text)){sawFlood=true;assert.ok(r.parts.some(q=>q[1]==="grass"),"a flood tide is said in the grass's green")}
+      }
+      assert.ok(sawVane&&sawFlood,"the morning's flood and the wind are both read");
+      await page.keyboard.press("Home");await page.keyboard.press("PageDown");
+      const nowStop=await xpState(page,"tide");
+      assert.match(nowStop.text,/^now /,"PageDown from the start lands on now");
+      assert.match(nowStop.said,/wind from the northeast 13 miles an hour, gusts 21/,"now's wind is the chip's");
+      await page.keyboard.press("PageDown");
+      const high=await xpState(page,"tide");
+      assert.match(high.text,/^10:17a 9\.4 ft high water big flood tide 1\d, gusts 2\d mph$/,`then the flood's own high, the table's number: ${high.text}`);
+      await page.keyboard.press("Escape");
+      assert.equal((await xpState(page,"tide")).shown,false);
+      /* the in-season row is the month's, drawn and said, and takes no tap */
+      assert.match(await page.evaluate(()=>document.getElementById("runsRow").textContent),/^In season in October, by SCDNR's calendar: bull reds, trout, flounder, sheepshead, shrimp\./);
+      assert.deepEqual(errors,[]);await context.close();checks++;
+    }
+    const {context,page,errors,cdp}=await phone(390,bftO,"bft",{when:bftAt});
+    await load(page);
+    const b=await inView(page,"#tideExplore"),y=b.y+b.height*.45;
+    let last=-1,monotone=true;
+    await touch(cdp,page,across(b,y),{end:false,each:async()=>{const s=await xpState(page,"tide");if(s.i<last)monotone=false;last=s.i}});
+    await page.waitForTimeout(30);
+    const s=await xpState(page,"tide");
+    assert.equal(await page.evaluate(()=>__cancels),0,"Beaufort's tide: the slide is the chart's, not the page's");
+    assert.ok(s.shown&&monotone,"Beaufort's tide: the reading follows the finger to the right");
+    assert.ok(Math.abs(s.x-(b.x+210))<=Math.max(7.5,s.gaps/2+1),`Beaufort's tide: the stop is under the finger: ${s.x} for ${b.x+210}`);
+    await fitsIn(page,"tide");
+    await cdp.send("Input.dispatchTouchEvent",{type:"touchEnd",touchPoints:[]});
+    await page.waitForTimeout(2700);
+    assert.equal((await xpState(page,"tide")).shown,false,"Beaufort's tide: gone by 2.7s");
     assert.deepEqual(errors,[]);await context.close();checks++;
   }
   for(const [code,kind] of [[75,"snow"],[67,"freezing rain"]]){
@@ -1473,7 +1541,7 @@ try{
     assert.ok(fontAt>0);
     assert.deepEqual(m.errors,[]);await m.context.close();checks++;
   }
-  console.log(`${checks} interaction scenarios passed: matched chart heights, hourly and tide exploration, warnings, thunder coming at the farm, the farm's sections after the coast, the entrance across a cache-to-live paint and below the fold, offline recovery, a storm card on a cold open, with the beach fast and the advisories slow, through a renewed beach warning (and 7h20m on, with the cache aged out and the beach fast, slow, slower than STORM_WAIT and failing) and growing under a reader inside it, the farm's card held through a failed alerts fetch and a cold open the next morning, WPC's index raising only the warnings it was asked for (an extended warning on a refresh, a new one on a cold open), the card, the strip and the headline kept through a failed alerts request at both places with an advisory ending during it, NOW and the headline on a warning issued ahead of its start and turning at noon, one period after midnight, its quoted title fitted again when the fonts land, on a two-hour-old cache whose beach warning has passed its expiry, and a tornado under a hurricane, and every line read by a real finger, the keys and a screen reader.`);
+  console.log(`${checks} interaction scenarios passed: matched chart heights, hourly and tide exploration, warnings, thunder coming at the farm, the farm's sections after the coast, the entrance across a cache-to-live paint and below the fold, offline recovery, a storm card on a cold open, with the beach fast and the advisories slow, through a renewed beach warning (and 7h20m on, with the cache aged out and the beach fast, slow, slower than STORM_WAIT and failing) and growing under a reader inside it, the farm's card held through a failed alerts fetch and a cold open the next morning, WPC's index raising only the warnings it was asked for (an extended warning on a refresh, a new one on a cold open), the card, the strip and the headline kept through a failed alerts request at both places with an advisory ending during it, NOW and the headline on a warning issued ahead of its start and turning at noon, one period after midnight, its quoted title fitted again when the fonts land, on a two-hour-old cache whose beach warning has passed its expiry, and a tornado under a hurricane, Beaufort's water read stop by stop at three widths and by a finger, and every line read by a real finger, the keys and a screen reader.`);
 }finally{
   await browser.close();server.close();
 }

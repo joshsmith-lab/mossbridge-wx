@@ -114,6 +114,14 @@ CASES.push(C("king-tide", "2026-10-27T08:40:00", .8, "the season's highest tide 
     windCurve: ramp([[0, 10], [8, 13], [12, 15], [16, 14], [20, 10], [26, 8], [32, 9], [36, 12], [42, 11], [48, 8]]),
     gustCurve: ramp([[0, 17], [8, 21], [12, 24], [16, 22], [20, 16], [26, 13], [32, 15], [36, 19], [42, 18], [48, 13]]),
     dirCurve: ramp([[0, 40], [10, 45], [16, 60], [22, 50], [30, 40], [38, 55], [48, 70]]), buoyTemp: 74.6, wave: 3.1 })));
+/* A May evening on the real table: the spring tide's 9.12 ft flood at 9:39 pm on May 16 2026, the evening
+   high the spring floods fall on (the fall's are the morning's), a sea breeze laying down after dark, and
+   the cobia in Port Royal Sound with May closed to keeping them, which the in-season row says */
+CASES.push(C("may-evening", "2026-05-16T18:30:00", .7, "a warm May evening on the spring tide: the evening flood coming, the sea breeze laying down",
+  REAL({ baseTemp: 80, nowTemp: 81, feels: 83, rh: 62, isDay: 1, code: 1, cloud: 15, nowWind: 12, nowDir: 160, nowGust: 18, nowUv: 1.2, uvMax: 9.5, windAmp: 6, gustAmp: 9, sunrise: "06:28", sunset: "20:13", popCurve: () => 5, dailyPop: (p) => p.fill(8),
+    windCurve: ramp([[0, 5], [8, 6], [12, 9], [17, 13], [19, 12], [22, 7], [26, 5], [32, 5], [36, 9], [41, 14], [48, 8]]),
+    gustCurve: ramp([[0, 9], [8, 10], [12, 14], [17, 19], [19, 18], [22, 12], [26, 9], [32, 9], [36, 14], [41, 21], [48, 13]]),
+    dirCurve: ramp([[0, 220], [9, 200], [14, 170], [18, 160], [22, 190], [28, 225], [34, 210], [40, 165], [48, 185]]), buoyTemp: 75.3, wave: 2.1 })));
 /* the water section after dark, on the carved week's real table: the morning's 8.3 ft flood ahead */
 CASES.push(C("water-night", "2026-10-23T21:30:00", .5, "an October night on the real table, the next morning's flood tide on the chart",
   REAL({ baseTemp: 66, nowTemp: 64, feels: 64, rh: 75, isDay: 0, code: 0, cloud: 6, nowWind: 6, nowDir: 30, nowGust: 10, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8, sunrise: "07:34", sunset: "18:37", popCurve: () => 5, dailyPop: (p) => p.fill(8),
@@ -207,10 +215,21 @@ for (const cs of CASES.filter((c) => !ONLY.length || ONLY.some((o) => c.name.inc
         if (w > 1 && h > 2) out.push(`"${T[i].s}" on "${T[j].s}"`);
       }
       const row = document.getElementById("runsRow");
-      if (row) {
-        const sec = document.getElementById("tideSection").getBoundingClientRect(), pad = 19.5, runs = [...row.querySelectorAll(".run")].map((e) => e.getBoundingClientRect());
-        for (const r of runs) if (r.left < sec.left + pad || r.right > sec.right - pad) out.push("an in-season fish runs past the column");
-        if (new Set(runs.map((r) => Math.round(r.bottom))).size > 1) out.push("the in-season row wraps");
+      if (row && !row.hidden) {
+        /* every month's row, not only this case's: the busiest (April and May, six of them) has to fit a
+           320 phone on one line too, and the row's held height has to hold every one */
+        const sec = document.getElementById("tideSection").getBoundingClientRect(), pad = 19.5;
+        const check = (m) => {
+          const runs = [...row.querySelectorAll(".run")].map((e) => e.getBoundingClientRect());
+          for (const r of runs) if (r.left < sec.left + pad || r.right > sec.right - pad) out.push(`an in-season fish runs past the column${m ? " in month " + m : ""}`);
+          if (new Set(runs.map((r) => Math.round(r.top))).size > 1) out.push(`the in-season row wraps${m ? " in month " + m : ""}`);
+          /* the row is never taller than the height held for it before its fish land */
+          if (row.getBoundingClientRect().height > parseFloat(getComputedStyle(row).minHeight) + .5) out.push(`the in-season row is taller than the height held for it${m ? " in month " + m : ""}`);
+        };
+        check(0);
+        const keep = row.innerHTML;
+        for (let m = 1; m <= 12; m++) { renderRuns(RUNS.bft, new Date(2026, m - 1, 15, 12)); check(m); }
+        row.innerHTML = keep;
       }
       return out;
     });
