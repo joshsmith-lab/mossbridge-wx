@@ -1093,10 +1093,10 @@ If you add a location, give it a `tz` and a `tzLabel`. Nothing else needs to kno
 
 ## On file size
 
-`index.html` is about 750 KB of source (October 2026, with NOAA's daily normals, the Halloween cast and the storm card's readers baked in), and an early plan set
+`index.html` is about 1.1 MB of source (October 15 2026, with NOAA's daily normals, the Halloween cast, the storm card's readers and Beaufort's whole cast baked in), and an early plan set
 160 KB as a ceiling. That number was about the source file and it is not the
 number that matters. GitHub Pages serves the file gzipped, so what a phone
-actually downloads is **about 255 KB**, once, and the service worker caches it
+actually downloads is **about 385 KB** (it was about 275 KB before Beaufort), once, and the service worker caches it
 after that. Measure both rather than trusting this paragraph: `wc -c index.html`
 for the source and `gzip -6c index.html | wc -c` for roughly what is sent.
 
