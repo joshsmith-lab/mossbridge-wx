@@ -76,6 +76,25 @@ CASES.push(C("halloween-night", "2026-10-31T20:40:00", .4, "Halloween night: the
 CASES.push(C("november-morning", "2026-11-01T09:30:00", .5, "the morning of November 1: every decoration down",
   { baseTemp: 64, nowTemp: 60, feels: 60, rh: 70, isDay: 1, code: 1, cloud: 18, nowWind: 6, nowDir: 30, nowGust: 10, nowUv: 2, uvMax: 4, windAmp: 5, gustAmp: 8, sunrise: "06:41", sunset: "17:28", popCurve: () => 5, dailyPop: (p) => p.fill(8) }));
 
+/* the sun behind the oak */
+/* Josh at about 8:35 on October 16 2026, "when the sun is behind the oak tree, like
+   it is now, that tree should really glow like it would in real life". Each clear morning the sun crosses
+   behind the crown for a while after sunrise, and the crown's rim, the moss's glow, the glare and the shade
+   are drawn only while it is there and the sky lets it through (bftBacklight); the evening sun sets behind the
+   palmettos the same way. glow and palms say whether the oak and the palmettos are lit from behind, and the
+   harness fails a case where they are not what they should be */
+const MORNING = { baseTemp: 72, nowTemp: 70, feels: 76, rh: 88, isDay: 1, code: 1, cloud: 12, nowWind: 3, nowDir: 220, nowGust: 6, nowUv: 1.2, uvMax: 5, windAmp: 4, gustAmp: 6,
+  popCurve: () => 5, dailyPop: (p) => p.fill(8), sunrise: "07:27", sunset: "18:48" };
+const B = (glow, palms, cs) => ({ ...cs, glow, palms });
+CASES.push(B(true, false, C("this-morning", "2026-10-16T08:35:00", .15, "this morning: the sun low over Lady's Island behind the oak's crown, the crown rimmed and the moss lit", { ...MORNING })));
+CASES.push(B(true, false, C("sunrise-oak", "2026-10-16T07:50:00", .25, "just after sunrise: the sun low behind the trunk and the low limbs, the light warmer, beams in the mist", { ...MORNING, nowTemp: 66, feels: 66, rh: 94, nowUv: .3 })));
+CASES.push(B(true, false, C("summer-morning", "2026-06-15T07:15:00", .5, "a June morning an hour after sunrise, the sun behind the crown's left side", { ...MORNING, baseTemp: 84, nowTemp: 78, feels: 82, rh: 86, nowUv: 1.6, uvMax: 10, sunrise: "06:15", sunset: "20:29" })));
+CASES.push(B(true, false, C("thin-cloud", "2026-10-16T08:35:00", .15, "this morning under thin cloud: the rim and the glow half as strong, no beams", { ...MORNING, code: 2, cloud: 55 })));
+CASES.push(B(false, false, C("overcast", "2026-10-16T08:35:00", .15, "this morning overcast: no rim, no glow, no shadow", { ...MORNING, code: 3, cloud: 95 })));
+CASES.push(B(false, false, C("fog", "2026-10-16T08:35:00", .15, "this morning in fog: none of it", { ...MORNING, code: 45, cloud: 100, rh: 99 })));
+CASES.push(B(false, false, C("clear-of-crown", "2026-10-16T10:45:00", .5, "later this morning, the sun clear of the crown: the oak in its ordinary light", { ...MORNING, nowTemp: 76, feels: 76, rh: 70, nowUv: 3.6 })));
+CASES.push(B(false, true, C("palm-sunset", "2026-10-16T18:25:00", .6, "this evening, the sun going down behind the palmettos: their fronds lit through, their trunks dark", { ...MORNING, nowTemp: 72, feels: 72, rh: 70, nowUv: .1 })));
+
 let chromium;
 try { ({ chromium } = await import("playwright")); } catch { console.error("playwright is not installed"); process.exit(1); }
 
@@ -128,10 +147,16 @@ for (const cs of CASES.filter((c) => !ONLY.length || ONLY.some((o) => c.name.inc
       return out;
     });
     if (overlaps.length) errs.push("animals overlap: " + overlaps.join(", "));
+    /* the sun behind the oak, and behind the palmettos, only where the case says */
+    const lit = await page.evaluate(() => ({ oak: document.querySelector('.scene [data-prop="sun-behind-oak"]')?.dataset.backlight || null,
+      palms: [...document.querySelectorAll('.scene [data-prop="palmetto"][data-backlight]')].map((n) => n.dataset.backlight) }));
+    if (cs.glow != null && !!lit.oak !== cs.glow) errs.push(`the oak is ${lit.oak ? "lit from behind (" + lit.oak + ")" : "not lit from behind"}, and should ${cs.glow ? "" : "not "}be`);
+    if (cs.palms != null && !!lit.palms.length !== cs.palms) errs.push(`the palmettos are ${lit.palms.length ? "lit from behind (" + lit.palms.join(" ") + ")" : "not lit from behind"}, and should ${cs.palms ? "" : "not "}be`);
+    if (lit.oak || lit.palms.length) info.backlight = `oak [${lit.oak || "-"}] palms [${lit.palms.join(" ") || "-"}]`;
     const tag = `${cs.name}-${width}`;
     await page.locator(".sky").screenshot({ path: path.join(OUT, `scene-${tag}.png`) }).catch((e) => errs.push("sky shot: " + e.message));
     await page.locator("#sceneSvg").screenshot({ path: path.join(OUT, `scene-${tag}-scene.png`) }).catch((e) => errs.push("scene shot: " + e.message));
-    console.log(`${tag}: loc ${info.loc}, tide ${info.tide == null ? "—" : info.tide.toFixed(2)}, props [${[...new Set(info.props)].join(" ")}], animals [${info.species.join(" ")}], ${info.running} animations`);
+    console.log(`${tag}: loc ${info.loc}, tide ${info.tide == null ? "—" : info.tide.toFixed(2)}, props [${[...new Set(info.props)].join(" ")}], animals [${info.species.join(" ")}], ${info.running} animations${info.backlight ? ", backlight " + info.backlight : ""}`);
     if (info.running > 120) errs.push(`${info.running} animations running, over the scenes' ceiling of 120`);
     if (info.loc !== "bft") { errs.push(`the page opened at ${info.loc}, not Beaufort`); }
     if (errs.length) { failed = true; console.log("  " + errs.join("\n  ")); }

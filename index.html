@@ -4601,14 +4601,15 @@ function bftOakMossGroups(layer="front",side=1){
   const list=bftOakMossList(lay),G=new Map(),back=lay==="back";
   BFT_CRIMP=back?3:2.4;
   list.forEach(([x,y,len,w,,g,pull=0,,nk],i)=>{const seed=bftOakMossSeed(i,lay),neck=!!nk||lay==="veil";
-    if(!G.has(g))G.set(g,{g,xs:[],ys:[],d:[],shade:[],hair:[],sheen:[]});const e=G.get(g);
+    if(!G.has(g))G.set(g,{g,xs:[],ys:[],d:[],shade:[],hair:[],sheen:[],b:[]});const e=G.get(g);
     e.xs.push(x);e.ys.push(y);
     e.d.push(bftMossCurtain(x,y,len,seed,w,false,pull,neck));
+    e.b.push({i,x,y,len,w,seed,pull,neck,d:e.d[e.d.length-1]});
     if(!back){e.shade.push(bftMossCurtain(x,y,len,seed,w,true,pull,neck));e.hair.push(bftMossHair(x,y,len,seed,w,pull,neck));
       e.sheen.push(bftMossSheen(x,y,len,seed,w,side,pull,neck))}});
   BFT_CRIMP=2.4;
   const out=[...G.values()].sort((a,b)=>a.g<b.g?-1:1).map(e=>({g:e.g,pivot:[f1(e.xs.reduce((a,b)=>a+b,0)/e.xs.length),Math.min(...e.ys)],
-    d:e.d.join(""),shade:e.shade.join(""),hair:e.hair.join(""),sheen:e.sheen.join("")}));
+    d:e.d.join(""),shade:e.shade.join(""),hair:e.hair.join(""),sheen:e.sheen.join(""),b:e.b}));
   BFT_OAK_MOSS_MEMO.set(key,out);return out;
 }
 /* the scene's moss, ready to place inside the oak's own transform: one layer as markup, a
@@ -4631,12 +4632,83 @@ const BFT_OAK_BOX=[-90,-89,188,94];
    is light, so the outline is at half strength; #4F515F is that ink at noon, so the look shows what the
    phone does); inside it the silhouettes, the dark locks over them, the hairlines (stroked in the group's
    ink, never filled: mossHair is "none") and the light */
-const bftOakMossLayers=(layer,side=1,ink="#4F515F")=>bftOakMossGroups(layer,side).map(e=>{const back=layer==="back";
+const bftOakMossLayers=(layer,side=1,ink="#4F515F",glow=null)=>bftOakMossGroups(layer,side).map(e=>{const back=layer==="back";
+  /* with the sun behind the oak (glow, from bftBacklight): the beards near it outlined in its light */
+  const G=glow?bftMossGlow(layer,e,glow):null;
   return{open:`<g class="moss" stroke="${ink}" stroke-opacity="${back?.24:.5}" stroke-width=".28" stroke-linejoin="round">`,pivot:e.pivot,layers:[
-    {parts:[part(e.d,back?"mossBack":"moss",{noSil:true})]},
+    {parts:[part(e.d,back?"mossBack":"moss",{noSil:true}),...(G?G.back:[])]},
     ...(e.shade?[{open:`<g class="bft-oak-lock" stroke="none">`,pivot:e.pivot,layers:[{parts:[part(e.shade,"mossShade",{noSil:true,op:.9})]}]}]:[]),
-    ...(e.hair?[{open:`<g class="bft-oak-hair" stroke-width=".15" stroke-opacity=".42">`,pivot:e.pivot,layers:[{parts:[part(e.hair,"mossHair",{noSil:true})]}]}]:[]),
+    ...(G&&G.halo.length?[{open:`<g class="bft-oak-glow"${layer==="front"?` stroke="none"`:` stroke="${glow.edge}" stroke-width=".22" stroke-linejoin="round"`}>`,pivot:e.pivot,layers:[{parts:G.halo}]}]:[]),
+    ...(e.hair&&(!G||G.hair)?[{open:`<g class="bft-oak-hair" stroke-width=".15" stroke-opacity=".42">`,pivot:e.pivot,layers:[{parts:[part(G?G.hair:e.hair,"mossHair",{noSil:true})]}]}]:[]),
+    ...(G&&G.hairLit?[{open:`<g class="bft-oak-hair-lit" stroke="${glow.hairC}" stroke-width=".17" stroke-opacity=".9">`,pivot:e.pivot,layers:[{parts:[part(G.hairLit,"mossHair",{noSil:true})]}]}]:[]),
     ...(e.sheen?[{open:`<g class="bft-oak-sheen" stroke="none">`,pivot:e.pivot,layers:[{parts:[part(e.sheen,"mossLit",{noSil:true,op:.45})]}]}]:[])]}});
+/* A beard with the sun behind it. Its grey scales scatter the light forward, so the light is on its edges, where
+   the fibres are thin against the sky, and over its loose ends, and never on its dense core: a band down both
+   edges of every tail, the silhouette's own edges outside and a line in by inn of the half width inside, and
+   the whole tail from tip of its length on. Above t0, where the beard still hangs in front of the leaves, the
+   leaves stop the light, so the band starts there, out of nothing */
+function bftMossHalo(x,y,len,seed,weight,pull,neck,inn,tip,t0){
+  const{S,N}=bftMossGeom(x,y,len,seed,weight,pull,neck),amp=.62,nt=S.length;
+  const off=t=>t<t0?1:t<t0+.08?1-(1-inn)*(t-t0)/.08:t>=tip+.1?0:t>tip?inn*(1-(t-tip)/.1):inn;
+  const seg=(s,side,ta,tb)=>{if(Math.max(ta,tb)<=t0+.02)return"";const A=bftEdge(s,side,ta,tb),B=bftEdge(s,side,tb,ta,off);
+    const a=A.P[A.P.length-1].map(f1),b=B.P[0].map(f1);
+    return`M${bftPts([A.P[0].map(f1)])}`+bftCrimp(A.P,A.bow*amp)+`l${bftPts([[f1(b[0]-a[0]),f1(b[1]-a[1])]])}`+bftCrimp(B.P,B.bow*amp)+"z"};
+  let d=seg(S[0],-1,0,1);
+  for(let j=0;j<nt;j++){d+=seg(S[j],1,1,j<nt-1?N[j]/S[j].L:0);if(j<nt-1)d+=seg(S[j+1],-1,N[j]/S[j+1].L,1)}
+  return d;
+}
+/* where a beard first hangs clear of the leaves behind it, as a share of its length (1 if it never does) */
+const BFT_MOSS_T0=new Map();
+const bftMossT0=(lay,b)=>{const key=lay+b.i;if(BFT_MOSS_T0.has(key))return BFT_MOSS_T0.get(key);
+  let t=1;for(let i=0;i<=20;i++){if(bftCrownGap(b.x+b.pull*i/40,b.y+b.len*i/20)>.4){t=i/20;break}}
+  BFT_MOSS_T0.set(key,t);return t};
+/* how lit a beard is, 0 to 3, by how near its lit part comes to the sun at S: full within 26 units, a middle
+   light to 54, a faint edge to 90 and nothing past it (bftNear's falloff, stepped). The moss that sways has no
+   faint edge (bftMossGlow) */
+const BFT_MOSS_REACH={front:[26,54,0]};
+const bftMossLevel=(lay,b,S)=>{const t0=bftMossT0(lay,b);if(t0>=.92&&lay!=="back")return 0;
+  const top=b.y+b.len*(lay==="back"?0:t0),bot=b.y+b.len,cx=b.x+b.pull*.4,d=Math.hypot(Math.max(0,Math.abs(S[0]-cx)-1.5),Math.max(0,top-S[1],S[1]-bot));
+  const[r3,r2,r1]=BFT_MOSS_REACH[lay]||[26,54,90];
+  return d<r3?3:d<r2?2:d<r1?1:0};
+/* the veil's lamps: with the sun showing at all through the crown (open), at most the two veil curtains nearest it
+   that still hang in front of the leaves for most of their length, within 34 units, lit whole by a beam through
+   a gap. Their indices in the veil */
+function bftOakLamps(S,open){
+  if(!(open>.04))return[];
+  return bftOakMossGroups("veil",1).flatMap(e=>e.b).filter(b=>bftMossT0("veil",b)>.45)
+    .map(b=>[b.i,Math.hypot(Math.max(0,Math.abs(S[0]-b.x)-1.5),Math.max(0,b.y-S[1],S[1]-b.y-b.len))]).filter(([,d])=>d<34)
+    .sort((a,b)=>a[1]-b[1]).slice(0,2).map(([i])=>i);
+}
+/* each level's band: how far in its inner line runs (inn) and from where its end is lit whole (tip) */
+const BFT_MOSS_GLOW=[null,{inn:.82,tip:.95},{inn:.7,tip:.88},{inn:.58,tip:.78}];
+/* the moss that sways has no hairline round its light, so its bands run a little further in to match */
+const BFT_MOSS_GLOW_FRONT=[null,null,{inn:.6,tip:.86},{inn:.48,tip:.76}];
+const BFT_MOSS_HALO=new Map();
+/* one sway group's light: the halo parts by level (roles mossGlow1 to 3), the hairs split into those drawn in the
+   light and the rest, and for the far moss, which is silhouettes alone, its near beards paler and warmer
+   (mossBackLit), all as strong as glow.k says. glow: {S, k, edge, hairC, lamp} */
+function bftMossGlow(lay,e,glow){
+  const by=[[],[],[],[]],hairs=[[],[]],back=lay==="back";
+  for(const b of e.b){const lv=bftMossLevel(lay,b,glow.S);by[lv].push(b)}
+  if(back)return{back:[3,2].filter(l=>by[l].length).map(l=>part(by[l].map(b=>b.d).join(""),"mossBackLit",{noSil:true,op:+((l===3?.85:.45)*(glow.k??1)).toFixed(2)})),halo:[],hair:null,hairLit:null};
+  const halo=[];
+  BFT_CRIMP=2.4;
+  /* the front moss sways, and WebKit repaints its whole sheet every frame, so its faintest edges (level 1,
+     BFT_MOSS_REACH) and its hairs drawn in the light are left to the still moss behind and in front of it, and
+     its light has no hairline of its own (its bands run further in instead, BFT_MOSS_GLOW_FRONT) */
+  for(const lv of[1,2,3]){if(!by[lv].length)continue;
+    const d=by[lv].map(b=>{const key=`${lay}:${b.i}:${lv}`;if(!BFT_MOSS_HALO.has(key)){const{inn,tip}=(lay==="front"?BFT_MOSS_GLOW_FRONT:BFT_MOSS_GLOW)[lv],t0=bftMossT0(lay,b);
+      /* a thin wisp nearest the sun is lit whole */
+      BFT_MOSS_HALO.set(key,lv===3&&(b.len<9||b.w<.8)&&t0<.4?b.d:bftMossHalo(b.x,b.y,b.len,b.seed,b.w,b.pull,b.neck,inn,tip,t0))}
+      return BFT_MOSS_HALO.get(key)}).join("");
+    if(d)halo.push(part(d,"mossGlow"+lv,{noSil:true,op:+([0,.5,.8,.95][lv]*(glow.k??1)).toFixed(2)}))}
+  for(const b of e.b){const key=`${lay}:${b.i}:hair`;if(!BFT_MOSS_HALO.has(key))BFT_MOSS_HALO.set(key,bftMossHair(b.x,b.y,b.len,b.seed,b.w,b.pull,b.neck));
+    hairs[lay!=="front"&&(by[2].includes(b)||by[3].includes(b))?1:0].push(BFT_MOSS_HALO.get(key))}
+  /* a veil curtain a beam reaches through a gap in the crown lights up whole, a lamp hung in the dark crown */
+  const lamp=lay==="veil"&&glow.lamp?e.b.filter(b=>glow.lamp.includes(b.i)):[];
+  if(lamp.length)halo.push(part(lamp.map(b=>b.d).join(""),"mossGlow2",{noSil:true,op:+(.62*(glow.k??1)).toFixed(2)}));
+  return{back:[],halo,hair:hairs[0].join("")||null,hairLit:hairs[1].join("")||null};
+}
 /* kept for a caller that hangs one beard on its own */
 const bftOakMossLayer=(x,y,len,seed,w,back,side=1)=>({open:`<g class="moss" stroke="#4F515F" stroke-opacity="${back?.24:.5}" stroke-width=".28" stroke-linejoin="round">`,pivot:[x,y],layers:[
   {parts:[part(bftMossCurtain(x,y,len,seed,w),back?"mossBack":"moss",{noSil:true})]},
@@ -4649,9 +4721,10 @@ const bftOakDraw=(st)=>{
      ink at noon). Back to front:
      the far moss, the back leaves over its tops, the moss off the limbs and the crown's ends, the wood,
      the front leaves, and the veil over them */
-  const side=st.side??1,ink=st.mossInk||"#4F515F";
-  const L=[...bftOakMossLayers("back",side,ink),{parts:propBftOakBack()},...bftOakMossLayers("front",side,ink),{parts:propBftOakWood()},
-    {parts:propBftOakCrown(!!st.grad)},...bftOakMossLayers("veil",side,ink),
+  const side=st.side??1,ink=st.mossInk||"#4F515F",gl=st.glow||null;
+  /* st.glow: the sun behind the oak (lowcountryScene, from bftBacklight), which lights the moss near it */
+  const L=[...bftOakMossLayers("back",side,ink,gl),{parts:propBftOakBack()},...bftOakMossLayers("front",side,ink,gl),{parts:propBftOakWood()},
+    {parts:propBftOakCrown(!!st.grad)},...bftOakMossLayers("veil",side,ink,gl),
     /* a check, not part of the oak: a great egret at the scene's size (.22) on every perch the scene
        may put a white bird on, in its day colours */
     ...(st.perch?[{open:`<g class="bft-oak-perchcheck">${BFT_OAK_PERCH.map(([x,y],i)=>inkAt(x,y,.22,i%2?-1:1,inkRig(rigEgret(()=>"",i%3===1,false),INK.egret,{s:.22*1.22,line:.42,heavy:.15,shade:.55,lit:.35}))).join("")}`,pivot:[0,0],layers:[]}]:[])];
@@ -4667,6 +4740,152 @@ BFT["grand-oak"]={pal:INK.bftOak,box:BFT_OAK_BOX,s:1,dist:.14,o:{},
   extra:(st,lt)=>st.frame?`<defs><clipPath id="bftOakFrame"><rect x="-60.8" y="-120" width="320" height="240"/></clipPath></defs>`
     +`<path d="M -60.8 -1.1 Q -28.8 -3.2 3.2 -.8 Q 32.8 .6 44.8 1.8 C 48.8 5.4 42.8 19.4 36.8 25.4 L -60.8 25.4 Z" fill="#6E7F45"/>`
     +`<rect x="-60.8" y="-120" width=".6" height="146" fill="#000" opacity=".5"/>`:""};
+
+/* ── the sun behind the oak ────────────────────────────────────────────────────────────
+   Josh, at 8:35 on October 16 2026, with the sun low over Lady's Island and showing through the crown: "when the
+   sun is behind the oak tree, like it is now, that tree should really glow like it would in real life." Seen
+   against the sun a tree is its own shaded side, so the crown, the wood and the moss go darker and cooler against
+   the brightest sky in the picture, and the light lives only at the edges and in whatever is thin. The drawing
+   does not change, only its colour plan, and every piece of light is a flat band cut from a silhouette the way
+   the kit cuts its lit edge: a rim along each edge that faces the sun, widest nearest it; a narrow olive-gold
+   band inside it where one layer of leaves lets the light through; the moss outlined in champagne silver on both
+   edges and over its loose ends, the thin wisps lit whole; and where the disc shows, a white point whose glare, a
+   flat stepped ellipse over each gap, eats the leaves round it. Everything here is in the oak's own units, as the
+   scene's frame places it (lowcountryScene works out where the sun is drawn from the oak's foot at this frame's
+   width). */
+const BFT_OAK_MASSES=[...BFT_OAK_LEAF_BACK,...BFT_OAK_LEAF];
+/* how far (x, y) lies outside the leaves, negative inside: each mass as the scallop draws it, a half ellipse
+   over and its underside flattened */
+function bftCrownGap(x,y,masses=BFT_OAK_MASSES){
+  let g=1e9;
+  for(const[cx,cy,rx,ry,,fl]of masses){const dx=x-cx,dy=y-cy,ey=dy>0?ry*(1-fl):ry,s=Math.hypot(dx/rx,dy/ey);
+    g=Math.min(g,s<1e-6?-Math.min(rx,ey):Math.hypot(dx,dy)*(1-1/s))}
+  return g;
+}
+/* the wood as discs along its centrelines, [x, y, half width], and the trunk as two */
+let BFT_OAK_WOOD_PTS=null;
+const bftWoodPts=()=>BFT_OAK_WOOD_PTS||(BFT_OAK_WOOD_PTS=[...BFT_OAK_LIMBS,...BFT_OAK_TWIGS].flatMap(L=>bftOakSample(L,6)).map(([x,y,w])=>[x,y,w/2]).concat([[.2,-9,9.2],[.4,-1,12.5]]));
+const bftWoodGap=(x,y)=>{let g=1e9;for(const[cx,cy,h]of bftWoodPts())g=Math.min(g,Math.hypot(x-cx,y-cy)-h);return g};
+/* every beard as a narrowing box for what hides the sun, [x, top, bottom, half width at the top] */
+let BFT_OAK_MOSS_BOX=null;
+const bftMossBoxes=()=>BFT_OAK_MOSS_BOX||(BFT_OAK_MOSS_BOX=[...BFT_OAK_MOSS_BACK,...BFT_OAK_MOSS,...BFT_OAK_MOSS_VEIL].map(([x,y,len,w,,,pull=0])=>[x+pull*.3,y,y+len,1.2+w*1.1]));
+/* how far the sun's centre is from the drawn oak, its leaves, its wood or its moss */
+const bftOakGap=(x,y)=>Math.min(bftCrownGap(x,y),bftWoodGap(x,y),...bftMossBoxes().map(([mx,t,b,h])=>Math.hypot(Math.max(0,Math.abs(x-mx)-h),Math.max(0,t-y,y-b))));
+/* a leaf mass exactly as the scallop draws it (the same draws): the polygon of its points and, outside each chord,
+   the outward arc's own circle, so a point can be tested against what is on the screen */
+const BFT_MASS_GEOM=new Map();
+function bftMassGeom(m){
+  if(BFT_MASS_GEOM.has(m))return BFT_MASS_GEOM.get(m);
+  const[cx,cy,rx,ry,count,fl]=m,r=mulberry((cx*7+cy*13)|0),jitter=.34,bulge=.62,pts=[];
+  for(let i=0;i<count;i++){const a=(i+(r()-.5)*jitter)/count*Math.PI*2,y=Math.sin(a),x=Math.cos(a),under=y>0,k=1+(r()-.5)*jitter*.6;
+    pts.push([cx+x*rx*k,cy+(under?y*ry*(1-fl):y*ry)*k,under])}
+  const arcs=pts.map((p,i)=>{const q=pts[(i+1)%pts.length],L=Math.hypot(q[0]-p[0],q[1]-p[1]),rad=L*(p[2]&&q[2]?bulge*1.25:bulge),h=L/2,
+    off=Math.sqrt(Math.max(0,rad*rad-h*h)),nx=-(q[1]-p[1])/L,ny=(q[0]-p[0])/L;
+    /* the arc sweeps clockwise on the screen, so its centre is on the inside of the chord */
+    return{p,q,rad,n:[nx,ny],m:[(p[0]+q[0])/2,(p[1]+q[1])/2],c:[(p[0]+q[0])/2+nx*off,(p[1]+q[1])/2+ny*off]}});
+  const g={pts,arcs,box:[cx-rx*1.3,cy-ry*1.3,cx+rx*1.3,cy+ry*1.3]};BFT_MASS_GEOM.set(m,g);return g;
+}
+function bftInMass(x,y,m){
+  const g=bftMassGeom(m);if(x<g.box[0]||x>g.box[2]||y<g.box[1]||y>g.box[3])return false;
+  let inside=false;const P=g.pts;
+  for(let i=0,j=P.length-1;i<P.length;j=i++){const[xi,yi]=P[i],[xj,yj]=P[j];if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)inside=!inside}
+  return inside||g.arcs.some(a=>(x-a.m[0])*a.n[0]+(y-a.m[1])*a.n[1]<0&&Math.hypot(x-a.c[0],y-a.c[1])<a.rad);
+}
+/* whether a beard covers (x, y): inside one of its tails, by the tail's own centre and half width at that height */
+const BFT_BEARDS=new Map();
+const bftBeardsOf=lay=>{if(!BFT_BEARDS.has(lay))BFT_BEARDS.set(lay,bftOakMossGroups(lay,1).flatMap(e=>e.b).map(b=>({...b,S:bftMossGeom(b.x,b.y,b.len,b.seed,b.w,b.pull,b.neck).S})));return BFT_BEARDS.get(lay)};
+const bftInBeard=(x,y,b)=>y>=b.y&&y<=b.y+b.len+.5&&b.S.some(s=>{const t=(y-s.C[0][1])/s.L;if(t<0||t>1)return false;return Math.abs(x-bftAt(s,t)[0])<bftWAt(s,t)});
+/* the points of the sun's disc (centre x, y, radius r) that the leaves, the wood and the moss leave open, on a
+   grid a fifth of the radius apart, each [x, y]: tested against the leaves as the scallops draw them, the wood's
+   centrelines and every beard's tails, and against ground(x), the far line's height at x (in these units), under
+   which the river and the far shore, drawn over the sun, hide it. bftDiscOpen is their share of the disc */
+function bftDiscPts(x,y,r=13,ground=null){
+  const st=r/5,P=[],M=BFT_OAK_MASSES.filter(m=>{const b=bftMassGeom(m).box;return b[2]>x-r&&b[0]<x+r&&b[3]>y-r&&b[1]<y+r});
+  const B=["back","front","veil"].flatMap(bftBeardsOf).filter(b=>b.y<y+r&&b.y+b.len>y-r&&Math.abs(b.x-x)<r+b.len*.4+4);let n=0;
+  for(let v=-r;v<=r+1e-6;v+=st)for(let u=-r;u<=r+1e-6;u+=st){if(u*u+v*v>r*r)continue;n++;const px=x+u,py=y+v;
+    if((ground&&py>ground(px))||M.some(m=>bftInMass(px,py,m))||bftWoodGap(px,py)<0||B.some(b=>bftInBeard(px,py,b)))continue;
+    P.push([px,py])}
+  P.n=n;return P;
+}
+const bftDiscOpen=(x,y,r=13,ground=null)=>{const P=bftDiscPts(x,y,r,ground);return P.n?P.length/P.n:0};
+/* the open bits of the disc gathered into gaps (bits touching on the grid, three or more, so a chink between two
+   strands is not a gap), each as the ellipse that fits it: [x, y, rx, ry, angle in degrees] */
+function bftGlareGaps(x,y,r=13,ground=null){
+  const P=bftDiscPts(x,y,r,ground),st=r/5,key=([px,py])=>`${Math.round((px-x)/st)},${Math.round((py-y)/st)}`,at=new Map(P.map(p=>[key(p),p])),seen=new Set(),out=[];
+  for(const p of P){const k0=key(p);if(seen.has(k0))continue;const C=[],Q=[k0];seen.add(k0);
+    while(Q.length){const k=Q.pop(),[i,j]=k.split(",").map(Number);C.push(at.get(k));
+      for(let di=-1;di<=1;di++)for(let dj=-1;dj<=1;dj++){const n=`${i+di},${j+dj}`;if(at.has(n)&&!seen.has(n)){seen.add(n);Q.push(n)}}}
+    if(C.length<3)continue;
+    const mx=C.reduce((a,q)=>a+q[0],0)/C.length,my=C.reduce((a,q)=>a+q[1],0)/C.length;
+    let sxx=0,syy=0,sxy=0;for(const[qx,qy]of C){sxx+=(qx-mx)**2;syy+=(qy-my)**2;sxy+=(qx-mx)*(qy-my)}sxx/=C.length;syy/=C.length;sxy/=C.length;
+    const tr=(sxx+syy)/2,dt=Math.sqrt(Math.max(0,((sxx-syy)/2)**2+sxy*sxy)),l1=tr+dt,l2=Math.max(0,tr-dt),ang=Math.atan2(l1-sxx,sxy||1e-9)*180/Math.PI;
+    out.push([mx,my,2*Math.sqrt(l1)+st/2,2*Math.sqrt(l2)+st/2,Math.abs(sxy)<1e-9?(sxx>=syy?0:90):ang])}
+  return out;
+}
+/* forward scattering: how lit a part d from the sun is, full within near and none from far */
+const bftNear=(d,near,far)=>{const t=bftClamp((d-near)/(far-near),0,1);return 1-t*t*(3-2*t)};
+/* How strongly the sun lights the oak from behind, 0 to 1: a product of honest parts, each 0 to 1, never a switch.
+     up      the sun is up: nothing below -0.83°, under half strength on the horizon, full from 2°
+     sky     its light is direct: full under 25% cloud, half at 55, none from 85, and none in rain, snow, a
+             storm or fog
+     behind  its disc is behind the oak on the screen, the leaves, the wood or the moss, or just beside them:
+             full while the disc touches the drawing (its centre a radius from it or nearer), none once the disc is a
+             disc and a half clear of it
+     low     it is low enough to stand behind a crown: full to 26°, none from 36°
+     rise    how much of the disc is up over the far line where the scene draws it, ground(x) (the scene's sun
+             comes up out of the river and goes down into it, a little after and before the real sunrise and
+             sunset), or what the caller hands as rise: the light is real while the sun is, so a disc still in
+             the river lights the oak at half, and only what is over the line shows
+   and what follows from them:
+     open    the share of the disc the oak leaves open, which sizes the glare where it shows
+     shafts  sunbeams need haze to be seen in, a low sun and a clear one: none under 80% humidity, a whisper at
+             88, more with mist on the river, none once the sun is 22° up or there is cloud over it
+     shadow  the oak's shadow toward us, from 1° up, softer and weaker under thin cloud
+     dew     the moss greener and its glow weaker in air damp enough to wet it, from 92% */
+function bftBacklight({alt=-90,sun=null,r=13,cloud=0,rh=0,wet=false,storm=false,fog=false,mist=false,gap:gapIn=null,ground=null,rise:riseIn=null}={}){
+  const none={k:0,up:0,sky:0,behind:0,low:0,rise:0,open:0,glare:0,shafts:0,shadow:0,dew:0,gap:null};
+  if(!sun||!(alt>-.83))return none;
+  const up=.45+.55*bftClamp((alt+.83)/2.83,0,1);
+  const sky=wet||storm||fog?0:bftClamp((85-cloud)/60,0,1);
+  const gap=gapIn??bftOakGap(sun[0],sun[1]);
+  const behind=bftClamp(1-(gap-r)/(r*1.5),0,1);
+  const low=bftClamp((36-alt)/10,0,1);
+  const rise=riseIn??(ground?bftClamp((ground(sun[0])-(sun[1]-r))/(2*r),0,1):1);
+  const k=up*sky*behind*low*(.5+.5*rise);
+  if(!(k>0))return{...none,up,sky,behind,low,rise,gap};
+  const open=gapIn==null?bftDiscOpen(sun[0],sun[1],r,ground):0;
+  const haze=bftClamp(bftClamp((rh-80)/15,0,1)*.65+(mist?.35:0),0,1);
+  return{k,up,sky,behind,low,rise,gap,open,glare:k*Math.sqrt(open),
+    shafts:k*bftClamp((22-alt)/6,0,1)*haze*bftClamp((sky-.8)/.2,0,1)*bftClamp(open*6,0,1),
+    shadow:k*sky*bftClamp((alt-1)/3,0,1),dew:bftClamp((rh-92)/6,0,1)};
+}
+/* The light round a silhouette with the sun behind it, as mask content: white where the silhouette is, then
+   black where it is again, moved straight away from the sun by its band's width, cell by cell (a ring round the
+   sun and a twelfth of it), so what is left on every edge that faces the sun is a band as wide as its ring says,
+   cut square to the sun's direction, and the edges that face away keep nothing. ids are the silhouette's paths
+   (each with a box [x0, y0, x1, y1]), S the sun, rings [[r0, r1, w]] in the drawing's units, and lost the radius
+   inside which the band also covers the ink outside the edge (stroke wide), so the line is lost in the light */
+function bftRimMask(pre,ids,S,rings,{n=12,stroke=0,lost=0}={}){
+  const[sx,sy]=S,rOut=rings[rings.length-1][1];let defs="",body="";
+  /* only the paths that can reach a box [x0, y0, x1, y1] */
+  const uses=(fill,st,box,dx=0,dy=0)=>ids.filter(([,b])=>b[2]+dx+st>box[0]&&b[0]+dx-st<box[2]&&b[3]+dy+st>box[1]&&b[1]+dy-st<box[3])
+    .map(([id])=>`<use href="#${id}" fill="${fill}"${st?` stroke="${fill}" stroke-width="${st}"`:""}${dx||dy?` transform="translate(${dx.toFixed(2)} ${dy.toFixed(2)})"`:""}/>`).join("");
+  const disc=r=>[sx-r,sy-r,sx+r,sy+r];
+  const at=(r,a)=>[sx+Math.cos(a)*r,sy+Math.sin(a)*r],P=p=>`${f1(p[0])} ${f1(p[1])}`;
+  defs+=`<clipPath id="${pre}o"><circle cx="${f1(sx)}" cy="${f1(sy)}" r="${f1(rOut)}"/></clipPath>`;
+  body+=`<g clip-path="url(#${pre}o)">${uses("#fff",0,disc(rOut))}</g>`;
+  if(stroke&&lost){defs+=`<clipPath id="${pre}l"><circle cx="${f1(sx)}" cy="${f1(sy)}" r="${f1(lost)}"/></clipPath>`;body+=`<g clip-path="url(#${pre}l)">${uses("#fff",stroke,disc(lost))}</g>`}
+  rings.forEach(([r0,r1,w],i)=>{for(let j=0;j<n;j++){const a0=j/n*2*Math.PI,a1=(j+1)/n*2*Math.PI,am=(a0+a1)/2,dx=Math.cos(am)*w,dy=Math.sin(am)*w;
+    const pts=[at(r1,a0),at(r1,am),at(r1,a1),at(r0,a0),at(r0,a1),at(r0,am)],xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);
+    const box=[Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)];
+    const u=uses("#000",stroke,box,dx,dy);if(!u)continue;
+    const inner=r0>.05?`L ${P(at(r0,a1))} A ${f1(r0)} ${f1(r0)} 0 0 0 ${P(at(r0,a0))}`:`L ${f1(sx)} ${f1(sy)}`;
+    defs+=`<clipPath id="${pre}${i}_${j}"><path d="M ${P(at(r0>.05?r0:0,a0))} L ${P(at(r1,a0))} A ${f1(r1)} ${f1(r1)} 0 0 1 ${P(at(r1,a1))} ${inner} Z"/></clipPath>`;
+    body+=`<g clip-path="url(#${pre}${i}_${j})">${u}</g>`}});
+  return{defs,body};
+}
+/* a path's box, [x0, y0, x1, y1], for the cells it can reach */
+const bftBox=d=>{const[x,y,w,h]=pathBox([d]);return[x,y,x+w,y+h]};
 
 /* ── palmetto ── */
 /* ── Beaufort: the sabal palmetto ─────────────────────────────────────────────────────
@@ -9440,12 +9659,83 @@ function lowcountryScene(c){
      ones off the limbs and the crown's ends in the open; the far curtains and the veil inside the crown
      hold still, half hidden. The oak is cut into three sheets at the front curtains (see the layers
      below), so a curtain that moves repaints only the moss and never the leaves and wood over it */
-  const oakL=bftOakDraw({grad:true,side:lightAt(oakX,oakY-50)[0]<0?-1:1,mossInk:inkAir(oakD+.25)});
+  /* ── the sun behind the oak (bftBacklight). Each clear morning the sun crosses behind the crown for a while
+     after sunrise, and then the tree is seen from its shaded side: the leaves, the wood and the moss go darker and
+     cooler, and the light is a flat band cut from each silhouette along the edges that face the sun, the moss's
+     a halo on both edges of the beards near it. The moss's light is drawn into its own sway groups, so it rides
+     the sway and adds no animation; everything else here is on the still layers */
+  const groundAt=x=>yFar-(bftSky.top?bftSky.top(x):0),oakGround=x=>groundAt(oakX+x)-oakY;
+  const BL=bftBacklight({alt:sunAltDeg,sun:sunXY?[sunXY[0]-oakX,sunXY[1]-oakY]:null,cloud,rh:humid,wet,storm,fog,mist:localHour<11&&sunAltDeg<14&&humid>=82,ground:oakGround});
+  const bk=BL.k>.02?BL.k:0,S=bk?[sunXY[0]-oakX,sunXY[1]-oakY]:null;
+  /* its light: cream at the edges, near white at the sun, the leaves' through-light olive gold, the moss's
+     champagne silver, greener in dew */
+  const blRim=mix(litC,c.rising?"#FFB89A":"#FFB070",goldK*.55),blCore=mix(blRim,"#FFFFFF",.55-.3*goldK),
+    blMoss=mix(mix(blRim,"#F2ECD6",.5*(1-goldK)),"#DCE4BC",BL.dew*.45),blMoss0=mix(blMoss,"#FFFFFF",.4*(1-goldK*.6));
+  const oakInk=bk?{...INK.bftOak,wood:mix(INK.bftOak.wood,"#4E3E3B",.9*bk),detail:mix(INK.bftOak.detail,mix(INK.bftOak.wood,"#4E3E3B",.9*bk),.6*bk),
+    leafBack:mix(INK.bftOak.leafBack,"#5F7444",.5*bk),moss:mix(INK.bftOak.moss,"#727A68",.85*bk),mossShade:mix(INK.bftOak.mossShade,"#4A5244",.6*bk),
+    mossLit:mix(INK.bftOak.mossLit,"#727A68",.9*bk),mossBackLit:mix("#CBC8AE",litC,.35),mossGlow1:blMoss,mossGlow2:blMoss,mossGlow3:blMoss0,
+    litOp:INK.bftOak.litOp*(1-.85*bk)}:INK.bftOak;
+  const oakL=bftOakDraw({grad:true,side:lightAt(oakX,oakY-50)[0]<0?-1:1,mossInk:inkAir(oakD+.25),...(bk?{glow:{S,k:bk,edge:blMoss,hairC:blMoss0,lamp:bftOakLamps(S,BL.open)}}:{})});
   const mossBack=bftOakMossLayers("back",1,"#000").length,mossFront=bftOakMossLayers("front",1,"#000").length;
-  const oakAt=layers=>inkAt(oakX,oakY,1,1,inkRig(layers,palAt(INK.bftOak,oakD,["leaf"]),{s:k,light:lightAt(oakX,oakY-20)}));
+  const oakAt=layers=>inkAt(oakX,oakY,1,1,inkRig(layers,palAt(oakInk,oakD,["leaf","mossGlow1","mossGlow2","mossGlow3","mossBackLit"]),{s:k,light:lightAt(oakX,oakY-20)}));
   const oakBack=oakAt(oakL.slice(0,mossBack+1)).replace(/<g class="moss"/g,'<g class="moss-still"');
   const oakMoss=beats(oakAt(oakL.slice(mossBack+1,mossBack+1+mossFront)),"moss",1.7,5521);
-  const oakFront=oakAt(oakL.slice(mossBack+1+mossFront)).replace(/<g class="moss"/g,'<g class="moss-still"');
+  /* The light on the oak from behind, as flat bands cut from its silhouettes (bftRimMask), in the oak's units:
+     each band is widest nearest the sun and steps down ring by ring, and it is coloured from near white at the
+     sun to cream further out. Widths are screen pixels (k to the unit), each with the ink's own reach outside
+     the edge added, so inside lost of the sun the band lies over the outline and the line is lost in the light.
+       crown  the front leaves: a cream rim to 86 units out (4.2px nearest, more as the disc shows), a lining
+              a hair deep on every outer edge near the sun, and inside the rim to 45 out a band of
+              olive gold where one layer of leaves lets the light through
+       wood   the limbs: a warm hairline where they cross the glow, to 50 out (1px nearest)
+       back   the back leaves: their own rim, and near the sun the leaves lighter and warmer than the front,
+              because the back of the crown is the side the sun is on */
+  function bftOakLight(kind){
+    if(!bk)return"";
+    const edge=(1.05/2+.55)/k,stroke=(1.05+1.1)/k,at=(px,base=edge)=>px/k+base;
+    const silOf=(pre,parts)=>parts.filter(p=>!INK_INNER.has(p.role)&&!p.noSil).map((p,i)=>[`${pre}${i}`,bftBox(p.d),p.d]);
+    const ids=kind==="crown"?silOf("blc",propBftOakCrown(true)):kind==="wood"?silOf("blw",propBftOakWood()):silOf("blb",propBftOakBack());
+    const pre=ids[0][0].replace(/\d+$/,""),defs=ids.map(([id,,d])=>`<path id="${id}" d="${d}"/>`).join("");
+    const box=`maskUnits="userSpaceOnUse" x="-110" y="-110" width="230" height="130"`;
+    const grad=(id,r,stops)=>`<radialGradient id="${id}" gradientUnits="userSpaceOnUse" cx="${f1(S[0])}" cy="${f1(S[1])}" r="${r}">${stops.map(([o,c,a])=>`<stop offset="${o}" stop-color="${c}" stop-opacity="${a}"/>`).join("")}</radialGradient>`;
+    const band=(id,rings,o={})=>{const m=bftRimMask(id,ids.map(([i,b])=>[i,b]),S,rings.map(([r0,r1,px])=>[r0,r1,at(px)]),{stroke,...o});
+      return{defs:m.defs+`<mask id="${id}" ${box}>${m.body}</mask>`}};
+    const paint=(mask,fill,op,st=true)=>`<g mask="url(#${mask})" fill="${fill}"${st?` stroke="${fill}" stroke-width="${stroke.toFixed(2)}" stroke-linejoin="round"`:""} opacity="${op.toFixed(2)}">${ids.map(([id])=>`<use href="#${id}"/>`).join("")}</g>`;
+    /* the lining: every outer edge near the sun, whichever way it faces, lit a hair deep inside its ink, because a
+       thin edge of leaves with the sun behind it lets the light through at any angle: the silhouette less each
+       mass worn back by wpx (its own outline stroked out of it), less what is given in minus (the back leaves,
+       behind the front crown's edges, where no sky shows through) */
+    const lining=(id,wpx,minus="")=>{const sw=(2*wpx/k).toFixed(2);
+      return ids.map(([i])=>`<mask id="${id}${i}" ${box}><use href="#${i}" fill="#fff"/><use href="#${i}" fill="none" stroke="#000" stroke-width="${sw}"/></mask>`).join("")
+        +`<mask id="${id}" ${box}>${ids.map(([i])=>`<use href="#${i}" fill="#fff"/>`).join("")}${ids.map(([i])=>`<use href="#${i}" fill="#000" mask="url(#${id}${i})"/>`).join("")}${minus}</mask>`};
+    const gl=BL.glare;
+    let out="",d=defs;
+    if(kind==="crown"){
+      /* nearest the sun its glare eats the leaves' edges, so the band there is wider as more of the disc shows */
+      const rim=band(`${pre}R`,[[0,13,4.2+5*gl],[13,28,3.2+2.5*gl],[28,45,2.2],[45,63,1.3],[63,86,.6]],{lost:45});
+      const thru=band(`${pre}T`,[[0,13,7.4+5*gl],[13,28,5.8+2.5*gl],[28,45,4]]);
+      d+=rim.defs+thru.defs+lining(`${pre}L`,1.1,propBftOakBack().map(p=>`<path d="${p.d}" fill="#000"/>`).join(""))+grad(`${pre}Rg`,90,[[0,blCore,1],[.3,blRim,.95],[1,blRim,.5]])
+        +grad(`${pre}Lg`,92,[[0,blCore,.95],[.25,blRim,.8],[.6,blRim,.32],[1,blRim,0]])
+        +grad(`${pre}Tg`,46,[[0,mix("#D2CC74",blRim,.25),1],[.55,mix("#BDB958",blRim,.15),.9],[1,mix("#A9A852",blRim,.1),.55]]);
+      out=paint(`${pre}T`,`url(#${pre}Tg)`,.72*bk,false)+paint(`${pre}L`,`url(#${pre}Lg)`,bk,false)+paint(`${pre}R`,`url(#${pre}Rg)`,bk);
+    }else if(kind==="wood"){
+      const rim=band(`${pre}R`,[[0,16,1],[16,32,.8],[32,50,.5]],{lost:20});
+      d+=rim.defs+grad(`${pre}Rg`,52,[[0,mix("#F3DCA6",litC,.4),1],[1,mix("#EBCB8C",litC,.3),.6]]);
+      out=paint(`${pre}R`,`url(#${pre}Rg)`,.9*bk);
+    }else{
+      const rim=band(`${pre}R`,[[0,15,1.2],[15,32,1],[32,52,.7],[52,75,.4]],{lost:30});
+      d+=rim.defs+lining(`${pre}N`,.9)+grad(`${pre}Rg`,78,[[0,blRim,.9],[.35,blRim,.75],[1,blRim,.35]])
+        +grad(`${pre}Ng`,90,[[0,blRim,.7],[.35,blRim,.5],[.7,blRim,.2],[1,blRim,0]])
+        +grad(`${pre}Lg`,70,[[0,mix("#9AA45E",litC,.25),.85],[.45,mix("#8E9B55",litC,.15),.7],[.8,"#7E8F4E",.25],[1,"#7E8F4E",0]]);
+      out=`<g fill="url(#${pre}Lg)" opacity="${bk.toFixed(2)}">${ids.map(([id])=>`<use href="#${id}"/>`).join("")}</g>`+paint(`${pre}N`,`url(#${pre}Ng)`,.6*bk,false)+paint(`${pre}R`,`url(#${pre}Rg)`,.5*bk);
+    }
+    return inkAt(oakX,oakY,1,1,`<defs>${d}</defs>${out}`);
+  }
+  /* the front of the oak, with the sun behind it, in three sheets so its light goes between them: the wood and
+     its hairline of light, the front leaves and their rim and through-light, and the veil */
+  const front0=mossBack+1+mossFront;
+  const oakFront=(bk?oakAt(oakL.slice(front0,front0+1))+bftOakLight("wood")+oakAt(oakL.slice(front0+1,front0+2))+bftOakLight("crown")+oakAt(oakL.slice(front0+2))
+    :oakAt(oakL.slice(front0))).replace(/<g class="moss"/g,'<g class="moss-still"');
 
   /* ── the palmettos on the right bank, the tallest behind. Each is drawn in three parts: the fronds
      behind the trunk, the trunk, and the fronds in front. The trunks stand still in the picture; the
@@ -9454,11 +9744,26 @@ function lowcountryScene(c){
   const palmWind=bftPalmWind(gust,downwind);
   const PALMS=[[W*.815,4,72,-.06,.4],[W*.88,5,58,.12,.5],[W*.945,6,46,.2,.55]];
   const palmRig=([x,seed,h,lean,boots])=>rigBftPalmetto(seed,{h,lean,boots,wind:palmWind});
-  const palmInk=(x,h,layers)=>inkAt(x,bankY-.6,1,1,inkRig(layers,palAt(INK.bftPalm,.1),{s:k,light:lightAt(x,bankY-h),...BFT_PALM_O}));
-  const palmTrunks=PALMS.map(P=>`<g data-prop="palmetto">${palmInk(P[0],P[2],[palmRig(P)[1]])}</g>`).join("");
+  /* The evening sun sets behind the palmettos, and it lights them from behind by the oak's rule (bftBacklight),
+     each palm by how near the sun is to its own crown and trunk on the screen: a fan frond is thin, so the light
+     comes through the whole blade, warm yellow green, the trunk goes dark, and the kit's own lit edge is turned
+     to the sun behind and widened into a rim. The crowns are on the moving layer, so their light is their own
+     colours and their own lit edge, and adds no mask and no animation */
+  const palmK=PALMS.map(P=>{if(!sunXY||!(sunAltDeg<36)||sunXY[0]<W*.6)return 0;const L=palmRig(P),[bx,by,bw,bh]=pathBox(flatParts([L[0],L[2]]).map(p=>p.d)),x0=P[0],y0=bankY-.6;
+    const cx=x0+bx+bw/2,cy=y0+by+bh/2,dx=sunXY[0]-cx,dy=sunXY[1]-cy,s=Math.hypot(dx/(bw/2),dy/(bh/2));
+    const crownGap=s<1e-6?-bh/2:Math.hypot(dx,dy)*(1-1/s),tx=clamp(sunXY[0],x0-3,x0+3+P[3]*P[2]*.3),trunkGap=Math.hypot(sunXY[0]-tx,Math.max(0,sunXY[1]-y0,cy-sunXY[1]))-3;
+    const b=bftBacklight({alt:sunAltDeg,sun:[0,0],cloud,rh:humid,wet,storm,fog,gap:Math.min(crownGap,trunkGap),rise:clamp((groundAt(sunXY[0])-(sunXY[1]-13))/26,0,1)});return b.k>.02?b.k:0});
+  const palmPal=i=>{const pk=palmK[i],P=INK.bftPalm;if(!pk)return palAt(P,.1);
+    return palAt({...P,frond:mix(P.frond,"#A4AE4C",.5*pk),frondLt:mix(P.frondLt,"#C6C666",.5*pk),costa:mix(P.costa,"#D6D27E",.45*pk),frondFar:mix(P.frondFar,"#3E5232",.4*pk),
+      pleat:mix(P.pleat,"#3A4C28",.4*pk),petiole:mix(P.petiole,"#3E5232",.4*pk),stalk:mix(P.stalk,"#3E5232",.4*pk),trunk:mix(P.trunk,"#6A6560",.6*pk),ring:mix(P.ring,"#55504C",.6*pk),
+      boot:mix(P.boot,"#5E5246",.6*pk),bootLt:mix(P.bootLt,"#6E604E",.6*pk),frondDead:mix(P.frondDead,"#C49A5C",.35*pk),
+      litOp:P.litOp*(1-pk)+.95*pk,shadeOp:P.shadeOp*(1+.3*pk)},.1)};
+  const palmInk=(x,h,layers,i)=>{const pk=palmK[i],pal=palmPal(i);if(pk)pal.lit=mix(blRim,"#FFE2A8",.3);
+    return inkAt(x,bankY-.6,1,1,inkRig(layers,pal,{s:k,light:pk?[sunXY[0]-x,sunXY[1]-(bankY-h*.8)]:lightAt(x,bankY-h),...BFT_PALM_O,...(pk?{lit:1+1.7*pk}:{})}))};
+  const palmTrunks=PALMS.map((P,i)=>`<g data-prop="palmetto"${palmK[i]?` data-backlight="${palmK[i].toFixed(2)}"`:""}>${palmInk(P[0],P[2],[palmRig(P)[1]],i)}</g>`).join("");
   /* the crowns always move with the wind; the fronds in them flutter on their own once it gusts twenty */
-  const palmCrowns0=beats(PALMS.map(P=>{const L=palmRig(P);
-    return palmInk(P[0],P[2],[L[0]])+`<g clip-path="url(#fxPalmTop)">${palmInk(P[0],P[2],[L[1]])}</g>`+palmInk(P[0],P[2],[L[2]])}).join(""),"bft-palm-crown",.55,61);
+  const palmCrowns0=beats(PALMS.map((P,i)=>{const L=palmRig(P);
+    return palmInk(P[0],P[2],[L[0]],i)+`<g clip-path="url(#fxPalmTop)">${palmInk(P[0],P[2],[L[1]],i)}</g>`+palmInk(P[0],P[2],[L[2]],i)}).join(""),"bft-palm-crown",.55,61);
   const palmCrowns=gust>=20?beats(beats(palmCrowns0,"bft-palm-frond-a",1.1,62),"bft-palm-frond-b",1.1,63):palmCrowns0;
 
   /* ── the dock: the walkway from the right edge to the dock house, the float riding the tide below. The
@@ -9505,10 +9810,21 @@ function lowcountryScene(c){
   const taken=[];
   for(const i of order){if(taken.length>=roostN)break;const[x]=PERCH[i];if(taken.every(j=>Math.abs(PERCH[j][0]-x)>=9))taken.push(i)}
   const egretPal={...palAt(INK.egret,oakD),shadeOp:.24*shadeK,litOp:.42*litK},ibisPal=palAt(INK.bftIbis,oakD);
+  /* with the sun behind the oak, a white bird in it sits in the crown's shade, so it is a cool lavender grey and
+     never white, and one near the sun wears a broad warm rim on its sun side, wider than a leaf's because
+     feathers scatter like fur, its bill glowing; one far from it has no rim at all */
+  const blBird=(pal,X,Y,o,bills)=>{if(!bk)return[pal,o];
+    const rk=bk*bftNear(Math.hypot(X-sunXY[0],Y-sunXY[1]),28,80),p={...pal};
+    for(const r of["body","neck","wing","tail","covert"])if(p[r])p[r]=mix(p[r],"#C8CDD8",.7*bk);
+    for(const[r,hot,cool]of bills)if(p[r])p[r]=mix(mix(p[r],cool,.45*bk*(1-rk)),hot,.6*rk);
+    Object.assign(p,{lit:mix(litC,"#FFF4D6",.5),litOp:pal.litOp*(1-bk)+.95*rk,shadeOp:pal.shadeOp*(1+.4*bk)});
+    return[p,{...o,lit:o.lit+1.1*rk,...(rk>.01?{light:[sunXY[0]-X,sunXY[1]-Y]}:{})}]};
   const treeBirds=taken.map((i,n)=>{const[x,y]=PERCH[i],X=oakX+x,Y=oakY+y,fl=birdDraw()<.5?1:-1,egret=n%2===0;
     const asleep=dark||storm;
-    return egret?inkAt(X,Y,.22,fl,inkRig(rigEgret(phase,asleep||n%4===0,false),egretPal,{s:.22*k,flip:fl,line:.42,heavy:.15,shade:.55,lit:.35,light:lightAt(X,Y)}),` data-species="great-egret" data-perch="${f1(x)},${f1(y)}"`)
-      :inkAt(X,Y,.25,fl,inkRig(rigBftIbis("roost",phase,{sleep:asleep}),ibisPal,{s:.25*k,flip:fl,...BFT_IBIS_O,line:.5,heavy:.2,shade:.6,lit:.4,light:lightAt(X,Y)}),` data-species="white-ibis" data-perch="${f1(x)},${f1(y)}"`)}).join("");
+    if(egret){const[p,o]=blBird(egretPal,X,Y,{s:.22*k,flip:fl,line:.42,heavy:.15,shade:.55,lit:.35,light:lightAt(X,Y)},[["bill","#F0A040","#A88848"]]);
+      return inkAt(X,Y,.22,fl,inkRig(rigEgret(phase,asleep||n%4===0,false),p,o),` data-species="great-egret" data-perch="${f1(x)},${f1(y)}"`)}
+    const[p,o]=blBird(ibisPal,X,Y,{s:.25*k,flip:fl,...BFT_IBIS_O,line:.5,heavy:.2,shade:.6,lit:.4,light:lightAt(X,Y)},[["bill","#F2845A","#A85A48"],["nose","#F0704E","#A04A3E"]]);
+    return inkAt(X,Y,.25,fl,inkRig(rigBftIbis("roost",phase,{sleep:asleep}),p,o),` data-species="white-ibis" data-perch="${f1(x)},${f1(y)}"`)}).join("");
   /* the gator is out on warm days: floating in the channel near the foot of the frame, or hauled out on
      the left flat at low water, and only its eyes and snout after dark. An eleven-foot gator is about
      sixteen units here */
@@ -9591,7 +9907,78 @@ function lowcountryScene(c){
       sceneClouds+=`<g class="drift" style="animation:drift ${(110/rush).toFixed(0)}s ease-in-out infinite ${rev};${phase(Math.round(110/rush)*2)}">${inkAt(W*fx,y,s,sd%2?-1:1,
         inkUnit(propCloud(sd),{body:"url(#cloudInk)",ink:mix(lineC,skyS[1],.45),shade:mix(shadeC,skyS[1],.4),lit:litC,litOp:.5*litK,shadeOp:.28},{s,light:[0,-1],line:.9,heavy:.4}))}</g>`}
   const lowSun=sunXY&&sunAltDeg<14&&veil<.7;
-  const bloom=lowSun?`<ellipse cx="${f1(sunXY[0])}" cy="${f1(sunXY[1]-4)}" rx="${(W*.46).toFixed(0)}" ry="72" fill="url(#bloom)" opacity="${(.5*(1-veil)).toFixed(2)}"/>`:"";
+  /* with the sun behind the oak its bloom is the sky behind the crown (blAureole), not a wash over the leaves */
+  const bloom=lowSun?`<ellipse cx="${f1(sunXY[0])}" cy="${f1(sunXY[1]-4)}" rx="${(W*.46).toFixed(0)}" ry="72" fill="url(#bloom)" opacity="${(.5*(1-veil)*(1-bk)).toFixed(2)}"/>`:"";
+  /* ── the sun behind the oak, the rest of it (bftBacklight):
+       the sky round the sun is not blue but a broad cream aureole, broader and whiter in humid air, laid on the
+         sky behind everything, and it is what the crown is dark against
+       where the disc shows through the crown it is a point too bright to look at, white and not a yellow coin,
+         with a few of the scene's own tapered rays, long and short and uneven, behind the crown, so they show
+         only where there is sky; and its glare spreads over the leaves round the gap (blGlare). Once the disc is
+         clear of the leaves it is the scene's own sun again, so the white and the rays go as the disc opens
+       sunbeams, few flat wedges fanning from the sun through the crown's gaps, crossing only what is dark (the
+         crown, the wood, the bank), fading along their length, and only in haze (BL.shafts)
+       and the oak's shadow comes toward us down the bank, a crisp umbra off the trunk and the crown's paler
+         shade round it with sun flecks through its gaps, weaker on the water */
+  let blAureole="",blSun="",blHaze="",blGlare="",blShafts="",oakShadow="";
+  if(bk){
+    const[sx,sy]=sunXY,sq=clamp(.9+Math.max(0,sunAltDeg)/8*.1,.9,1),hz=clamp((humid-60)/30,0,1);
+    blAureole=`<defs><radialGradient id="blAur"><stop offset="0" stop-color="${mix("#FFF6DC",litC,.3)}" stop-opacity=".9"/><stop offset=".22" stop-color="${mix("#F6ECCC",litC,.3)}" stop-opacity=".62"/><stop offset=".55" stop-color="#F3E8C6" stop-opacity=".22"/><stop offset="1" stop-color="#F3E8C6" stop-opacity="0"/></radialGradient></defs>`
+      +`<ellipse data-prop="aureole" cx="${f1(sx)}" cy="${f1(sy)}" rx="${f1(W*(.24+.08*hz))}" ry="${f1(W*(.2+.06*hz))}" fill="url(#blAur)" opacity="${(bk*(.6+.4*hz)).toFixed(2)}"/>`;
+    /* and the far shore toward the sun goes warm and pale into it, the low wood and the bridge's town end lifted */
+    blHaze=`<ellipse data-prop="far-haze" cx="${f1(sx)}" cy="${f1(yFar-3)}" rx="${f1(W*.27)}" ry="10" fill="url(#blAur)" opacity="${(.55*bk*(.4+.6*hz)).toFixed(2)}"/>`;
+    const rr=mulberry(1016),whiteK=bk*Math.pow(1-BL.open,.6);let rays="";
+    /* the rays are as long and as bright as the share of the sun that shows: a sliver throws short faint ones */
+    const rayK=.4+.6*Math.sqrt(BL.open);
+    for(let i=0;i<6;i++){const a=(i+.5)/6*Math.PI*2+(rr()-.5)*.7,L=((i%2?10:18)+rr()*10)*rayK,c0=Math.cos(a),s0=Math.sin(a)*sq;
+      rays+=`<path d="${taper([[sx+c0*15,sy+s0*15,2.2],[sx+c0*(15+L),sy+s0*(15+L),.2]],{per:2,capEnd:false})}"/>`}
+    /* where the disc shows, its glare spreads over the leaves round each gap (bftGlareGaps: the open bits of the
+       disc gathered into gaps, each its own flat ellipse) in three flat steps, so the gap looks bigger than it is
+       and the edges round it are eaten, and none of it where the leaves hide the disc. It is laid over the
+       leaves, so it is left off when one of the scene's clouds can drift across the disc, which would put the
+       glare over the cloud */
+    const cloudOver=!!sceneClouds&&[[.42,GY-82,.92],[.74,GY-100,.7]].slice(0,cloud>40?2:1)
+      .some(([fx,y,s])=>sx+13>W*fx-W*.14-38*s&&sx-13<W*fx+W*.14+38*s&&sy+13>y-13*s&&sy-13<y+8*s);
+    const gaps=cloudOver?[]:bftGlareGaps(S[0],S[1],13,oakGround),gK=bk*(1-.6*BL.open);
+    if(gaps.length){const ring=g=>gaps.map(([x,y,rx,ry,a])=>`<ellipse cx="${f1(oakX+x)}" cy="${f1(oakY+y)}" rx="${f1(rx+g)}" ry="${f1(ry+g)}" transform="rotate(${f1(a)} ${f1(oakX+x)} ${f1(oakY+y)})"/>`).join("");
+      blGlare=`<g data-prop="sun-glare" fill="${mix(blCore,"#FFFFFF",.4)}"><g opacity="${(.15*gK).toFixed(2)}">${ring(4.6)}</g><g opacity="${(.32*gK).toFixed(2)}">${ring(2.6)}</g><g opacity="${(.6*gK).toFixed(2)}">${ring(.9)}</g></g>`}
+    blSun=`<g data-prop="sun-behind-oak" data-backlight="${["k","open","glare","shafts","shadow"].map(n=>n+" "+BL[n].toFixed(2)).join(" ")}"><g fill="${blCore}" opacity="${(.8*whiteK*Math.sqrt(Math.min(1,BL.open*3))).toFixed(2)}">${rays}</g><ellipse cx="${f1(sx)}" cy="${f1(sy)}" rx="13.7" ry="${f1(13.7*sq)}" fill="${mix(blCore,"#FFFFFF",.6)}" opacity="${whiteK.toFixed(2)}"/></g>`;
+    /* the beams: down from the sun along the directions where the crown just under it is open (a ray from the
+       sun meets its leaves the least there), up to four of them, apart, each a thin wedge in three fading steps,
+       painted only over the crown's shade, the wood and the bank, never the sky */
+    const shK=BL.shafts;
+    if(shK>.02){const fr=mulberry(1622),cand=[];
+      for(let a=30;a<=150;a+=4){const r=a*Math.PI/180;let o=0,n=0;for(let d=15;d<=51;d+=4){n++;if(bftCrownGap(S[0]+Math.cos(r)*d,S[1]+Math.sin(r)*d)>.5)o++}cand.push([a,o/n])}
+      const pick=[];for(const[a,o]of cand.sort((p,q)=>q[1]-p[1]))if(o>=.3&&pick.length<4&&pick.every(b=>Math.abs(b-a)>=16))pick.push(a);
+      let w="";for(const a of pick){const r=a*Math.PI/180,h=(1.1+fr()*1.5)*Math.PI/180,L=Math.min(150,(H+4-sy)/Math.max(.2,Math.sin(r)));
+        for(const[t0,t1,o]of[[0,.38,.13],[.38,.7,.085],[.7,1,.045]]){const R0=14+(L-14)*t0,R1=14+(L-14)*t1,P=(R,b)=>`${f1(sx+Math.cos(b)*R)} ${f1(sy+Math.sin(b)*R)}`;
+          w+=`<path d="M ${P(R0,r-h)} L ${P(R1,r-h)} L ${P(R1,r+h)} L ${P(R0,r+h)} Z" opacity="${(o*shK).toFixed(3)}"/>`}}
+      if(w)blShafts=`<g data-prop="sun-shafts"><defs><mask id="blDark" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><path d="${landL}" fill="#fff"/>`
+        +`<g transform="translate(${f1(oakX)} ${f1(oakY)})" fill="#fff">${propBftOakCrown(true).map((p,i)=>`<use href="#blc${i}"/>`).join("")}${propBftOakWood().filter(p=>!INK_INNER.has(p.role)).map((p,i)=>`<use href="#blw${i}"/>`).join("")}</g></mask></defs>`
+        +`<g mask="url(#blDark)" fill="${blRim}">${w}</g></g>`}
+    /* the shadow comes toward us down the bank: the oak laid on the ground away from the sun, each part as far
+       toward us as it stands high (its height over the tangent of the sun's height, on the bank's foreshortened
+       ground, fs to the unit), so the trunk and the limbs are a crisp dark umbra off the foot and the crown is a
+       paler dappled shade lower down, with sun flecks through its gaps, and at a low sun most of it is off the
+       frame. Strong on the land and the flats, about a third of that on the water, because water shows the sky */
+    const sdK=BL.shadow;
+    if(sdK>.03){const cot=1/Math.tan(Math.max(2.5,sunAltDeg)*Math.PI/180),fs=.052,lean=clamp(-S[0]/90,-.6,.6),fr=mulberry(1610);
+      const gp=(x,h)=>{const dr=Math.max(0,h)*cot*fs,sc=1+dr/26;return[oakX+x*sc+lean*dr*.9,oakY+1+dr,sc]};
+      const um=[],pen=[];let fl="";
+      /* the trunk and every limb and twig, as tapers along their projected centrelines */
+      um.push(taper([[0,2,25],[0,-6,20],[0,-14,17]].map(([x,y,w])=>{const[gx,gy,sc]=gp(x,-y);return[gx,gy,w*sc]}),{per:2}));
+      for(const L of[...BFT_OAK_LIMBS,...BFT_OAK_TWIGS]){const P=bftOakSample(L,3).map(([x,y,w])=>{const[gx,gy,sc]=gp(x,-y);return[gx,gy,Math.max(.4,w*sc*.6)]});
+        if(P.some(q=>q[1]<H+4))um.push(taper(P,{per:2}))}
+      /* the crown, each front mass a flat scallop of shade, holed with a fleck or two */
+      for(const[cx,cy,rx,ry,c]of BFT_OAK_LEAF){const[gx,gy,sc]=gp(cx,-cy),gry=Math.max(1.2,ry*cot*fs*sc);if(gy-gry>H+2)continue;
+        pen.push(scallop(gx,gy,rx*sc*1.05,gry,c,(cx*7+cy*13)|0,{flat:.2,jitter:.34}));
+        for(let j=0;j<2;j++){const fx=gx+(fr()*2-1)*rx*sc*.6,fy=gy+(fr()*2-1)*gry*.5;if(fr()<.7)fl+=`<ellipse cx="${f1(fx)}" cy="${f1(fy)}" rx="${f1((1.1+fr()*1.6)*sc)}" ry="${f1((.35+fr()*.3)*sc)}"/>`}}
+      const top=oakY-2,bot=H+2;
+      oakShadow=`<g data-prop="oak-shadow" fill="#1D3440"><defs><clipPath id="blLand"><path d="${landL}"/>${flatL?`<path d="${flatL}"/>`:""}</clipPath>`
+        +`<mask id="blFleck" maskUnits="userSpaceOnUse" x="0" y="${f1(top)}" width="${W}" height="${f1(bot-top)}"><rect x="0" y="${f1(top)}" width="${W}" height="${f1(bot-top)}" fill="#fff"/><g fill="#000">${fl}</g></mask></defs>`
+        +`<g mask="url(#blFleck)"><g opacity="${(.09*sdK).toFixed(2)}">${[...pen,...um].map(d=>`<path d="${d}"/>`).join("")}</g>`
+        +`<g clip-path="url(#blLand)"><g opacity="${(.22*sdK).toFixed(2)}">${pen.map(d=>`<path d="${d}"/>`).join("")}</g><g opacity="${(.3*sdK).toFixed(2)}">${um.map(d=>`<path d="${d}"/>`).join("")}</g></g></g></g>`}
+  }
   let flies="";
   if(showFlies){const fr=mulberry(80127);for(let i=0;i<flyCount;i++){const cx=10+fr()*(W-20),cy=bankY-6-fr()*34;
     flies+=`<g class="wildlife ff" style="--fy:${(-2-fr()*4).toFixed(1)}px;animation-duration:${(3.5+fr()*3.5).toFixed(1)}s;animation-delay:-${(fr()*6).toFixed(1)}s"><circle cx="${f1(cx)}" cy="${f1(cy)}" r="5" fill="url(#flyglow)"/><circle cx="${f1(cx)}" cy="${f1(cy)}" r="1.2" fill="#F8F7B0"/></g>`}}
@@ -9617,19 +10004,19 @@ function lowcountryScene(c){
         <stop offset="0" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity="0"/><stop offset=".55" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity=".34"/><stop offset="1" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity=".06"/></linearGradient>
       <linearGradient id="lcland" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${landC}"/><stop offset="1" stop-color="${landFoot}"/></linearGradient>
       <linearGradient id="lcmud" gradientUnits="userSpaceOnUse" x1="0" y1="${bankY}" x2="0" y2="${H}"><stop offset="0" stop-color="${mudC}"/><stop offset="1" stop-color="${mudWet}"/></linearGradient>
-      <linearGradient id="lcOakLeaf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${air("#94B25C",oakD)}"/><stop offset="1" stop-color="${air("#4F6E40",oakD)}"/></linearGradient>
+      <linearGradient id="lcOakLeaf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${air(bk?mix("#94B25C","#5C7656",.85*bk):"#94B25C",oakD)}"/><stop offset="1" stop-color="${air(bk?mix("#4F6E40","#344E3E",.85*bk):"#4F6E40",oakD)}"/></linearGradient>
       <radialGradient id="bloom"><stop offset="0" stop-color="${litC}" stop-opacity=".55"/><stop offset=".5" stop-color="${litC}" stop-opacity=".16"/><stop offset="1" stop-color="${litC}" stop-opacity="0"/></radialGradient>
       <radialGradient id="lclamp"><stop offset="0" stop-color="#FFD27A" stop-opacity=".6"/><stop offset="1" stop-color="#FFD27A" stop-opacity="0"/></radialGradient>
       <clipPath id="lcwater"><rect x="0" y="${yFar+.5}" width="${W}" height="${H-yFar}"/></clipPath>
       ${tex?`<pattern id="paper" width="160" height="160" patternUnits="userSpaceOnUse"><image href="${paperTex()}" width="160" height="160"/></pattern>`:""}
     </defs>
-    <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
+    ${blAureole}<path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
     ${goldArc}
-    ${sunBody}${moonBody}
+    ${sunBody}${blSun}${moonBody}
     <rect x="0" y="${yFar}" width="${W}" height="${H-yFar}" fill="url(#lcwaterband)"/>
     ${tex?`<rect x="0" y="${yFar}" width="${W}" height="${H-yFar}" fill="${tex}" opacity="${(.55*paperK).toFixed(2)}"/>`:""}
     ${farShore}
-    ${bridgeRefl}${bridgeLit}${bridgeGlow}
+    ${bridgeRefl}${bridgeLit}${bridgeGlow}${blHaze}
     ${fog?`<rect x="0" y="${f1(yFar-40)}" width="${W}" height="48" fill="url(#fogveil)"/>`:""}
     ${sparkle}${curls}
     ${palmTrunks}
@@ -9637,7 +10024,7 @@ function lowcountryScene(c){
     <path d="${landL}" fill="url(#lcland)" stroke="${grassLine}" stroke-width=".9" stroke-linejoin="round"/>
     <path d="${landR}" fill="url(#lcland)" stroke="${grassLine}" stroke-width=".9" stroke-linejoin="round"/>
     ${tex?`<path d="${landL}" fill="${tex}" opacity="${(.6*paperK).toFixed(2)}"/><path d="${landR}" fill="${tex}" opacity="${(.6*paperK).toFixed(2)}"/>`:""}
-    <g data-prop="live-oak">${oakBack}</g>`;
+    ${oakShadow}<g data-prop="live-oak">${oakBack}${bftOakLight("back")}</g>`;
   /* what moves in the sky goes behind the oak and the palmettos, which is where it is */
   skyL.innerHTML=`
     <defs>
@@ -9646,10 +10033,10 @@ function lowcountryScene(c){
     ${sceneClouds}
     ${bats}
     ${c.witchFly(witch)}
-    ${soarer}${jet}`;
+    ${soarer}${jet}${bk?glint:""}`;
   mossL.innerHTML=`<g data-prop="moss">${oakMoss}</g>`;
   nearL.innerHTML=`
-    <g data-prop="live-oak">${oakFront}${treeBirds}</g>
+    <g data-prop="live-oak">${oakFront}${treeBirds}</g>${blShafts}${blGlare}
     ${buoy}
     ${dock}
     ${halloStill.join("")}
@@ -9664,7 +10051,7 @@ function lowcountryScene(c){
       <clipPath id="fxPalmTop"><rect x="0" y="0" width="${W}" height="${f1(deckY-16)}"/></clipPath>
       ${c.candles?c.candleDefs:""}${c.hallowDefs||""}
     </defs>
-    ${glint}${waterFx}
+    ${bk?"":glint}${waterFx}
     ${mist}
     ${palmCrowns}
     ${boat}${flag}${sock}
