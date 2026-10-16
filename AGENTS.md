@@ -896,6 +896,66 @@ sheltered and because each saved the frames. Measured on October 15 2026 (`tools
 hard blow 60, an October night with the bats, the witch, the lantern, the balloon and the skeleton 56
 with no frame over 34ms (the coast's and the farm's nights hold 60).
 
+**The sun behind the oak.** Josh, at about 8:35 on October 16 2026, with the sun low over Lady's Island and
+a yellow sliver of it showing through the crown: "when the sun is behind the oak tree, like it is now, that
+tree should really glow like it would in real life." Seen against the sun a tree is its own shaded side, so
+the oak goes darker and cooler against the brightest sky in the picture and the light lives only at its edges
+and in what is thin. The drawing does not change, only its colour plan, and every piece of light is a flat
+band cut from a silhouette the way the kit cuts its lit edge, never a blur (`bftOakLight`): a cream rim on
+each edge of the leaves that faces the sun, the silhouette moved straight away from it ring by ring and a
+twelfth of the way round at a time (`bftRimMask`), 4.2px nearest the sun and wider as more of the disc shows,
+none 86 units out, laid over the ink within 45 so the line is lost in the light; a hairline lining on every
+outer edge near the sun whichever way it faces; inside the rim a narrow olive-gold band where one layer of
+leaves lets the light through; a warm hairline on the limbs; and the back leaves near the sun lighter and
+warmer than the front, because the back of the crown is the side the sun is on. The moss is the heart of it:
+each beard near the sun outlined in champagne silver down both edges and over its loose ends, its silhouette's
+own edges outside (`bftMossHalo`, `bftMossLevel`: full within 26 units, a middle light to 54, a faint edge to
+90), only where it hangs clear of the leaves behind it, the thin wisps nearest lit whole, the dense cores
+darker, and the one or two veil curtains nearest a sun that shows lit whole like lamps in the dark crown
+(`bftOakLamps`). The white birds in the crown go lavender grey in its shade, and those near the sun wear a
+broad warm rim. Where the disc shows it is white, its glare a flat stepped ellipse over each gap it shows
+through (`bftGlareGaps`, the disc tested against the leaves exactly as the scallops draw them, the wood and
+every beard's tails: this morning 8% of it), its few uneven rays behind the crown as long as the share that
+shows; clear of the leaves it is the scene's own yellow sun again, and the glare is left off whenever a scene
+cloud can drift across the disc. Round it the sky is a cream aureole, the far shore toward it goes pale, the
+low sun's bloom moves behind the crown, and the sun's track on the water goes behind the trunk. Beams through
+the crown's gaps are two to four flat wedges, only over the crown's shade, the wood and the bank. And the
+oak's shadow comes toward us down the bank, each part laid on the ground as far toward us as it stands high,
+so the trunk and the limbs are a crisp umbra and the crown a paler dappled shade with sun flecks, mostly off
+the frame at sunrise, and a third as strong on the water. The gates (`bftBacklight`, pure and tested) are
+each 0 to 1 and multiplied: the sun up (none below -0.83°, under half on the horizon, full from 2°), its light
+direct (full under 25% cloud, half at 55, none from 85, none in rain, snow, a storm or fog), its disc behind
+the oak on the screen, measured from the drawn leaves, wood and moss at this frame's width (full while the
+disc touches them, none once it is a disc and a half clear), low enough to stand behind a crown (none from
+36°), and over the far line where it is drawn: the scene's sun comes up out of the river about a quarter hour
+after the real sunrise and goes down into it as long before sunset, and while it is still in the river its
+light is real and the oak is lit at half, and nothing of the disc shows under the line (`ground`). Beams need
+80% humidity (a whisper at 88, more with mist on the river), the sun under 22° and less than a quarter cloud;
+the shadow needs the sun a degree up; dew from 92% greens the moss and dims it. A moon behind the oak is far
+too faint for any of it, so it is left off. It comes each clear morning from sunrise, gently, at half
+strength or more from about a quarter hour after it, until the sun climbs clear of the crown; on the 15th of
+each month at 390 (320 is the same frame, 430 within three minutes, 760 up to sixteen minutes later) until
+Jan 9:45, Feb 9:37, Mar 10:16, Apr 9:44, May 9:20, Jun 9:15, Jul 9:24, Aug 9:39, Sep 9:54, Oct 10:03, Nov 9:17,
+Dec 9:34, fading over the last fifteen to twenty-five minutes. The palmettos, which the evening sun sets
+behind, are lit by the same gates from their own crowns and trunks, from about two and a half hours before
+sunset until it (October 15, 4:17 to 6:50, at half from 6:32, when the drawn sun goes into the river): their
+fronds lit through warm yellow green, their trunks dark, the kit's lit edge turned to the sun and widened,
+all in their own colours on the moving layer, with no mask added. The moss's light is drawn
+into the front moss's own sway groups on `#sceneMoss`, so it rides the sway and adds no animation. That sheet
+repaints every frame, so there its light is fills alone, with no hairline round it (its bands run a little
+further in instead, `BFT_MOSS_GLOW_FRONT`), and its faintest edges and lit hairs are left to the still moss: a
+stroke round every band was what cost, about four frames a second in WebKit, and the fills alone cost nothing
+measurable. Everything else is still, on `#sceneSvg` (the aureole, the white disc and its rays, the far haze,
+the back leaves' light, the shadow) and `#sceneNear` (the wood's and the leaves' light between the wood, the
+leaves and the veil, the beams and the glare over them). No filter, no new animation, every draw seeded, and
+with the sun anywhere else the oak is drawn exactly as before. Measured October 16 2026 at 390 in Chrome: the
+scene builds in 23ms with the sun behind the oak and 16 without, a paint about 25ms longer, the same 47
+animations; in `tools/webkit.mjs`'s WKWebView (its `bft-sun-behind-oak` and `bft-sun-clear` cases), alternating
+with main on a Mac loaded by other work, the sun behind the oak ran 40 to 56 frames a second against main's 42
+to 52, within the noise. `tools/beaufort/scene.mjs`'s cases under `/* the sun
+behind the oak */` fail if the oak or the palmettos are lit from behind when they should not be, or not when
+they should.
+
 **Halloween at Beaufort** is on the same calendar as the other two places (`holidayOn`, `locToday()`), and
 all of it comes down the morning of November 1: the blood moon and the cobweb are shared, the bats keep
 over the oak, the palmettos, the bridge and the steeples, the witch crosses the moon, a pumpkin stands at
