@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v100/);
+  assert.match(worker, /mbwx-shell-v101/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -5672,6 +5672,56 @@ test("Beaufort is the third place: its readings, its scene in layers, its birds 
   assert.doesNotMatch(html, /bftOakCurl\(/);
   // the tide is drawn: the flats come out as it falls, at the dock's own water
   assert.match(lc, /const dockX=W\*\.66,deckY=GY-\.5,yTide=deckY\+bftDockWater\(tide\);/);
+  // the grass is rooted (Josh, October 16 2026: "at low tide like now, looks like it's floating"). Smooth
+  // cordgrass stands on the marsh platform from about mean tide up, so on a spring high the river is up around
+  // its stems and the picture is the one that was approved, and on every lower water the bank it stands on is
+  // out of the river: none from BFT_GRASS_WET up, four units at dead low, never at an unknown tide's dead low
+  const gm = html.match(/const BFT_GRASS_WET=[^\n]*\nconst bftGrassMud=[^\n]*/)[0];
+  const gctx = vm.createContext({});
+  vm.runInContext(`${html.match(/const bftDockClamp=[^\n]*/)[0]}\n${html.match(/const bftDockTide=[^\n]*/)[0]}\n${gm};this.wet=BFT_GRASS_WET;this.mud=bftGrassMud`, gctx);
+  assert.equal(gctx.wet, .94);
+  assert.equal(gctx.mud(1), 0, "a spring high: the river up around the stems, no bank out");
+  assert.equal(gctx.mud(gctx.wet), 0);
+  assert.equal(gctx.mud(0), 4, "dead low: four units of the bank out of the river");
+  for (let t = 0; t < .94; t += .02) assert.ok(gctx.mud(t) > gctx.mud(t + .02) - 1e-9, `the bank goes under as the tide rises (${t.toFixed(2)})`);
+  assert.ok(gctx.mud(.15) > 3 && gctx.mud(.15) < 3.6, "Josh's morning, near low, has most of the bank out");
+  assert.equal(gctx.mud(null), gctx.mud(.5), "an unknown tide is mid water, as the dock's is");
+  // the bank is the flats' own mud on the still picture, painted over the flats and under the palmettos'
+  // trunks and the land; the grass keeps its draws and stays on the moving layer, where it sways; and every
+  // ground the harness measures a tuft's foot against is tagged
+  assert.match(lc, /const mudH=bftGrassMud\(tide\);/);
+  assert.match(lc, /const grassBank=mudH>0&&flatL&&flatR\?BANKS\.map\(/);
+  // each bank's outline is written once: the land and its flat are drawn from BANKS, the points the bank's mud
+  // is measured off, so a change to the land's line cannot leave the mud on the old one
+  assert.match(lc, /const BANKS=\[\{dir:1,top:\[\[-12,bankY-1\.4\],/);
+  assert.match(lc, /const\[flatL,flatR\]=BANKS\.map\(flatOf\);/);
+  assert.match(lc, /const\[landL,landR\]=BANKS\.map\(landOf\);/);
+  assert.doesNotMatch(lc, /const landL=`|const landR=`|const flatL=|const flatR=/);
+  // where the bank is out, the land's top line is only the lip inside the one mud, laid over in the mud's own
+  // colour; the waterline glints in seeded broken lengths
+  assert.match(lc, /<path d="\$\{b\.lip\}" fill="none" stroke="url\(#lcbank\$\{i\}\)"/);
+  assert.match(lc, /const gr=mulberry\(dir>0\?7757:7759\)/);
+  assert.match(lc, /tuftRun\(-6,W\*\.22,bankY\+\.5,5,8\);tuftRun\(W\*\.25,lEdge\+2,bankY\+1\.5,8,12\);tuftRun\(rEdge-2,W\*\.79,bankY\+1\.5,8,12\);tuftRun\(W\*\.84,W\+8,bankY,5,8\);/);
+  assert.match(lc, /const wr=mulberry\(6611\);/);
+  assert.match(lc, /const vr=mulberry\(dir>0\?7741:7753\)/);
+  const still = lc.slice(lc.indexOf("  svg.innerHTML=`"), lc.indexOf("  skyL.innerHTML=`")), moving = lc.slice(lc.indexOf("  fx.innerHTML=`"));
+  assert.match(still, /\$\{flats\}\n    \$\{grassMud\}\n    \$\{palmTrunks\}\n    <path data-ground="land" d="\$\{landL\}"/);
+  assert.match(still, /\$\{grassFoot\}\$\{wrackSvg\}\n    \$\{oakShadow\}<g data-prop="live-oak">\$\{oakBack\}\$\{bftOakLight\("back"\)\}<\/g>/);
+  assert.match(still, /<rect data-ground="water" x="0" y="\$\{yFar\}"/);
+  assert.match(lc, /<path data-ground="mud" d="\$\{flatL\}"/);
+  assert.match(lc, /`<path data-ground="mud" d="\$\{b\.fill\}" fill="url\(#lcbank\$\{i\}\)"\/>`/);
+  assert.doesNotMatch(moving, /grassMud|grassFoot|wrackSvg/);
+  assert.match(moving, /<g data-grass\$\{bandAt\(i\)\}>/);
+  // the harness measures every tuft's foot, at the case's tide and at 0, .15, .5, .8 and 1, at every width
+  const bscene = await readFile(new URL("tools/beaufort/scene.mjs", root), "utf8");
+  assert.match(bscene, /\/\* the grass at every tide \*\/\n/);
+  assert.match(bscene, /: \[0, \.15, \.5, \.8, 1\];\nasync function grassCheck\(page\)/);
+  // the ground over a foot runs down to none at the wet line with no step, and a foot past the frame's edge is
+  // not measured, because no phone shows it
+  assert.match(bscene, /const need = t <= \.5 \? 1\.5 \+ \(\.5 - t\) \* 2 : t < BFT_GRASS_WET \? 1\.5 \* \(BFT_GRASS_WET - t\) \/ \(BFT_GRASS_WET - \.5\) : 0;/);
+  assert.match(bscene, /if \(!xs\.length\) \{ off\+\+; continue; \}/);
+  for (const n of ["this-morning", "grass-dead-low", "grass-mid-tide", "grass-flood-tide", "grass-spring-high"]) assert.match(bscene, new RegExp(`CASES\\.push\\((?:B\\(\\w+, \\w+, )?C\\("${n}"`));
+  assert.match(bscene, /CASES\.push\(B\(true, false, C\("this-morning", "2026-10-16T08:35:00", \.15,/);
   // the jack-o'-lantern under the dock house roof, and the rest of Halloween, on the shared calendar
   assert.match(lc, /const hw=c\.halloween;/);
   assert.match(lc, /carved:c\.carved,seed:3,sheltered:true/);
@@ -5686,4 +5736,106 @@ test("Beaufort is the third place: its readings, its scene in layers, its birds 
   assert.match(html, /\.scene-layer \.bft-bones-wave\[style\]\{animation:bftBonesWave 24s ease-in-out infinite\}/);
   // the Hornet crosses only on a clear day, and never under reduced motion
   assert.match(lc, /const jetUp=!PRM&&sunAltDeg>5&&!wet&&!storm&&!fog&&cloud<70/);
+
+  // the sun behind the oak (Josh, October 16 2026: "when the sun is behind the oak tree, like it is now, that tree
+  // should really glow like it would in real life"). bftBacklight is a product of honest parts, never a switch
+  const kit = html.slice(html.indexOf("/* ── Storybook ink: the drawing kit"), html.indexOf("/* ── the scene: arc, sun / moon"));
+  const bctx = vm.createContext({});
+  vm.runInContext(`${html.match(/function mulberry\(a\)\{[\s\S]*?\}\}/)[0]}\n${kit}\nObject.assign(globalThis,{bftBacklight,bftNear,bftDiscOpen,bftDiscPts,bftGlareGaps,bftInMass,bftOakLamps,bftRimMask,bftMossLevel,bftMossGlow,bftOakMossGroups,bftOakMossLayers,bftOakDraw,BFT_OAK_LEAF,BFT_OAK_MASSES,bftOakMass});`, bctx);
+  const { bftBacklight: BL } = bctx;
+  // this morning at 8:35, on a 390 phone (a frame of 320): the sun 12.5° up, drawn 4.8 left of the trunk and 55.4 up,
+  // behind the middle of the crown with only a sliver of it showing, in clear humid air
+  const S = [-4.84, -55.36], AM = { alt: 12.5, sun: S, cloud: 12, rh: 88 };
+  const am = BL(AM);
+  assert.equal(am.k, 1, "the sun behind the crown in a clear sky lights it at full strength");
+  assert.ok(am.open > 0 && am.open < .2, `only a sliver of the disc shows through the crown (${am.open})`);
+  assert.ok(am.shafts > 0 && am.shafts < .2, "in humid air the beams are a whisper");
+  assert.ok(BL({ ...AM, mist: true }).shafts > am.shafts, "mist on the river holds more of them");
+  assert.equal(BL({ ...AM, rh: 60 }).shafts, 0, "clear dry air shows no beams");
+  assert.equal(am.shadow, 1);
+  // the sky lets it through or it does not: half under thin cloud (and no beams), none overcast, in fog, rain or a storm
+  assert.ok(Math.abs(BL({ ...AM, cloud: 55 }).k - .5) < .01, "thin cloud halves it");
+  assert.equal(BL({ ...AM, cloud: 55 }).shafts, 0);
+  for (const o of [{ cloud: 95 }, { fog: true }, { wet: true }, { storm: true }]) assert.equal(BL({ ...AM, ...o }).k, 0, JSON.stringify(o));
+  // the sun up: none at night, under half strength on the horizon, no shadow until it is a degree up
+  assert.equal(BL({ ...AM, alt: -2 }).k, 0);
+  assert.equal(BL({ ...AM, sun: null }).k, 0, "no sun drawn, no light from it");
+  const rim = BL({ ...AM, alt: -.5 });
+  assert.ok(rim.k > .45 && rim.k < .6 && rim.shadow === 0, "the sun on the horizon lights it weakly and throws no shadow");
+  // low enough to stand behind a crown: none from 36°
+  assert.equal(BL({ ...AM, alt: 40 }).k, 0);
+  // behind the oak on the screen: full while the disc touches the drawing, none once it is a disc and a half clear,
+  // so at 10:45 this morning, the sun well over the crown, nothing
+  assert.equal(BL({ ...AM, alt: 22, sun: [20, -120] }).k, 0);
+  const edge = BL({ ...AM, alt: 22, sun: [14, -100] });
+  assert.ok(edge.k > .3 && edge.k < .8 && edge.open === 1, "just over the crown's top it fades, its disc all clear");
+  // a drawing hands its own distance from the sun: the palmettos at sunset
+  assert.equal(BL({ ...AM, sun: [0, 0], gap: -3 }).k, 1);
+  assert.equal(BL({ ...AM, sun: [0, 0], gap: 40 }).k, 0);
+  // dew greens the moss from 92%
+  assert.equal(am.dew, 0);
+  assert.ok(BL({ ...AM, rh: 98 }).dew === 1);
+  // forward scattering: full near the sun, none far from it
+  assert.deepEqual([0, 26, 58, 90].map((d) => +bctx.bftNear(d, 26, 90).toFixed(2)), [1, 1, .5, 0]);
+  // what hides the disc is tested against the leaves as the scallops draw them
+  for (const m of bctx.BFT_OAK_LEAF) assert.ok(bctx.bftInMass(m[0], m[1], m), "a mass covers its own middle");
+  assert.equal(bctx.bftDiscOpen(200, -150), 1, "a sun far from the oak is all open");
+  assert.equal(bctx.bftDiscOpen(-30, -60), 0, "a sun deep in the crown is hidden");
+  assert.ok(bctx.bftDiscPts(...S).length > 0, "this morning's sliver is where the glare goes");
+  // the glare is a flat ellipse over each gap the disc shows through, none where it is hidden, one round a disc all clear
+  assert.ok(bctx.bftGlareGaps(...S).length >= 1);
+  assert.equal(bctx.bftGlareGaps(-30, -60).length, 0);
+  const open = bctx.bftGlareGaps(200, -150);
+  assert.equal(open.length, 1);
+  assert.ok(Math.abs(open[0][0] - 200) < .5 && Math.abs(open[0][2] - open[0][3]) < 1 && open[0][2] > 12 && open[0][2] < 18, JSON.stringify(open[0]));
+  // a lamp in the dark crown: at most two veil curtains, and only when the sun shows at all
+  assert.ok(bctx.bftOakLamps(S, am.open).length >= 1 && bctx.bftOakLamps(S, am.open).length <= 2);
+  assert.equal(bctx.bftOakLamps(S, 0).length, 0);
+  // the rim is cut from the silhouette, cell by cell round the sun: white where the leaves are, black where they are again moved
+  // away from it, so only the edges that face it keep a band
+  const rm = bctx.bftRimMask("t", bctx.BFT_OAK_LEAF.map((m, i) => [`m${i}`, [m[0] - m[2], m[1] - m[3], m[0] + m[2], m[1] + m[3]]]), S, [[0, 13, 3], [13, 40, 2]]);
+  assert.match(rm.body, /<use href="#m\d+" fill="#fff"\/>/);
+  assert.match(rm.body, /<use href="#m\d+" fill="#000" transform="translate\(/);
+  assert.match(rm.defs, /<clipPath id="t0_\d+">/);
+  // the cells overlap, so no hairline of white shows along the seams where they meet
+  assert.match(html, /const SEAM=\.6;\n  rings\.forEach\(\(\[r0,r1,w\],i\)=>\{const da=Math\.min\(\.15,SEAM\/Math\.max\(r0,4\)\);/);
+  // the moss's light is in its own sway groups (it rides the sway and adds no animation), near beards most, none far
+  const glowL = bctx.bftOakMossLayers("front", 1, "#4F515F", { S, edge: "#FFF", hairC: "#FFF" });
+  assert.ok(glowL.some((g) => g.layers.some((l) => /bft-oak-glow/.test(l.open || ""))), "the front moss near the sun carries a halo");
+  // the moss that sways repaints every frame in WebKit, where a stroke round every band cost about four frames a second,
+  // so its light is fills alone; the still veil keeps its hairline
+  assert.ok(glowL.every((g) => g.layers.every((l) => !/bft-oak-glow/.test(l.open || "") || /bft-oak-glow" stroke="none"/.test(l.open))));
+  const veilL = bctx.bftOakMossLayers("veil", 1, "#4F515F", { S, k: 1, edge: "#FFF", hairC: "#FFF" });
+  assert.ok(veilL.some((g) => g.layers.some((l) => /bft-oak-glow" stroke="#FFF"/.test(l.open || ""))));
+  assert.equal(JSON.stringify(bctx.bftOakMossLayers("front", 1, "#4F515F")), JSON.stringify(bctx.bftOakMossLayers("front", 1, "#4F515F", null)), "no sun, the moss as it was");
+  const far = bctx.bftOakMossGroups("front", 1).flatMap((e) => e.b).filter((b) => bctx.bftMossLevel("front", b, [500, -300]) > 0);
+  assert.equal(far.length, 0, "no beard far from the sun is lit");
+  // in the scene: the light is worked out each paint from where the sun is drawn, and only while it lights the oak
+  assert.match(lc, /const BL=bftBacklight\(\{alt:sunAltDeg,sun:sunXY\?\[sunXY\[0\]-oakX,sunXY\[1\]-oakY\]:null,cloud,rh:humid,wet,storm,fog,/);
+  assert.match(lc, /const bk=BL\.k>\.02\?BL\.k:0,/);
+  // with no light from behind the oak is drawn exactly as it was, in one sheet; with it, the wood's hairline goes between the
+  // wood and the leaves, the rim between the leaves and the veil, the back leaves' light on the still picture
+  assert.match(lc, /const oakFront=\(bk\?oakAt\(oakL\.slice\(front0,front0\+1\)\)\+bftOakLight\("wood"\)\+oakAt\(oakL\.slice\(front0\+1,front0\+2\)\)\+bftOakLight\("crown"\)\+oakAt\(oakL\.slice\(front0\+2\)\)\n\s*:oakAt\(oakL\.slice\(front0\)\)\)/);
+  assert.match(lc, /\$\{oakShadow\}<g data-prop="live-oak">\$\{oakBack\}\$\{bftOakLight\("back"\)\}<\/g>`;/);
+  assert.match(lc, /<g data-prop="live-oak">\$\{oakFront\}\$\{treeBirds\}<\/g>\$\{blShafts\}\$\{blGlare\}/);
+  // the sun's track on the far water goes behind the trunk while the sun is behind the oak
+  assert.match(lc, /\$\{soarer\}\$\{jet\}\$\{bk\?glint:""\}`;/);
+  assert.match(lc, /\$\{bk\?"":glint\}\$\{waterFx\}/);
+  // nothing in it moves, nothing in it is a filter, and every draw is seeded
+  const light = lc.slice(lc.indexOf("/* ── the sun behind the oak, the rest of it"), lc.indexOf("  let flies=\"\";"))
+    + lc.slice(lc.indexOf("  function bftOakLight(kind){"), lc.indexOf("  /* the front of the oak, with the sun behind it"));
+  assert.doesNotMatch(light, /animation|class=|filter=|<filter|Math\.random|feGaussian/);
+  // the glare is never laid over a cloud that can drift across the disc
+  assert.match(lc, /const gaps=cloudOver\?\[\]:bftGlareGaps\(S\[0\],S\[1\],13,oakGround\)/);
+  // the palmettos, which the evening sun sets behind, by the same rule, their light in their own colours and lit edge
+  assert.match(lc, /const b=bftBacklight\(\{alt:sunAltDeg,sun:\[0,0\],cloud,rh:humid,wet,storm,fog,gap:Math\.min\(crownGap,trunkGap\),rise:clamp\(\(groundAt\(sunXY\[0\]\)-\(sunXY\[1\]-13\)\)\/26,0,1\)\}\);/);
+  // the scene's sun comes up out of the river and goes down into it, a little after and before the real sunrise and
+  // sunset: its light is real while it is, so a disc still under the far line lights the oak at half, and none of
+  // the disc shows below that line
+  assert.match(lc, /ground:oakGround\}\);/);
+  assert.ok(Math.abs(BL({ ...AM, ground: () => S[1] - 20 }).k - .5) < .01, "a disc still under the far line lights it at half");
+  assert.ok(Math.abs(BL({ ...AM, ground: () => S[1] }).k - .75) < .01, "half of it up, three quarters of the light");
+  assert.equal(BL({ ...AM, ground: () => S[1] - 20 }).open, 0, "and nothing of it shows");
+  const half = bctx.bftDiscOpen(200, -150, 13, () => -150);
+  assert.ok(half > .5 && half < .6, `the half under the far line is hidden (${half})`);
 });

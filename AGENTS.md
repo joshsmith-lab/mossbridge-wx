@@ -870,6 +870,29 @@ as the tide falls, with their oyster rakes and a wet edge, and go under on the f
 units under the deck at high water and seventeen at dead low, and the channel under it is the last thing
 wet. `tideLevel` reads the level off the station's own high and low predictions (`SCENE_TIDE`).
 
+**The grass stands on its bank.** Josh, on the morning of October 16 2026 with the tide near low: "the mud
+flat sim is excellent! let's look at that grass though, because at low tide like now, looks like it's
+floating." It was. The spartina stood on the banks' top lines with the river drawn straight behind its feet
+at every tide, while the flats and the float said the water was down, and the tall grass at each bank's
+corner had water under its feet on the flood. Smooth cordgrass grows on the marsh platform from
+about mean tide up to the high-water line, so the bank it is rooted in now comes up out of the river as the
+tide falls (`bftGrassMud`): four units of it at dead low, and none from `BFT_GRASS_WET` (.94) up, so a spring
+high is the picture it always was, the river up around the stems. Along each bank's river side there is wet
+mud from the waterline down to the grass's feet, its top swelling and dipping a little along the bank (seeded)
+and kept under the dock's stringers so the walkway stands over the marsh, and its waterline glints in broken
+lengths. The land's top line is only the lip inside that mud now, so its ink is laid over in the mud's colour
+and only a faint line of it is left. A darker wet band lies at the feet and fades into the grass, with a little
+wrack. At each corner the mud carries on under the tall grass and drops into the flat's own outline, in the
+flat's own colour, so the corner grass stands on the mud the flat is. Each bank's outline is written once
+(`BANKS`), and the land, its flat and the mud are all drawn from those points. It is the flats' own mud and
+ink on the still picture, and it adds no animation. The grass keeps every one of its draws and stays on
+`#sceneFx`. `tools/beaufort/scene.mjs` measures every tuft's foot the frame shows against the ground drawn
+under it (the shapes tagged `data-ground`), at the case's own tide and painted again at 0, .15, .5, .8 and 1,
+at every width: a foot is on the land or the mud, in the river only from the wet line, never over air, and
+below the wet line the ground stands over it, 2.5 units at dead low, 1.5 at mean tide and down to none at the
+wet line with no step, so it is never seen against the river. The page as it was fails 9 of the 34 feet in
+the frame at 390 on Josh's morning and 15 at dead low.
+
 **The animals are their real sizes** against the oak, the boat and the dock (about two-thirds of a foot to
 a unit on the near banks), which Josh asked for, and none stands on another (`tools/beaufort/scene.mjs`
 fails an overlap). The white birds are in the oak, as Josh asked: great egrets and white ibis on the limbs
@@ -896,6 +919,66 @@ sheltered and because each saved the frames. Measured on October 15 2026 (`tools
 hard blow 60, an October night with the bats, the witch, the lantern, the balloon and the skeleton 56
 with no frame over 34ms (the coast's and the farm's nights hold 60).
 
+**The sun behind the oak.** Josh, at about 8:35 on October 16 2026, with the sun low over Lady's Island and
+a yellow sliver of it showing through the crown: "when the sun is behind the oak tree, like it is now, that
+tree should really glow like it would in real life." Seen against the sun a tree is its own shaded side, so
+the oak goes darker and cooler against the brightest sky in the picture and the light lives only at its edges
+and in what is thin. The drawing does not change, only its colour plan, and every piece of light is a flat
+band cut from a silhouette the way the kit cuts its lit edge, never a blur (`bftOakLight`): a cream rim on
+each edge of the leaves that faces the sun, the silhouette moved straight away from it ring by ring and a
+twelfth of the way round at a time (`bftRimMask`), 4.2px nearest the sun and wider as more of the disc shows,
+none 86 units out, laid over the ink within 45 so the line is lost in the light; a hairline lining on every
+outer edge near the sun whichever way it faces; inside the rim a narrow olive-gold band where one layer of
+leaves lets the light through; a warm hairline on the limbs; and the back leaves near the sun lighter and
+warmer than the front, because the back of the crown is the side the sun is on. The moss is the heart of it:
+each beard near the sun outlined in champagne silver down both edges and over its loose ends, its silhouette's
+own edges outside (`bftMossHalo`, `bftMossLevel`: full within 26 units, a middle light to 54, a faint edge to
+90), only where it hangs clear of the leaves behind it, the thin wisps nearest lit whole, the dense cores
+darker, and the one or two veil curtains nearest a sun that shows lit whole like lamps in the dark crown
+(`bftOakLamps`). The white birds in the crown go lavender grey in its shade, and those near the sun wear a
+broad warm rim. Where the disc shows it is white, its glare a flat stepped ellipse over each gap it shows
+through (`bftGlareGaps`, the disc tested against the leaves exactly as the scallops draw them, the wood and
+every beard's tails: this morning 8% of it), its few uneven rays behind the crown as long as the share that
+shows; clear of the leaves it is the scene's own yellow sun again, and the glare is left off whenever a scene
+cloud can drift across the disc. Round it the sky is a cream aureole, the far shore toward it goes pale, the
+low sun's bloom moves behind the crown, and the sun's track on the water goes behind the trunk. Beams through
+the crown's gaps are two to four flat wedges, only over the crown's shade, the wood and the bank. And the
+oak's shadow comes toward us down the bank, each part laid on the ground as far toward us as it stands high,
+so the trunk and the limbs are a crisp umbra and the crown a paler dappled shade with sun flecks, mostly off
+the frame at sunrise, and a third as strong on the water. The gates (`bftBacklight`, pure and tested) are
+each 0 to 1 and multiplied: the sun up (none below -0.83°, under half on the horizon, full from 2°), its light
+direct (full under 25% cloud, half at 55, none from 85, none in rain, snow, a storm or fog), its disc behind
+the oak on the screen, measured from the drawn leaves, wood and moss at this frame's width (full while the
+disc touches them, none once it is a disc and a half clear), low enough to stand behind a crown (none from
+36°), and over the far line where it is drawn: the scene's sun comes up out of the river about a quarter hour
+after the real sunrise and goes down into it as long before sunset, and while it is still in the river its
+light is real and the oak is lit at half, and nothing of the disc shows under the line (`ground`). Beams need
+80% humidity (a whisper at 88, more with mist on the river), the sun under 22° and less than a quarter cloud;
+the shadow needs the sun a degree up; dew from 92% greens the moss and dims it. A moon behind the oak is far
+too faint for any of it, so it is left off. It comes each clear morning from sunrise, gently, at half
+strength or more from about a quarter hour after it, until the sun climbs clear of the crown; on the 15th of
+each month at 390 (320 is the same frame, 430 within three minutes, 760 up to sixteen minutes later) until
+Jan 9:45, Feb 9:37, Mar 10:16, Apr 9:44, May 9:20, Jun 9:15, Jul 9:24, Aug 9:39, Sep 9:54, Oct 10:03, Nov 9:17,
+Dec 9:34, fading over the last fifteen to twenty-five minutes. The palmettos, which the evening sun sets
+behind, are lit by the same gates from their own crowns and trunks, from about two and a half hours before
+sunset until it (October 15, 4:17 to 6:50, at half from 6:32, when the drawn sun goes into the river): their
+fronds lit through warm yellow green, their trunks dark, the kit's lit edge turned to the sun and widened,
+all in their own colours on the moving layer, with no mask added. The moss's light is drawn
+into the front moss's own sway groups on `#sceneMoss`, so it rides the sway and adds no animation. That sheet
+repaints every frame, so there its light is fills alone, with no hairline round it (its bands run a little
+further in instead, `BFT_MOSS_GLOW_FRONT`), and its faintest edges and lit hairs are left to the still moss: a
+stroke round every band was what cost, about four frames a second in WebKit, and the fills alone cost nothing
+measurable. Everything else is still, on `#sceneSvg` (the aureole, the white disc and its rays, the far haze,
+the back leaves' light, the shadow) and `#sceneNear` (the wood's and the leaves' light between the wood, the
+leaves and the veil, the beams and the glare over them). No filter, no new animation, every draw seeded, and
+with the sun anywhere else the oak is drawn exactly as before. Measured October 16 2026 at 390 in Chrome: the
+scene builds in 23ms with the sun behind the oak and 16 without, a paint about 25ms longer, the same 47
+animations; in `tools/webkit.mjs`'s WKWebView (its `bft-sun-behind-oak` and `bft-sun-clear` cases), alternating
+with main on a Mac loaded by other work, the sun behind the oak ran 40 to 56 frames a second against main's 42
+to 52, within the noise. `tools/beaufort/scene.mjs`'s cases under `/* the sun
+behind the oak */` fail if the oak or the palmettos are lit from behind when they should not be, or not when
+they should.
+
 **Halloween at Beaufort** is on the same calendar as the other two places (`holidayOn`, `locToday()`), and
 all of it comes down the morning of November 1: the blood moon and the cobweb are shared, the bats keep
 over the oak, the palmettos, the bridge and the steeples, the witch crosses the moon, a pumpkin stands at
@@ -911,7 +994,10 @@ up the walkway, out from under the balloon's string.
 **Seeing it.** `node tools/beaufort/look.mjs <key>` shows any Beaufort drawing close up and at phone size
 (the keys are in `BFT`, the registry each drawing registers in), and `TZ=America/New_York node
 tools/beaufort/scene.mjs [cases]` renders the real page at Beaufort in every weather, tide and October
-case, and fails a page error, an animal overlap or more than 120 animations.
+case, and fails a page error, an animal overlap, a tuft of grass with nothing under its foot (see the grass
+above) or more than 120 animations. Its last cases are the grass at every tide: Josh's morning
+(`this-morning`, October 16 2026 at 8:35, the tide at .15), dead low, mid tide, the flood at .8 and a
+spring high.
 
 ## Deploying
 

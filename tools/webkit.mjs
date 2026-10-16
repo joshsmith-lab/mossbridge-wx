@@ -39,6 +39,14 @@ const CASES = [
   { name: "coast-afternoon", loc: "mb", when: "2026-10-10T15:30:00", note: "partly cloudy, the ordinary afternoon",
     o: { baseTemp: 71, nowTemp: 75, feels: 75, rh: 55, isDay: 1, code: 2, cloud: 45, nowWind: 9, nowDir: 40, nowGust: 15, nowUv: 3.4, uvMax: 5, windAmp: 6, gustAmp: 10,
       sunrise: "07:13", sunset: "18:44", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  /* Beaufort with the sun behind the oak (October 16 2026), whose front moss carries its light while it sways, and
+     the same morning two hours on with the sun clear of the crown, to set it against */
+  { name: "bft-sun-behind-oak", loc: "bft", when: "2026-10-16T08:35:00", note: "the sun behind the oak: the rim, the moss lit, the shade",
+    o: { baseTemp: 72, nowTemp: 70, feels: 76, rh: 88, isDay: 1, code: 1, cloud: 12, nowWind: 3, nowDir: 220, nowGust: 6, nowUv: 1.2, uvMax: 5, windAmp: 4, gustAmp: 6,
+      sunrise: "07:27", sunset: "18:48", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "bft-sun-clear", loc: "bft", when: "2026-10-16T10:45:00", note: "the same morning, the sun clear of the crown",
+    o: { baseTemp: 72, nowTemp: 76, feels: 76, rh: 70, isDay: 1, code: 1, cloud: 12, nowWind: 3, nowDir: 220, nowGust: 6, nowUv: 3.6, uvMax: 5, windAmp: 4, gustAmp: 6,
+      sunrise: "07:27", sunset: "18:48", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
 ];
 
 const runner = path.join(ROOT, "tools", "shots", "webkit-runner"), source = path.join(ROOT, "tools", "webkit.swift");
