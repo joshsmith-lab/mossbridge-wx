@@ -39,6 +39,12 @@ const CASES = [
   { name: "coast-afternoon", loc: "mb", when: "2026-10-10T15:30:00", note: "partly cloudy, the ordinary afternoon",
     o: { baseTemp: 71, nowTemp: 75, feels: 75, rh: 55, isDay: 1, code: 2, cloud: 45, nowWind: 9, nowDir: 40, nowGust: 15, nowUv: 3.4, uvMax: 5, windAmp: 6, gustAmp: 10,
       sunrise: "07:13", sunset: "18:44", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  /* Beaufort's October afternoon on NOAA's own table for the day, with the water mock's fishing water drawn
+     (option A: the grass, the floods, the wind row and the fish in season are all still shapes) */
+  { name: "beaufort-afternoon", loc: "bft", when: "2026-10-10T15:30:00", note: "Beaufort in October: the oak, the moss, the bridge, the Halloween dock, and the fishing water",
+    o: { baseTemp: 76, nowTemp: 78, feels: 79, rh: 60, isDay: 1, code: 2, cloud: 40, nowWind: 9, nowDir: 40, nowGust: 15, nowUv: 3.6, uvMax: 5, windAmp: 6, gustAmp: 10,
+      sunrise: "07:21", sunset: "18:56", popCurve: () => 5, dailyPop: (p) => p.fill(8), noGauge: true, waterTemp: null, buoyTemp: 78.1, buoyAge: 20,
+      ...(() => { try { const t = JSON.parse(readFileSync(path.join(ROOT, "tools", "beaufort", "tides-8667999.json"), "utf8"))["2026-10-10"]; return t ? { hilo: t } : {}; } catch { return {}; } })() } },
 ];
 
 const runner = path.join(ROOT, "tools", "shots", "webkit-runner"), source = path.join(ROOT, "tools", "webkit.swift");

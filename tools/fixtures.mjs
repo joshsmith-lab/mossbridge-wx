@@ -82,7 +82,7 @@ export function forecast(now, o, tz, loc = "mb") {
   const start = new Date(now);
   if (tz) { const p = partsIn(now, tz); start.setTime(now.getTime() - (+p.hour % 24) * 3600e3 - (+p.minute) * 60e3); }
   else start.setHours(0, 0, 0, 0);
-  const time = [], temp = [], apparent = [], pop = [], code = [], wind = [], gust = [], uv = [];
+  const time = [], temp = [], apparent = [], pop = [], code = [], wind = [], gust = [], uv = [], dir = [];
   const feelDelta = Number(o.feels) - Number(o.nowTemp);
   /* The day is a sine around baseTemp, but the scenario's current reading is what the header
      shows, and a curve that ignores it put a 7° cliff into the first hour of the chart. Lean
@@ -111,11 +111,15 @@ export function forecast(now, o, tz, loc = "mb") {
     const thunder = [95, 96, 99].includes(o.code);
     const wetCode = thunder ? o.code : 80;
     code.push(frozen ? o.code : o.hourlyCode?.(i, hr) ?? (pop[i] >= 55 ? wetCode : pop[i] >= 35 ? 3 : o.code));
-    wind.push(Math.round(6 + Math.abs(diurnal) * o.windAmp));
+    /* `windCurve` reshapes the sustained wind hour by hour too (Beaufort's wind row reads it) */
+    const w = Math.round(6 + Math.abs(diurnal) * o.windAmp);
+    wind.push(o.windCurve ? o.windCurve(i, hr, w) : w);
     /* the diurnal gust is 10 at five o'clock whatever the wind, so a day that blows through needs
        its own: `gustCurve` reshapes the run hour by hour, the way tempCurve does the temperature */
     const g = Math.round(10 + Math.abs(diurnal) * o.gustAmp);
     gust.push(o.gustCurve ? o.gustCurve(i, hr, g) : g);
+    /* where the wind comes from, hour by hour: the scenario's own now unless it shapes the run */
+    dir.push(o.dirCurve ? o.dirCurve(i, hr) : o.nowDir ?? 200);
     uv.push(Math.max(0, +(Math.max(0, diurnal) * o.uvMax).toFixed(1)));
   }
   const dtime = [], dmax = [], dmin = [], dcode = [], dpop = [], dsun = [], dset = [], duv = [], dwmax = [];
@@ -136,7 +140,7 @@ export function forecast(now, o, tz, loc = "mb") {
       apparent_temperature: o.feels, is_day: o.isDay, weather_code: o.code, cloud_cover: o.cloud,
       wind_speed_10m: o.nowWind, wind_direction_10m: o.nowDir, wind_gusts_10m: o.nowGust, uv_index: o.nowUv,
     },
-    hourly: { time, temperature_2m: temp, apparent_temperature: apparent, precipitation_probability: pop, weather_code: code, wind_speed_10m: wind, wind_gusts_10m: gust, uv_index: uv },
+    hourly: { time, temperature_2m: temp, apparent_temperature: apparent, precipitation_probability: pop, weather_code: code, wind_speed_10m: wind, wind_direction_10m: dir, wind_gusts_10m: gust, uv_index: uv },
     daily: { time: dtime, weather_code: dcode, temperature_2m_max: dmax, temperature_2m_min: dmin, sunrise: dsun, sunset: dset, precipitation_probability_max: dpop, wind_speed_10m_max: dwmax, uv_index_max: duv },
     minutely_15: o.nowcast
       ? { time: Array.from({ length: 12 }, (_, i) => iso(new Date(now.getTime() + i * 9e5), tz)), precipitation: [0, 0, 0, 0.2, 0.6, 0.9, 0.4, 0.1, 0, 0, 0, 0] }
@@ -149,7 +153,9 @@ export function forecast(now, o, tz, loc = "mb") {
  * `phase` shifts the first extreme so a scenario can choose whether the water
  * is on its way in or on its way out right now.
  */
-export function tides(now, phase = 0) {
+export function tides(now, phase = 0, o = {}) {
+  /* a scenario can carry NOAA's own table for its station and days (tools/beaufort/tides-8667999.json) */
+  if (o.hilo) return { predictions: o.hilo };
   const preds = [], t0 = new Date(now); t0.setHours(1, 12, 0, 0);
   t0.setTime(t0.getTime() + phase * 3600e3);
   for (let i = 0; i < 10; i++) {
@@ -179,13 +185,15 @@ export function marine(now, o, tz) {
  */
 export function coops(url, now, o, tidePhase = 0) {
   const q = new URL(url).searchParams, product = q.get("product");
-  if (product === "predictions" && q.get("interval") === "hilo") return tides(now, tidePhase);
+  if (product === "predictions" && q.get("interval") === "hilo") return tides(now, tidePhase, o);
   const stamp = (d) => `${day(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
   const last = new Date(now); last.setMinutes(last.getMinutes() - (last.getMinutes() % 6) - 6, 0, 0);
   const marks = Array.from({ length: 11 }, (_, i) => new Date(last.getTime() - (10 - i) * 6 * 6e4));
   const table = (d) => (2 + Math.sin(d.getTime() / 7.1e6)).toFixed(3);
   if (product === "water_temperature")
     return o.waterTemp === null ? { error: { message: "No data was found." } } : { data: [{ t: stamp(last), v: String(o.waterTemp ?? 77.0), f: "0,0,0" }] };
+  /* a station with predictions only (Beaufort, 8667999) has no gauge to read */
+  if (product === "water_level" && o.noGauge) return { error: { message: "No data was found." } };
   if (product === "water_level")
     return { data: marks.map((d) => ({ t: stamp(d), v: (+table(d) + (o.surge || 0)).toFixed(3), s: "0.05", f: "1,0,0,0", q: "p" })) };
   if (product === "predictions") return { predictions: marks.map((d) => ({ t: stamp(d), v: table(d) })) };

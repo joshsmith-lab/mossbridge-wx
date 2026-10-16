@@ -913,6 +913,57 @@ up the walkway, out from under the balloon's string.
 tools/beaufort/scene.mjs [cases]` renders the real page at Beaufort in every weather, tide and October
 case, and fails a page error, an animal overlap or more than 120 animations.
 
+**The fishing water (MOCK, option A, October 16 2026, on mock/bft-water-A: not chosen yet).** Josh asked
+to build in what Jen's family talked about ("always looking at the tide for fishing and ... always looking
+at the wind", and which fish are running when) on the tide chart, so theirs is different from Wilmington's.
+At Beaufort alone (`LOCS.bft.fishWater`) the water section is a fishing chart on the same honest curve,
+and nothing is scored or picked:
+- **The grass.** A dashed green line at 8 ft, NOAA's own mean higher high water at 8667999 (7.98 ft over
+  MLLW), labelled `grass 8 ft` like the depth scale's own words (`grass` alone where the number has no
+  room), placed over its line or under it, and kept further off the times than the scale's words, because
+  at 320 it sat between two highs on their baseline and read as one label with them. Every guide's flood
+  number lands on 7.9 to 8.2 once moved onto this station, and Plair's "10 to 15 a month" is this station
+  at 8.0. A high over it is a flood tide: its hours are a quiet green wash, the water over the line is
+  tinted and the short spartina stands in it, and its time prints in the grass's green, mid-March to
+  November while the reds tail (`season`); the first green time with room over it carries the words
+  `flood tide`, once. The rest of the year the wash and the grass stay and the green word goes. The scale's
+  top always clears the line, so it is drawn every day. No guide's bare number is ever printed: they belong
+  to other stations. It is the table's water: the station has no gauge, the table ran a mean 0.59 ft under
+  USGS 02176603 (Beaufort River at Beaufort) from August 17 to October 16 2026, and a northeast blow adds
+  about a foot, so the chart under-counts floods. The honest fix is that gauge beside the skiff (MLLW is its
+  gage height plus 4.43 ft), not built.
+- **The wind row** (`windRow`, `tideWindH`) under the lows, on the tide's own clock: the chip's vane into
+  the wind and the speed, now's own reading first with its `mph`, then a reading every two to eight hours
+  from it, evenly, as the width allows a fair gap. Calm is `calm` with no vane, a missing hour a dash. The
+  gusts are said under the hours they reach the boat's caution line (`BOAT.iffyGust`, 22) and run 6 over
+  (the chip's rule), once a stretch, `gusts to 34`, with a hairline the stretch's length; a stretch with no
+  room is left to the pill. No grade, no red, no shorthand, and no "wind against the tide": the vanes over
+  the rising and falling curve let a fisherman see it. The loading shell holds its height.
+- **The moving water is said, not drawn.** The first mock drew chevrons on each flank; they repeated the
+  slope, read as glyphs, and stood still at the turn, which is not true at the swing bridge, where the
+  flood runs two hours past the high. They went.
+- **The slider** names the stage the guides use (`high water`, `first of the incoming`, `incoming`, `last
+  of the outgoing`; never "slack"), or inside a flood `flood tide` and, where the stop's own water is 8.8
+  ft or more, `big flood tide` (`in the grass` and `deep in the grass` out of season), and the wind that hour
+  off the forecast's own run, the chip's vane drawn with `vane()` in one piece with its speed (`12 mph,
+  gusts 19`). The pill clears the skiff wherever it reaches over it (`clear`), because two lines at 320 sat
+  on the T-top. PageUp and PageDown stop at each flood's start too. Solunar times are left off on purpose:
+  here every moon transit falls on the ebb and every rise and set on the flood, the tide by another name.
+- **In season** (`#tideRun`, `BFT_RUN`, `runFor`, `runLayout`): under the chart, `IN SEASON · OCT` in the
+  faint mono, then each fish drawn (`RUN_RIG`, `node tools/beaufort/run-sheet.mjs`) with its name. One rule:
+  each fish in its peak months, SCDNR first and the guides where SCDNR is silent. A fish that lives here all
+  year is not in the row all year; the reds are, because their seasons run back to back (the winter schools,
+  the flood tides mid-March to November, the bulls in the sounds), and from September the row says `bulls`
+  under them. The only law beside them: cobia `closed` in May (the Southern Cobia Management Zone), and shrimp
+  `baiting` only for a year whose dates were checked against SCDNR's own September release (`SHRIMP_BAIT`,
+  empty: no 2026 release was found, and Carolina Sportsman's 2023 dates do not fit the rule). A calendar,
+  never a bite, and it reads no water temperature: the note keeps the buoy's. The loading shell and a place
+  switch hold its room (`runShell`).
+`tools/beaufort/tides-8667999.json` is NOAA's own table for the cases' days (`node
+tools/beaufort/tides-fetch.mjs <day>`), and the scene harness writes `scene-<case>-<w>-water.png` and prints
+the wind row and the season row. Porters Neck's water is unchanged: its markup, note, label, every stop's
+reading and spoken value and its pills match main's at 320 and 390.
+
 ## Deploying
 
 GitHub CLI (`gh`) is installed on WorkMacPro and signed in as `joshsmith-lab`.

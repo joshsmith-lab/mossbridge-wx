@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v100/);
+  assert.match(worker, /mbwx-shell-v101/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -5686,4 +5686,120 @@ test("Beaufort is the third place: its readings, its scene in layers, its birds 
   assert.match(html, /\.scene-layer \.bft-bones-wave\[style\]\{animation:bftBonesWave 24s ease-in-out infinite\}/);
   // the Hornet crosses only on a clear day, and never under reduced motion
   assert.match(lc, /const jetUp=!PRM&&sunAltDeg>5&&!wet&&!storm&&!fog&&cloud<70/);
+});
+
+test("MOCK option A: Beaufort's tide chart is a fishing chart, by rules anyone can see the reason for", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const lift = (re) => { const m = html.match(re); assert.ok(m, `${re} should be extractable`); return m[0]; };
+  // only Beaufort: the grass is NOAA's own mean higher high water at 8667999 (7.98 ft), and nowhere else has one
+  assert.match(html, /fishWater:\{grass:8,deep:8\.8,season:\["03-15","11-30"\]\},/);
+  const locs = html.slice(html.indexOf("const LOCS={"), html.indexOf("const LOC_ORDER"));
+  assert.equal(locs.split("fishWater:").length - 1, 1, "one place has the fishing water");
+  assert.ok(locs.indexOf("fishWater:") > locs.indexOf("bft:{id:\"bft\""), "and it is Beaufort");
+  const tide = html.slice(html.indexOf("function renderTides("), html.indexOf("/* ── the moon over the farm"));
+  assert.match(tide, /const FW=LOC\.fishWater\|\|null,HW=H\+\(FW\?tideWindH\(W\):0\);/);
+  assert.match(tide, /tideSvg\.setAttribute\("viewBox",`0 0 \$\{W\} \$\{HW\}`\);/);
+  assert.match(tide, /const vTopF=FW\?Math\.max\(vTop,FW\.grass\+\.7\):vTop;/);
+  // the loading shell holds the wind row's room and the fish row's, at Beaufort alone
+  assert.match(html, /box\("tideSvg",ch\+\(LOC\.fishWater\?tideWindH\(cw\):0\)\);/);
+  assert.match(html, /box\("tideSvg",ch\+\(L\.fishWater\?Math\.round\(26\*\(cw<360\?1\.08:cw<520\?1\.16:1\)\*1\.22\):0\)\);/);
+  assert.match(html, /const tideWindH=w=>Math\.round\(26\*\(w<360\?1\.08:w<520\?1\.16:1\)\*1\.22\);/, "the early shell's height is tideWindH's own");
+  assert.match(html, /bft:\{full:"Coosaw Club Dr · Beaufort"[^\n]*fishWater:true\}/);
+  // no almanac times on the river: there they are the tide by another name, and nothing is a bite or a best
+  assert.doesNotMatch(tide.replace(/\/\*[\s\S]*?\*\//g, ""), /solunarWindows|fishWindows|\bbite\b|best time/);
+  // the moving water is said, not drawn: no chevrons, because at the bridge the flood runs two hours past the high
+  const art = html.slice(html.indexOf("function fishWaterArt("), html.indexOf("const tideWindH="));
+  assert.match(art, /return\{bands,under\};/);
+  assert.doesNotMatch(art.replace(/\/\*[\s\S]*?\*\//g, ""), /flow|chevron/);
+  // "flood tide" is said once on the chart, over the first in-season green time with room for it
+  assert.match(tide, /if\(high&&!floodSaid&&floodHi\(p\)\)\{/);
+  assert.equal((tide.match(/>flood tide<\/text>/g) || []).length, 1);
+  const ctx = vm.createContext({ BOAT: { iffyGust: 22 }, clamp: (v, a, b) => Math.min(b, Math.max(a, v)),
+    xpSaid: (t, now) => t === now ? "Now" : new Date(t).toISOString().slice(11, 16), xpSpoken: (d) => d.toISOString().slice(11, 16) });
+  vm.runInContext([
+    lift(/const dirLong=d=>\[[^\n]*\n[^\n]*/),
+    lift(/const mdOf=d=>[^\n]*/), lift(/const inSeason=\(d,r\)=>[^\n]*/), lift(/const xpFin=v=>[^\n]*/),
+    html.slice(html.indexOf("let TIDE_RUN=null;"), html.indexOf("/* said with the chart: where the grass is")),
+    html.slice(html.indexOf("const tideWindH="), html.indexOf("/* What is in season on the Beaufort River")),
+    html.slice(html.indexOf("const BFT_RUN=["), html.indexOf("/* The row's layout, pure")),
+    "Object.assign(globalThis,{fishWater,fishWaterAt,windWords,windAt,windRow,runFor,BFT_RUN,SHRIMP_BAIT});",
+  ].join("\n"), ctx);
+  const own = (r) => JSON.parse(JSON.stringify(r));
+  // a table on the half cosine the chart draws: a low at 4:00, an 8.6 ft high at 10:12, a low at 16:24
+  const at = (s) => new Date(s).getTime();
+  const P = [["2026-10-16T04:00", .5, "L"], ["2026-10-16T10:12", 9.2, "H"], ["2026-10-16T16:24", .4, "L"], ["2026-10-16T22:36", 7.6, "H"]]
+    .map(([t, v, type]) => ({ time: new Date(t), v, type }));
+  const curve = (Q) => (t) => { let i = 0; while (i + 1 < Q.length && Q[i + 1].time.getTime() <= t) i++;
+    const a = Q[i], b = Q[Math.min(i + 1, Q.length - 1)]; if (a === b) return a.v;
+    const f = Math.min(1, Math.max(0, (t - a.time.getTime()) / (b.time.getTime() - a.time.getTime()))); return a.v + (b.v - a.v) * (1 - Math.cos(Math.PI * f)) / 2; };
+  const interp = curve(P);
+  const FW = { grass: 8, deep: 8.8, season: ["03-15", "11-30"] };
+  const fw = ctx.fishWater(P, interp, { t0: at("2026-10-16T02:00"), t1: at("2026-10-17T02:00"), FW });
+  assert.equal(fw.floods.length, 1, "only the high over the grass is a flood tide");
+  const f = fw.floods[0];
+  assert.ok(interp(f.a + 6e4) >= 8 && interp(f.a - 6e4) < 8 && interp(f.b - 6e4) >= 8 && interp(f.b + 6e4) < 8, "its hours are where the drawn curve crosses the grass");
+  assert.ok(Math.abs((f.a + f.b) / 2 - at("2026-10-16T10:12")) <= 6e4, "centred on its high");
+  assert.equal(f.deep, true); assert.equal(f.season, true);
+  // the flood is judged on the stop's own level: the edge of a 9.2 ft flood is a flood tide, its top a big one
+  const stT = (t, v) => own(ctx.fishWaterAt(fw, P, t, at("2026-10-16T05:00"), v ?? interp(t)));
+  const st = (s, v) => stT(at(s), v);
+  assert.equal(st("2026-10-16T10:12").flood, "big flood tide");
+  assert.equal(stT(f.a + 3e5).flood, "flood tide", "at the band's edge the water is just over the grass");
+  // out of season the water still goes into the grass, but the word goes, and deep is the stop's own level too
+  const D = P.map((p) => ({ ...p, time: new Date(p.time.getTime() + 70 * 864e5) }));
+  const dec = ctx.fishWater(D, curve(D), { t0: at("2026-12-25T02:00"), t1: at("2026-12-26T02:00"), FW });
+  assert.equal(dec.floods.length, 1); assert.equal(dec.floods[0].season, false);
+  assert.equal(own(ctx.fishWaterAt(dec, D, at("2026-12-25T10:12"), at("2026-12-25T05:00"), 9.2)).flood, "deep in the grass");
+  assert.equal(own(ctx.fishWaterAt(dec, D, dec.floods[0].a, at("2026-12-25T05:00"), 8.0)).flood, "in the grass");
+  // the stage, from how far the stop is from the table's turns: never "slack"
+  assert.equal(st("2026-10-16T04:20").stage, "low water");
+  assert.equal(st("2026-10-16T05:30").stage, "first of the incoming");
+  assert.equal(st("2026-10-16T07:00").stage, "incoming");
+  assert.equal(st("2026-10-16T09:00").stage, "last of the incoming");
+  assert.equal(st("2026-10-16T11:30").stage, "first of the outgoing");
+  assert.equal(st("2026-10-16T14:00").flood, null);
+  assert.doesNotMatch(html.slice(html.indexOf("function fishWaterAt("), html.indexOf("/* said with the chart")), /"slack/);
+  // the wind the chip's way, with the chip's own vane in one piece with its speed: calm under 1 mph has no
+  // vane, gusts only when 6 or more over, a missing hour a dash
+  assert.deepEqual(own(ctx.windWords({ w: 12, g: 19, d: 45 }).parts), [["45|12 mph, gusts 19", "vane"]]);
+  assert.deepEqual(own(ctx.windWords({ w: 12, g: 15, d: 250 }).parts), [["250|12 mph", "vane"]]);
+  assert.deepEqual(own(ctx.windWords({ w: .4, g: 9, d: 90 }).parts), [["calm, gusts 9", "faint"]]);
+  assert.deepEqual(own(ctx.windWords(null).parts), [["wind –", "faint"]]);
+  assert.equal(ctx.windWords({ w: 12, g: 19, d: 45 }).said, "wind 12 miles an hour from the northeast, gusts 19");
+  assert.match(html, /c==="vane"\?`<span class="faint wind"><span class="vane-p">\$\{vane\(t\.split\("\|"\)\[0\]\)\}<\/span>/, "the pill draws the chip's vane()");
+  assert.doesNotMatch(html, /VANE8/, "no arrow glyphs from a fallback font");
+  // the wind row: from now, the chip's reading, then the clock's hours; the gusts said once a stretch, from
+  // the boat's caution line (22) and 6 over, never a score, never red
+  const t0 = at("2026-10-16T12:00"), now = at("2026-10-16T14:30"), t1 = now + 26 * 36e5;
+  const hrs = Array.from({ length: 40 }, (_, i) => new Date(at("2026-10-16T14:00") + i * 36e5));
+  const iso = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 16);
+  const gustAt = (i) => (i < 4 ? 30 : i >= 10 && i < 13 ? 26 : 12);
+  const run = { h: { time: hrs.map(iso), wind: hrs.map((_, i) => (gustAt(i) > 20 ? 16 : 7)), gust: hrs.map((_, i) => gustAt(i)), dir: hrs.map(() => 250) }, live: { w: 18, g: 31, d: 250 } };
+  const css = { soft: "#456", faint: "#789", marker: "#B33" };
+  const X = (t) => 16 + (t - t0) / (t1 - t0) * 318;
+  const wr = ctx.windRow(run, { X, t0, t1, now, x0: 16, xR: 334, Hc: 202, fs: 1.415, css, halo: "", rvAt: () => "" });
+  assert.equal(wr.cols[0].t, now, "the row starts at now");
+  assert.equal(wr.cols[0].txt, "18", "with the chip's own reading");
+  const step = wr.cols[1].t - now;
+  assert.ok([2, 3, 4, 6, 8].includes(step / 36e5) && wr.cols.every((c, i) => c.t - now === i * step), "then evenly, every few hours from now");
+  assert.ok(wr.cols.every((c, i) => !i || c.x - c.wd / 2 - (wr.cols[i - 1].x + wr.cols[i - 1].wd / 2) >= 12 * 1.415 - .01), "a fair gap apart");
+  assert.deepEqual(own(wr.stretches).map((s) => Math.round(s.top)), [31, 26], "one gust line a stretch, its top gust");
+  assert.match(wr.svg, />gusts to 31</); assert.match(wr.svg, />gusts to 26</);
+  assert.doesNotMatch(wr.svg, /#B33|g\d\d</, "no red and no gust shorthand");
+  // what is in season: each fish in its peak months, the reds' three seasons back to back, the law beside them
+  const row = (s, bait) => own(ctx.runFor(new Date(s), bait)).map((x) => x.name + (x.sub ? "/" + x.sub : ""));
+  assert.deepEqual(row("2026-10-16T08:00"), ["reds/bulls", "trout", "flounder", "sheepshead", "shrimp"]);
+  assert.deepEqual(row("2026-08-20T08:00"), ["reds", "tarpon", "sharks", "shrimp"], "a late-August week is never promised the bulls");
+  assert.deepEqual(row("2026-05-12T08:00"), ["reds", "trout", "sheepshead", "black drum", "cobia/closed"], "cobia may not be taken here in May");
+  assert.deepEqual(row("2026-01-14T08:00"), ["reds", "sheepshead"]);
+  // the shrimp baiting season is said only for a year whose dates were checked against SCDNR's release
+  assert.deepEqual(own(ctx.SHRIMP_BAIT), {}, "no 2026 release was found, so no dates are assumed");
+  const checked = { 2026: ["2026-09-11T12:00", "2026-11-10T12:00"] };
+  assert.deepEqual(row("2026-10-16T08:00", checked), ["reds/bulls", "trout", "flounder", "sheepshead", "shrimp/baiting"]);
+  assert.deepEqual(row("2026-11-10T12:30", checked), ["reds/bulls", "trout", "flounder", "sheepshead", "shrimp"], "the baiting season closes at noon");
+  assert.ok(ctx.BFT_RUN.every((x) => x.months.every((m) => m >= 1 && m <= 12)));
+  // the row is labelled for what it is, in the faint ink, never the month alone in red
+  assert.match(html, /fill="\$\{css\.faint\}">IN SEASON · \$\{mon\}<\/text>/);
+  // the row reads no water temperature into the calendar
+  assert.doesNotMatch(html.slice(html.indexOf("const BFT_RUN=["), html.indexOf("/* ── the moon over the farm")).replace(/\/\*[\s\S]*?\*\//g, ""), /waterTemp|buoy|\.temp\b/);
 });

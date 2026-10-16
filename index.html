@@ -594,6 +594,9 @@ section{padding:28px 20px 0}
 .xp-peek .faint{color:var(--ink-faint)}.xp-peek .warm{color:#974607}.xp-peek .cold{color:var(--water-ink)}
 html[data-theme=dark] .xp-peek .warm{color:var(--heat)}
 .xp-peek .gold{color:#785015}html[data-theme=dark] .xp-peek .gold{color:#E8BC69}
+.xp-peek .grass{color:#4F6B33;font-weight:600}html[data-theme=dark] .xp-peek .grass{color:#A9C48A}
+/* the chip's vane on the water's pill at Beaufort, in the wind's faint ink beside its speed (MOCK, option A) */
+.xp-peek .wind{display:inline-flex;align-items:baseline;gap:3px}.xp-peek .vane-p{display:inline-flex;align-self:center}.xp-peek .vane-p .vane{color:var(--ink-faint);opacity:1}
 .xp-peek[hidden]{display:none}
 .xp-cursor{pointer-events:none}
 .xp-cursor line{stroke:var(--ink-soft);stroke-width:1;opacity:.7}
@@ -605,6 +608,8 @@ html[data-theme=dark] .xp-peek .warm{color:var(--heat)}
 .hr-labels span{position:absolute;transform:translateX(-50%);text-align:center}
 .hr-labels .mark{color:var(--marker);font-weight:600}
 .tide-svg{display:block;width:100%;height:auto}
+/* Beaufort's fish in season, under the water's labels (MOCK, option A) */
+.tide-run{display:block;width:100%;height:auto;margin-top:12px}.tide-run[hidden]{display:none}
 @keyframes bob{from{transform:rotate(calc(var(--rock,2.6deg) * -1)) translateY(.6px)}to{transform:rotate(var(--rock,2.6deg)) translateY(-.6px)}}
 /* the skiff leans the way the water is going: inland on a rising tide, seaward on a falling one */
 @keyframes setDrift{from{transform:translateX(0)}to{transform:translateX(var(--dx,0px))}}
@@ -1015,6 +1020,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
     <input class="xp-key" type="range" min="0" max="0" step="1" value="0" disabled aria-label="Water, 15 minutes a step">
     <div class="xp-peek" aria-hidden="true" hidden></div>
   </div>
+  <svg id="tideRun" class="tide-run" viewBox="0 0 350 52" xmlns="http://www.w3.org/2000/svg" role="img" hidden></svg>
 </section>
 
 <section id="stormLine" hidden aria-label="Storm">
@@ -1138,7 +1144,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   var PLACES={
     mb:{full:"Moss Bridge Ct · Porters Neck",short:"Porters Neck",lat:34.2982,lon:-77.7896,scene:"marsh",tide:true,fish:false,year:"The year · Wilmington",airport:"Wilmington",label:"Sun and moon over the marsh horizon",snowy:false},
     sp:{full:"Bob Plumley Rd · Shady Spring",short:"Shady Spring",lat:37.8215,lon:-80.9942,scene:"ridge",tide:false,fish:true,year:"The year · Shady Spring",airport:"Beckley",label:"Sun and moon over Appalachian ridgelines and the farm pond",snowy:true},
-    bft:{full:"Coosaw Club Dr · Beaufort",short:"Beaufort",lat:32.4938,lon:-80.6151,scene:"lowcountry",tide:true,fish:false,year:"The year · Beaufort",airport:"Beaufort MCAS",water:"Beaufort River",label:"Sun and moon over the Beaufort River, the swing bridge and a live oak hung with moss",snowy:false}
+    bft:{full:"Coosaw Club Dr · Beaufort",short:"Beaufort",lat:32.4938,lon:-80.6151,scene:"lowcountry",tide:true,fish:false,year:"The year · Beaufort",airport:"Beaufort MCAS",water:"Beaufort River",label:"Sun and moon over the Beaufort River, the swing bridge and a live oak hung with moss",snowy:false,fishWater:true}
   };
   var id="mb";
   try{var saved=localStorage.getItem("mbwx-loc");if(PLACES[saved])id=saved}catch(e){}
@@ -1197,7 +1203,8 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   var W=Math.max(320,aw/1.22),H=Math.round((L.scene==="marsh"?150:168)+(760-W)*.10),cw=aw-40,ch=Math.round(165+(760-cw)*.09);
   document.getElementById("sceneSvg").setAttribute("viewBox","0 0 "+W+" "+H);
   var box=function(el,h){document.getElementById(el).setAttribute("viewBox","0 0 "+cw+" "+h)};
-  box("hourlySvg",ch-18);box("tideSvg",ch);box("moonSvg",ch+16);box("yearSvg",138+34+(L.snowy?46:0));
+  /* Beaufort's tide chart carries its wind row under the lows (MOCK, option A): tideWindH */
+  box("hourlySvg",ch-18);box("tideSvg",ch+(L.fishWater?Math.round(26*(cw<360?1.08:cw<520?1.16:1)*1.22):0));box("moonSvg",ch+16);box("yearSvg",138+34+(L.snowy?46:0));
   document.getElementById("weekRows").style.minHeight="218px";
 })();
 </script>
@@ -1244,6 +1251,15 @@ const LOCS={
          current products come with it, and stay off the strip on Lady's Island (quietAlerts) */
       quietAlerts:["Rip Current Statement","High Surf Advisory","Beach Hazards Statement"],
       boatSeason:null,
+      /* MOCK, option A (October 16 2026): the tide chart is a fishing chart here. The grass is NOAA's own
+         mean higher high water at 8667999, 7.98 ft over MLLW (epoch 1983-2001), the top of the short
+         spartina, so a high over it puts water in the grass: a flood tide. Every guide's number lands on
+         7.9 to 8.2 once it is moved onto this station (Fort Pulaski 7.5, Charleston 6.0, Bay Street 7.8 to
+         9), and Plair's "10 to 15 a month" is this station at 8.0 (12 a month in 2026). `deep` is LoCo's
+         8.5 to 9 at Fort Pulaski moved here, where the grass is deep enough that it fishes for minutes. The
+         word "flood tide" is said mid-March to the end of November, while the reds tail (Bay Street, Plair,
+         Indigo); the rest of the year the water still goes into the grass and the line and its hours stay */
+      fishWater:{grass:8,deep:8.8,season:["03-15","11-30"]},
       sceneLabel:"Sun and moon over the Beaufort River, the swing bridge and a live oak hung with moss"}
 };
 /* The trip is over, so Denver is parked: still in LOCS as the template for the next travel
@@ -7511,6 +7527,153 @@ BFT["skeleton"]=bftBonesLook([-209,-201,300,240],st=>rigBftBones({...st,k:BFT_BO
 /* him alone, legs and all, for the close-up, with the wheel his hand is on and room for the wave */
 BFT["skeleton-alone"]=bftBonesLook([-42,-102,80,104],st=>rigBftBones({...st,cut:false}));
 
+/* ── Beaufort's fishing water: the fish in season, drawn small ─────────────────────
+   MOCK, option A (October 16 2026), for Josh to see and pick from. Jen's family is "always looking at
+   the tide for fishing", and asked which fish are running when, so under Beaufort's tide chart sits a
+   row of what is in season this month, each one drawn: a side view facing later in the day, about 32
+   units nose to tail, at the almanac fish's restraint (rigFish): an inked silhouette, flat colour, a
+   shadow crescent and a lit edge, and the one landmark that tells it apart at thirty pixels. The red
+   drum's spot at the tail, the trout's spots, the flounder's flat disc with both eyes up top, the
+   sheepshead's convict bars, the black drum's high back and chin barbels, the cobia's dark stripe and
+   shark's tail, the tarpon's jutting jaw and deep fork, the shark's fin, the shrimp's curl. */
+/* where a body's outline is at x, top and bottom, off its own points, so a bar or a stripe stays
+   inside the silhouette it is painted on */
+const runEdge=(pts,x)=>{const ys=[];
+  for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length];
+    if((a[0]-x)*(b[0]-x)<=0&&a[0]!==b[0])ys.push(a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0]))}
+  return ys.length?[Math.min(...ys),Math.max(...ys)]:[0,0]};
+const runBar=(pts,x,w,role,inset=.75,lean=.5)=>{const[t,b]=runEdge(pts,x);
+  return pTaper([[x+lean*.3,t+inset,w*.7],[x,(t+b)/2,w],[x-lean*.3,b-inset,w*.7]],role)};
+const RUN_INK={
+  reds:{body:"#B9703F",mark:"#F1DDB8",fin:"#A35A32",tail:"#AA6238",band:"#1C1620",detail:"#7C4527",eyeRing:"#F3E1B6",eye:"#1B1720"},
+  trout:{body:"#94A49B",mark:"#EEF0E6",fin:"#8A988D",tail:"#86958B",band:"#2A2E33",detail:"#5E7068",eyeRing:"#EEE8CC",eye:"#1B1720"},
+  flounder:{body:"#8C704F",mark:"#B39773",fin:"#A2855F",tail:"#9B7E59",band:"#5A4430",detail:"#5A4430",eyeRing:"#E9DDB6",eye:"#1B1720"},
+  sheepshead:{body:"#CCCABF",mark:"#ECEAE1",fin:"#A3A29A",tail:"#A9A79E",band:"#24222B",detail:"#55535C",eyeRing:"#ECE6CF",eye:"#1B1720"},
+  blackdrum:{body:"#64626C",mark:"#8E8C96",fin:"#504E58",tail:"#57555F",band:"#3A3842",detail:"#2B2933",eyeRing:"#C9C4B4",eye:"#15131A"},
+  cobia:{body:"#5E4B3B",mark:"#E6D8BF",fin:"#4C3C2F",tail:"#4F3F31",band:"#241B15",detail:"#C2AE8F",eyeRing:"#E3D3B2",eye:"#15111A"},
+  tarpon:{body:"#BCC8D1",mark:"#F2F5F6",fin:"#93A6B4",tail:"#9AACB9",band:"#6F8596",detail:"#7F94A4",eyeRing:"#F0F2EC",eye:"#1B1720"},
+  sharks:{body:"#8D98A3",mark:"#EEF0F0",fin:"#808C98",tail:"#7F8B97",band:"#26262E",detail:"#5C6773",eyeRing:"#E3E6E6",eye:"#15131A"},
+  shrimp:{body:"#DCD3C3",mark:"#ECE6DA",fin:"#C8BFAE",tail:"#B4BCA6",band:"#9A8E7C",detail:"#A39785",eyeRing:"#3A3030",eye:"#1B1720"},
+};
+for(const k in RUN_INK)Object.assign(RUN_INK[k],{ink:"#2A1B33",shade:"#3A2350",lit:"#FFE2A8",shadeOp:.3,litOp:.5});
+const RUN_RIG={
+  /* redfish: a long bronze body, the blunt snout and the mouth set under it, the broad square tail
+     and the black spot at its root, the one mark everyone knows a red by */
+  reds:()=>{const B=[[-11,-1.9],[-6,-4.1],[0,-5.3],[6,-5.2],[10.6,-4],[14,-2.4],[15.9,-.5],[15.9,.9],[14.4,2.1],[10.6,3.4],[5,4.3],[-1,4.2],[-6,3.3],[-11,1.7]];
+    return[{parts:[pBlob([[-10.4,-1.5],[-13.2,-3.8],[-16.6,-5],[-17,-2],[-16.3,0],[-17,2.1],[-16.6,5],[-13.2,3.8],[-10.4,1.5]],"tail")]},
+      {parts:[pBlob([[-9.6,-2.6],[-7.4,-5],[-2.4,-5.7],[-.6,-7.2],[2.8,-7.7],[5.6,-5.6],[1.8,-4.8],[-4,-3.9]],"fin"),
+        pBlob([[-3.2,3.5],[-5.4,5.8],[-1.4,5],[.2,4]],"fin")]},
+      {parts:[pBlob(B,"body"),
+        pBlob([[-10.2,.9],[-4,2],[3,2.5],[10,2.3],[14.2,1.5],[13.2,2.6],[9,3.6],[3,4.1],[-3,3.8],[-8.2,2.7]],"mark"),
+        pTaper([[8.6,-2.6,.22],[7.9,-.2,.55],[8.3,2.2,.22]],"detail"),
+        pDot(-8.4,-.5,1.3,"band"),
+        pDot(12,-1.4,1,"eyeRing"),pDot(12.2,-1.4,.6,"eye")]},
+      {parts:[pBlob([[7.4,.8],[4.8,1.3],[2.6,3],[5.3,3.2],[7.7,1.9]],"fin")]}]},
+  /* speckled trout: slimmer and pointed, the jaw a touch out in front, two dorsals, and the black
+     spots over the back, the fins and the tail */
+  trout:()=>{const B=[[-11,-1.6],[-6,-3.6],[0,-4.6],[6,-4.6],[11,-3.4],[14.6,-1.8],[16.6,-.5],[16.2,.6],[13.9,1.6],[9,3.2],[3,3.9],[-3,3.6],[-8,2.6],[-11,1.4]];
+    return[{parts:[pBlob([[-10.4,-1.4],[-13.4,-3.6],[-16.9,-5.1],[-16.4,-1.4],[-16,0],[-16.4,1.4],[-16.9,5.1],[-13.4,3.6],[-10.4,1.4]],"tail")]},
+      {parts:[pBlob([[-9.2,-2.3],[-6.6,-4.6],[-1.4,-4.9],[.6,-6.7],[3.2,-7],[5.8,-4.5],[1.2,-4.1],[-4.6,-3.4]],"fin"),
+        pBlob([[-3.6,3.4],[-5.8,5.6],[-1.6,4.8],[-.2,3.6]],"fin")]},
+      {parts:[pBlob(B,"body"),
+        pBlob([[-10.2,.8],[-4,1.6],[3,2],[10,1.5],[14,.9],[13.2,1.9],[9,3],[3,3.6],[-3,3.3],[-8.2,2.3]],"mark"),
+        pTaper([[16.4,-.3,.24],[14.6,.25,.42],[13.2,.4,.2]],"detail"),
+        pTaper([[9.4,-2.6,.2],[8.8,-.4,.5],[9.2,1.8,.2]],"detail"),
+        ...[[-7.2,-1.7,.4],[-4.4,-2.7,.5],[-1.6,-1.4,.4],[.8,-3.1,.5],[3.4,-1.9,.4],[6,-3.2,.4],[-9.4,-.3,.4],[-2.6,-3.6,.3],[4.8,-3.9,.3]].map(([x,y,r])=>pDot(x,y,r,"band")),
+        ...[[-13.7,-2.4,0.5],[-14.4,1.5,0.5],[-15.2,-0.3,0.4],[1.6,-5.3,0.4],[-3.6,-3.7,0.4]].map(([x,y,r])=>pDot(x,y,r,"band",{noSil:true})),
+        pDot(12.4,-1.4,1.1,"eyeRing"),pDot(12.6,-1.4,0.7,"eye")]},
+      {parts:[pBlob([[7.6,.6],[5.2,1],[3.2,2.7],[5.6,2.9],[7.8,1.6]],"fin")]}]},
+  /* southern flounder: a flat brown disc lying on the bottom, fringed all round, both eyes on the
+     top of the head, the tail a little fan */
+  flounder:()=>{const B=[[-10.2,-.6],[-8.2,-4.4],[-3,-6.4],[3,-6.4],[8,-5],[11.6,-3],[13.9,-1],[14.4,.8],[13,2.9],[9,5],[3,6.3],[-3,6.3],[-8.2,4.5],[-10.2,.8]];
+    return[{parts:[pBlob([[-9.8,-1.6],[-13.4,-4.3],[-16.2,-2.4],[-16.6,0],[-16.2,2.4],[-13.4,4.3],[-9.8,1.6]],"tail"),
+        pBlob([[-9.6,-2.4],[-8.8,-5.6],[-3.4,-8],[3,-8],[8.6,-6.4],[12.2,-3.8],[10.6,-3.4],[7.4,-4.6],[3,-5.8],[-3,-5.8],[-7.6,-3.8]],"fin"),
+        pBlob([[-9.6,2.4],[-8.8,5.6],[-3.4,8],[3,8],[8.6,6.6],[11.4,4.4],[9.6,4.2],[6.6,5.2],[3,5.8],[-3,5.8],[-7.6,3.8]],"fin")]},
+      {parts:[pBlob(B,"body"),
+        ...[[-5.2,-2.4,1.2],[-5,2.6,1.2],[1.8,0.1,1.1],[6.4,-2.6,0.8],[6.2,2.8,0.8],[-1.6,-4.2,0.7],[-1.6,4.4,0.7]].map(([x,y,r])=>pDot(x,y,r,"band",{op:.75})),
+        ...[[-5.2,-2.4,0.6],[-5,2.6,0.6],[1.8,0.1,0.5]].map(([x,y,r])=>pDot(x,y,r,"mark")),
+        pTaper([[10.2,-4.2,.2],[9.2,-.8,.5],[9.4,3.4,.2]],"detail"),
+        pTaper([[14.2,1.2,.22],[12.8,2,.4],[11.8,2.2,.2]],"detail"),
+        pDot(11.2,-2.7,1.1,"eyeRing"),pDot(11.4,-2.7,0.6,"eye"),
+        pDot(12.8,-0.9,1,"eyeRing"),pDot(13,-0.9,0.6,"eye")]}]},
+  /* sheepshead: deep and flat-sided, the steep face, the spiny dorsal, and the five black bars of the
+     convict fish */
+  sheepshead:()=>{const B=[[-10,-1.8],[-6,-5.6],[-1,-7.9],[4,-8.1],[8.5,-6.4],[11.8,-3.7],[13.5,-1.2],[13.8,.7],[12.5,2.6],[8.5,5.3],[3,6.9],[-2,6.7],[-6.5,4.6],[-10,1.8]];
+    return[{parts:[pBlob([[-9.4,-1.6],[-12.6,-4.4],[-15.8,-6.2],[-14.7,-2.1],[-14,0],[-14.7,2.1],[-15.8,6.2],[-12.6,4.4],[-9.4,1.6]],"tail")]},
+      {parts:[pBlob([[-8.4,-3.8],[-7,-6.8],[-5.2,-8.2],[-3.6,-9.4],[-1.6,-10.2],[.6,-10.6],[2.8,-10.4],[5,-9.4],[7.2,-7.2],[3,-7.4],[-3,-6.6]],"fin"),
+        pBlob([[-3.6,6],[-5.8,8.4],[-1.6,7.6],[.4,6.6]],"fin")]},
+      {parts:[pBlob(B,"body"),
+        pBlob([[-9.4,1.4],[-4,3],[3,3.6],[10,3],[13.2,1.6],[12.2,2.9],[8.4,5],[3,6.5],[-2,6.3],[-6.2,4.3]],"mark",{op:.8}),
+        ...[-6.8,-3.2,.4,4,7.6].map(x=>runBar(B,x,1.75,"band",.85,1)),
+        pDot(10.8,-2.6,1.1,"eyeRing"),pDot(11,-2.6,0.7,"eye")]},
+      {parts:[pBlob([[7.4,1.4],[4.8,1.9],[2.8,3.9],[5.4,4],[7.6,2.6]],"fin")]}]},
+  /* black drum: deep, the back arched high, dark grey, and the whiskers under the chin */
+  blackdrum:()=>{const B=[[-10.5,-1.9],[-6,-5],[-.5,-7.2],[4.5,-7.2],[9.4,-5.4],[12.9,-3.1],[14.7,-.6],[14.4,1.3],[12.5,3],[8,4.9],[2,5.7],[-4,5],[-8,3.3],[-10.5,1.7]];
+    return[{parts:[pBlob([[-9.8,-1.8],[-12.8,-4.6],[-16.4,-5.8],[-16.6,-2.2],[-15.8,0],[-16.6,2.2],[-16.4,5.8],[-12.8,4.6],[-9.8,1.8]],"tail"),
+        ...[[12.2,3.4],[11,4],[9.8,4.6]].map(([x,y])=>pTaper([[x,y,.5],[x-.4,y+1.4,.32],[x-.9,y+2.3,.1]],"detail"))]},
+      {parts:[pBlob([[-9.4,-3.1],[-7,-5.8],[-2.4,-7.1],[-.2,-9.1],[3.2,-9.4],[6.2,-7.1],[2.4,-6.7],[-3.6,-6]],"fin"),
+        pBlob([[-3.4,4.8],[-5.6,7.2],[-1.2,6.5],[.6,5.4]],"fin")]},
+      {parts:[pBlob(B,"body"),
+        pBlob([[-9.8,.8],[-4,2.1],[3,2.8],[10,2.4],[13.5,1.5],[12.5,2.8],[8,4.5],[2,5.3],[-4,4.6],[-7.8,3.1]],"mark",{op:.7}),
+        pTaper([[9.2,-3.4,.22],[8.4,-.2,.55],[8.8,3,.22]],"detail",undefined,{op:.6}),
+        pDot(11.6,-2.1,1.1,"eyeRing"),pDot(11.8,-2.1,0.7,"eye")]},
+      {parts:[pBlob([[7,1.2],[4.4,1.7],[2.4,3.7],[5,3.8],[7.2,2.4]],"fin")]}]},
+  /* cobia: long and shark-shaped, the broad flat head with the jaw out in front, the dark stripe down
+     the side between two pale ones, the long dark pectoral and the forked tail */
+  cobia:()=>{const B=[[-12,-1.2],[-7,-3],[0,-3.8],[7,-3.8],[11.6,-3],[14.9,-1.6],[16.6,-.5],[16.5,.6],[14.2,1.4],[9,2.8],[2,3.6],[-5,3.2],[-10,1.8],[-12,1]];
+    return[{parts:[pBlob([[-11.4,-1],[-14,-3.6],[-17.6,-6.6],[-16.7,-2.6],[-15.3,0],[-16.7,2.6],[-17.6,6.6],[-14,3.6],[-11.4,1]],"tail")]},
+      {parts:[pBlob([[-9.4,-2.4],[-6.4,-3.8],[-2.2,-6],[-.6,-5.6],[-.4,-3.4]],"fin"),
+        pBlob([[-9.4,2.2],[-6.4,3.4],[-2.4,5.2],[-.8,4.8],[-.6,3]],"fin"),
+        ...[1.6,3.2,4.8].map(x=>pTaper([[x,-3.4,.55],[x+.3,-4.9,.3],[x+.5,-5.6,.1]],"fin"))]},
+      {parts:[pBlob(B,"body"),
+        pBlob([[-11,.7],[-4,1.6],[3,2.1],[10,1.6],[14.2,1],[13.6,1.6],[9,2.6],[2,3.3],[-5,2.9],[-10,1.6]],"mark"),
+        pTaper([[-11.2,.15,.5],[-4,-.05,.62],[4,-.3,.66],[10.2,-.6,.55],[13.6,-.8,.3]],"detail"),
+        pTaper([[-11.2,-.55,.7],[-4,-.75,1],[4,-1,1.05],[10.4,-1.25,.8],[14.2,-1.25,.35]],"band"),
+        pDot(13.4,-1.7,0.9,"eyeRing"),pDot(13.6,-1.7,0.6,"eye")]},
+      {parts:[pBlob([[8.6,.8],[5.4,1.6],[1.6,4.6],[6,2.9],[8.8,1.9]],"fin")]}]},
+  /* tarpon: big and silver, the lower jaw jutting up in front of the eye, the high dorsal with its
+     long trailing ray, the scales, and the deep forked tail */
+  tarpon:()=>{const B=[[-11,-1.8],[-6,-4.6],[0,-6.4],[6,-6.2],[10.5,-4.8],[13.4,-3.3],[14.9,-2.6],[16,-3.1],[16.7,-2.6],[16.2,-1.4],[15.2,.1],[13.7,1.6],[9,4],[3,5.6],[-3,5.2],[-8,3.4],[-11,1.6]];
+    return[{parts:[pBlob([[-10.4,-1.5],[-13.4,-4.6],[-18.3,-8.6],[-16.3,-3.3],[-14.6,0],[-16.3,3.3],[-18.3,8.6],[-13.4,4.6],[-10.4,1.5]],"tail")]},
+      {parts:[pBlob([[-3.6,-5.8],[-1.2,-9.2],[1,-8.9],[2.6,-6.1]],"fin"),
+        pTaper([[-.8,-8.9,.62],[-4.6,-10.1,.36],[-9.2,-10.3,.12]],"fin"),
+        pBlob([[-6.2,3.8],[-8.2,6.2],[-4,5.4],[-2.6,4.4]],"fin")]},
+      {parts:[pBlob(B,"body"),
+        pBlob([[-10.2,-1.2],[-4,-3.7],[3,-4.9],[9.6,-4],[13.6,-2.4],[10,-2.8],[3,-3.4],[-4,-2.6]],"band",{op:.55}),
+        pBlob([[-10.2,1],[-4,2.2],[3,2.8],[10,2.4],[14.2,1.2],[13.2,2.4],[9,3.9],[3,5.2],[-3,4.8],[-8.2,3.1]],"mark"),
+        ...[[-6,-.8],[-2.6,-1.4],[.8,-1.6],[4.2,-1.4],[-4.3,1.2],[-.9,1.1],[2.5,1.2]].map(([x,y])=>pTaper([[x,y-1.25,.14],[x+.8,y,.32],[x,y+1.25,.14]],"detail",undefined,{op:.7})),
+        pTaper([[16.3,-2.5,.2],[14.8,-1.3,.38],[13.6,-.3,.18]],"detail"),
+        pDot(12.6,-2.2,1.2,"eyeRing"),pDot(12.8,-2.2,0.7,"eye")]},
+      {parts:[pBlob([[8.4,1.6],[5.6,2.2],[3.2,4.4],[6,4.3],[8.6,2.9]],"fin")]}]},
+  /* a shark: the pointed snout, the tall first dorsal, the pectoral, the long top lobe of the tail,
+     the sounds' sharpnose, blacktips and bonnetheads in one */
+  sharks:()=>{const B=[[-11,-.8],[-5,-2.7],[2,-3.7],[8,-3.5],[12.5,-2.3],[15.8,-.7],[17.1,.2],[15.4,1.1],[11,2.3],[4,3.3],[-3,3.1],[-8,1.9],[-11,.8]];
+    return[{parts:[pBlob([[-10.5,-.6],[-13,-3],[-17.3,-8.4],[-16.4,-4.4],[-15,-.6],[-16,2.6],[-14.4,3.7],[-10.5,.8]],"tail"),
+        pBlob([[-4.6,2.8],[-6.6,5],[-3.4,4.4],[-2.6,3.1]],"fin")]},
+      {parts:[pBlob([[-1.2,-3.4],[1.8,-8.6],[3.6,-8.7],[4.2,-6.4],[6,-3.6]],"fin")]},
+      {parts:[pBlob(B,"body"),
+        pBlob([[-10.4,.5],[-3,1.3],[4,1.7],[11,1.1],[15.6,.5],[14.4,1.3],[11,2.1],[4,3.1],[-3,2.9],[-8,1.8]],"mark"),
+        ...[9.2,10.2,11.2].map(x=>pTaper([[x+.3,-1.8,.18],[x,-.2,.32],[x-.2,1,.15]],"detail")),
+        pDot(13.6,-1,0.8,"eyeRing"),pDot(13.8,-1,0.5,"eye")]},
+      {parts:[pBlob([[8.2,1.4],[5.2,2.6],[2,6.4],[4.2,6.2],[7,3.8],[8.8,2.2]],"fin")]}]},
+  /* white shrimp: the curled tail and its fan, the shell's segments, the horn and the long feelers
+     swept back over its back */
+  shrimp:()=>{const C=[[13.4,-1.4,5],[9.4,-3,6.2],[4.6,-3.6,6.4],[.2,-3.2,6],[-4,-1.8,5.4],[-7.4,.8,4.7],[-8.8,4,4],[-8,6.9,3.2],[-6,8.6,2.4]];
+    return[{parts:[pTaper([[13.6,-2.6,.32],[6,-8.6,.26],[-4,-9.6,.18],[-12.4,-6.8,.1]],"detail"),
+        pTaper([[14,-1.8,.3],[8,-6.6,.24],[-1,-8,.15],[-8.4,-6,.08]],"detail"),
+        ...[[7.6,2.2],[4.8,2.6],[2,2.4],[-.8,1.8],[-3.4,.8]].map(([x,y])=>pTaper([[x,y,.5],[x-.5,y+2,.3],[x-1.2,y+3.1,.12]],"fin")),
+        pBlob([[-6.6,7.4],[-4,6.6],[-1,6.4],[-1.6,7.8],[-4,9],[-6.2,9.6]],"tail"),
+        pBlob([[-6.4,8.4],[-3.6,9],[-1.8,10.4],[-4.6,10.6],[-6.6,9.8]],"tail")]},
+      {parts:[pTaper(C,"body",{capStart:true,capEnd:true}),
+        pTaper([[15.4,-2.6,.9],[17.4,-3.6,.5],[19.2,-4.3,.12]],"body"),
+        ...[[2,-6.4,1.6,.2],[-2,-5.6,-1.4,1.4],[-5.4,-3.8,-3.8,3],[-8,-1.2,-5.8,4.8],[-9.4,2.6,-6.8,6.6]].map(([a,b,c,d])=>pTaper([[a,b,.2],[(a+c)/2,(b+d)/2,.42],[c,d,.2]],"detail")),
+        pTaper([[7.2,-6.4,.22],[6.6,-3,.4],[7,.4,.2]],"detail",undefined,{op:.7}),
+        pDot(13.4,-2.6,1,"eye")]}]},
+};
+/* the look tool's names for them: node tools/beaufort/look.mjs run-reds (and the rest) */
+for(const k in RUN_RIG)BFT["run-"+k]={pal:RUN_INK[k],box:[-20,-12,40,23],s:1,dist:.04,ground:false,
+  o:{line:.8,heavy:.35,shade:1.3,lit:.65},draw:()=>RUN_RIG[k]()};
+
 /* ── the scene: arc, sun / moon, marsh horizon ──────── */
 /* The same fish is a mark on the moon line and a visitor to the farm pond. */
 function fishBite(x,y,s,pal,{delay=0,pond=false,tilt=0,offset=0}={}){
@@ -11153,15 +11316,22 @@ function renderTides(preds,css,gust,wind,gap=0){
   /* the water runs the same width as every other line: its depth scale is on its own gridlines
      inside the plot, so it no longer holds the curve in from the left */
   const topY=22,seaY=H-34,bedY=seaY+6,lowY=H-9,x0=padX;
+  /* Beaufort's fishing water (MOCK, option A) carries its wind row under the lows, so its picture is
+     that much taller than the chart (tideWindH, which the loading shell holds too) */
+  const FW=LOC.fishWater||null,HW=H+(FW?tideWindH(W):0);
   const vs=[];for(let t=t0;t<=t1;t+=9e5)vs.push(interp(t));
   /* measured up from the chart datum, so the height of the water on screen is the water there */
   const hiV=Math.max(...vs),base=Math.min(0,...vs);
   const vTop=hiV+Math.max(.5,(hiV-base)*.2);
+  /* Beaufort's fishing water (MOCK, option A): the grass line is drawn every day, so the top of the
+     scale never sits under it. Still measured up from the datum: only the headroom grows */
+  const vTopF=FW?Math.max(vTop,FW.grass+.7):vTop;
   /* the water that is there now, the table plus the gauge's gap, for the slider's reading at now */
   const wNow=interp(now.getTime())+(gap||0);
   const X=t=>x0+(t-t0)/(t1-t0)*(W-padX-x0);
-  const Y=v=>seaY-(v-base)/(vTop-base)*(seaY-topY);
+  const Y=v=>seaY-(v-base)/(vTopF-base)*(seaY-topY);
   const pts=[];for(let t=t0;t<=t1;t+=9e5)pts.push([X(t),Y(interp(t))]);
+  const fw=FW?fishWater(P,interp,{t0,t1,now:now.getTime(),FW}):null;
   const path=spline(pts);
   const area=path+` L ${X(t1).toFixed(1)} ${seaY} L ${X(t0).toFixed(1)} ${seaY} Z`;
   const sand=mix(css.faint,"#C2A268",.55);
@@ -11210,8 +11380,13 @@ function renderTides(preds,css,gust,wind,gap=0){
   const halo=`paint-order="stroke" stroke="${css.paper}" stroke-width="3.5" stroke-linejoin="round"`;
   const rv=REVEAL.tide.state!=="done",rvAt=(x,k,d)=>rvTag(rv,x,k,d);
 
-  /* highs ride above their own peak, lows share one aligned row under the waterline */
-  let labels="",ticks="",nowTop=topY-10;const times=[];
+  /* highs ride above their own peak, lows share one aligned row under the waterline. At Beaufort a
+     high that puts water in the grass, in season, prints its time in the grass's own green, and the
+     first of them on the chart carries the words over its time, "flood tide", once, so the green says
+     what it is without a finger on it (MOCK, option A) */
+  const grassInk=document.documentElement.dataset.theme==="dark"?"#A9C48A":"#4F6B33";
+  const floodHi=p=>fw&&fw.floods.some(f=>f.t===p.time.getTime()&&f.season);
+  let labels="",ticks="",nowTop=topY-10,floodSaid=false;const times=[];
   for(const p of P){
     const tm=p.time.getTime();if(tm<t0||tm>t1)continue;
     const x=X(tm),y=Y(p.v),high=p.type==="H";
@@ -11225,11 +11400,21 @@ function renderTides(preds,css,gust,wind,gap=0){
     /* and the now-line stops under any high label it would cross, lifted or not */
     if(high&&nx>lx-2&&nx<lx+lw+2)nowTop=Math.max(nowTop,y-lift+5);
     const ty=high?Math.max(12*fs,y-lift):lowY;times.push([lx,ty-11*fs*.78-2,lx+lw,ty+3]);
-    labels+=`<text x="${x.toFixed(1)}" y="${ty.toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(11*fs).toFixed(1)}" font-weight="600" fill="${high?css.ink:css.soft}" ${halo}${rvAt(anchor==="start"?x+20*fs:anchor==="end"?x-20*fs:x,"label")}>${clock(p.time)}</text>`;
+    labels+=`<text x="${x.toFixed(1)}" y="${ty.toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(11*fs).toFixed(1)}" font-weight="600" fill="${high?(floodHi(p)?grassInk:css.ink):css.soft}" ${halo}${rvAt(anchor==="start"?x+20*fs:anchor==="end"?x-20*fs:x,"label")}>${clock(p.time)}</text>`;
+    /* the words go over the first green time with room over it for them, and the now line stops
+       under them as it does under the time */
+    if(high&&!floodSaid&&floodHi(p)){
+      const wfs=9*fs,wcap=wfs*.74,wy=ty-11*fs*.78-4,ww="flood tide".length*wfs*.6+2;
+      const wx0=anchor==="start"?x:anchor==="end"?x-ww:x-ww/2;
+      if(wy-wcap>=2&&wx0>=x0-.5&&wx0+ww<=W-padX+.5){
+        floodSaid=true;times.push([wx0,wy-wcap-2,wx0+ww,wy+3]);
+        if(nx>wx0-2&&nx<wx0+ww+2)nowTop=Math.max(nowTop,wy+4);
+        labels+=`<text x="${x.toFixed(1)}" y="${wy.toFixed(1)}" text-anchor="${anchor}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${wfs.toFixed(1)}" font-weight="600" fill="${grassInk}" ${halo}${rvAt(anchor==="start"?x+20*fs:anchor==="end"?x-20*fs:x,"label")}>flood tide</text>`;
+      }
+    }
     /* the low's tick is drawn under the tag and the boat, whose halos break it */
     if(!high)ticks+=`<line x1="${x.toFixed(1)}" y1="${(y+1).toFixed(1)}" x2="${x.toFixed(1)}" y2="${(bedY+2).toFixed(1)}" stroke="${css.line}" stroke-width="1"${rvAt(x,"fade")}/>`;
   }
-
   /* the skiff rides the curve, so where it sits is how much water is under you right now,
      and it sets the way the water is setting: three pixels inland on a rising tide */
   const g0=Number(gust)||0;
@@ -11273,7 +11458,11 @@ function renderTides(preds,css,gust,wind,gap=0){
      it clear there, then the left end, then the nearest clear spot along the line, and every
      gridline takes the same spot when one spot clears them all, so the scale reads as one column */
   const gfs=Math.max(10,9*fs),gcap=gfs*.74,grids=[];
-  for(let ft=Math.ceil(base/2)*2;ft<=hiV;ft+=2)if(ft>base+.05)grids.push({ft,y:Y(ft),w:(ft+" ft").length*gfs*.6});
+  for(let ft=Math.ceil(base/2)*2;ft<=hiV;ft+=2)if(ft>base+.05&&!(FW&&Math.abs(ft-FW.grass)<1))grids.push({ft,y:Y(ft),w:(ft+" ft").length*gfs*.6});
+  /* the grass line keeps its number, the way the scale's own lines do ("grass 8 ft"), and stands a
+     little further off the times than they do, because at 320 it sat in the gap between two highs and
+     read as one long label with them */
+  if(FW)grids.push({ft:FW.grass,y:Y(FW.grass),w:`grass ${FW.grass} ft`.length*gfs*.6,grass:true,pad:22});
   const xR=W-padX;
   /* the tag's room beside the bow and the stern counts as solid whether or not a tag is drawn:
      a bare "2 ft" in the slot where "+1.5 ft" goes reads as a reading about the boat */
@@ -11282,26 +11471,40 @@ function renderTides(preds,css,gust,wind,gap=0){
     ...P.filter(p=>p.type!=="H"&&p.time.getTime()>=t0&&p.time.getTime()<=t1).map(p=>{const x=X(p.time.getTime());return[x-2,Y(p.v),x+2,bedY+2]})];
   const spots=[["end",xR],["start",x0]];
   for(let st=3;st<=xR-x0;st+=3)spots.push(["end",xR-st],["start",x0+st]);
-  const gBox=(g,[a,x])=>a==="end"?[x-g.w,g.y-3-gcap,x,g.y-1]:[x,g.y-3-gcap,x+g.w,g.y-1];
+  const gBox=(g,[a,x])=>{const t=g.under?g.y+3:g.y-3-gcap,b=g.under?g.y+5+gcap:g.y-1;return a==="end"?[x-g.w,t,x,b]:[x,t,x+g.w,b]};
   const gHits=(g,s)=>{const b=gBox(g,s);if(b[0]<x0-.1||b[2]>xR+.1)return Infinity;
     return pts.filter(([px,py])=>px>b[0]-5&&px<b[2]+5&&py>b[1]-5&&py<b[3]+5).length
-      +solid.filter(o=>o[0]<b[2]+3&&o[2]>b[0]-3&&o[1]<b[3]+2&&o[3]>b[1]-2).length*100};
+      +solid.filter(o=>o[0]<b[2]+(g.pad||3)&&o[2]>b[0]-(g.pad||3)&&o[1]<b[3]+2&&o[3]>b[1]-2).length*100};
+  /* the grass line says its number where there is room for it, over the line and then under it, and
+     only "grass" where there is not: over the line at 320 it sat between two highs' times on their own
+     baseline and read as one long label with them */
+  for(const g of grids)if(g.grass){
+    const tries=[[false,false],[true,false],[false,true],[true,true]];
+    const roomUnder=!grids.some(o=>!o.grass&&o.y>g.y&&o.y-3-gcap-8<g.y+5+gcap);
+    const fit=tries.find(([u,sh])=>{if(u&&!roomUnder)return false;g.under=u;g.short=sh;g.w=(sh?"grass":`grass ${FW.grass} ft`).length*gfs*.6;return spots.some(q=>!gHits(g,q))})||[false,true];
+    g.under=fit[0];g.short=fit[1];g.w=(g.short?"grass":`grass ${FW.grass} ft`).length*gfs*.6;
+  }
   const shared=spots.find(s=>grids.every(g=>!gHits(g,s)));
   let grid="";
   for(const g of grids){
     const s=shared||spots.find(q=>!gHits(g,q))||spots.reduce((a,q)=>gHits(g,q)<gHits(g,a)?q:a,spots[0]);
-    grid+=`<line x1="${x0}" y1="${g.y.toFixed(1)}" x2="${xR}" y2="${g.y.toFixed(1)}" stroke="${css.line}" stroke-width="1" stroke-dasharray="2 7"/>
+    g.box=gBox(g,s);
+    grid+=g.grass?`<line x1="${x0}" y1="${g.y.toFixed(1)}" x2="${xR}" y2="${g.y.toFixed(1)}" stroke="${grassInk}" stroke-width="1.2" stroke-dasharray="1.5 4.5" stroke-linecap="round" opacity=".75"/>
+    <text x="${s[1].toFixed(1)}" y="${(g.under?g.y+4+gcap:g.y-3).toFixed(1)}" text-anchor="${s[0]}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${gfs.toFixed(1)}" fill="${grassInk}"><tspan font-weight="600">grass</tspan>${g.short?"":` ${FW.grass} ft`}</text>`
+    :`<line x1="${x0}" y1="${g.y.toFixed(1)}" x2="${xR}" y2="${g.y.toFixed(1)}" stroke="${css.line}" stroke-width="1" stroke-dasharray="2 7"/>
     <text x="${s[1].toFixed(1)}" y="${(g.y-3).toFixed(1)}" text-anchor="${s[0]}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${gfs.toFixed(1)}" fill="${css.faint}">${g.ft} ft</text>`;
   }
   const tideSvg=document.getElementById("tideSvg"),waterTop=Math.min(...pts.map(p=>p[1]));
-  tideSvg.setAttribute("viewBox",`0 0 ${W} ${H}`);
-  tideSvg.innerHTML=`
+  tideSvg.setAttribute("viewBox",`0 0 ${W} ${HW}`);
+  const fwArt=fw?fishWaterArt(fw,{X,Y,t0,t1,topY,seaY,grassInk,rvAt}):null;
+  const wr=fw?windRow(fw.run,{X,t0,t1,now:now.getTime(),x0,xR,Hc:H,fs,css,halo,rvAt}):null;
+  tideSvg.innerHTML=`${fwArt?fwArt.bands:""}
     <defs><linearGradient id="tideFill" gradientUnits="userSpaceOnUse" x1="0" y1="${waterTop.toFixed(1)}" x2="0" y2="${seaY}">
       <stop offset="0" stop-color="${css.water}" stop-opacity=".34"/>
       <stop offset="1" stop-color="${css.water}" stop-opacity=".06"/></linearGradient>
       <clipPath id="tideArea"><path d="${area}"/></clipPath></defs>
     ${grid}
-    <g clip-path="url(#tideArea)"><rect class="rv-fill" x="${X(t0).toFixed(1)}" y="0" width="${(X(t1)-X(t0)).toFixed(1)}" height="${seaY}" fill="url(#tideFill)"/></g>
+    <g clip-path="url(#tideArea)"><rect class="rv-fill" x="${X(t0).toFixed(1)}" y="0" width="${(X(t1)-X(t0)).toFixed(1)}" height="${seaY}" fill="url(#tideFill)"/>${fwArt?fwArt.under:""}</g>
     ${rv?[[10,.3,.24],[6.5,.6,.2],[4.4,1,.16]].map(([w,f,o])=>`<path class="rv-tail" data-f="${f}" data-o="${o}" d="${path}" fill="none" stroke="${css.water}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>`).join(""):""}
     <path class="wline" d="${path}" fill="none" stroke="${css.water}" stroke-width="2.4" stroke-linecap="round"/>
     <path d="M ${x0} ${seaY-.5} L ${W-padX} ${seaY-.5} L ${W-padX} ${bedY} Q ${(W*.72).toFixed(1)} ${bedY+2.5} ${((x0+W)/2).toFixed(1)} ${bedY-1} Q ${(W*.28).toFixed(1)} ${bedY-3.5} ${x0} ${bedY} Z" fill="${sand}" opacity=".55"/>
@@ -11311,28 +11514,323 @@ function renderTides(preds,css,gust,wind,gap=0){
     <g class="xp-cursor"></g>
     ${tag?`<g${rvAt(nx,"fade")}><text x="${tag.x.toFixed(1)}" y="${tag.b.toFixed(1)}" text-anchor="${tag.a}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="${(10.5*fs).toFixed(1)}" font-weight="600" fill="${css.wink}" ${halo}>${tagTxt}</text></g>`:""}
     <g${rvAt(nx,"boat")}>${boat}</g>
-    ${labels}
+    ${labels}${wr?wr.svg:""}
     ${rv?`<g class="rv-tip" opacity="0" fill="${css.water}"><circle r="12" opacity=".14"/><circle r="6.5" opacity=".28"/><circle r="3"/><circle class="rv-core" r="1.4" fill="#FFFFFF" opacity=".95"/></g>`:""}`;
   revealChart("tide",tideSvg,{xa:X(t0),xb:X(t1),dur:clamp(2100+W*1.1,2400,2950),tail:72,color:()=>css.water});
   /* the quarter hours, now and each turn at its own minute. At now the reading is the water that is
      there (wNow, the table plus the gauge's gap), which the tag beside the boat reconciles with the
      curve it rides; the skiff is the mark there, so no ring is drawn at now */
   const nt=now.getTime(),turns=P.filter(p=>p.time.getTime()>=t0&&p.time.getTime()<=t1);
-  const stops=quarterStops(t0,t1,nt,turns.map(p=>p.time.getTime())).map(t=>{
+  const stops=quarterStops(t0,t1,nt,[...turns.map(p=>p.time.getTime()),...(fw?fw.floods.map(f=>f.a).filter(a=>a>t0&&a<t1):[])]).map(t=>{
     const p=turns.find(q=>q.time.getTime()===t),nextT=P.find(q=>q.time.getTime()>t);
     return{t,depth:t===nt?wNow:p?p.v:interp(t),turn:p&&t!==nt?p.type:null,now:t===nt,
-      dir:nextT?.type==="H"?"rising":nextT?.type==="L"?"falling":""};
+      dir:nextT?.type==="H"?"rising":nextT?.type==="L"?"falling":"",...(fw?fishWaterAt(fw,P,t,nt,p?p.v:interp(t)):{})};
   });
-  const ni=stops.findIndex(s=>s.now),marks=stops.map((s,i)=>s.now||s.turn?i:-1).filter(i=>i>=0);
-  /* the skiff is the mark at now, so the pill rises clear of it and its tag (over) without a ring */
+  const ni=stops.findIndex(s=>s.now),marks=stops.map((s,i)=>s.now||s.turn||s.floodStart?i:-1).filter(i=>i>=0);
+  /* the skiff is the mark at now, so the pill rises clear of it and its tag (over) without a ring.
+     At Beaufort the pill is two lines on a narrow phone, and at a stop a quarter hour off now it sat on
+     the T-top, so there the pill clears the boat's box wherever the pill itself reaches over it (clear) */
   const skiffTop=boatTop+5;
   xpPublish("tide",{svg:tideSvg,W,x:stops.map(s=>X(s.t)),y:stops.map(s=>[s.now?NaN:Y(s.depth)]),over:stops.map(s=>s.now?skiffTop:NaN),t:stops.map(s=>s.t),
+    ...(fw?{clear:[[nx-25,nx+21,skiffTop]]}:{}),
     band:[topY-10,seaY],start:ni,marks,snap:marks,noRing:[ni],read:i=>readTide(stops[i],nt,gap)});
   if(next){
     const rising=next.type==="H";
-    return{rising,next,note:(rising?"high ":"low ")+clock(next.time)};
+    return{rising,next,note:(rising?"high ":"low ")+clock(next.time),said:fw?fishWaterSaid(fw,nt)+(wr&&wr.said?". "+wr.said:""):""};
   }
   return null;
+}
+
+/* ── Beaufort's fishing water ───────────────────────── */
+/* MOCK, option A (October 16 2026), for Josh to pick from. Jen's family is "always looking at the tide
+   for fishing and ... always looking at the wind", so at Beaufort the tide chart is a fishing chart, on
+   the same honest curve and by rules anyone can see the reason for. Nothing is scored or picked: no
+   best time, no bite, no green. What it marks is what the water and the air are doing:
+   - the grass: a line at NOAA's own mean higher high water at the station, 8 ft (LOCS.bft.fishWater),
+     and each high over it is a flood tide, its hours a quiet wash, the water over the line tinted and
+     the grass standing in it. "flood tide" is said once on the chart, over the first green time, in
+     season (mid-March to November);
+   - the wind: a row under the lows on the tide's own clock, the chip's vane and speed from now and
+     every few hours of the run, and the gusts said under the hours they reach the boat's caution line;
+   - and at each stop the slider names the stage the way the guides talk (first of the incoming, last
+     of the outgoing, high water), the flood, and the wind that hour off the forecast's own run.
+   The moving water is said, not drawn: the curve's own slope already shows where it runs hardest, and
+   at the swing bridge the flood runs on two hours past the high, so marks that stand still at the turn
+   would not be true there. Solunar times are left off on purpose: here every moon transit falls on the
+   ebb and every rise and set on the flood (USNO and NOAA, September and October 2026), so they would be
+   the tide by another name.
+   The station has no gauge, so the wind that piles water in or holds it out is never drawn: the curve
+   is the table's, and the chart says so to a screen reader. The honest way to show it is USGS 02176603,
+   Beaufort River at Beaufort (gage height on NAVD88, so MLLW is the gage plus 4.43 ft by 8667999's own
+   datums, every 15 minutes, about half an hour late), which ran a mean 0.59 ft over this table from
+   August 17 to October 16 2026 and 1.5 ft over it on October 10: the existing tag beside the skiff
+   (levelFeet, levelGap) on that gauge, with a freshness window like BUOY_FRESH. Not built in this mock.
+   Pure, apart from TIDE_RUN, the hourly run render hands over before it draws */
+let TIDE_RUN=null;
+function fishWater(P,interp,{t0,t1,FW}){
+  const floods=[];
+  P.forEach((p,i)=>{
+    if(p.type!=="H"||!(p.v>=FW.grass))return;
+    const tp=p.time.getTime(),lo=P[i-1]?.time.getTime()??tp-6.2*36e5,hi=P[i+1]?.time.getTime()??tp+6.2*36e5;
+    /* where the drawn curve crosses the grass, to the minute, so the band and the picture agree */
+    const cross=(a,b,up)=>{for(let k=0;k<40;k++){const m=(a+b)/2;if((interp(m)>=FW.grass)===up)b=m;else a=m}return Math.round((a+b)/2/6e4)*6e4};
+    const a=cross(lo,tp,true),b=cross(tp,hi,false);
+    if(b<t0||a>t1)return;
+    floods.push({a,b,t:tp,v:p.v,deep:p.v>=FW.deep,season:inSeason(p.time,FW.season)});
+  });
+  return{floods,FW,run:TIDE_RUN};
+}
+/* the wind in the hour a stop is in, off the forecast's own run (the hour now is in carries the chip's
+   live reading), or null where the run has no reading */
+function windAt(run,t,now){
+  const h=run&&run.h;if(!h||!h.time)return null;
+  if(Math.floor(t/36e5)===Math.floor(now/36e5)&&run.live&&xpFin(run.live.w))return{w:+run.live.w,g:xpFin(run.live.g)?+run.live.g:null,d:xpFin(run.live.d)?+run.live.d:null};
+  /* the hour the moment is in: the last of the run's hours at or before it, as long as that is within
+     two hours, because the night the clocks go back the run says 1 am twice and its naive times parse
+     both to the first, which left the second an hour with no reading */
+  const ms=run.ms||(run.ms=h.time.map(s=>new Date(s).getTime()));
+  let i=-1;for(let j=0;j<ms.length;j++){if(ms[j]<=t)i=j;else break}
+  if(i>=0&&t-ms[i]>=2*36e5)i=-1;
+  if(i<0&&ms.length&&t<ms[0])return undefined;   /* before the run: the past has no forecast */
+  if(i<0||!xpFin(h.wind?.[i]))return null;
+  return{w:+h.wind[i],g:xpFin(h.gust?.[i])?+h.gust[i]:null,d:xpFin(h.dir?.[i])?+h.dir[i]:null};
+}
+/* the chip's way with the wind: the chip's own vane into the wind (a "vane" part, which the pill draws
+   with vane()), and the speed, calm under 1 mph with no vane, and the gusts only when they run 6 or more
+   over it. A missing hour is a dash */
+function windWords(w){
+  if(!w)return{parts:[["wind –","faint"]],txt:"wind –",said:"wind unavailable"};
+  const sp=Math.round(w.w),g=w.g!=null&&w.g-w.w>=6?Math.round(w.g):null;
+  if(w.w<1){const txt="calm"+(g?`, gusts ${g}`:"");return{parts:[[txt,"faint"]],txt,said:"calm"+(g?`, gusts ${g} miles an hour`:"")}}
+  const txt=`${sp} mph${g?`, gusts ${g}`:""}`;
+  return{parts:[w.d!=null?[`${Math.round(w.d)}|${txt}`,"vane"]:[txt,"faint"]],txt,
+    said:`wind ${sp} miles an hour${w.d!=null?" from the "+dirLong(w.d):""}${g?`, gusts ${g}`:""}`};
+}
+/* the stage of the tide at a stop, from how far it is to the table's turns: within half an hour of
+   one it is high or low water (never "slack": at the bridge the flood runs on two hours past the
+   high), two hours either side it is the first or the last of the incoming or the outgoing, and
+   between them the water is running. Then the flood the stop is in, judged on the stop's own level
+   (v), so the edge of a 9 ft flood is a flood tide and only the water over 8.8 is a big one, and the
+   wind. Pure */
+function fishWaterAt(fw,P,t,now,v){
+  let prev=null;for(const p of P)if(p.time.getTime()<=t)prev=p;
+  const next=P.find(p=>p.time.getTime()>t),H=36e5;
+  let stage="";
+  if(prev&&next){const dp=t-prev.time.getTime(),dn=next.time.getTime()-t;
+    if(dp<=H/2)stage=prev.type==="H"?"high water":"low water";
+    else if(dn<=H/2)stage=next.type==="H"?"high water":"low water";
+    else{const way=next.type==="H"?"incoming":"outgoing";stage=dp<=2*H?"first of the "+way:dn<=2*H?"last of the "+way:way}}
+  const f=fw.floods.find(f=>t>=f.a&&t<=f.b),deep=Number.isFinite(v)&&v>=fw.FW.deep;
+  return{stage,flood:f?(f.season?(deep?"big flood tide":"flood tide"):(deep?"deep in the grass":"in the grass")):null,
+    floodStart:fw.floods.some(f=>f.a===t),wind:windAt(fw.run,t,now)};
+}
+/* said with the chart: where the grass is, and each flood tide's hours, all by the tide table */
+function fishWaterSaid(fw,now){
+  const fl=fw.floods.map(f=>`${f.season?(f.deep?"a big flood tide":"a flood tide"):"a high"} ${xpSaidAt(f.t,now)}, ${f.v.toFixed(1)} feet, in the grass from ${f.a<=now?"now":xpSaid(f.a,now)} to ${xpSpoken(new Date(f.b))}`);
+  const up=t=>t.charAt(0).toUpperCase()+t.slice(1);
+  return`The grass line at ${fw.FW.grass} feet, NOAA's mean higher high water here, by the tide table. ${fl.length?fl.map(up).join(". "):"No high reaches the grass"}`;
+}
+/* the picture: the flood's hours as a wash behind everything, and the water over the grass and the
+   grass standing in it (drawn inside the water's own clip) */
+function fishWaterArt(fw,{X,Y,t0,t1,topY,seaY,grassInk,rvAt}){
+  const dark=document.documentElement.dataset.theme==="dark",gy=Y(fw.FW.grass);
+  let bands="",under="";
+  for(const f of fw.floods){
+    const a=X(Math.max(t0,f.a)),b=X(Math.min(t1,f.b));if(b-a<1)continue;
+    bands+=`<rect x="${a.toFixed(1)}" y="${(topY-10).toFixed(1)}" width="${(b-a).toFixed(1)}" height="${(seaY-topY+10).toFixed(1)}" rx="3" fill="${grassInk}" opacity="${dark?.13:.09}"${rvAt(a,"fade")}/>`;
+    /* the water over the grass, and the grass standing in it: the short spartina, two to eight pixels
+       of blade from the line, leaning a little either way, seeded off the high so a repaint never
+       moves a blade. Inside the water's own clip, so only what is under water shows */
+    let blades="";const r=mulberry(Math.round(f.t/6e4)%100000);
+    for(let x=a+1.4;x<b-1;x+=2.3){const h=3+r()*5,l=(r()-.5)*2.6;
+      blades+=`<path d="M ${x.toFixed(1)} ${(gy+1.5).toFixed(1)} Q ${(x+l*.2).toFixed(1)} ${(gy-h*.55).toFixed(1)} ${(x+l).toFixed(1)} ${(gy-h).toFixed(1)}"/>`;
+    }
+    under+=`<g${rvAt((a+b)/2,"fade")}><rect x="${a.toFixed(1)}" y="0" width="${(b-a).toFixed(1)}" height="${gy.toFixed(1)}" fill="${grassInk}" opacity="${dark?.32:.26}"/><g fill="none" stroke="${grassInk}" stroke-width="1.1" stroke-linecap="round" opacity=".7">${blades}</g></g>`;
+  }
+  return{bands,under};
+}
+/* The wind row's height under Beaufort's tide chart, a function of the width alone, so the loading shell
+   holds the room the row will take and the handoff does not jump */
+const tideWindH=w=>Math.round(26*(w<360?1.08:w<520?1.16:1)*1.22);
+/* The wind, which Josh called very important to them ("the family is always checking the wind and the waves",
+   the family pilot's flying), on the tide's own clock. Under the lows, from now: the chip's vane pointing into the
+   wind and the speed, at now (the chip's own reading) and then on the clock's hours, every two to six of
+   them as the width allows the marks a fair gap apart, the same mph as the chip and the hourly, so a
+   picture and its label agree. Calm under 1 mph is "calm" and no vane, a missing hour is a dash, and the
+   hours before now (the run starts at the hour now is in) have none. The gusts are said under the hours
+   they reach the boat's own caution line (BOAT.iffyGust, 22, where Josh's boat sentence turns to
+   "Choppy", and 6 or more over the wind, the chip's rule), once for each stretch, its top gust in the
+   storm card's words ("gusts to 34") with a hairline the length of the stretch, so the row is quiet on an
+   ordinary day and says the gusts where they matter to a small boat. The pill says every hour's. No
+   score, no grade, no red, and no "wind against the tide": the vanes over the rising and falling curve
+   let a fisherman see it. It is the house's forecast point, never the airfield's or a buoy's. Pure but
+   for its ink */
+function windRow(run,{X,t0,t1,now,x0,xR,Hc,fs,css,halo,rvAt}){
+  const h=run&&run.h;if(!h||!h.time||!h.time.length)return null;
+  /* quieter than the tide's own times over it: a size under them, the regular weight, the soft ink */
+  const nfs=9.2*fs,k=.86*fs,vw=6*k,gap=2.2*fs,yv=Hc+8*fs,mono=`font-family="Spline Sans Mono,ui-monospace,monospace"`;
+  const run0=new Date(h.time[0]).getTime(),H=36e5;
+  const col=(t,unit="")=>{const w=windAt(run,t,now);
+    if(w===undefined)return null;
+    const txt=!w?"–":w.w<1?"calm":String(Math.round(w.w)),vane=!!w&&w.w>=1&&w.d!=null;
+    if(!vane)unit="";
+    return{t,x:X(t),w,txt,vane,unit,wd:(vane?vw+gap:0)+txt.length*nfs*.6+unit.length*nfs*.82*.6}};
+  /* now's own reading, stepped in from the edge rather than go and saying its unit the way the chip does,
+     then a reading every `step` hours from it, evenly, the fewest hours apart that keep a fair gap
+     between their marks at this width (each the forecast's hour that moment is in). The marks print no
+     clock, so they sit where their moments are, and a mark that would hang off the end goes */
+  const clear=(a,b)=>b.x-b.wd/2-(a.x+a.wd/2)>=12*fs;
+  const row=step=>{const c0=col(now," mph"),out=[];
+    if(c0){c0.x=clamp(c0.x,x0+c0.wd/2,xR-c0.wd/2);out.push(c0)}
+    for(let t=now+step*H;t<=t1;t+=step*H){if(t<run0)continue;const c=col(t);if(c&&c.x+c.wd/2<=xR+.5)out.push(c)}
+    return out};
+  let cols=null;
+  for(const step of [2,3,4,6,8]){const cs=row(step);if(cs.every((c,i)=>!i||clear(cs[i-1],c))){cols=cs;break}}
+  if(!cols){cols=[];for(const c of row(8))if(!cols.length||clear(cols[cols.length-1],c))cols.push(c)}
+  if(!cols.length)return null;
+  let svg="";
+  for(const c of cols){
+    const left=c.x-c.wd/2,fade=rvAt(c.x,"label");
+    if(c.vane){
+      const deg=Math.round(((c.w.d%360)+360)%360);
+      /* the chip's vane (vane()), drawn in the chart's units: an arrow into the wind */
+      svg+=`<g${fade}><g transform="translate(${(left+vw/2).toFixed(1)} ${yv.toFixed(1)}) rotate(${deg}) scale(${k.toFixed(3)})"><path d="M0 -4.5 L0 4.5 M-2.4 -1.7 L0 -4.5 L2.4 -1.7" stroke="${css.soft}" stroke-width="1.45" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+      <text x="${(left+vw+gap).toFixed(1)}" y="${(yv+nfs*.36).toFixed(1)}" ${mono} font-size="${nfs.toFixed(1)}" font-weight="500" fill="${css.soft}" ${halo}>${c.txt}${c.unit?`<tspan font-size="${(nfs*.82).toFixed(1)}" fill="${css.faint}">${c.unit}</tspan>`:""}</text></g>`;
+    }else svg+=`<text x="${c.x.toFixed(1)}" y="${(yv+nfs*.36).toFixed(1)}" text-anchor="middle" ${mono} font-size="${(c.txt==="calm"?nfs*.86:nfs).toFixed(1)}" font-weight="500" fill="${c.txt==="–"?css.faint:css.soft}" ${halo}${fade}>${c.txt}</text>`;
+  }
+  /* the gusts, once a stretch: the hours from now whose gust reaches the caution line and runs 6 over */
+  const gy=yv+14*fs,gfs=8*fs,stretches=[];
+  let cur=null;
+  for(let t=Math.floor(now/H)*H;t<=t1;t+=H){
+    const w=windAt(run,Math.max(t,now),now),windy=!!w&&w.g!=null&&w.g>=BOAT.iffyGust&&w.g-w.w>=6;
+    if(windy){if(!cur)stretches.push(cur={a:Math.max(t,now),b:t+H,top:w.g});else{cur.b=t+H;cur.top=Math.max(cur.top,w.g)}}else cur=null;
+  }
+  let lastR=-Infinity;
+  for(const s of stretches){
+    const a=X(s.a),b=X(Math.min(s.b,t1)),txt=`gusts to ${Math.round(s.top)}`,tw=txt.length*gfs*.6;
+    /* the words sit under the middle of their hours, inside the chart; one that would run into the last
+       steps along to clear it, as long as it still sits over some of its own hours, or is left to the pill */
+    let cx=clamp((a+b)/2,x0+tw/2,xR-tw/2);
+    if(cx-tw/2<lastR+8*fs)cx=lastR+8*fs+tw/2;
+    if(cx+tw/2>xR+.5||cx-tw/2>b)continue;
+    lastR=cx+tw/2;
+    const ly=gy-gfs*.3,fade=rvAt(cx,"label");
+    /* the hairline runs the stretch on either side of its words, so its length is the gusty hours */
+    const seg=(p,q)=>q-p>3?`<line x1="${p.toFixed(1)}" y1="${ly.toFixed(1)}" x2="${q.toFixed(1)}" y2="${ly.toFixed(1)}" stroke="${css.faint}" stroke-width="1" stroke-linecap="round" opacity=".7"/>`:"";
+    svg+=`<g${fade}>${seg(Math.max(x0,a),cx-tw/2-4)}${seg(cx+tw/2+4,Math.min(xR,b))}<text x="${cx.toFixed(1)}" y="${gy.toFixed(1)}" text-anchor="middle" ${mono} font-size="${gfs.toFixed(1)}" fill="${css.faint}" ${halo}>${txt}</text></g>`;
+  }
+  /* said with the chart: the wind now, then every gusty stretch, the ones the row had no room to print too */
+  const gusts=stretches.map(s=>`to ${Math.round(s.top)} miles an hour ${s.a<=now?"until":"from "+xpSaid(s.a,now)+" until"} ${xpSaid(Math.min(s.b,t1),now)}`);
+  const first=cols[0]&&cols[0].t===now&&cols[0].w?windWords(cols[0].w).said:"";
+  return{svg,cols,stretches,said:[first?"Wind now "+first.replace(/^wind /,""):"",gusts.length?"Gusts "+gusts.join(", then "):""].filter(Boolean).join(". ")};
+}
+/* What is in season on the Beaufort River, month by month: a calendar, never a bite. It says in
+   season, never biting or running now, and nothing reads the water temperature into it: the note
+   beside the title carries the Fripp buoy's reading, and the family can put the two together. One rule
+   for every fish: it is in the row in its peak months, as SCDNR's species pages, its 2025 snapshots and
+   its Technical Report 89 give them, with the guides only where SCDNR is silent. A fish that lives here
+   all year (the trout, the sheepshead, the black drum) is not in the row all year: only in its season.
+   The reds' seasons run back to back, which is why they are in every month: schooled on the low-tide
+   flats in winter (December to February), tailing on the flood tides from mid-March to the end of
+   November (the guides' season, the same one the chart's "flood tide" is said in), and the bull reds in
+   the sounds and inlets from late August to November, said under them ("bulls") from September, so a
+   late-August week is never promised them. The order is fixed, not a ranking.
+   The two dates that are the law are said with the fish: cobia may not be taken here in May (the
+   Southern Cobia Management Zone, all of SC south of Jeremy Inlet, SC Code 50-5-1713), and the shrimp
+   baiting season (SC Code 50-5-1100: sixty days between September 1 and November 15, set each year by
+   SCDNR, and "may but are not required to be consecutive"). No bag limits: they change, and the page
+   would go stale saying them. */
+const BFT_RUN=[
+  /* red drum: the three seasons above (SCDNR, Bay Street, Plair, Indigo, Carolina Sportsman) */
+  {k:"reds",name:"reds",full:"red drum",months:[1,2,3,4,5,6,7,8,9,10,11,12],sub:{bulls:[9,10,11]},subSaid:{bulls:"the bull reds in the sounds and inlets"}},
+  /* spotted seatrout: spring, April and May, and fall, October (SCDNR's trends) into November (guides) */
+  {k:"trout",name:"trout",full:"spotted seatrout",months:[4,5,10,11]},
+  /* southern flounder: spring and fall in the creeks (guides; SCDNR gives no peak), out to sea as the
+     water falls in late fall */
+  {k:"flounder",name:"flounder",full:"southern flounder",months:[4,10,11]},
+  /* sheepshead: shallow in late spring and late fall into early winter, on the nearshore reefs and the
+     pilings from late winter into spring, when they spawn there (SCDNR) */
+  {k:"sheepshead",name:"sheepshead",full:"sheepshead",months:[1,2,3,4,5,10,11,12]},
+  /* black drum: late winter and spring, spawning in the sounds (SCDNR; the May River's calling peaks
+     in February and March) */
+  {k:"blackdrum",name:"black drum",full:"black drum",months:[2,3,4,5]},
+  /* cobia: the inshore run in Port Royal and St. Helena sounds from mid-April, peaking May and June
+     (SCDNR Technical Report 89), and closed to taking in May */
+  {k:"cobia",name:"cobia",full:"cobia",months:[4,5,6],closed:[5]},
+  /* tarpon: July to September (guides; SCDNR peaks July and August) */
+  {k:"tarpon",name:"tarpon",full:"tarpon",months:[7,8,9]},
+  /* sharks: spring to fall in the sounds, most in summer (SCDNR's coastal shark research) */
+  {k:"sharks",name:"sharks",full:"sharks",months:[6,7,8]},
+  /* white shrimp: the fall crop, August to December (SCDNR), and the baiting season inside it */
+  {k:"shrimp",name:"shrimp",full:"white shrimp",months:[8,9,10,11,12]},
+];
+/* The shrimp baiting season, a year's dates once they are checked against SCDNR's own September release,
+   and none until then. SCDNR's rule (noon on the last Friday on or before September 15, sixty days to
+   noon on a Tuesday) gives noon September 11 to noon November 10 for 2026, but the statute lets the
+   department set other days, Carolina Sportsman printed 2023's as September 8 to November 12, which the
+   rule does not give, and no 2026 release was found on October 16 2026. So nothing is said under the
+   shrimp: a real build reads the release each September and adds the year here. */
+const SHRIMP_BAIT={};
+/* the month's row, pure: the fish in season and the law beside them */
+function runFor(d,bait=SHRIMP_BAIT){
+  const m=d.getMonth()+1,b=bait[d.getFullYear()],open=b&&d>=new Date(b[0])&&d<new Date(b[1]);
+  return BFT_RUN.filter(f=>f.months.includes(m)).map(f=>{
+    const closed=f.closed&&f.closed.includes(m),sub=closed?"closed":f.k==="shrimp"&&open?"baiting":Object.keys(f.sub||{}).find(s=>f.sub[s].includes(m))||"";
+    return{...f,sub,
+      said:f.full+(closed?", closed to taking in May":sub==="baiting"?`, the baiting season open until noon ${new Date(b[1]).toLocaleDateString("en-US",{month:"long",day:"numeric"})}`:sub?", with "+f.subSaid[sub]:"")}});
+}
+/* The row's layout, pure and a function of the month and the width alone, so the loading shell can hold
+   its height: a quiet caption, IN SEASON and the month, the way the hourly and the week label their
+   axes, then each fish with its name under it, a fair gap apart and never further than a list reads.
+   A month with more than a narrow phone holds (April's six at 320) goes on to a second row under the
+   first, lined up with it, rather than crowd the names, and the fish are shared evenly between the rows,
+   so a second row is never one fish left over */
+function runLayout(items,W){
+  const x0=CHART_IN,x1=W-CHART_IN,narrow=W<360;
+  const sF=narrow?.88:1.02,nfs=narrow?8.6:10.2,fishW=37*sF,cfs=narrow?8.2:9;
+  const ws=items.map(f=>Math.max(fishW,f.name.length*nfs*.6,f.sub.length*(nfs-1)*.6));
+  const fits=r=>r.reduce((t,i)=>t+ws[i]+5,0)<=x1-x0;
+  const idx=items.map((_,i)=>i),split=n=>{const per=Math.ceil(items.length/n);return Array.from({length:n},(_,k)=>idx.slice(per*k,per*(k+1))).filter(r=>r.length)};
+  let nR=1;while(nR<items.length&&!split(nR).every(fits))nR++;
+  const rows=split(nR);
+  const gap=rows.length?Math.min(...rows.map(r=>Math.min(30,(x1-x0-r.reduce((t,i)=>t+ws[i],0))/r.length))):0;
+  const capY=cfs*.74+1,step=13*sF+nfs*.78+3,subH=nfs*.78+4;
+  let fy=capY+7+13*sF;const at=[];
+  rows.forEach(r=>{const ny=fy+step,sub=r.some(i=>items[i].sub);at.push({r,fy,ny});fy=ny+(sub?subH:0)+8+13*sF});
+  const last=at[at.length-1];
+  const H=Math.ceil(last?last.ny+(last.r.some(i=>items[i].sub)?subH:0)+4:capY+4);
+  return{x0,x1,sF,nfs,cfs,ws,rows,gap,capY,at,subH,H};
+}
+/* drawn: the caption, then the row(s) of fish, every row's columns where the first row's are */
+function renderRun(css,now){
+  const svg=document.getElementById("tideRun");
+  if(!LOC.fishWater){svg.setAttribute("hidden","");svg.innerHTML="";return}
+  const items=runFor(now),W=appW()-40,L=runLayout(items,W);
+  const mono=`font-family="Spline Sans Mono,ui-monospace,monospace"`,O={line:.8,heavy:.35,shade:1.3,lit:.65,light:[-.5,-1]};
+  const mon=now.toLocaleDateString("en-US",{month:"short"}).toUpperCase();
+  let out=`<text x="${L.x0}" y="${L.capY.toFixed(1)}" ${mono} font-size="${L.cfs}" letter-spacing=".08em" fill="${css.faint}">IN SEASON · ${mon}</text>`;
+  const colW=L.rows.length?L.rows[0].map(i=>L.ws[i]):[];
+  for(const {r,fy,ny} of L.at){
+    let x=L.x0+L.gap*.5;
+    r.forEach((i,j)=>{const f=items[i],w=Math.max(L.ws[i],colW[j]||0),cx=x+w/2;
+      out+=inkAt(cx,fy,L.sF,1,inkRig(RUN_RIG[f.k](),RUN_INK[f.k],{...O,s:L.sF}));
+      out+=`<text x="${cx.toFixed(1)}" y="${ny.toFixed(1)}" text-anchor="middle" ${mono} font-size="${L.nfs}" fill="${css.soft}">${f.name}</text>`;
+      if(f.sub)out+=`<text x="${cx.toFixed(1)}" y="${(ny+L.subH).toFixed(1)}" text-anchor="middle" ${mono} font-size="${L.nfs-1}" fill="${f.sub==="closed"?css.marker:css.faint}">${f.sub}</text>`;
+      x+=w+L.gap;});
+  }
+  const month=now.toLocaleDateString("en-US",{month:"long"}),said=items.map(f=>f.said);
+  const list=said.length>1?said.slice(0,-1).join(", ")+" and "+said[said.length-1]:said[0]||"nothing";
+  svg.setAttribute("viewBox",`0 0 ${W} ${L.H}`);
+  svg.setAttribute("aria-label",`In season on the river in ${month}, by SCDNR's calendar and the guides': ${list}.`);
+  svg.innerHTML=`<title>In season in ${month}: each fish in its peak months, by SCDNR and the guides</title>${out}`;
+  svg.removeAttribute("hidden");
+}
+/* the loading shell holds the row's room, empty, so the handoff does not jump */
+function runShell(){
+  const svg=document.getElementById("tideRun");
+  if(!LOC.fishWater){svg.setAttribute("hidden","");svg.innerHTML="";return}
+  const W=appW()-40;svg.setAttribute("viewBox",`0 0 ${W} ${runLayout(runFor(wallNow()),W).H}`);
+  svg.innerHTML="";svg.removeAttribute("hidden");
 }
 
 /* ── the moon over the farm ─────────────────────────── */
@@ -12976,6 +13474,15 @@ function readTide(s,now,gap){
   if(by)parts.push(["by the table","faint"]);
   const feet=`${s.turn?"":"about "}${ft(s.depth).replace("−","minus ")} feet${by?" by the tide table":""}`;
   const off=s.now&&live?`, running ${Math.abs(gap)===.5?"half a foot":Math.abs(gap)+" ft"} ${gap>0?"above":"below"} the tide table`:"";
+  /* Beaufort's fishing water (MOCK, option A): the flood the stop is in, or the stage between the turns
+     (a turn is its own name), and the wind that hour, with the chip's own vane */
+  if(s.stage!==undefined){
+    const ww=windWords(s.wind);
+    if(s.flood)parts.push([s.flood,"grass"]);else if(!s.turn&&s.stage)parts.push([s.stage,""]);
+    if(s.wind!==undefined)parts.push(...ww.parts);
+    const base=s.turn?`${s.turn==="H"?"High":"Low"} tide ${s.t===now?"now":xpSaidAt(s.t,now)}, ${feet}`:`${said}, ${feet}${off}`;
+    return{parts,said:[base,s.flood,s.turn?"":s.stage,s.wind!==undefined?ww.said:""].filter(Boolean).join(", ")};
+  }
   return{parts,said:s.turn?`${s.turn==="H"?"High":"Low"} tide ${s.t===now?"now":xpSaidAt(s.t,now)}, ${feet}`:`${said}, ${feet}${off}${s.dir?", "+s.dir:""}`};
 }
 /* One stop on the moon. Inside a fishing time the pill says when it ends, because the band shows
@@ -13134,7 +13641,9 @@ function xpShow(X,i){
   X.i=i;X.shown=true;
   if(X.k==="moon")fishMotion();
   const r=D.read(i);
-  X.peek.innerHTML=r.parts.map(([t,c])=>`<span${c?` class="${c}"`:""}>${esc(t)}</span>`).join("");
+  /* a part whose class is "vane" is the wind, "bearing|words": the chip's own vane and its speed in
+     one piece, so a pill that wraps keeps them together (Beaufort's water) */
+  X.peek.innerHTML=r.parts.map(([t,c])=>c==="vane"?`<span class="faint wind"><span class="vane-p">${vane(t.split("|")[0])}</span>${esc(t.split("|")[1])}</span>`:`<span${c?` class="${c}"`:""}>${esc(t)}</span>`).join("");
   X.peek.hidden=false;
   if(X.key){X.key.value=i;X.key.setAttribute("aria-valuetext",r.said)}
   /* drawn inside the chart, over the line and under the labels, whose paper halos break it */
@@ -13148,13 +13657,16 @@ function xpShow(X,i){
   const b=X.box.getBoundingClientRect(),v=X.view?document.querySelector(X.view).getBoundingClientRect():b,s=D.svg.getBoundingClientRect();
   const px=s.left-b.left+D.x[i]/D.W*s.width,lo=Math.max(0,v.left-b.left)+8,hi=Math.min(b.width,v.right-b.left)-8;
   X.peek.style.maxWidth=Math.max(0,hi-lo)+"px";
-  const w=X.peek.offsetWidth,ph=X.peek.offsetTop+X.peek.offsetHeight;
-  X.peek.style.setProperty("--xp-x",clamp(px,lo+w/2,hi-w/2).toFixed(1)+"px");
+  const w=X.peek.offsetWidth,ph=X.peek.offsetTop+X.peek.offsetHeight,cx=clamp(px,lo+w/2,hi-w/2);
+  X.peek.style.setProperty("--xp-x",cx.toFixed(1)+"px");
   /* and never on the point it reads: over the top of a chart (the week's warmest day, July on the
      coast, a hot hour under a two-line pill) it rises clear of the ring, or the dot the chart
      already marks there, or what stands over the line there without a ring (the skiff, `over`),
-     by as much as it has to and no more */
-  const ys=[...D.y[i],D.over?.[i]].filter(Number.isFinite),ry=ys.length?s.top-b.top+(Math.min(...ys)-6)*s.width/D.W:Infinity;
+     by as much as it has to and no more. A chart can also name boxes the pill clears wherever the
+     pill itself reaches over them (`clear`, [left, right, top] in chart units: Beaufort's skiff) */
+  const sx=v=>s.left-b.left+v/D.W*s.width;
+  const reach=(D.clear||[]).filter(([l,r])=>sx(r)>cx-w/2&&sx(l)<cx+w/2).map(c=>c[2]);
+  const ys=[...D.y[i],D.over?.[i]].filter(Number.isFinite).concat(reach.filter(Number.isFinite)),ry=ys.length?s.top-b.top+(Math.min(...ys)-6)*s.width/D.W:Infinity;
   X.peek.style.setProperty("--xp-y",Math.min(0,ry-ph).toFixed(1)+"px");
 }
 function xpHide(X,delay=0){
@@ -13606,11 +14118,15 @@ function render(d,live,savedAt=0){
      against the table is said on the chart: the skiff rides the table's curve, with the gap beside it
      as a tag */
   if(LOC.tide){
+    TIDE_RUN=LOC.fishWater?{h:full,live:{w:c.wind_speed_10m,g:c.wind_gusts_10m,d:c.wind_direction_10m}}:null;
     const tide=renderTides(d.tides,css,c.wind_gusts_10m,c.wind_speed_10m,levelFeet(d.water,now));
     /* with no tide table the chart is empty, and the note says so after whatever it can read */
     document.getElementById("tideNote").textContent=tide?waterNote(water,tide):[waterNote(water,null),"tide data unavailable"].filter(Boolean).join(" · ");
-    document.getElementById("tideSvg").setAttribute("aria-label",tide?"Tide curve, next 27 hours"+(water&&water.level?". "+water.level:""):"Tide data unavailable");
+    document.getElementById("tideSvg").setAttribute("aria-label",(tide?"Tide curve, next 27 hours"+(water&&water.level?". "+water.level:""):"Tide data unavailable")+(tide&&tide.said?". "+tide.said+".":""));
+    /* and under it, at Beaufort, what is in season this month (MOCK, option A) */
+    renderRun(css,now);
   }else xpPublish("tide",null);
+  if(!LOC.tide)renderRun(css,now);
   /* the strip, less what a storm card takes in, and the card's model, with the view held: the storm
      statement leaving the strip when the card comes in is the header changing height */
   keepView(()=>paintStorm(d,sm));
@@ -13965,7 +14481,7 @@ async function refresh(){
     const yest=new Date(Date.now()-864e5);
     const bd=yest.toLocaleDateString("en-CA",{timeZone:L.tz}).replace(/-/g,"");
     const [wj,marine,tides,water,alerts]=await Promise.all([
-      fetchJSON(`https://api.open-meteo.com/v1/forecast?latitude=${L.lat}&longitude=${L.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,wind_speed_10m_max,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=${encodeURIComponent(L.tz)}&forecast_days=8&minutely_15=precipitation&forecast_minutely_15=12`,10000),
+      fetchJSON(`https://api.open-meteo.com/v1/forecast?latitude=${L.lat}&longitude=${L.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,wind_speed_10m_max,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=${encodeURIComponent(L.tz)}&forecast_days=8&minutely_15=precipitation&forecast_minutely_15=12`,10000),
       /* the seas every day of the year, hour by hour for two days, because after dark the boat's
          sentence speaks for tomorrow */
       L.marine?fetchJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${L.marine.lat}&longitude=${L.marine.lon}&hourly=wave_height&timezone=${encodeURIComponent(L.tz)}&forecast_days=2&length_unit=imperial`,6000).then(mj=>{
@@ -13993,7 +14509,9 @@ async function refresh(){
       time:wj.hourly.time.slice(i0),temp:wj.hourly.temperature_2m.slice(i0),
       feels:wj.hourly.apparent_temperature?.slice(i0),
       pop:wj.hourly.precipitation_probability.slice(i0),code:wj.hourly.weather_code.slice(i0),wind:wj.hourly.wind_speed_10m.slice(i0),
-      gust:wj.hourly.wind_gusts_10m.slice(i0),uv:wj.hourly.uv_index.slice(i0)};
+      gust:wj.hourly.wind_gusts_10m.slice(i0),uv:wj.hourly.uv_index.slice(i0),
+      /* where the wind comes from, hour by hour: Beaufort's water says it at each stop (MOCK, option A) */
+      ...(Array.isArray(wj.hourly.wind_direction_10m)?{dir:wj.hourly.wind_direction_10m.slice(i0)}:{})};
     /* the storms from their lane when it is in, and a first open waits a moment for it; until it
        lands, the last ones this place had */
     let wait=null;const waited=()=>wait||(wait=new Promise(r=>setTimeout(r,STORM_WAIT)));
@@ -14132,7 +14650,9 @@ function loadFrame(){
   const aw=appW(),W=Math.max(320,aw/1.22),H=Math.round((LOC.scene==="marsh"?150:168)+(760-W)*.10);
   document.getElementById("sceneSvg").setAttribute("viewBox",`0 0 ${W} ${H}`);
   const cw=aw-40,ch=chartH(cw),box=(id,h)=>document.getElementById(id).setAttribute("viewBox",`0 0 ${cw} ${h}`);
-  box("hourlySvg",ch-18);box("tideSvg",ch);box("moonSvg",ch+16);
+  /* Beaufort's tide chart carries its wind row, and its fish row sits under it (MOCK, option A) */
+  box("hourlySvg",ch-18);box("tideSvg",ch+(LOC.fishWater?tideWindH(cw):0));box("moonSvg",ch+16);
+  runShell();
   const N=NORMALS[LOC.id],snowy=!!(N&&N.snow.some(s=>s>=1));
   box("yearSvg",138+34+(snowy?46:0));
   document.getElementById("weekRows").style.minHeight="218px";
@@ -14222,8 +14742,12 @@ function clearPlaceReadings(){
   /* the week's height comes from its columns (its chart is absolutely placed), so hold it across
      the clear, or everything under it jumps up and back while the cached paint is staged in */
   const wr=document.getElementById("weekRows");wr.style.minHeight=wr.offsetHeight+"px";
-  for(const id of ["hourlySvg","hrLabels","weekRows","weekSvg","tideSvg","moonSvg","yearSvg","uvSvg"])
+  for(const id of ["hourlySvg","hrLabels","weekRows","weekSvg","tideSvg","tideRun","moonSvg","yearSvg","uvSvg"])
     document.getElementById(id).innerHTML="";
+  /* Beaufort's fish row keeps its room, empty, across the clear, and anywhere else it goes; and the
+     tide's empty box takes the new place's height, its wind row or none (MOCK, option A) */
+  runShell();
+  {const cw=appW()-40;document.getElementById("tideSvg").setAttribute("viewBox",`0 0 ${cw} ${chartH(cw)+(LOC.fishWater?tideWindH(cw):0)}`)}
   for(const id of ["hourlyNote","weekNote","tideNote"])document.getElementById(id).textContent="";
   for(const id of ["uvLead","eveLead"])document.getElementById(id).textContent="—";
   weekBrief(null);xpReset();
