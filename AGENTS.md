@@ -872,23 +872,26 @@ wet. `tideLevel` reads the level off the station's own high and low predictions 
 
 **The grass stands on its bank.** Josh, on the morning of October 16 2026 with the tide near low: "the mud
 flat sim is excellent! let's look at that grass though, because at low tide like now, looks like it's
-floating." It was. The spartina stood on the banks' top lines with the river drawn straight behind its feet,
-at the water's own height, while the flats and the float said the water was down, and the tall grass at each
-bank's corner had water under its feet on the flood. Smooth cordgrass grows on the marsh platform from about
-mean tide up to the high-water line, so the bank it is rooted in now comes up out of the river as the tide
-falls (`bftGrassMud`): along each bank's river side, wet dark mud from the waterline down to just under the
-grass's feet, its top swelling and dipping a little along the bank (seeded) and kept under the dock's
-stringers so the walkway stands over the marsh, a darker wet band at the feet that fades into the grass, and
-a little wrack there. At each bank's corner the mud carries on under the tall grass and drops into the flat's
-own outline, in the flat's own colour, so the corner grass stands on the same mud the flat is. Four units of
-it at dead low, and none from `BFT_GRASS_WET` (.94) up, so a spring high is the picture it always was, the
-river up around the stems. It is the flats' own mud and ink on the still picture (over the flats, under the
-palmettos' trunks and the land), and it adds no animation. The grass keeps every one of its draws and stays
-on `#sceneFx`. `tools/beaufort/scene.mjs` measures every tuft's foot on the real page against the ground drawn
+floating." It was. The spartina stood on the banks' top lines with the river drawn straight behind its feet
+at every tide, while the flats and the float said the water was down, and the tall grass at each bank's
+corner had water under its feet on the flood. Smooth cordgrass grows on the marsh platform from
+about mean tide up to the high-water line, so the bank it is rooted in now comes up out of the river as the
+tide falls (`bftGrassMud`): four units of it at dead low, and none from `BFT_GRASS_WET` (.94) up, so a spring
+high is the picture it always was, the river up around the stems. Along each bank's river side there is wet
+mud from the waterline down to the grass's feet, its top swelling and dipping a little along the bank (seeded)
+and kept under the dock's stringers so the walkway stands over the marsh, and its waterline glints in broken
+lengths. The land's top line is only the lip inside that mud now, so its ink is laid over in the mud's colour
+and only a faint line of it is left. A darker wet band lies at the feet and fades into the grass, with a little
+wrack. At each corner the mud carries on under the tall grass and drops into the flat's own outline, in the
+flat's own colour, so the corner grass stands on the mud the flat is. Each bank's outline is written once
+(`BANKS`), and the land, its flat and the mud are all drawn from those points. It is the flats' own mud and
+ink on the still picture, and it adds no animation. The grass keeps every one of its draws and stays on
+`#sceneFx`. `tools/beaufort/scene.mjs` measures every tuft's foot the frame shows against the ground drawn
 under it (the shapes tagged `data-ground`), at the case's own tide and painted again at 0, .15, .5, .8 and 1,
-at every width: a foot is on the land or the mud, in the river only from `BFT_GRASS_WET`, never over air, and
-at or under mean tide the ground stands over it, 1.5 units at mean tide and 2.5 at dead low, so it is never
-seen against the river. The page as it was failed 7 of the 36 feet at 390 on Josh's morning and 13 at dead low.
+at every width: a foot is on the land or the mud, in the river only from the wet line, never over air, and
+below the wet line the ground stands over it, 2.5 units at dead low, 1.5 at mean tide and down to none at the
+wet line with no step, so it is never seen against the river. The page as it was fails 9 of the 34 feet in
+the frame at 390 on Josh's morning and 15 at dead low.
 
 **The animals are their real sizes** against the oak, the boat and the dock (about two-thirds of a foot to
 a unit on the near banks), which Josh asked for, and none stands on another (`tools/beaufort/scene.mjs`

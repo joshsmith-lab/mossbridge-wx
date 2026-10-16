@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v101/);
+  assert.match(worker, /mbwx-shell-v102/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -5690,7 +5690,17 @@ test("Beaufort is the third place: its readings, its scene in layers, its birds 
   // trunks and the land; the grass keeps its draws and stays on the moving layer, where it sways; and every
   // ground the harness measures a tuft's foot against is tagged
   assert.match(lc, /const mudH=bftGrassMud\(tide\);/);
-  assert.match(lc, /const grassBank=mudH>\.05\?BANKS\.filter\(b=>b\.flat\)\.map\(/);
+  assert.match(lc, /const grassBank=mudH>0&&flatL&&flatR\?BANKS\.map\(/);
+  // each bank's outline is written once: the land and its flat are drawn from BANKS, the points the bank's mud
+  // is measured off, so a change to the land's line cannot leave the mud on the old one
+  assert.match(lc, /const BANKS=\[\{dir:1,top:\[\[-12,bankY-1\.4\],/);
+  assert.match(lc, /const\[flatL,flatR\]=BANKS\.map\(flatOf\);/);
+  assert.match(lc, /const\[landL,landR\]=BANKS\.map\(landOf\);/);
+  assert.doesNotMatch(lc, /const landL=`|const landR=`|const flatL=|const flatR=/);
+  // where the bank is out, the land's top line is only the lip inside the one mud, laid over in the mud's own
+  // colour; the waterline glints in seeded broken lengths
+  assert.match(lc, /<path d="\$\{b\.lip\}" fill="none" stroke="url\(#lcbank\$\{i\}\)"/);
+  assert.match(lc, /const gr=mulberry\(dir>0\?7757:7759\)/);
   assert.match(lc, /tuftRun\(-6,W\*\.22,bankY\+\.5,5,8\);tuftRun\(W\*\.25,lEdge\+2,bankY\+1\.5,8,12\);tuftRun\(rEdge-2,W\*\.79,bankY\+1\.5,8,12\);tuftRun\(W\*\.84,W\+8,bankY,5,8\);/);
   assert.match(lc, /const wr=mulberry\(6611\);/);
   assert.match(lc, /const vr=mulberry\(dir>0\?7741:7753\)/);
@@ -5706,6 +5716,10 @@ test("Beaufort is the third place: its readings, its scene in layers, its birds 
   const bscene = await readFile(new URL("tools/beaufort/scene.mjs", root), "utf8");
   assert.match(bscene, /\/\* the grass at every tide \*\/\n/);
   assert.match(bscene, /: \[0, \.15, \.5, \.8, 1\];\nasync function grassCheck\(page\)/);
+  // the ground over a foot runs down to none at the wet line with no step, and a foot past the frame's edge is
+  // not measured, because no phone shows it
+  assert.match(bscene, /const need = t <= \.5 \? 1\.5 \+ \(\.5 - t\) \* 2 : t < BFT_GRASS_WET \? 1\.5 \* \(BFT_GRASS_WET - t\) \/ \(BFT_GRASS_WET - \.5\) : 0;/);
+  assert.match(bscene, /if \(!xs\.length\) \{ off\+\+; continue; \}/);
   for (const n of ["this-morning", "grass-dead-low", "grass-mid-tide", "grass-flood-tide", "grass-spring-high"]) assert.match(bscene, new RegExp(`CASES\\.push\\(C\\("${n}"`));
   assert.match(bscene, /CASES\.push\(C\("this-morning", "2026-10-16T08:35:00", \.15,/);
   // the jack-o'-lantern under the dock house roof, and the rest of Halloween, on the shared calendar

@@ -110,39 +110,47 @@ const html = () => {
 /* The grass check. Every spartina tuft's foot, measured on the real page against what the still picture
    draws under it (the shapes tagged data-ground: the river, the flats, the bank's mud and the land, the
    topmost one at the point): the grass is rooted in the land or the mud, it stands in the river only from
-   BFT_GRASS_WET up (a spring high, the water up around its stems), and it is never over air. At or under
-   mean tide, with the water under every stem, the ground also has to stand over each foot, 1.5 units at
-   mean tide and 2.5 at dead low, so the foot is seen against the bank's own mud and never against the
-   river behind it, which is how the grass read as floating at low water. It is run at the
-   case's own tide and then at each of GRASS_TIDES, the page painted again at that tide (tideLevel stood in
-   for), at every width */
+   BFT_GRASS_WET up (a spring high, the water up around its stems), and it is never over air. Below the wet
+   line, with the water under every stem, the ground also has to stand over each foot, so the foot is seen
+   against the bank's own mud and never against the river behind it, which is how the grass read as floating
+   at low water: 2.5 units at dead low, 1.5 at mean tide, and from there down to none at the wet line, with
+   no step anywhere between. Only what the frame shows is measured: a foot past the frame's edge, which no
+   phone shows, is left out, and so is any point of a foot that is. It is run at the case's own tide and
+   then at each of GRASS_TIDES, the page painted again at that tide (tideLevel stood in for), at every width */
 const GRASS_TIDES = process.env.PORCH_BFT_GRASS_TIDES ? process.env.PORCH_BFT_GRASS_TIDES.split(",").map(Number) : [0, .15, .5, .8, 1];
 async function grassCheck(page) {
   return page.evaluate(async (tides) => {
     const measure = () => {
       const fx = document.getElementById("sceneFx");
       const grounds = ["sceneSvg", "sceneNear"].flatMap((id) => [...document.getElementById(id).querySelectorAll("[data-ground]")]);
-      const toScreen = fx.getScreenCTM();
+      const toScreen = fx.getScreenCTM(), frame = document.querySelector(".scene").getBoundingClientRect();
       const kind = (x, y) => {
         const P = new DOMPoint(x, y).matrixTransform(toScreen);
         let top = "air";
         for (const g of grounds) if (g.isPointInFill(P.matrixTransform(g.getScreenCTM().inverse()))) top = g.dataset.ground;
         return top;
       };
+      const seen = (x, y) => { const P = new DOMPoint(x, y).matrixTransform(toScreen); return P.x >= frame.left && P.x <= frame.right; };
       const feet = [...fx.querySelectorAll("[data-grass] path[fill='url(#blade)']")]
         .flatMap((p) => [...p.getAttribute("d").matchAll(/M (-?[\d.]+) (-?[\d.]+) Q/g)].map((m) => [+m[1] + .8, +m[2]]));
-      /* how much ground has to stand over a foot: none from mean tide up, 1.5 units at mean tide, 2.5 at dead low */
-      const t = SCENE_TIDE, wet = t >= BFT_GRASS_WET, need = t <= .5 ? 1.5 + (.5 - t) * 2 : 0, bad = [];
+      /* how much ground has to stand over a foot: 2.5 units at dead low, 1.5 at mean tide, none from the wet line up */
+      const t = SCENE_TIDE, wet = t >= BFT_GRASS_WET, bad = [];
+      const need = t <= .5 ? 1.5 + (.5 - t) * 2 : t < BFT_GRASS_WET ? 1.5 * (BFT_GRASS_WET - t) / (BFT_GRASS_WET - .5) : 0;
       const ground = (k) => k === "land" || k === "mud";
+      let off = 0;
       for (const [x, y] of feet) {
-        const under = [-.7, 0, .7].map((dx) => kind(x + dx, y + .4));
+        /* the foot's two edges and its middle, those of them the frame shows */
+        const xs = [-.7, 0, .7].map((dx) => x + dx).filter((sx) => seen(sx, y));
+        if (!xs.length) { off++; continue; }
+        const under = xs.map((sx) => kind(sx, y + .4));
         if (!under.every((k) => ground(k) || (wet && k === "water"))) { bad.push(`(${x.toFixed(1)}, ${y.toFixed(1)}) over ${under.join("/")}`); continue; }
-        for (let h = .5; h <= need + 1e-6; h += .5) {
-          const behind = kind(x, y - h);
-          if (!ground(behind)) { bad.push(`(${x.toFixed(1)}, ${y.toFixed(1)}) seen against ${behind} ${h} over its foot`); break; }
-        }
+        const hs = [];
+        for (let h = .25; h < need; h += .25) hs.push(h);
+        if (need > 0) hs.push(need);
+        const behind = hs.flatMap((h) => xs.map((sx) => [h, kind(sx, y - h)])).find(([, k]) => !ground(k));
+        if (behind) bad.push(`(${x.toFixed(1)}, ${y.toFixed(1)}) seen against ${behind[1]} ${behind[0].toFixed(2)} over its foot`);
       }
-      return { tide: t, feet: feet.length, grounds: grounds.length, bad };
+      return { tide: t, feet: feet.length - off, off, grounds: grounds.length, bad };
     };
     const out = [measure()];
     const own = tideLevel;
@@ -204,7 +212,7 @@ for (const cs of CASES.filter((c) => !ONLY.length || ONLY.some((o) => c.name.inc
       if (!g.feet || !g.grounds) errs.push(`grass at tide ${at}: ${g.feet} feet and ${g.grounds} ground shapes to measure them against`);
       if (g.bad.length) errs.push(`grass at tide ${at}: ${g.bad.length} of ${g.feet} feet floating: ${g.bad.slice(0, 6).join(", ")}${g.bad.length > 6 ? ", …" : ""}`);
     }
-    console.log(`  grass: ${grass.map((g) => `${g.tide == null ? "—" : g.tide.toFixed(2)} ${g.bad.length ? g.bad.length + " floating" : "rooted"}`).join(" · ")} (${grass[0]?.feet ?? 0} feet)`);
+    console.log(`  grass: ${grass.map((g) => `${g.tide == null ? "—" : g.tide.toFixed(2)} ${g.bad.length ? g.bad.length + " floating" : "rooted"}`).join(" · ")} (${grass[0]?.feet ?? 0} feet in the frame, ${grass[0]?.off ?? 0} past its edge)`);
     if (errs.length) { failed = true; console.log("  " + errs.join("\n  ")); }
     await ctx.close();
   }

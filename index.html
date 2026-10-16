@@ -9416,11 +9416,22 @@ function lowcountryScene(c){
   const flatTop=(x,x0,x1,dy)=>bankY+.6+clamp((x-x0)/(x1-x0||1),0,1)*dy;
   const mudY=x=>x<=lEdge?bankY+.6:flatTop(x,lEdge-8,xL,4.6);
   const mudC=air("#6A5640",.06),mudWet=air("#4E4234",.06),landC=air(SEASON_BLADE[month][2],.08),landFoot=air("#4A5236",.06);
-  const flatL=ebb>.06?`M ${f1(lEdge-8)} ${H+2} L ${f1(lEdge-8)} ${f1(bankY+.6)} Q ${f1((lEdge+xL)/2)} ${f1(bankY+2.2)} ${f1(xL-3)} ${f1(bankY+5.2)} C ${f1(xL+2)} ${f1(bankY+6.4)} ${f1(xL+3)} ${f1(H-6)} ${f1(xL+6)} ${H+2} Z`:"";
-  const flatR=ebb>.06?`M ${f1(rEdge+8)} ${H+2} L ${f1(rEdge+8)} ${f1(bankY+.6)} Q ${f1((rEdge+xR)/2)} ${f1(bankY+2)} ${f1(xR+3)} ${f1(bankY+4.6)} C ${f1(xR-2)} ${f1(bankY+5.8)} ${f1(xR-3)} ${f1(H-6)} ${f1(xR-6)} ${H+2} Z`:"";
+  /* each near bank's outline, written once (BANKS) and drawn from here, so the land, its flat and the mud the
+     grass stands on (below) are always the one line: the land's top line, two quadratics from off the frame's
+     side to its corner at the channel, then its face down to the foot of the frame; the flat's top line from
+     under the land out to its toe, then the face of its toe; and which way the channel is */
+  const BANKS=[{dir:1,top:[[-12,bankY-1.4],[f1(W*.1),bankY-3.6],[f1(W*.2),bankY-1.2],[f1(lEdge-12),bankY+.2],[f1(lEdge),bankY+1.4]],
+      face:[[f1(lEdge+4),bankY+5],[f1(lEdge-2),H-4],[f1(lEdge-8),H+2]],
+      flat:[[lEdge-8,bankY+.6],[(lEdge+xL)/2,bankY+2.2],[xL-3,bankY+5.2]].map(p=>p.map(f1)),toe:[[xL-3,bankY+5.2],[xL+2,bankY+6.4],[xL+3,H-6],[xL+6,H+2]].map(p=>p.map(f1))},
+    {dir:-1,top:[[W+12,bankY-1.8],[f1(W*.9),bankY-3.2],[f1(W*.82),bankY-1.4],[f1(rEdge+10),bankY+.2],[f1(rEdge),bankY+1.4]],
+      face:[[f1(rEdge-4),bankY+5],[f1(rEdge+2),H-4],[f1(rEdge+8),H+2]],
+      flat:[[rEdge+8,bankY+.6],[(rEdge+xR)/2,bankY+2],[xR+3,bankY+4.6]].map(p=>p.map(f1)),toe:[[xR+3,bankY+4.6],[xR-2,bankY+5.8],[xR-3,H-6],[xR-6,H+2]].map(p=>p.map(f1))}];
+  const pt=p=>`${p[0]} ${p[1]}`;
+  const landOf=({top:T,face:F})=>`M ${T[0][0]} ${H+2} L ${pt(T[0])} Q ${pt(T[1])} ${pt(T[2])} Q ${pt(T[3])} ${pt(T[4])} C ${pt(F[0])} ${pt(F[1])} ${pt(F[2])} Z`;
+  const flatOf=({flat:F,toe:T})=>ebb>.06?`M ${F[0][0]} ${H+2} L ${pt(F[0])} Q ${pt(F[1])} ${pt(F[2])} C ${pt(T[1])} ${pt(T[2])} ${pt(T[3])} Z`:"";
+  const[flatL,flatR]=BANKS.map(flatOf);
   const wetEdge=(x,dir)=>`<path d="M ${f1(x-dir*3)} ${f1(bankY+5.6)} C ${f1(x+dir*2)} ${f1(bankY+6.8)} ${f1(x+dir*3)} ${f1(H-6)} ${f1(x+dir*6)} ${H+2}" fill="none" stroke="${mix(waterTop,"#FFFFFF",.4)}" stroke-width=".8" opacity="${(.6*(1-gloom)).toFixed(2)}"/>`;
-  const landL=`M -12 ${H+2} L -12 ${bankY-1.4} Q ${f1(W*.1)} ${bankY-3.6} ${f1(W*.2)} ${bankY-1.2} Q ${f1(lEdge-12)} ${bankY+.2} ${f1(lEdge)} ${bankY+1.4} C ${f1(lEdge+4)} ${bankY+5} ${f1(lEdge-2)} ${H-4} ${f1(lEdge-8)} ${H+2} Z`;
-  const landR=`M ${W+12} ${H+2} L ${W+12} ${bankY-1.8} Q ${f1(W*.9)} ${bankY-3.2} ${f1(W*.82)} ${bankY-1.4} Q ${f1(rEdge+10)} ${bankY+.2} ${f1(rEdge)} ${bankY+1.4} C ${f1(rEdge-4)} ${bankY+5} ${f1(rEdge+2)} ${H-4} ${f1(rEdge+8)} ${H+2} Z`;
+  const[landL,landR]=BANKS.map(landOf);
   /* oyster rakes: grey shell clumps on the flats, each out only once the flat has reached it */
   const rakeAt=(x,y,w,seed)=>`<path d="${scallop(x,y,w,1.6,9,seed,{flat:.85,bulge:.75})}" fill="${air("#8C8274",.06)}" stroke="${lineC}" stroke-width=".35" opacity=".95"/>`
     +`<g fill="${air("#EDE3CF",.06)}" opacity=".7">${[-.6,-.2,.2,.6].map((kk,i)=>`<ellipse cx="${f1(x+kk*w)}" cy="${f1(y-.5-(i%2)*.4)}" rx=".9" ry=".4" transform="rotate(${i%2?16:-12} ${f1(x+kk*w)} ${f1(y-.5)})"/>`).join("")}</g>`;
@@ -9442,22 +9453,18 @@ function lowcountryScene(c){
     for(let i=0;i<28;i++){const m=(lo+hi)/2;if((at(m,0)<x)===up)lo=m;else hi=m}
     const t=(lo+hi)/2,t0=Math.max(0,t-1e-3),t1=Math.min(1,t+1e-3),dx=at(t1,0)-at(t0,0);
     return[at(t,1),dx?(at(t1,1)-at(t0,1))/dx:0]};
-  /* each bank as the land and its flat draw it: the land's top line (two quadratics, from the river side
-     to the corner), the flat's top line and the face of its toe, and which way the channel is */
-  const BANKS=[{top:[[-12,bankY-1.4],[W*.1,bankY-3.6],[W*.2,bankY-1.2],[lEdge-12,bankY+.2],[lEdge,bankY+1.4]],dir:1,
-      flat:flatL&&[[lEdge-8,bankY+.6],[(lEdge+xL)/2,bankY+2.2],[xL-3,bankY+5.2]],toe:[[xL-3,bankY+5.2],[xL+2,bankY+6.4],[xL+3,H-6],[xL+6,H+2]]},
-    {top:[[W+12,bankY-1.8],[W*.9,bankY-3.2],[W*.82,bankY-1.4],[rEdge+10,bankY+.2],[rEdge,bankY+1.4]],dir:-1,
-      flat:flatR&&[[rEdge+8,bankY+.6],[(rEdge+xR)/2,bankY+2],[xR+3,bankY+4.6]],toe:[[xR+3,bankY+4.6],[xR-2,bankY+5.8],[xR-3,H-6],[xR-6,H+2]]}]
-    .map(b=>({...b,top:b.top.map(p=>p.map(f1)),flat:b.flat&&b.flat.map(p=>p.map(f1)),toe:b.toe.map(p=>p.map(f1))}));
+  /* the land's top line raised or lowered, from BANKS, the points the land itself is drawn from */
   const topLine=(T,dy)=>`M ${f1(T[0][0])} ${f1(T[0][1]+dy)} Q ${f1(T[1][0])} ${f1(T[1][1]+dy)} ${f1(T[2][0])} ${f1(T[2][1]+dy)} Q ${f1(T[3][0])} ${f1(T[3][1]+dy)} ${f1(T[4][0])} ${f1(T[4][1]+dy)}`;
   /* the land's top line at x, and the flat's outline at x: its top line, then the face of its toe down to the
      foot of the frame */
   const footAt=(T,x)=>((x-T[2][0])*(T[0][0]-T[2][0])>=0?bezAt(T.slice(0,3),x):bezAt(T.slice(2),x))[0];
   const flatAt=({flat:F,toe,dir},x)=>(x-F[2][0])*dir<=0?bezAt(F,x):(x-toe[3][0])*dir<=0?bezAt(toe,x):[H+2,0];
-  const grassBank=mudH>.05?BANKS.filter(b=>b.flat).map(b=>{const{top:T,flat:F,dir}=b,cx=T[4][0];
-    /* at the corner the bank's mud carries on under the tall grass there, past its last stems, and then
-       drops into the flat's outline, meeting it on its own slope */
-    const sl=(T[4][1]-T[3][1])/(T[4][0]-T[3][0]),K=[cx+dir*3.6,T[4][1]-mudH+sl*dir*3.6];
+  const grassBank=mudH>0&&flatL&&flatR?BANKS.map(b=>{const{top:T,flat:F,dir}=b,cx=T[4][0];
+    /* at the corner the bank's mud carries on under the tall grass there, past its last stems, holding up
+       under their feet (it falls away a third as fast as the land's line does), and then drops into the
+       flat's outline, meeting it on its own slope. It is there all the way up to the wet line, so the stems
+       that stand out past the land's corner are never over open water below a spring high */
+    const sl=(T[4][1]-T[3][1])/(T[4][0]-T[3][0])/3,K=[cx+dir*3.6,T[4][1]-mudH+sl*dir*3.6];
     const jx=cx+dir*Math.max(6,Math.min(9,Math.abs(F[2][0]-cx)*.75)),[jy,js]=flatAt(b,jx),d=(jx-K[0])/3;
     /* how much of the bank is out of the river swells and dips along it, the same every time, and evens
        out toward the corner, so its top is never a ruled copy of the land's; under the dock's walkway it
@@ -9470,22 +9477,28 @@ function lowcountryScene(c){
     let under="";
     for(let i=0;i<=6;i++){const x=jx+(cx-jx)*i/6;under+=` L ${f1(x)} ${f1(flatAt(b,x)[0]+.7)}`}
     under+=` L ${f1(cx-dir*2)} ${f1(T[4][1]+2.5)} Q ${f1(T[3][0])} ${f1(T[3][1]+2.5)} ${f1(T[2][0])} ${f1(T[2][1]+2.5)} Q ${f1(T[1][0])} ${f1(T[1][1]+2.5)} ${f1(T[0][0])} ${f1(T[0][1]+2.5)} Z`;
-    return{fill:`${edge}${under}`,edge,cx,jx,dir,sheen:spline(top.map(([x,y])=>[x,y+.55])),footBand:`${topLine(T,-.7)} L ${f1(cx+dir*2)} ${f1(T[4][1]-.7)} L ${f1(cx+dir*2)} ${f1(bankY+3.8)} L ${f1(T[0][0])} ${f1(bankY+3.8)} Z`,footTex:`${topLine(T,-.7)} L ${f1(cx+dir*2)} ${f1(T[4][1]-.7)} L ${f1(cx+dir*2)} ${f1(bankY+2.4)} L ${f1(T[0][0])} ${f1(bankY+2.4)} Z`}}):[];
+    /* the waterline glints where the river has just left the mud, broken the way ripples break the light */
+    const gr=mulberry(dir>0?7757:7759),glints=Array.from({length:14},(_,i)=>f1(i%2?1.5+gr()*4:2+gr()*8)).join(" ");
+    return{fill:`${edge}${under}`,edge,cx,jx,dir,glints,lip:topLine(T,0),sheen:spline(top.map(([x,y])=>[x,y+.55])),footBand:`${topLine(T,-.7)} L ${f1(cx+dir*2)} ${f1(T[4][1]-.7)} L ${f1(cx+dir*2)} ${f1(bankY+3.8)} L ${f1(T[0][0])} ${f1(bankY+3.8)} Z`,footTex:`${topLine(T,-.7)} L ${f1(cx+dir*2)} ${f1(T[4][1]-.7)} L ${f1(cx+dir*2)} ${f1(bankY+2.4)} L ${f1(T[0][0])} ${f1(bankY+2.4)} Z`}}):[];
   /* the bank's mud is wet and dark where the river has just left it and at the grass's foot, and runs into
      the flat's own colour at the corner; the foot band lies over the land's edge under the grass, so the
      stems stand in it, and fades into the grass below them */
   const outK=clamp(mudH/1.6,0,1);
-  const bankWet=mix(mudWet,air("#1A140E",.06),.3),bankSheen=mix(waterTop,"#FFFFFF",.45);
+  const bankWet=mix(mudWet,air("#1A140E",.06),.12),bankSheen=mix(waterTop,"#FFFFFF",.45);
   const grassMud=grassBank.length?`<g data-prop="grass-bank"><defs>${grassBank.map((b,i)=>`<linearGradient id="lcbank${i}" gradientUnits="userSpaceOnUse" x1="${f1(b.cx-b.dir*10)}" y1="0" x2="${f1(b.jx)}" y2="0"><stop offset="0" stop-color="${bankWet}"/><stop offset="1" stop-color="${mudC}"/></linearGradient>`).join("")}
       <linearGradient id="lcfoot" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(bankY-4)}" x2="0" y2="${f1(bankY+3.8)}"><stop offset="0" stop-color="${bankWet}"/><stop offset=".72" stop-color="${bankWet}"/><stop offset="1" stop-color="${bankWet}" stop-opacity="0"/></linearGradient></defs>`
     +grassBank.map((b,i)=>`<path data-ground="mud" d="${b.fill}" fill="url(#lcbank${i})"/>`).join("")
     +(texOn?`<path d="${grassBank.map(b=>b.fill).join(" ")}" fill="url(#paper)" opacity="${(.5*paperK).toFixed(2)}"/>`:"")
     +grassBank.map(b=>`<path d="${b.edge}" fill="none" stroke="${lineC}" stroke-width=".5" stroke-linejoin="round"/>`
-      +`<path d="${b.sheen}" fill="none" stroke="${bankSheen}" stroke-width=".55" stroke-linecap="round" opacity="${(.55*(1-gloom)).toFixed(2)}"/>`).join("")+"</g>":"";
-  /* the foot band, over the land's edge, and the wrack: a few dead stems the last high water left there */
-  const grassFoot=grassBank.length?`<g data-prop="grass-foot" opacity="${(.92*outK).toFixed(2)}"><defs><clipPath id="lcLandL"><path d="${landL}"/></clipPath><clipPath id="lcLandR"><path d="${landR}"/></clipPath></defs>${grassBank.map(b=>`<path d="${b.footBand}" fill="url(#lcfoot)" clip-path="url(#lcLand${b.dir>0?"L":"R"})"/>`+(texOn?`<path d="${b.footTex}" fill="url(#paper)" opacity="${(.5*paperK).toFixed(2)}" clip-path="url(#lcLand${b.dir>0?"L":"R"})"/>`:"")).join("")}</g>`:"";
+      +`<path d="${b.sheen}" fill="none" stroke="${bankSheen}" stroke-width=".55" stroke-linecap="round" stroke-dasharray="${b.glints}" opacity="${(.55*(1-gloom)).toFixed(2)}"/>`).join("")+"</g>":"";
+  /* the foot band, over the land's edge, and the wrack: a few dead stems the last high water left there.
+     Where the bank is out the land's top line is no longer its edge against the river, only the lip the
+     grass stands on inside the one mud, so its ink is laid over in the mud's own colour and only a faint
+     line of it is left */
+  const grassFoot=grassBank.length&&outK>.01?`<g data-prop="grass-foot" opacity="${(.92*outK).toFixed(2)}"><defs><clipPath id="lcLandL"><path d="${landL}"/></clipPath><clipPath id="lcLandR"><path d="${landR}"/></clipPath></defs>${grassBank.map((b,i)=>`<path d="${b.footBand}" fill="url(#lcfoot)" clip-path="url(#lcLand${b.dir>0?"L":"R"})"/>`+(texOn?`<path d="${b.footTex}" fill="url(#paper)" opacity="${(.5*paperK).toFixed(2)}" clip-path="url(#lcLand${b.dir>0?"L":"R"})"/>`:"")
+    +`<path d="${b.lip}" fill="none" stroke="url(#lcbank${i})" stroke-width="1.05" opacity=".78"/>`).join("")}</g>`:"";
   let wrack="";
-  if(grassBank.length){const wr=mulberry(6611);
+  if(grassBank.length&&outK>.01){const wr=mulberry(6611);
     for(const{top:T,dir}of BANKS)for(let x=dir>0?-6:W+6;dir>0?x<T[4][0]-2:x>T[4][0]+2;x+=dir*(3+wr()*7)){
       const n=1+Math.floor(wr()*2.2);
       for(let i=0;i<n;i++){const x0=x+wr()*2,y0=Math.max(footAt(T,x0)+.8,bankY+.8)+wr()*.8,len=.9+wr()*1.6,a=(wr()-.5)*.7;
