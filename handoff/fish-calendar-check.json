@@ -1,0 +1,192 @@
+{
+ "months": [
+  {
+   "month": "January",
+   "keep": [
+    "reds"
+   ],
+   "add": [
+    "trout"
+   ],
+   "drop": [
+    "sheepshead"
+   ],
+   "why": "Reds: SCDNR says red drum are present year-round and the juveniles spend the winter in deeper inshore water and river channels. Trout: SCDNR's MRRI Spotted Seatrout report (Wenner) says winter trout fishing in January and February is traditionally good in the upper tidal rivers, and the trout stay in the estuaries all year. Gigging is closed December 1 to the end of February (50-5-1705(L)), but hook and line is open. Sheepshead: SCDNR's species page puts them in the shallows in late spring and in late fall into early winter, and says the cold moves them out to offshore reefs. SCDNR's MRRI Sheepshead report says most go out to the artificial reefs and live bottom in January and February to spawn. In January they are a reef fish, not a river fish. This is borderline, because one angler in that report likes January at the jetties."
+  },
+  {
+   "month": "February",
+   "keep": [
+    "reds",
+    "black drum"
+   ],
+   "add": [
+    "trout"
+   ],
+   "drop": [],
+   "why": "Black drum: SCDNR says they are most abundant near shore February through July, so this is right as drawn. Reds: present year-round (SCDNR). Trout: the same winter-trout fishery as January (SCDNR MRRI). With trout added, February no longer shows reds alone at a time of year when trout are a real target."
+  },
+  {
+   "month": "March",
+   "keep": [
+    "reds",
+    "black drum"
+   ],
+   "add": [
+    "trout"
+   ],
+   "drop": [],
+   "why": "Black drum: February to July (SCDNR). Trout: SCDNR's MRRI report counts March and April as spring. It says trout feed on the warm flats from late fall through early spring, and its SeaScience page says inshore fishing is better in spring and fall than in summer. Adding March makes trout run continuously from October to May. Flounder catches start to rise in March in SCDNR's survey, but April is still the safer first month for them."
+  },
+  {
+   "month": "April",
+   "keep": [
+    "reds",
+    "trout",
+    "flounder",
+    "black drum",
+    "cobia"
+   ],
+   "add": [],
+   "drop": [
+    "sheepshead"
+   ],
+   "why": "Cobia: SCDNR Technical Report 89 says they come into Port Royal and St. Helena sounds in mid-April and peak in May and June. Flounder: SCDNR says the adults come back inshore in spring. Black drum: February to July (SCDNR). Trout: spring. Sheepshead: SCDNR's MRRI report says spring sends them deeper to spawn until May, when they come back to the shallows. The species page's 'late spring' means May, not April."
+  },
+  {
+   "month": "May",
+   "keep": [
+    "reds",
+    "trout",
+    "flounder",
+    "sheepshead",
+    "black drum",
+    "cobia (closed)"
+   ],
+   "add": [],
+   "drop": [],
+   "why": "Cobia: this is the peak month (TR89: May and June), and May is closed to keeping. The law is SC Code 50-5-1713(A)(1): it is unlawful to take or possess cobia in the Southern Cobia Management Zone from May 1 to 31. SCDNR's 2026-27 guide prints the same closure, and catch and release is allowed (SCDNR's 2016 release). Sheepshead: back in the shallows in late spring (SCDNR). Flounder: SCDNR's MRRI report found flounder in 56% of its May and June net sets, and an angler in it calls May the best month. The row already holds six. Sharks are in by the SCDNR MRRI water-temperature rule (the Fripp buoy averages about 75°F in May), but there is no room for them."
+  },
+  {
+   "month": "June",
+   "keep": [
+    "reds",
+    "black drum",
+    "cobia",
+    "sharks"
+   ],
+   "add": [
+    "flounder",
+    "shrimp"
+   ],
+   "drop": [],
+   "why": "Flounder: SCDNR's SeaScience Summer Inshore Fishing page says flounder are 'quite abundant in the estuaries during the summer months' and that people gig them on summer nights. SCDNR's MRRI survey catches peak in August, so leaving out June to August was the row's biggest miss. Cobia: still at the peak (TR89). Sharks: in once the water is 66 to 68°F (SCDNR MRRI). Shrimp (lowest priority): SCDNR's shrimp page says people cast-net brown shrimp in the tidal creeks from early June. Leave it out if the row should mean only the fall whites."
+  },
+  {
+   "month": "July",
+   "keep": [
+    "reds",
+    "black drum",
+    "tarpon",
+    "sharks"
+   ],
+   "add": [
+    "flounder",
+    "shrimp"
+   ],
+   "drop": [],
+   "why": "Tarpon: SCDNR says they are in South Carolina from April and peak in July and August. Black drum: the last month of SCDNR's February to July window. Flounder: high in July to September in SCDNR's MRRI survey. Shrimp: brown shrimp in the creeks, and SCDNR says the first white shrimp are caught there in late July or early August. Cobia stay out of July, because TR89 says their numbers in the sounds drop sharply by July."
+  },
+  {
+   "month": "August",
+   "keep": [
+    "bull reds",
+    "tarpon",
+    "sharks",
+    "shrimp"
+   ],
+   "add": [
+    "flounder"
+   ],
+   "drop": [],
+   "why": "Bull reds: SCDNR's 2025 snapshot says the adults move into the coastal sounds and inlets in late summer and fall to spawn, in a short window in August and September. Its summer page says 20 to 30 lb fish are caught at the mouths of the bays and sounds in late summer. Tarpon: the July and August peak (SCDNR). Shrimp: whites are first caught in the creeks in late July or early August, and commercial landings start in August (SCDNR). Flounder: the August peak in SCDNR's survey."
+  },
+  {
+   "month": "September",
+   "keep": [
+    "bull reds",
+    "flounder",
+    "tarpon",
+    "sharks",
+    "shrimp"
+   ],
+   "add": [],
+   "drop": [],
+   "why": "Right as drawn. Bull reds: SCDNR's MRRI Red Drum report puts the most intense spawning in September. Flounder: high July to September (SCDNR MRRI). Tarpon: the Beaufort guides' July to September, because SCDNR names only the peak. Sharks: they leave once the water is under 79°F (SCDNR MRRI), and the Fripp buoy averages about 81°F in September. Shrimp: the baiting season opened at noon on September 11, 2026 (SCDNR's 2026-27 guide), and landings peak in September and October."
+  },
+  {
+   "month": "October",
+   "keep": [
+    "bull reds",
+    "trout",
+    "flounder",
+    "sheepshead",
+    "shrimp"
+   ],
+   "add": [],
+   "drop": [],
+   "why": "Right as drawn. SCDNR's Saltwater Fishing Trends page (undated October notes) says the bull reds show up in the Beaufort inlets and that October is the best month for bull reds inshore at Hilton Head. It says trout fishing should peak, flounder should be good around structure at Beaufort, and the sheepshead bite is best of the year in the mid 70s. SCDNR's MRRI report says the October to December fall fishery returned 45.1% of all tagged trout. Shrimp: baiting is open until noon on November 9. Black drum (the trends page says they feed up) and tripletail (some around for part of October) are optional and can stay out."
+  },
+  {
+   "month": "November",
+   "keep": [
+    "bull reds",
+    "trout",
+    "flounder",
+    "sheepshead",
+    "shrimp"
+   ],
+   "add": [],
+   "drop": [],
+   "why": "Bull reds: SCDNR says late summer and fall, and the Hunting Island surf runs September to November (guides). Trout: SCDNR's fall fishery. Sheepshead: in the shallows in late fall (SCDNR), with the best trips from late October through November (SCDNR MRRI). Flounder: keep it as the fall run out to sea, but this is the weakest entry, because SCDNR only says the adults leave 'during late fall' as the water cools. Shrimp: keep it, because baiting runs to noon on November 9, 2026, and SCDNR says the whites stay until the water falls to about 60 to 65°F (the Fripp buoy averages about 66°F in November). SCDNR also says the whites have usually left the creeks by late October, so the second half of the month is thin."
+  },
+  {
+   "month": "December",
+   "keep": [
+    "reds",
+    "sheepshead"
+   ],
+   "add": [
+    "trout"
+   ],
+   "drop": [
+    "shrimp"
+   ],
+   "why": "Shrimp: SCDNR says white shrimp have usually left the creeks for the ocean by late October. They leave at about 60 to 65°F, and the Fripp buoy averages about 58°F in December. Baiting closed at noon on November 9. Taking shrimp without bait closes December 16, after which only 12 dozen per boat is allowed (50-5-1105(C), and SCDNR's 2026-27 guide). The December trawl season SCDNR mentions is commercial and in the ocean. Trout: add it, because SCDNR counts October to December as the fall fishery, with 45.1% of tag returns. Gigging closes December 1, but hook and line is open. Sheepshead: early winter in the shallows (SCDNR). Reds: year-round."
+  }
+ ],
+ "rules": "The row prints one legal fact: cobia 'closed' in May (the sr-only text says 'closed to keeping'). It is RIGHT for 2026.\n- SC Code 50-5-1713(A)(1) (2021 Act 15) makes it unlawful to take or possess cobia in the Southern Cobia Management Zone from May 1 to May 31. 50-5-15(67) defines the zone as all state waters south of 32°31.0'N, near Jeremy Inlet on Edisto.\n- SCDNR's 2026-2027 Hunting and Fishing Laws and Regulations Guide, and its eRegulations finfish page (updated August 11 2026), list the closed season 'May 1 to May 31 in state waters south of 032° 31.0' N'. The limit is 1 per person and 3 per boat, 36 in fork length, from June 1 to April 30.\n- No 2026 act changed it. Act 231 of 2026 (S.961) touched only red drum and hooks.\n- Catch and release is still allowed in May: SCDNR's 2016 release says 'limited to catch and release only'. So 'closed to keeping' is the exact wording, and the visible 'closed' matches DNR's own 'Closed season'.\n- Coosaw Point (32°29.6'N), the Beaufort River, Port Royal Sound and the Broad River are inside the zone. The line runs along the north side of the Coosaw River and through upper St. Helena Sound. North of it (the Combahee and Ashepoo mouths), May is open at 1 per person and 6 per boat.\n- 50-5-1713(C) also closes state waters whenever the federal Atlantic cobia recreational fishery closes. No such closure was found for 2026.\n\nThe row prints no other legal fact. These are not printed, but are wrong or stale in the research and comments:\n1. Red drum changed on July 1 2026 (Act 231): 1 per person and 2 per boat, with an 18 to 25 in total-length slot. Gamefish (red drum, cobia, trout, tarpon, striped bass) fished with natural bait on hooks 4/0 or larger now need a non-offset, non-stainless circle hook. The research's '15 to 23 in, 2 per person, 6 per boat' is out of date. scstatehouse.gov's online code still shows the old 50-5-1705(D), so do not read red drum limits from it.\n2. Gigging for trout and red drum is closed December 1 to the end of February (50-5-1705(L)).\n3. Shrimp without bait: 48 quarts a day from May 1 to December 15, and only 12 dozen per boat from December 16 to April 30 (50-5-1105(B),(C)).\n4. The shrimp baiting statute, 50-5-1100(B), says only that 'the department shall establish annually a sixty-day open season between September 1 and November 15'. It sets no default of 'the second Friday of September to the second Tuesday of November'. SCDNR's practice is to open at noon on the last Friday on or before September 15.\n\nHonesty fixes for the copy and comments before shipping:\n(a) The sr-only sentence says 'In season in <month>, by SCDNR's calendar'. SCDNR publishes no monthly calendar, and several windows come from guides (tarpon in September, bull reds in November, trout in spring). Say 'In season in October:' or 'by SCDNR and local guides'.\n(b) The RUNS comment credits trout's April, May, October and November to 'SCDNR's 2025 snapshot'. That snapshot gives no months. The SCDNR sources are the MRRI Spotted Seatrout report (fall is October to December, and winter trout fishing is good) and the SeaScience Summer Inshore page (spring and fall beat summer).\n(c) The reds comment credits tailing from mid-March to the end of November to SCDNR. That is guide lore (Gink and Gasoline / Owen Plair). SCDNR's trends page says only that reds keep tailing on very high tides through October. The same applies to LOCS.bft.floodSeason, whose comment already says it is the guides'.\n(d) Remove the 'MOCK: check every window with SCDNR before it ships' comment once the windows are corrected.\n\nProposed RUNS.bft months:\n- reds [1-12]; bull reds [8,9,10,11]\n- trout [10,11,12,1,2,3,4,5]\n- flounder [4,5,6,7,8,9,10,11]\n- sheepshead [5,10,11,12]\n- black drum [2-7]\n- cobia [4,5,6], closed [5]\n- tarpon [7,8,9]\n- sharks [6,7,8,9]\n- shrimp [6,7,8,9,10,11], or [8,9,10,11] if June and July brown shrimp are left out\n\nNo month shows more than 6 entries (May and June show 6), so the 320px one-line fit still holds.\n\nOptional fish the family might expect, each needing a new drawing:\n- whiting: SCDNR says year-round, with inshore catches peaking in the late-spring and early-fall migrations\n- Spanish mackerel: SCDNR says April to November, most available during the spring and fall migrations close to shore, in high-salinity sounds and beachfront water off Fripp and Hunting Island\n- tripletail: guides and SCDNR's trends page only; summer into October",
+ "shrimpBaiting2026": "PUBLISHED: noon Friday September 11, 2026 to noon Monday November 9, 2026.\n\nSource: SCDNR's own 2026-2027 South Carolina Hunting and Fishing Laws and Regulations Guide (valid August 14, 2026 to August 14, 2027), Shrimp Baiting section, which reads '2026 Shrimp baiting season Sept. 11 (Noon) - Nov. 9 (Noon)': https://www.dnr.sc.gov/regs/pdf/Regs2627.pdf. SCDNR's eRegulations page, last updated August 11 2026, prints the same dates: https://www.eregulations.com/southcarolina/fishing/crustaceans-shellfish-size-catch-limits.\n\nNo separate September 2026 SCDNR news release turned up. The dnr.sc.gov/news index refused the fetch, and searches found none.\n\nThe close is November 9 (a Monday), not November 10. SCDNR now counts the 60 days inclusive: its 2025-26 guide gave 'Sept. 12 (Noon) - Nov. 10 (Noon)', also a Monday (https://www.dnr.sc.gov/regs/pdf/25SCAB-PP2-RE.pdf). The research's 'closes noon Tuesday November 10' and the third-party 'HERE' articles ('Monday, Nov. 10', which is the wrong weekday) are a day late.\n\nLegal basis: SC Code 50-5-1100(B), under which the department sets a 60-day season between September 1 and November 15. The opening follows SCDNR's practice of the last Friday on or before September 15.",
+ "sources": [
+  "SC Code Title 50 Ch. 5 (50-5-15(67) Southern Cobia Management Zone; 50-5-1100(B) shrimp baiting; 50-5-1105 shrimp limits; 50-5-1705 catch limits incl. (L) gigging; 50-5-1713 cobia): https://www.scstatehouse.gov/code/t50c005.php",
+  "Act 231 of 2026 (S.961), red drum 1/2 and 18-25 in slot, circle hooks, effective July 1 2026: https://www.scstatehouse.gov/sess126_2025-2026/bills/961.htm",
+  "SCDNR 2026-2027 Hunting & Fishing Laws and Regulations Guide (2026 shrimp baiting Sept 11 noon - Nov 9 noon; cobia closed May 1-31 south of 32°31.0'N; shrimp without bait closed Dec 16 - Apr 30; Act 231): https://www.dnr.sc.gov/regs/pdf/Regs2627.pdf",
+  "SCDNR 2025-2026 guide (2025 shrimp baiting Sept 12 noon - Nov 10 noon, the inclusive-count precedent): https://www.dnr.sc.gov/regs/pdf/25SCAB-PP2-RE.pdf",
+  "SCDNR eRegulations, crustaceans and shellfish (updated Aug 11 2026): https://www.eregulations.com/southcarolina/fishing/crustaceans-shellfish-size-catch-limits",
+  "SCDNR eRegulations, finfish size and catch limits 2026-2027 (cobia, red drum, trout, flounder, sheepshead, black drum, tarpon): https://www.eregulations.com/southcarolina/fishing/finfish-size-catch-limits",
+  "SCDNR 2016 release, May cobia fishery catch and release only south of Jeremy Inlet: https://dnr.sc.gov/news/2016/may/may2_cobialegislation.html",
+  "SCDNR SeaScience Shrimp (browns cast-netted from early June; whites first caught late July/early August and usually gone from the creeks by late October; 60-65°F; baiting opens last Friday on or before Sept 15): https://www.dnr.sc.gov/marine/pub/seascience/shrimp.html",
+  "SCDNR SeaScience Summer Inshore Fishing (summer slower than spring and fall; flounder abundant in summer, gigging; late-summer big reds at sound mouths): https://www.dnr.sc.gov/marine/pub/seascience/inshore.html",
+  "SCDNR MRRI, Spotted Seatrout Natural History and Fishing Techniques in SC (fall fishery Oct-Dec = 45.1% of tag returns; winter trout fishing good in upper tidal rivers): https://www.dnr.sc.gov/marine/mrri/insh_fish/seatrout.pdf",
+  "SCDNR MRRI, Red Drum Natural History and Fishing Techniques (Ed. Report 17; spawning most intense in September): https://www.dnr.sc.gov/marine/mrri/insh_fish/reddrum.pdf",
+  "SCDNR MRRI, Sheepshead Natural History and Fishing Techniques (Ed. Report 23; most move offshore to reefs Jan-Feb to spawn; back to shallows in May; best Oct-Nov): https://www.dnr.sc.gov/marine/mrri/insh_fish/sheepshead.pdf",
+  "SCDNR MRRI, Southern Flounder Natural History and Fishing Techniques (Ed. Report 20; catches rise in March, peak August, high July-Sept; 56% of May-June sets): https://www.dnr.sc.gov/marine/mrri/insh_fish/southernflounder.pdf",
+  "SCDNR species pages: https://www.dnr.sc.gov/marine/species/reddrum.html, https://www.dnr.sc.gov/marine/species/spottedseatrout.html, https://www.dnr.sc.gov/marine/species/southernflounder.html, https://dnr.sc.gov/marine/species/sheepshead.html, https://www.dnr.sc.gov/marine/species/blackdrum.html, https://www.dnr.sc.gov/marine/species/cobia.html, https://www.dnr.sc.gov/marine/species/tarpon.html, https://www.dnr.sc.gov/marine/species/whiteshrimp.html, https://www.dnr.sc.gov/marine/species/spanishmackerel.html, https://www.dnr.sc.gov/marine/species/southernkingfish.html",
+  "SCDNR MRRI coastal sharks (arrive at 19-20°C, leave below 26°C; Port Royal Sound to Bulls Bay): https://dnr.sc.gov/marine/mrri/shark.html",
+  "SCDNR 2025 species snapshots (red drum: adults in sounds and inlets late summer and fall, spawn Aug-Sep; seatrout: year-round, spawn Apr-Sep, no peak months given; flounder): https://www.saltwaterfishing.sc.gov/pdf/RedDrumSpeciesSnapshot.pdf, https://www.saltwaterfishing.sc.gov/pdf/SpottedSeatroutSpeciesSnapshot.pdf, https://www.saltwaterfishing.sc.gov/pdf/FlounderSnapshot.pdf, https://www.saltwaterfishing.sc.gov/pdf/ShrimpSnapshot.pdf",
+  "SCDNR Technical Report 89, Status of the SC Fisheries for Cobia (into Port Royal and St. Helena sounds mid-April, peak May-June, drops sharply by July): https://www.saltwaterfishing.sc.gov/pdf/CobiaReport.pdf",
+  "SCDNR Saltwater Fishing Trends, undated October reports for Beaufort, Hilton Head and Edisto: https://www.dnr.sc.gov/news/saltpiers.html",
+  "Guides where SCDNR is silent (tarpon Jul-Sep, Hunting Island surf bull reds Sep-Nov, flood-tide tailing season), as cited in the research file: https://www.carolinasportsman.com/?p=110695, https://www.carolinasportsman.com/?p=112876, https://www.ginkandgasoline.com/fly-fishing-tips-technique/flood-tide-redfish/",
+  "Fripp buoy 41067 monthly water temperatures (research file's own averages from SECOORA ERDDAP): https://erddap.secoora.org/erddap/tabledap/41067-frp2wave-4-nm-southeast-of.csv",
+  "Code checked: git show mock/bft-water-C:index.html (RUNS.bft near line 11348, runsIn/runsTall/renderRuns, LOCS.bft floodSeason near line 1279); research: /private/tmp/claude-501/-Users-workmac-Documents-Codex-2026-08-03-github-plugin-github-openai-curated-remote-work-porch-weather-oak-preview/b29199e6-b38b-4565-b71f-78d5b8b7339b/tasks/wk01f22pe.output"
+ ]
+}
