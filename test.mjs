@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v102/);
+  assert.match(worker, /mbwx-shell-v103/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -2327,6 +2327,14 @@ test("light, motion and alerts stay tuned", async () => {
   assert.match(html, /animation:bolt 19s linear infinite/);
   assert.doesNotMatch(html, /stormWash 7s/);
   assert.doesNotMatch(html, /var\(--bd,37s\)/);
+  // and that clock is set once the paint has landed, on the wash and the bolts together: the wash
+  // is the same element from paint to paint, so a delay worked out again each paint kept its old
+  // start time, and the live paint landing after the cache struck bolts into a sky that never lit
+  assert.doesNotMatch(html, /fl\.style\.animationDelay/);
+  assert.match(html, /for\(const a of el\.getAnimations\(\)\)onClock\(a,\(\)=>Date\.now\(\)%P\+P\)/);
+  assert.match(html, /function onClock\(a,at\)\{a\.currentTime=at\(\);a\.ready\.then\(/);
+  // the witch's crossing is put on her own clock the same way, once the scene has painted
+  assert.match(html, /paintBolts\(\);\n  witchClock\(\);/);
   // and it is a sky effect, not a scene one: inside the scene SVG it could only start a
   // third of the way down the page, which is a bolt coming out of clear air
   assert.match(html, /function paintBolts\(\)/);

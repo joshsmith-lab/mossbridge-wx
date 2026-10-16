@@ -1760,7 +1760,6 @@ function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd,code){
   } else {RAIN_KEY="";rf.innerHTML=""}
   const fl=document.getElementById("flash");
   fl.className="flash"+(PRM||!THUNDER?"":THUNDER>1?" on":" far");
-  fl.style.animationDelay=`-${(Date.now()/1000%STORM_P).toFixed(2)}s`;
 }
 
 /* One period for every part of a storm, so the bolts and the sky wash share a clock. */
@@ -1796,7 +1795,6 @@ function paintBolts(){
   if(!THUNDER||PRM){layer.innerHTML="";return}
   const sky=document.getElementById("sky");
   const w=sky.clientWidth||430,h=sky.clientHeight||560;
-  const beat=p=>(p*STORM_P-(Date.now()/1000%STORM_P)).toFixed(2);
   /* lean is how far the whole channel walks sideways on the way down, as a share of the
      width: three bolts that all fall straight read as a fence, not as a storm */
   const spots=THUNDER>1
@@ -1804,11 +1802,32 @@ function paintBolts(){
     :[[.29,20260814,.5,0,.09]];
   layer.innerHTML=spots.map(([fx,sd,k,p,lean])=>{
     const d=boltPath(w*fx,h*.13,h*1.03,sd,w*lean);
-    return `<g class="bolt" style="animation-delay:${beat(p)}s">`
+    return `<g class="bolt" style="animation-delay:${(p*STORM_P).toFixed(2)}s">`
       +[[7*k,.08,"#FFEFC2"],[3.4*k,.22,"#FFF6DE"],[1.5*k,.8,"#FFFDF4"],[.6*k,1,"#FFFFFF"]]
         .map(([sw,o,c])=>`<path d="${d}" fill="none" stroke="${c}" stroke-width="${sw.toFixed(2)}" stroke-linecap="round" stroke-linejoin="round" opacity="${o}"/>`).join("")
       +`</g>`;
   }).join("");
+  /* One clock, set once the paint has landed. The sky's wash is the same element from paint to
+     paint, so an animation-delay worked out again each paint left its old start time under the new
+     delay, and the bolts, drawn fresh each paint, took theirs off a clock read a stage later: the
+     live paint landing a moment after the cache put the beats half a second and more apart, and a
+     bolt struck into a sky that never lit. Every part's current time is the wall clock's place in
+     the storm's period, and each bolt's delay is only its own beat inside it. */
+  const P=STORM_P*1e3;
+  for(const el of [document.getElementById("flash"),...layer.querySelectorAll(".bolt")])
+    for(const a of el.getAnimations())onClock(a,()=>Date.now()%P+P);
+}
+/* A current time set before an animation's first frame is held until that frame lands, which on a
+   heavy paint is late: so it is set again once the animation is running, off the clock read then */
+function onClock(a,at){a.currentTime=at();a.ready.then(()=>{if(a.playState==="running")a.currentTime=at()},()=>{})}
+/* The witch's crossing is planned off WITCH_RUN when the scene is built, and its animation starts
+   on the frame the scene first paints, which on a slow phone is the better part of a second later:
+   so once the paint has landed she is put where her clock says, the way the bolts are */
+function witchClock(){
+  const a=document.querySelector("#sceneSvg .witch-cross,.scene-layer .witch-cross")?.getAnimations().find(x=>x.animationName==="witchCross");
+  if(!a||!WITCH_RUN)return;
+  const D=a.effect.getComputedTiming().duration,R=WITCH_RUN;
+  onClock(a,()=>((Date.now()-R.t0)%D+D)%D+(a.effect.getTiming().delay||0));
 }
 /* 0 no thunder, 1 thunder in the area, 2 thunder overhead. Set in render() from three
    readings and read by both the sky effects and the scene. */
@@ -14711,6 +14730,7 @@ function render(d,live,savedAt=0){
      headline, the chips, the rain card and the scene are all inside .sky, and a bolt
      measured before them stops in mid-air where the sky used to end. */
   paintBolts();
+  witchClock();
   starsClearOfType();
   /* The reading age was fixed when this paint began. Width is taken once the page
      below the header has landed, which is what a resize compares against. */
