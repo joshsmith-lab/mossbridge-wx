@@ -5672,6 +5672,56 @@ test("Beaufort is the third place: its readings, its scene in layers, its birds 
   assert.doesNotMatch(html, /bftOakCurl\(/);
   // the tide is drawn: the flats come out as it falls, at the dock's own water
   assert.match(lc, /const dockX=W\*\.66,deckY=GY-\.5,yTide=deckY\+bftDockWater\(tide\);/);
+  // the grass is rooted (Josh, October 16 2026: "at low tide like now, looks like it's floating"). Smooth
+  // cordgrass stands on the marsh platform from about mean tide up, so on a spring high the river is up around
+  // its stems and the picture is the one that was approved, and on every lower water the bank it stands on is
+  // out of the river: none from BFT_GRASS_WET up, four units at dead low, never at an unknown tide's dead low
+  const gm = html.match(/const BFT_GRASS_WET=[^\n]*\nconst bftGrassMud=[^\n]*/)[0];
+  const gctx = vm.createContext({});
+  vm.runInContext(`${html.match(/const bftDockClamp=[^\n]*/)[0]}\n${html.match(/const bftDockTide=[^\n]*/)[0]}\n${gm};this.wet=BFT_GRASS_WET;this.mud=bftGrassMud`, gctx);
+  assert.equal(gctx.wet, .94);
+  assert.equal(gctx.mud(1), 0, "a spring high: the river up around the stems, no bank out");
+  assert.equal(gctx.mud(gctx.wet), 0);
+  assert.equal(gctx.mud(0), 4, "dead low: four units of the bank out of the river");
+  for (let t = 0; t < .94; t += .02) assert.ok(gctx.mud(t) > gctx.mud(t + .02) - 1e-9, `the bank goes under as the tide rises (${t.toFixed(2)})`);
+  assert.ok(gctx.mud(.15) > 3 && gctx.mud(.15) < 3.6, "Josh's morning, near low, has most of the bank out");
+  assert.equal(gctx.mud(null), gctx.mud(.5), "an unknown tide is mid water, as the dock's is");
+  // the bank is the flats' own mud on the still picture, painted over the flats and under the palmettos'
+  // trunks and the land; the grass keeps its draws and stays on the moving layer, where it sways; and every
+  // ground the harness measures a tuft's foot against is tagged
+  assert.match(lc, /const mudH=bftGrassMud\(tide\);/);
+  assert.match(lc, /const grassBank=mudH>0&&flatL&&flatR\?BANKS\.map\(/);
+  // each bank's outline is written once: the land and its flat are drawn from BANKS, the points the bank's mud
+  // is measured off, so a change to the land's line cannot leave the mud on the old one
+  assert.match(lc, /const BANKS=\[\{dir:1,top:\[\[-12,bankY-1\.4\],/);
+  assert.match(lc, /const\[flatL,flatR\]=BANKS\.map\(flatOf\);/);
+  assert.match(lc, /const\[landL,landR\]=BANKS\.map\(landOf\);/);
+  assert.doesNotMatch(lc, /const landL=`|const landR=`|const flatL=|const flatR=/);
+  // where the bank is out, the land's top line is only the lip inside the one mud, laid over in the mud's own
+  // colour; the waterline glints in seeded broken lengths
+  assert.match(lc, /<path d="\$\{b\.lip\}" fill="none" stroke="url\(#lcbank\$\{i\}\)"/);
+  assert.match(lc, /const gr=mulberry\(dir>0\?7757:7759\)/);
+  assert.match(lc, /tuftRun\(-6,W\*\.22,bankY\+\.5,5,8\);tuftRun\(W\*\.25,lEdge\+2,bankY\+1\.5,8,12\);tuftRun\(rEdge-2,W\*\.79,bankY\+1\.5,8,12\);tuftRun\(W\*\.84,W\+8,bankY,5,8\);/);
+  assert.match(lc, /const wr=mulberry\(6611\);/);
+  assert.match(lc, /const vr=mulberry\(dir>0\?7741:7753\)/);
+  const still = lc.slice(lc.indexOf("  svg.innerHTML=`"), lc.indexOf("  skyL.innerHTML=`")), moving = lc.slice(lc.indexOf("  fx.innerHTML=`"));
+  assert.match(still, /\$\{flats\}\n    \$\{grassMud\}\n    \$\{palmTrunks\}\n    <path data-ground="land" d="\$\{landL\}"/);
+  assert.match(still, /\$\{grassFoot\}\$\{wrackSvg\}\n    \$\{oakShadow\}<g data-prop="live-oak">\$\{oakBack\}\$\{bftOakLight\("back"\)\}<\/g>/);
+  assert.match(still, /<rect data-ground="water" x="0" y="\$\{yFar\}"/);
+  assert.match(lc, /<path data-ground="mud" d="\$\{flatL\}"/);
+  assert.match(lc, /`<path data-ground="mud" d="\$\{b\.fill\}" fill="url\(#lcbank\$\{i\}\)"\/>`/);
+  assert.doesNotMatch(moving, /grassMud|grassFoot|wrackSvg/);
+  assert.match(moving, /<g data-grass\$\{bandAt\(i\)\}>/);
+  // the harness measures every tuft's foot, at the case's tide and at 0, .15, .5, .8 and 1, at every width
+  const bscene = await readFile(new URL("tools/beaufort/scene.mjs", root), "utf8");
+  assert.match(bscene, /\/\* the grass at every tide \*\/\n/);
+  assert.match(bscene, /: \[0, \.15, \.5, \.8, 1\];\nasync function grassCheck\(page\)/);
+  // the ground over a foot runs down to none at the wet line with no step, and a foot past the frame's edge is
+  // not measured, because no phone shows it
+  assert.match(bscene, /const need = t <= \.5 \? 1\.5 \+ \(\.5 - t\) \* 2 : t < BFT_GRASS_WET \? 1\.5 \* \(BFT_GRASS_WET - t\) \/ \(BFT_GRASS_WET - \.5\) : 0;/);
+  assert.match(bscene, /if \(!xs\.length\) \{ off\+\+; continue; \}/);
+  for (const n of ["this-morning", "grass-dead-low", "grass-mid-tide", "grass-flood-tide", "grass-spring-high"]) assert.match(bscene, new RegExp(`CASES\\.push\\((?:B\\(\\w+, \\w+, )?C\\("${n}"`));
+  assert.match(bscene, /CASES\.push\(B\(true, false, C\("this-morning", "2026-10-16T08:35:00", \.15,/);
   // the jack-o'-lantern under the dock house roof, and the rest of Halloween, on the shared calendar
   assert.match(lc, /const hw=c\.halloween;/);
   assert.match(lc, /carved:c\.carved,seed:3,sheltered:true/);

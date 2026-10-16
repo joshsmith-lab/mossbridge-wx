@@ -7,9 +7,11 @@
  *   TZ=America/New_York node tools/beaufort/scene.mjs noon night   # only the cases whose name matches
  *   PORCH_BFT_WIDTHS=390,430,760 ...                               # the widths to shoot (default 390,430)
  *   PORCH_BFT_PRM=1 ...                                            # under reduced motion (default: motion on, as on a phone)
+ *   PORCH_BFT_GRASS_TIDES=0,.05,.1 ...                             # the tides the grass check paints again at (default 0,.15,.5,.8,1)
  *
  * Writes tools/shots/beaufort/scene-<case>-<width>.png (the sky block, type and all) and
- * scene-<case>-<width>-scene.png (the picture alone), and prints any page errors.
+ * scene-<case>-<width>-scene.png (the picture alone), prints any page errors, and fails an animal overlap,
+ * more than 120 animations or a tuft of grass with nothing under its foot (grassCheck).
  */
 import { readFileSync, readdirSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -86,7 +88,7 @@ CASES.push(C("november-morning", "2026-11-01T09:30:00", .5, "the morning of Nove
 const MORNING = { baseTemp: 72, nowTemp: 70, feels: 76, rh: 88, isDay: 1, code: 1, cloud: 12, nowWind: 3, nowDir: 220, nowGust: 6, nowUv: 1.2, uvMax: 5, windAmp: 4, gustAmp: 6,
   popCurve: () => 5, dailyPop: (p) => p.fill(8), sunrise: "07:27", sunset: "18:48" };
 const B = (glow, palms, cs) => ({ ...cs, glow, palms });
-CASES.push(B(true, false, C("this-morning", "2026-10-16T08:35:00", .15, "this morning: the sun low over Lady's Island behind the oak's crown, the crown rimmed and the moss lit", { ...MORNING })));
+CASES.push(B(true, false, C("this-morning", "2026-10-16T08:35:00", .15, "Josh's morning, October 16 2026 at 8:35: the sun low over Lady's Island behind the oak's crown, the crown rimmed and the moss lit, the tide near low, the flats out and the grass on its mud", { ...MORNING })));
 CASES.push(B(true, false, C("sunrise-oak", "2026-10-16T07:50:00", .25, "just after sunrise: the sun low behind the trunk and the low limbs, the light warmer, beams in the mist", { ...MORNING, nowTemp: 66, feels: 66, rh: 94, nowUv: .3 })));
 CASES.push(B(true, false, C("summer-morning", "2026-06-15T07:15:00", .5, "a June morning an hour after sunrise, the sun behind the crown's left side", { ...MORNING, baseTemp: 84, nowTemp: 78, feels: 82, rh: 86, nowUv: 1.6, uvMax: 10, sunrise: "06:15", sunset: "20:29" })));
 CASES.push(B(true, false, C("thin-cloud", "2026-10-16T08:35:00", .15, "this morning under thin cloud: the rim and the glow half as strong, no beams", { ...MORNING, code: 2, cloud: 55 })));
@@ -94,6 +96,17 @@ CASES.push(B(false, false, C("overcast", "2026-10-16T08:35:00", .15, "this morni
 CASES.push(B(false, false, C("fog", "2026-10-16T08:35:00", .15, "this morning in fog: none of it", { ...MORNING, code: 45, cloud: 100, rh: 99 })));
 CASES.push(B(false, false, C("clear-of-crown", "2026-10-16T10:45:00", .5, "later this morning, the sun clear of the crown: the oak in its ordinary light", { ...MORNING, nowTemp: 76, feels: 76, rh: 70, nowUv: 3.6 })));
 CASES.push(B(false, true, C("palm-sunset", "2026-10-16T18:25:00", .6, "this evening, the sun going down behind the palmettos: their fronds lit through, their trunks dark", { ...MORNING, nowTemp: 72, feels: 72, rh: 70, nowUv: .1 })));
+/* the grass at every tide */
+/* the spartina stands on the marsh platform: on its wet mud when the water is down and in the river on a spring
+   high, and never over air or over water it is not standing in (the grass check below walks every tuft) */
+CASES.push(C("grass-dead-low", "2026-09-20T10:30:00", 0, "dead low on a September morning: the flats all the way out, the grass on the marsh's wet mud edge",
+  { ...MORNING, baseTemp: 80, nowTemp: 79, feels: 82, rh: 74, nowUv: 5, uvMax: 7, sunrise: "07:09", sunset: "19:21" }));
+CASES.push(C("grass-mid-tide", "2026-09-20T13:30:00", .5, "half tide: the flats half out, the mud edge under the grass still wet",
+  { ...MORNING, baseTemp: 84, nowTemp: 83, feels: 87, rh: 64, nowUv: 7, uvMax: 7, sunrise: "07:09", sunset: "19:21" }));
+CASES.push(C("grass-flood-tide", "2026-09-20T15:20:00", .8, "the flood near the top: the flats nearly under, the river just under the grass, a strip of wet bank still out",
+  { ...MORNING, baseTemp: 84, nowTemp: 83, feels: 86, rh: 64, nowUv: 5, uvMax: 7, sunrise: "07:09", sunset: "19:21" }));
+CASES.push(C("grass-spring-high", "2026-09-20T16:40:00", 1, "a spring high: the river up around the grass's stems, the flats under",
+  { ...MORNING, baseTemp: 84, nowTemp: 82, feels: 85, rh: 66, nowUv: 3, uvMax: 7, sunrise: "07:09", sunset: "19:21" }));
 
 let chromium;
 try { ({ chromium } = await import("playwright")); } catch { console.error("playwright is not installed"); process.exit(1); }
@@ -108,6 +121,60 @@ const html = () => {
   if (!h.includes(mark)) throw new Error("no scene marker in index.html");
   return parts ? h.replace(mark, "const LOOK=BFT;\n" + parts + mark) : h;
 };
+
+/* The grass check. Every spartina tuft's foot, measured on the real page against what the still picture
+   draws under it (the shapes tagged data-ground: the river, the flats, the bank's mud and the land, the
+   topmost one at the point): the grass is rooted in the land or the mud, it stands in the river only from
+   BFT_GRASS_WET up (a spring high, the water up around its stems), and it is never over air. Below the wet
+   line, with the water under every stem, the ground also has to stand over each foot, so the foot is seen
+   against the bank's own mud and never against the river behind it, which is how the grass read as floating
+   at low water: 2.5 units at dead low, 1.5 at mean tide, and from there down to none at the wet line, with
+   no step anywhere between. Only what the frame shows is measured: a foot past the frame's edge, which no
+   phone shows, is left out, and so is any point of a foot that is. It is run at the case's own tide and
+   then at each of GRASS_TIDES, the page painted again at that tide (tideLevel stood in for), at every width */
+const GRASS_TIDES = process.env.PORCH_BFT_GRASS_TIDES ? process.env.PORCH_BFT_GRASS_TIDES.split(",").map(Number) : [0, .15, .5, .8, 1];
+async function grassCheck(page) {
+  return page.evaluate(async (tides) => {
+    const measure = () => {
+      const fx = document.getElementById("sceneFx");
+      const grounds = ["sceneSvg", "sceneNear"].flatMap((id) => [...document.getElementById(id).querySelectorAll("[data-ground]")]);
+      const toScreen = fx.getScreenCTM(), frame = document.querySelector(".scene").getBoundingClientRect();
+      const kind = (x, y) => {
+        const P = new DOMPoint(x, y).matrixTransform(toScreen);
+        let top = "air";
+        for (const g of grounds) if (g.isPointInFill(P.matrixTransform(g.getScreenCTM().inverse()))) top = g.dataset.ground;
+        return top;
+      };
+      const seen = (x, y) => { const P = new DOMPoint(x, y).matrixTransform(toScreen); return P.x >= frame.left && P.x <= frame.right; };
+      const feet = [...fx.querySelectorAll("[data-grass] path[fill='url(#blade)']")]
+        .flatMap((p) => [...p.getAttribute("d").matchAll(/M (-?[\d.]+) (-?[\d.]+) Q/g)].map((m) => [+m[1] + .8, +m[2]]));
+      /* how much ground has to stand over a foot: 2.5 units at dead low, 1.5 at mean tide, none from the wet line up */
+      const t = SCENE_TIDE, wet = t >= BFT_GRASS_WET, bad = [];
+      const need = t <= .5 ? 1.5 + (.5 - t) * 2 : t < BFT_GRASS_WET ? 1.5 * (BFT_GRASS_WET - t) / (BFT_GRASS_WET - .5) : 0;
+      const ground = (k) => k === "land" || k === "mud";
+      let off = 0;
+      for (const [x, y] of feet) {
+        /* the foot's two edges and its middle, those of them the frame shows */
+        const xs = [-.7, 0, .7].map((dx) => x + dx).filter((sx) => seen(sx, y));
+        if (!xs.length) { off++; continue; }
+        const under = xs.map((sx) => kind(sx, y + .4));
+        if (!under.every((k) => ground(k) || (wet && k === "water"))) { bad.push(`(${x.toFixed(1)}, ${y.toFixed(1)}) over ${under.join("/")}`); continue; }
+        const hs = [];
+        for (let h = .25; h < need; h += .25) hs.push(h);
+        if (need > 0) hs.push(need);
+        const behind = hs.flatMap((h) => xs.map((sx) => [h, kind(sx, y - h)])).find(([, k]) => !ground(k));
+        if (behind) bad.push(`(${x.toFixed(1)}, ${y.toFixed(1)}) seen against ${behind[1]} ${behind[0].toFixed(2)} over its foot`);
+      }
+      return { tide: t, feet: feet.length - off, off, grounds: grounds.length, bad };
+    };
+    const out = [measure()];
+    const own = tideLevel;
+    try {
+      for (const t of tides) { tideLevel = () => t; render(LAST.d, LAST.live, LAST.savedAt); await PAINT; out.push(measure()); }
+    } finally { tideLevel = own; render(LAST.d, LAST.live, LAST.savedAt); await PAINT; }
+    return out;
+  }, GRASS_TIDES);
+}
 
 mkdirSync(OUT, { recursive: true });
 const server = await serve(PORT, FONT_DIR);
@@ -159,6 +226,14 @@ for (const cs of CASES.filter((c) => !ONLY.length || ONLY.some((o) => c.name.inc
     console.log(`${tag}: loc ${info.loc}, tide ${info.tide == null ? "—" : info.tide.toFixed(2)}, props [${[...new Set(info.props)].join(" ")}], animals [${info.species.join(" ")}], ${info.running} animations${info.backlight ? ", backlight " + info.backlight : ""}`);
     if (info.running > 120) errs.push(`${info.running} animations running, over the scenes' ceiling of 120`);
     if (info.loc !== "bft") { errs.push(`the page opened at ${info.loc}, not Beaufort`); }
+    /* the grass is rooted, at the case's tide and at every one of GRASS_TIDES */
+    const grass = await grassCheck(page).catch((e) => [{ tide: null, feet: 0, grounds: 0, bad: ["the grass check failed: " + e.message] }]);
+    for (const g of grass) {
+      const at = g.tide == null ? "—" : g.tide.toFixed(2);
+      if (!g.feet || !g.grounds) errs.push(`grass at tide ${at}: ${g.feet} feet and ${g.grounds} ground shapes to measure them against`);
+      if (g.bad.length) errs.push(`grass at tide ${at}: ${g.bad.length} of ${g.feet} feet floating: ${g.bad.slice(0, 6).join(", ")}${g.bad.length > 6 ? ", …" : ""}`);
+    }
+    console.log(`  grass: ${grass.map((g) => `${g.tide == null ? "—" : g.tide.toFixed(2)} ${g.bad.length ? g.bad.length + " floating" : "rooted"}`).join(" · ")} (${grass[0]?.feet ?? 0} feet in the frame, ${grass[0]?.off ?? 0} past its edge)`);
     if (errs.length) { failed = true; console.log("  " + errs.join("\n  ")); }
     await ctx.close();
   }
