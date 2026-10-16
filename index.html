@@ -4875,7 +4875,12 @@ function bftRimMask(pre,ids,S,rings,{n=12,stroke=0,lost=0}={}){
   defs+=`<clipPath id="${pre}o"><circle cx="${f1(sx)}" cy="${f1(sy)}" r="${f1(rOut)}"/></clipPath>`;
   body+=`<g clip-path="url(#${pre}o)">${uses("#fff",0,disc(rOut))}</g>`;
   if(stroke&&lost){defs+=`<clipPath id="${pre}l"><circle cx="${f1(sx)}" cy="${f1(sy)}" r="${f1(lost)}"/></clipPath>`;body+=`<g clip-path="url(#${pre}l)">${uses("#fff",stroke,disc(lost))}</g>`}
-  rings.forEach(([r0,r1,w],i)=>{for(let j=0;j<n;j++){const a0=j/n*2*Math.PI,a1=(j+1)/n*2*Math.PI,am=(a0+a1)/2,dx=Math.cos(am)*w,dy=Math.sin(am)*w;
+  /* the cells overlap by SEAM units on every side, so where two meet their black covers the seam whole: cut
+     edge to edge, each cell's antialiased edge let the white under it through, a faint hairline along every
+     spoke and ring across the lit crown */
+  const SEAM=.6;
+  rings.forEach(([r0,r1,w],i)=>{const da=Math.min(.15,SEAM/Math.max(r0,4));r0=r0>.05?Math.max(.06,r0-SEAM):r0;r1+=SEAM;
+    for(let j=0;j<n;j++){const a0=j/n*2*Math.PI-da,a1=(j+1)/n*2*Math.PI+da,am=(a0+a1)/2,dx=Math.cos(am)*w,dy=Math.sin(am)*w;
     const pts=[at(r1,a0),at(r1,am),at(r1,a1),at(r0,a0),at(r0,a1),at(r0,am)],xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);
     const box=[Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)];
     const u=uses("#000",stroke,box,dx,dy);if(!u)continue;

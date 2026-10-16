@@ -5797,6 +5797,8 @@ test("Beaufort is the third place: its readings, its scene in layers, its birds 
   assert.match(rm.body, /<use href="#m\d+" fill="#fff"\/>/);
   assert.match(rm.body, /<use href="#m\d+" fill="#000" transform="translate\(/);
   assert.match(rm.defs, /<clipPath id="t0_\d+">/);
+  // the cells overlap, so no hairline of white shows along the seams where they meet
+  assert.match(html, /const SEAM=\.6;\n  rings\.forEach\(\(\[r0,r1,w\],i\)=>\{const da=Math\.min\(\.15,SEAM\/Math\.max\(r0,4\)\);/);
   // the moss's light is in its own sway groups (it rides the sway and adds no animation), near beards most, none far
   const glowL = bctx.bftOakMossLayers("front", 1, "#4F515F", { S, edge: "#FFF", hairC: "#FFF" });
   assert.ok(glowL.some((g) => g.layers.some((l) => /bft-oak-glow/.test(l.open || ""))), "the front moss near the sun carries a halo");
