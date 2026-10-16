@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v99/);
+  assert.match(worker, /mbwx-shell-v100/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -5677,6 +5677,13 @@ test("Beaufort is the third place: its readings, its scene in layers, its birds 
   assert.match(lc, /carved:c\.carved,seed:3,sheltered:true/);
   assert.match(lc, /c\.batColony\(8,/);
   assert.match(lc, /c\.witchFly\(witch\)/);
+  // the red balloon on the rail, down in a storm or a gale, and the trick-or-treater out from under its string;
+  // the skeleton at the helm rides the boat's rock
+  assert.match(lc, /if\(!storm&&gust<35\)\{const bx=dockX\+BFT_BALLOON_AT\.x,by=deckY\+BFT_BALLOON_AT\.y;/);
+  assert.match(lc, /c\.kidAt\(dockX\+80,deckY\)/);
+  assert.match(lc, /const bones=c\.halloween\?inkAt\(BFT_BONES_AT\.x,BFT_BONES_AT\.y,BFT_BONES_AT\.s,1,inkRig\(rigBftBones\(/);
+  assert.match(html, /@keyframes bftBalloonSway\{/);
+  assert.match(html, /\.scene-layer \.bft-bones-wave\[style\]\{animation:bftBonesWave 24s ease-in-out infinite\}/);
   // the Hornet crosses only on a clear day, and never under reduced motion
   assert.match(lc, /const jetUp=!PRM&&sunAltDeg>5&&!wet&&!storm&&!fog&&cloud<70/);
 });

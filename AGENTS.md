@@ -892,19 +892,21 @@ water's ripples, the mist, the palmetto crowns, the boat, the flag and the sock,
 dock). Nothing on a higher layer is behind anything on a lower one. Every other scene clears the four
 overlays and paints in one sheet as before. The palmettos' fronds flutter on their own only from 20 mph
 of gust, and the jack-o'-lantern under the dock house roof gutters only from 10, both because they are
-sheltered and because each saved the frames. Measured on October 15 2026 (`tools/webkit.mjs`'s WKWebView, 390 at 3x): noon and
-rain 60, a hard blow 58, an October night with the bats, the witch and the lantern 54.5 with no frame
-over 34ms (the coast's and the farm's nights hold 60).
+sheltered and because each saved the frames. Measured on October 15 2026 (`tools/webkit.mjs`'s WKWebView, 390 at 3x): noon, rain and a
+hard blow 60, an October night with the bats, the witch, the lantern, the balloon and the skeleton 56
+with no frame over 34ms (the coast's and the farm's nights hold 60).
 
 **Halloween at Beaufort** is on the same calendar as the other two places (`holidayOn`, `locToday()`), and
 all of it comes down the morning of November 1: the blood moon and the cobweb are shared, the bats keep
 over the oak, the palmettos, the bridge and the steeples, the witch crosses the moon, a pumpkin stands at
 the dock house's river end (carved and lit from the 24th) with a little one at its landward post, the
 black cat sits on the walkway, eyes open in the spartina, the trick-or-treater comes out on the walkway on
-Halloween night, and two touches are drawn for it and come in their own change, each only while the October
-night still holds its frames: a red balloon tied to the rail (the nod to "It", `rigBftBalloon`) and a
-plastic skeleton at the boat's helm waiting to go fishing (`rigBftBones`). Until they are in the cast the
-scene leaves them out (`typeof`).
+Halloween night, a red balloon is tied to the third rail post past the dock house (the nod to "It", `rigBftBalloon`,
+`BFT_BALLOON_AT`, clear of the palmetto's trunk behind it), leaning on its string as far as the wind says,
+swinging on the gusts and down in a storm or from 35 mph of gust, since a party balloon is torn off in a
+gale; and a plastic yard skeleton stands at the boat's helm waiting to go fishing (`rigBftBones`), riding
+the boat's rock, waving now and then and glowing a little after dark. The trick-or-treater stands further
+up the walkway, out from under the balloon's string.
 
 **Seeing it.** `node tools/beaufort/look.mjs <key>` shows any Beaufort drawing close up and at phone size
 (the keys are in `BFT`, the registry each drawing registers in), and `TZ=America/New_York node

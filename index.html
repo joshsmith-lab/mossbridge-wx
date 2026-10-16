@@ -179,6 +179,10 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .scene-layer :is(.bft-sock,.bft-sock-tail)[style]{animation:bftFlutter var(--fd,1.6s) ease-in-out infinite alternate}
 .scene-layer .bft-flyover{animation:bftFlyover 300s linear infinite;opacity:0}
 @keyframes bftFlyover{0%{transform:translateX(0);opacity:1}7%{transform:translateX(var(--j1,420px));opacity:1}7.01%,100%{transform:translateX(var(--j1,420px));opacity:0}}
+/* Halloween at Beaufort: the red balloon swings about its tie on the rail, the skeleton at the helm waves */
+@keyframes bftBalloonSway{0%,100%{transform:rotate(var(--bl,-3deg))}34%{transform:rotate(var(--bp,3deg))}52%{transform:rotate(calc(var(--bp,3deg) * .3))}70%{transform:rotate(calc(var(--bp,3deg) * .65))}}
+.scene-layer .bft-bones-wave[style]{animation:bftBonesWave 24s ease-in-out infinite}
+@keyframes bftBonesWave{0%,78%,100%{transform:rotate(0)}81%{transform:rotate(20deg)}84%{transform:rotate(-6deg)}87%{transform:rotate(20deg)}90%{transform:rotate(-6deg)}93%{transform:rotate(10deg)}96%{transform:rotate(0)}}
 @keyframes bftFlutter{from{transform:rotate(calc(var(--fa,1.5deg) * -1))}to{transform:rotate(var(--fa,1.5deg))}}
 .flight-wing{transform-box:fill-box;animation:wingBeat var(--fd,7.4s) ease-in-out infinite}
 .wing-l{transform-origin:100% 60%;--rest:0deg;--lift:9deg;--press:-5deg}.wing-r{transform-origin:0 60%;--rest:0deg;--lift:-9deg;--press:5deg}
@@ -6901,6 +6905,612 @@ BFT.jet={pal:BFT_JET_LOOKPAL,box:[-66,-50,134,100],s:1/BFT_JET_Z,dist:.5,ground:
   states:{plain:{},trail:{trail:true},lights:{lights:true},under:{e:86,yaw:3},low:{e:40,yaw:14}},
   draw:st=>rigBftJet(st)};
 
+/* ── the red balloon ── */
+/* ── Beaufort, October: the red balloon ─────────────────────────────────────────────────
+   One red party balloon on a string, tied to a rail post on the walkway by the dock house. It is
+   Pennywise's balloon from "It" ("they all float down here"), creepy only to the ones who know it:
+   nothing in it is a face, a clown or a drop of blood. It is a balloon somebody tied to the dock,
+   alone on its post, with nothing else under it.
+
+   What has to survive on a phone is a small red ball on a pale line over the dock, with a darker
+   nub of a knot under it and a white fleck of gloss on it. The rest is for the close-up: the
+   classic latex shape (round over a short taper into the neck), the tied knot and its flared lip,
+   the gathers at the neck, the bounce light low on the shadow side, and the string wrapped round
+   the post and tied off in a bow.
+
+   Drawn at ten units to the scene unit (BFT_BALLOON_U), the way the flags and the faces in the oak
+   and the loft are, so the kit's tenth-of-a-unit rounding cannot step the knot or the bow. The
+   scene draws it at .1. y=0 is the top of the rail post it is tied to (the dock's walkway post
+   `top`, where the post's rounded cap starts), x=0 the post's axis. The string is wrapped round the
+   post just under its cap, above the top rail, and runs about 13.6 scene units to the knot; the
+   balloon's middle rides about 16.6 over the post in a calm.
+
+   It answers the wind the way a tethered balloon does. In a calm it stands nearly straight up, the
+   string with a little slack in it. The harder it blows the further it leans downwind (dir +1
+   toward +x, -1 toward -x), the string drawn taut, bellied a little by the wind on it (flatter at
+   the post, steeper at the balloon), and the balloon tipped to follow its string: about 49° from
+   upright at 10 mph and 60° at 20, close to the 64° it never passes, beside a flag flying level.
+   The lean is the sustained wind's, the swing is the gusts' (bftBalloonMotion), and both are taken
+   in five-mile steps (bftBalloonQ), the way the witch and the cheesecloth ghost take theirs, so the
+   live paint landing a moment after the cache never moves the string or retimes its swing. The
+   geometry is mirrored, never flipped, so the gloss and the lit edge stay on the side the light is.
+
+   It moves at one joint, a transform only: the string and the balloon swing together about the tie
+   on the post (bft-balloon), slowly in a calm and in lurches the gustier it gets.
+
+   Where it is tied, and what it keeps clear of, is a promise bftBalloonCheck keeps: the dock house
+   roof and the flag's staff, the little pumpkin, the black cat and the trick-or-treater, each read
+   off its own drawing, at every wind and both ends of the swing. */
+INK.bftBalloon={
+  /* a bright red a shade toward scarlet, with as little blue in it as a red can carry, so the
+     scene's night navy takes it to a deep brick red and not to a plum */
+  body:"#DF2518",knot:"#A3150F",lip:"#C31B14",sheen:"#F27C68",crease:"#8C1210",glint:"#FFFFFF",
+  /* the string: a pale cotton line, with a little of the sky's dark ink under it (stringInk), the
+     way the cobweb's silk is drawn, so it reads on the bright sky and on the dark water alike */
+  string:"#F4F0E6",stringInk:"#2A1B33",
+  ink:"#2A1B33",shade:"#4A0C18",lit:"#FFE6B8",shadeOp:.32,litOp:.5};
+/* the ink a thing this small wants: the flags' light line, a narrow crescent */
+const BFT_BALLOON_O={line:.62,heavy:.3,shade:.85,lit:.5};
+const BFT_BALLOON_U=10;
+/* the string's length from the tie to the knot, in drawing units, and where it is tied: just under
+   the post's rounded cap, above the walkway's top rail (whose top edge is about 3.9 down) */
+const BFT_BALLOON_LEN=136;
+const BFT_BALLOON_TIE=[0,2];
+const bftBalloonClamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const bftBalloonR2=v=>Math.round(v*100)/100;
+/* a wind or a gust in five-mile steps, 0 to 45 */
+const bftBalloonQ=mph=>Math.round(bftBalloonClamp(+mph||0,0,45)/5)*5;
+
+/* the balloon in its own frame: the string's end (the foot of the knot) at the origin, the balloon
+   standing up its own axis (-y). A classic round latex balloon: a round crown, widest a third of
+   the way down, then a long taper into a short neck. 31 wide and 39 tall over the neck */
+const BFT_BALLOON_BODY=(()=>{
+  const R=[[1.15,-5.2],[1.9,-6.7],[4.4,-8.5],[8.8,-11.6],[12.9,-16.4],[15.3,-22.4],[15.9,-28.8],[14.6,-35],[11.2,-40],[6,-43],[0,-43.9]];
+  return[...R,...R.slice(0,-1).reverse().map(([x,y])=>[-x,y])];
+})();
+/* the middle of the round part and its radius, for the gloss, the bounce light and the scene's
+   clearances */
+const BFT_BALLOON_C=[0,-28.2],BFT_BALLOON_R=15.6;
+/* the storybook's licence: a party balloon is about a foot across, a unit and a third here, and drawn
+   true it would be a pink speck. At this size it is 3.6 units across (4.3px on a 390 phone), about two
+   thirds of the dock's little pumpkin, so it reads as a red ball on a line at a glance */
+const BFT_BALLOON_SIZE=1.12;
+
+/* the lean from the vertical, in degrees, for a sustained wind in mph (taken in five-mile steps): a
+   hair off upright in a calm, 34° at 5 mph, 49° at 10, 57° at 15, 60° at 20 and never past 64°. A
+   real party balloon is nearly flat by ten miles an hour; 64° is as far as it can go here with the
+   swing's push on top and still keep its string a pixel off the black cat on the river side, with
+   room to spare (bftBalloonCheck, bftBalloonRoom), and beside a flag flying level it reads as a
+   balloon blown hard over */
+const BFT_BALLOON_LEAN=[2,62,7];
+const bftBalloonLean=mph=>{const[a,b,c]=BFT_BALLOON_LEAN;return a+b*(1-Math.exp(-bftBalloonQ(mph)/c))};
+
+/* the string's centreline from the tie up to the knot, as points [x, y], and the angle from the
+   vertical it leaves the knot at (the balloon follows it). slack is the calm's lazy S, gone by 10
+   mph; belly is the wind's bend, the string leaving the post a few degrees flatter than it meets
+   the balloon */
+function bftBalloonString(mph,dir=1,len=BFT_BALLOON_LEN){
+  const m=bftBalloonQ(mph),d=dir<0?-1:1,th=bftBalloonLean(m);
+  const slack=bftBalloonClamp(1-m/10,0,1)*7,belly=bftBalloonClamp(m/10,0,1)*6;
+  const phi=s=>th+belly*(1-2*s)+slack*Math.sin(2*Math.PI*s);
+  const N=36,P=[[BFT_BALLOON_TIE[0],BFT_BALLOON_TIE[1]]];
+  let x=P[0][0],y=P[0][1];
+  for(let i=0;i<N;i++){const a=phi((i+.5)/N)*Math.PI/180;x+=d*Math.sin(a)*len/N;y-=Math.cos(a)*len/N;P.push([x,y])}
+  return{pts:P,end:[x,y],tip:d*phi(1),lean:th};
+}
+
+/* where everything is, in drawing units, for one wind: the tie, the knot, the balloon's tilt and
+   its middle and radius. bftBalloonReach gives the balloon's middle and radius in scene units off
+   the post's top */
+function bftBalloonGeo(mph,dir=1){
+  const S=bftBalloonString(mph,dir),a=S.tip*Math.PI/180,ca=Math.cos(a),sa=Math.sin(a),[kx,ky]=S.end;
+  const z=BFT_BALLOON_SIZE,toW=([x,y])=>[kx+z*(x*ca-y*sa),ky+z*(x*sa+y*ca)];
+  return{tie:BFT_BALLOON_TIE,knot:S.end,tilt:S.tip,lean:S.lean,string:S.pts,toW,centre:toW(BFT_BALLOON_C),r:BFT_BALLOON_R*z};
+}
+const bftBalloonReach=(mph,dir=1)=>{const G=bftBalloonGeo(mph,dir),U=BFT_BALLOON_U;
+  return{x:bftBalloonR2(G.centre[0]/U),y:bftBalloonR2(G.centre[1]/U),r:bftBalloonR2(G.r/U),knot:G.knot.map(v=>bftBalloonR2(v/U))}};
+
+/* ── where it is tied ──────────────────────────────────────────────────────────────────
+   The third walkway post landward of the dock house (post 2, about 57.7 in dock units), in dock
+   units: the post's x and its top, where y=0 of the rig goes. Not the first (post 0, about 36.7):
+   there a balloon leaning toward the river lies on the dock house's tin roof by 50°, so it could never
+   lean as far as the wind says, and the black cat sits at its foot, which turns it into the cat's
+   balloon. Not the second (post 1, about 47): on a 320 to 390 phone the tall palmetto's trunk stands
+   right behind it, and the string ran up the trunk's edge and was lost. Here, on every width from 320
+   to 760, it stands on its own post over open water between the palmettos' trunks, with the cat a post
+   and a half toward the river and open walkway landward. The dock's own posts when its part is in the
+   same script (a function declaration is hoisted, so the order the parts load in does not matter),
+   else the same seeded draw the dock makes for that post */
+const BFT_BALLOON_POST=2;
+const bftBalloonPost=(len=95,i=BFT_BALLOON_POST)=>{
+  if(typeof bftDockWalkPosts==="function"){const p=bftDockWalkPosts(len)[i];return{x:p.x,y:p.top}}
+  const r=mulberry(7500+i*13);return{x:+(36.6+i*10.5+(r()-.5)*.3).toFixed(2),y:-5.6+(r()-.5)*.5}};
+const BFT_BALLOON_AT=bftBalloonPost();
+/* where the walkway's other Halloween things stand, in dock units, as the scene places them (the
+   little pumpkin at the dock house's landward post, the black cat on the walkway, the
+   trick-or-treater on Halloween night), for bftBalloonCheck. The pumpkin and the cat are where the
+   scene has them, and the balloon comes no nearer the cat than two units (in a westerly of 30, pushed
+   by a gust). The kid stands landward of the balloon, past the furthest its balloon and string reach
+   that way, with three and a half units to spare (bftBalloonRoom says 77.7 at the least), and not at
+   52, where it would stand under the string in any wind off the land */
+const BFT_BALLOON_NEAR={pumpkin:{x:28.6,y:0,w:5.6,h:4.2},cat:{x:40,y:.25},kid:{x:80,y:0}};
+
+/* ── the promise the placement makes ──────────────────────────────────────────────────
+   From a calm to a 45 mph gale, either way, at both ends of the swing (bftBalloonStyle's push and
+   lift, at the widest swing any gust gives): the balloon, and the whole string from just over the
+   bow, keep a scene unit clear (a pixel on a 390 phone, the decorations' own rule) of the dock house
+   and its tin roof and ridge cap, the flag's staff on the ridge, the little pumpkin, and the black
+   cat and the trick-or-treater, each read off its own drawing (propBlackCat, propTrickOrTreater) at
+   the scale the scene draws it, when the kit is in the same script, else off boxes round them. In
+   dock units. near: {pumpkin, cat, kid}, each {x, y} (the pumpkin with w and h) or null for one
+   that is not out. KEEP is the room to keep, in scene units. Returns a list of what failed */
+/* a kit path flattened to polygons in its own units: the kit only writes M, L, C, A and a, and Z */
+function bftBalloonFlat(d){
+  const tk=d.match(/[MLCAZa]|-?\d*\.?\d+(?:e-?\d+)?/g)||[],out=[];
+  let P=null,c="M",x=0,y=0;
+  const arc=(r,large,sweep,x1,y1)=>{
+    const hx=(x-x1)/2,hy=(y-y1)/2,d2=hx*hx+hy*hy||1e-9,rr=Math.max(r,Math.sqrt(d2));
+    const f=Math.sqrt(Math.max(0,(rr*rr-d2)/d2))*(large===sweep?-1:1),cx=f*hy+(x+x1)/2,cy=-f*hx+(y+y1)/2;
+    const a0=Math.atan2(y-cy,x-cx);let da=Math.atan2(y1-cy,x1-cx)-a0;
+    if(sweep&&da<0)da+=2*Math.PI;if(!sweep&&da>0)da-=2*Math.PI;
+    for(let i=1;i<=8;i++){const a=a0+da*i/8;P.push([cx+Math.cos(a)*rr,cy+Math.sin(a)*rr])}
+    x=x1;y=y1;
+  };
+  for(let i=0;i<tk.length;){
+    if(/[A-Za-z]/.test(tk[i])){c=tk[i++];if(c==="Z"){if(P&&P.length>2)out.push(P);P=null;continue}}
+    if(c==="M"){x=+tk[i];y=+tk[i+1];i+=2;if(P&&P.length>2)out.push(P);P=[[x,y]];c="L"}
+    else if(c==="L"){x=+tk[i];y=+tk[i+1];i+=2;P.push([x,y])}
+    else if(c==="C"){const q=tk.slice(i,i+6).map(Number);i+=6;
+      for(let k=1;k<=6;k++){const t=k/6,u=1-t;P.push([u*u*u*x+3*u*u*t*q[0]+3*u*t*t*q[2]+t*t*t*q[4],u*u*u*y+3*u*u*t*q[1]+3*u*t*t*q[3]+t*t*t*q[5]])}
+      x=q[4];y=q[5]}
+    else if(c==="A"){arc(+tk[i],+tk[i+3],+tk[i+4],+tk[i+5],+tk[i+6]);i+=7}
+    else if(c==="a"){arc(+tk[i],+tk[i+3],+tk[i+4],x+ +tk[i+5],y+ +tk[i+6]);i+=7}
+    else i++;
+  }
+  if(P&&P.length>2)out.push(P);
+  return out;
+}
+/* every polygon a rig's parts draw, in its own units, the joints' own pivots left as drawn */
+const bftBalloonPolys=layers=>{const out=[],walk=L=>L.forEach(l=>l.parts?l.parts.forEach(p=>out.push(...bftBalloonFlat(p.d))):walk(l.layers||[]));walk(layers);return out};
+let BFT_BALLOON_SHAPES=null;
+const bftBalloonShapes=()=>BFT_BALLOON_SHAPES||(BFT_BALLOON_SHAPES={
+  cat:typeof propBlackCat==="function"?{s:.072,P:bftBalloonPolys(propBlackCat(""))}
+    :{s:1,P:[[[-2.9,-8.8],[.8,-8.8],[.8,-4.3],[-2.9,-4.3]],[[-2.3,-5],[3.1,-1.4],[3.1,.1],[-2.3,.1]],[[2.4,-.6],[4.2,-.6],[4.2,4.6],[2.4,4.6]]]},
+  kid:typeof propTrickOrTreater==="function"?{s:.1,P:bftBalloonPolys(propTrickOrTreater(1))}
+    :{s:1,P:[[[-2.6,-11.6],[2.6,-11.6],[2.6,-6.3],[-2.6,-6.3]],[[-4.1,-6.4],[4.8,-6.4],[4.8,0],[-4.1,0]],[[3.2,-6.4],[7,-6.4],[7,-2.1],[3.2,-2.1]]]}});
+function bftBalloonCheck(at=BFT_BALLOON_AT,near=BFT_BALLOON_NEAR,KEEP=1){
+  const U=BFT_BALLOON_U,errs=[];
+  const inPoly=(P,x,y)=>{let c=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const[a,b]=P[i],[e,d]=P[j];if((b>y)!==(d>y)&&x<(e-a)*(y-b)/(d-b)+a)c=!c}return c};
+  const segD=(px,py,[ax,ay],[bx,by])=>{const dx=bx-ax,dy=by-ay,t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy||1)));return Math.hypot(px-ax-t*dx,py-ay-t*dy)};
+  const polyD=(P,x,y)=>inPoly(P,x,y)?0:Math.min(...P.map((p,i)=>segD(x,y,p,P[(i+1)%P.length])));
+  const box=(x0,y0,x1,y1)=>[[x0,y0],[x1,y0],[x1,y1],[x0,y1]];
+  /* what is there, in dock units: the dock house's tin roof and ridge cap and its trim, the house
+     under it from its river end to its landward corner piling, the flag's staff on the ridge, and
+     the walkway's own Halloween things where near puts them */
+  const things=[["the dock house's roof",[[[-2.6,-8.9],[28.6,-8.9],[28.6,-9.7],[18.9,-14.6],[18.9,-15.15],[7.1,-15.15],[7.1,-14.6],[-2.6,-9.7]]]],
+    ["the dock house",[box(-.4,-8.9,25.7,2.6)]],["the flag's staff",[box(12.7,-27.3,13.3,-15.15)]]];
+  const S=bftBalloonShapes(),n=near||{};
+  if(n.pumpkin){const p=n.pumpkin,w=p.w??5.6,h=p.h??4.2;things.push(["the little pumpkin",[box(p.x-w/2,p.y-h-1.1,p.x+w/2,p.y)]])}
+  for(const k of["cat","kid"])if(n[k]){const{s,P}=S[k],o=n[k];things.push([k==="cat"?"the black cat":"the trick-or-treater",P.map(Q=>Q.map(([x,y])=>[o.x+x*s,o.y+y*s]))])}
+  const clear=(x,y)=>{let best=[1e9,""];for(const[name,Ps]of things)for(const P of Ps){const d=polyD(P,x,y);if(d<best[0])best=[d,name]}return best};
+  const seen=new Set();
+  for(const dir of[1,-1])for(let mph=0;mph<=45;mph+=5){
+    const G=bftBalloonGeo(mph,dir),M=bftBalloonMotion(mph,45),calm=mph<3;
+    for(const sw of[dir*M.sway*(calm?1:.6),-dir*M.sway]){
+      const a=sw*Math.PI/180,ca=Math.cos(a),sa=Math.sin(a),[tx,ty]=G.tie;
+      const P=([x,y])=>[at.x+(tx+(x-tx)*ca-(y-ty)*sa)/U,at.y+(ty+(x-tx)*sa+(y-ty)*ca)/U];
+      const [cx,cy]=P(G.centre),r=G.r/U,tag=`${mph} mph toward ${dir>0?"+x":"-x"}, swung ${sw.toFixed(1)}°`;
+      const[bd,bn]=clear(cx,cy);
+      if(bd<r+KEEP&&!seen.has("b"+bn+mph+dir)){seen.add("b"+bn+mph+dir);errs.push(`${tag}: the balloon is ${bftBalloonR2(Math.max(0,bd-r))} off ${bn}`)}
+      for(const q of G.string.slice(3).map(P)){const[sd,sn]=clear(q[0],q[1]);
+        if(sd<KEEP){if(!seen.has("s"+sn+mph+dir)){seen.add("s"+sn+mph+dir);errs.push(`${tag}: the string is ${bftBalloonR2(sd)} off ${sn}`)}break}}
+    }
+  }
+  return errs;
+}
+/* how far the cat and the kid may stand from the balloon's post, from the check: the furthest
+   landward the cat may sit (it is on the river side) and the nearest the kid may stand (landward of
+   the post), in dock units, each to the half unit, with the other one out of the way */
+function bftBalloonRoom(at=BFT_BALLOON_AT){
+  const ok=(k,x)=>!bftBalloonCheck(at,{[k]:{x,y:k==="cat"?.25:0}}).length;
+  let cat=at.x-2,kid=at.x+2;
+  while(cat>at.x-30&&!ok("cat",cat))cat-=.5;
+  while(kid<at.x+40&&!ok("kid",kid))kid+=.5;
+  return{cat,kid};
+}
+
+/* an ellipse as a closed path, turned by rot degrees about its middle */
+const bftBalloonEll=(cx,cy,rx,ry,rot,role,x)=>{
+  const a=rot*Math.PI/180,c=Math.cos(a),s=Math.sin(a),P=[];
+  for(let i=0;i<14;i++){const t=i/14*Math.PI*2,u=Math.cos(t)*rx,v=Math.sin(t)*ry;P.push([cx+u*c-v*s,cy+u*s+v*c])}
+  return pBlob(P,role,x)};
+
+/**
+ * The balloon on its string, tied to the post. mph is the sustained wind (the lean, in five-mile
+ * steps), dir the way it blows (+1 toward +x). Options:
+ *   light:  [x, y] toward the light in screen space, the same vector the scene's look() hands inkRig
+ *           (lightAt(x, y-20)), so the gloss sits on the side the kit puts the lit edge; default
+ *           the upper left
+ *   night:  0 to 1, how far the night has come on: the gloss shrinks to the moon's small cold
+ *           point. The colours are the scene's to tone; nothing here glows
+ *   sway:   the style attribute for the joint (bftBalloonStyle), or nothing for a still balloon
+ * Returns layers for inkRig, back to front: the swinging string and balloon, then the bow on the post.
+ */
+function rigBftBalloon(mph=0,dir=1,o={}){
+  o=o||{};
+  const G=bftBalloonGeo(mph,dir),toW=G.toW,T=G.tie;
+  const W=pts=>pts.map(p=>{const q=toW(p);return p.length>2?[q[0],q[1],p[2]]:q});
+  const night=bftBalloonClamp(+o.night||0,0,1);
+  /* the light, as a unit vector in screen space; the gloss sits toward it on the round part */
+  let[lx,ly]=Array.isArray(o.light)?o.light:[-.65,-1];
+  {const n=Math.hypot(lx,ly)||1;lx/=n;ly/=n;if(ly>.2){ly=.2;const m=Math.hypot(lx,ly)||1;lx/=m;ly/=m}}
+  const [cx,cy]=G.centre,R=G.r;
+  /* the string: the pale line, a fine shadow of ink beside it on the side away from the light. It
+     is sampled every few units so the taper's spline follows the lean's curve */
+  const sp=G.string.filter((p,i,a)=>i%4===0||i===a.length-1);
+  const shadowSide=sp.map((p,i)=>{const a=sp[Math.max(0,i-1)],b=sp[Math.min(sp.length-1,i+1)];let nx=-(b[1]-a[1]),ny=b[0]-a[0];
+    const n=Math.hypot(nx,ny)||1;nx/=n;ny/=n;if(nx*-lx+ny*-ly<0){nx=-nx;ny=-ny}return[p[0]+nx*1.5,p[1]+ny*1.5,3]});
+  const string=[
+    pTaper(shadowSide,"stringInk",{capStart:false,capEnd:false},{noSil:true,op:.58}),
+    pTaper(sp.map(([x,y])=>[x,y,3]),"string",{capStart:false,capEnd:false},{noSil:true})];
+  /* the balloon: its body (the neck runs down into the knot), the knot and its flared lip, the
+     gathers at the neck, the bounce light low on the shadow side, and the gloss */
+  const body=pBlob(W(BFT_BALLOON_BODY),"body");
+  const knot=pBlob(W([[-1.15,-5.6],[1.15,-5.6],[1.7,-3.6],[3.3,-.9],[3.5,.15],[1.6,.55],[0,.3],[-1.6,.55],[-3.5,.15],[-3.3,-.9],[-1.7,-3.6]]),"knot");
+  const lip=pBlob(W([[-3.6,-.5],[-1.8,-1.3],[0,-1.1],[1.8,-1.3],[3.6,-.5],[3.4,.6],[1.4,.95],[-1.4,.95],[-3.4,.6]]),"lip");
+  /* the string tied round the neck just over the lip, a turn of it showing across the knot */
+  const tie=pTaper(W([[-2.7,-2.1,1.25],[-1.2,-1.55,1.35],[0,-1.45,1.4],[1.2,-1.55,1.35],[2.7,-2.1,1.25]]),"string",{capStart:false,capEnd:false},{noSil:true,op:.95});
+  /* the gathers: two short puckers where the neck flares into the body, kept inside the taper so
+     they read as the neck's folds and never as prongs up into the round */
+  const creases=[pTaper(W([[.45,-5.6,.6],[1.2,-7.6,.55],[2.3,-9.4,.12]]),"crease",{},{noSil:true,op:.4}),
+    pTaper(W([[-.45,-5.6,.6],[-1.1,-7.4,.5],[-2,-9,.12]]),"crease",{},{noSil:true,op:.34})];
+  /* the bounce light: a soft crescent inside the rim, low on the side away from the light, where
+     the shadow crescent falls, so it shows as the reflected light a glossy ball carries there */
+  const ba=Math.atan2(-ly,-lx),bounce=[];
+  for(let i=0;i<=8;i++){const t=i/8,a=ba+(t-.5)*1.6,rr=R-2.1;bounce.push([cx+Math.cos(a)*rr,cy+Math.sin(a)*rr,.2+2.8*Math.sin(Math.PI*t)])}
+  const sheen=pTaper(bounce,"sheen",{},{noSil:true,op:.36});
+  /* the gloss: a long highlight across the round part toward the light, its length along the
+     surface, and a small second fleck under it. Under the moon it is one small point */
+  const gk=1-.45*night,ga=Math.atan2(ly,lx),gx=cx+Math.cos(ga)*R*.52,gy=cy+Math.sin(ga)*R*.52;
+  const gloss=[bftBalloonEll(gx,gy,2.5*gk,5.6*gk,ga*180/Math.PI,"glint",{noSil:true,op:+(.9-.25*night).toFixed(2)})];
+  if(night<.5){const g2=ga-.8,r2=R*.6;gloss.push(pDot(cx+Math.cos(g2)*r2,cy+Math.sin(g2)*r2,1.15,"glint",{noSil:true,op:.75}))}
+  /* the bow on the post: the string wrapped round it (a band that dips toward us across the post's
+     round face), the knot on its face, two loops and two short tails. The long end leaves the knot
+     upward, so the bow sits over the string's foot */
+  const[tx,ty]=T;
+  const bow=[
+    pTaper([[tx-9.4,ty-.9,1.9],[tx-4.5,ty+.35,2],[tx,ty+.75,2.1],[tx+4.5,ty+.35,2],[tx+9.4,ty-.9,1.9]],"string",{capStart:false,capEnd:false}),
+    pTaper([[tx+.4,ty+.4,1.3],[tx-2.2,ty-1.4,1.4],[tx-5.2,ty-1.9,1.3],[tx-6.2,ty-.2,1.2],[tx-4.6,ty+1.2,1.3],[tx-1.6,ty+.9,1.3]],"string",{capStart:false,capEnd:false}),
+    pTaper([[tx+.6,ty+.4,1.3],[tx+3,ty-1.7,1.4],[tx+5.8,ty-1.8,1.3],[tx+6.5,ty-.1,1.2],[tx+4.8,ty+1.3,1.3],[tx+1.8,ty+1.1,1.3]],"string",{capStart:false,capEnd:false}),
+    pTaper([[tx-.6,ty+1.4,1.3],[tx-1.8,ty+4.4,1.1],[tx-3.1,ty+7.4,.9]],"string",{capStart:false}),
+    pTaper([[tx+.8,ty+1.4,1.3],[tx+2,ty+4.8,1.1],[tx+2.6,ty+8.2,.9]],"string",{capStart:false}),
+    pDot(tx+.1,ty+.7,1.5,"string")];
+  return[
+    {open:`<g class="bft-balloon"${o.sway?` style="${o.sway}"`:""}>`,pivot:T,layers:[
+      {parts:string},
+      {parts:[body,...creases,sheen,knot,lip,tie,...gloss]}]},
+    {parts:bow}];
+}
+
+/* ── the motion ─────────────────────────────────────────────────────────────────────────
+   The swing about the tie, the gusts' (both readings in five-mile steps). In a calm a slow drift of
+   three degrees either way over seven seconds, the drift of a balloon in still air; the further the
+   gusts run over the wind, the wider and the quicker, up to eight degrees in a second and three
+   quarters, so a gusty day jerks it about and a steady breeze only leans it. In wind the swing is
+   lopsided the way a gust works it: pushed over a little further (six tenths of the swing), then
+   lifting back the whole swing toward upright in the lull, so its lowest reach stays clear of what
+   is beside it (bftBalloonCheck walks both ends). The keyframes lurch and settle rather than run a
+   sine, because a tethered balloon is pushed and then falls back. One animation, a rotation on the
+   joint's own pivot, phased off the wall clock */
+function bftBalloonMotion(mph,gustMph){
+  const m=bftBalloonQ(mph),g=Math.max(m,bftBalloonQ(gustMph));
+  return{sway:bftBalloonR2(bftBalloonClamp(3+(g-m)*.3+m*.06,3,8)),dur:bftBalloonR2(bftBalloonClamp(7.2-g*.17,1.75,7.2))};
+}
+/* the style attribute for the joint, phased off the wall clock so a repaint carries on where it
+   was. The scene leaves it off under reduced motion, and the balloon holds still at its lean */
+function bftBalloonStyle(mph,gustMph,dir=1,now=Date.now()){
+  const M=bftBalloonMotion(mph,gustMph),t=now/1000,d=dir<0?-1:1;
+  /* --bp the push (downwind, further over), --bl the lift (back toward upright); clockwise is +x */
+  const calm=bftBalloonQ(mph)<3,bp=bftBalloonR2(d*M.sway*(calm?1:.6)),bl=bftBalloonR2(-d*M.sway);
+  return{sway:`transform-box:view-box;transform-origin:0 0;--bp:${bp}deg;--bl:${bl}deg;animation:bftBalloonSway ${M.dur}s ease-in-out -${(t%M.dur).toFixed(2)}s infinite`};
+}
+/* the keyframes, for the page's stylesheet */
+const BFT_BALLOON_CSS=`@keyframes bftBalloonSway{0%,100%{transform:rotate(var(--bl,-3deg))}34%{transform:rotate(var(--bp,3deg))}52%{transform:rotate(calc(var(--bp,3deg) * .3))}70%{transform:rotate(calc(var(--bp,3deg) * .65))}}`;
+
+/* ── the looks ─────────────────────────────────────────────────────────────────────────
+   The rail post it is tied to, for the look only (the scene has its own): the post with its rounded
+   cap, the walkway's top and mid rails in front of it, and the deck, in the dock's colours, lit
+   the way the look lights the drawing, with a hairline that stays a hairline at every scale */
+const bftBalloonPostSvg=(lt)=>{
+  const hx=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)),mx=(a,b,t)=>"#"+hx(a).map((v,i)=>Math.round(v+(hx(b)[i]-v)*t).toString(16).padStart(2,"0")).join("");
+  const tn=c=>{let t=c;if(lt&&lt.warm)t=mx(t,lt.warm,.3*(lt.gold||0));if(lt&&lt.night)t=mx(t,"#15223D",.62*lt.night);return t};
+  const ink=lt&&lt.night?"#0A1020":"#2A1B33",st=`stroke="${ink}" stroke-width=".7" vector-effect="non-scaling-stroke"`;
+  return `<path d="M -9 0 A 9 9 0 0 1 9 0 L 9.6 66 L -9.6 66 Z" fill="${tn("#7B6C5C")}" ${st}/>`
+    +`<rect x="-70" y="3.9" width="170" height="7.2" fill="${tn("#BAAC94")}" ${st}/>`
+    +`<rect x="-70" y="28.9" width="170" height="5.2" fill="${tn("#BAAC94")}" ${st}/>`
+    +`<rect x="-70" y="56" width="170" height="8" fill="${tn("#B4A58D")}" ${st}/>`
+    +`<rect x="-70" y="64" width="170" height="14" fill="${tn("#837463")}" ${st}/>`;
+};
+/* the placement's promise, printed in red over the panel: anything bftBalloonCheck finds (at the post
+   and with the neighbours it is placed for), so a change to the lean or the swing that puts the
+   balloon on the roof or the string on the cat is seen here */
+const bftBalloonFails=()=>{const e=bftBalloonCheck();return e.slice(0,8).map((s,i)=>`<text x="-172" y="${-190+i*9}" font-size="7" fill="#C00">${s}</text>`).join("")+(e.length>8?`<text x="-172" y="${-190+8*9}" font-size="7" fill="#C00">… ${e.length-8} more</text>`:"")};
+const BFT_BALLOON_STATES={calm:{mph:0},breeze:{mph:8},windy:{mph:22},
+  "windy-west":{mph:22,dir:-1},gale:{mph:30},night:{mph:4,night:1,light:[.5,-1]}};
+BFT.balloon={pal:INK.bftBalloon,box:[-178,-205,356,290],s:.1,dist:.04,o:BFT_BALLOON_O,ground:false,
+  states:BFT_BALLOON_STATES,
+  draw:st=>rigBftBalloon(st.mph??0,st.dir??1,st),
+  extra:(st,lt)=>bftBalloonPostSvg(lt)+bftBalloonFails(),
+  css:BFT_BALLOON_CSS};
+/* the balloon alone, close, for its knot, its gloss and its bounce light. look.mjs caps its close-up
+   at x14, which leaves this a thumbnail, so look at it with --scale:
+     node tools/beaufort/look.mjs balloon-head --scale 100 */
+BFT["balloon-head"]={pal:INK.bftBalloon,box:[-24,-188,48,60],s:.1,dist:.04,o:BFT_BALLOON_O,ground:false,
+  states:{calm:{mph:0},night:{mph:0,night:1,light:[.5,-1]}},
+  draw:st=>rigBftBalloon(st.mph??0,st.dir??1,st)};
+/* the bow on the post, close. The same:  node tools/beaufort/look.mjs balloon-bow --scale 120 */
+BFT["balloon-bow"]={pal:INK.bftBalloon,box:[-16,-12,32,30],s:.1,dist:.04,o:BFT_BALLOON_O,ground:false,
+  states:{calm:{mph:0}},
+  draw:st=>rigBftBalloon(st.mph??0,st.dir??1,st),
+  extra:(st,lt)=>bftBalloonPostSvg(lt)};
+
+/* ── the skeleton at the helm ── */
+/* ── Beaufort, for Halloween: the skeleton captain ─────────────────────────────────────────
+   A plastic yard skeleton, the kind people set out for October, standing at the helm of the
+   family's center console where it lies at the float: one bony hand on the wheel, the other up in
+   a wave, a sun-faded red fishing cap on his skull. The joke is that he is waiting to go fishing.
+
+   He is drawn at ten units to the scene unit, the way the faces in the oak and the loft are, with
+   y=0 on the boat's cockpit sole under his feet and x=0 at his spine, the boat facing -x. His hips
+   stand to the bow, his chest is turned a little toward us, and his skull is turned three-quarters
+   to the bow, the way his cap's bill points, so he is looking where the boat is going. What has to
+   survive on a phone is about nine pixels of him over the gunwale: a bone-white figure, a skull
+   with a band of white brow under a red cap and two dark eye sockets, the ribcage as white bars, one
+   arm out to the console and one up in the air. The grin, the teeth, the nose, the finger bones and
+   the cap's green underbrim are for the close-up. He is a cartoon's proportions, a big skull on a
+   small frame, because at that size the skull is what says skeleton.
+
+   He reads white because he is inked as few units as he can be: everything over the gunwale (the
+   skull and its cap, the neck, the ribcage, both upper arms and the arm to the wheel) is one unit,
+   with one outline and one crescent, so no line falls across a bone half a pixel wide, and his
+   crescent is narrow and light (BFT_BONES_O, INK.bftBones.shadeOp), glossy plastic and not chalk.
+   His sockets are the only dark pair on him: the pelvis's holes are a faint crease.
+
+   The scene draws him at BFT_BONES_AT inside the boat's rock joint, after the boat, so he rides the
+   chop with it and stands in front of the console, the T-top's legs and the leaning post. He stands
+   aft of the T-top's aft leg and under its canopy with sky between (his cap's bill short, the way a
+   bill turned three-quarters to us is), because a skull or a bill tangent to a pole, or a cap
+   pressed on a roof, merges into one dark band at phone size. Being in front of the
+   hull too, his legs and pelvis are cut at the gunwale (a static clip along the boat's own sheer),
+   so they are behind the hull side the way a skipper's are and nothing of him hangs over the water.
+   He brings the boat's wheel, on the console's aft face, and his arm reaches it from wherever he
+   stands (a two-bone reach, bftBonesReach), so his hand is always on the rim.
+
+   The waving forearm is its own joint at the elbow (bft-bones-wave): a slow wave now and then, the
+   hand swung out and back twice and a long rest, phased off the wall clock, and still, hand up,
+   under reduced motion (BFT_BONES_CSS, which the scene's style needs, beside its bftRock). That is
+   the holiday's licence the bats and the witch have: motion for fun, a transform only, and the
+   weather still runs it (bftBonesWaving): he holds his hand up still in a storm, under thunder, in
+   anything heavier than light rain, in freezing rain and in heavy snow, the witch's own gates. He
+   stays out in all weather, because he is plastic, like the pumpkins.
+
+   After dark (the sun 6° under) the bones glow the soft green of glow-in-the-dark plastic, written as
+   rgb() so neither the scene nor the look tones it toward the night, the way the dock's lit lamp is,
+   and inked with BFT_BONES_GLOW_O: no crescent and no lit edge, because the plastic is lit from
+   inside and the moon does not shade it. */
+INK.bftBones={bone:"#F4EFE2",hollow:"#4A3A48",eye:"#20172A",nose:"#2A1F2C",grin:"#4A3A48",detail:"#A89A94",
+  cap:"#C0685A",seam:"#94463E",underbrim:"#5E7D66",wheel:"#2D2E34",hub:"#C9CFD3",
+  /* glow-in-the-dark plastic: a pale green the night does not tone */
+  boneGlow:"rgb(214,242,208)",
+  /* a light, narrow crescent: shiny plastic bones half a pixel wide go grey under a heavy one */
+  ink:"#2A1B33",shade:"#3A2350",lit:"#FFE6B0",shadeOp:.16,litOp:.45};
+/* where he stands in the boat, in boat units (rigBftBoat: y=0 the waterline, the boat facing -x):
+   his spine 5.9 aft of the boat's centre, at the aft end of the leaning post. The tip of his cap's
+   bill is then 1.2 aft of the T-top's aft leg and the top of his cap 1.3 under the canopy, path to
+   path, which leaves about a pixel of sky between the two inks on a 390 phone and a little under one
+   at 320, and his waving elbow is 1.9 short of the outboard's cowl. His soles are on the sole, 0.15
+   over the waterline and out of sight under the hull side; his drawing is at a tenth. The gunwale
+   crosses him at his hips */
+const BFT_BONES_AT={x:5.9,y:-.15,s:.1};
+/* his line, the weight the faces in the oak and the loft are inked at, and a narrow crescent */
+const BFT_BONES_O={line:.5,heavy:.25,shade:.45,lit:.45};
+/* glowing after dark: the plastic is lit from inside, so no crescent and no lit edge */
+const BFT_BONES_GLOW_O={line:.5,heavy:.25,shade:0,lit:0};
+/* the wheel's centre on the console's aft face, in boat units, which his far hand reaches for */
+const BFT_BONES_WHEEL=[2.42,-5.2];
+/* the wave: a 24 s cycle, the hand swung out and back twice over about four seconds and a long rest
+   with the hand up: 20° out, which moves the hand about a pixel and a half at 3x on a phone, and 6°
+   in, which keeps the fingers clear of the back of his skull.
+   The scene phases it off the wall clock, rigBftBones({wave:phase(BFT_BONES_WAVE)}), and passes no
+   style under reduced motion or in weather he would not wave in, which leaves the joint still */
+const BFT_BONES_WAVE=24;
+const BFT_BONES_CSS=`.scene-layer .bft-bones-wave[style]{animation:bftBonesWave ${BFT_BONES_WAVE}s ease-in-out infinite}
+@keyframes bftBonesWave{0%,78%,100%{transform:rotate(0)}81%{transform:rotate(20deg)}84%{transform:rotate(-6deg)}87%{transform:rotate(20deg)}90%{transform:rotate(-6deg)}93%{transform:rotate(10deg)}96%{transform:rotate(0)}}`;
+/* whether he waves: the witch's gates, less the dark and the fog, which only keep her out of the sky.
+   A storm, thunder overhead, rain from rainK .65 up, freezing rain (66, 67) and heavy snow (75, 86)
+   hold his hand up still. Pure: the scene hands it what it already has */
+const bftBonesWaving=({storm=false,thunder=0,rainK=0,code=0}={})=>!(storm||thunder>1||rainK>=.65||[66,67,75,86].includes(code));
+/* the boat's sheer in boat units: the boat's own bftBoatSheer, and a copy of it where that is not loaded */
+const bftBonesSheer=x=>{if(typeof bftBoatSheer==="function")return bftBoatSheer(x);const s=Math.max(0,Math.min(1,(10.4-x)/23.4));return -2.9-.45*s-2.85*s**2.4};
+/* the gunwale under him, in his units: the sheer, less the outer half of the hull's own ink line, so his
+   cut bones stop on the hull's line and never cover it. k is the screen pixels to a scene unit (the
+   scene's own k: 1.22 on a 390 phone, where the boat's .85px line is .35 of a boat unit) */
+const bftBonesGunwale=(x,k=1.22)=>(bftBonesSheer(BFT_BONES_AT.x+x*BFT_BONES_AT.s)-BFT_BONES_AT.y)/BFT_BONES_AT.s
+  -(typeof BFT_BOAT_O!=="undefined"?BFT_BOAT_O.line:.85)/2/k/BFT_BONES_AT.s;
+/* a two-bone reach: the elbow for a shoulder at (sx,sy) and a wrist at (tx,ty), the upper arm a long
+   and the forearm b, bent to the side bend says (1 under the line from shoulder to wrist). A wrist
+   out of reach is brought in along the line, so the arm is straight and never pulled apart */
+function bftBonesReach(sx,sy,tx,ty,a,b,bend=1){
+  const dx=tx-sx,dy=ty-sy,d0=Math.hypot(dx,dy)||1,d=Math.min(d0,a+b-.01);
+  const ux=dx/d0,uy=dy/d0,along=(a*a-b*b+d*d)/(2*d),off=Math.sqrt(Math.max(0,a*a-along*along));
+  /* the side: the normal that points down the screen when bend is 1 */
+  let nx=-uy,ny=ux;if(ny<0){nx=-nx;ny=-ny}
+  return{elbow:[sx+ux*along+nx*off*bend,sy+uy*along+ny*off*bend],wrist:[sx+ux*d,sy+uy*d]};
+}
+let BFT_BONES_N=0;
+
+/**
+ * The skeleton captain, back to front: the wheel on the console's aft face; his legs, pelvis and lower
+ * spine (cut at the gunwale); then everything over it as one unit (the arm to the wheel, the ribcage,
+ * the upper arms, the skull and its cap); then the forearm and the hand on their elbow joint
+ * (bft-bones-wave). Options:
+ *   wave: the style for the wave joint (the scene passes phase(BFT_BONES_WAVE), or "" to hold it still)
+ *   glow: the glow-in-the-dark bones, from the sun 6° under (ink them with BFT_BONES_GLOW_O)
+ *   cut:  cut him at the boat's gunwale (default); false draws his legs whole
+ *   k:    the scene's screen pixels to a scene unit, which the cut allows for the hull's line (1.22)
+ * Returns layers for inkRig in his own units, y=0 on the sole.
+ */
+function rigBftBones({wave="",glow=false,cut=true,k=1.22}={}){
+  const bone=glow?"boneGlow":"bone",in_={noSil:true};
+  const oval=(cx,cy,rx,ry,rot=0,n=14)=>{const a=rot*Math.PI/180,ca=Math.cos(a),sa=Math.sin(a);
+    return Array.from({length:n},(_,i)=>{const t=i/n*Math.PI*2,x=Math.cos(t)*rx,y=Math.sin(t)*ry;return[cx+x*ca-y*sa,cy+x*sa+y*ca]})};
+  const add=([x,y],[u,v],t=1)=>[x+u*t,y+v*t];
+  /* the wheel, where the console is: its centre on the console's aft face, in his units. The rim is
+     seen nearly edge on and leans aft at the top, the way a helm is set toward the driver; a short
+     shaft runs into the console's face, and the hub is chrome */
+  const A=BFT_BONES_AT,W=[(BFT_BONES_WHEEL[0]-A.x)/A.s,(BFT_BONES_WHEEL[1]-A.y)/A.s];
+  const face=((2.01-A.x)/A.s)-1;
+  const RX=2.6,RY=7.3,TILT=12*Math.PI/180;
+  const rimAt=t=>{const x=RX*Math.cos(t),y=RY*Math.sin(t);return[W[0]+x*Math.cos(TILT)-y*Math.sin(TILT),W[1]+x*Math.sin(TILT)+y*Math.cos(TILT)]};
+  const wheel=[pTaper([[face,W[1]+.2,1.8],[W[0],W[1],1.6]],"wheel",{capStart:false}),
+    part(inkSpline(oval(W[0],W[1],RX,RY,12,16),true)+" "+inkSpline(oval(W[0],W[1],1,5.7,12,16).reverse(),true),"wheel"),
+    pDot(W[0],W[1],1.15,"hub")];
+
+  /* below the gunwale: both legs, the pelvis and the lower spine, one mass of bone. The pelvis is a
+     butterfly, its wings flaring up from the hip joints; its two holes are a faint crease, so the
+     sockets in his skull are the only dark pair on him (dark, level and round, they made a second
+     face) */
+  const legs=[
+    pTaper([[-5.8,-32,5.4],[-6.4,-23.5,4.6],[-6.8,-15.6,5.2]],bone),pDot(-6.8,-15.3,3.3,bone),
+    pTaper([[-6.8,-14.8,4.8],[-6.8,-8,4],[-6.6,-3.4,4.4]],bone),
+    pBlob([[-4.6,-4],[-9,-3.2],[-12.4,-1.8],[-12.2,-.2],[-4.2,-.2]],bone),
+    pTaper([[4.8,-32,5.4],[5.4,-23.5,4.6],[5.8,-15.6,5.2]],bone),pDot(5.8,-15.3,3.3,bone),
+    pTaper([[5.8,-14.8,4.8],[5.7,-8,4],[5.6,-3.4,4.4]],bone),
+    pBlob([[7.2,-4],[2.8,-3.2],[-.6,-1.8],[-.4,-.2],[7.4,-.2]],bone),
+    pTaper([[-1,-46.2,5.6],[-1.1,-42.4,5],[-1,-38,5.6]],bone),
+    pBlob([[-11.6,-39.9],[-7.8,-38.5],[-4.2,-37.2],[-1,-38.2],[2.2,-37.2],[5.8,-38.5],[9.6,-39.9],[10.8,-36.9],[9.2,-33.1],[6.8,-30.5],[3.6,-28.3],[-1,-27.5],[-5.6,-28.3],[-8.8,-30.5],[-11.2,-33.1],[-12.8,-36.9]],bone),
+    pBlob(oval(-4.6,-32.4,.9,1.5,-34),"detail"),pBlob(oval(2.6,-32.4,.9,1.5,34),"detail"),
+    ...[-44.6,-41.8].map(y=>pTaper([[-2.8,y,.2],[-1,y+.2,.8],[.8,y,.2]],"hollow",{},in_))];
+
+  /* the arm out to the wheel: the shoulder, an elbow that bends as far as the reach needs
+     (bftBonesReach), the wrist, and a fist round the rim's aft edge, three finger bones wrapped across
+     the rim to the bow and the thumb over the top of them */
+  const sh=[-11.2,-56.9],grip=rimAt(-.5),ua=10.4,fa=9.6;
+  const{elbow:el,wrist:wr}=bftBonesReach(sh[0],sh[1],grip[0]+2.7,grip[1]+.3,ua,fa,1);
+  const fl=Math.hypot(wr[0]-el[0],wr[1]-el[1]),fu=[(wr[0]-el[0])/fl,(wr[1]-el[1])/fl];
+  const G=(dx,dy)=>[grip[0]+dx,grip[1]+dy];
+  const armWheel=[pDot(...sh,3.7,bone),
+    pTaper([[...add(sh,[(el[0]-sh[0])/ua,(el[1]-sh[1])/ua],.4),5.6],[(sh[0]+el[0])/2,(sh[1]+el[1])/2,4.8],[...el,5.2]],bone),
+    pDot(...el,3.1,bone),
+    pTaper([[...el,4.6],[...add(el,fu,fl/2),3.8],[...wr,4.2]],bone),
+    pBlob(oval(...G(1.1,.2),2.3,2.7,8,12),bone),
+    ...[-1.5,0,1.5].map(dy=>pTaper([[...G(1.6,dy-.2),1.75],[...G(-.3,dy-.6),1.6],[...G(-1.7,dy+.3),1.35]],bone)),
+    pTaper([[...G(1.8,-2.2),1.7],[...G(.1,-3.2),1.5],[...G(-1.4,-2.8),1.25]],bone)];
+
+  /* the ribcage: one white cage with the gaps between its ribs drawn in, two a side bowing down to the
+     outside and stopping short of the edge, the breastbone between them and the arch of the lower ribs
+     under it; the shoulders on its top corners, a crease where each ball meets the cage */
+  const gaps=[];
+  for(const y of[-55.8,-50.9])for(const sd of[1,-1])
+    gaps.push(pTaper([[-1+sd*2.3,y,.9],[-1+sd*5.1,y-.35,2.6],[-1+sd*8.1,y+.6,2.5],[-1+sd*10.1,y+2.5,.8]],"hollow",{},in_));
+  const cage=[pTaper([[-1.4,-59.4,4.8],[-1.5,-63.6,4.6]],bone),
+    pBlob([[-8.4,-59.5],[-3.2,-60.6],[1.4,-60.6],[6.6,-59.5],[9.9,-56.5],[11,-51.9],[10.4,-47.3],[8.8,-44.1],[5.8,-43],[2.6,-44.3],[-1,-47.2],[-4.6,-44.3],[-7.8,-43],[-10.8,-44.1],[-12.4,-47.3],[-12.9,-52.1],[-11.8,-56.7]],bone),
+    ...gaps];
+  /* the waving arm: the near shoulder out to the elbow (the forearm and the hand are the joint) */
+  const EL=[23,-52.6];
+  const armUp=[pDot(10.6,-57.3,3.7,bone),pTaper([[11,-56.9,5.6],[16.9,-54.6,4.8],[22.8,-52.6,5.2]],bone),pDot(...EL,3.2,bone)];
+  const creases=[pTaper([[-9.4,-60.2,.25],[-7.8,-58.2,.45],[-7.9,-55.6,.4],[-9.4,-53.6,.25]],"detail"),
+    pTaper([[8.8,-60.6,.25],[7.2,-58.6,.45],[7.3,-56,.4],[8.8,-54,.25]],"detail")];
+
+  /* the skull, in its own frame (its middle at HX,HY): a round cranium turned three-quarters to the
+     bow, so its back is the fuller side and the face is toward -x; the cheekbones and a narrower jaw
+     forward under it. Two dark sockets well under the cap's edge, the bow one narrower for the turn,
+     the nose's upturned heart between them, a smile with three teeth */
+  const HX=-.4,HY=-81.3,H=pts=>pts.map(([x,y,...r])=>[x+HX,y+HY,...r]);
+  const skull=[
+    pBlob(H([[-1,-14.2],[7,-12.6],[12.4,-8],[14.4,-1],[13.5,6],[10.6,11],[5.5,13.8],[-4,14.4],[-11,12.6],[-14.4,7.8],[-15.2,.4],[-13,-7.6],[-8,-12.6]]),bone),
+    pBlob(H([[-12.4,11],[-11.8,15.6],[-8.8,18.4],[-3.8,19.2],[1,18.4],[4.8,16.4],[6.8,12.6],[-2.8,10.4]]),bone),
+    /* the cap: a crown of panels on the dome down to a level band, a button on top and two seams, and
+       a short bill out to the bow over the brow, its old green underbrim showing under its edge */
+    pBlob(H([[-14.2,-6.6],[-14,-10.6],[-10.8,-15.2],[-4,-17.6],[3.4,-17.4],[9.6,-15],[13.6,-10.8],[15.2,-6],[14.6,-4.6],[7.6,-5.6],[-1,-6.4],[-8.8,-6.6]]),"cap"),
+    pBlob(H([[-8.4,-7.6],[-13.2,-8.7],[-16.6,-8.5],[-18.3,-7.3],[-17.2,-5.9],[-13.6,-5.5],[-9.2,-5.9]]),"cap"),
+    pTaper(H([[-10.6,-6.1,.5],[-14.2,-5.95,.75],[-17.4,-6.3,.35]]),"underbrim",{},in_),
+    pTaper(H([[-13.8,-6.8,.35],[-1,-6.6,.5],[14.4,-5.2,.35]]),"seam",{},in_),
+    pTaper(H([[-1.4,-17.4,.5],[-4.4,-12.4,.6],[-6.4,-7.4,.45]]),"seam",{},in_),pTaper(H([[-1.4,-17.4,.45],[2.6,-12.6,.55],[4.6,-6.8,.4]]),"seam",{},in_),
+    pDot(...H([[-1.3,-17.9]])[0],.9,"cap"),
+    /* the face */
+    pBlob(H([[-4.3,1.8],[-3,-1.6],[.5,-2.3],[3.2,-.3],[3.6,3.8],[2.2,6.9],[-.9,7.4],[-3.5,5]]),"eye"),
+    pBlob(H([[-13.9,2.2],[-13,-1.5],[-10.2,-2.1],[-7.5,-.1],[-7,3.9],[-8.4,6.8],[-11.3,7.2],[-13.6,5]]),"eye"),
+    pBlob(H([[-5.6,10.6],[-6.8,11],[-7.1,10],[-5.7,7.7],[-4.4,10],[-4.6,11]]),"nose"),
+    pTaper(H([[-12,12.9,.4],[-9.2,14,.7],[-5.4,14.5,.8],[-1.6,14.2,.7],[2,13.1,.4]]),"grin",{},in_),
+    ...[-8.8,-5.4,-2].map(x=>pTaper(H([[x,12.6,.35],[x+.1,16.2,.35]]),"detail",{capStart:false,capEnd:false}))];
+
+  /* the forearm's two bones, the wrist, an open palm and four fingers spread, the thumb toward his
+     head: waving at the house. Drawn upright from an elbow at (20,-53.3) and set on his elbow leaning
+     6° aft, so even the thumb keeps sky between it and the back of his skull */
+  const lean=6*Math.PI/180,UP=pts=>pts.map(([x,y,...r])=>{const dx=x-20,dy=y+53.3;
+    return[EL[0]+dx*Math.cos(lean)-dy*Math.sin(lean),EL[1]+dx*Math.sin(lean)+dy*Math.cos(lean),...r]});
+  const hand=[pTaper(UP([[20.2,-53.5,5],[20.9,-58.9,4.2],[21.3,-63.9,4.6]]),bone),
+    pTaper(UP([[20.5,-55.9,.5],[20.9,-59.3,.9],[21.05,-62.3,.5]]),"detail"),
+    pDot(...UP([[21.4,-64.7]])[0],2.7,bone),
+    pBlob(UP([[19,-65.1],[18.4,-67.9],[19.3,-70.4],[21.6,-71.2],[23.9,-70.4],[24.6,-67.5],[23.6,-65.1]]),bone),
+    pTaper(UP([[19.6,-69.9,1.9],[18.8,-73.1,1.55],[18.3,-75.3,1.3]]),bone),pTaper(UP([[20.9,-70.5,1.9],[20.6,-74.1,1.55],[20.4,-76.5,1.3]]),bone),
+    pTaper(UP([[22.3,-70.5,1.9],[22.5,-74.1,1.55],[22.6,-76.3,1.3]]),bone),pTaper(UP([[23.5,-69.9,1.85],[24.2,-72.7,1.5],[24.6,-74.7,1.25]]),bone),
+    pTaper(UP([[19.1,-67.9,1.9],[17.9,-69.6,1.55],[17.3,-71.4,1.3]]),bone)];
+
+  /* the gunwale: a still clip over everything below it along the boat's sheer, so it goes behind the
+     hull side. The clip is in his units and never moves; the boat's rock carries it with him */
+  let low=[{parts:legs}];
+  if(cut){const id=`bftBonesGw${++BFT_BONES_N}`,xs=[];for(let x=-30;x<=30;x+=5)xs.push(`${f1(x)} ${f1(bftBonesGunwale(x,k))}`);
+    low=[{open:`<g clip-path="url(#${id})"><clipPath id="${id}"><path d="M -30 -130 L 30 -130 L ${xs.reverse().join(" L ")} Z"/></clipPath>`,pivot:[0,0],layers:low}]}
+  return[{parts:wheel},...low,{parts:[...armWheel,...cage,...armUp,...skull,...creases]},
+    {open:`<g class="bft-bones-wave"${wave?` style="${wave}"`:""}>`,pivot:EL,layers:[{parts:hand}]}];
+}
+
+/* ── the looks ───────────────────────────────────────────────────────────────────────────────
+   Registered in BFT, the cast's own table (which the look tool calls BFT), so they need no change
+   when the file is folded into index.html.
+   "skeleton" is him in the family's boat as the scene draws him: the boat first, inked with its own
+   palette and line (BFT_BOAT_O), then him over it at BFT_BONES_AT with his. The look tool inks a part
+   once per panel with one line, so the boat comes in under him through `extra`, which is told the
+   panel's light but not its scale. look.mjs calls it in a fixed order (the close-up, then noon,
+   golden and night at phone size, then beside the heron), and that order is what says which scale to
+   ink the boat at: if look.mjs ever draws its panels in another order, this has to follow it. It is
+   called just before draw() in each panel, so it hands draw() that scale too. The state (day or
+   night) chooses the bones' glow, and with it their ink (the `o` getter below). rigBftBoat is
+   index.html's */
+let BFT_BONES_LOOK_LAST=null,BFT_BONES_LOOK_K=1.22;
+function bftBonesLookBoat(st,lt){
+  const kind=lt.night?"night":lt.gold?"golden":BFT_BONES_LOOK_LAST==="close"?"noon":BFT_BONES_LOOK_LAST==="night"?"heron":"close";
+  BFT_BONES_LOOK_LAST=kind;
+  const L=BFT.skeleton,[,,bw]=L.box,args=typeof process!=="undefined"?process.argv:[],sc=args.indexOf("--scale");
+  const big=sc>=0?+args[sc+1]:Math.max(1,Math.min(14,620/(bw*L.s)));
+  /* screen px to a boat unit in this panel, which draw() is then handed for the cut at the gunwale */
+  const px=BFT_BONES_LOOK_K=(kind==="close"?big:1.22)*L.s/BFT_BONES_AT.s;
+  const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+  const mix=(a,b,t)=>"#"+hex(a).map((v,i)=>Math.round(v+(hex(b)[i]-v)*t).toString(16).padStart(2,"0")).join("");
+  if(typeof rigBftBoat!=="function")throw new Error("the skeleton captain's look needs rigBftBoat (index.html)");
+  const rig=rigBftBoat(),pal=INK.bftBoat,d=L.dist,p={};
+  for(const[k,v]of Object.entries(pal)){let c=v;
+    if(kind!=="close"&&/^#[0-9a-f]{6}$/i.test(v)&&!["ink","shade","lit"].includes(k)){if(lt.warm)c=mix(c,lt.warm,.3*lt.gold);if(lt.night)c=mix(c,"#15223D",.62*lt.night);c=mix(c,lt.haze,d*.72)}
+    p[k]=c}
+  if(kind!=="close")Object.assign(p,{ink:mix(lt.ink,lt.haze,d*.7),shade:lt.shade,lit:lt.lit,litOp:(pal.litOp??.5)*(lt.night?.55:1)});
+  const k=1/BFT_BONES_AT.s;
+  return `<rect x="-1200" y="${f1(-BFT_BONES_AT.y*k)}" width="2400" height="600" fill="${lt.water||"#7FB2C9"}" opacity=".7"/>`
+    +inkAt(-BFT_BONES_AT.x*k,-BFT_BONES_AT.y*k,k,1,inkRig(rig,p,{s:px,light:kind==="close"?[1,-.5]:lt.light,...(typeof BFT_BOAT_O!=="undefined"?BFT_BOAT_O:{line:.85,heavy:.45,shade:1.2,lit:.8})}));
+}
+/* the states, and his ink in each: the look tool reads `o` after it has called draw(), so the getter
+   hands the glowing bones their own ink, the way the scene does */
+const BFT_BONES_STATES={day:{glow:false},night:{glow:true}};
+let BFT_BONES_LOOK_GLOW=false;
+const bftBonesLook=(box,draw,extra)=>({pal:INK.bftBones,box,s:.1,dist:.04,ground:false,states:BFT_BONES_STATES,
+  get o(){return BFT_BONES_LOOK_GLOW?BFT_BONES_GLOW_O:BFT_BONES_O},
+  css:BFT_BONES_CSS.replace(/\.scene-layer /g,""),draw:st=>{BFT_BONES_LOOK_GLOW=!!st.glow;return draw(st)},...(extra?{extra}:{})});
+/* the boat's box (-15,-21 to 15,3 in boat units) in his units */
+BFT["skeleton"]=bftBonesLook([-209,-201,300,240],st=>rigBftBones({...st,k:BFT_BONES_LOOK_K}),(st,lt)=>bftBonesLookBoat(st,lt));
+/* him alone, legs and all, for the close-up, with the wheel his hand is on and room for the wave */
+BFT["skeleton-alone"]=bftBonesLook([-42,-102,80,104],st=>rigBftBones({...st,cut:false}));
+
 /* ── the scene: arc, sun / moon, marsh horizon ──────── */
 /* The same fish is a mark on the moon line and a visitor to the farm pond. */
 function fishBite(x,y,s,pal,{delay=0,pond=false,tilt=0,offset=0}={}){
@@ -8862,8 +9472,10 @@ function lowcountryScene(c){
   const boatAt=BFT_DOCK_BOAT(tide),rock=clamp(.5+chopK*2.6+(gust-wind)*.04,.5,3.4);
   const boatRig=rigBftBoat();
   const boatSvg=inkRig(boatRig,palAt(INK.bftBoat,.04),{s:k,light:lightAt(dockX+boatAt.x,deckY+boatAt.y-8),...BFT_BOAT_O});
-  const bones=c.halloween&&typeof rigBftBones==="function"&&typeof BFT_BONES_AT!=="undefined"
-    ?inkAt(BFT_BONES_AT.x,BFT_BONES_AT.y,BFT_BONES_AT.s??.1,1,inkRig(rigBftBones(),palAt(INK.bftBones,.04),{s:(BFT_BONES_AT.s??.1)*k,line:.6,heavy:.3,shade:.8,lit:.5,light:lightAt(dockX+boatAt.x,deckY+boatAt.y-8)}),` class="decor" data-decor="skeleton"`):"";
+  /* in October a plastic yard skeleton stands at the helm waiting to go fishing, riding the boat's rock, and
+     waves now and then (not in a storm); he glows a little after dark, the way the plastic ones do */
+  const bonesGlow=sunAltDeg< -6;
+  const bones=c.halloween?inkAt(BFT_BONES_AT.x,BFT_BONES_AT.y,BFT_BONES_AT.s,1,inkRig(rigBftBones({wave:bftBonesWaving({storm,thunder:c.thunder,rainK,code})?phase(BFT_BONES_WAVE):"",glow:bonesGlow,k}),palAt(INK.bftBones,.04),{s:BFT_BONES_AT.s*k,...(bonesGlow?BFT_BONES_GLOW_O:BFT_BONES_O),light:lightAt(dockX+boatAt.x,deckY+boatAt.y-8)}),` class="decor" data-decor="skeleton"`):"";
   const boat=`<g data-prop="boat" transform="translate(${f1(dockX+boatAt.x)} ${f1(deckY+boatAt.y)})">${(PRM?boatSvg:boatSvg.replace('<g class="bft-boat-rock">',`<g class="bft-boat-rock" style="--rk:${rock.toFixed(2)}deg;--rd:${clamp(5.6-chopK*2.6,2.8,5.6).toFixed(1)}s;animation-delay:-${(Date.now()/1000%5).toFixed(1)}s">`)).replace(/<\/g><\/g><\/g>$/,bones+"</g></g></g>")}</g>`;
   const kt=gust*.869,dirX=downwind;
   const PO=BFT_DOCK_POLES,flagPal=palAt(INK.bftFlags,.04);
@@ -8941,9 +9553,13 @@ function lowcountryScene(c){
     (/class="candle flicker"/.test(lantern)?halloMove:halloStill).push(lantern);
     halloStill.push(c.pumpkinAt(dockX+28.6,deckY,1,{w:5.6,h:4.2,seed:8}));
     if(!wet&&!storm&&!(temp<48&&!dark))halloMove.push(c.catAt(dockX+40,deckY+.25).svg);
-    if(c.trickOrTreat)halloStill.push(c.kidAt(dockX+52,deckY).svg);
-    if(typeof rigBftBalloon==="function"&&!storm){const bx=dockX+(typeof BFT_BALLOON_AT!=="undefined"?BFT_BALLOON_AT.x:31),by=deckY+(typeof BFT_BALLOON_AT!=="undefined"?BFT_BALLOON_AT.y:-5.6);
-      halloMove.push(`<g class="decor" data-decor="red-balloon">${look("balloon",{mph:gust,dir:dirX},bx,by)}</g>`)}
+    /* the trick-or-treater stands further up the walkway, out from under the balloon's string */
+    if(c.trickOrTreat)halloStill.push(c.kidAt(dockX+80,deckY).svg);
+    /* the balloon is tied to the third rail post past the dock house (BFT_BALLOON_AT), clear of the
+       palmetto's trunk behind it, leaning on its string as far as the wind says; a party balloon is torn
+       off in a gale, so it is down in a storm and from 35 mph of gust */
+    if(!storm&&gust<35){const bx=dockX+BFT_BALLOON_AT.x,by=deckY+BFT_BALLOON_AT.y;
+      halloMove.push(`<g class="decor" data-decor="red-balloon">${look("balloon",{mph:wind,dir:dirX,light:lightAt(bx,by-20),night:nightK,...(PRM?{}:bftBalloonStyle(wind,gust,dirX))},bx,by)}</g>`)}
   }
   const eyes=c.nightEyes?c.darkEyes([[W*.27,bankY-5,"gold",2.6,27,3],[W*.79,bankY-4.5,"green",2.4,33,17]]):"";
 
