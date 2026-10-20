@@ -509,8 +509,8 @@ Each is a transform or nothing, and each holds perfectly still under reduced mot
   white pumpkin on it, and a big pumpkin either side of the door. `node tools/rig.mjs pumpkin`
   (or `lantern`, `lantern-lit`, `lumina`, `cornshock`, `bale`, `loft-head`, `ghostface`, `bat`, `witch`, `spider`, `trick-or-treater`, `cat`, `sheet-ghost`, `scarecrow`) shows
   each one close up and at phone size.
-- **They keep a pumpkin's own calendar.** Plain until the 24th, then the big ones are carved,
-  because a carved pumpkin in coastal humidity is soft inside a week. The carved face is its
+- **They keep a pumpkin's own calendar.** Plain until the 20th, then the big ones are carved
+  (Josh moved carving day to October 20 2026). The carved face is its
   own role, `carve`, and not `face`: the heron already has a face, and it keeps its outline.
 - **A jack-o'-lantern has to read as one at eight pixels.** Phone size wins over the close-up.
   The face is two eyes and a grin and no nose, so lit or dark it is three marks. The eyes come
@@ -982,7 +982,7 @@ they should.
 **Halloween at Beaufort** is on the same calendar as the other two places (`holidayOn`, `locToday()`), and
 all of it comes down the morning of November 1: the blood moon and the cobweb are shared, the bats keep
 over the oak, the palmettos, the bridge and the steeples, the witch crosses the moon, a pumpkin stands at
-the dock house's river end (carved and lit from the 24th) with a little one at its landward post, the
+the dock house's river end (carved and lit from the 20th) with a little one at its landward post, the
 black cat sits on the walkway, eyes open in the spartina, the trick-or-treater comes out on the walkway on
 Halloween night, a red balloon is tied to the third rail post past the dock house (the nod to "It", `rigBftBalloon`,
 `BFT_BALLOON_AT`, clear of the palmetto's trunk behind it), leaning on its string as far as the wind says,

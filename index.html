@@ -1297,12 +1297,11 @@ const inSeason=(d,r)=>{if(!r)return false;const md=mdOf(d);return r[0]<=r[1]?md>
 /* The scenes dress for the holidays the way the family does: the decorations go out on a date
    and come down the morning after the holiday passes. A window is a pair of month-days on the
    location's own calendar, read the way the boat season is. Halloween's pumpkins go out on the
-   first of October and are carved for the last week, because a carved pumpkin on the coast
-   is soft inside a week. On the night itself a trick-or-treater comes, from sunset, when the barn
+   first of October and are carved from the 20th. On the night itself a trick-or-treater comes, from sunset, when the barn
    lamps and the candles are lit (the small hours before dawn on the 31st are the 30th's night, so
    the place's own clock has to be past noon), and stays in when it rains: a drizzle does not keep a kid in,
    rain and anything heavier does, and so do snow, ice and a storm. */
-const HOLIDAYS=[{id:"halloween",window:["10-01","10-31"],carved:"10-24",trickOrTreat:"10-31"}];
+const HOLIDAYS=[{id:"halloween",window:["10-01","10-31"],carved:"10-20",trickOrTreat:"10-31"}];
 const holidayOn=d=>HOLIDAYS.find(h=>inSeason(d,h.window))||null;
 const trickOrTreating=(hol,d,sunAlt,code,hour)=>!!hol?.trickOrTreat&&mdOf(d)===hol.trickOrTreat&&hour>=12&&sunAlt< -.83&&(!isWet(code)||[51,53,55].includes(code));
 /* Halloween's moon, Josh's pick (October 3 2026: "a creepy blood moon ... or harvest moon"). For
@@ -9065,7 +9064,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     }
     /* Halloween at the barn door, measured off the barn. A corn shock stands at the corner, a
        straw bale at its foot with the small white pumpkin on it, clear of the window, and a big
-       pumpkin on the ground either side of the door, carved for the last week. They are not a
+       pumpkin on the ground either side of the door, carved from the 20th. They are not a
        pair: the left one is bigger and a step nearer, the right one smaller and back under its
        window. Each lights the doorstep, and the left one the end of the bale, the white pumpkin
        and the shock above the bale's shadow */
@@ -9456,7 +9455,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
   const dx=W*.8;
   const dock=propAt(propDock(),{wood:"#7A5A48",piling:"#5E4638"},dx,base-5,1,.04)
     +`<g fill="${lineC}" opacity=".16">${[dx-25,dx-6,dx+14].map((p,i)=>`<rect x="${(p-.6).toFixed(1)}" y="${(base+13.2+i*1.5-(i===1?1:0)).toFixed(1)}" width="1.2" height="${5+i}"/>`).join("")}</g>`;
-  /* Halloween on the dock: a pumpkin at each end, and for the last week the big one is carved.
+  /* Halloween on the dock: a pumpkin at each end, and from the 20th the big one is carved.
      Measured off the dock, not the frame. The middle is the cormorant's. Drying its wings on the
      middle piling it reaches from 20 units left of the dock's centre to 9 right, so each pumpkin
      stands at an end, clear of it */

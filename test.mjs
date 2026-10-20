@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v102/);
+  assert.match(worker, /mbwx-shell-v103/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -1448,8 +1448,8 @@ test("the scenes dress for the holidays and take it all down when they pass", as
   // they come down the morning after
   assert.equal(on("2026-11-01T00:00"), null);
   assert.equal(on("2027-10-15T12:00"), "halloween");
-  // the pumpkins go out plain and are carved for the last week
-  assert.equal(ctx.holidayOn(new Date("2026-10-24T09:00")).carved, "10-24");
+  // the pumpkins go out plain and are carved from the 20th
+  assert.equal(ctx.holidayOn(new Date("2026-10-20T09:00")).carved, "10-20");
   // the gate reads the place's own date string, as the boat season does, never the shifted wall
   // clock, which runs an hour slow in the small hours of November 1 2026 when the clocks go back
   assert.match(html, /const today=locToday\(\),hol=holidayOn\(today\),halloween=hol\?\.id==="halloween";/);
