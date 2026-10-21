@@ -166,14 +166,25 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 /* spanish moss hangs, so it pivots from the top and swings further than what holds it */
 .moss{transform-box:fill-box;transform-origin:50% 0;animation:sway var(--md,7s) ease-in-out infinite alternate}
 /* Beaufort's layers (lowcountryScene), laid over the still picture so WebKit repaints only what moves:
-   the moss on its own, the still oak and the dock in front of it, and everything else that moves; and the
-   joints its moving parts turn at: the palmetto crowns, the boat, the flag and the sock */
+   the moss on its own, the still oak and the dock in front of it, the boxes over them (the water's band, and
+   the palmetto crowns and the boat, which turn whole), and everything else that moves; and the joints the
+   flag, the sock, the balloon and the skeleton's wave turn at */
 .scene .scene-layer{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;will-change:transform}
-.scene-layer :is(.bft-palm-crown,.bft-palm-frond-a,.bft-palm-frond-b,.bft-boat-rock,.bft-flag,.bft-sock,.bft-sock-tail,.bft-balloon,.bft-bones-wave){transform-box:view-box;transform-origin:0 0}
-.scene-layer :is(.bft-palm-crown,.bft-palm-frond-a,.bft-palm-frond-b)[style]{animation:bftTurn var(--md,6s) ease-in-out infinite alternate}
+/* the parts that turn whole, the palmetto crowns and the boat: each a box placed in the scene's units, as
+   fractions of the frame, whose drawing is still and which turns about its joint, so WebKit hands the turn
+   to the compositor and repaints nothing. A box in a box is the same size as its parent */
+.scene .scene-lift{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;container-type:size;overflow:hidden}
+/* only Beaufort has boxes; empty, at the other places, the container is not there at all, because even empty it
+   moved a pixel of the coast's still picture under reduced motion */
+.scene .scene-lift:empty{display:none}
+.scene-lift .lift{position:absolute;overflow:hidden}
+.scene-lift .lift>.lift{position:absolute;left:0;top:0;width:100%;height:100%}
+/* a drawing runs on past the frame inside its box, and the frame is cut once, here, where it does not turn: cut
+   by its own sheet, the third palmetto lost a turning sliver at the right edge of the screen as it swayed */
+.scene-lift .lift>svg{position:absolute;display:block;overflow:visible}
+@keyframes bftRockLift{from{transform:rotate(calc(var(--rk,1deg) * -1)) translateY(var(--rty,.25px))}to{transform:rotate(var(--rk,1deg)) translateY(calc(var(--rty,.25px) * -1))}}
+.scene-layer :is(.bft-flag,.bft-sock,.bft-sock-tail,.bft-balloon),.scene-lift .bft-bones-wave{transform-box:view-box;transform-origin:0 0}
 @keyframes bftTurn{from{transform:rotate(var(--sway-neg,-.6deg))}to{transform:rotate(var(--sway,.6deg))}}
-.scene-layer .bft-boat-rock[style]{animation:bftRock var(--rd,4s) ease-in-out infinite alternate}
-@keyframes bftRock{from{transform:rotate(calc(var(--rk,1deg) * -1)) translateY(.25px)}to{transform:rotate(var(--rk,1deg)) translateY(-.25px)}}
 .scene-layer .bft-flag[style]{animation:bftFlag var(--fd,1.4s) ease-in-out infinite alternate}
 @keyframes bftFlag{from{transform:skewY(calc(var(--fs,2deg) * -1))}to{transform:skewY(var(--fs,2deg))}}
 .scene-layer :is(.bft-sock,.bft-sock-tail)[style]{animation:bftFlutter var(--fd,1.6s) ease-in-out infinite alternate}
@@ -181,7 +192,7 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes bftFlyover{0%{transform:translateX(0);opacity:1}7%{transform:translateX(var(--j1,420px));opacity:1}7.01%,100%{transform:translateX(var(--j1,420px));opacity:0}}
 /* Halloween at Beaufort: the red balloon swings about its tie on the rail, the skeleton at the helm waves */
 @keyframes bftBalloonSway{0%,100%{transform:rotate(var(--bl,-3deg))}34%{transform:rotate(var(--bp,3deg))}52%{transform:rotate(calc(var(--bp,3deg) * .3))}70%{transform:rotate(calc(var(--bp,3deg) * .65))}}
-.scene-layer .bft-bones-wave[style]{animation:bftBonesWave 24s ease-in-out infinite}
+.scene-lift .bft-bones-wave[style]{animation:bftBonesWave 24s ease-in-out infinite}
 @keyframes bftBonesWave{0%,78%,100%{transform:rotate(0)}81%{transform:rotate(20deg)}84%{transform:rotate(-6deg)}87%{transform:rotate(20deg)}90%{transform:rotate(-6deg)}93%{transform:rotate(10deg)}96%{transform:rotate(0)}}
 @keyframes bftFlutter{from{transform:rotate(calc(var(--fa,1.5deg) * -1))}to{transform:rotate(var(--fa,1.5deg))}}
 .flight-wing{transform-box:fill-box;animation:wingBeat var(--fd,7.4s) ease-in-out infinite}
@@ -980,7 +991,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   <p class="verdict" id="verdict">Reading the sky…</p>
   <div class="chips" id="chips"></div>
   <div class="nowcast" id="nowcast"><span id="ncText"></span><span class="nc-bars" id="ncBars"></span></div>
-  <div class="scene"><svg id="sceneSvg" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-label="Sun and moon over the marsh horizon"></svg><svg id="sceneSky" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneMoss" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneNear" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneFx" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg></div>
+  <div class="scene"><svg id="sceneSvg" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-label="Sun and moon over the marsh horizon"></svg><svg id="sceneSky" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneMoss" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneNear" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><div id="sceneLift" class="scene-lift" aria-hidden="true"></div><svg id="sceneFx" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg></div>
   <div class="cobweb" id="cobweb" aria-hidden="true" hidden></div>
 </header>
 
@@ -7579,7 +7590,7 @@ BFT["balloon-bow"]={pal:INK.bftBalloon,box:[-16,-12,32,30],s:.1,dist:.04,o:BFT_B
 
    The waving forearm is its own joint at the elbow (bft-bones-wave): a slow wave now and then, the
    hand swung out and back twice and a long rest, phased off the wall clock, and still, hand up,
-   under reduced motion (BFT_BONES_CSS, which the scene's style needs, beside its bftRock). That is
+   under reduced motion (BFT_BONES_CSS, which the scene's style needs, beside its bftRockLift). That is
    the holiday's licence the bats and the witch have: motion for fun, a transform only, and the
    weather still runs it (bftBonesWaving): he holds his hand up still in a storm, under thunder, in
    anything heavier than light rain, in freezing rain and in heavy snow, the witch's own gates. He
@@ -7615,7 +7626,7 @@ const BFT_BONES_WHEEL=[2.42,-5.2];
    The scene phases it off the wall clock, rigBftBones({wave:phase(BFT_BONES_WAVE)}), and passes no
    style under reduced motion or in weather he would not wave in, which leaves the joint still */
 const BFT_BONES_WAVE=24;
-const BFT_BONES_CSS=`.scene-layer .bft-bones-wave[style]{animation:bftBonesWave ${BFT_BONES_WAVE}s ease-in-out infinite}
+const BFT_BONES_CSS=`.scene-lift .bft-bones-wave[style]{animation:bftBonesWave ${BFT_BONES_WAVE}s ease-in-out infinite}
 @keyframes bftBonesWave{0%,78%,100%{transform:rotate(0)}81%{transform:rotate(20deg)}84%{transform:rotate(-6deg)}87%{transform:rotate(20deg)}90%{transform:rotate(-6deg)}93%{transform:rotate(10deg)}96%{transform:rotate(0)}}`;
 /* whether he waves: the witch's gates, less the dark and the fog, which only keep her out of the sky.
    A storm, thunder overhead, rain from rainK .65 up, freezing rain (66, 67) and heavy snow (75, 86)
@@ -7796,7 +7807,7 @@ const BFT_BONES_STATES={day:{glow:false},night:{glow:true}};
 let BFT_BONES_LOOK_GLOW=false;
 const bftBonesLook=(box,draw,extra)=>({pal:INK.bftBones,box,s:.1,dist:.04,ground:false,states:BFT_BONES_STATES,
   get o(){return BFT_BONES_LOOK_GLOW?BFT_BONES_GLOW_O:BFT_BONES_O},
-  css:BFT_BONES_CSS.replace(/\.scene-layer /g,""),draw:st=>{BFT_BONES_LOOK_GLOW=!!st.glow;return draw(st)},...(extra?{extra}:{})});
+  css:BFT_BONES_CSS.replace(/\.scene-lift /g,""),draw:st=>{BFT_BONES_LOOK_GLOW=!!st.glow;return draw(st)},...(extra?{extra}:{})});
 /* the boat's box (-15,-21 to 15,3 in boat units) in his units */
 BFT["skeleton"]=bftBonesLook([-209,-201,300,240],st=>rigBftBones({...st,k:BFT_BONES_LOOK_K}),(st,lt)=>bftBonesLookBoat(st,lt));
 /* him alone, legs and all, for the close-up, with the wheel his hand is on and room for the wave */
@@ -8814,7 +8825,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
   requestAnimationFrame(()=>{
   if(sceneGen!==RENDER_GEN)return;
   /* the moving layer is Beaufort's alone; every other scene draws in one sheet */
-  if(LOC.scene!=="lowcountry")for(const id of ["sceneSky","sceneMoss","sceneNear","sceneFx"])document.getElementById(id).innerHTML="";
+  if(LOC.scene!=="lowcountry")for(const id of ["sceneSky","sceneMoss","sceneNear","sceneLift","sceneFx"])document.getElementById(id).innerHTML="";
   if(LOC.scene==="front-range"){
     /* ── Denver: high plains foreground, the Front Range, cottonwood and city edge ── */
     const ink=dark?"#07161B":"#173029",base=GY+10,g=mulberry(5280);
@@ -9746,9 +9757,34 @@ function lowcountryScene(c){
   const look=(key,st,x,y,{flip=1,d,keep,attrs="",scale=1,o={}}={})=>{const L=BFT[key];if(!L)return"";
     const s=(L.s??1)*scale;
     return inkAt(x,y,s,flip,inkRig(asLayers(L.draw(st||{})),palAt(L.pal,d??L.dist??.1,keep),{s:s*k,flip,light:lightAt(x,y-20),...(L.o||{}),...o}),attrs)};
-  /* the moss and the crowns sway with the wind, each on its own beat, off the wall clock */
-  const beats=(svg,cls,amtK,seed)=>{const r=mulberry(seed);return PRM?svg:svg.replace(new RegExp(`<g class="${cls}"`,"g"),()=>{const amt=swayAmt*amtK*(.8+r()*.5);
-    return `<g class="${cls}" style="--sway:${amt.toFixed(2)}deg;--sway-neg:${(-amt).toFixed(2)}deg;--md:${(swayDur*(.7+r()*.55)).toFixed(1)}s;animation-delay:-${((Date.now()/1000+r()*9)%9).toFixed(1)}s"`})};
+  /* the moss and the crowns sway with the wind, each on its own beat, off the wall clock. A beat is three
+     draws, the throw, the time and the delay, so the crowns' boxes (beatsOf) turn on the very beats the
+     crowns had when they were groups on the moving layer */
+  const beatOf=(r,amtK)=>{const amt=swayAmt*amtK*(.8+r()*.5),md=swayDur*(.7+r()*.55),dl=(Date.now()/1000+r()*9)%9;return{amt,md,dl}};
+  const beats=(svg,cls,amtK,seed)=>{const r=mulberry(seed);return PRM?svg:svg.replace(new RegExp(`<g class="${cls}"`,"g"),()=>{const b=beatOf(r,amtK);
+    return `<g class="${cls}" style="--sway:${b.amt.toFixed(2)}deg;--sway-neg:${(-b.amt).toFixed(2)}deg;--md:${b.md.toFixed(1)}s;animation-delay:-${b.dl.toFixed(1)}s"`})};
+  const beatsOf=(seed,n,amtK)=>{const r=mulberry(seed);return Array.from({length:n},()=>beatOf(r,amtK))};
+  /* ── what turns whole goes in a box of its own. WebKit repaints an SVG sheet whole whenever anything in it
+     moves, and the sheet's cost is what it holds: on October 21 2026, with only the flag fluttering, the old
+     moving layer still cost most of Beaufort's graphics work, because the palmettos' crowns and the boat were
+     in it. A box (#sceneLift) is placed in the scene's units, as fractions of the frame, so it sits exactly where
+     the drawing did at every width; the drawing in it is still, in the scene's own coordinates and line weights,
+     and the box turns about the drawing's joint, which WebKit leaves to the compositor and repaints nothing */
+  const partsOf=L=>L.flatMap(l=>l.parts||partsOf(l.layers||[]));
+  const boxOf=(layers,dx,dy,m=3,also=null)=>{const ds=partsOf(layers).map(p=>p.d);if(!ds.length)return null;let[bx,by,bw,bh]=pathBox(ds);
+    if(also){const x1=Math.max(bx+bw,also[0]+also[2]),y1=Math.max(by+bh,also[1]+also[3]);bx=Math.min(bx,also[0]);by=Math.min(by,also[1]);bw=x1-bx;bh=y1-by}
+    const x0=Math.floor((dx+bx-m)*10)/10,y0=Math.floor((dy+by-m)*10)/10;return[x0,y0,Math.ceil((dx+bx+bw+m-x0)*10)/10,Math.ceil((dy+by+bh+m-y0)*10)/10]};
+  const pct=v=>(v*100).toFixed(4)+"%",origin=(b,p)=>`transform-origin:${pct((p[0]-b[0])/b[2])} ${pct((p[1]-b[1])/b[3])}`;
+  /* the drawing in a box is the whole frame's, laid over the scene's other sheets and seen through the box.
+     It is placed in the frame's own width and height (cqw, cqh), because placed as a share of its box the
+     browser's rounding of the box is multiplied by the frame's size over the box's, and the drawing landed up
+     to a third of a pixel off the picture under it; the shares stay as the fallback for an older browser. It
+     keeps the sheets' own fit of the frame to the box, as their sheets do */
+  const liftSvg=(b,inner)=>`<svg viewBox="0 0 ${W} ${H}" style="left:${pct(-b[0]/b[2])};top:${pct(-b[1]/b[3])};width:${pct(W/b[2])};height:${pct(H/b[3])};left:${(-b[0]/W*100).toFixed(4)}cqw;top:${(-b[1]/H*100).toFixed(4)}cqh;width:100cqw;height:100cqh">${inner}</svg>`;
+  const liftAt=(b,inner,p,anim="")=>`<div class="lift" style="left:${pct(b[0]/W)};top:${pct(b[1]/H)};width:${pct(b[2]/W)};height:${pct(b[3]/H)}${p?";"+origin(b,p):""}${anim?";"+anim:""}">${inner}</div>`;
+  /* a box inside a box, the same size, turning on its own joint inside its parent's turn */
+  const liftIn=(b,inner,p,anim="")=>`<div class="lift" style="${origin(b,p)}${anim?";"+anim:""}">${inner}</div>`;
+  const turn=bt=>PRM?"":`--sway:${bt.amt.toFixed(2)}deg;--sway-neg:${(-bt.amt).toFixed(2)}deg;animation:bftTurn ${bt.md.toFixed(1)}s ease-in-out -${bt.dl.toFixed(1)}s infinite alternate`;
 
   /* ── the far shore, seen from the waterway east of the bridge: Lady's Island's low wood on the left, and
      on the right, beyond the bridge's town end, Beaufort's waterfront oaks with St. Helena's green spire and
@@ -9990,10 +10026,19 @@ function lowcountryScene(c){
   const palmInk=(x,h,layers,i)=>{const pk=palmK[i],pal=palmPal(i);if(pk)pal.lit=mix(blRim,"#FFE2A8",.3);
     return inkAt(x,bankY-.6,1,1,inkRig(layers,pal,{s:k,light:pk?[sunXY[0]-x,sunXY[1]-(bankY-h*.8)]:lightAt(x,bankY-h),...BFT_PALM_O,...(pk?{lit:1+1.7*pk}:{})}))};
   const palmTrunks=PALMS.map((P,i)=>`<g data-prop="palmetto"${palmK[i]?` data-backlight="${palmK[i].toFixed(2)}"`:""}>${palmInk(P[0],P[2],[palmRig(P)[1]],i)}</g>`).join("");
-  /* the crowns always move with the wind; the fronds in them flutter on their own once it gusts twenty */
-  const palmCrowns0=beats(PALMS.map((P,i)=>{const L=palmRig(P);
-    return palmInk(P[0],P[2],[L[0]],i)+`<g clip-path="url(#fxPalmTop)">${palmInk(P[0],P[2],[L[1]],i)}</g>`+palmInk(P[0],P[2],[L[2]],i)}).join(""),"bft-palm-crown",.55,61);
-  const palmCrowns=gust>=20?beats(beats(palmCrowns0,"bft-palm-frond-a",1.1,62),"bft-palm-frond-b",1.1,63):palmCrowns0;
+  /* the crowns always move with the wind; the fronds in them flutter on their own once it gusts twenty. Each
+     palm is three boxes over the water, back to front: its back fronds, a copy of its trunk's top standing in
+     front of them (the trunk itself is on the still picture), cut off at the foot of its box well above the
+     dock, and its front fronds, the head and the skirt each in a box of its own inside the crown's, turning on
+     their own joint. Palm by palm, so the nearer palm's back fronds still go over the farther one's front */
+  const crownBeat=beatsOf(61,6,.55),headBeat=beatsOf(62,3,1.1),skirtBeat=beatsOf(63,3,1.1);
+  const palmCrowns=PALMS.map((P,i)=>{const L=palmRig(P),[x,,h]=P,x0=+f1(x),y0=+f1(bankY-.6);
+    const at=([jx,jy])=>[x0+ +f1(jx),y0+ +f1(jy)],back=boxOf([L[0]],x0,y0),top=boxOf([L[1]],x0,y0),front=boxOf([L[2]],x0,y0);
+    let out=back?liftAt(back,liftSvg(back,palmInk(x,h,[L[0]],i)),at(L[0].pivot),turn(crownBeat[2*i])):"";
+    if(top){const t=palmInk(x,h,[L[1]],i);if(top[1]<deckY-16)out+=liftAt(top,liftSvg(top,`<clipPath id="liftPalmTop${i}"><rect x="0" y="0" width="${W}" height="${f1(deckY-16)}"/></clipPath><g clip-path="url(#liftPalmTop${i})">${t}</g>`))}
+    const halves=L[2].layers.map(F=>[palmInk(x,h,[{...L[2],layers:[F]}],i),at(F.pivot)]);
+    if(front)out+=liftAt(front,halves.map(([d,p],j)=>liftIn(front,liftSvg(front,d),p,gust>=20?turn((j?skirtBeat:headBeat)[i]):"")).join(""),at(L[2].pivot),turn(crownBeat[2*i+1]));
+    return out}).join("");
 
   /* ── the dock: the walkway from the right edge to the dock house, the float riding the tide below. The
      boat alongside rocks with the chop, and the SC flag on the ridge and the windsock on the float's guide
@@ -10010,7 +10055,13 @@ function lowcountryScene(c){
      waves now and then (not in a storm); he glows a little after dark, the way the plastic ones do */
   const bonesGlow=sunAltDeg< -6;
   const bones=c.halloween?inkAt(BFT_BONES_AT.x,BFT_BONES_AT.y,BFT_BONES_AT.s,1,inkRig(rigBftBones({wave:bftBonesWaving({storm,thunder:c.thunder,rainK,code})?phase(BFT_BONES_WAVE):"",glow:bonesGlow,k}),palAt(INK.bftBones,.04),{s:BFT_BONES_AT.s*k,...(bonesGlow?BFT_BONES_GLOW_O:BFT_BONES_O),light:lightAt(dockX+boatAt.x,deckY+boatAt.y-8)}),` class="decor" data-decor="skeleton"`):"";
-  const boat=`<g data-prop="boat" transform="translate(${f1(dockX+boatAt.x)} ${f1(deckY+boatAt.y)})">${(PRM?boatSvg:boatSvg.replace('<g class="bft-boat-rock">',`<g class="bft-boat-rock" style="--rk:${rock.toFixed(2)}deg;--rd:${clamp(5.6-chopK*2.6,2.8,5.6).toFixed(1)}s;animation-delay:-${(Date.now()/1000%5).toFixed(1)}s">`)).replace(/<\/g><\/g><\/g>$/,bones+"</g></g></g>")}</g>`;
+  /* the boat rocks whole in a box of its own (see the crowns' boxes above), with the skeleton riding in it and
+     room in it for his wave; the rock's quarter unit of lift is a share of the box's own height */
+  const boatXY=[+f1(dockX+boatAt.x),+f1(deckY+boatAt.y)];
+  const bonesBox=c.halloween?(()=>{const A=BFT_BONES_AT,[bx,by,bw,bh]=pathBox(partsOf(rigBftBones({k})).map(p=>p.d));return[A.x+bx*A.s,A.y+by*A.s,bw*A.s,bh*A.s]})():null;
+  const boatBox=boxOf(boatRig,boatXY[0],boatXY[1],bonesBox?5:3,bonesBox);
+  const boat=liftAt(boatBox,liftSvg(boatBox,`<g data-prop="boat" transform="translate(${f1(dockX+boatAt.x)} ${f1(deckY+boatAt.y)})">${boatSvg.replace(/<\/g><\/g><\/g>$/,bones+"</g></g></g>")}</g>`),boatXY,
+    PRM?"":`--rk:${rock.toFixed(2)}deg;--rty:${pct(.25/boatBox[3])};animation:bftRockLift ${clamp(5.6-chopK*2.6,2.8,5.6).toFixed(1)}s ease-in-out -${(Date.now()/1000%5).toFixed(1)}s infinite alternate`);
   const kt=gust*.869,dirX=downwind;
   const PO=BFT_DOCK_POLES,flagPal=palAt(INK.bftFlags,.04);
   const fm=bftFlagMotion(wind,gust),sm=bftSockMotion(wind*.869,kt);
@@ -10213,15 +10264,16 @@ function lowcountryScene(c){
     flies+=`<g class="wildlife ff" style="--fy:${(-2-fr()*4).toFixed(1)}px;animation-duration:${(3.5+fr()*3.5).toFixed(1)}s;animation-delay:-${(fr()*6).toFixed(1)}s"><circle cx="${f1(cx)}" cy="${f1(cy)}" r="5" fill="url(#flyglow)"/><circle cx="${f1(cx)}" cy="${f1(cy)}" r="1.2" fill="#F8F7B0"/></g>`}}
   const tex=texOn?"url(#paper)":"";
 
-  /* Two layers. WebKit, which draws every iPhone browser, repaints an SVG as one sheet, and repaints all
+  /* Layers. WebKit, which draws every iPhone browser, repaints an SVG as one sheet, and repaints all
      of it under anything that moves; this picture's oak, moss and bridge are too heavy to paint sixty
      times a second (it ran at 33 frames on a WKWebView, where the marsh runs at 60). So the still
-     picture and the moss, which is woven through the oak's limbs and leaves, are #sceneSvg, and
-     everything else that moves (the clouds, the water's ripples and rings, the mist, the palmetto
-     crowns, the boat, the flag and the windsock, the grass, the birds in the sky, the bats and the
-     witch, the lit pumpkins, the fireflies) is #sceneFx, a layer of its own laid over it. Each only
-     repaints itself. Nothing on the moving layer is behind anything on the still one */
-  const svg=document.getElementById("sceneSvg"),skyL=document.getElementById("sceneSky"),mossL=document.getElementById("sceneMoss"),nearL=document.getElementById("sceneNear"),fx=document.getElementById("sceneFx");
+     picture is #sceneSvg, and over it, back to front: what moves in the sky (#sceneSky), the moss
+     (#sceneMoss), the still oak and dock in front of it (#sceneNear), the boxes (#sceneLift: a band over
+     the water for its ripples, rings and mist, and the palmettos' crowns and the boat, each a box of its
+     own that the compositor turns), and everything else that moves (#sceneFx: the flag and the windsock, the
+     Halloween dock, the eyes, the crab, the grass, the cloud shadows, the perched eagle, the
+     fireflies). Each only repaints itself. Nothing on a higher layer is behind anything on a lower one */
+  const svg=document.getElementById("sceneSvg"),skyL=document.getElementById("sceneSky"),mossL=document.getElementById("sceneMoss"),nearL=document.getElementById("sceneNear"),liftL=document.getElementById("sceneLift"),fx=document.getElementById("sceneFx");
   for(const l of [svg,skyL,mossL,nearL,fx])l.setAttribute("viewBox",`0 0 ${W} ${H}`);
   svg.innerHTML=`
     <defs>
@@ -10274,18 +10326,20 @@ function lowcountryScene(c){
     ${gator}
     ${bloom}
     ${sunTimes}`;
+  /* the water's ripples, rings and mist move all the time, under the crowns and the boat, so they are a band of
+     their own over the river, as small a sheet as they need, which repaints only itself */
+  const waterBox=[0,Math.floor(yFar-14),W,H-Math.floor(yFar-14)];
+  liftL.innerHTML=liftAt(waterBox,liftSvg(waterBox,`
+    ${bk?"":glint}${waterFx}
+    ${mist}`),null,"will-change:transform")+palmCrowns+boat;
   fx.innerHTML=`
     <defs>
       <linearGradient id="blade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${bladeC[0]}"/><stop offset=".45" stop-color="${bladeC[1]}"/><stop offset="1" stop-color="${bladeC[2]}"/></linearGradient>
       <radialGradient id="flyglow"><stop offset="0" stop-color="#F8F7B0" stop-opacity=".7"/><stop offset=".45" stop-color="#F8F7B0" stop-opacity=".18"/><stop offset="1" stop-color="#F8F7B0" stop-opacity="0"/></radialGradient>
       <radialGradient id="cshade"><stop offset="0" stop-color="#0A1E26" stop-opacity=".55"/><stop offset="1" stop-color="#0A1E26" stop-opacity="0"/></radialGradient>
-      <clipPath id="fxPalmTop"><rect x="0" y="0" width="${W}" height="${f1(deckY-16)}"/></clipPath>
       ${c.candles?c.candleDefs:""}${c.hallowDefs||""}
     </defs>
-    ${bk?"":glint}${waterFx}
-    ${mist}
-    ${palmCrowns}
-    ${boat}${flag}${sock}
+    ${flag}${sock}
     ${halloMove.join("")}
     ${eyes}
     ${crab}
@@ -13639,16 +13693,15 @@ function goldenHour(altDeg,now,dark,root){
   const key=rising?"am":"pm", theme=dark?"dark":"lit";
   const tint=GOLD[key][theme], base=PAPER[theme];
   /* the paper only leans; the ink never moves, so nothing gets harder to read */
-  root.setProperty("--paper",mix(base.paper,tint,k*.26));
-  root.setProperty("--wash",mix(base.wash,tint,k*.34));
-  root.setProperty("--line",mix(base.line,tint,k*.42));
+  const paper={paper:mix(base.paper,tint,k*.26),wash:mix(base.wash,tint,k*.34),line:mix(base.line,tint,k*.42)};
+  for(const v of ["paper","wash","line"])root.setProperty("--"+v,paper[v]);
   /* Morning light is thinner and sits higher; evening is heavier and fills the room. Neither
      is allowed to fall to nothing before the bottom of the screen, or the wash stops reading
      as light in the room and starts reading as a gradient someone drew on the page. */
   const top=(rising?.34:.46)*k, mid=(rising?.17:.25)*k, base2=(rising?.09:.15)*k;
   gw.style.background=`linear-gradient(180deg,${hexA(tint,top)} 0%,${hexA(tint,mid)} ${rising?42:52}%,${hexA(tint,base2)} 100%)`;
   gw.style.opacity="1";
-  return{k,rising};
+  return{k,rising,paper};
 }
 
 /* ── main render ────────────────────────────────────── */
@@ -14325,14 +14378,13 @@ function render(d,live,savedAt=0){
   root.setProperty("--rain",lum(stops[1])>.13?"rgba(22,48,64,.55)":"rgba(198,225,238,.66)");
   root.setProperty("--chip-bg",bright?"rgba(11,37,48,.13)":"rgba(238,246,249,.17)");
   root.setProperty("--hl",bright?(veil>.6?"#8A2A0C":"#A93A16"):"#FFC09B");
-  goldenHour(altDeg,now,dark,root);
+  const gold=goldenHour(altDeg,now,dark,root);
+  /* the paper the daylight leans: golden hour's, or the light theme's own. Worked out here, never read back
+     with getComputedStyle, which made the browser restyle the whole page, Beaufort's thousands of picture
+     nodes with it, just after the sky's colours had changed and just before the picture is drawn again */
   if(!dark){
-    const day=daylightPaper(stops,LOC.scene),blend=daylightBlend(altDeg);
-    const lit=getComputedStyle(document.documentElement);
-    for(const key of ["paper","wash","line"]){
-      const prop="--"+key,base=lit.getPropertyValue(prop).trim();
-      root.setProperty(prop,mix(base,day[key],blend));
-    }
+    const day=daylightPaper(stops,LOC.scene),blend=daylightBlend(altDeg),lit=gold?.paper||PAPER.lit;
+    for(const key of ["paper","wash","line"])root.setProperty("--"+key,mix(lit[key],day[key],blend));
   }
 
   document.getElementById("themeColor").setAttribute("content",stops[0]);
@@ -15239,12 +15291,10 @@ function paintLoadMark(){
   root.setProperty("--rain",lum(stops[1])>.13?"rgba(22,48,64,.55)":"rgba(198,225,238,.66)");
   root.setProperty("--chip-bg",bright?"rgba(11,37,48,.13)":"rgba(238,246,249,.17)");
   root.setProperty("--hl",bright?(veil>.6?"#8A2A0C":"#A93A16"):"#FFC09B");
-  goldenHour(altDeg,now,dark,root);
+  const gold=goldenHour(altDeg,now,dark,root);
   if(!dark){
-    const day=daylightPaper(stops,LOC.scene),blend=daylightBlend(altDeg),got=getComputedStyle(rootEl);
-    for(const key of ["paper","wash","line"]){
-      const prop="--"+key;root.setProperty(prop,mix(got.getPropertyValue(prop).trim(),day[key],blend));
-    }
+    const day=daylightPaper(stops,LOC.scene),blend=daylightBlend(altDeg),lit=gold?.paper||PAPER.lit;
+    for(const key of ["paper","wash","line"])root.setProperty("--"+key,mix(lit[key],day[key],blend));
   }
   document.getElementById("themeColor").setAttribute("content",stops[0]);
   const ink=dark?"#C9D4DC":"#2A2130";
@@ -15270,7 +15320,7 @@ function paintLoadingState(){
   for(const id of ["feels","hiNow","loNow"])document.getElementById(id).textContent="—";
   document.getElementById("feelsRow").hidden=false;
   document.getElementById("verdict").textContent="Reading the sky…";
-  for(const id of ["chips","skyFx","rainFx","sceneSvg","sceneSky","sceneMoss","sceneNear","sceneFx","hourlySvg","hrLabels","weekRows","weekSvg","moonTxt","uvSvg","moonSvg","yearSvg"])
+  for(const id of ["chips","skyFx","rainFx","sceneSvg","sceneSky","sceneMoss","sceneNear","sceneLift","sceneFx","hourlySvg","hrLabels","weekRows","weekSvg","moonTxt","uvSvg","moonSvg","yearSvg"])
     document.getElementById(id).innerHTML="";
   document.getElementById("weekRows").style.minHeight="";
   SCENE_KEY="";SCENE_META=null;RAIN_KEY="";

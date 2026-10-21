@@ -53,6 +53,14 @@ const CASES = [
   { name: "bft-sun-clear", loc: "bft", when: "2026-10-16T10:45:00", note: "the same morning, the sun clear of the crown",
     o: { baseTemp: 72, nowTemp: 76, feels: 76, rh: 70, isDay: 1, code: 1, cloud: 12, nowWind: 3, nowDir: 220, nowGust: 6, nowUv: 3.6, uvMax: 5, windAmp: 4, gustAmp: 6,
       sunrise: "07:27", sunset: "18:48", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  /* Beaufort's October night (the bats, the witch, the lit lantern, the balloon and the skeleton), and a hard
+     blow, where the palmettos' fronds flutter on their own inside their crowns' turn (October 21 2026) */
+  { name: "bft-october-night", loc: "bft", when: "2026-10-24T21:30:00", note: "an October night at Beaufort: bats, the witch, the lantern, the balloon, the skeleton",
+    o: { baseTemp: 64, nowTemp: 62, feels: 62, rh: 75, isDay: 0, code: 0, cloud: 20, nowWind: 6, nowDir: 30, nowGust: 10, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
+      sunrise: "07:33", sunset: "18:36", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "bft-blow", loc: "bft", when: "2026-08-12T14:00:00", note: "an August blow gusting 34: the fronds flutter in their crowns",
+    o: { baseTemp: 84, nowTemp: 86, feels: 92, rh: 70, isDay: 1, code: 3, cloud: 80, nowWind: 22, nowDir: 210, nowGust: 34, nowUv: 5, uvMax: 8, windAmp: 6, gustAmp: 8,
+      sunrise: "06:40", sunset: "20:05", popCurve: () => 8, dailyPop: (p) => p.fill(8) } },
 ];
 
 const runner = path.join(ROOT, "tools", "shots", "webkit-runner"), source = path.join(ROOT, "tools", "webkit.swift");
