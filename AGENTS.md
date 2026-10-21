@@ -298,6 +298,14 @@ place name.
   from tomorrow. The hourly run's first hour carries the live UV, so the sentence and the pin
   read the same number. The UV chip shows from 3 and only while the card does (`sunAdvice&&`),
   because a cache opened after the strong sun still holds a 3 from an hour that has passed.
+  On October 21 2026 Josh said "the uv language feels crowded (to the left). I also want the actual
+  numerical high represented somehow." The scale words had stood at their bands' starts (0, 3 and 6 on the
+  0-12 bar), which put LOW, MODERATE and HIGH in the left half while HIGH's band runs to 11. Each now stands
+  under the middle of its band (1.5, 4.5 and 8.5), and EXTREME, whose band is too narrow to centre in, stays
+  flush right. The ring prints the day's high as a number (`6.1`) in the pin's own figures and the softer
+  ink, with its hour small after it (`11a`), the number over the ring. It is placed, not stamped: right of
+  the pin's reading, then without its hour, then with the reading stepped to the left of its pin, so at 10.6
+  now and 11.4 to come, where the peak used to go unlabelled at 320 and 390, both numbers stand.
 - **Golden hour is said once.** Josh loves it and asked whether it was weird that it popped twice
   (September 28 2026). It was: the Next 24 hours note and a gold line on the Tonight card named the
   same span, and on a cold morning they named two different mornings with nearly the same times. It
@@ -1040,6 +1048,12 @@ was. Nothing in it is a score, a grade or red.
   has no direction: its marks are the speed with no arrow but now's (the chip's reading always had one) until
   the live forecast lands. The row's height is held from the first frame (`windRowH`, and its copy in the
   preload), and a cached place switch holds the chart at the new place's empty height.
+- **Room under the chart.** Josh, October 21 2026: the water section "feels crowded, especially when there's an
+  offshore warning. could be spacing." Each row under the chart stands clear of the one over it: the wind row
+  `ROW_AIR` (5px) under the lows' times, the gusts line and the advisory's bar 3px more, the advisory's words
+  further off their bar, and the in-season row 18px under all of it. And because the grass line already says
+  8 ft, the depth scale at Beaufort names only the 4 ft line (and 0 ft when a spring low runs under the datum),
+  leaving 2 and 6 as unlabelled gridlines (`quiet`). The coast's scale names every gridline, as it did.
 - **The gusts line** is under the row, only where the gusts matter to a small boat (`gustSpans`): the hours
   whose gust reaches the boat's caution line (`BOAT.iffyGust`, 22, where the boat's sentence turns to "Choppy"
   and the water card grades its gusts) and runs 6 or more over the wind (the chip's own rule for saying
