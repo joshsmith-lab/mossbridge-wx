@@ -911,21 +911,56 @@ flat at low water, eyes and snout after dark. The bald eagle soars on a fair mid
 palmetto early and late. A fiddler comes out on the flat in the rain. Options drawn and not taken (a
 dolphin, a Marsh Tacky, a shrimp trawler) are in git history on feature/beaufort-scene.
 
-**Five layers, for the iPhone.** WebKit repaints an SVG as one sheet, and all of it under anything that
+**Layers and boxes, for the iPhone.** WebKit repaints an SVG as one sheet, and all of it under anything that
 moves. This picture's oak, moss, bridge and palmettos are too heavy to repaint every frame (the first
 build ran at 33 frames a second in `tools/webkit.mjs`'s WKWebView, where the marsh runs at 60), so
-Beaufort alone paints into five stacked SVGs in `.scene`, each its own layer (`.scene-layer`,
-`will-change:transform`): `#sceneSvg` the still picture to the oak's back leaves; `#sceneSky` what moves
-in the sky (clouds, the soaring eagle, the bats, the witch, the Hornet), behind the trees; `#sceneMoss`
-the front moss alone, the only moss that sways; `#sceneNear` the still oak wood and crown, the veil, the
-birds in the oak, the dock and what stands on the near water; `#sceneFx` everything else that moves (the
-water's ripples, the mist, the palmetto crowns, the boat, the flag and the sock, the grass, the Halloween
-dock). Nothing on a higher layer is behind anything on a lower one. Every other scene clears the four
-overlays and paints in one sheet as before. The palmettos' fronds flutter on their own only from 20 mph
-of gust, and the jack-o'-lantern under the dock house roof gutters only from 10, both because they are
-sheltered and because each saved the frames. Measured on October 15 2026 (`tools/webkit.mjs`'s WKWebView, 390 at 3x): noon, rain and a
-hard blow 60, an October night with the bats, the witch, the lantern, the balloon and the skeleton 56
-with no frame over 34ms (the coast's and the farm's nights hold 60).
+Beaufort alone paints into stacked layers in `.scene`: `#sceneSvg` the still picture to the oak's back
+leaves; `#sceneSky` what moves in the sky (clouds, the soaring eagle, the bats, the witch, the Hornet),
+behind the trees; `#sceneMoss` the front moss alone, the only moss that sways; `#sceneNear` the still oak
+wood and crown, the veil, the birds in the oak, the dock and what stands on the near water; `#sceneLift`,
+the boxes (below); and `#sceneFx` everything else that moves (the flag and the sock, the Halloween dock, the
+eyes, the crab, the grass, the cloud shadows, the perched eagle, the fireflies). The four overlay sheets
+are `.scene-layer`, each its own layer (`will-change:transform`). Nothing on a higher layer is behind
+anything on a lower one. Every other scene clears the overlays and paints in one sheet as before. The
+palmettos' fronds flutter on their own only from 20 mph of gust, and the jack-o'-lantern under the dock
+house roof gutters only from 10, both because they are sheltered and because each saved the frames.
+Measured on October 15 2026 (`tools/webkit.mjs`'s WKWebView, 390 at 3x): noon, rain and a hard blow 60,
+an October night with the bats, the witch, the lantern, the balloon and the skeleton 56 with no frame
+over 34ms (the coast's and the farm's nights hold 60).
+
+**What turns whole is a box.** Josh, October 21 2026, after the Mac-only checks showed Beaufort behind the
+other two places: "go ahead and smooth out Beaufort." The moving sheet was still most of Beaufort's
+graphics work. With only the flag fluttering, WebKit repainted all of its 1,200 to 1,300 nodes every frame,
+and the cost was what the sheet held: the palmetto crowns (about 380 nodes) and the boat (250) were most of
+it. So the parts that turn whole are boxes of their own in `#sceneLift`, each a div turned by CSS, which
+WebKit hands to the compositor and repaints nothing:
+- each palm, back to front: its back fronds, a still copy of its trunk's top in front of them (cut off at
+  `deckY-16`, as `fxPalmTop` cut it), and its front fronds, with the head and the skirt each turning in a box
+  of its own on their joint inside the crown's (their flutter from 20 mph). Palm by palm, so the nearer
+  palm's back fronds still go over the farther one's front;
+- the boat, rocking (`bftRockLift`, its quarter unit of lift a share of the box's own height), with the
+  skeleton riding in it and his wave still an SVG joint inside;
+- under them a band over the river (`waterBox`) for the water's ripples, rings and mist, which were under
+  the crowns and the boat, as small a sheet as they need.
+
+The crowns keep the beats they had as groups: `beatsOf` draws them the way `beats` did. A box is placed as
+fractions of the frame (`liftAt`) and turns about its joint (`transform-origin` in shares of the box). Its
+drawing is the frame's own (`liftSvg`, viewBox `0 0 W H`), seen through the box, and placed in the frame's
+width and height (`cqw`, `cqh`; `.scene-lift` is a size container). Placed as a share of the small box, the
+browser's rounding of the box was multiplied by the frame's size over the box's, the drawing landed up to a
+third of a pixel off the picture under it, and a pixel compare showed a hairline round every crown. The
+drawing runs on past the frame inside its box, and the frame is cut once, at `.scene-lift`, which does not
+turn: cut by its own sheet, the third palmetto, combed past the right edge in an easterly, lost a sliver
+there that turned with its sway. Measured
+in `tools/webkit.mjs`'s WKWebView, alternating with main: the GPU process's idle work fell from 18 to 21
+seconds per 10 to 8 to 12 (a hard blow, `bft-blow`, 16 to 6), and every Beaufort case holds 60 frames a
+second idle where main held 49 to 58 (the sun behind the oak 49 to 56, `bft-october-night` 53 to 58). The
+picture is the same. Shot by a WKWebView at 3x with every animation held at the same moments, main and the
+boxes differ by a few levels on a few pixels at most, as main differs from itself, at 320, 390 and 430, by
+day, at sunset on the palmettos, on an October night and in a blow. The one cost is the first frame: making
+the boxes puts the picture on screen about 30ms later on the Mac. `tools/beaufort/scene.mjs` fails a sheet that still
+holds a crown or the boat, a crown or boat box without its one turn (none under reduced motion), and a
+box's drawing more than a twentieth of a pixel off the frame.
 
 **The sun behind the oak.** Josh, at about 8:35 on October 16 2026, with the sun low over Lady's Island and
 a yellow sliver of it showing through the crown: "when the sun is behind the oak tree, like it is now, that
@@ -971,7 +1006,7 @@ Dec 9:34, fading over the last fifteen to twenty-five minutes. The palmettos, wh
 behind, are lit by the same gates from their own crowns and trunks, from about two and a half hours before
 sunset until it (October 15, 4:17 to 6:50, at half from 6:32, when the drawn sun goes into the river): their
 fronds lit through warm yellow green, their trunks dark, the kit's lit edge turned to the sun and widened,
-all in their own colours on the moving layer, with no mask added. The moss's light is drawn
+all in their own colours in their crowns' boxes, with no mask added. The moss's light is drawn
 into the front moss's own sway groups on `#sceneMoss`, so it rides the sway and adds no animation. That sheet
 repaints every frame, so there its light is fills alone, with no hairline round it (its bands run a little
 further in instead, `BFT_MOSS_GLOW_FRONT`), and its faintest edges and lit hairs are left to the still moss: a
@@ -1282,12 +1317,14 @@ which repaints a moving SVG part on every frame. It drives a WKWebView on the Ma
 (`tools/webkit.swift`, built with swiftc into tools/shots/ on first use) at 390 CSS pixels and
 3x, off the screen, so it runs with the screen locked, and counts frames in the page: the coast
 and the farm on October nights, a rainy coast day and an ordinary afternoon, and Beaufort's October
-afternoon (`beaufort-afternoon`: its five layers, Halloween's props and the water's grass line, wind lane and
-in-season row on NOAA's real table), idle for 10 seconds
+afternoon (`beaufort-afternoon`: its layers and boxes, Halloween's props and the water's grass line, wind lane and
+in-season row on NOAA's real table), its October night (`bft-october-night`) and a hard blow (`bft-blow`), idle for 10 seconds
 and opening for 6. On October 9 2026, with the clouds baked, every case held 59 to 60 frames a
 second idle and 58 to 60 opening, where the live blur had held them to 10 to 23. Its GPU process
 still spends one to two of the Mac's cores at idle repainting the scene's moving parts, and no one
-group of them is most of it: that is the next thing to look at. `--strict` fails a case under 50
+group of them is most of it: that is the next thing to look at. At Beaufort it was the moving sheet itself,
+repainted whole for every part in it, and the crowns and the boat are boxes now (see What turns whole is a
+box, under Beaufort); the same move would serve the coast's and the farm's moving parts. `--strict` fails a case under 50
 frames a second. The zoom that makes 3x assumes a Retina Mac, and the report prints the width
 and pixel ratio the page saw.
 
@@ -2158,6 +2195,16 @@ The fuller scene earns its playfulness from the existing drawings and their beha
     (`codeAt`), so a cloudy reading never sits beside `Nice and sunny this afternoon.` And a wet
     sky at an hour with odds under 25, every reading known, is `Maybe a stray shower.` (`lowWet`,
     `stray`), never `Forecast details unavailable.`, which is for real gaps.
+- **The paper is worked out, never read back (October 21 2026).** `render()` read the paper (`--paper`,
+  `--wash`, `--line`) back with `getComputedStyle` just after setting the sky's colours, which made the browser
+  restyle the whole page to answer, Beaufort's five to six thousand picture nodes with it. On a cached open,
+  when the live forecast landed mid-pen, that was a 95 to 105ms frame and a 40 to 65ms one after it in
+  `tools/webkit.mjs`'s WKWebView. `goldenHour` hands back the paper it set, and the light theme's own is
+  `PAPER.lit`; every root colour is the same as main's at every place and hour. The sky's ink fade (`.sky`'s
+  .8s `color` transition) still restyles the whole picture on each of its frames as the page opens, because
+  the picture inherits it: taking it out (`.scene{color:var(--on-sky)}`) smoothed the first half second of an
+  open but stopped the sun's path and times fading with the sky's words, and moved the bridge's ink by a level
+  or two in WebKit, so it was left as it is.
 - **Every line runs the same width.** Josh, October 9 2026: "the width of the week part doesn't
   extend as far as the other lines. everything should be even". The hours, the week, the water,
   the moon and the year each start their line and its fill `CHART_IN` (16px, the hourly's own

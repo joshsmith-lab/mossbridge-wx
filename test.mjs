@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v104/);
+  assert.match(worker, /mbwx-shell-v105/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -5686,9 +5686,32 @@ test("Beaufort is the third place: its readings, its scene in layers, its birds 
   // the scene: Beaufort alone paints into five stacked layers, so a moving thing repaints only its own
   for (const id of ["sceneSky", "sceneMoss", "sceneNear", "sceneFx"]) assert.match(html, new RegExp(`<svg id="${id}" class="scene-layer"`));
   assert.match(html, /\.scene \.scene-layer\{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;will-change:transform\}/);
-  assert.match(html, /if\(LOC\.scene!=="lowcountry"\)for\(const id of \["sceneSky","sceneMoss","sceneNear","sceneFx"\]\)document\.getElementById\(id\)\.innerHTML="";/);
+  assert.match(html, /if\(LOC\.scene!=="lowcountry"\)for\(const id of \["sceneSky","sceneMoss","sceneNear","sceneLift","sceneFx"\]\)document\.getElementById\(id\)\.innerHTML="";/);
   assert.match(html, /mossL\.innerHTML=`<g data-prop="moss">\$\{oakMoss\}<\/g>`;/);
   const lc = html.slice(html.indexOf("function lowcountryScene(c){"), html.indexOf("/* ── smooth path through points"));
+  // what turns whole is a box of its own that the compositor turns (October 21 2026: the palmettos' crowns and the
+  // boat in the moving sheet were most of Beaufort's graphics work, because WebKit repaints a sheet whole): the
+  // boxes are placed as fractions of the frame, their drawings are the frame's own, placed in its width and height,
+  // the crowns keep the beats they had as groups, and the water's band is a box too, under them
+  assert.match(html, /<svg id="sceneNear" class="scene-layer"[^>]*><\/svg><div id="sceneLift" class="scene-lift" aria-hidden="true"><\/div><svg id="sceneFx"/);
+  assert.match(html, /\.scene \.scene-lift\{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;container-type:size;overflow:hidden\}/);
+  assert.match(html, /\.scene-lift \.lift>svg\{position:absolute;display:block;overflow:visible\}/);
+  assert.match(html, /\.scene \.scene-lift:empty\{display:none\}/);
+  assert.match(html, /@keyframes bftRockLift\{from\{transform:rotate\(calc\(var\(--rk,1deg\) \* -1\)\) translateY\(var\(--rty,\.25px\)\)\}/);
+  assert.doesNotMatch(html, /\.scene-layer \.bft-boat-rock\[style\]|\.scene-layer :is\(\.bft-palm-crown/);
+  assert.match(lc, /const liftSvg=\(b,inner\)=>`<svg viewBox="0 0 \$\{W\} \$\{H\}" style="[^`]*;left:\$\{\(-b\[0\]\/W\*100\)\.toFixed\(4\)\}cqw;top:\$\{\(-b\[1\]\/H\*100\)\.toFixed\(4\)\}cqh;width:100cqw;height:100cqh">/);
+  assert.match(lc, /const crownBeat=beatsOf\(61,6,\.55\),headBeat=beatsOf\(62,3,1\.1\),skirtBeat=beatsOf\(63,3,1\.1\);/);
+  assert.match(lc, /const beatOf=\(r,amtK\)=>\{const amt=swayAmt\*amtK\*\(\.8\+r\(\)\*\.5\),md=swayDur\*\(\.7\+r\(\)\*\.55\),dl=\(Date\.now\(\)\/1000\+r\(\)\*9\)%9;/);
+  assert.match(lc, /liftL\.innerHTML=liftAt\(waterBox,liftSvg\(waterBox,`\n    \$\{bk\?"":glint\}\$\{waterFx\}\n    \$\{mist\}`\),null,"will-change:transform"\)\+palmCrowns\+boat;/);
+  assert.match(lc, /animation:bftRockLift \$\{clamp\(5\.6-chopK\*2\.6,2\.8,5\.6\)\.toFixed\(1\)\}s ease-in-out/);
+  assert.doesNotMatch(lc, /fxPalmTop|bft-boat-rock" style/);
+  const bharness = await readFile(new URL("tools/beaufort/scene.mjs", root), "utf8");
+  assert.match(bharness, /if \(crowns\.length !== 6\) bad\.push/);
+  assert.match(bharness, /if \(worst > \.05\) bad\.push\(`a box's drawing lies/);
+  // the daylight paper is worked out, never read back with getComputedStyle, which restyled the whole page
+  assert.equal(html.match(/const gold=goldenHour\(altDeg,now,dark,root\);/g).length, 2);
+  assert.equal(html.match(/lit=gold\?\.paper\|\|PAPER\.lit;/g).length, 2);
+  assert.doesNotMatch(html, /getComputedStyle\(rootEl\)|const lit=getComputedStyle\(document\.documentElement\)/);
   // Josh's notes: the steeples behind the bridge, not a tree line; no curls; the white birds in the oak;
   // real sizes and nobody standing on anybody; and no boiled peanut sign
   assert.match(lc, /const bftSky=bftSkyline\(\{W,brX:W\*\.6,yFar,/);
@@ -5758,7 +5781,7 @@ test("Beaufort is the third place: its readings, its scene in layers, its birds 
   assert.match(lc, /c\.kidAt\(dockX\+80,deckY\)/);
   assert.match(lc, /const bones=c\.halloween\?inkAt\(BFT_BONES_AT\.x,BFT_BONES_AT\.y,BFT_BONES_AT\.s,1,inkRig\(rigBftBones\(/);
   assert.match(html, /@keyframes bftBalloonSway\{/);
-  assert.match(html, /\.scene-layer \.bft-bones-wave\[style\]\{animation:bftBonesWave 24s ease-in-out infinite\}/);
+  assert.match(html, /\.scene-lift \.bft-bones-wave\[style\]\{animation:bftBonesWave 24s ease-in-out infinite\}/);
   // the Hornet crosses only on a clear day, and never under reduced motion
   assert.match(lc, /const jetUp=!PRM&&sunAltDeg>5&&!wet&&!storm&&!fog&&cloud<70/);
 

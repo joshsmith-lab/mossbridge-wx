@@ -437,6 +437,32 @@ for (const cs of CASES.filter((c) => !ONLY.length || ONLY.some((o) => c.name.inc
       if (g.bad.length) errs.push(`grass at tide ${at}: ${g.bad.length} of ${g.feet} feet floating: ${g.bad.slice(0, 6).join(", ")}${g.bad.length > 6 ? ", …" : ""}`);
     }
     console.log(`  grass: ${grass.map((g) => `${g.tide == null ? "—" : g.tide.toFixed(2)} ${g.bad.length ? g.bad.length + " floating" : "rooted"}`).join(" · ")} (${grass[0]?.feet ?? 0} feet in the frame, ${grass[0]?.off ?? 0} past its edge)`);
+    /* the palmettos' crowns and the boat turn whole, each a box the compositor turns (October 21 2026): no sheet
+       holds a crown or the boat, each crown half and the boat is a box of its own carrying its one turn (none
+       under reduced motion), and every drawing in a box lies on the frame within a twentieth of a pixel, measured
+       with the turns held off, because placed as a share of a small box it once landed a third of a pixel off */
+    const lift = await page.evaluate((prm) => {
+      const bad = [], main = document.getElementById("sceneSvg").getScreenCTM();
+      for (const s of document.querySelectorAll(".scene svg")) if (!s.closest("#sceneLift") && s.querySelector(".bft-palm-crown,.bft-boat-rock")) bad.push(`#${s.id} still holds a crown or the boat`);
+      const top = [...document.querySelectorAll("#sceneLift > .lift")];
+      const crowns = top.filter((b) => b.querySelector(".bft-palm-crown")), boats = top.filter((b) => b.querySelector(".bft-boat-rock"));
+      if (crowns.length !== 6) bad.push(`${crowns.length} crown boxes, not 6`);
+      if (boats.length !== 1) bad.push(`${boats.length} boat boxes, not 1`);
+      for (const b of [...crowns, ...boats]) {
+        const own = b.getAnimations().map((a) => a.animationName), want = prm ? 0 : 1;
+        if (own.length !== want) bad.push(`a ${b.querySelector(".bft-boat-rock") ? "boat" : "crown"} box turns ${own.length} times (${own.join(" ") || "none"}), not ${want}`);
+      }
+      const boxes = [...document.querySelectorAll("#sceneLift .lift")];
+      boxes.forEach((b) => b.style.setProperty("transform", "none", "important"));
+      let worst = 0;
+      for (const s of document.querySelectorAll("#sceneLift svg")) { const m = s.getScreenCTM();
+        worst = Math.max(worst, Math.abs(m.e - main.e), Math.abs(m.f - main.f), Math.abs(m.a - main.a) * 760, Math.abs(m.d - main.d) * 760); }
+      boxes.forEach((b) => b.style.removeProperty("transform"));
+      if (worst > .05) bad.push(`a box's drawing lies ${worst.toFixed(3)}px off the frame`);
+      return { bad, boxes: boxes.length, worst };
+    }, !!process.env.PORCH_BFT_PRM);
+    errs.push(...lift.bad.map((b) => "lift: " + b));
+    console.log(`  lift: ${lift.boxes} boxes, the drawings within ${lift.worst.toFixed(3)}px of the frame`);
     if (errs.length) { failed = true; console.log("  " + errs.join("\n  ")); }
     await ctx.close();
   }
