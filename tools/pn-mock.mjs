@@ -21,7 +21,8 @@ const PORT = Number(process.env.PORCH_PORT || 8841);
 const WIDTHS = (process.env.PORCH_PN_WIDTHS || "390").split(",").map(Number);
 const ONLY = process.argv.slice(2);
 
-/* late September and late October at Porters Neck, with a waxing moon up in the evening */
+/* late September and late October at Porters Neck. The September night is half past one, when the moon
+   two days past full stands on the roof's ridge; most of the evening it is behind the roof */
 const SEP = { sunrise: "07:03", sunset: "19:10", popCurve: () => 4, dailyPop: (p) => p.fill(8), uvMax: 6 };
 const OCT = { sunrise: "07:27", sunset: "18:23", popCurve: () => 4, dailyPop: (p) => p.fill(8), uvMax: 4 };
 const TIMES = [
@@ -29,7 +30,7 @@ const TIMES = [
     o: { ...SEP, baseTemp: 78, nowTemp: 82, feels: 84, rh: 58, isDay: 1, code: 1, cloud: 22, nowWind: 7, nowDir: 200, nowGust: 12, nowUv: 6.1, windAmp: 4, gustAmp: 5 } },
   { name: "sep-dusk", when: "2026-09-23T19:26:00",
     o: { ...SEP, baseTemp: 68, nowTemp: 66, feels: 66, rh: 66, isDay: 0, code: 0, cloud: 8, nowWind: 4, nowDir: 200, nowGust: 8, nowUv: 0, windAmp: 3, gustAmp: 2 } },
-  { name: "sep-night", when: "2026-09-24T23:30:00",
+  { name: "sep-night", when: "2026-09-28T01:30:00",
     o: { ...SEP, baseTemp: 66, nowTemp: 64, feels: 64, rh: 72, isDay: 0, code: 0, cloud: 4, nowWind: 2, nowDir: 30, nowGust: 5, nowUv: 0, windAmp: 2, gustAmp: 1 } },
   { name: "oct-night", when: "2026-10-24T21:30:00",
     o: { ...OCT, baseTemp: 60, nowTemp: 58, feels: 58, rh: 72, isDay: 0, code: 0, cloud: 4, nowWind: 3, nowDir: 30, nowGust: 6, nowUv: 0, windAmp: 2, gustAmp: 1 } },
