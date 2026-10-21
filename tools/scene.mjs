@@ -445,6 +445,9 @@ function reportAnimalContacts(cs, width, result) {
  * disc's centre has to be inside her at the closest step. Her clock (WITCH_RUN) has to agree with
  * the animation on screen, so the first crossing comes 2.4s after the app opens. */
 async function walkWitch(page) {
+  /* her clock is read against the wall clock, so she has to be running when it is: an earlier check
+     can leave the sky scrolled away, and the page parks the header's motion while it is off screen */
+  await page.evaluate(() => new Promise((r) => { scrollTo({ top: 0, behavior: "instant" }); requestAnimationFrame(() => requestAnimationFrame(r)); }));
   return page.evaluate(() => {
     const w = document.querySelector('#sceneSvg [data-fly="witch"]');
     if (!w) return null;

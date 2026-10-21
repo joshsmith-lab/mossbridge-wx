@@ -230,7 +230,7 @@ try{
       await page.keyboard.press("Escape");
       assert.equal((await xpState(page,"tide")).shown,false);
       /* the in-season row is the month's, drawn and said, and takes no tap */
-      assert.match(await page.evaluate(()=>document.getElementById("runsRow").textContent),/^In season in October: bull reds, trout, flounder, sheepshead, shrimp \(the baiting season is open\)\./);
+      assert.match(await page.evaluate(()=>document.getElementById("runsRow").textContent),/^In season in October: bull reds, trout, flounder, sheepshead\./);
       assert.deepEqual(errors,[]);await context.close();checks++;
     }
     const {context,page,errors,cdp}=await phone(390,bftO,"bft",{when:bftAt});

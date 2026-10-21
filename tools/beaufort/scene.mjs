@@ -316,10 +316,17 @@ for (const cs of CASES.filter((c) => !ONLY.length || ONLY.some((o) => c.name.inc
     await page.evaluate(() => document.fonts.ready).catch(() => {});
     await page.waitForTimeout(1200);
     await page.evaluate(() => typeof finishReveal === "function" && finishReveal());
+    /* what costs is what keeps running: the one-shot entrances (the strip's and the rain-soon bars'
+       alertIn and grow, staggered and painted on the live paint) finish in about a second, so they
+       are let finish before the count, the way tools/scene.mjs counts after its own waits */
+    await page.evaluate(() => Promise.race([
+      Promise.all(document.getAnimations().filter((a) => a.effect?.getComputedTiming().iterations !== Infinity).map((a) => a.finished.catch(() => {}))),
+      new Promise((r) => setTimeout(r, 4000))]));
     const info = await page.evaluate(() => ({ loc: typeof LOC !== "undefined" ? LOC.id : null, tide: typeof SCENE_TIDE !== "undefined" ? SCENE_TIDE : null,
       props: [...document.querySelectorAll(".scene :is([data-prop],[data-decor])")].map((n) => n.dataset.prop || "decor:" + n.dataset.decor),
       species: [...document.querySelectorAll(".scene [data-species]")].map((n) => n.dataset.species),
-      running: document.getAnimations().filter((a) => a.playState === "running").length }));
+      running: document.getAnimations().filter((a) => a.playState === "running").length,
+      byName: Object.entries(document.getAnimations().filter((a) => a.playState === "running").reduce((m, a) => { const k = a.animationName || a.id || "?"; m[k] = (m[k] || 0) + 1; return m; }, {})).sort((a, b) => b[1] - a[1]).map(([k, n]) => k + " " + n).join(", ") }));
     /* nothing stands on anything else: every animal's drawn box, measured on the screen, against every other's */
     const overlaps = await page.evaluate(() => {
       const els = [...document.querySelectorAll(".scene [data-species]")].filter((e) => !e.parentElement.closest("[data-species]") && e.dataset.species !== "bat");
@@ -419,6 +426,7 @@ for (const cs of CASES.filter((c) => !ONLY.length || ONLY.some((o) => c.name.inc
     console.log(`${tag}: loc ${info.loc}, tide ${info.tide == null ? "—" : info.tide.toFixed(2)}, props [${[...new Set(info.props)].join(" ")}], animals [${info.species.join(" ")}], ${info.running} animations${info.backlight ? ", backlight " + info.backlight : ""}`);
     if (lane.gusts.length || lane.zone) console.log(`  wind lane: [${lane.gusts.join(", ")}]${lane.zone ? ` · ${lane.zone}${lane.open ? " (runs on)" : ""}` : ""}`);
     if (process.env.PORCH_BFT_SAID) console.log(`  said: ${lane.said}`);
+    if (process.env.PORCH_BFT_ANIMS) console.log(`  animations: ${info.byName}`);
     if (info.running > 120) errs.push(`${info.running} animations running, over the scenes' ceiling of 120`);
     if (info.loc !== "bft") { errs.push(`the page opened at ${info.loc}, not Beaufort`); }
     /* the grass is rooted, at the case's tide and at every one of GRASS_TIDES */

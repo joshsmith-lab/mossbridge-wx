@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v102/);
+  assert.match(worker, /mbwx-shell-v104/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -294,8 +294,12 @@ test("the page agrees with itself", async () => {
   // text boxes only, and each star placed from its own percentages so a second call agrees
   assert.match(html, /createTreeWalker\(el,NodeFilter\.SHOW_TEXT\)/);
   assert.match(html, /parseFloat\(st\.getAttribute\("cx"\)\)/);
-  // the UV words start where their bands start on the bar's 0-12 scale
-  assert.match(html, /\.uv-scale span:nth-child\(3\)\{left:50%\}/);
+  // the UV words stand under the middles of their bands on the bar's 0-12 scale (low 0-3, moderate 3-6,
+  // high 6-11), extreme flush right: set at the bands' starts they bunched in the left half (Josh, October 21
+  // 2026: "the uv language feels crowded (to the left)")
+  assert.match(html, /\.uv-scale span\{position:absolute;top:0;white-space:nowrap;transform:translateX\(-50%\)\}/);
+  assert.match(html, /\.uv-scale span:nth-child\(1\)\{left:12\.5%\}\n\.uv-scale span:nth-child\(2\)\{left:37\.5%\}\n\.uv-scale span:nth-child\(3\)\{left:70\.8%\}/);
+  assert.match(html, /\.uv-scale span:last-child\{right:0;transform:none\}/);
   // and the bar is that same scale, lit in the gradient's own stops
   assert.match(html, /const X=u=>clamp\(u,0,12\)\/12\*W/);
   assert.match(html, /const UV_STOPS=\[\[0,"#4E9E6E"\],\[\.38,"#D9B437"\],\[\.68,"#C7431F"\],\[1,"#7A3A86"\]\];/);
@@ -1331,9 +1335,13 @@ test("the sun card says it with the bar, and steps aside when today has nothing 
   // band stays, nudged clear, or a sunscreen sentence sat over a bar that showed nothing past LOW
   assert.match(html, /if\(uvI>=0&&uvPk-\(uvNow\?\?0\)<\.5&&uvBand\(uvPk\)===uvBand\(uvNow\?\?0\)\)uvI=-1;/);
   assert.match(html, /cx=clamp\(Math\.max\(X\(u\),pinX\+10\),4\.5,W-4\.5\)/);
-  // labels are placed, not stamped: the peak's hour steps right of the reading or goes unsaid
-  assert.match(html, /const tx=Math\.max\(clamp\(cx,tw\/2,W-tw\/2\),pinR\+6\+tw\/2\)/);
-  assert.match(html, /if\(tx\+tw\/2<=W\+\.5\)marks\+=/);
+  // the day's high is a number on its ring ("I also want the actual numerical high represented somehow"),
+  // in the pin's figures and the softer ink, its hour small after it; placed, not stamped: right of the
+  // reading, then without its hour, then with the reading stepped left of its pin, and never off the card
+  assert.match(html, /const at=clamp\(cx-nw\/2,0,Math\.max\(0,W-w\)\);/);
+  assert.match(html, /for\(const \[w,hour\] of \[\[nw\+gap\+hw,true\],\[nw,false\]\]\)/);
+  assert.match(html, /if\(!hour&&pinL&&at-6-pinL\.w>=0\)\{pinL=\{x:Math\.min\(at-6,px-4\)-pinL\.w,w:pinL\.w\}/);
+  assert.match(html, /<text data-uv="high"[^\n]*<tspan font-size="14" font-weight="600" fill="\$\{css\.soft\}">\$\{peakL\.num\}<\/tspan>/);
   // The band is spoken, not inked: EXTREME is set flush right and covers about 10.2 to 12, so an
   // inked HIGH sat far left of a 10.6 pin standing under EXTREME. The scale is a quiet ruler, and
   // the label says the band of the number printed on the pin, and the peak in spoken time.
@@ -1341,7 +1349,7 @@ test("the sun card says it with the bar, and steps aside when today has nothing 
   // nudge needs the pin's own x
   assert.match(html, /const uvBand=u=>\{u=\+\(\+u\)\.toFixed\(1\);return u<3\?0:u<6\?1:u<11\?2:3\};/);
   assert.match(html, /band=pin\?uvBand\(uvNow\):-1;/);
-  assert.match(html, /pinR=tx\+tw\/2;pinX=px;/);
+  assert.match(html, /if\(pin\)\{pinX=px;pinL=\{x:clamp\(px-pw\/2,0,W-pw\),w:pw\}\}/);
   assert.equal((html.match(/u<3\?0:u<6\?1:u<11\?2:3/g) || []).length, 1, "the band rule is written once");
   assert.doesNotMatch(html, /\.uv-scale span\.on|\.uv-scale span"\)\.forEach/);
   assert.match(html, /svg\.setAttribute\("aria-label",sentence\(\[pin\?`UV \$\{shown\.toFixed\(1\)\} now, \$\{UV_BANDS\[band\]\}`:"UV today",\n\s*uvI>=0\?`peaking at \$\{\(\+h\.uv\[uvI\]\)\.toFixed\(1\)\} around \$\{spokenAt\(h\.time\[uvI\]\)\}`:null\]/);
@@ -2327,6 +2335,14 @@ test("light, motion and alerts stay tuned", async () => {
   assert.match(html, /animation:bolt 19s linear infinite/);
   assert.doesNotMatch(html, /stormWash 7s/);
   assert.doesNotMatch(html, /var\(--bd,37s\)/);
+  // and that clock is set once the paint has landed, on the wash and the bolts together: the wash
+  // is the same element from paint to paint, so a delay worked out again each paint kept its old
+  // start time, and the live paint landing after the cache struck bolts into a sky that never lit
+  assert.doesNotMatch(html, /fl\.style\.animationDelay/);
+  assert.match(html, /for\(const a of el\.getAnimations\(\)\)onClock\(a,\(\)=>Date\.now\(\)%P\+P\)/);
+  assert.match(html, /function onClock\(a,at\)\{a\.currentTime=at\(\);a\.ready\.then\(/);
+  // the witch's crossing is put on her own clock the same way, once the scene has painted
+  assert.match(html, /paintBolts\(\);\n  witchClock\(\);/);
   // and it is a sky effect, not a scene one: inside the scene SVG it could only start a
   // third of the way down the page, which is a bolt coming out of clear air
   assert.match(html, /function paintBolts\(\)/);
@@ -4112,7 +4128,10 @@ test("every line runs the same width, from CHART_IN to CHART_IN", async () => {
   assert.match(tide, /const W=appW\(\)-40,H=chartH\(W\),padX=CHART_IN;/);
   assert.match(tide, /const topY=22,seaY=H-34,bedY=seaY\+6,lowY=H-9,x0=padX;/);
   assert.doesNotMatch(tide, /axisW|\(x0-6\)\.toFixed/);
-  assert.match(tide, /const shared=spots\.find\(s=>grids\.every\(g=>!gHits\(g,s\)\)\);/);
+  assert.match(tide, /const shared=spots\.find\(s=>grids\.every\(g=>g\.quiet\|\|!gHits\(g,s\)\)\);/);
+  // at Beaufort the grass line says 8, so the scale names only 4 and its 2 and 6 are unlabelled gridlines; the
+  // coast labels every one (Josh, October 21 2026: "the water section in beaufort feels crowded")
+  assert.match(tide, /grids\.push\(\{ft,y:Y\(ft\),w:\(ft\+" ft"\)\.length\*gfs\*\.6,quiet:grass!=null&&ft%4!==0\}\)/);
   assert.match(tide, /const spots=\[\["end",xR\],\["start",x0\]\];/);
   // and clear of the tag's room beside the bow and the stern, drawn or not
   assert.match(tide, /const solid=\[\.\.\.times,\[nx-26\*fs-tagRoom,boatTop,nx\+24\*fs\+tagRoom,ny\+6\],/);
@@ -5860,7 +5879,7 @@ test("Beaufort's fishing water: the grass line, the stage of the water, the wind
     html.match(/const BOAT=\{[^\n]*/)[0],
     pick("function vtecOf(s){", "/* The feed keeps an alert"), html.match(/const DEAD_VTEC=[^\n]*/)[0], html.match(/const vtecLive=[^\n]*/)[0],
     pick("function floodSpans(", "/* The in-season row, under the chart"),
-    "Object.assign(globalThis,{floodSpans,floodSay,tideStage,windAt,windTimes,windWords,windSpoken,gustSpans,zoneBars,runsIn,runsTall,runNote,baitOpen,SHRIMP_BAIT,RUNS,MARINE_EVENT,BOAT});",
+    "Object.assign(globalThis,{floodSpans,floodSay,tideStage,windAt,windTimes,windWords,windSpoken,gustSpans,zoneBars,runsIn,runsTall,runNote,RUNS,MARINE_EVENT,BOAT});",
   ].join("\n"), ctx);
   const at = (s) => new Date(s).getTime();
   const BFT = { grass: 8, bigFlood: 8.8, floodSeason: ["03-15", "11-30"] };
@@ -5975,7 +5994,8 @@ test("Beaufort's fishing water: the grass line, the stage of the water, the wind
   assert.deepEqual(zb([{ ...sca, event: "Rip Current Statement" }]), [], "and nothing but the zone's own marine products");
   assert.equal(zb([sca], 36e5)[0].s, Date.parse(sca.onset) + 36e5, "on the chart's wall clock");
 
-  // ── what is in season: a calendar, never a bite, with cobia's May closure and SCDNR's 2026 shrimp baiting season said.
+  // ── what is in season: a calendar, never a bite, with cobia's May closure said. Only fish: Josh took the shrimp
+  // and their baiting season out on October 21 2026 ("drop the shrimp too.... just stuff they would fish for").
   // Reds are in every month (SCDNR: year-round), bull reds from August to November, so a flood tide in the reds' season
   // never sits over a row without them. The months are SCDNR's month-by-month check of October 16 2026
   const names = (m) => Array.from(ctx.runsIn(ctx.RUNS.bft, m), (r) => r.name);
@@ -5984,8 +6004,8 @@ test("Beaufort's fishing water: the grass line, the stage of the water, the wind
   assert.deepEqual(names(4), ["reds", "trout", "flounder", "black drum", "cobia"]);
   assert.deepEqual(names(5), ["reds", "trout", "flounder", "sheepshead", "black drum", "cobia"]);
   assert.deepEqual(names(6), ["reds", "flounder", "black drum", "cobia", "sharks"]);
-  assert.deepEqual(names(8), ["bull reds", "flounder", "tarpon", "sharks", "shrimp"]);
-  assert.deepEqual(names(10), ["bull reds", "trout", "flounder", "sheepshead", "shrimp"]);
+  assert.deepEqual(names(8), ["bull reds", "flounder", "tarpon", "sharks"]);
+  assert.deepEqual(names(10), ["bull reds", "trout", "flounder", "sheepshead"]);
   assert.deepEqual(names(12), ["reds", "trout", "sheepshead"]);
   const fish = Object.keys(vm.runInContext("(" + pick("const RUN_FISH={", "/* each one registers for the close-up").replace(/^const RUN_FISH=/, "").replace(/;\s*$/, "") + ")",
     vm.createContext({ pBlob: () => 0, pTaper: () => 0, pDot: () => 0, runEye: () => [] })));
@@ -5994,27 +6014,19 @@ test("Beaufort's fishing water: the grass line, the stage of the water, the wind
     assert.ok(r.m.length && r.m.every((m) => Number.isInteger(m) && m >= 1 && m <= 12) && new Set(r.m).size === r.m.length, `${r.name}'s months are months`);
     assert.ok(!r.closed || r.closed.every((m) => r.m.includes(m)), `${r.name} is closed only in its own months`);
   }
-  // the baiting season, noon to noon on the place's clock (SCDNR's 2026-2027 guide: Sept. 11 (Noon) - Nov. 9 (Noon)),
-  // and nothing in a year SCDNR has not set
-  const W = (s) => new Date(s);
-  assert.equal(JSON.stringify(ctx.SHRIMP_BAIT), JSON.stringify({ 2026: ["2026-09-11T12:00", "2026-11-09T12:00"] }));
-  for (const [t, open] of [["2026-09-11T11:59", false], ["2026-09-11T12:00", true], ["2026-10-16T08:35", true], ["2026-11-09T11:59", true], ["2026-11-09T12:00", false], ["2027-10-01T12:00", false]])
-    assert.equal(ctx.baitOpen(W(t)), open, t);
-  const shrimp = ctx.RUNS.bft.find((r) => r.id === "shrimp");
-  assert.equal(ctx.runNote(shrimp, 10, W("2026-10-16T08:35")), "baiting");
-  assert.equal(ctx.runNote(shrimp, 11, W("2026-11-20T08:35")), "");
-  assert.equal(ctx.runNote(ctx.RUNS.bft.find((r) => r.id === "cobia"), 5, W("2026-05-10T08:00")), "closed");
-  const preload = (html.match(/bft:\{full:[^\n]*runsTall:\[([\d,]*)\],bait:(\[\[[^\]]*\]\])\}/) || []).slice(1);
-  assert.equal(preload.length, 2, "the preload holds the months and the baiting days whose row takes a second line");
-  assert.equal(JSON.stringify(JSON.parse(preload[1])), JSON.stringify(Object.values(ctx.SHRIMP_BAIT)), "the preload's baiting days are SHRIMP_BAIT's");
-  const mid = (m) => W(`2026-${String(m).padStart(2, "0")}-15T12:00`);
+  // no shrimp, no baiting season, and nothing in the row that is not a fish
+  assert.ok(!ctx.RUNS.bft.some((r) => r.id === "shrimp" || r.bait), "only fish in season");
+  assert.doesNotMatch(html, /SHRIMP_BAIT|baitOpen|baiting|shrimp:\{pal/);
+  assert.equal(ctx.runNote(ctx.RUNS.bft.find((r) => r.id === "cobia"), 5), "closed");
+  assert.equal(ctx.runNote(ctx.RUNS.bft.find((r) => r.id === "cobia"), 6), "");
+  const preload = (html.match(/bft:\{full:[^\n]*runsTall:\[([\d,]*)\]\}/) || []).slice(1);
+  assert.equal(preload.length, 1, "the preload holds the months whose row takes a second line");
   for (let m = 1; m <= 12; m++) {
     assert.equal(names(m).filter((n) => /^(bull )?reds$/.test(n)).length, 1, `month ${m} has its reds, once`);
     assert.equal(names(m).includes("bull reds"), m >= 8 && m <= 11, `month ${m}: bull reds only August to November`);
     assert.ok(names(m).length >= 1 && names(m).length <= 6, `month ${m} fits one row`);
-    assert.equal(ctx.runsTall(ctx.RUNS.bft, m, W("2027-06-01T12:00")), m === 5, `month ${m}: only May says a closure out of the baiting season`);
-    assert.equal(preload[0].split(",").map(Number).includes(m), ctx.runsTall(ctx.RUNS.bft, m, W("2027-06-01T12:00")), `month ${m}: the preload's copy is runsTall's`);
-    assert.equal(ctx.runsTall(ctx.RUNS.bft, m, mid(m)), m === 5 || (m >= 9 && m <= 10), `month ${m} of 2026`);
+    assert.equal(ctx.runsTall(ctx.RUNS.bft, m), m === 5, `month ${m}: only May says a closure`);
+    assert.equal(preload[0].split(",").map(Number).includes(m), ctx.runsTall(ctx.RUNS.bft, m), `month ${m}: the preload's copy is runsTall's`);
   }
   assert.ok(ctx.runsIn(ctx.RUNS.bft, 5).find((r) => r.name === "cobia").closed.includes(5));
   const rr = pick("function renderRuns(", "/* how tall the wind row");
@@ -6030,8 +6042,6 @@ test("Beaufort's fishing water: the grass line, the stage of the water, the wind
   assert.match(html, /document\.getElementById\("runsRow"\)\.hidden=!L\.windRow;/);
   assert.match(html, /\.runs\{display:flex;[^}]*min-height:54px;/);
   assert.doesNotMatch(html, /getElementById\("runsRow"\)\?\.remove\(\)/);
-  // the white shrimp is raw, not pink
-  assert.doesNotMatch(pick("const RUN_FISH={", "/* each one registers for the close-up"), /shrimp:\{pal:\{body:"#D9A994"/);
 
   // ── only Beaufort carries it: the grass line, the big flood, the season, the marine zone and the row are fields
   // of LOCS.bft, and the coast's call passes null, so its chart is drawn exactly as before
@@ -6080,7 +6090,15 @@ test("Beaufort's fishing water: the grass line, the stage of the water, the wind
   assert.match(wr, /const words="offshore "\+/);
   // said with the chart: every gusty stretch, the line's room or not
   assert.match(wr, /\.\.\.gusts\.map\(s=>`gusts to \$\{s\.top\} miles an hour /);
-  assert.match(html, /const gustRowH=cw=>\{const f=\(cw<360\?1\.08:cw<520\?1\.16:1\)\*1\.22;return Math\.round\(8\*f\*1\.3\+4\*f\)\};/);
+  assert.match(html, /const gustRowH=cw=>\{const f=\(cw<360\?1\.08:cw<520\?1\.16:1\)\*1\.22;return Math\.round\(8\*f\*1\.3\+4\*f\+3\)\};/);
+  // the rows under the chart each stand clear of the one over it (Josh, October 21 2026: "crowded, especially
+  // when there's an offshore warning. could be spacing"): the wind row ROW_AIR under the lows, the gusts and
+  // the advisory's bar 3 more, its words further off the bar, and the in-season row well clear of them all
+  assert.match(html, /const ROW_AIR=5;/);
+  assert.match(wr, /const vy=H\+7\*fs\+ROW_AIR;/);
+  assert.match(wr, /const gb=HT\+lfs\*\.9\+3,/);
+  assert.match(wr, /const by=HT\+3,bh=2\.4\*fs,/);
+  assert.match(html, /\.runs\{display:flex;[^}]*margin-top:18px;/);
   // and the band of a flood stops under its high's time, never through it, and the depth scale keeps out of it
   // where it can, lightly, never onto the tide line for it (at the coast there is no flood, and the scale is
   // placed as it always was)
@@ -6089,8 +6107,8 @@ test("Beaufort's fishing water: the grass line, the stage of the water, the wind
   assert.match(tide, /\.length\*100\+inWash\(b\)\};/);
   assert.match(tide, /const floods=day\?floodSpans\(P,interp,t0,t1,grass\):\[\]/);
   // the loading shell holds the wind row's height at Beaufort, and only there (the preload's copy is windRowH's)
-  assert.match(html, /box\("tideSvg",ch\+\(L\.windRow\?Math\.round\(13\*\(cw<360\?1\.08:cw<520\?1\.16:1\)\*1\.22\+3\):0\)\)/);
-  assert.match(html, /const windRowH=cw=>Math\.round\(13\*\(cw<360\?1\.08:cw<520\?1\.16:1\)\*1\.22\+3\);/);
+  assert.match(html, /box\("tideSvg",ch\+\(L\.windRow\?Math\.round\(13\*\(cw<360\?1\.08:cw<520\?1\.16:1\)\*1\.22\+8\):0\)\)/);
+  assert.match(html, /const windRowH=cw=>Math\.round\(13\*\(cw<360\?1\.08:cw<520\?1\.16:1\)\*1\.22\+8\);/);
   assert.match(html, /box\("tideSvg",ch\+\(LOC\.grass\?windRowH\(cw\):0\)\)/);
 
   // ── the zone's own lane: the forecast never waits on it, a late answer paints again with the view held, and a

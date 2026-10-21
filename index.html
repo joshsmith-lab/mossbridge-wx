@@ -602,7 +602,7 @@ html[data-theme=dark] .xp-peek .warm{color:var(--heat)}
 /* and what SCDNR's calendar has in season, drawn, in one quiet row under the chart's labels. Its height is
    held from the first frame (the loading shell and a cached place switch), so nothing under it moves when
    the fish land; each drawing sits in a box of one height, so the names stand on one line */
-.runs{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:center;gap:3px 13px;margin-top:8px;min-height:54px;
+.runs{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:center;gap:3px 13px;margin-top:18px;min-height:54px;
   font-family:var(--mono);font-size:10px;line-height:12px;color:var(--ink-soft)}
 .runs[hidden]{display:none}
 .runs .rk{flex-basis:100%;text-align:center;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:1px}
@@ -770,12 +770,14 @@ html:not([data-theme=dark]) .rv-core{display:none}
 html[data-theme=dark] .uv-svg .uv-track{opacity:.28}
 .uv-scale{position:relative;height:1.3em;font-family:var(--mono);font-size:10.5px;
   color:var(--ink-faint);margin-top:1px;letter-spacing:.11em}
-/* on the same 0-12 scale as the bar: moderate from 3, high from 6, extreme at the end, so a
-   6.2 sits under HIGH instead of short of it */
-.uv-scale span{position:absolute;top:0;white-space:nowrap}
-.uv-scale span:nth-child(2){left:25%}
-.uv-scale span:nth-child(3){left:50%}
-.uv-scale span:last-child{right:0}
+/* on the same 0-12 scale as the bar, each word under the middle of its own band: low 0-3, moderate
+   3-6, high 6-11 (uvBand), and extreme, whose band is too narrow to centre in, flush right. Set at the
+   bands' starts they bunched in the left half (Josh, October 21 2026: "crowded (to the left)") */
+.uv-scale span{position:absolute;top:0;white-space:nowrap;transform:translateX(-50%)}
+.uv-scale span:nth-child(1){left:12.5%}
+.uv-scale span:nth-child(2){left:37.5%}
+.uv-scale span:nth-child(3){left:70.8%}
+.uv-scale span:last-child{right:0;transform:none}
 @media (max-width:359px){.uv-scale{letter-spacing:.03em}}
 @media (max-width:339px){.uv-scale{font-size:9.5px;letter-spacing:.04em}}
 /* two columns on a narrow tablet leave a card about 250px wide, where MODERATE ran into HIGH */
@@ -1159,7 +1161,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   var PLACES={
     mb:{full:"Moss Bridge Ct · Porters Neck",short:"Porters Neck",lat:34.2982,lon:-77.7896,scene:"marsh",tide:true,fish:false,year:"The year · Wilmington",airport:"Wilmington",label:"Sun and moon over the marsh horizon",snowy:false},
     sp:{full:"Bob Plumley Rd · Shady Spring",short:"Shady Spring",lat:37.8215,lon:-80.9942,scene:"ridge",tide:false,fish:true,year:"The year · Shady Spring",airport:"Beckley",label:"Sun and moon over Appalachian ridgelines and the farm pond",snowy:true},
-    bft:{full:"Coosaw Club Dr · Beaufort",short:"Beaufort",lat:32.4938,lon:-80.6151,scene:"lowcountry",tide:true,fish:false,year:"The year · Beaufort",airport:"Beaufort MCAS",water:"Beaufort River",label:"Sun and moon over the Beaufort River, the swing bridge and a live oak hung with moss",snowy:false,windRow:true,runsTall:[5],bait:[["2026-09-11T12:00","2026-11-09T12:00"]]}
+    bft:{full:"Coosaw Club Dr · Beaufort",short:"Beaufort",lat:32.4938,lon:-80.6151,scene:"lowcountry",tide:true,fish:false,year:"The year · Beaufort",airport:"Beaufort MCAS",water:"Beaufort River",label:"Sun and moon over the Beaufort River, the swing bridge and a live oak hung with moss",snowy:false,windRow:true,runsTall:[5]}
   };
   var id="mb";
   try{var saved=localStorage.getItem("mbwx-loc");if(PLACES[saved])id=saved}catch(e){}
@@ -1221,11 +1223,10 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   /* Beaufort's tide chart carries its wind row under the lows, and its in-season row under that: both are
      held from the first frame (windRowH in the app). The months whose row says a closure on a second line
      are the app's runsTall (cobia, closed to keeping in May), and test.mjs holds the two copies together */
-  box("hourlySvg",ch-18);box("tideSvg",ch+(L.windRow?Math.round(13*(cw<360?1.08:cw<520?1.16:1)*1.22+3):0));box("moonSvg",ch+16);box("yearSvg",138+34+(L.snowy?46:0));
+  box("hourlySvg",ch-18);box("tideSvg",ch+(L.windRow?Math.round(13*(cw<360?1.08:cw<520?1.16:1)*1.22+8):0));box("moonSvg",ch+16);box("yearSvg",138+34+(L.snowy?46:0));
   document.getElementById("runsRow").hidden=!L.windRow;
-  /* and the days SCDNR's shrimp baiting season is open, when the shrimp say "baiting" on a second line */
   var nowIso=new Date().toLocaleString("sv-SE",{timeZone:"America/New_York"}).slice(0,16).replace(" ","T");
-  if(L.runsTall&&(L.runsTall.indexOf(+nowIso.slice(5,7))>=0||(L.bait||[]).some(function(r){return nowIso>=r[0]&&nowIso<r[1]})))document.getElementById("runsRow").classList.add("tall");
+  if(L.runsTall&&L.runsTall.indexOf(+nowIso.slice(5,7))>=0)document.getElementById("runsRow").classList.add("tall");
   document.getElementById("weekRows").style.minHeight="218px";
 })();
 </script>
@@ -1760,7 +1761,6 @@ function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd,code){
   } else {RAIN_KEY="";rf.innerHTML=""}
   const fl=document.getElementById("flash");
   fl.className="flash"+(PRM||!THUNDER?"":THUNDER>1?" on":" far");
-  fl.style.animationDelay=`-${(Date.now()/1000%STORM_P).toFixed(2)}s`;
 }
 
 /* One period for every part of a storm, so the bolts and the sky wash share a clock. */
@@ -1796,7 +1796,6 @@ function paintBolts(){
   if(!THUNDER||PRM){layer.innerHTML="";return}
   const sky=document.getElementById("sky");
   const w=sky.clientWidth||430,h=sky.clientHeight||560;
-  const beat=p=>(p*STORM_P-(Date.now()/1000%STORM_P)).toFixed(2);
   /* lean is how far the whole channel walks sideways on the way down, as a share of the
      width: three bolts that all fall straight read as a fence, not as a storm */
   const spots=THUNDER>1
@@ -1804,11 +1803,32 @@ function paintBolts(){
     :[[.29,20260814,.5,0,.09]];
   layer.innerHTML=spots.map(([fx,sd,k,p,lean])=>{
     const d=boltPath(w*fx,h*.13,h*1.03,sd,w*lean);
-    return `<g class="bolt" style="animation-delay:${beat(p)}s">`
+    return `<g class="bolt" style="animation-delay:${(p*STORM_P).toFixed(2)}s">`
       +[[7*k,.08,"#FFEFC2"],[3.4*k,.22,"#FFF6DE"],[1.5*k,.8,"#FFFDF4"],[.6*k,1,"#FFFFFF"]]
         .map(([sw,o,c])=>`<path d="${d}" fill="none" stroke="${c}" stroke-width="${sw.toFixed(2)}" stroke-linecap="round" stroke-linejoin="round" opacity="${o}"/>`).join("")
       +`</g>`;
   }).join("");
+  /* One clock, set once the paint has landed. The sky's wash is the same element from paint to
+     paint, so an animation-delay worked out again each paint left its old start time under the new
+     delay, and the bolts, drawn fresh each paint, took theirs off a clock read a stage later: the
+     live paint landing a moment after the cache put the beats half a second and more apart, and a
+     bolt struck into a sky that never lit. Every part's current time is the wall clock's place in
+     the storm's period, and each bolt's delay is only its own beat inside it. */
+  const P=STORM_P*1e3;
+  for(const el of [document.getElementById("flash"),...layer.querySelectorAll(".bolt")])
+    for(const a of el.getAnimations())onClock(a,()=>Date.now()%P+P);
+}
+/* A current time set before an animation's first frame is held until that frame lands, which on a
+   heavy paint is late: so it is set again once the animation is running, off the clock read then */
+function onClock(a,at){a.currentTime=at();a.ready.then(()=>{if(a.playState==="running")a.currentTime=at()},()=>{})}
+/* The witch's crossing is planned off WITCH_RUN when the scene is built, and its animation starts
+   on the frame the scene first paints, which on a slow phone is the better part of a second later:
+   so once the paint has landed she is put where her clock says, the way the bolts are */
+function witchClock(){
+  const a=document.querySelector("#sceneSvg .witch-cross,.scene-layer .witch-cross")?.getAnimations().find(x=>x.animationName==="witchCross");
+  if(!a||!WITCH_RUN)return;
+  const D=a.effect.getComputedTiming().duration,R=WITCH_RUN;
+  onClock(a,()=>((Date.now()-R.t0)%D+D)%D+(a.effect.getTiming().delay||0));
 }
 /* 0 no thunder, 1 thunder in the area, 2 thunder overhead. Set in render() from three
    readings and read by both the sky effects and the scene. */
@@ -7783,11 +7803,11 @@ BFT["skeleton"]=bftBonesLook([-209,-201,300,240],st=>rigBftBones({...st,k:BFT_BO
 BFT["skeleton-alone"]=bftBonesLook([-42,-102,80,104],st=>rigBftBones({...st,cut:false}));
 
 /* ── Beaufort's runs: what is in season, drawn small ──────────────────────
-   The fish, and the shrimp, the in-season row under Beaufort's tide names: one small drawing each, head to
+   The fish, the in-season row under Beaufort's tide names: one small drawing each, head to
    the right like the farm's almanac fish, each carrying the one mark that tells it at twenty pixels. The
    red drum's black tail spot, the trout's speckles, the flounder lying flat with both eyes up, the
    sheepshead's convict bars, the black drum's chin barbels, the cobia's pale side stripe, the tarpon's deep
-   fork and the thread off its dorsal, the shark's fin and long upper lobe, the shrimp's curl and feelers.
+   fork and the thread off its dorsal, and the shark's fin and long upper lobe.
    Day colours on the page's paper; the kit's own crescent and lit edge, and nothing else lights them */
 const RUN_INK={ink:"#2A1B33",shade:"#3A2350",lit:"#FFE8BC",eye:"#1B1720",eyeRing:"#F3E8C8"};
 const runEye=(x,y,r=1)=>[pDot(x,y,r,"eyeRing"),pDot(x+.2*r,y,r*.6,"eye")];
@@ -7848,21 +7868,6 @@ const RUN_FISH={
       pBlob([[-9,.6],[-3,1.5],[4,2],[11,1.4],[15,.5],[13.4,1.2],[8,2.6],[0,3],[-6,2]],"mark"),
       ...[9.2,10.1,11].map(x=>pTaper([[x,-1.1,.14],[x-.2,.3,.3],[x,1.3,.12]],"detail")),pDot(12.8,-1,.62,"eye")]},
     {parts:[pBlob([[5,2.2],[2.2,6.4],[3.6,6.8],[7.6,2.8]],"fin")]}]},
-  /* white shrimp, the fall crop, raw: a pale grey-cream shell (a pink one read as cooked), the curled
-     tail and its fan, the shell's segments, the horn and the long feelers swept back over its back, which
-     read as a shrimp at row size where a blob of a tail did not */
-  shrimp:{pal:{body:"#DCD3C3",mark:"#ECE6DA",fin:"#C8BFAE",tail:"#B4BCA6",band:"#9A8E7C",detail:"#A39785",eyeRing:"#3A3030",eye:"#1B1720"},box:[-13.2,-10.6,33.4,22],rig:()=>{
-    const C=[[13.4,-1.4,5],[9.4,-3,6.2],[4.6,-3.6,6.4],[.2,-3.2,6],[-4,-1.8,5.4],[-7.4,.8,4.7],[-8.8,4,4],[-8,6.9,3.2],[-6,8.6,2.4]];
-    return[{parts:[pTaper([[13.6,-2.6,.32],[6,-8.6,.26],[-4,-9.6,.18],[-12.4,-6.8,.1]],"detail"),
-        pTaper([[14,-1.8,.3],[8,-6.6,.24],[-1,-8,.15],[-8.4,-6,.08]],"detail"),
-        ...[[7.6,2.2],[4.8,2.6],[2,2.4],[-.8,1.8],[-3.4,.8]].map(([x,y])=>pTaper([[x,y,.5],[x-.5,y+2,.3],[x-1.2,y+3.1,.12]],"fin")),
-        pBlob([[-6.6,7.4],[-4,6.6],[-1,6.4],[-1.6,7.8],[-4,9],[-6.2,9.6]],"tail"),
-        pBlob([[-6.4,8.4],[-3.6,9],[-1.8,10.4],[-4.6,10.6],[-6.6,9.8]],"tail")]},
-      {parts:[pTaper(C,"body",{capStart:true,capEnd:true}),
-        pTaper([[15.4,-2.6,.9],[17.4,-3.6,.5],[19.2,-4.3,.12]],"body"),
-        ...[[2,-6.4,1.6,.2],[-2,-5.6,-1.4,1.4],[-5.4,-3.8,-3.8,3],[-8,-1.2,-5.8,4.8],[-9.4,2.6,-6.8,6.6]].map(([a,b,c,d])=>pTaper([[a,b,.2],[(a+c)/2,(b+d)/2,.42],[c,d,.2]],"detail")),
-        pTaper([[7.2,-6.4,.22],[6.6,-3,.4],[7,.4,.2]],"detail",undefined,{op:.7}),
-        pDot(13.4,-2.6,1,"eye")]}]}},
 };
 /* each one registers for the close-up: node tools/beaufort/look.mjs run-reds */
 for(const[k,f]of Object.entries(RUN_FISH))BFT["run-"+k]={pal:{...RUN_INK,...f.pal},box:f.box,s:.65,dist:0,ground:false,draw:f.rig,o:{line:.8,heavy:.32,shade:1.1,lit:.6}};
@@ -11872,8 +11877,8 @@ function zoneBars(zone,now,t1,shift=0){
    history reports, its SeaScience pages and Technical Report 89 on cobia) and says so, with the local
    guides only where SCDNR gives no months, and says that too. The row says "in season", never "running"
    or "biting": it is a calendar, not a report. No bag limits, which change and would go stale on the
-   page: the dates it says are the cobia closure, because the peak month is closed, and the shrimp baiting
-   season, which SCDNR sets each year (SHRIMP_BAIT) */
+   page: the one date it says is the cobia closure, because the peak month is closed. Only fish: Josh took
+   the shrimp out on October 21 2026 ("just stuff they would fish for") */
 const RUNS={bft:[
   /* reds all year (SCDNR: present year-round, the juveniles wintering in the deeper creeks and river
      channels). From August to November the adults come into the sounds and inlets to spawn (SCDNR's 2025
@@ -11902,32 +11907,15 @@ const RUNS={bft:[
   /* in at 66 to 68° in spring and starting offshore once the water is under 79° in fall (SCDNR MRRI): at
      the Fripp buoy's monthly averages that is June to September in the row, which keeps May on one line */
   {id:"sharks",name:"sharks",m:[6,7,8,9]},
-  /* the fall whites: first caught in the creeks in late July or early August, the landings peaking in
-     September and October, and gone to the ocean at about 60 to 65°, usually by late October, which at
-     the Fripp buoy's averages is November's (SeaScience). "baiting" under them while SCDNR's season for
-     shrimp over bait is open (SHRIMP_BAIT) */
-  {id:"shrimp",name:"shrimp",m:[8,9,10,11],bait:true},
 ]};
-/* SCDNR's shrimp baiting season, which it sets each year inside the 60 days between September 1 and
-   November 15 that SC Code 50-5-1100(B) allows, noon to noon on the place's clock. 2026: noon Friday
-   September 11 to noon Monday November 9, from SCDNR's 2026-2027 Hunting and Fishing Laws and Regulations
-   Guide (dnr.sc.gov/regs/pdf/Regs2627.pdf). A year with no row says nothing, because the dates are
-   SCDNR's to announce: add the next one from its guide when it is out. The preload's copy is
-   PLACES.bft.bait, and test.mjs holds the two together */
-const SHRIMP_BAIT={2026:["2026-09-11T12:00","2026-11-09T12:00"]};
-/* whether the baiting season is open at a wall-clock instant on the place's clock. Pure */
-const baitOpen=t=>{const d=new Date(t),r=SHRIMP_BAIT[d.getFullYear()];if(!r)return false;
-  const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}T${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
-  return iso>=r[0]&&iso<r[1]};
 /* the row's entries for a month, each animal once (the first name the table gives it that month, so bull
    reds from August to November and reds the rest of the year), in the table's order. Pure */
 const runsIn=(list,m)=>{const seen=new Set();return(list||[]).filter(r=>r.m.includes(m)&&!seen.has(r.id)&&seen.add(r.id))};
-/* what a row's entry says under its name on a second line, at a wall-clock instant: "closed" for a closure,
-   "baiting" while the baiting season is open. Pure */
-const runNote=(r,m,t)=>r.closed?.includes(m)?"closed":r.bait&&baitOpen(t)?"baiting":"";
+/* what a row's entry says under its name on a second line: "closed" in a month it is closed to keeping. Pure */
+const runNote=(r,m)=>r.closed?.includes(m)?"closed":"";
 /* whether a row says something under a name, and so takes a second line (the preload's copy is
-   PLACES.bft.runsTall, cobia in May, and PLACES.bft.bait, and test.mjs holds them together). Pure */
-const runsTall=(list,m,t)=>runsIn(list,m).some(r=>runNote(r,m,t));
+   PLACES.bft.runsTall, cobia in May, and test.mjs holds the two together). Pure */
+const runsTall=(list,m)=>runsIn(list,m).some(r=>runNote(r,m));
 /* The in-season row, under the chart and its labels: drawn, quiet, and said in one sentence. Its place is
    in the page from the first frame at Beaufort (the preload, paintLocationShell) with its height held, so
    the fish landing push nothing under them, and it is hidden at every place without a calendar */
@@ -11935,22 +11923,24 @@ function renderRuns(list,now){
   const el=document.getElementById("runsRow");if(!el)return;
   el.hidden=!list;
   const m=new Date(now).getMonth()+1,items=list?runsIn(list,m):[];
-  el.classList.toggle("tall",runsTall(list,m,now));
+  el.classList.toggle("tall",runsTall(list,m));
   if(!items.length){el.innerHTML="";return}
   /* each drawing about 32 pixels nose to tail (36 for a bull red), a little less on a 320 phone */
-  const narrow=appW()-40<360,maxH=narrow?21:24,len=r=>Math.round((r.big?36:r.id==="shrimp"?34:32)*(narrow?.86:1));
-  const said={closed:" (closed to keeping)",baiting:" (the baiting season is open)"};
-  const names=items.map(r=>r.name+(said[runNote(r,m,now)]||""));
+  const narrow=appW()-40<360,maxH=narrow?21:24,len=r=>Math.round((r.big?36:32)*(narrow?.86:1));
+  const names=items.map(r=>r.name+(runNote(r,m)?" (closed to keeping)":""));
   el.innerHTML=`<span class="sr-only">In season in ${MONTHS[m-1]}: ${names.join(", ")}.</span>`
     +`<span class="rk" aria-hidden="true">in season</span>`
-    +items.map(r=>`<span class="run${r.big?" big":""}" aria-hidden="true"><span class="g">${runGlyph(r.id,len(r),maxH)}</span><span>${r.name}${runNote(r,m,now)?` <i>${runNote(r,m,now)}</i>`:""}</span></span>`).join("");
+    +items.map(r=>`<span class="run${r.big?" big":""}" aria-hidden="true"><span class="g">${runGlyph(r.id,len(r),maxH)}</span><span>${r.name}${runNote(r,m)?` <i>${runNote(r,m)}</i>`:""}</span></span>`).join("");
 }
 /* how tall the wind row under the tide's lows is, so the loading shell holds it (the preload's own copy
-   is inline): one line of the vane and the mph */
-const windRowH=cw=>Math.round(13*(cw<360?1.08:cw<520?1.16:1)*1.22+3);
+   is inline): one line of the vane and the mph, with ROW_AIR over it so it stands clear of the lows' times */
+const ROW_AIR=5;
+const windRowH=cw=>Math.round(13*(cw<360?1.08:cw<520?1.16:1)*1.22+8);
 /* and the gusts' line under it, on a gusty day only: the advisory's size of type, and air under it, so an
-   advisory's bar under the gusts reads as the advisory's and never as the gusts' underline */
-const gustRowH=cw=>{const f=(cw<360?1.08:cw<520?1.16:1)*1.22;return Math.round(8*f*1.3+4*f)};
+   advisory's bar under the gusts reads as the advisory's and never as the gusts' underline. Josh, October 21
+   2026: the rows under the chart "feel crowded, especially when there's an offshore warning. could be
+   spacing", so each row stands ROW_AIR or so clear of the one over it */
+const gustRowH=cw=>{const f=(cw<360?1.08:cw<520?1.16:1)*1.22;return Math.round(8*f*1.3+4*f+3)};
 
 /* ── tide ───────────────────────────────────────────── */
 function renderTides(preds,css,gust,wind,gap=0,day=null){
@@ -12118,7 +12108,10 @@ function renderTides(preds,css,gust,wind,gap=0,day=null){
      it clear there, then the left end, then the nearest clear spot along the line, and every
      gridline takes the same spot when one spot clears them all, so the scale reads as one column */
   const gfs=Math.max(10,9*fs),gcap=gfs*.74,grids=[];
-  for(let ft=Math.ceil(base/2)*2;ft<=hiV;ft+=2)if(ft>base+.05&&ft!==grass)grids.push({ft,y:Y(ft),w:(ft+" ft").length*gfs*.6});
+  for(let ft=Math.ceil(base/2)*2;ft<=hiV;ft+=2)if(ft>base+.05&&ft!==grass)grids.push({ft,y:Y(ft),w:(ft+" ft").length*gfs*.6,quiet:grass!=null&&ft%4!==0});
+  /* At Beaufort the grass line says 8, so the scale names only 4 and leaves its 2 and 6 as unlabelled
+     gridlines: with the grass line's words, three depths beside the curve crowded the chart (Josh, October
+     21 2026, "the water section in beaufort feels crowded") and two say the scale */
   /* Beaufort's grass line is a gridline of its own, drawn whatever the day's highs, its words led by a
      tuft of spartina (placed after the depth scale, below) */
   const tuftW=grass!=null?gfs*1.05:0;
@@ -12139,7 +12132,7 @@ function renderTides(preds,css,gust,wind,gap=0,day=null){
   const gHits=(g,s)=>{const b=gBox(g,s);if(b[0]<x0-.1||b[2]>xR+.1)return Infinity;
     return pts.filter(([px,py])=>px>b[0]-5&&px<b[2]+5&&py>b[1]-5&&py<b[3]+5).length
       +solid.filter(o=>o[0]<b[2]+3&&o[2]>b[0]-3&&o[1]<b[3]+2&&o[3]>b[1]-2).length*100+inWash(b)};
-  const shared=spots.find(s=>grids.every(g=>!gHits(g,s)));
+  const shared=spots.find(s=>grids.every(g=>g.quiet||!gHits(g,s)));
   let grid="";const gridBoxes=[];
   /* the grass line's words go down after the depth scale's, at the first spot clear of everything and of
      the scale's own words: over the line, then under it with the tuft still standing on it (at 320 the
@@ -12148,6 +12141,7 @@ function renderTides(preds,css,gust,wind,gap=0,day=null){
   const grassG=grass!=null?[{ft:grass,y:Y(grass),w:(grass+" ft").length*gfs*.6+tuftW,grass:true}]:[];
   for(const g of [...grids,...grassG]){
     let s;
+    if(g.quiet){grid+=`<line x1="${x0}" y1="${g.y.toFixed(1)}" x2="${xR}" y2="${g.y.toFixed(1)}" stroke="${css.line}" stroke-width="1" stroke-dasharray="2 7"/>`;continue}
     if(g.grass){
       /* tried in order: over the line with room round it, so it never reads as one run with a high's
          time beside it; under it, with the tuft still standing on it; both again a size smaller with less
@@ -12211,7 +12205,7 @@ function renderTides(preds,css,gust,wind,gap=0,day=null){
     const cols=windTimes(P,nt0,t1,(pairW+5*fs)/pxH*36e5).map((t,i)=>({t,x:i?X(t):nx,now:!i}));
     const unitW=4*wfs*.6,c0R=clamp(nx-(pairW+unitW)/2,x0,xR-pairW-unitW)+pairW+unitW;
     const unit=!cols[1]||X(cols[1].t)-pairW/2>=c0R+6*fs?" mph":"";
-    const vy=H+7*fs;
+    const vy=H+7*fs+ROW_AIR;
     for(const col of cols){
       const wd=windAt(day.h,col.t,day.c,nt0);col.wd=wd;
       const ink=col.now?css.ink:css.soft,fade=rvAt(col.x,"fade");
@@ -12237,7 +12231,7 @@ function renderTides(preds,css,gust,wind,gap=0,day=null){
        on the line, so one stretch's line never runs into the next one's words */
     const gusts=gustSpans(day.h,day.c,nt0,t1),lfs=8*fs,put=[];
     if(gusts.length){
-      const gb=HT+lfs*.9,ly=gb-lfs*.3,keep=3*lfs*.6;
+      const gb=HT+lfs*.9+3,ly=gb-lfs*.3,keep=3*lfs*.6;
       for(const s of [...gusts].sort((p,q)=>q.top-p.top||p.a-q.a)){
         const a=X(s.a),b=X(s.b),txt=`gusts to ${s.top}`,tw=txt.length*lfs*.6;
         const edge=c=>clamp(c,x0+tw/2,xR-tw/2),lo=edge(a),hi=edge(b),mid=edge((a+b)/2);
@@ -12265,14 +12259,14 @@ function renderTides(preds,css,gust,wind,gap=0,day=null){
          from the first one's start, as far left as they need to fit (two in a row, a Small Craft Advisory
          and then a Gale Watch behind it, would print over each other), "offshore" said once in front, and
          the run a size smaller where a 320 phone needs it */
-      const by=HT,bh=2.4*fs,r=bh/2;
+      const by=HT+3,bh=2.4*fs,r=bh/2;
       for(const v of adv){const a=X(v.s),b=Math.max(X(v.e),a+2),op=/watch/i.test(v.a.event)?.28:.6;
         windRow+=v.open?`<path data-lane="zone" d="M ${(a+r).toFixed(1)} ${by.toFixed(1)} H ${b.toFixed(1)} V ${(by+bh).toFixed(1)} H ${(a+r).toFixed(1)} A ${r.toFixed(2)} ${r.toFixed(2)} 0 0 1 ${(a+r).toFixed(1)} ${by.toFixed(1)} Z" fill="${css.soft}" opacity="${op}"${rvAt(a,"fade")}/>`
           :`<rect data-lane="zone" x="${a.toFixed(1)}" y="${by.toFixed(1)}" width="${(b-a).toFixed(1)}" height="${bh.toFixed(1)}" rx="${r.toFixed(1)}" fill="${css.soft}" opacity="${op}"${rvAt(a,"fade")}/>`}
       const words="offshore "+[...new Set(adv.map(v=>v.a.event.toLowerCase()))].join(" · ");
       const zfs=Math.min(lfs,(xR-x0)/(words.length*.6)),tw=words.length*zfs*.6,lx=clamp(X(adv[0].s),x0,Math.max(x0,xR-tw));
-      windRow+=`<text data-lane="zone" x="${lx.toFixed(1)}" y="${(by+bh+zfs*1.05).toFixed(1)}" ${mono} font-size="${zfs.toFixed(1)}" fill="${css.soft}" ${halo}${rvAt(lx,"label")}>${words}</text>`;
-      HT=Math.round(by+bh+zfs*1.4);
+      windRow+=`<text data-lane="zone" x="${lx.toFixed(1)}" y="${(by+bh+zfs*1.2).toFixed(1)}" ${mono} font-size="${zfs.toFixed(1)}" fill="${css.soft}" ${halo}${rvAt(lx,"label")}>${words}</text>`;
+      HT=Math.round(by+bh+zfs*1.55);
     }
     /* said with the chart: the wind now, every gusty stretch (the ones the line had no room for too), the
        strongest column, and each advisory with its hours */
@@ -13556,21 +13550,41 @@ function renderUV(uvNow,uvPk,uvI,h,css){
      that was standing under EXTREME. The number on the pin and the lit bar carry the reading, and
      the label says the band of the number printed, so a 2.96 that reads 3.0 is moderate. */
   const shown=pin?+uvNow.toFixed(1):null,band=pin?uvBand(uvNow):-1;
-  let marks="",pinR=-Infinity,pinX=-Infinity;
-  if(pin){
-    const px=clamp(X(uvNow),2,W-2),t=shown.toFixed(1),tw=adv(t,14),tx=clamp(px,tw/2,W-tw/2);
-    pinR=tx+tw/2;pinX=px;
-    marks+=`<rect x="${(px-1.5).toFixed(1)}" y="${y-8}" width="3" height="16" rx="1.5" fill="${css.ink}" stroke="${css.paper}" stroke-width="5" paint-order="stroke"${rvAt(px,"pin")}/>
-      <text x="${tx.toFixed(1)}" y="11" ${mono} font-size="14" font-weight="600" fill="${css.ink}" ${halo}${rvAt(px,"label")}>${t}</text>`;
-  }
+  /* The labels are placed before they are drawn. The pin's reading sits over the pin. A peak still to
+     come prints its number, the day's high, over its ring in the pin's own figures but the softer ink,
+     with its hour small beside it (Josh, October 21 2026: "I also want the actual numerical high
+     represented somehow"). Where the two would meet the high steps right of the reading, then the
+     reading steps left of its pin, then the high gives up its hour, and only then is it left to the
+     bar's spoken label. */
+  let marks="",pinX=-Infinity,pinL=null,peakL=null;
+  const px=pin?clamp(X(uvNow),2,W-2):null,pt=pin?shown.toFixed(1):"",pw=adv(pt,14);
+  if(pin){pinX=px;pinL={x:clamp(px-pw/2,0,W-pw),w:pw}}
+  let cx=null,u=null;
   if(uvI>=0){
     /* a peak kept because it is in a higher band can be a few pixels from the pin, so its dot
        steps clear of the pin's paper edge. Within half a point that cannot take it out of its band */
-    const u=+h.uv[uvI],cx=clamp(Math.max(X(u),pinX+10),4.5,W-4.5),col=uvColor(u),t=hh(h.time[uvI]),tw=adv(t,10.5);
-    const tx=Math.max(clamp(cx,tw/2,W-tw/2),pinR+6+tw/2);
+    u=+h.uv[uvI];cx=clamp(Math.max(X(u),pinX+10),4.5,W-4.5);
+    const num=u.toFixed(1),hr=hh(h.time[uvI]),nw=adv(num,14),hw=adv(hr,10.5),gap=4;
+    /* the number stands over its ring, the hour after it; the whole label kept inside the card */
+    const fits=(w,l)=>l>=0&&l+w<=W+.5,clear=l=>!pinL||l>=pinL.x+pinL.w+6,lab=(x,w,hour)=>({x,w,num,hr:hour?hr:"",gap});
+    for(const [w,hour] of [[nw+gap+hw,true],[nw,false]]){
+      const at=clamp(cx-nw/2,0,Math.max(0,W-w));
+      if(clear(at)){peakL=lab(at,w,hour);break}
+      if(pinL&&fits(w,pinL.x+pinL.w+6)){peakL=lab(pinL.x+pinL.w+6,w,hour);break}
+      /* at the top of the scale, where neither fits right of the other, the reading goes to the left of
+         its pin and the high keeps only its number */
+      if(!hour&&pinL&&at-6-pinL.w>=0){pinL={x:Math.min(at-6,px-4)-pinL.w,w:pinL.w};peakL=lab(at,w,false);break}
+    }
+  }
+  if(pin){
+    marks+=`<rect x="${(px-1.5).toFixed(1)}" y="${y-8}" width="3" height="16" rx="1.5" fill="${css.ink}" stroke="${css.paper}" stroke-width="5" paint-order="stroke"${rvAt(px,"pin")}/>
+      <text x="${(pinL.x+pw/2).toFixed(1)}" y="11" ${mono} font-size="14" font-weight="600" fill="${css.ink}" ${halo}${rvAt(px,"label")}>${pt}</text>`;
+  }
+  if(uvI>=0){
+    const col=uvColor(u);
     if(rv)marks+=`<circle cx="${cx.toFixed(1)}" cy="${y}" r="13" fill="none" stroke="${col}" stroke-width="1.6" opacity="0"${rvAt(cx,"ring")}/>`;
     marks+=`<circle cx="${cx.toFixed(1)}" cy="${y}" r="4.2" fill="${css.paper}" stroke="${col}" stroke-width="2.4"${rvAt(cx,"dot")}/>`;
-    if(tx+tw/2<=W+.5)marks+=`<text x="${tx.toFixed(1)}" y="11" ${mono} font-size="10.5" font-weight="500" fill="${css.faint}" ${halo}${rvAt(cx,"label")}>${t}</text>`;
+    if(peakL)marks+=`<text data-uv="high" x="${peakL.x.toFixed(1)}" y="11" font-family="Spline Sans Mono,ui-monospace,monospace" ${halo}${rvAt(cx,"label")}><tspan font-size="14" font-weight="600" fill="${css.soft}">${peakL.num}</tspan>${peakL.hr?`<tspan dx="${peakL.gap}" font-size="10.5" font-weight="500" fill="${css.faint}">${peakL.hr}</tspan>`:""}</text>`;
   }
   /* one cubic, so the pen's walk reads it like the charts' splines */
   const bar=`M0 ${y}C${(xe/3).toFixed(1)} ${y} ${(xe*2/3).toFixed(1)} ${y} ${xe.toFixed(1)} ${y}`;
@@ -14711,6 +14725,7 @@ function render(d,live,savedAt=0){
      headline, the chips, the rain card and the scene are all inside .sky, and a bolt
      measured before them stops in mid-air where the sky used to end. */
   paintBolts();
+  witchClock();
   starsClearOfType();
   /* The reading age was fixed when this paint began. Width is taken once the page
      below the header has landed, which is what a resize compares against. */
@@ -15135,7 +15150,7 @@ function paintLocationShell(){
   document.getElementById("waterTitle").textContent="Water · "+(LOC.water||"Wrightsville Beach");
   /* Beaufort's in-season row holds its place, empty, until its fish land */
   const runs=document.getElementById("runsRow");runs.hidden=!(LOC.runs&&LOC.tide);runs.innerHTML="";
-  runs.classList.toggle("tall",!runs.hidden&&runsTall(RUNS[LOC.id],+locToday().slice(5,7),wallNow()));
+  runs.classList.toggle("tall",!runs.hidden&&runsTall(RUNS[LOC.id],+locToday().slice(5,7)));
   /* this place's shape before any reading: the same sections in the same order, each with its
      title and no picture yet, and no sentence card until there is something to say */
   document.getElementById("moonSection").hidden=!LOC.fish;
