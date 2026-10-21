@@ -5868,7 +5868,7 @@ test("Beaufort's fishing water: the grass line, the stage of the water, the wind
     html.match(/const BOAT=\{[^\n]*/)[0],
     pick("function vtecOf(s){", "/* The feed keeps an alert"), html.match(/const DEAD_VTEC=[^\n]*/)[0], html.match(/const vtecLive=[^\n]*/)[0],
     pick("function floodSpans(", "/* The in-season row, under the chart"),
-    "Object.assign(globalThis,{floodSpans,floodSay,tideStage,windAt,windTimes,windWords,windSpoken,gustSpans,zoneBars,runsIn,runsTall,runNote,baitOpen,SHRIMP_BAIT,RUNS,MARINE_EVENT,BOAT});",
+    "Object.assign(globalThis,{floodSpans,floodSay,tideStage,windAt,windTimes,windWords,windSpoken,gustSpans,zoneBars,runsIn,runsTall,runNote,RUNS,MARINE_EVENT,BOAT});",
   ].join("\n"), ctx);
   const at = (s) => new Date(s).getTime();
   const BFT = { grass: 8, bigFlood: 8.8, floodSeason: ["03-15", "11-30"] };
@@ -5983,7 +5983,8 @@ test("Beaufort's fishing water: the grass line, the stage of the water, the wind
   assert.deepEqual(zb([{ ...sca, event: "Rip Current Statement" }]), [], "and nothing but the zone's own marine products");
   assert.equal(zb([sca], 36e5)[0].s, Date.parse(sca.onset) + 36e5, "on the chart's wall clock");
 
-  // ── what is in season: a calendar, never a bite, with cobia's May closure and SCDNR's 2026 shrimp baiting season said.
+  // ── what is in season: a calendar, never a bite, with cobia's May closure said. Only fish: Josh took the shrimp
+  // and their baiting season out on October 21 2026 ("drop the shrimp too.... just stuff they would fish for").
   // Reds are in every month (SCDNR: year-round), bull reds from August to November, so a flood tide in the reds' season
   // never sits over a row without them. The months are SCDNR's month-by-month check of October 16 2026
   const names = (m) => Array.from(ctx.runsIn(ctx.RUNS.bft, m), (r) => r.name);
@@ -5992,8 +5993,8 @@ test("Beaufort's fishing water: the grass line, the stage of the water, the wind
   assert.deepEqual(names(4), ["reds", "trout", "flounder", "black drum", "cobia"]);
   assert.deepEqual(names(5), ["reds", "trout", "flounder", "sheepshead", "black drum", "cobia"]);
   assert.deepEqual(names(6), ["reds", "flounder", "black drum", "cobia", "sharks"]);
-  assert.deepEqual(names(8), ["bull reds", "flounder", "tarpon", "sharks", "shrimp"]);
-  assert.deepEqual(names(10), ["bull reds", "trout", "flounder", "sheepshead", "shrimp"]);
+  assert.deepEqual(names(8), ["bull reds", "flounder", "tarpon", "sharks"]);
+  assert.deepEqual(names(10), ["bull reds", "trout", "flounder", "sheepshead"]);
   assert.deepEqual(names(12), ["reds", "trout", "sheepshead"]);
   const fish = Object.keys(vm.runInContext("(" + pick("const RUN_FISH={", "/* each one registers for the close-up").replace(/^const RUN_FISH=/, "").replace(/;\s*$/, "") + ")",
     vm.createContext({ pBlob: () => 0, pTaper: () => 0, pDot: () => 0, runEye: () => [] })));
@@ -6002,27 +6003,19 @@ test("Beaufort's fishing water: the grass line, the stage of the water, the wind
     assert.ok(r.m.length && r.m.every((m) => Number.isInteger(m) && m >= 1 && m <= 12) && new Set(r.m).size === r.m.length, `${r.name}'s months are months`);
     assert.ok(!r.closed || r.closed.every((m) => r.m.includes(m)), `${r.name} is closed only in its own months`);
   }
-  // the baiting season, noon to noon on the place's clock (SCDNR's 2026-2027 guide: Sept. 11 (Noon) - Nov. 9 (Noon)),
-  // and nothing in a year SCDNR has not set
-  const W = (s) => new Date(s);
-  assert.equal(JSON.stringify(ctx.SHRIMP_BAIT), JSON.stringify({ 2026: ["2026-09-11T12:00", "2026-11-09T12:00"] }));
-  for (const [t, open] of [["2026-09-11T11:59", false], ["2026-09-11T12:00", true], ["2026-10-16T08:35", true], ["2026-11-09T11:59", true], ["2026-11-09T12:00", false], ["2027-10-01T12:00", false]])
-    assert.equal(ctx.baitOpen(W(t)), open, t);
-  const shrimp = ctx.RUNS.bft.find((r) => r.id === "shrimp");
-  assert.equal(ctx.runNote(shrimp, 10, W("2026-10-16T08:35")), "baiting");
-  assert.equal(ctx.runNote(shrimp, 11, W("2026-11-20T08:35")), "");
-  assert.equal(ctx.runNote(ctx.RUNS.bft.find((r) => r.id === "cobia"), 5, W("2026-05-10T08:00")), "closed");
-  const preload = (html.match(/bft:\{full:[^\n]*runsTall:\[([\d,]*)\],bait:(\[\[[^\]]*\]\])\}/) || []).slice(1);
-  assert.equal(preload.length, 2, "the preload holds the months and the baiting days whose row takes a second line");
-  assert.equal(JSON.stringify(JSON.parse(preload[1])), JSON.stringify(Object.values(ctx.SHRIMP_BAIT)), "the preload's baiting days are SHRIMP_BAIT's");
-  const mid = (m) => W(`2026-${String(m).padStart(2, "0")}-15T12:00`);
+  // no shrimp, no baiting season, and nothing in the row that is not a fish
+  assert.ok(!ctx.RUNS.bft.some((r) => r.id === "shrimp" || r.bait), "only fish in season");
+  assert.doesNotMatch(html, /SHRIMP_BAIT|baitOpen|baiting|shrimp:\{pal/);
+  assert.equal(ctx.runNote(ctx.RUNS.bft.find((r) => r.id === "cobia"), 5), "closed");
+  assert.equal(ctx.runNote(ctx.RUNS.bft.find((r) => r.id === "cobia"), 6), "");
+  const preload = (html.match(/bft:\{full:[^\n]*runsTall:\[([\d,]*)\]\}/) || []).slice(1);
+  assert.equal(preload.length, 1, "the preload holds the months whose row takes a second line");
   for (let m = 1; m <= 12; m++) {
     assert.equal(names(m).filter((n) => /^(bull )?reds$/.test(n)).length, 1, `month ${m} has its reds, once`);
     assert.equal(names(m).includes("bull reds"), m >= 8 && m <= 11, `month ${m}: bull reds only August to November`);
     assert.ok(names(m).length >= 1 && names(m).length <= 6, `month ${m} fits one row`);
-    assert.equal(ctx.runsTall(ctx.RUNS.bft, m, W("2027-06-01T12:00")), m === 5, `month ${m}: only May says a closure out of the baiting season`);
-    assert.equal(preload[0].split(",").map(Number).includes(m), ctx.runsTall(ctx.RUNS.bft, m, W("2027-06-01T12:00")), `month ${m}: the preload's copy is runsTall's`);
-    assert.equal(ctx.runsTall(ctx.RUNS.bft, m, mid(m)), m === 5 || (m >= 9 && m <= 10), `month ${m} of 2026`);
+    assert.equal(ctx.runsTall(ctx.RUNS.bft, m), m === 5, `month ${m}: only May says a closure`);
+    assert.equal(preload[0].split(",").map(Number).includes(m), ctx.runsTall(ctx.RUNS.bft, m), `month ${m}: the preload's copy is runsTall's`);
   }
   assert.ok(ctx.runsIn(ctx.RUNS.bft, 5).find((r) => r.name === "cobia").closed.includes(5));
   const rr = pick("function renderRuns(", "/* how tall the wind row");
@@ -6038,8 +6031,6 @@ test("Beaufort's fishing water: the grass line, the stage of the water, the wind
   assert.match(html, /document\.getElementById\("runsRow"\)\.hidden=!L\.windRow;/);
   assert.match(html, /\.runs\{display:flex;[^}]*min-height:54px;/);
   assert.doesNotMatch(html, /getElementById\("runsRow"\)\?\.remove\(\)/);
-  // the white shrimp is raw, not pink
-  assert.doesNotMatch(pick("const RUN_FISH={", "/* each one registers for the close-up"), /shrimp:\{pal:\{body:"#D9A994"/);
 
   // ── only Beaufort carries it: the grass line, the big flood, the season, the marine zone and the row are fields
   // of LOCS.bft, and the coast's call passes null, so its chart is drawn exactly as before

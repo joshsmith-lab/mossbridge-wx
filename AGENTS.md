@@ -1072,7 +1072,7 @@ was. Nothing in it is a score, a grade or red.
   bar moves. A request that fails or times out (six seconds) is no answer and no bar, and takes the last
   reading's down, because an advisory nobody could confirm is not said. When the forecast fails the cached
   reading takes the zone's answer too (Open-Meteo unreachable while api.weather.gov answers is the known way).
-- **In season** is a quiet row under the chart: `IN SEASON` and the month's fish and shrimp drawn small in the
+- **In season** is a quiet row under the chart: `IN SEASON` and the month's fish drawn small in the
   Storybook way (`RUN_FISH`, each about 32px nose to tail, carrying the one mark that tells it), with their
   names. SCDNR publishes no monthly calendar, so `RUNS` is read from its own pages (the species pages, the MRRI
   natural history reports on red drum, seatrout, flounder and sheepshead, the SeaScience pages, its 2025
@@ -1083,18 +1083,13 @@ was. Nothing in it is a score, a grade or red.
   fishery, winter trout in the upper rivers, spring on the flats), flounder April to November, sheepshead in May
   and from October into December (on the offshore reefs to spawn from January), black drum February to July,
   cobia mid-April into June with `closed` under them in May (all of South Carolina south of Jeremy Inlet, the
-  Southern Cobia Management Zone, SC Code 50-5-1713), tarpon July to September, sharks June to September and
-  the fall white shrimp August to November, gone from the creeks at about 60 to 65°. Under the shrimp,
-  `baiting` while SCDNR's shrimp baiting season is open, noon to noon on the place's clock (`SHRIMP_BAIT`,
-  `baitOpen`): in 2026 noon Friday September 11 to noon Monday November 9, from SCDNR's 2026-2027 Hunting and
-  Fishing Laws and Regulations Guide (Regs2627.pdf). SC Code 50-5-1100(B) only allows SCDNR sixty days between
-  September 1 and November 15, and SCDNR counts them inclusive (2025's ran to noon Monday November 10), so
-  each year's dates are SCDNR's to set and a year with no row says nothing: add the next from its guide
-  when it is out. It says in season, never biting or running now: a calendar, not a report, and it reads no
-  temperature into it (the buoy's is in the note beside the title). No bag limits, which change and would go
-  stale on the page (red drum's changed on July 1 2026). Its height is held from the first frame, a second
-  line too for May's `closed` and the baiting days (`runsTall`, and the preload's `runsTall` and `bait`,
-  which test.mjs holds to the app's).
+  Southern Cobia Management Zone, SC Code 50-5-1713), tarpon July to September and sharks June to September.
+  Only fish: the fall white shrimp and SCDNR's shrimp baiting season under them were in it until Josh took
+  them out on October 21 2026 ("drop the shrimp too.... just stuff they would fish for"). It says in season,
+  never biting or running now: a calendar, not a report, and it reads no temperature into it (the buoy's is in
+  the note beside the title). No bag limits, which change and would go stale on the page (red drum's changed on
+  July 1 2026). Its height is held from the first frame, a second line too for May's `closed` (`runsTall`, and
+  the preload's `runsTall`, which test.mjs holds to the app's).
 - **Left out, and why.** The almanac's fishing times: at Beaufort high water follows the moon by a nearly fixed
   interval, so every moon transit fell on the falling tide and every moonrise or moonset on the rising one (115
   of 115 and 116 of 116, September and October 2026), and they would be the tide by another name. They stay a

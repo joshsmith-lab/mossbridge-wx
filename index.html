@@ -1159,7 +1159,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   var PLACES={
     mb:{full:"Moss Bridge Ct · Porters Neck",short:"Porters Neck",lat:34.2982,lon:-77.7896,scene:"marsh",tide:true,fish:false,year:"The year · Wilmington",airport:"Wilmington",label:"Sun and moon over the marsh horizon",snowy:false},
     sp:{full:"Bob Plumley Rd · Shady Spring",short:"Shady Spring",lat:37.8215,lon:-80.9942,scene:"ridge",tide:false,fish:true,year:"The year · Shady Spring",airport:"Beckley",label:"Sun and moon over Appalachian ridgelines and the farm pond",snowy:true},
-    bft:{full:"Coosaw Club Dr · Beaufort",short:"Beaufort",lat:32.4938,lon:-80.6151,scene:"lowcountry",tide:true,fish:false,year:"The year · Beaufort",airport:"Beaufort MCAS",water:"Beaufort River",label:"Sun and moon over the Beaufort River, the swing bridge and a live oak hung with moss",snowy:false,windRow:true,runsTall:[5],bait:[["2026-09-11T12:00","2026-11-09T12:00"]]}
+    bft:{full:"Coosaw Club Dr · Beaufort",short:"Beaufort",lat:32.4938,lon:-80.6151,scene:"lowcountry",tide:true,fish:false,year:"The year · Beaufort",airport:"Beaufort MCAS",water:"Beaufort River",label:"Sun and moon over the Beaufort River, the swing bridge and a live oak hung with moss",snowy:false,windRow:true,runsTall:[5]}
   };
   var id="mb";
   try{var saved=localStorage.getItem("mbwx-loc");if(PLACES[saved])id=saved}catch(e){}
@@ -1223,9 +1223,8 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
      are the app's runsTall (cobia, closed to keeping in May), and test.mjs holds the two copies together */
   box("hourlySvg",ch-18);box("tideSvg",ch+(L.windRow?Math.round(13*(cw<360?1.08:cw<520?1.16:1)*1.22+3):0));box("moonSvg",ch+16);box("yearSvg",138+34+(L.snowy?46:0));
   document.getElementById("runsRow").hidden=!L.windRow;
-  /* and the days SCDNR's shrimp baiting season is open, when the shrimp say "baiting" on a second line */
   var nowIso=new Date().toLocaleString("sv-SE",{timeZone:"America/New_York"}).slice(0,16).replace(" ","T");
-  if(L.runsTall&&(L.runsTall.indexOf(+nowIso.slice(5,7))>=0||(L.bait||[]).some(function(r){return nowIso>=r[0]&&nowIso<r[1]})))document.getElementById("runsRow").classList.add("tall");
+  if(L.runsTall&&L.runsTall.indexOf(+nowIso.slice(5,7))>=0)document.getElementById("runsRow").classList.add("tall");
   document.getElementById("weekRows").style.minHeight="218px";
 })();
 </script>
@@ -7802,11 +7801,11 @@ BFT["skeleton"]=bftBonesLook([-209,-201,300,240],st=>rigBftBones({...st,k:BFT_BO
 BFT["skeleton-alone"]=bftBonesLook([-42,-102,80,104],st=>rigBftBones({...st,cut:false}));
 
 /* ── Beaufort's runs: what is in season, drawn small ──────────────────────
-   The fish, and the shrimp, the in-season row under Beaufort's tide names: one small drawing each, head to
+   The fish, the in-season row under Beaufort's tide names: one small drawing each, head to
    the right like the farm's almanac fish, each carrying the one mark that tells it at twenty pixels. The
    red drum's black tail spot, the trout's speckles, the flounder lying flat with both eyes up, the
    sheepshead's convict bars, the black drum's chin barbels, the cobia's pale side stripe, the tarpon's deep
-   fork and the thread off its dorsal, the shark's fin and long upper lobe, the shrimp's curl and feelers.
+   fork and the thread off its dorsal, and the shark's fin and long upper lobe.
    Day colours on the page's paper; the kit's own crescent and lit edge, and nothing else lights them */
 const RUN_INK={ink:"#2A1B33",shade:"#3A2350",lit:"#FFE8BC",eye:"#1B1720",eyeRing:"#F3E8C8"};
 const runEye=(x,y,r=1)=>[pDot(x,y,r,"eyeRing"),pDot(x+.2*r,y,r*.6,"eye")];
@@ -7867,21 +7866,6 @@ const RUN_FISH={
       pBlob([[-9,.6],[-3,1.5],[4,2],[11,1.4],[15,.5],[13.4,1.2],[8,2.6],[0,3],[-6,2]],"mark"),
       ...[9.2,10.1,11].map(x=>pTaper([[x,-1.1,.14],[x-.2,.3,.3],[x,1.3,.12]],"detail")),pDot(12.8,-1,.62,"eye")]},
     {parts:[pBlob([[5,2.2],[2.2,6.4],[3.6,6.8],[7.6,2.8]],"fin")]}]},
-  /* white shrimp, the fall crop, raw: a pale grey-cream shell (a pink one read as cooked), the curled
-     tail and its fan, the shell's segments, the horn and the long feelers swept back over its back, which
-     read as a shrimp at row size where a blob of a tail did not */
-  shrimp:{pal:{body:"#DCD3C3",mark:"#ECE6DA",fin:"#C8BFAE",tail:"#B4BCA6",band:"#9A8E7C",detail:"#A39785",eyeRing:"#3A3030",eye:"#1B1720"},box:[-13.2,-10.6,33.4,22],rig:()=>{
-    const C=[[13.4,-1.4,5],[9.4,-3,6.2],[4.6,-3.6,6.4],[.2,-3.2,6],[-4,-1.8,5.4],[-7.4,.8,4.7],[-8.8,4,4],[-8,6.9,3.2],[-6,8.6,2.4]];
-    return[{parts:[pTaper([[13.6,-2.6,.32],[6,-8.6,.26],[-4,-9.6,.18],[-12.4,-6.8,.1]],"detail"),
-        pTaper([[14,-1.8,.3],[8,-6.6,.24],[-1,-8,.15],[-8.4,-6,.08]],"detail"),
-        ...[[7.6,2.2],[4.8,2.6],[2,2.4],[-.8,1.8],[-3.4,.8]].map(([x,y])=>pTaper([[x,y,.5],[x-.5,y+2,.3],[x-1.2,y+3.1,.12]],"fin")),
-        pBlob([[-6.6,7.4],[-4,6.6],[-1,6.4],[-1.6,7.8],[-4,9],[-6.2,9.6]],"tail"),
-        pBlob([[-6.4,8.4],[-3.6,9],[-1.8,10.4],[-4.6,10.6],[-6.6,9.8]],"tail")]},
-      {parts:[pTaper(C,"body",{capStart:true,capEnd:true}),
-        pTaper([[15.4,-2.6,.9],[17.4,-3.6,.5],[19.2,-4.3,.12]],"body"),
-        ...[[2,-6.4,1.6,.2],[-2,-5.6,-1.4,1.4],[-5.4,-3.8,-3.8,3],[-8,-1.2,-5.8,4.8],[-9.4,2.6,-6.8,6.6]].map(([a,b,c,d])=>pTaper([[a,b,.2],[(a+c)/2,(b+d)/2,.42],[c,d,.2]],"detail")),
-        pTaper([[7.2,-6.4,.22],[6.6,-3,.4],[7,.4,.2]],"detail",undefined,{op:.7}),
-        pDot(13.4,-2.6,1,"eye")]}]}},
 };
 /* each one registers for the close-up: node tools/beaufort/look.mjs run-reds */
 for(const[k,f]of Object.entries(RUN_FISH))BFT["run-"+k]={pal:{...RUN_INK,...f.pal},box:f.box,s:.65,dist:0,ground:false,draw:f.rig,o:{line:.8,heavy:.32,shade:1.1,lit:.6}};
@@ -11891,8 +11875,8 @@ function zoneBars(zone,now,t1,shift=0){
    history reports, its SeaScience pages and Technical Report 89 on cobia) and says so, with the local
    guides only where SCDNR gives no months, and says that too. The row says "in season", never "running"
    or "biting": it is a calendar, not a report. No bag limits, which change and would go stale on the
-   page: the dates it says are the cobia closure, because the peak month is closed, and the shrimp baiting
-   season, which SCDNR sets each year (SHRIMP_BAIT) */
+   page: the one date it says is the cobia closure, because the peak month is closed. Only fish: Josh took
+   the shrimp out on October 21 2026 ("just stuff they would fish for") */
 const RUNS={bft:[
   /* reds all year (SCDNR: present year-round, the juveniles wintering in the deeper creeks and river
      channels). From August to November the adults come into the sounds and inlets to spawn (SCDNR's 2025
@@ -11921,32 +11905,15 @@ const RUNS={bft:[
   /* in at 66 to 68° in spring and starting offshore once the water is under 79° in fall (SCDNR MRRI): at
      the Fripp buoy's monthly averages that is June to September in the row, which keeps May on one line */
   {id:"sharks",name:"sharks",m:[6,7,8,9]},
-  /* the fall whites: first caught in the creeks in late July or early August, the landings peaking in
-     September and October, and gone to the ocean at about 60 to 65°, usually by late October, which at
-     the Fripp buoy's averages is November's (SeaScience). "baiting" under them while SCDNR's season for
-     shrimp over bait is open (SHRIMP_BAIT) */
-  {id:"shrimp",name:"shrimp",m:[8,9,10,11],bait:true},
 ]};
-/* SCDNR's shrimp baiting season, which it sets each year inside the 60 days between September 1 and
-   November 15 that SC Code 50-5-1100(B) allows, noon to noon on the place's clock. 2026: noon Friday
-   September 11 to noon Monday November 9, from SCDNR's 2026-2027 Hunting and Fishing Laws and Regulations
-   Guide (dnr.sc.gov/regs/pdf/Regs2627.pdf). A year with no row says nothing, because the dates are
-   SCDNR's to announce: add the next one from its guide when it is out. The preload's copy is
-   PLACES.bft.bait, and test.mjs holds the two together */
-const SHRIMP_BAIT={2026:["2026-09-11T12:00","2026-11-09T12:00"]};
-/* whether the baiting season is open at a wall-clock instant on the place's clock. Pure */
-const baitOpen=t=>{const d=new Date(t),r=SHRIMP_BAIT[d.getFullYear()];if(!r)return false;
-  const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}T${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
-  return iso>=r[0]&&iso<r[1]};
 /* the row's entries for a month, each animal once (the first name the table gives it that month, so bull
    reds from August to November and reds the rest of the year), in the table's order. Pure */
 const runsIn=(list,m)=>{const seen=new Set();return(list||[]).filter(r=>r.m.includes(m)&&!seen.has(r.id)&&seen.add(r.id))};
-/* what a row's entry says under its name on a second line, at a wall-clock instant: "closed" for a closure,
-   "baiting" while the baiting season is open. Pure */
-const runNote=(r,m,t)=>r.closed?.includes(m)?"closed":r.bait&&baitOpen(t)?"baiting":"";
+/* what a row's entry says under its name on a second line: "closed" in a month it is closed to keeping. Pure */
+const runNote=(r,m)=>r.closed?.includes(m)?"closed":"";
 /* whether a row says something under a name, and so takes a second line (the preload's copy is
-   PLACES.bft.runsTall, cobia in May, and PLACES.bft.bait, and test.mjs holds them together). Pure */
-const runsTall=(list,m,t)=>runsIn(list,m).some(r=>runNote(r,m,t));
+   PLACES.bft.runsTall, cobia in May, and test.mjs holds the two together). Pure */
+const runsTall=(list,m)=>runsIn(list,m).some(r=>runNote(r,m));
 /* The in-season row, under the chart and its labels: drawn, quiet, and said in one sentence. Its place is
    in the page from the first frame at Beaufort (the preload, paintLocationShell) with its height held, so
    the fish landing push nothing under them, and it is hidden at every place without a calendar */
@@ -11954,15 +11921,14 @@ function renderRuns(list,now){
   const el=document.getElementById("runsRow");if(!el)return;
   el.hidden=!list;
   const m=new Date(now).getMonth()+1,items=list?runsIn(list,m):[];
-  el.classList.toggle("tall",runsTall(list,m,now));
+  el.classList.toggle("tall",runsTall(list,m));
   if(!items.length){el.innerHTML="";return}
   /* each drawing about 32 pixels nose to tail (36 for a bull red), a little less on a 320 phone */
-  const narrow=appW()-40<360,maxH=narrow?21:24,len=r=>Math.round((r.big?36:r.id==="shrimp"?34:32)*(narrow?.86:1));
-  const said={closed:" (closed to keeping)",baiting:" (the baiting season is open)"};
-  const names=items.map(r=>r.name+(said[runNote(r,m,now)]||""));
+  const narrow=appW()-40<360,maxH=narrow?21:24,len=r=>Math.round((r.big?36:32)*(narrow?.86:1));
+  const names=items.map(r=>r.name+(runNote(r,m)?" (closed to keeping)":""));
   el.innerHTML=`<span class="sr-only">In season in ${MONTHS[m-1]}: ${names.join(", ")}.</span>`
     +`<span class="rk" aria-hidden="true">in season</span>`
-    +items.map(r=>`<span class="run${r.big?" big":""}" aria-hidden="true"><span class="g">${runGlyph(r.id,len(r),maxH)}</span><span>${r.name}${runNote(r,m,now)?` <i>${runNote(r,m,now)}</i>`:""}</span></span>`).join("");
+    +items.map(r=>`<span class="run${r.big?" big":""}" aria-hidden="true"><span class="g">${runGlyph(r.id,len(r),maxH)}</span><span>${r.name}${runNote(r,m)?` <i>${runNote(r,m)}</i>`:""}</span></span>`).join("");
 }
 /* how tall the wind row under the tide's lows is, so the loading shell holds it (the preload's own copy
    is inline): one line of the vane and the mph */
@@ -15155,7 +15121,7 @@ function paintLocationShell(){
   document.getElementById("waterTitle").textContent="Water · "+(LOC.water||"Wrightsville Beach");
   /* Beaufort's in-season row holds its place, empty, until its fish land */
   const runs=document.getElementById("runsRow");runs.hidden=!(LOC.runs&&LOC.tide);runs.innerHTML="";
-  runs.classList.toggle("tall",!runs.hidden&&runsTall(RUNS[LOC.id],+locToday().slice(5,7),wallNow()));
+  runs.classList.toggle("tall",!runs.hidden&&runsTall(RUNS[LOC.id],+locToday().slice(5,7)));
   /* this place's shape before any reading: the same sections in the same order, each with its
      title and no picture yet, and no sentence card until there is something to say */
   document.getElementById("moonSection").hidden=!LOC.fish;
