@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v103/);
+  assert.match(worker, /mbwx-shell-v104/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -294,8 +294,12 @@ test("the page agrees with itself", async () => {
   // text boxes only, and each star placed from its own percentages so a second call agrees
   assert.match(html, /createTreeWalker\(el,NodeFilter\.SHOW_TEXT\)/);
   assert.match(html, /parseFloat\(st\.getAttribute\("cx"\)\)/);
-  // the UV words start where their bands start on the bar's 0-12 scale
-  assert.match(html, /\.uv-scale span:nth-child\(3\)\{left:50%\}/);
+  // the UV words stand under the middles of their bands on the bar's 0-12 scale (low 0-3, moderate 3-6,
+  // high 6-11), extreme flush right: set at the bands' starts they bunched in the left half (Josh, October 21
+  // 2026: "the uv language feels crowded (to the left)")
+  assert.match(html, /\.uv-scale span\{position:absolute;top:0;white-space:nowrap;transform:translateX\(-50%\)\}/);
+  assert.match(html, /\.uv-scale span:nth-child\(1\)\{left:12\.5%\}\n\.uv-scale span:nth-child\(2\)\{left:37\.5%\}\n\.uv-scale span:nth-child\(3\)\{left:70\.8%\}/);
+  assert.match(html, /\.uv-scale span:last-child\{right:0;transform:none\}/);
   // and the bar is that same scale, lit in the gradient's own stops
   assert.match(html, /const X=u=>clamp\(u,0,12\)\/12\*W/);
   assert.match(html, /const UV_STOPS=\[\[0,"#4E9E6E"\],\[\.38,"#D9B437"\],\[\.68,"#C7431F"\],\[1,"#7A3A86"\]\];/);
@@ -1331,9 +1335,13 @@ test("the sun card says it with the bar, and steps aside when today has nothing 
   // band stays, nudged clear, or a sunscreen sentence sat over a bar that showed nothing past LOW
   assert.match(html, /if\(uvI>=0&&uvPk-\(uvNow\?\?0\)<\.5&&uvBand\(uvPk\)===uvBand\(uvNow\?\?0\)\)uvI=-1;/);
   assert.match(html, /cx=clamp\(Math\.max\(X\(u\),pinX\+10\),4\.5,W-4\.5\)/);
-  // labels are placed, not stamped: the peak's hour steps right of the reading or goes unsaid
-  assert.match(html, /const tx=Math\.max\(clamp\(cx,tw\/2,W-tw\/2\),pinR\+6\+tw\/2\)/);
-  assert.match(html, /if\(tx\+tw\/2<=W\+\.5\)marks\+=/);
+  // the day's high is a number on its ring ("I also want the actual numerical high represented somehow"),
+  // in the pin's figures and the softer ink, its hour small after it; placed, not stamped: right of the
+  // reading, then without its hour, then with the reading stepped left of its pin, and never off the card
+  assert.match(html, /const at=clamp\(cx-nw\/2,0,Math\.max\(0,W-w\)\);/);
+  assert.match(html, /for\(const \[w,hour\] of \[\[nw\+gap\+hw,true\],\[nw,false\]\]\)/);
+  assert.match(html, /if\(!hour&&pinL&&at-6-pinL\.w>=0\)\{pinL=\{x:Math\.min\(at-6,px-4\)-pinL\.w,w:pinL\.w\}/);
+  assert.match(html, /<text data-uv="high"[^\n]*<tspan font-size="14" font-weight="600" fill="\$\{css\.soft\}">\$\{peakL\.num\}<\/tspan>/);
   // The band is spoken, not inked: EXTREME is set flush right and covers about 10.2 to 12, so an
   // inked HIGH sat far left of a 10.6 pin standing under EXTREME. The scale is a quiet ruler, and
   // the label says the band of the number printed on the pin, and the peak in spoken time.
@@ -1341,7 +1349,7 @@ test("the sun card says it with the bar, and steps aside when today has nothing 
   // nudge needs the pin's own x
   assert.match(html, /const uvBand=u=>\{u=\+\(\+u\)\.toFixed\(1\);return u<3\?0:u<6\?1:u<11\?2:3\};/);
   assert.match(html, /band=pin\?uvBand\(uvNow\):-1;/);
-  assert.match(html, /pinR=tx\+tw\/2;pinX=px;/);
+  assert.match(html, /if\(pin\)\{pinX=px;pinL=\{x:clamp\(px-pw\/2,0,W-pw\),w:pw\}\}/);
   assert.equal((html.match(/u<3\?0:u<6\?1:u<11\?2:3/g) || []).length, 1, "the band rule is written once");
   assert.doesNotMatch(html, /\.uv-scale span\.on|\.uv-scale span"\)\.forEach/);
   assert.match(html, /svg\.setAttribute\("aria-label",sentence\(\[pin\?`UV \$\{shown\.toFixed\(1\)\} now, \$\{UV_BANDS\[band\]\}`:"UV today",\n\s*uvI>=0\?`peaking at \$\{\(\+h\.uv\[uvI\]\)\.toFixed\(1\)\} around \$\{spokenAt\(h\.time\[uvI\]\)\}`:null\]/);
@@ -4120,7 +4128,10 @@ test("every line runs the same width, from CHART_IN to CHART_IN", async () => {
   assert.match(tide, /const W=appW\(\)-40,H=chartH\(W\),padX=CHART_IN;/);
   assert.match(tide, /const topY=22,seaY=H-34,bedY=seaY\+6,lowY=H-9,x0=padX;/);
   assert.doesNotMatch(tide, /axisW|\(x0-6\)\.toFixed/);
-  assert.match(tide, /const shared=spots\.find\(s=>grids\.every\(g=>!gHits\(g,s\)\)\);/);
+  assert.match(tide, /const shared=spots\.find\(s=>grids\.every\(g=>g\.quiet\|\|!gHits\(g,s\)\)\);/);
+  // at Beaufort the grass line says 8, so the scale names only 4 and its 2 and 6 are unlabelled gridlines; the
+  // coast labels every one (Josh, October 21 2026: "the water section in beaufort feels crowded")
+  assert.match(tide, /grids\.push\(\{ft,y:Y\(ft\),w:\(ft\+" ft"\)\.length\*gfs\*\.6,quiet:grass!=null&&ft%4!==0\}\)/);
   assert.match(tide, /const spots=\[\["end",xR\],\["start",x0\]\];/);
   // and clear of the tag's room beside the bow and the stern, drawn or not
   assert.match(tide, /const solid=\[\.\.\.times,\[nx-26\*fs-tagRoom,boatTop,nx\+24\*fs\+tagRoom,ny\+6\],/);
@@ -6079,7 +6090,15 @@ test("Beaufort's fishing water: the grass line, the stage of the water, the wind
   assert.match(wr, /const words="offshore "\+/);
   // said with the chart: every gusty stretch, the line's room or not
   assert.match(wr, /\.\.\.gusts\.map\(s=>`gusts to \$\{s\.top\} miles an hour /);
-  assert.match(html, /const gustRowH=cw=>\{const f=\(cw<360\?1\.08:cw<520\?1\.16:1\)\*1\.22;return Math\.round\(8\*f\*1\.3\+4\*f\)\};/);
+  assert.match(html, /const gustRowH=cw=>\{const f=\(cw<360\?1\.08:cw<520\?1\.16:1\)\*1\.22;return Math\.round\(8\*f\*1\.3\+4\*f\+3\)\};/);
+  // the rows under the chart each stand clear of the one over it (Josh, October 21 2026: "crowded, especially
+  // when there's an offshore warning. could be spacing"): the wind row ROW_AIR under the lows, the gusts and
+  // the advisory's bar 3 more, its words further off the bar, and the in-season row well clear of them all
+  assert.match(html, /const ROW_AIR=5;/);
+  assert.match(wr, /const vy=H\+7\*fs\+ROW_AIR;/);
+  assert.match(wr, /const gb=HT\+lfs\*\.9\+3,/);
+  assert.match(wr, /const by=HT\+3,bh=2\.4\*fs,/);
+  assert.match(html, /\.runs\{display:flex;[^}]*margin-top:18px;/);
   // and the band of a flood stops under its high's time, never through it, and the depth scale keeps out of it
   // where it can, lightly, never onto the tide line for it (at the coast there is no flood, and the scale is
   // placed as it always was)
@@ -6088,8 +6107,8 @@ test("Beaufort's fishing water: the grass line, the stage of the water, the wind
   assert.match(tide, /\.length\*100\+inWash\(b\)\};/);
   assert.match(tide, /const floods=day\?floodSpans\(P,interp,t0,t1,grass\):\[\]/);
   // the loading shell holds the wind row's height at Beaufort, and only there (the preload's copy is windRowH's)
-  assert.match(html, /box\("tideSvg",ch\+\(L\.windRow\?Math\.round\(13\*\(cw<360\?1\.08:cw<520\?1\.16:1\)\*1\.22\+3\):0\)\)/);
-  assert.match(html, /const windRowH=cw=>Math\.round\(13\*\(cw<360\?1\.08:cw<520\?1\.16:1\)\*1\.22\+3\);/);
+  assert.match(html, /box\("tideSvg",ch\+\(L\.windRow\?Math\.round\(13\*\(cw<360\?1\.08:cw<520\?1\.16:1\)\*1\.22\+8\):0\)\)/);
+  assert.match(html, /const windRowH=cw=>Math\.round\(13\*\(cw<360\?1\.08:cw<520\?1\.16:1\)\*1\.22\+8\);/);
   assert.match(html, /box\("tideSvg",ch\+\(LOC\.grass\?windRowH\(cw\):0\)\)/);
 
   // ── the zone's own lane: the forecast never waits on it, a late answer paints again with the view held, and a

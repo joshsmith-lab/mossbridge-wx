@@ -602,7 +602,7 @@ html[data-theme=dark] .xp-peek .warm{color:var(--heat)}
 /* and what SCDNR's calendar has in season, drawn, in one quiet row under the chart's labels. Its height is
    held from the first frame (the loading shell and a cached place switch), so nothing under it moves when
    the fish land; each drawing sits in a box of one height, so the names stand on one line */
-.runs{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:center;gap:3px 13px;margin-top:8px;min-height:54px;
+.runs{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:center;gap:3px 13px;margin-top:18px;min-height:54px;
   font-family:var(--mono);font-size:10px;line-height:12px;color:var(--ink-soft)}
 .runs[hidden]{display:none}
 .runs .rk{flex-basis:100%;text-align:center;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:1px}
@@ -770,12 +770,14 @@ html:not([data-theme=dark]) .rv-core{display:none}
 html[data-theme=dark] .uv-svg .uv-track{opacity:.28}
 .uv-scale{position:relative;height:1.3em;font-family:var(--mono);font-size:10.5px;
   color:var(--ink-faint);margin-top:1px;letter-spacing:.11em}
-/* on the same 0-12 scale as the bar: moderate from 3, high from 6, extreme at the end, so a
-   6.2 sits under HIGH instead of short of it */
-.uv-scale span{position:absolute;top:0;white-space:nowrap}
-.uv-scale span:nth-child(2){left:25%}
-.uv-scale span:nth-child(3){left:50%}
-.uv-scale span:last-child{right:0}
+/* on the same 0-12 scale as the bar, each word under the middle of its own band: low 0-3, moderate
+   3-6, high 6-11 (uvBand), and extreme, whose band is too narrow to centre in, flush right. Set at the
+   bands' starts they bunched in the left half (Josh, October 21 2026: "crowded (to the left)") */
+.uv-scale span{position:absolute;top:0;white-space:nowrap;transform:translateX(-50%)}
+.uv-scale span:nth-child(1){left:12.5%}
+.uv-scale span:nth-child(2){left:37.5%}
+.uv-scale span:nth-child(3){left:70.8%}
+.uv-scale span:last-child{right:0;transform:none}
 @media (max-width:359px){.uv-scale{letter-spacing:.03em}}
 @media (max-width:339px){.uv-scale{font-size:9.5px;letter-spacing:.04em}}
 /* two columns on a narrow tablet leave a card about 250px wide, where MODERATE ran into HIGH */
@@ -1221,7 +1223,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   /* Beaufort's tide chart carries its wind row under the lows, and its in-season row under that: both are
      held from the first frame (windRowH in the app). The months whose row says a closure on a second line
      are the app's runsTall (cobia, closed to keeping in May), and test.mjs holds the two copies together */
-  box("hourlySvg",ch-18);box("tideSvg",ch+(L.windRow?Math.round(13*(cw<360?1.08:cw<520?1.16:1)*1.22+3):0));box("moonSvg",ch+16);box("yearSvg",138+34+(L.snowy?46:0));
+  box("hourlySvg",ch-18);box("tideSvg",ch+(L.windRow?Math.round(13*(cw<360?1.08:cw<520?1.16:1)*1.22+8):0));box("moonSvg",ch+16);box("yearSvg",138+34+(L.snowy?46:0));
   document.getElementById("runsRow").hidden=!L.windRow;
   var nowIso=new Date().toLocaleString("sv-SE",{timeZone:"America/New_York"}).slice(0,16).replace(" ","T");
   if(L.runsTall&&L.runsTall.indexOf(+nowIso.slice(5,7))>=0)document.getElementById("runsRow").classList.add("tall");
@@ -11931,11 +11933,14 @@ function renderRuns(list,now){
     +items.map(r=>`<span class="run${r.big?" big":""}" aria-hidden="true"><span class="g">${runGlyph(r.id,len(r),maxH)}</span><span>${r.name}${runNote(r,m)?` <i>${runNote(r,m)}</i>`:""}</span></span>`).join("");
 }
 /* how tall the wind row under the tide's lows is, so the loading shell holds it (the preload's own copy
-   is inline): one line of the vane and the mph */
-const windRowH=cw=>Math.round(13*(cw<360?1.08:cw<520?1.16:1)*1.22+3);
+   is inline): one line of the vane and the mph, with ROW_AIR over it so it stands clear of the lows' times */
+const ROW_AIR=5;
+const windRowH=cw=>Math.round(13*(cw<360?1.08:cw<520?1.16:1)*1.22+8);
 /* and the gusts' line under it, on a gusty day only: the advisory's size of type, and air under it, so an
-   advisory's bar under the gusts reads as the advisory's and never as the gusts' underline */
-const gustRowH=cw=>{const f=(cw<360?1.08:cw<520?1.16:1)*1.22;return Math.round(8*f*1.3+4*f)};
+   advisory's bar under the gusts reads as the advisory's and never as the gusts' underline. Josh, October 21
+   2026: the rows under the chart "feel crowded, especially when there's an offshore warning. could be
+   spacing", so each row stands ROW_AIR or so clear of the one over it */
+const gustRowH=cw=>{const f=(cw<360?1.08:cw<520?1.16:1)*1.22;return Math.round(8*f*1.3+4*f+3)};
 
 /* ── tide ───────────────────────────────────────────── */
 function renderTides(preds,css,gust,wind,gap=0,day=null){
@@ -12103,7 +12108,10 @@ function renderTides(preds,css,gust,wind,gap=0,day=null){
      it clear there, then the left end, then the nearest clear spot along the line, and every
      gridline takes the same spot when one spot clears them all, so the scale reads as one column */
   const gfs=Math.max(10,9*fs),gcap=gfs*.74,grids=[];
-  for(let ft=Math.ceil(base/2)*2;ft<=hiV;ft+=2)if(ft>base+.05&&ft!==grass)grids.push({ft,y:Y(ft),w:(ft+" ft").length*gfs*.6});
+  for(let ft=Math.ceil(base/2)*2;ft<=hiV;ft+=2)if(ft>base+.05&&ft!==grass)grids.push({ft,y:Y(ft),w:(ft+" ft").length*gfs*.6,quiet:grass!=null&&ft%4!==0});
+  /* At Beaufort the grass line says 8, so the scale names only 4 and leaves its 2 and 6 as unlabelled
+     gridlines: with the grass line's words, three depths beside the curve crowded the chart (Josh, October
+     21 2026, "the water section in beaufort feels crowded") and two say the scale */
   /* Beaufort's grass line is a gridline of its own, drawn whatever the day's highs, its words led by a
      tuft of spartina (placed after the depth scale, below) */
   const tuftW=grass!=null?gfs*1.05:0;
@@ -12124,7 +12132,7 @@ function renderTides(preds,css,gust,wind,gap=0,day=null){
   const gHits=(g,s)=>{const b=gBox(g,s);if(b[0]<x0-.1||b[2]>xR+.1)return Infinity;
     return pts.filter(([px,py])=>px>b[0]-5&&px<b[2]+5&&py>b[1]-5&&py<b[3]+5).length
       +solid.filter(o=>o[0]<b[2]+3&&o[2]>b[0]-3&&o[1]<b[3]+2&&o[3]>b[1]-2).length*100+inWash(b)};
-  const shared=spots.find(s=>grids.every(g=>!gHits(g,s)));
+  const shared=spots.find(s=>grids.every(g=>g.quiet||!gHits(g,s)));
   let grid="";const gridBoxes=[];
   /* the grass line's words go down after the depth scale's, at the first spot clear of everything and of
      the scale's own words: over the line, then under it with the tuft still standing on it (at 320 the
@@ -12133,6 +12141,7 @@ function renderTides(preds,css,gust,wind,gap=0,day=null){
   const grassG=grass!=null?[{ft:grass,y:Y(grass),w:(grass+" ft").length*gfs*.6+tuftW,grass:true}]:[];
   for(const g of [...grids,...grassG]){
     let s;
+    if(g.quiet){grid+=`<line x1="${x0}" y1="${g.y.toFixed(1)}" x2="${xR}" y2="${g.y.toFixed(1)}" stroke="${css.line}" stroke-width="1" stroke-dasharray="2 7"/>`;continue}
     if(g.grass){
       /* tried in order: over the line with room round it, so it never reads as one run with a high's
          time beside it; under it, with the tuft still standing on it; both again a size smaller with less
@@ -12196,7 +12205,7 @@ function renderTides(preds,css,gust,wind,gap=0,day=null){
     const cols=windTimes(P,nt0,t1,(pairW+5*fs)/pxH*36e5).map((t,i)=>({t,x:i?X(t):nx,now:!i}));
     const unitW=4*wfs*.6,c0R=clamp(nx-(pairW+unitW)/2,x0,xR-pairW-unitW)+pairW+unitW;
     const unit=!cols[1]||X(cols[1].t)-pairW/2>=c0R+6*fs?" mph":"";
-    const vy=H+7*fs;
+    const vy=H+7*fs+ROW_AIR;
     for(const col of cols){
       const wd=windAt(day.h,col.t,day.c,nt0);col.wd=wd;
       const ink=col.now?css.ink:css.soft,fade=rvAt(col.x,"fade");
@@ -12222,7 +12231,7 @@ function renderTides(preds,css,gust,wind,gap=0,day=null){
        on the line, so one stretch's line never runs into the next one's words */
     const gusts=gustSpans(day.h,day.c,nt0,t1),lfs=8*fs,put=[];
     if(gusts.length){
-      const gb=HT+lfs*.9,ly=gb-lfs*.3,keep=3*lfs*.6;
+      const gb=HT+lfs*.9+3,ly=gb-lfs*.3,keep=3*lfs*.6;
       for(const s of [...gusts].sort((p,q)=>q.top-p.top||p.a-q.a)){
         const a=X(s.a),b=X(s.b),txt=`gusts to ${s.top}`,tw=txt.length*lfs*.6;
         const edge=c=>clamp(c,x0+tw/2,xR-tw/2),lo=edge(a),hi=edge(b),mid=edge((a+b)/2);
@@ -12250,14 +12259,14 @@ function renderTides(preds,css,gust,wind,gap=0,day=null){
          from the first one's start, as far left as they need to fit (two in a row, a Small Craft Advisory
          and then a Gale Watch behind it, would print over each other), "offshore" said once in front, and
          the run a size smaller where a 320 phone needs it */
-      const by=HT,bh=2.4*fs,r=bh/2;
+      const by=HT+3,bh=2.4*fs,r=bh/2;
       for(const v of adv){const a=X(v.s),b=Math.max(X(v.e),a+2),op=/watch/i.test(v.a.event)?.28:.6;
         windRow+=v.open?`<path data-lane="zone" d="M ${(a+r).toFixed(1)} ${by.toFixed(1)} H ${b.toFixed(1)} V ${(by+bh).toFixed(1)} H ${(a+r).toFixed(1)} A ${r.toFixed(2)} ${r.toFixed(2)} 0 0 1 ${(a+r).toFixed(1)} ${by.toFixed(1)} Z" fill="${css.soft}" opacity="${op}"${rvAt(a,"fade")}/>`
           :`<rect data-lane="zone" x="${a.toFixed(1)}" y="${by.toFixed(1)}" width="${(b-a).toFixed(1)}" height="${bh.toFixed(1)}" rx="${r.toFixed(1)}" fill="${css.soft}" opacity="${op}"${rvAt(a,"fade")}/>`}
       const words="offshore "+[...new Set(adv.map(v=>v.a.event.toLowerCase()))].join(" · ");
       const zfs=Math.min(lfs,(xR-x0)/(words.length*.6)),tw=words.length*zfs*.6,lx=clamp(X(adv[0].s),x0,Math.max(x0,xR-tw));
-      windRow+=`<text data-lane="zone" x="${lx.toFixed(1)}" y="${(by+bh+zfs*1.05).toFixed(1)}" ${mono} font-size="${zfs.toFixed(1)}" fill="${css.soft}" ${halo}${rvAt(lx,"label")}>${words}</text>`;
-      HT=Math.round(by+bh+zfs*1.4);
+      windRow+=`<text data-lane="zone" x="${lx.toFixed(1)}" y="${(by+bh+zfs*1.2).toFixed(1)}" ${mono} font-size="${zfs.toFixed(1)}" fill="${css.soft}" ${halo}${rvAt(lx,"label")}>${words}</text>`;
+      HT=Math.round(by+bh+zfs*1.55);
     }
     /* said with the chart: the wind now, every gusty stretch (the ones the line had no room for too), the
        strongest column, and each advisory with its hours */
@@ -13541,21 +13550,41 @@ function renderUV(uvNow,uvPk,uvI,h,css){
      that was standing under EXTREME. The number on the pin and the lit bar carry the reading, and
      the label says the band of the number printed, so a 2.96 that reads 3.0 is moderate. */
   const shown=pin?+uvNow.toFixed(1):null,band=pin?uvBand(uvNow):-1;
-  let marks="",pinR=-Infinity,pinX=-Infinity;
-  if(pin){
-    const px=clamp(X(uvNow),2,W-2),t=shown.toFixed(1),tw=adv(t,14),tx=clamp(px,tw/2,W-tw/2);
-    pinR=tx+tw/2;pinX=px;
-    marks+=`<rect x="${(px-1.5).toFixed(1)}" y="${y-8}" width="3" height="16" rx="1.5" fill="${css.ink}" stroke="${css.paper}" stroke-width="5" paint-order="stroke"${rvAt(px,"pin")}/>
-      <text x="${tx.toFixed(1)}" y="11" ${mono} font-size="14" font-weight="600" fill="${css.ink}" ${halo}${rvAt(px,"label")}>${t}</text>`;
-  }
+  /* The labels are placed before they are drawn. The pin's reading sits over the pin. A peak still to
+     come prints its number, the day's high, over its ring in the pin's own figures but the softer ink,
+     with its hour small beside it (Josh, October 21 2026: "I also want the actual numerical high
+     represented somehow"). Where the two would meet the high steps right of the reading, then the
+     reading steps left of its pin, then the high gives up its hour, and only then is it left to the
+     bar's spoken label. */
+  let marks="",pinX=-Infinity,pinL=null,peakL=null;
+  const px=pin?clamp(X(uvNow),2,W-2):null,pt=pin?shown.toFixed(1):"",pw=adv(pt,14);
+  if(pin){pinX=px;pinL={x:clamp(px-pw/2,0,W-pw),w:pw}}
+  let cx=null,u=null;
   if(uvI>=0){
     /* a peak kept because it is in a higher band can be a few pixels from the pin, so its dot
        steps clear of the pin's paper edge. Within half a point that cannot take it out of its band */
-    const u=+h.uv[uvI],cx=clamp(Math.max(X(u),pinX+10),4.5,W-4.5),col=uvColor(u),t=hh(h.time[uvI]),tw=adv(t,10.5);
-    const tx=Math.max(clamp(cx,tw/2,W-tw/2),pinR+6+tw/2);
+    u=+h.uv[uvI];cx=clamp(Math.max(X(u),pinX+10),4.5,W-4.5);
+    const num=u.toFixed(1),hr=hh(h.time[uvI]),nw=adv(num,14),hw=adv(hr,10.5),gap=4;
+    /* the number stands over its ring, the hour after it; the whole label kept inside the card */
+    const fits=(w,l)=>l>=0&&l+w<=W+.5,clear=l=>!pinL||l>=pinL.x+pinL.w+6,lab=(x,w,hour)=>({x,w,num,hr:hour?hr:"",gap});
+    for(const [w,hour] of [[nw+gap+hw,true],[nw,false]]){
+      const at=clamp(cx-nw/2,0,Math.max(0,W-w));
+      if(clear(at)){peakL=lab(at,w,hour);break}
+      if(pinL&&fits(w,pinL.x+pinL.w+6)){peakL=lab(pinL.x+pinL.w+6,w,hour);break}
+      /* at the top of the scale, where neither fits right of the other, the reading goes to the left of
+         its pin and the high keeps only its number */
+      if(!hour&&pinL&&at-6-pinL.w>=0){pinL={x:Math.min(at-6,px-4)-pinL.w,w:pinL.w};peakL=lab(at,w,false);break}
+    }
+  }
+  if(pin){
+    marks+=`<rect x="${(px-1.5).toFixed(1)}" y="${y-8}" width="3" height="16" rx="1.5" fill="${css.ink}" stroke="${css.paper}" stroke-width="5" paint-order="stroke"${rvAt(px,"pin")}/>
+      <text x="${(pinL.x+pw/2).toFixed(1)}" y="11" ${mono} font-size="14" font-weight="600" fill="${css.ink}" ${halo}${rvAt(px,"label")}>${pt}</text>`;
+  }
+  if(uvI>=0){
+    const col=uvColor(u);
     if(rv)marks+=`<circle cx="${cx.toFixed(1)}" cy="${y}" r="13" fill="none" stroke="${col}" stroke-width="1.6" opacity="0"${rvAt(cx,"ring")}/>`;
     marks+=`<circle cx="${cx.toFixed(1)}" cy="${y}" r="4.2" fill="${css.paper}" stroke="${col}" stroke-width="2.4"${rvAt(cx,"dot")}/>`;
-    if(tx+tw/2<=W+.5)marks+=`<text x="${tx.toFixed(1)}" y="11" ${mono} font-size="10.5" font-weight="500" fill="${css.faint}" ${halo}${rvAt(cx,"label")}>${t}</text>`;
+    if(peakL)marks+=`<text data-uv="high" x="${peakL.x.toFixed(1)}" y="11" font-family="Spline Sans Mono,ui-monospace,monospace" ${halo}${rvAt(cx,"label")}><tspan font-size="14" font-weight="600" fill="${css.soft}">${peakL.num}</tspan>${peakL.hr?`<tspan dx="${peakL.gap}" font-size="10.5" font-weight="500" fill="${css.faint}">${peakL.hr}</tspan>`:""}</text>`;
   }
   /* one cubic, so the pen's walk reads it like the charts' splines */
   const bar=`M0 ${y}C${(xe/3).toFixed(1)} ${y} ${(xe*2/3).toFixed(1)} ${y} ${xe.toFixed(1)} ${y}`;
