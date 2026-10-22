@@ -9117,17 +9117,34 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) matrix(1 0 ${(-lean).toFixed(2)} -.13 0 0) scale(${(flip*s).toFixed(2)} ${s.toFixed(2)})" fill="${shadeC}" opacity="${(.22*shadowK).toFixed(2)}">${parts.map(p=>`<path d="${p.d}"/>`).join("")}</g>`};
   const flatParts=L=>L.flatMap(l=>l.parts?l.parts.filter(p=>!INK_INNER.has(p.role)&&!p.soft):flatParts(l.layers));
   /* The house's sunrise and sunset sit up in open sky. Sunrise is the right-hand word, because the
-     house faces north. They stay in the corner columns, which are sky from the top of the frame down
+     house faces north, and it stays there all day: the next event does not trade sides. Sunset stays
+     on the left. Three marks are drawn for Josh to choose, switched with mark=a, mark=b or mark=c
+     (a thin chevron, a half sun on the horizon, or a small caps name). Up is sunrise and down is
+     sunset in every one. They stay in the corner columns, which are sky from the top of the frame down
      to the palm crowns: the house occupies the middle from about x 64, and the palms start near y 90.
      A short window crops the top of that sky (the same sum pondFit uses) and the words drop to just
      under the crop, still in the corner. A sun or a moon that would cover a word steps it along.
      No box: the sky there is clear, and the thin halo the times already wear keeps a digit readable
      when the sky goes dark. The same spots are what the witch and the bats keep off. */
   if(pnArc){
+    let sunMark="a";
+    try{const m=/[?&]mark=([abc])/.exec(location.search);if(m)sunMark=m[1]}catch(e){}
+    const TIME_ADV=6.8,WORD_ADV=4.8,WORD_TRACK=0.4,CHEV_W=5.4;
+    const sunTimeParts=(kind,up,t)=>{
+      const tw=t.length*TIME_ADV;
+      if(kind==="b")return{tw,w:tw+2.8+11.2,above:12,below:6};
+      if(kind==="c"){const n=up?7:6,ww=n*WORD_ADV+(n-1)*WORD_TRACK+2.2+CHEV_W;return{tw,w:Math.max(tw,ww)+1,above:18,below:4}}
+      return{tw,w:tw+2.4+CHEV_W+1,above:10,below:4};
+    };
+    const halo=(d,sw)=>`<path d="${d}" fill="none" stroke="var(--off-sky,#F7F4EA)" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>`;
+    const inkP=(d,sw)=>`<path d="${d}" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    const chev=(x,top,up,h=4.6)=>{const x2=x+CHEV_W/2,x3=x+CHEV_W,y0=top,y1=top+h;
+      const d=up?`M ${x.toFixed(1)} ${y1.toFixed(1)} L ${x2.toFixed(1)} ${y0.toFixed(1)} L ${x3.toFixed(1)} ${y1.toFixed(1)}`:`M ${x.toFixed(1)} ${y0.toFixed(1)} L ${x2.toFixed(1)} ${y1.toFixed(1)} L ${x3.toFixed(1)} ${y0.toFixed(1)}`;
+      return halo(d,3.5)+inkP(d,1.15)};
     const avoid=[sunXY&&[sunXY[0],sunXY[1],28],moonXY&&[moonXY[0],moonXY[1],moonR+8]].filter(Boolean);
-    const place=side=>{
-      const w=40,a=side==="L"?"start":"end";
-      const box=(x,y)=>a==="end"?[x-w,y-11,x+2,y+3]:[x-2,y-11,x+w,y+3];
+    const place=(side,t)=>{
+      const up=side==="R",lay=sunTimeParts(sunMark,up,t),w=lay.w,a=side==="L"?"start":"end";
+      const box=(x,y)=>a==="end"?[x-w,y-lay.above,x+2,y+lay.below]:[x-2,y-lay.above,x+w,y+lay.below];
       const clear=(x,y)=>{
         const b=box(x,y);
         if(b[0]<3||b[2]>W-3||b[1]<visTop+1.5||b[3]>86)return false;
@@ -9140,12 +9157,30 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
         const x=x0+step*i;
         if(side==="L"&&x>W*.46)break;
         if(side==="R"&&x<W*.54)break;
-        if(clear(x,y))return{x,y,a};
+        if(clear(x,y))return{x,y,a,box:box(x,y),t,up,lay};
       }
-      return{x:x0,y:y0,a};
+      return{x:x0,y:y0,a,box:box(x0,y0),t,up,lay};
     };
-    skyLabs={rise:place("R"),set:place("L")};
-    sunTimes=`<g data-sun-times="1" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="11" font-weight="600" fill="currentColor">${lab(0,clock(sunrise))+lab(1,clock(sunset))}</g>`;
+    const markOf=s=>{
+      const {x,y,a,t,up,lay}=s;
+      const time=`<text class="suntime" x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${a}">${t}</text>`;
+      if(sunMark==="b"){
+        const gw=11.2,gx=a==="end"?x-lay.tw-2.8-gw:x+lay.tw+2.8,hy=y-0.4,r=4,xL=gx+1.6,xR=xL+8,mid=(xL+xR)/2;
+        const arc=`M ${xL.toFixed(1)} ${hy.toFixed(1)} A ${r} ${r} 0 0 0 ${xR.toFixed(1)} ${hy.toFixed(1)}`;
+        const line=`M ${gx.toFixed(1)} ${hy.toFixed(1)} H ${(gx+gw).toFixed(1)}`;
+        const arrow=up?chev(mid-CHEV_W/2,hy-r-6,true,4.2):chev(mid-CHEV_W/2,hy+1.6,false,4.2);
+        return time+halo(arc,3.2)+halo(line,3.1)+`<path d="${arc} Z" fill="currentColor"/>`+inkP(line,1.15)+arrow;
+      }
+      if(sunMark==="c"){
+        const word=up?"SUNRISE":"SUNSET",wy=y-11.2,h=3.8;
+        if(a==="start")return time+chev(x,wy-h+0.6,up,h)+`<text class="suntime" x="${(x+CHEV_W+2.2).toFixed(1)}" y="${wy.toFixed(1)}" text-anchor="start" font-size="8" letter-spacing="${WORD_TRACK}">${word}</text>`;
+        return time+`<text class="suntime" x="${(x-CHEV_W-2.2).toFixed(1)}" y="${wy.toFixed(1)}" text-anchor="end" font-size="8" letter-spacing="${WORD_TRACK}">${word}</text>`+chev(x-CHEV_W,wy-h+0.6,up,h);
+      }
+      const ax=a==="end"?x-lay.tw-2.4-CHEV_W:x+lay.tw+2.4;
+      return time+chev(ax,y-6.6,up,4.8);
+    };
+    skyLabs={rise:place("R",clock(sunrise)),set:place("L",clock(sunset))};
+    sunTimes=`<g data-sun-times="1" data-sun-mark="${sunMark}" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="11" font-weight="600" fill="currentColor">${markOf(skyLabs.rise)+markOf(skyLabs.set)}</g>`;
   }
   /* ── the holiday ──────────────────────────────────────────────────────────────────
      Decorations are things set out in the scene, painted like the dock and the barn and lit by
@@ -9366,7 +9401,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
        of them, from her hat (14px over her seat) to her boots, with room for her lean and her bob,
        over each label's width and her own length either side; and it keeps above anything
        standing up into her band */
-    const labs=[.17,.83].map(f=>{const lx=labX(f),ly=labY(f);return labA(f)==="end"?[lx-30,lx,ly]:[lx,lx+30,ly]});
+    const labs=pnArc&&skyLabs?[skyLabs.set.box,skyLabs.rise.box].map(b=>[b[0],b[2],(b[1]+b[3])/2]):[.17,.83].map(f=>{const lx=labX(f),ly=labY(f);return labA(f)==="end"?[lx-30,lx,ly]:[lx,lx+30,ly]});
     const under=(y0,y1,a,b,top)=>[a-23,b+23].every(x=>yAt(y0,y1,x)<top);
     const clear=(y0,y1)=>labs.every(([a,b,ly])=>{const ya=yAt(y0,y1,a-22),yb=yAt(y0,y1,b+22);return Math.min(ya,yb)>ly+21||Math.max(ya,yb)<ly-19})
       &&tops.every(([a,b,t])=>under(y0,y1,a,b,t-6));
@@ -9597,7 +9632,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     return out+`</g>`;
   };
   /* the two times written on the arc, as boxes a bat stays out of */
-  const timeBoxes=(pnArc?[0,1]:[.17,.83]).map(f=>{const x=labX(f),y=labY(f);return labA(f)==="end"?[x-40,y-10,x+2,y+3]:[x-2,y-10,x+40,y+3]});
+  const timeBoxes=pnArc&&skyLabs?[skyLabs.set.box,skyLabs.rise.box]:(pnArc?[0,1]:[.17,.83]).map(f=>{const x=labX(f),y=labY(f);return labA(f)==="end"?[x-40,y-10,x+2,y+3]:[x-2,y-10,x+40,y+3]});
   /* and, under reduced motion, the witch where she holds still (witchPlan) */
   const batKeep=wp=>wp&&wp.box?[...timeBoxes,wp.box]:timeBoxes;
 
