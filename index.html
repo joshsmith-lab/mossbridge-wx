@@ -10676,12 +10676,14 @@ function pnTurtlesPlan({sunAlt,wet,storm,temp,snowing}){
   return{heads:0,bask:false,dim:false};
 }
 /* Blue merle Australian Shepherd. The yard pose sits three-quarter, haunch to the left and
-   chest toward us, head turned to the viewer. The body is the mass: a deep chest, straight
-   front legs and a short neck ruff. The ears are moderate triangles whose tips fold forward,
-   not tall sails. A white blaze and collar, copper on the cheeks, brows and socks, black
-   marbling, dark eyes with a catchlight, a black nose and a bobbed tail. y=0 is the feet.
-   `lie` is its own low pose, side on. The tail and the head are the only motion. */
-const PN_HERDER={merle:"#6A7078",black:"#2C3036",white:"#F6F3EC",copper:"#C47A45",mane:"#8A9098",ear:"#4A5058",nose:"#16141A",eye:"#1C1814",glint:"#C5D4E4",ink:"#241C28",shade:"#3A2350",lit:"#FFE2A8",shadeOp:.35,litOp:.5};
+   chest toward us, head turned to the viewer. The coat is long and shaggy: a tufted outline
+   and a few fur strokes, silver-grey with small black patches, not one smooth block. The face
+   stays grey. Copper sits on the cheeks, the muzzle sides, the brows and the chest ruff. The
+   white is a narrow blaze on the muzzle only, never a stripe up the crown. The muzzle is long
+   and tapered, the nose big and black, the eyes almond, one icy blue and one brown. The ears
+   are high triangles whose tips fold forward. A tan and white ruff rings the neck. y=0 is the
+   feet. `lie` is its own low pose, side on. The tail and the head are the only motion. */
+const PN_HERDER={merle:"#A3ABB4",silver:"#D2DAE2",black:"#2A2E34",white:"#F4F1EA",copper:"#C4783E",tan:"#D09258",mane:"#D09258",ear:"#8E969F",nose:"#16141A",eye:"#D7EAF6",eyeRing:"#6A3A22",glint:"#F7FBFF",detail:"#4A525C",ink:"#241C28",shade:"#3A2350",lit:"#FFE2A8",shadeOp:.32,litOp:.48};
 function propPnHerder({lie=false,phase=""}={}){
   const wag=`<g class="pn-wag" style="${phase}">`,nod=`<g class="pn-nod" style="${phase}">`;
   if(lie){
@@ -10710,77 +10712,130 @@ function propPnHerder({lie=false,phase=""}={}){
     ]}]};
     return[{parts:body},tail,head];
   }
+  const fur=(pts)=>pTaper(pts,"detail",{},{noSil:true,op:".88"});
+  const ell=(cx,cy,rx,ry,role,extra)=>part(`M ${f1(cx-rx)} ${f1(cy)} A ${f1(rx)} ${f1(ry)} 0 1 0 ${f1(cx+rx)} ${f1(cy)} A ${f1(rx)} ${f1(ry)} 0 1 0 ${f1(cx-rx)} ${f1(cy)} Z`,role,extra||{});
+  const poly=(pts,role,extra)=>part("M "+pts.map(P2).join(" L ")+" Z",role,extra||{});
   const body=[
-    pBlob([[-6.4,-.5],[-8.3,-2.6],[-7.6,-6.2],[-3.6,-7.3],[-1.5,-5],[-2,-2.2],[-4.4,-.4]],"merle"),
-    pBlob([[-6.2,-5.2],[-4.6,-6.3],[-3.6,-4.6],[-5.2,-3.6],[-6.6,-4.2]],"black",{noSil:true}),
-    pBlob([[-5.2,-2.4],[-3.8,-3.2],[-3.2,-1.8],[-4.6,-1.2]],"black",{noSil:true}),
-    pBlob([[-2.4,-2.3],[-2.7,-4.6],[-1.2,-7],[2.6,-7.4],[4.3,-5.2],[4.2,-2.5],[1.6,-2.2]],"merle"),
-    pBlob([[.6,-6.5],[2.4,-7],[3.1,-5.2],[1.2,-4.8],[-.2,-5.6]],"black",{noSil:true}),
-    pBlob([[-4.8,-4.4],[-3.4,-5.1],[-2.8,-4],[-4,-3.4]],"black",{noSil:true}),
-    pTaper([[-.7,-3.6,1.15],[-.62,-1.7,.95],[-.5,-.05,1.05]],"merle"),
-    pTaper([[2.15,-3.7,1.18],[2.22,-1.7,.98],[2.1,-.05,1.08]],"merle"),
-    pBlob([[-1.35,-1.55],[.05,-1.55],[.1,-.05],[-1.28,-.05]],"copper",{noSil:true}),
-    pBlob([[1.45,-1.6],[2.9,-1.6],[2.85,-.05],[1.4,-.05]],"copper",{noSil:true}),
-    pBlob([[-.4,-6.2],[1.8,-6.6],[2.2,-3.4],[.2,-2.7],[-.7,-4.2]],"white",{noSil:true}),
-    pBlob([[-3.2,-5.8],[-3.7,-7.6],[-1.4,-8.7],[1.6,-8.8],[3.3,-7.4],[2.8,-5.8],[.6,-5.2],[-1.4,-5.3]],"mane"),
-    pBlob([[-1.9,-6.9],[2.2,-7.2],[2,-6.2],[-1.6,-6]],"white",{noSil:true}),
+    pBlob([[-4.15,-.4],[-5.35,-.85],[-6.25,-1.85],[-7.05,-2.55],[-6.35,-3.35],[-7.2,-4.15],[-6.4,-4.95],[-7.25,-5.75],[-6.05,-6.4],[-4.7,-5.95],[-3.45,-6.85],[-2.05,-7.4],[-.45,-7.7],[1.35,-7.55],[2.7,-6.9],[3.75,-5.95],[4.4,-4.85],[3.6,-3.9],[4.3,-2.75],[3.45,-1.7],[2.05,-1.25],[.45,-1.5],[-1.15,-1.6],[-2.55,-1.15],[-3.55,-.65]],"merle"),
+    pTaper([[-.4,-4.2,.95],[-.35,-2.1,.78],[-.3,-.05,.88]],"merle"),
+    pTaper([[2.05,-4.35,1],[2.1,-2.15,.8],[2.05,-.05,.9]],"merle"),
+    pTaper([[-4.85,-2.35,1.05],[-4.35,-1.1,.78],[-4.05,-.05,.86]],"merle"),
+    poly([[-.95,-1.35],[-.15,-1.4],[-.1,-.08],[-.9,-.08]],"copper",{noSil:true}),
+    poly([[1.45,-1.4],[2.45,-1.45],[2.4,-.08],[1.4,-.08]],"copper",{noSil:true}),
+    poly([[-4.7,-1.15],[-3.75,-1.2],[-3.7,-.08],[-4.6,-.08]],"copper",{noSil:true}),
+    poly([[-7.05,-4.55],[-6.2,-5.15],[-5.45,-4.6],[-5.55,-3.85],[-6.35,-3.55],[-6.95,-4]],"black",{noSil:true}),
+    poly([[-6.35,-2.55],[-5.55,-2.95],[-5.2,-2.25],[-5.85,-1.85],[-6.4,-2.05]],"black",{noSil:true}),
+    poly([[-4.85,-5.95],[-4.05,-6.35],[-3.7,-5.6],[-4.35,-5.15],[-4.9,-5.35]],"black",{noSil:true}),
+    poly([[1.05,-6.15],[1.85,-6.55],[2.15,-5.75],[1.45,-5.3],[.95,-5.7]],"black",{noSil:true}),
+    poly([[2.85,-4.45],[3.6,-4.8],[3.7,-4.05],[3.05,-3.65],[2.7,-4.05]],"black",{noSil:true}),
+    poly([[-6.15,-3.55],[-5.25,-3.95],[-5.05,-3.2],[-5.85,-2.9]],"silver",{noSil:true}),
+    poly([[-3.15,-6.65],[-2.15,-7.1],[-1.85,-6.35],[-2.7,-5.95]],"silver",{noSil:true}),
+    poly([[.35,-6.45],[1.25,-6.85],[1.45,-6.1],[.55,-5.75]],"silver",{noSil:true}),
+    poly([[2.15,-3.45],[2.9,-3.8],[2.85,-3.05],[2.15,-2.8]],"black",{noSil:true}),
+    pBlob([[-3.15,-6.15],[-3.55,-7.15],[-2.2,-8.15],[-.35,-8.55],[1.45,-8.45],[2.85,-7.7],[3.55,-6.55],[2.7,-5.7],[.55,-5.45],[-1.45,-5.6]],"tan"),
+    poly([[-2.55,-7.15],[-1.7,-7.7],[-1.15,-6.7],[-1.85,-6.15]],"copper",{noSil:true}),
+    poly([[1.7,-7.05],[2.6,-7.55],[2.35,-6.45],[1.55,-6.1]],"copper",{noSil:true}),
+    poly([[-.55,-7.15],[-.15,-6.2],[-.4,-5.05],[.25,-4.75],[.75,-5.15],[.55,-6.25],[.3,-7.1]],"white",{noSil:true}),
+    fur([[-6.7,-3.2,.42],[-5.7,-4.05,.28],[-4.9,-3.35,.08]]),
+    fur([[-6.4,-5,.38],[-5.3,-5.7,.24],[-4.4,-5.05,.08]]),
+    fur([[-3.4,-6.5,.36],[-2.2,-7.05,.22],[-1.1,-6.45,.08]]),
+    fur([[.2,-6.3,.34],[1.2,-6.9,.2],[2.1,-6.2,.08]]),
+    fur([[1.2,-4.2,.32],[2.1,-4.8,.18],[2.9,-4.1,.06]]),
+    fur([[-1.6,-3.4,.3],[-.5,-4,.18],[.5,-3.3,.06]]),
+    pTaper([[-6.3,-2.45,.2],[-7.7,-2.05,.95],[-8.2,-2.65,.12]],"merle"),
+    pTaper([[-6.7,-3.85,.18],[-8.15,-4.45,.95],[-8.35,-3.7,.12]],"merle"),
+    pTaper([[-6.45,-5.35,.16],[-7.7,-6.15,.85],[-7.15,-6.7,.1]],"merle"),
+    pTaper([[3.5,-5.45,.16],[4.75,-5.05,.8],[4.95,-4.35,.1]],"merle"),
+    pTaper([[3.85,-3.25,.16],[5.05,-2.85,.85],[4.65,-2.15,.1]],"merle"),
+    pTaper([[-3.15,-6.85,.18],[-4.15,-7.7,.8],[-3.35,-8.05,.1]],"tan"),
+    pTaper([[2.55,-6.95,.16],[3.55,-7.75,.75],[2.9,-8.1,.1]],"tan"),
   ];
-  const tail={open:wag,pivot:[-6.6,-4.8],layers:[{parts:[
-    pBlob([[-6.5,-5.2],[-9.3,-6.1],[-9.8,-5.1],[-8.5,-4.2],[-6.5,-4.4]],"merle"),
-    pBlob([[-8.7,-5.8],[-9.6,-5.6],[-9.1,-4.9]],"white",{noSil:true}),
+  const tail={open:wag,pivot:[-6.3,-5.15],layers:[{parts:[
+    pBlob([[-6.2,-4.85],[-7.7,-6.15],[-9.15,-6.7],[-10.35,-5.95],[-10.45,-4.85],[-9.5,-3.9],[-8.05,-3.75],[-6.45,-4.25]],"merle"),
+    poly([[-9.35,-6.15],[-10.15,-5.85],[-9.85,-5.15],[-9.15,-5.4]],"white",{noSil:true}),
+    poly([[-8.7,-5.7],[-8.2,-6],[-7.9,-5.5]],"black",{noSil:true}),
+    fur([[-7.3,-4.7,.32],[-8.5,-5.45,.2],[-9.4,-4.85,.06]]),
   ]}]};
-  const head={open:nod,pivot:[.4,-7.8],layers:[{parts:[
-    pBlob([[-2.15,-8.5],[-2.55,-10.5],[-1.7,-12.15],[1.45,-12.3],[2.45,-10.6],[2.35,-8.7],[1.05,-7.7],[0,-7.45],[-1,-7.7]],"merle"),
-    pBlob([[-2.05,-10.7],[-3.05,-11.5],[-2.55,-12.85],[-1.35,-11.7],[-.85,-10.4],[-1.55,-10.2]],"ear"),
-    pBlob([[1.7,-10.55],[2.7,-11.3],[2.25,-12.7],[1.15,-11.55],[.7,-10.3],[1.3,-10.1]],"ear"),
-    pBlob([[-2.15,-11.7],[-1.45,-12.15],[-1.7,-11.2]],"black",{noSil:true}),
-    pBlob([[1.7,-11.5],[2.15,-11.95],[1.85,-11.05]],"black",{noSil:true}),
-    pBlob([[-1.9,-11.35],[-.95,-11.7],[-.9,-11],[-1.7,-10.8]],"copper",{noSil:true}),
-    pBlob([[1.75,-11.25],[.9,-11.6],[.95,-10.9],[1.7,-10.7]],"copper",{noSil:true}),
-    pBlob([[-2.05,-9.7],[-1.05,-10.1],[-.95,-9.2],[-1.9,-8.95]],"copper",{noSil:true}),
-    pBlob([[1.95,-9.6],[1,-10],[1.05,-9.1],[1.9,-8.85]],"copper",{noSil:true}),
-    pBlob([[-.45,-11.7],[.45,-11.7],[.7,-9.6],[.85,-8.1],[.4,-7.6],[0,-7.5],[-.4,-7.6],[-.85,-8.1],[-.7,-9.6]],"white",{noSil:true}),
-    pDot(-1.25,-10.55,.72,"eye",{noSil:true}),
-    pDot(1.22,-10.55,.68,"eye",{noSil:true}),
-    pDot(-.98,-10.78,.22,"glint",{noSil:true}),
-    pDot(1.46,-10.78,.2,"glint",{noSil:true}),
-    pDot(0,-7.85,.48,"nose",{noSil:true}),
+  /* Ears are straight triangles, high and outside the eyes. The folded tip stays lateral,
+     above the outer corner, so it cannot become a mask. The blaze is a line path on the
+     muzzle only: a spline here once climbed the forehead. */
+  const head={open:nod,pivot:[.2,-8.15],layers:[{parts:[
+    pBlob([[-2.05,-9.05],[-2.45,-10.15],[-2.3,-11.35],[-1.45,-12.45],[-.2,-12.9],[1.05,-12.75],[1.95,-12.15],[2.5,-11.1],[2.45,-9.95],[2.05,-8.95],[1.15,-8.2],[.3,-7.9],[-.35,-7.9],[-1.2,-8.25]],"merle"),
+    pBlob([[-1.15,-8.55],[-1.05,-7.5],[-.65,-6.75],[0,-6.4],[.65,-6.75],[1.05,-7.5],[1.15,-8.55],[.55,-8.9],[-.55,-8.9]],"merle"),
+    poly([[-1.55,-11.55],[-2.2,-13.55],[-3.3,-12.45],[-2.65,-11.3],[-1.85,-11.2]],"ear"),
+    poly([[-2.4,-12.65],[-3.5,-12.05],[-3.05,-11.2],[-2.25,-11.4]],"ear"),
+    poly([[1.6,-11.5],[2.3,-13.45],[3.35,-12.3],[2.6,-11.25],[1.9,-11.15]],"ear"),
+    poly([[2.35,-12.5],[3.45,-11.9],[2.95,-11.15],[2.2,-11.35]],"ear"),
+    poly([[-2.7,-12.7],[-2.3,-12.95],[-2.25,-12.45]],"black",{noSil:true}),
+    poly([[2.55,-12.55],[2.95,-12.8],[2.85,-12.3]],"black",{noSil:true}),
+    poly([[-1.7,-12.15],[-1.15,-12.4],[-1.05,-11.95]],"silver",{noSil:true}),
+    poly([[1.15,-12.05],[1.7,-12.3],[1.55,-11.85]],"black",{noSil:true}),
+    poly([[-1.85,-11.4],[-.55,-11.62],[-.8,-11.18],[-1.7,-11.12]],"copper",{noSil:true}),
+    poly([[.6,-11.38],[1.85,-11.15],[1.65,-11.08],[.85,-11.16]],"copper",{noSil:true}),
+    poly([[-1.95,-9.55],[-1.2,-9.9],[-.75,-9.15],[-1.6,-8.85]],"copper",{noSil:true}),
+    poly([[.85,-9.5],[1.7,-9.85],[1.85,-9.1],[1.05,-8.8]],"copper",{noSil:true}),
+    poly([[-1.05,-8.15],[-.45,-8.45],[-.35,-7.35],[-.95,-7.2]],"copper",{noSil:true}),
+    poly([[.4,-8.4],[1.05,-8.1],[.95,-7.15],[.35,-7.3]],"copper",{noSil:true}),
+    poly([[-.15,-9.2],[.15,-9.2],[.16,-8],[.08,-7.05],[-.08,-7.05],[-.16,-8]],"white",{noSil:true}),
+    fur([[-1.5,-12.15,.28],[-.4,-12.5,.18],[.7,-12.1,.06]]),
+    fur([[-1.7,-9.3,.22],[-1.15,-8.7,.12],[-.7,-8.15,.04]]),
+    fur([[1.55,-9.2,.2],[1.05,-8.6,.12],[.65,-8.1,.04]]),
+    ell(0,-6.55,.58,.36,"nose"),
+    ell(-1.15,-10.42,.74,.44,"eye"),
+    ell(1.15,-10.42,.7,.42,"eyeRing"),
+    pDot(-1.02,-10.4,.2,"nose",{noSil:true}),
+    pDot(1.02,-10.4,.19,"nose",{noSil:true}),
+    pDot(-1.48,-10.62,.11,"glint",{noSil:true}),
+    pDot(1.42,-10.6,.1,"glint",{noSil:true}),
   ]}]};
   return[{parts:body},tail,head];
 }
-/* Blenheim Cavalier. Sits three-quarter, haunch to the right, head turned to the viewer.
-   A domed skull, a short muzzle, long wavy chestnut ears that hang to the chest, a white
-   blaze with a small chestnut lozenge, chestnut patches over the eyes, a feathered tail,
-   big round dark eyes with a catchlight and a black nose. Smaller than the herder. No lying pose. */
-const PN_SPANIEL={white:"#F7F4EE",chestnut:"#8E3F24",ear:"#A24A2A",curl:"#C46A42",patch:"#7A341C",nose:"#1A1414",eye:"#1A1414",glint:"#FFF8EE",ink:"#241C28",shade:"#3A2350",lit:"#FFE2A8",shadeOp:.32,litOp:.5};
+/* Blenheim Cavalier. Sits three-quarter, haunch to the right, head turned to the viewer, smaller
+   than the herder. A white face with a broad blaze up the forehead, chestnut over the eyes and
+   the crown, a short muzzle, big round dark eyes and a black nose. Long wavy chestnut ears hang
+   to the chest. The body is white with chestnut patches, a silky coat and a feathered tail. */
+const PN_SPANIEL={white:"#F7F4EE",chestnut:"#8E3F24",ear:"#9A4528",curl:"#C46A42",patch:"#7A341C",nose:"#1A1414",eye:"#2A1812",glint:"#FFF8EE",detail:"#CDB8A6",ink:"#241C28",shade:"#3A2350",lit:"#FFE2A8",shadeOp:.28,litOp:.48};
 function propPnSpaniel({phase=""}={}){
   const wag=`<g class="pn-wag" style="${phase}">`,nod=`<g class="pn-nod" style="${phase}">`;
+  const silk=(pts)=>pTaper(pts,"detail",{},{noSil:true,op:".9"});
+  const poly=(pts,role,extra)=>part("M "+pts.map(P2).join(" L ")+" Z",role,extra||{});
   const body=[
-    pBlob([[1.15,-.45],[4.55,-.55],[5.5,-3.1],[4.7,-6.05],[2.15,-6.65],[.55,-4.1],[.75,-1.1]],"white"),
-    pBlob([[-2.55,-.55],[-3.15,-3.3],[-2.35,-6.05],[1.15,-6.45],[2.15,-4.3],[1.75,-.75],[-.35,-.25]],"white"),
-    pTaper([[-1.45,-3.5,1.02],[-1.4,-1.55,.82],[-1.3,-.05,.92]],"white"),
-    pTaper([[.5,-3.7,1.06],[.55,-1.55,.86],[.45,-.05,.96]],"white"),
-    pBlob([[.15,-6.05],[2.15,-6.4],[2.5,-4.7],[.55,-4.3]],"chestnut",{noSil:true}),
-    pBlob([[3.05,-4.9],[4.35,-5.35],[4.4,-3.85],[3.15,-3.55]],"patch",{noSil:true}),
+    pBlob([[.85,-.35],[2.7,-.4],[3.9,-1.35],[4.35,-2.9],[3.9,-4.7],[3.05,-5.85],[1.7,-6.25],[.55,-4.6],[.65,-2.1],[.25,-.75]],"white"),
+    pBlob([[-1.9,-.4],[-2.45,-1.55],[-2.15,-3.5],[-1.55,-5.35],[.55,-5.9],[1.25,-4.15],[1.05,-1.15],[-.15,-.3]],"white"),
+    pTaper([[-1.2,-3.3,.85],[-1.15,-1.45,.68],[-1.08,-.05,.76]],"white"),
+    pTaper([[.55,-3.45,.88],[.58,-1.5,.7],[.5,-.05,.78]],"white"),
+    poly([[.35,-5.55],[1.65,-5.95],[1.9,-4.55],[.7,-4.25]],"chestnut",{noSil:true}),
+    poly([[2.7,-4.55],[3.85,-5],[3.9,-3.55],[2.75,-3.25]],"patch",{noSil:true}),
+    poly([[-1.7,-4.4],[-.7,-4.85],[-.45,-3.7],[-1.4,-3.4]],"chestnut",{noSil:true}),
+    silk([[-1.3,-3.4,.22],[-.35,-4,.14],[.55,-3.35,.05]]),
+    silk([[.15,-2.05,.18],[1.05,-2.55,.12],[1.85,-2,.05]]),
+    silk([[2.35,-4.6,.16],[3.15,-5.05,.1],[3.7,-4.45,.04]]),
   ];
-  const tail={open:wag,pivot:[4.35,-5.05],layers:[{parts:[
-    pBlob([[4.15,-5.3],[6.25,-7.05],[7.05,-5.7],[6.05,-4.55],[4.25,-4.75]],"white"),
-    pBlob([[5.35,-6.7],[6.7,-6.95],[6.35,-5.55],[5.15,-5.4]],"chestnut",{noSil:true}),
+  const tail={open:wag,pivot:[3.7,-5.15],layers:[{parts:[
+    pBlob([[3.6,-5.05],[5.15,-6.55],[6.25,-6.05],[6.7,-4.95],[5.95,-4.1],[4.6,-4.2]],"white"),
+    pTaper([[4.7,-5.85,.34],[5.8,-6.7,.22],[6.85,-6.15,.06]],"chestnut"),
+    pTaper([[4.9,-5.2,.28],[5.95,-5.85,.16],[6.9,-5.15,.05]],"curl"),
+    pTaper([[5.05,-4.55,.22],[6.05,-4.85,.12],[6.75,-4.25,.04]],"chestnut"),
   ]}]};
-  const head={open:nod,pivot:[-.35,-6.05],layers:[{parts:[
-    pBlob([[-2.55,-6.5],[-3.15,-8.5],[-2.15,-10.5],[.15,-11.1],[2.35,-10.3],[3.15,-8.3],[2.55,-6.3],[.35,-5.7],[-1.35,-5.9]],"white"),
-    pBlob([[-2.1,-8.9],[-3.2,-9.7],[-4.6,-8.6],[-5.5,-7.2],[-6.15,-5.2],[-5.7,-3.4],[-6.05,-2.2],[-5.2,-1.7],[-4.3,-2.5],[-4.7,-4.4],[-3.9,-6.6],[-3,-8.1]],"ear"),
-    pBlob([[1.9,-8.75],[3.05,-9.55],[4.4,-8.4],[5.2,-6.9],[5.8,-5],[5.4,-3.2],[5.75,-2.1],[4.95,-1.6],[4.05,-2.4],[4.4,-4.2],[3.4,-6.4],[2.6,-7.9]],"ear"),
-    pTaper([[-4.7,-8.2,.28],[-5.15,-5.4,.34],[-5.2,-2.6,.2]],"curl",{},{noSil:true}),
-    pTaper([[3.9,-7.9,.24],[4.3,-5.1,.3],[4.35,-2.5,.18]],"curl",{},{noSil:true}),
-    pBlob([[-.42,-10.55],[.42,-10.55],[.32,-9.7],[-.32,-9.7]],"chestnut",{noSil:true}),
-    pBlob([[-2.35,-9.3],[-1.15,-9.9],[-.65,-8.55],[-1.55,-8.15],[-2.25,-8.55]],"chestnut",{noSil:true}),
-    pBlob([[2.25,-9.2],[1.05,-9.8],[.6,-8.45],[1.45,-8.05],[2.15,-8.45]],"chestnut",{noSil:true}),
-    pDot(-1.5,-8.75,.88,"eye",{noSil:true}),
-    pDot(1.45,-8.75,.84,"eye",{noSil:true}),
-    pDot(-1.18,-9.02,.28,"glint",{noSil:true}),
-    pDot(1.74,-9.02,.26,"glint",{noSil:true}),
-    pDot(0,-7.45,.46,"nose",{noSil:true}),
+  /* Chestnut stays off the midline, so the white head is a broad blaze. Ears are wavy
+     ribbons that stop at the chest. Eyes are circles, painted last. */
+  const head={open:nod,pivot:[-.15,-6.2],layers:[{parts:[
+    pBlob([[-2.15,-6.6],[-2.6,-8.15],[-1.75,-10.05],[-.2,-10.6],[1.7,-10.15],[2.5,-8.15],[2.1,-6.45],[.35,-5.85],[-1.05,-6.05]],"white"),
+    poly([[-2.15,-9.15],[-2.4,-10.05],[-1.35,-10.5],[-.72,-9.85],[-.78,-8.85],[-1.7,-8.35]],"chestnut",{noSil:true}),
+    poly([[2.05,-9.05],[2.3,-9.95],[1.25,-10.45],[.7,-9.75],[.75,-8.75],[1.6,-8.25]],"chestnut",{noSil:true}),
+    poly([[-2.25,-9.15],[-2.05,-7.7],[-.9,-7.55],[-.82,-8.95],[-1.35,-9.55],[-2.15,-9.5]],"patch",{noSil:true}),
+    poly([[2.15,-9.05],[1.95,-7.6],[.88,-7.5],[.8,-8.85],[1.3,-9.45],[2.05,-9.4]],"patch",{noSil:true}),
+    poly([[-2.05,-8.15],[-2.85,-9.35],[-4.05,-8.15],[-4.85,-6.85],[-3.7,-5.85],[-4.9,-4.75],[-3.75,-3.75],[-4.7,-3.05],[-3.55,-2.95],[-2.85,-3.9],[-3.55,-5.15],[-2.55,-6.45],[-3.25,-7.55],[-2.2,-8.35]],"ear"),
+    poly([[2,-8.05],[2.8,-9.2],[3.95,-8],[4.7,-6.7],[3.55,-5.7],[4.75,-4.6],[3.6,-3.65],[4.55,-2.95],[3.4,-2.85],[2.7,-3.8],[3.45,-5],[2.45,-6.3],[3.15,-7.4],[2.15,-8.25]],"ear"),
+    pTaper([[-2.7,-8.6,.24],[-3.45,-7,.3],[-3.7,-5.5,.2],[-3.55,-4,.1]],"curl",{},{noSil:true}),
+    pTaper([[-2.15,-8.2,.18],[-2.9,-6.6,.22],[-3.15,-5.1,.14],[-3.05,-3.8,.06]],"curl",{},{noSil:true}),
+    pTaper([[2.55,-8.45,.22],[3.3,-6.85,.28],[3.55,-5.35,.18],[3.4,-3.9,.08]],"curl",{},{noSil:true}),
+    pTaper([[2.05,-8.05,.16],[2.75,-6.45,.2],[3,-4.95,.12],[2.9,-3.75,.05]],"curl",{},{noSil:true}),
+    pDot(-1.52,-8.5,.82,"eye"),
+    pDot(1.48,-8.5,.78,"eye"),
+    pDot(-1.28,-8.72,.18,"glint",{noSil:true}),
+    pDot(1.7,-8.72,.16,"glint",{noSil:true}),
+    pDot(0,-6.95,.5,"nose"),
   ]}]};
   return[{parts:body},tail,head];
 }
@@ -11210,8 +11265,8 @@ function pnPondScene(c){
   const dogAt=(hx0,sc,flip,rig,pal,sp,where)=>{const x=hx+u(hx0);
     return `<g class="wildlife" data-species="${sp}" data-dogs="${where}"><ellipse cx="${f1(x)}" cy="${f1(foot+.35)}" rx="${f1(sc*9)}" ry=".7" fill="${shadeC}" opacity=".22"/>${inkAt(x,foot,sc,flip,inkRig(rig,palAt(pal,.03),{s:sc,flip,line:1.35,heavy:.5,shade:1.15,lit:.9,light:lightAt(x,foot-8)}))}</g>`};
   if(plan.out==="both"){
-    dogs=dogAt(-15,1.02,1,propPnHerder({phase:phase(3.2)}),PN_HERDER,"merle-herder","yard")
-      +dogAt(14,.9,1,propPnSpaniel({phase:phase(4.1)}),PN_SPANIEL,"blenheim-spaniel","yard");
+    dogs=dogAt(-15,1.08,1,propPnHerder({phase:phase(3.2)}),PN_HERDER,"merle-herder","yard")
+      +dogAt(14,.78,1,propPnSpaniel({phase:phase(4.1)}),PN_SPANIEL,"blenheim-spaniel","yard");
   }else if(plan.out==="one"){
     dogs=dogAt(-36,.7,1,propPnHerder({lie:true,phase:phase(3.2)}),PN_HERDER,"merle-herder","fire");
   }
