@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v130/);
+  assert.match(worker, /mbwx-shell-v131/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -6354,12 +6354,13 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
     same(on(dark, 2, 15), false, false, false, "stays off overnight");
     same(on(dark, 11, 50), false, false, false);
   }
-  // the hot tub steams from October 20 through April 15, and its lights are the strands' hours
+  // the hot tub opens with the fire, and only from October 20 through April 15
   assert.match(html, /const PN_TUB=\["10-20","04-15"\];/);
   assert.match(html, /function pnTubSeason\(d\)\{return inSeason\(d,PN_TUB\)\}/);
   assert.match(fn, /const tubSeason=pnTubSeason\(locToday\(\)\);/);
-  assert.match(fn, /const tubLit=tubSeason&&strandsOn;/);
-  assert.match(fn, /propPnTub\(\{open:tubSeason\}\)/);
+  assert.match(fn, /const tubOn=tubSeason&&fireOn;/);
+  assert.match(fn, /propPnTub\(\{open:tubOn\}\)/);
+  assert.doesNotMatch(fn, /open:tubSeason|tubLit=/);
   assert.match(fn, /data-prop="tub-live"/);
   assert.match(html, /@keyframes pnSteam\{0%\{transform:translateY\(0\);opacity:\.6\}20%\{opacity:\.85\}100%\{transform:translateY\(-12px\);opacity:0\}\}/);
   assert.match(html, /@keyframes pnTubHue\{0%,20%\{opacity:var\(--hi,\.62\)\}48%\{opacity:\.16\}74%,100%\{opacity:var\(--lo,\.03\)\}\}/);
