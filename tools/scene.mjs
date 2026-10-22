@@ -136,7 +136,7 @@ const CASES = [
     o: { baseTemp: 50, nowTemp: 46, feels: 42, rh: 70, isDay: 0, code: 1, cloud: 12, nowWind: 8, nowDir: 350, nowGust: 13, nowUv: 0, uvMax: 4, windAmp: 6, gustAmp: 10,
       sunrise: "07:32", sunset: "18:18", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
   { name: "36-house-october-golden-evening", loc: "mb", when: "2026-10-10T18:25:00", decor: ["ghostface", "light-tree", "pumpkin", "pumpkin-lights", "white-pumpkin"], candles: 0,
-    note: "golden hour in October: Ghostface's mask and the pumpkins warm with the house, the warmth from the west, and nothing is lit yet but the pumpkin lights",
+    note: "golden hour in October: Ghostface's mask and the pumpkins warm with the house, the warmth from the west, the strands just on, and the windows still dark",
     o: { baseTemp: 71, nowTemp: 72, feels: 72, rh: 60, isDay: 1, code: 1, cloud: 18, nowWind: 8, nowDir: 40, nowGust: 13, nowUv: 0.2, uvMax: 5, windAmp: 6, gustAmp: 10,
       sunrise: "07:13", sunset: "18:44", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
   { name: "37-house-october-fog-morning", loc: "mb", when: "2026-10-14T09:40:00", decor: ["ghostface", "light-tree", "pumpkin", "pumpkin-lights", "white-pumpkin"], candles: 0,
@@ -755,7 +755,7 @@ for (const cs of cases) {
       reportDecor(cs, PHONE_WIDTH, decor);
     }
 
-    // ── the fire table at the house: lit only after sunset and before 10:30, between 45° and 68°, dry, with
+    // ── the fire table at the house: lit only while the strands are on, from evening golden hour until 10:00, between 45° and 68°, dry, with
     // gusts under 20 (fireOn). A case that says what the fire is doing is held to it ──
     if (cs.fire !== undefined) {
       const lit = await page.evaluate(() => document.querySelector('.scene [data-prop="fire-table"]')?.getAttribute("data-lit") ?? null);

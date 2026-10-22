@@ -8481,6 +8481,21 @@ function pnMoonInRoof(x,y){
     if((yi>ly)!==(yj>ly)&&lx<(xj-xi)*(ly-yi)/(yj-yi)+xi)inside=!inside}
   return inside;
 }
+/* The drawn sun has to stay under the top of the frame. The path's crown is 20 and the longest
+   ray reaches 24.7 past the centre (16.2 out, then 8.5), so at noon the tips cross y=0, and a
+   short window crops the sky as well (visTop, from pnCrop). The centre drops until the disc and
+   the rays clear that edge. When the open sky above the roof cannot hold them at full size, the
+   sun draws smaller, just enough that the tips still clear the edge and the top of the disc stays
+   above the ridge, and the house covers the rest. hy 138 and scale 1.45 are the house's own,
+   the same numbers pnPondScene and pnMoonInRoof use. */
+function pnSunFit(y,visTop,squash){
+  const ridge=138+PN_HA.ridge*1.45,pad=2,peek=2,ray0=16.2+8.5,disc0=13;
+  const top=visTop||0,sky=ridge-top,full=(disc0+ray0)*squash+pad;
+  let s=1;
+  if(sky<full)s=Math.min(1,Math.max(.45,(sky-pad-peek)/(squash*(ray0-disc0))));
+  const floor=top+ray0*squash*s+pad;
+  return{y:Math.max(y,floor),s};
+}
 INK.pnBackHouse={
   wall:"#F2F0EA",wallShade:"#C6CBD2",siding:"#DDDAD2",shake:"#E4E0D6",shakeDk:"#B9B4AA",end:"#CDD2D8",roof:"#B4C2CC",roofDk:"#8F9DA8",seam:"#8A98A4",seamLit:"#E6EEF3",
   trim:"#FBFAF6",cast:"#5B6170",glass:"#34434E",glassUp:"#7F98A8",frame:"#FBFAF6",porchWall:"#E7E4DC",shiplap:"#CBC6BC",screen:"#4C525A",panel:"#8A8070",post:"#FBFAF6",
@@ -8767,6 +8782,14 @@ const sceneH=W=>LOC.view==="pond"?194:Math.round((LOC.scene==="marsh"?150:168)+(
 /* scale the phone picture to the scene's width. When that would eat the first screen, crop the sky and
    keep the house: never into the roof (the ridge sits about 16% down the frame). The sheets stay the
    full picture, bottom aligned, so a lift box's percentages do not drift */
+/* the visible top of the house's frame, in the picture's own units. The sun and the time
+   labels read the same sum pondFit crops with, so a short window and the noon rays agree
+   about where the frame starts */
+function pnCrop(cssW,H,W){
+  const full=cssW*H/W,keep=full*.84,room=(window.innerHeight||800)*.5,cap=Math.min(full,Math.max(keep,room));
+  const crop=full-cap>=12;
+  return{full,cap,crop,visTop:crop?H*(1-cap/full):0};
+}
 function pondFit(){
   const scene=document.querySelector(".scene");
   if(!scene)return;
@@ -8779,8 +8802,7 @@ function pondFit(){
   }
   const cssW=scene.clientWidth;
   if(!cssW)return;
-  const full=cssW*194/320,keep=full*.84,room=(window.innerHeight||800)*.5,cap=Math.min(full,Math.max(keep,room));
-  const crop=full-cap>=12;
+  const {full,cap,crop}=pnCrop(cssW,194,320);
   scene.style.setProperty("--pn-full",full.toFixed(1)+"px");
   scene.classList.toggle("pond-fit",crop);
   scene.style.height=crop?cap.toFixed(1)+"px":"";
@@ -8915,10 +8937,14 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
   const mirrorSky=LOC.faces==="north";
   /* and there the house fills the phone's frame, so the sun's path is a sine over it (pnArc): the ends
      sit in open sky just above the palm crowns and the crown of the arch clears the ridge. The house
-     draws no arc. The illustrated sun keeps that path, and a low sun lays a long shadow and a glint
-     on the windows it faces. The times sit up in the open sky, never on the palms, the roof or the
-     pond. Golden hour is the same window as goldenHour(), +6° to −4°. */
+     draws no arc. The illustrated sun keeps that path, except at the crown, where it drops until the
+     disc and the rays sit under the top of the frame (pnSunFit). On a short window that sky is cropped,
+     and when what is left above the roof cannot hold the sun it draws smaller and tucks behind the
+     ridge. A low sun lays a long shadow and a glint on the windows it faces. The times sit up in the
+     open sky, never on the palms, the roof or the pond, and clear of the sun. Golden hour is the same
+     window as goldenHour(), +6° to −4°. */
   const pnArc=mirrorSky?{x0:28,y0:GY-70,top:20,k:1}:null;
+  const visTop=pnArc?pnCrop((typeof document!=="undefined"&&document.querySelector(".scene")||{clientWidth:0}).clientWidth,H,W).visTop:0;
   const px=f=>pnArc?pnArc.x0+(1-f)*(W-2*pnArc.x0):30+f*arcSpan;
   const py=f=>pnArc?pnArc.y0-Math.pow(Math.max(0,Math.sin(Math.PI*f)),pnArc.k)*(pnArc.y0-pnArc.top):GY-Math.sin(Math.PI*f)*(GY-arcTop);
   let arc=`M ${px(0)} ${py(0)}`;
@@ -8980,14 +9006,16 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
   const veil=clamp(cloud/100,0,1);               /* cloud hides the disc */
   let body="",moonBody="",glintX=null,glintCol="#FFD98F",glintOp=0,sunXY=null,moonXY=null,moonR=11,moonLight="#B9CCEE";
   if(up){
-    const f=clamp(dayFrac,0,1), x=px(f), y=py(f);
+    const f=clamp(dayFrac,0,1), x=px(f);
     const low=Math.sin(Math.PI*f)<.28;
     /* near the horizon the atmosphere flattens the disc and takes it further orange */
     const squash=clamp(.9+Math.max(0,sunAltDeg)/8*.1,.9,1);
+    const fit=pnArc?pnSunFit(py(f),visTop,squash):{y:py(f),s:1};
+    const y=fit.y,sunS=fit.s;
     const warm=clamp((8-sunAltDeg)/12,0,1);
     const disc=mix(mix(low?"#F0A03C":"#F5C94D","#E8752A",warm*.5),"#C8CFCE",veil*.72);
     if(veil<.85){glintX=x;glintCol=low?"#FFB86A":"#FFD98F";glintOp=1-veil}
-    const gr=38-veil*12,cc=`cx="${x.toFixed(1)}" cy="${y.toFixed(1)}"`;
+    const gr=(38-veil*12)*sunS,cc=`cx="${x.toFixed(1)}" cy="${y.toFixed(1)}"`;
     /* under a warned storm the sun is a rumour, not a lamp. The .32 floor exists so heavy
        overcast still hints where the sun is; a storm does not get the hint. */
     const sdim=storm?.24:1;
@@ -8995,14 +9023,14 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
        so a veiled sun keeps its glow and loses its sparkle */
     const rayOp=clamp(1-veil*1.25,0,1)*sdim;
     let rays="";
-    if(rayOp>.05)for(let i=0;i<16;i++){const a=i/16*Math.PI*2,L=i%2?4.5:8.5,c0=Math.cos(a),s0=Math.sin(a)*squash;
-      rays+=`<path d="${taper([[x+c0*16.2,y+s0*16.2,2],[x+c0*(16.2+L),y+s0*(16.2+L),.2]],{per:2,capEnd:false})}"/>`}
+    if(rayOp>.05)for(let i=0;i<16;i++){const a=i/16*Math.PI*2,L=i%2?4.5:8.5,c0=Math.cos(a),s0=Math.sin(a)*squash,r0=16.2*sunS;
+      rays+=`<path d="${taper([[x+c0*r0,y+s0*r0,2],[x+c0*(r0+L*sunS),y+s0*(r0+L*sunS),.2]],{per:2,capEnd:false})}"/>`}
     sunXY=[x,y];
     body=`<ellipse ${cc} rx="${gr.toFixed(0)}" ry="${(gr*squash).toFixed(0)}" fill="url(#sunglow)" opacity="${(Math.max(.16,1-veil*.8)*sdim).toFixed(2)}"/>
       ${rays?`<g fill="#FFF3D2" opacity="${(.85*rayOp).toFixed(2)}">${rays}</g>`:""}
-      <ellipse ${cc} rx="13" ry="${(13*squash).toFixed(2)}" fill="${disc}" opacity="${(Math.max(.32,1-veil**2.2*.94)*sdim).toFixed(2)}"/>
-      <ellipse ${cc} rx="13" ry="${(13*squash).toFixed(2)}" fill="none" stroke="${lineC}" stroke-width="1.1" opacity="${(Math.max(.15,1-veil)*sdim*.8).toFixed(2)}"/>
-      <path d="M ${(x-7.2).toFixed(1)} ${(y-4.6*squash).toFixed(1)} A 9 ${(9*squash).toFixed(1)} 0 0 1 ${(x+1.3).toFixed(1)} ${(y-9.4*squash).toFixed(1)}" fill="none" stroke="#FFF8E6" stroke-width="1.6" stroke-linecap="round" opacity="${(Math.max(.1,1-veil)*sdim*.8).toFixed(2)}"/>`;
+      <ellipse ${cc} rx="${(13*sunS).toFixed(2)}" ry="${(13*squash*sunS).toFixed(2)}" fill="${disc}" opacity="${(Math.max(.32,1-veil**2.2*.94)*sdim).toFixed(2)}"/>
+      <ellipse ${cc} rx="${(13*sunS).toFixed(2)}" ry="${(13*squash*sunS).toFixed(2)}" fill="none" stroke="${lineC}" stroke-width="1.1" opacity="${(Math.max(.15,1-veil)*sdim*.8).toFixed(2)}"/>
+      <path d="M ${(x-7.2*sunS).toFixed(1)} ${(y-4.6*squash*sunS).toFixed(1)} A ${(9*sunS).toFixed(1)} ${(9*squash*sunS).toFixed(1)} 0 0 1 ${(x+1.3*sunS).toFixed(1)} ${(y-9.4*squash*sunS).toFixed(1)}" fill="none" stroke="#FFF8E6" stroke-width="1.6" stroke-linecap="round" opacity="${(Math.max(.1,1-veil)*sdim*.8).toFixed(2)}"/>`;
   }
   if(mp.alt>-.05&&(!up||mp.alt>.21)){        /* daytime moon only when it's genuinely up there */
     /* moon by true altitude / azimuth, mapped east→west across the arc */
@@ -9096,13 +9124,6 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
      No box: the sky there is clear, and the thin halo the times already wear keeps a digit readable
      when the sky goes dark. The same spots are what the witch and the bats keep off. */
   if(pnArc){
-    const sceneEl=typeof document!=="undefined"?document.querySelector(".scene"):null;
-    const cssW=sceneEl?sceneEl.clientWidth:0;
-    let visTop=0;
-    if(cssW){
-      const full=cssW*H/W,keep=full*.84,room=(window.innerHeight||800)*.5,cap=Math.min(full,Math.max(keep,room));
-      if(full-cap>=12)visTop=H*(1-cap/full);
-    }
     const avoid=[sunXY&&[sunXY[0],sunXY[1],28],moonXY&&[moonXY[0],moonXY[1],moonR+8]].filter(Boolean);
     const place=side=>{
       const w=40,a=side==="L"?"start":"end";
@@ -10591,19 +10612,24 @@ function liftKit(W,H){
   const liftIn=(b,inner,p,anim="")=>`<div class="lift" style="${origin(b,p)}${anim?";"+anim:""}">${inner}</div>`;
   return{partsOf,boxOf,pct,origin,liftSvg,liftAt,liftIn};
 }
-/* Porters Neck's light schedule, on the place's own clock. The windows, the porch, the strands and the
-   fire table are on from sunset until 10:30 pm (PN_LIGHTS_OUT) and off through the small hours until the
-   next sunset. The pumpkin lights are October only. They stay on through the day and from dusk until
-   the same 10:30, then the wire stays up and the bulbs go dark until the sun is up.
-   PN_PUMPKIN_LIGHTS switches the string. */
-const PN_LIGHTS_OUT=22*60+30,PN_PUMPKIN_LIGHTS=true;
-/* windows, strands and the fence's pumpkin lights. Windows and strands are on only after dusk and before
-   10:30. The pumpkin lights are on by day and from dusk until 10:30, then off through the small hours
-   until the sun is up. hour and minute are the place's clock. */
-function pnHouseLights(sunAlt,hour,minute){
+/* Porters Neck's light schedule, on the place's own clock. The windows and the porch are on from
+   sunset until 10:30 pm (PN_LIGHTS_OUT). The bistro strands come on at the start of evening golden
+   hour, the sun at +6° on the way down, the same line goldenHour() uses, and go off at 10:00
+   (PN_STRANDS_OUT). The fire follows the strands. Morning golden hour is the sun rising, so the
+   strands stay dark, and the noon gate keeps them off through the small hours while the sun is
+   still going down. The pumpkin lights are October only. They stay on through the day and from
+   dusk until the windows' 10:30, then the wire stays up and the bulbs go dark until the sun is up.
+   They used to share the strands' off switch. PN_PUMPKIN_LIGHTS switches the string. */
+const PN_LIGHTS_OUT=22*60+30,PN_STRANDS_OUT=22*60,PN_PUMPKIN_LIGHTS=true;
+/* windows, strands and the fence's pumpkin lights. Strands are on from evening golden hour until
+   10:00. Windows are on only after dusk and before 10:30. The pumpkin lights are on by day and from
+   dusk until 10:30, then off through the small hours until the sun is up. hour and minute are the
+   place's clock. rising is the sun ten minutes on, the same flag the sky uses. */
+function pnHouseLights(sunAlt,hour,minute,rising){
   const dark=sunAlt<-.83,mins=hour*60+(minute||0);
-  const on=dark&&mins>=12*60&&mins<PN_LIGHTS_OUT;
-  return{windows:on,strands:on,pumpkins:!dark||on};
+  const windows=dark&&mins>=12*60&&mins<PN_LIGHTS_OUT;
+  const strands=sunAlt<=6&&!rising&&mins>=12*60&&mins<PN_STRANDS_OUT;
+  return{windows,strands,pumpkins:!dark||windows};
 }
 /* A standing Ghostface in the rightmost east window, October only. The window itself is the
    house's own sash, drawn with the others. He is a dim layer clipped inside the two sash
@@ -10753,8 +10779,8 @@ function pnRigBat(beat){
    group at the east, the black fence between its two white pillars with a gate on the door's line and fountain grass
    inside it, a strip of lawn, the sand and the pond, which holds the picture upside down (pressed a little
    shorter, so the doubled lights stay in the frame) and has its fountain mid-pond on the door's line. The
-   weather stays honest: the strands, the fire table and the windows from sunset until 10:30 (the fire only on a cool dry
-   evening), the strands' ends tucked into the sabals' boots so the palms' sway never
+   weather stays honest: the strands and the fire table from evening golden hour until 10:00, the windows from sunset until 10:30 (the fire only on a cool dry
+   evening, and only while the strands are on), the strands' ends tucked into the sabals' boots so the palms' sway never
    shows a loose end, the fountain leans and its spray drifts downwind, and the reflection is glass in a calm, strips in a breeze
    and glints in a blow. The low sun's warmth comes from its own side. In October (holidayOn) the fence carries
    pumpkin lights, on by day and from dusk until 10:30, each run a swag between posts, a little tree by the fire table is wrapped in purple and orange, each pillar
@@ -10777,7 +10803,7 @@ function pnPondScene(c){
   const doorX=hx+u((BH.door[0]+BH.door[1])/2);
   const palAt=(pal,d)=>{const o={};for(const[k,v]of Object.entries(pal))o[k]=typeof v==="string"&&v[0]==="#"&&!["ink","shade","lit"].includes(k)?air(v,d):v;
     return Object.assign(o,{ink:inkAir(d),shade:shadeC,lit:litC,litOp:(pal.litOp??.5)*litK,shadeOp:(pal.shadeOp??.32)*shadeK})};
-  const lit=pnHouseLights(sunAltDeg,localHour,localMin);
+  const lit=pnHouseLights(sunAltDeg,localHour,localMin,rising);
   const lightsOn=lit.windows,strandsOn=lit.strands,pumpOn=lit.pumpkins;
   const fireOn=strandsOn&&localHour>=15&&temp>=45&&temp<68&&!wet&&!storm&&!fog&&gust<20&&!THUNDER;
   const swayAmt=clamp(.3+gust*.05,.3,2.6),swayDur=clamp(8.5-gust*.15,3,8.5);
@@ -10844,7 +10870,7 @@ function pnPondScene(c){
     return liftAt(b,liftSvg(b,g),[P.x,fenceB],PRM?"":`${leanTo(P.amt,.4)};animation:swayTree ${P.dur.toFixed(1)}s ease-in-out infinite alternate;${wallClock(2*P.dur,P.i*1.9)}`)};
 
   /* ── the string lights: two strands from one eye over the back door, a V, each sagging out to the nearer
-     sabal on its side: clear teardrops on drops by day, light from sunset until 10:30 */
+     sabal on its side: clear teardrops on drops by day, light from evening golden hour until 10:00 */
   const L0=PALMS[2],R0=PALMS[3];
   /* Josh: "the bistro lights go from door to each palm - forming a V". Both strands start at one eye over
      the back door and each sags out and forward to its sabal, crossing in front of the windows */
@@ -10899,7 +10925,7 @@ function pnPondScene(c){
 
   /* ── October: a black weeping willow just left of the fire table, where a round bush was. It is up with
      the other decorations and gone the morning of November 1. Its purple and orange lights stay lit the
-     whole time it is out, by day and all night, past the 10:30 lights-out. They are fills, no blur, and
+     whole time it is out, by day and all night, past the strands at 10:00 and the windows at 10:30. They are fills, no blur, and
      they hold still: a twinkle would be an animation on this still sheet, which WebKit repaints whole. */
   let tree="";
   if(halloween){const tx=hx+u(-63)-3,ty=hy+3.6,k=1.35,halo=dark?1.85:1.5,ha=dark?.58:.46;

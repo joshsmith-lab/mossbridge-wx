@@ -871,7 +871,7 @@ carries `faces:"north"`, and for such a place the sun's arc is mirrored (sunrise
 sunset on the left), the moon's place and shading follow it, and the wind's bearing is mirrored once
 upstream for the scene and the sky, so the palms, the grass, the spray, the rain, the clouds, the bats and
 the witch all go the way the real wind blows. The house draws no arc. The illustrated sun keeps that
-sine and `sunPos`, golden hour warms the light, and a low sun lays a long shadow and a glint on the
+sine and `sunPos`, except at the crown, where it drops until the whole disc and its rays sit under the top of the frame (`pnSunFit`). A short window crops that sky, and when the open sky above the roof cannot hold the sun, it draws smaller and tucks behind the ridge. Golden hour warms the light, and a low sun lays a long shadow and a glint on the
 windows it faces. The sunrise and sunset times sit up in open sky, in the corner columns, clear of
 the palms, the roof, the house and the pond, with the thin halo they already wear and no box behind them.
 A short window crops the top of that sky, and the times drop to just under the crop, still in the corner.
@@ -885,11 +885,11 @@ neutral.
 
 **The lights keep the family's hours.** The bistro strands run from one point over the back door to a
 sabal on each side, a V seen from above ("the bistro lights go from door to each palm - forming a V"),
-crossing the windows as they swag forward. They are on from sunset until 10:30 pm on the place's clock
-(`PN_LIGHTS_OUT`), and hang still from the sabals, each end tucked into its palm's
+crossing the windows as they swag forward. They come on at the start of evening golden hour, the sun at +6° on the way down, the same moment the golden hour label uses, and go off at 10:00 pm on the place's clock
+(`PN_STRANDS_OUT`). Morning golden hour leaves them dark. They hang still from the sabals, each end tucked into its palm's
 boots so the palms' sway never shows a loose end. The fire table
 (`propPnFireTable`) burns only while the strands are on, between 45° and 68°, dry, in no storm or fog,
-with gusts under 20 and no thunder (`fireOn`), and the light on its cap and the chairs facing it is its own. The windows and the porch light the house from sunset until the same 10:30, then stay off overnight (`pnHouseLights`). Josh picked this drawing and it is the house everyone sees. The main roof is one trapezoid: its lower edge is the outer bottom corners of the two gables, the ridge is 0.87 of that span and the rise is 0.30 of it, the photo's ratios, and each gable peak is 0.45 of that rise. The siding, the shakes and the metal roof are white, with the seams and a little shade for depth, and at night that white goes blue-gray with the sky. The only house lights are the strands out to the palms, off at 10:30. In October the orange pumpkin lights
+with gusts under 20 and no thunder (`fireOn`), and the light on its cap and the chairs facing it is its own. The windows and the porch light the house from sunset until 10:30, then stay off overnight (`pnHouseLights`). The pumpkin lights keep that 10:30, on their own, and do not follow the strands. Josh picked this drawing and it is the house everyone sees. The main roof is one trapezoid: its lower edge is the outer bottom corners of the two gables, the ridge is 0.87 of that span and the rise is 0.30 of it, the photo's ratios, and each gable peak is 0.45 of that rise. The siding, the shakes and the metal roof are white, with the seams and a little shade for depth, and at night that white goes blue-gray with the sky. The only house lights are the strands out to the palms, off at 10:00. In October the orange pumpkin lights
 along the fence hang in swags, high at each post and low in the middle, five or six bulbs to a bay. They are on by day and from dusk until 10:30, then the wire stays up and the bulbs go dark until the sun is up. They are on the holiday
 calendar like every decoration, and gone the morning of November 1.
 
@@ -913,7 +913,7 @@ Carolina pond sliders (`pnTurtlesPlan`) are small. In the water only a little he
 over the house is small, so the bats and the witch fly in front of the roof. The house's own, each a
 `data-decor` the harness counts: the pumpkin lights (`pumpkin-lights`), the black weeping willow just
 left of the fire table (`light-tree`, in the round bush's place: drooping black locks, purple and orange
-lights that stay lit by day and all night, past the 10:30 lights-out, fills only), one orange and one white pumpkin on each pillar ("put
+lights that stay lit by day and all night, past the strands at 10:00 and the windows at 10:30, fills only), one orange and one white pumpkin on each pillar ("put
 one orange and one white pumpkin on both fence stantions - then carve them on time"), both carved and lit
 from the carving day by the candle rules (`pumpkin`, `white-pumpkin`, then `jack-o-lantern`), two lanterns
 at the gate, Ghostface a dim layer clipped inside the glass of the rightmost east window, which is drawn with the same sash as the other three (the same frame, the same meeting rail, the same glass and the same light at every hour), clear of those bars, with no extra window parts and no vertical bar (he lived in the marsh's oak, October only, and he stays after the lamps go out at 10:30), and on Halloween
@@ -959,7 +959,7 @@ idles at 60, the rain case at 60.1 with the GPU at 5.7 seconds per 10. `tools/sc
 where any still sheet runs an animation.
 
 **Seeing it.** `TZ=America/New_York node tools/pond.mjs` shoots the house at noon, sunrise, the morning and
-evening golden hours, dusk, the night with the moon, 10:30 pm with the strands off, rain, a storm, fog, a
+evening golden hours, dusk, the night with the moon, 10:30 pm with the strands off since 10:00, rain, a storm, fog, a
 blow from each side, an October night and Halloween night, at 390, with close crops of the yard;
 `PORCH_PN_WIDTHS=390,320,760` also shoots the four main moments (noon, dusk, the night with the moon and the
 October night) at each further width.
