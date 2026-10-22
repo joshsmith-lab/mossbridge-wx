@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v120/);
+  assert.match(worker, /mbwx-shell-v121/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
