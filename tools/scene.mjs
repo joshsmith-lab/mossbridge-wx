@@ -877,7 +877,7 @@ for (const cs of cases) {
     // the sway a limb crosses the edge of an eye. Each eye is sampled on its own fill at both ends
     // of the sway, in this scene's wind and again at the oak's full throw in a gale (1.4°), and the
     // scene fails if the oak hides 40% of either. The oak is put back running as it was.
-    // At the house he stands behind the glass of the rightmost east window, smaller and set back in the dark room, and still.
+    // At the house he is a dim layer clipped inside the rightmost east window's own glass, and still.
     // The clip hides his chin on purpose, so this check asks for that face and leaves the oak's eye sample to the marsh.
     if (cs.decor?.includes("ghostface") && await page.locator('.scene [data-prop="house"]').count()) {
       const peek = await page.locator('.scene [data-decor="ghostface"][data-peek="window"]').count();

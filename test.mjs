@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v115/);
+  assert.match(worker, /mbwx-shell-v116/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -1884,7 +1884,7 @@ test("Ghostface peeks out of the live oak for October, and never moves", async (
   for (const name of ["26-house-october-afternoon", "27-house-halloween-night", "45-house-carved-week-morning", "29-house-halloween-rain-night", "36-house-october-golden-evening", "37-house-october-fog-morning"])
     assert.match(scene, new RegExp(`name: "${name}"[^\\n]*decor: \\["ghostface"`));
   assert.match(scene, /name: "35-house-november-small-hours"[^\n]*decor: \[\]/);
-  // at the house he stands behind the glass of the rightmost east window, set back and smaller, and never moves.
+  // at the house he is a dim layer clipped inside the rightmost east window, and never moves.
   // The harness asks for that window rather than the oak's eye sample
   assert.match(scene, /if \(cs\.decor\?\.includes\("ghostface"\) && await page\.locator\('\.scene \[data-prop="house"\]'\)\.count\(\)\)/);
   assert.match(scene, /if \(!peek\) problems\.push\(`\$\{cs\.name\}: Ghostface is not in the east window`\);/);
@@ -6437,15 +6437,20 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(fn, /pnHouseGull\(/);
   assert.match(fn, /pnRigBat\(beat\)/);
   assert.match(fn, /propPnDoeLook\(/);
-  assert.match(fn, /openLast:!!halloween/);
+  assert.match(fn, /pnBackHouse\(\{night:houseNight,lit:lightsOn,shadowOp,B:BH\}\)/);
+  assert.doesNotMatch(fn, /openLast/);
+  const houseFn = html.slice(html.indexOf("function pnBackHouse({"), html.indexOf("function pnBackHouseGlow("));
+  assert.doesNotMatch(houseFn, /openLast|lastOpen|"room"/);
+  assert.match(houseFn, /B\.winR\.forEach\(\(\[w0,w1\],i\)=>R0\.parts\.push\(\.\.\.sashes\(w0,w1,i\+2\)\)\)/);
+  assert.match(houseFn, /for\(const\[w0,w1\]of B\.winR\)cas\(w0,w1\)/);
   const peekFn = html.slice(html.indexOf("function pnPeekGhost("), html.indexOf("function pnWindowGhost("));
   assert.match(peekFn, /yT=Y\(t\)/);
   assert.match(peekFn, /pnWindowGhost\(\)/);
   assert.match(peekFn, /data-decor="ghostface" data-peek="window"/);
-  assert.match(peekFn, /data-glass="front"/);
+  assert.match(peekFn, /pnPeekClip/);
   assert.doesNotMatch(peekFn, /propGhostface/);
-  // the rightmost east window matches the others: a frame and a meeting rail, and no vertical bar
-  assert.doesNotMatch(peekFn, /mullW|mullion/);
+  // the rightmost east window is the house's own sash. Ghostface adds no glass, no frame and no vertical bar
+  assert.doesNotMatch(peekFn, /mullW|mullion|data-glass|pnPeekGlass|railH|openLast/);
 });
 
 test("the house dogs and the pond sliders keep to their table", async () => {
