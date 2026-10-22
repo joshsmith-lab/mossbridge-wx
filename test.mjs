@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v122/);
+  assert.match(worker, /mbwx-shell-v123/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -6296,6 +6296,7 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.doesNotMatch(html, /SUN_LOOK|sunPick|\?sun=|data-dial="horizon"|data-sun="1"|data-sun="3"|data-sun-arc/);
   assert.match(html, /data-sun-times="1"/);
   assert.match(html, /const y0=Math\.max\(14,visTop\+14\);/);
+  assert.match(html, /const fit=pnArc\?pnSunFit\(py\(f\),visTop,squash\):\{y:py\(f\),s:1\};/);
   assert.match(html, /data-light="long-shadow"/);
   assert.match(html, /data-light="glint"/);
   // a moon the sine would set into the roof takes the shallower rise and stays in the sky
@@ -6304,32 +6305,61 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(html, /y=pnArc\.y0-Math\.pow\(altS,\.35\)\*\(pnArc\.y0-pnArc\.top\);/);
   assert.match(html, /if\(LOC\.faces==="north"\)windDir=\(360-windDir\)%360;/);
   assert.match(html, /if\(LOC\.faces==="north"\)weather=\{\.\.\.weather,wind_direction_10m:/);
-  // the windows, the strands and the fire go off at 10:30 and stay off through the small hours.
-  // the fire only burns on a cool dry evening. the face in the window is not a lamp.
-  assert.match(html, /const PN_LIGHTS_OUT=22\*60\+30,PN_PUMPKIN_LIGHTS=true;/);
-  assert.match(fn, /const lit=pnHouseLights\(sunAltDeg,localHour,localMin\);/);
+  // the windows and the pumpkin lights go off at 10:30. the strands come on at evening golden
+  // hour, the sun at +6° on the way down, and go off at 10:00. the fire follows the strands.
+  // the face in the window is not a lamp.
+  assert.match(html, /const PN_LIGHTS_OUT=22\*60\+30,PN_STRANDS_OUT=22\*60,PN_PUMPKIN_LIGHTS=true;/);
+  assert.match(fn, /const lit=pnHouseLights\(sunAltDeg,localHour,localMin,rising\);/);
   assert.match(fn, /const lightsOn=lit\.windows,strandsOn=lit\.strands,pumpOn=lit\.pumpkins;/);
   assert.match(fn, /const fireOn=strandsOn&&localHour>=15&&temp>=45&&temp<68&&!wet&&!storm&&!fog&&gust<20&&!THUNDER;/);
   {
     const ctx = vm.createContext({});
     const block = html.slice(html.indexOf("const PN_LIGHTS_OUT="), html.indexOf("function pnPeekGhost("));
     vm.runInContext(block + "\nglobalThis.pnHouseLights=pnHouseLights;", ctx);
-    const on = (alt, hour, minute) => ctx.pnHouseLights(alt, hour, minute);
+    const on = (alt, hour, minute, rising = false) => ctx.pnHouseLights(alt, hour, minute, rising);
     const same = (got, windows, strands, pumpkins, msg) => {
       assert.equal(got.windows, windows, msg);
       assert.equal(got.strands, strands, msg);
       assert.equal(got.pumpkins, pumpkins, msg);
     };
     const dark = -2, day = 10;
-    same(on(day, 21, 0), false, false, true, "by day");
+    same(on(day, 15, 0), false, false, true, "by day, above golden hour");
+    same(on(6, 7, 40, true), false, false, true, "morning golden hour stays dark");
+    same(on(6, 17, 30, false), false, true, true, "evening golden hour turns the strands on");
+    same(on(5, 17, 40, false), false, true, true, "under +6 on the way down");
+    same(on(7, 17, 0, false), false, false, true, "still above +6");
     same(on(dark, 19, 40), true, true, true, "on from dusk");
-    same(on(dark, 22, 0), true, true, true, "still on at 10");
-    same(on(dark, 22, 29), true, true, true, "on at 10:29");
-    same(on(dark, 22, 30), false, false, false, "off at 10:30");
+    same(on(dark, 21, 59), true, true, true, "strands on at 9:59");
+    same(on(dark, 22, 0), true, false, true, "strands off at 10:00, windows and pumpkins stay");
+    same(on(dark, 22, 1), true, false, true, "strands off at 10:01");
+    same(on(dark, 22, 29), true, false, true, "windows and pumpkins on at 10:29");
+    same(on(dark, 22, 30), false, false, false, "windows and pumpkins off at 10:30");
     same(on(dark, 22, 40), false, false, false, "pumpkin string off at 10:40");
     same(on(dark, 23, 10), false, false, false);
+    same(on(dark, 0, 30, false), false, false, false, "stays off after midnight");
     same(on(dark, 2, 15), false, false, false, "stays off overnight");
     same(on(dark, 11, 50), false, false, false);
+  }
+  {
+    const ctx = vm.createContext({});
+    const block = html.slice(html.indexOf("const PN_HA="), html.indexOf("INK.pnBackHouse"));
+    vm.runInContext(block + "\nglobalThis.pnSunFit=pnSunFit;", ctx);
+    const ridge = 138 + -66 * 1.45, ray = 16.2 + 8.5;
+    const noon = ctx.pnSunFit(20, 0, 1);
+    assert.equal(noon.s, 1, "a phone holds the sun at full size");
+    assert.ok(Math.abs(noon.y - (ray + 2)) < 1e-6, "noon rays clear the top of the frame");
+    assert.ok(noon.y + 13 < ridge, "on a phone the whole disc sits above the ridge");
+    const wide = ctx.pnSunFit(20, 25.6, 1);
+    assert.equal(wide.s, 1, "a moderate crop still holds a full sun");
+    assert.ok(wide.y - ray >= 25.6, "rays stay under the crop");
+    assert.ok(wide.y - 13 < ridge, "the top of the disc stays above the ridge");
+    const short = ctx.pnSunFit(20, 31, 1);
+    assert.ok(short.s < 1 && short.s > 0.5, "a short window draws the sun smaller");
+    assert.ok(short.y - ray * short.s >= 31 - 1e-6, "the shorter sun's rays clear the crop");
+    assert.ok(short.y - 13 * short.s < ridge, "the top of the smaller disc stays above the ridge");
+    const low = ctx.pnSunFit(90, 0, 1);
+    assert.equal(low.y, 90, "a low sun keeps the path");
+    assert.equal(low.s, 1, "a low sun stays full size");
   }
   assert.match(fn, /const peek=halloween\?pnPeekGhost\(hx,hy,S,BH\):"";/);
   assert.doesNotMatch(fn, /const ghost=/);
