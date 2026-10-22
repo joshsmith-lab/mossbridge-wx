@@ -2331,9 +2331,9 @@ The fuller scene earns its playfulness from the existing drawings and their beha
   it: left brings the next place, right the previous, and the three wrap. The picture follows
   the finger and eases the rest of the way, off through the sky, and the next one comes in
   from the other side. A vertical move stays a scroll (`touch-action: pan-y`, and a 10px lock
-  that gives the gesture up once it is taller than it is wide). Three small dots sit on the
-  picture's foot, the current place a short pill, so the other places are visible without a
-  sentence. Reduced motion changes the place with no slide. One picture only, moved by a
+  that gives the gesture up once it is taller than it is wide). Nothing on the picture says
+  the other places are there: Josh asked for the swipe to stay a thing you find (October 22
+  2026), so the three dots came off the same day they went on. Reduced motion changes the place with no slide. One picture only, moved by a
   transform, so the sheets are not drawn twice.
 - **Opening and switching in October 2026.** Four things a family member saw on a phone, fixed
   together on October 10 2026 after an audit of the staged paint (#75):
