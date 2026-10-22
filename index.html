@@ -8477,7 +8477,7 @@ function pnBackHouseSil(B=PN_HA){
   const roof=`L ${B.roofL} ${B.eave} L ${B.ridgeL} ${B.ridge} L ${B.ridgeR} ${B.ridge} L ${B.roofR} ${B.eave}`;
   return[`M ${B.l} 0 L ${B.l} ${B.geave} ${roof} L ${B.r} ${B.geave} L ${B.r} 0 Z`];
 }
-function pnBackHouse({night=false,lit=null,shadowOp=1,B=PN_HA,openLast=false}={}){
+function pnBackHouse({night=false,lit=null,shadowOp=1,B=PN_HA}={}){
   const lamps=lit==null?!!night:!!lit,L=[],ge=B.geave;
   const cast=(pts,op=.3)=>pnPoly(pts,"cast",{noSil:true,op:op*shadowOp});
   const strip=(a,b,w,role="trim",o)=>{const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy),nx=-dy/l*w/2,ny=dx/l*w/2;
@@ -8561,11 +8561,9 @@ function pnBackHouse({night=false,lit=null,shadowOp=1,B=PN_HA,openLast=false}={}
   /* a window: tall double-hung, one meeting rail; by day the upper sash holds the sky and the lower is dark,
      under the head's shadow; at night it is lit, one dimmer, one with a lamp, one with a blind drawn */
   const glassOf=(i)=>lamps?(i===1?"glassDim":"glassOn"):"glass";
-  /* October leaves the last east window an open dark room: the ghost stands in it, and the
-     glass, the meeting rail and the casing are painted in front of him (pnPeekGhost) */
-  const lastOpen=openLast?B.winR[B.winR.length-1][0]:null;
+  /* every window, the rightmost east one included, is this same sash: one meeting rail, the
+     upper light by day, the night lamp and the blind only on the windows that already had them */
   const sashes=(w0,w1,i)=>{const t=B.winT,b=B.winB,m=(t+b)/2,P=[];
-    if(w0===lastOpen){P.push(pnRect(w0,t,w1,b,"room",{noSil:true}));return P}
     P.push(pnRect(w0,t,w1,b,glassOf(i),{noSil:true}));
     if(!night)P.push(pnRect(w0,t,w1,m,"glassUp",{noSil:true,op:.6}));
     if(lamps&&i===3)for(let k=0;k<3;k++)P.push(pnHEll(w0+(w1-w0)*.65,b-4.6,3.4-k,3.4-k,"glassHot",{noSil:true,op:.35}));
@@ -8578,11 +8576,11 @@ function pnBackHouse({night=false,lit=null,shadowOp=1,B=PN_HA,openLast=false}={}
   const casing=[],cas=(w0,w1)=>{const t=B.winT,b=B.winB;casing.push(pnRect(w0-1.4,t-2.2,w1+1.4,t,"trim"),pnRect(w0-1.4,t,w0,b,"trim"),pnRect(w1,t,w1+1.4,b,"trim"),pnRect(w0-2,b,w1+2,b+1.3,"trim"));
     casing.push(cast([[w0-2,b+1.3],[w1+2,b+1.3],[w1+1.6,b+2.4],[w0-1.6,b+2.4]],.3))};
   cas(B.winL[0][0],B.winL[B.winL.length-1][1]);casing.push(pnRect(B.winL[0][1],B.winT,B.winL[1][0],B.winB,"trim"));
-  for(const[w0,w1]of B.winR)if(w0!==lastOpen)cas(w0,w1);
+  for(const[w0,w1]of B.winR)cas(w0,w1);
   L.push(L0,{parts:trims(B.gl[0],B.gl[1],...B.peakL)},R0,{parts:trims(B.gr[0],B.gr[1],...B.peakR)},{parts:casing});
   /* at night the lit glass lays warm pools on the wall under each window, falling off to the night */
   if(lamps){const wash=[],g=(x,y,rx,ry,op=.07)=>{for(let i=0;i<5;i++){const k=1-i*.17;wash.push(pnHEll(x,y,rx*k,ry*k,"glow",{soft:true,noSil:true,op}))}};
-    g(-39.6,-2,12,4.5,.08);for(const[w0,w1]of B.winR)if(w0!==lastOpen)g((w0+w1)/2,-1.6,6,3.6,.07);g(-39.6,-14,14,12,.04);g(39.6,-14,20,12,.04);L.push({parts:wash});}
+    g(-39.6,-2,12,4.5,.08);for(const[w0,w1]of B.winR)g((w0+w1)/2,-1.6,6,3.6,.07);g(-39.6,-14,14,12,.04);g(39.6,-14,20,12,.04);L.push({parts:wash});}
   return L;
 }
 /* the porch's light spilling out over the patio at night, a trapezoid, under the ink */
@@ -10509,32 +10507,27 @@ function pnHouseLights(sunAlt,hour,minute){
   const on=dark&&mins>=12*60&&mins<PN_LIGHTS_OUT;
   return{windows:on,strands:on,pumpkins:!dark||on};
 }
-/* A standing Ghostface in the rightmost east window, October only. He is set back in the dark
-   room, smaller than the pane, the way a person stands a few feet behind the glass. The frame,
-   the meeting rail and a tint of glass are painted after him, so he is never in front of the pane.
-   The east windows have no vertical bar, and this one matches them. He is not a lamp: he stays
-   after 10:30. The oak's Ghostface is untouched. */
+/* A standing Ghostface in the rightmost east window, October only. The window itself is the
+   house's own sash, drawn with the others. He is a dim layer clipped inside the two sash
+   openings, clear of the meeting rail and the frame, so those stay the window's own ink.
+   He is not a lamp: he stays after 10:30. The oak's Ghostface is untouched. */
 function pnPeekGhost(hx,hy,S,B){
   const[w0,w1]=B.winR[B.winR.length-1],t=B.winT,b=B.winB,m=(t+b)/2;
   const X=v=>hx+v*S,Y=v=>hy+v*S;
-  const x0=X(w0),x1=X(w1),yT=Y(t),yB=Y(b),yM=Y(m);
+  const x0=X(w0),x1=X(w1),yT=Y(t),yB=Y(b);
   /* local hood top is -11.6. gs is his size against the house, so the hood sits a few units
-     under the head of the window and the hem stops short of the sill: dark room around him */
+     under the head of the window and the hem stops short of the sill */
   const gs=.5,cx=(w0+w1)/2,sy=t+4.2+11.6*gs;
-  /* dim, not black: the room behind him is near #100E14, so a robe that dark
-     disappears, and a mask under a heavy shade reads as empty glass */
   const pal={robe:"#3A3544",hood:"#454054",mask:"#D8D2C4",eye:"#0A090C",ink:"#221E28",shade:"#2A2432",lit:"#E6E0D4",shadeOp:.1,litOp:.32};
   const fig=inkRig(pnWindowGhost(),pal,{s:S*gs,line:.5,heavy:.12,shade:.22,lit:.4,light:[-.15,-1]});
-  const id="pnPeekClip",gid="pnPeekGlass";
-  const box=(xa,ya,xb,yb)=>`<rect x="${f1(X(xa))}" y="${f1(Y(ya))}" width="${f1((xb-xa)*S)}" height="${f1((yb-ya)*S)}" fill="#F7F6F2" stroke="#2A2430" stroke-width=".4"/>`;
-  const railH=.7*S;
-  const glass=`<rect x="${f1(x0)}" y="${f1(yT)}" width="${f1(x1-x0)}" height="${f1(yB-yT)}" fill="url(#${gid})"/>`
-    +`<polygon points="${f1(x0)},${f1(yT+(yB-yT)*.06)} ${f1(x0+(x1-x0)*.58)},${f1(yT)} ${f1(x0+(x1-x0)*.78)},${f1(yT)} ${f1(x0)},${f1(yT+(yB-yT)*.26)}" fill="#E4EEF2" opacity=".14"/>`
-    +`<rect x="${f1(x0)}" y="${f1(yM-railH/2)}" width="${f1(x1-x0)}" height="${f1(railH)}" fill="#F4F2EC" stroke="#2A2430" stroke-width=".35"/>`
-    +box(w0-1.4,t-2.2,w1+1.4,t)+box(w0-1.4,t,w0,b)+box(w1,t,w1+1.4,b)+box(w0-2,b,w1+2,b+1.3);
+  const id="pnPeekClip";
+  /* the meeting rail is .32 either side of the middle, and its ink runs a little past the fill.
+     The head shadow occupies the top of the upper sash. The clip is the glass that is left. */
+  const inset=.7,rail=1,shade=2.2;
+  const clip=(y0,y1)=>`<rect x="${f1(X(w0+inset))}" y="${f1(Y(y0))}" width="${f1((w1-w0-2*inset)*S)}" height="${f1((y1-y0)*S)}"/>`;
   /* the clipped figure is the first child: the scene harness measures that, and a defs
-     ahead of it has an empty box that reads as off the frame. The glass group is after him. */
-  return `<g class="decor" data-decor="ghostface" data-peek="window" data-win="${f1(X(w0-1.4))} ${f1(Y(t-2.2))} ${f1(X(w1+1.4))} ${f1(Y(b+1.3))}" data-pane="${f1(x0)} ${f1(yT)} ${f1(x1)} ${f1(yB)}"><g clip-path="url(#${id})"><g opacity=".94">${inkAt(hx+cx*S,hy+sy*S,S*gs,1,fig)}</g></g><defs><clipPath id="${id}"><rect x="${f1(x0)}" y="${f1(yT)}" width="${f1(x1-x0)}" height="${f1(yB-yT)}"/></clipPath><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D5E2EA" stop-opacity=".2"/><stop offset=".42" stop-color="#9BB0BE" stop-opacity=".08"/><stop offset="1" stop-color="#6E8494" stop-opacity=".12"/></linearGradient></defs><g data-glass="front">${glass}</g></g>`;
+     ahead of it has an empty box that reads as off the frame */
+  return `<g class="decor" data-decor="ghostface" data-peek="window" data-win="${f1(X(w0-1.4))} ${f1(Y(t-2.2))} ${f1(X(w1+1.4))} ${f1(Y(b+1.3))}" data-pane="${f1(x0)} ${f1(yT)} ${f1(x1)} ${f1(yB)}"><g clip-path="url(#${id})"><g opacity=".46">${inkAt(hx+cx*S,hy+sy*S,S*gs,1,fig)}</g></g><defs><clipPath id="${id}">${clip(t+shade,m-rail)}${clip(m+rail,b-inset)}</clipPath></defs></g>`;
 }
 /* Shoulder line at the meeting rail, hood top just inside the top of the glass, head tipped the
    way he cocks it. y=0 is the shoulder. The robe is left unrotated so it hangs straight. */
@@ -10802,8 +10795,8 @@ function pnRigBat(beat){
    shows a loose end, the fountain leans and its spray drifts downwind, and the reflection is glass in a calm, strips in a breeze
    and glints in a blow. The low sun's warmth comes from its own side. In October (holidayOn) the fence carries
    pumpkin lights, on by day and from dusk until 10:30, each run a swag between posts, a little tree by the fire table is wrapped in purple and orange, each pillar
-   holds an orange pumpkin and a white one, the gate has two lanterns from the carving day, Ghostface stands
-   behind the glass of the rightmost east window (smaller, set back in the dark room, and he stays after the lamps go out at 10:30), and on Halloween night the trick-or-treater stands at the gate.
+   holds an orange pumpkin and a white one, the gate has two lanterns from the carving day, Ghostface is a dim layer
+   clipped inside the glass of the rightmost east window (the window is the same sash as the others, and he stays after the lamps go out at 10:30), and on Halloween night the trick-or-treater stands at the gate.
    The heron, the gulls, the does and the bats are the detailed drawings, and the pond sliders and the two dogs come out on the table in PN_DOGS. Laid out in a
    320 by 194 frame (sceneH), centred on wider ones, where the wood, the lawn, the sand and the pond run on to
    the frame's edges */
@@ -10861,11 +10854,11 @@ function pnPondScene(c){
   const sheen=`<defs><linearGradient id="pnSheen" x1="${sunSide<0?1:0}" y1="0" x2="${sunSide<0?0:1}" y2="0"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/><stop offset=".55" stop-color="#FFFFFF" stop-opacity="0"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="${(dark?.06:.22*(1-veil*.6)).toFixed(2)}"/></linearGradient></defs>`
     +`<path d="M ${BH.roofL} ${BH.eave} L ${BH.ridgeL} ${BH.ridge} L ${BH.ridgeR} ${BH.ridge} L ${BH.roofR} ${BH.eave} Z" fill="url(#pnSheen)"/>`;
   const houseNight=sunAltDeg<-.83;
-  const house=`<g data-prop="house" data-lit="${lightsOn?1:0}">${inkAt(hx,hy,S,1,pnBackHouseGlow({night:lightsOn})+inkRig(pnBackHouse({night:houseNight,lit:lightsOn,shadowOp,B:BH,openLast:!!halloween}),hPal,{s:S,light:lightAt(hx,hy-u(40)),line:1.4,heavy:1,shade:1.6,lit:.9})
+  const house=`<g data-prop="house" data-lit="${lightsOn?1:0}">${inkAt(hx,hy,S,1,pnBackHouseGlow({night:lightsOn})+inkRig(pnBackHouse({night:houseNight,lit:lightsOn,shadowOp,B:BH}),hPal,{s:S,light:lightAt(hx,hy-u(40)),line:1.4,heavy:1,shade:1.6,lit:.9})
     +sheen+(tex?pnBackHouseSil(BH).map(d=>`<path d="${d}" fill="${tex}" opacity="${(.55*paperK).toFixed(2)}"/>`).join(""):""))}</g>`;
   top(hx+u(BH.roofL)-4,hx+u(BH.roofR)+4,hy+u(BH.ridge)-4);
-  /* in October Ghostface stands behind the glass of the rightmost east window, set back in the dark
-     room, and he stays after the lamps go out: he is a decoration, not a light */
+  /* in October Ghostface is a dim layer inside the rightmost east window's own glass, and he
+     stays after the lamps go out: he is a decoration, not a light, and he adds no window parts */
   const peek=halloween?pnPeekGhost(hx,hy,S,BH):"";
 
   /* ── the palms at the fence. Each end of the house is the same group: a sabal, a windmill palm low
