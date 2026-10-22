@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v110/);
+  assert.match(worker, /mbwx-shell-v111/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -6353,6 +6353,17 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(fn, /const fnX=doorX,/);
   assert.match(fn, /gx0=doorX-6\.2,gx1=doorX\+6\.2/);
   assert.match(fn, /const tbX=hx\+u\(\(BH\.winR\[1\]\[0\]\+BH\.winR\[1\]\[1\]\)\/2\)/);
+  // every chair at the fire table is black, the one behind included
+  assert.match(fn, /chair\(fX\+7,fY-3\.4,"side","black",-1\)\}\$\{chair\(fX-9,fY-3\.6,"side","black"\)/);
+  assert.match(fn, /chair\(fX-17\.5,fY\+\.5,"side","black"\)\}\$\{chair\(fX\+17\.5,fY\+\.5,"side","black",-1\)/);
+  assert.doesNotMatch(fn, /"side","wood"/);
+  // the round bush is a black weeping willow for October, lit purple and orange by day and all night
+  assert.match(html, /function propPnWillow\(\)/);
+  assert.match(fn, /data-decor="light-tree" data-lit="1"/);
+  assert.match(fn, /#C084FC/);
+  assert.match(fn, /#FF8A2A/);
+  assert.doesNotMatch(fn, /scallop\(0,-8,4,7\.2/);
+  assert.doesNotMatch(fn, /if\(lightsOn\)\{glows/);
   assert.equal((html.match(/winR:\[\[[^\]]*\],\[[^\]]*\],\[[^\]]*\]\]/g) || []).length, 1, "three windows east of the porch on the shipped house");
   assert.equal((html.match(/winR:\[\[[^\]]*\],\[[^\]]*\],\[[^\]]*\],\[[^\]]*\]\]/g) || []).length, 2, "four east windows on each review house");
   // A is the drawing under review: the main roof is a trapezoid whose lower corners are the gables'

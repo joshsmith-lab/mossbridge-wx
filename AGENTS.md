@@ -899,8 +899,9 @@ picture makes no claim about who is home.
 
 **October.** The blood moon, the bats, the witch and the cobweb are shared with the other places; the sky
 over the house is small, so the bats and the witch fly in front of the roof. The house's own, each a
-`data-decor` the harness counts: the pumpkin lights (`pumpkin-lights`), the little tree wrapped in purple
-and orange lights by the fire table (`light-tree`), one orange and one white pumpkin on each pillar ("put
+`data-decor` the harness counts: the pumpkin lights (`pumpkin-lights`), the black weeping willow just
+left of the fire table (`light-tree`, in the round bush's place: drooping black locks, purple and orange
+lights that stay lit by day and all night, past the 10:30 lights-out, fills only), one orange and one white pumpkin on each pillar ("put
 one orange and one white pumpkin on both fence stantions - then carve them on time"), both carved and lit
 from the carving day by the candle rules (`pumpkin`, `white-pumpkin`, then `jack-o-lantern`), two lanterns
 at the gate, Ghostface peeking round the house's east corner (he lived in the marsh's oak; on `?house=a` and `?house=b` he is a small face in the rightmost east window, and he stays after the lamps go out), and on Halloween
