@@ -9117,17 +9117,31 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) matrix(1 0 ${(-lean).toFixed(2)} -.13 0 0) scale(${(flip*s).toFixed(2)} ${s.toFixed(2)})" fill="${shadeC}" opacity="${(.22*shadowK).toFixed(2)}">${parts.map(p=>`<path d="${p.d}"/>`).join("")}</g>`};
   const flatParts=L=>L.flatMap(l=>l.parts?l.parts.filter(p=>!INK_INNER.has(p.role)&&!p.soft):flatParts(l.layers));
   /* The house's sunrise and sunset sit up in open sky. Sunrise is the right-hand word, because the
-     house faces north. They stay in the corner columns, which are sky from the top of the frame down
-     to the palm crowns: the house occupies the middle from about x 64, and the palms start near y 90.
-     A short window crops the top of that sky (the same sum pondFit uses) and the words drop to just
-     under the crop, still in the corner. A sun or a moon that would cover a word steps it along.
-     No box: the sky there is clear, and the thin halo the times already wear keeps a digit readable
-     when the sky goes dark. The same spots are what the witch and the bats keep off. */
+     house faces north, and it stays there all day. Sunset stays on the left. A thin chevron sits on
+     the inner side of each time, up for sunrise and down for sunset. Its stroke is the stem of the
+     digits, and the halo behind it is the same 1.3px the times wear, so the arrow and the numerals
+     read as one mark. The chevron is centered on the figures. They stay in the corner columns, which
+     are sky from the top of the frame down to the palm crowns: the house occupies the middle from
+     about x 64, and the palms start near y 90. A short window crops the top of that sky (the same
+     sum pondFit uses) and the words drop to just under the crop, still in the corner. A sun or a
+     moon that would cover a word steps it along. No box: the sky there is clear, and the thin halo
+     keeps a digit readable when the sky goes dark. The same spots are what the witch and the bats
+     keep off. */
   if(pnArc){
+    const TIME_ADV=6.6,CHEV_W=6.6,CHEV_H=5.6,STEM=1.4,GAP=2,CAP_MID=4.4;
+    const sceneCss=(typeof document!=="undefined"&&document.querySelector(".scene")||{clientWidth:390}).clientWidth||390;
+    const haloW=STEM+1.3*320/sceneCss;
+    const twOf=t=>t.length*TIME_ADV;
+    const chev=(x,top,up)=>{
+      const x2=x+CHEV_W/2,x3=x+CHEV_W,y0=top,y1=top+CHEV_H;
+      const d=up?`M ${x.toFixed(2)} ${y1.toFixed(2)} L ${x2.toFixed(2)} ${y0.toFixed(2)} L ${x3.toFixed(2)} ${y1.toFixed(2)}`:`M ${x.toFixed(2)} ${y0.toFixed(2)} L ${x2.toFixed(2)} ${y1.toFixed(2)} L ${x3.toFixed(2)} ${y0.toFixed(2)}`;
+      const attr=`fill="none" stroke-linecap="round" stroke-linejoin="miter" stroke-miterlimit="2.2" shape-rendering="geometricPrecision" d="${d}"`;
+      return `<path ${attr} stroke="var(--off-sky,#F7F4EA)" stroke-width="${haloW.toFixed(2)}" opacity=".9"/><path ${attr} stroke="currentColor" stroke-width="${STEM}"/>`;
+    };
     const avoid=[sunXY&&[sunXY[0],sunXY[1],28],moonXY&&[moonXY[0],moonXY[1],moonR+8]].filter(Boolean);
-    const place=side=>{
-      const w=40,a=side==="L"?"start":"end";
-      const box=(x,y)=>a==="end"?[x-w,y-11,x+2,y+3]:[x-2,y-11,x+w,y+3];
+    const place=(side,t)=>{
+      const up=side==="R",tw=twOf(t),w=tw+GAP+STEM+CHEV_W+1.2,a=side==="L"?"start":"end",above=11,below=4;
+      const box=(x,y)=>a==="end"?[x-w,y-above,x+2,y+below]:[x-2,y-above,x+w,y+below];
       const clear=(x,y)=>{
         const b=box(x,y);
         if(b[0]<3||b[2]>W-3||b[1]<visTop+1.5||b[3]>86)return false;
@@ -9140,12 +9154,18 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
         const x=x0+step*i;
         if(side==="L"&&x>W*.46)break;
         if(side==="R"&&x<W*.54)break;
-        if(clear(x,y))return{x,y,a};
+        if(clear(x,y))return{x,y,a,box:box(x,y),t,up,tw};
       }
-      return{x:x0,y:y0,a};
+      return{x:x0,y:y0,a,box:box(x0,y0),t,up,tw};
     };
-    skyLabs={rise:place("R"),set:place("L")};
-    sunTimes=`<g data-sun-times="1" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="11" font-weight="600" fill="currentColor">${lab(0,clock(sunrise))+lab(1,clock(sunset))}</g>`;
+    const markOf=s=>{
+      const {x,y,a,t,up,tw}=s;
+      const time=`<text class="suntime" x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${a}">${t}</text>`;
+      const ax=a==="end"?x-tw-GAP-STEM/2-CHEV_W:x+tw+GAP+STEM/2;
+      return time+chev(ax,y-CAP_MID-CHEV_H/2,up);
+    };
+    skyLabs={rise:place("R",clock(sunrise)),set:place("L",clock(sunset))};
+    sunTimes=`<g data-sun-times="1" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="11" font-weight="600" fill="currentColor">${markOf(skyLabs.rise)+markOf(skyLabs.set)}</g>`;
   }
   /* ── the holiday ──────────────────────────────────────────────────────────────────
      Decorations are things set out in the scene, painted like the dock and the barn and lit by
@@ -9366,7 +9386,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
        of them, from her hat (14px over her seat) to her boots, with room for her lean and her bob,
        over each label's width and her own length either side; and it keeps above anything
        standing up into her band */
-    const labs=[.17,.83].map(f=>{const lx=labX(f),ly=labY(f);return labA(f)==="end"?[lx-30,lx,ly]:[lx,lx+30,ly]});
+    const labs=pnArc&&skyLabs?[skyLabs.set.box,skyLabs.rise.box].map(b=>[b[0],b[2],(b[1]+b[3])/2]):[.17,.83].map(f=>{const lx=labX(f),ly=labY(f);return labA(f)==="end"?[lx-30,lx,ly]:[lx,lx+30,ly]});
     const under=(y0,y1,a,b,top)=>[a-23,b+23].every(x=>yAt(y0,y1,x)<top);
     const clear=(y0,y1)=>labs.every(([a,b,ly])=>{const ya=yAt(y0,y1,a-22),yb=yAt(y0,y1,b+22);return Math.min(ya,yb)>ly+21||Math.max(ya,yb)<ly-19})
       &&tops.every(([a,b,t])=>under(y0,y1,a,b,t-6));
@@ -9597,7 +9617,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     return out+`</g>`;
   };
   /* the two times written on the arc, as boxes a bat stays out of */
-  const timeBoxes=(pnArc?[0,1]:[.17,.83]).map(f=>{const x=labX(f),y=labY(f);return labA(f)==="end"?[x-40,y-10,x+2,y+3]:[x-2,y-10,x+40,y+3]});
+  const timeBoxes=pnArc&&skyLabs?[skyLabs.set.box,skyLabs.rise.box]:(pnArc?[0,1]:[.17,.83]).map(f=>{const x=labX(f),y=labY(f);return labA(f)==="end"?[x-40,y-10,x+2,y+3]:[x-2,y-10,x+40,y+3]});
   /* and, under reduced motion, the witch where she holds still (witchPlan) */
   const batKeep=wp=>wp&&wp.box?[...timeBoxes,wp.box]:timeBoxes;
 

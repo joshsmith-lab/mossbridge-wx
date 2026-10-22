@@ -874,6 +874,9 @@ the witch all go the way the real wind blows. The house draws no arc. The illust
 sine and `sunPos`, except at the crown, where it drops until the whole disc and its rays sit under the top of the frame (`pnSunFit`). A short window crops that sky, and when the open sky above the roof cannot hold the sun, it draws smaller and tucks behind the ridge. Golden hour warms the light, and a low sun lays a long shadow and a glint on the
 windows it faces. The sunrise and sunset times sit up in open sky, in the corner columns, clear of
 the palms, the roof, the house and the pond, with the thin halo they already wear and no box behind them.
+Sunrise stays on the right and sunset on the left all day, because the house faces north. A thin
+chevron sits beside each time, on the side toward the house, up for sunrise and down for sunset.
+Its stroke matches the digits and it wears their halo. Josh picked this on October 22 2026.
 A short window crops the top of that sky, and the times drop to just under the crop, still in the corner.
 The sine takes 90° to that crown, which set an afternoon moon into the roof, so a moon
 `pnMoonInRoof` would hide takes the shallower rise (.35) and stays in the sky. A moon already clear of
