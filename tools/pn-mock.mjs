@@ -2,7 +2,8 @@
  * Previews of Porters Neck from across the pond, for Josh. renderScene draws it when window.PN_SHOW is
  * {opt:"A"} at Porters Neck; without it the scene is today's marsh, unchanged. This serves the page on
  * the shared fixtures, sets PN_SHOW before the page loads, and writes the header (the sky and its scene)
- * for the preview and for today's scene, at a September noon, dusk and night and an October night.
+ * for the preview (and today's scene for the main four), at a September noon, dusk and night and an October
+ * night, and at sunrise, golden hour, in rain, a thunderstorm, fog and a hard blow, and on Halloween night.
  *
  *   TZ=America/New_York node tools/pn-mock.mjs                 # every option, every time, at 390
  *   TZ=America/New_York node tools/pn-mock.mjs A night         # only the shots whose tag matches
@@ -21,19 +22,38 @@ const PORT = Number(process.env.PORCH_PORT || 8841);
 const WIDTHS = (process.env.PORCH_PN_WIDTHS || "390").split(",").map(Number);
 const ONLY = process.argv.slice(2);
 
-/* late September and late October at Porters Neck. The September night is half past one, when the moon
-   two days past full stands on the roof's ridge; most of the evening it is behind the roof */
+/* late September and October at Porters Neck. `main` moments are shot at every width; the rest at the first */
 const SEP = { sunrise: "07:03", sunset: "19:10", popCurve: () => 4, dailyPop: (p) => p.fill(8), uvMax: 6 };
 const OCT = { sunrise: "07:27", sunset: "18:23", popCurve: () => 4, dailyPop: (p) => p.fill(8), uvMax: 4 };
+const HAL = { sunrise: "07:32", sunset: "18:16", popCurve: () => 4, dailyPop: (p) => p.fill(8), uvMax: 4 };
+const calm = { windAmp: 2, gustAmp: 1 };
 const TIMES = [
-  { name: "sep-noon", when: "2026-09-23T13:10:00",
+  { name: "sep-noon", main: true, when: "2026-09-23T13:10:00",
     o: { ...SEP, baseTemp: 78, nowTemp: 82, feels: 84, rh: 58, isDay: 1, code: 1, cloud: 22, nowWind: 7, nowDir: 200, nowGust: 12, nowUv: 6.1, windAmp: 4, gustAmp: 5 } },
-  { name: "sep-dusk", when: "2026-09-23T19:26:00",
+  { name: "sep-dusk", main: true, when: "2026-09-23T19:26:00",
     o: { ...SEP, baseTemp: 68, nowTemp: 66, feels: 66, rh: 66, isDay: 0, code: 0, cloud: 8, nowWind: 4, nowDir: 200, nowGust: 8, nowUv: 0, windAmp: 3, gustAmp: 2 } },
-  { name: "sep-night", when: "2026-09-28T01:30:00",
-    o: { ...SEP, baseTemp: 66, nowTemp: 64, feels: 64, rh: 72, isDay: 0, code: 0, cloud: 4, nowWind: 2, nowDir: 30, nowGust: 5, nowUv: 0, windAmp: 2, gustAmp: 1 } },
-  { name: "oct-night", when: "2026-10-24T21:30:00",
-    o: { ...OCT, baseTemp: 60, nowTemp: 58, feels: 58, rh: 72, isDay: 0, code: 0, cloud: 4, nowWind: 3, nowDir: 30, nowGust: 6, nowUv: 0, windAmp: 2, gustAmp: 1 } },
+  /* the full moon over the house's east end, the string lights still on */
+  { name: "sep-night", main: true, when: "2026-09-26T21:30:00",
+    o: { ...SEP, baseTemp: 66, nowTemp: 64, feels: 64, rh: 72, isDay: 0, code: 0, cloud: 4, nowWind: 2, nowDir: 30, nowGust: 5, nowUv: 0, ...calm } },
+  /* half past ten: the string lights and the fire are off (Josh: off at 10 pm), the house still lit */
+  { name: "sep-late", when: "2026-09-26T22:30:00",
+    o: { ...SEP, baseTemp: 66, nowTemp: 64, feels: 64, rh: 72, isDay: 0, code: 0, cloud: 4, nowWind: 2, nowDir: 30, nowGust: 5, nowUv: 0, ...calm } },
+  { name: "oct-night", main: true, when: "2026-10-24T21:30:00",
+    o: { ...OCT, baseTemp: 60, nowTemp: 58, feels: 58, rh: 72, isDay: 0, code: 0, cloud: 4, nowWind: 3, nowDir: 30, nowGust: 6, nowUv: 0, ...calm } },
+  { name: "sunrise", when: "2026-09-23T07:16:00",
+    o: { ...SEP, baseTemp: 68, nowTemp: 64, feels: 64, rh: 86, isDay: 1, code: 1, cloud: 14, nowWind: 3, nowDir: 40, nowGust: 6, nowUv: .1, ...calm } },
+  { name: "golden", when: "2026-09-23T18:40:00",
+    o: { ...SEP, baseTemp: 76, nowTemp: 74, feels: 74, rh: 60, isDay: 1, code: 1, cloud: 12, nowWind: 5, nowDir: 200, nowGust: 9, nowUv: .3, windAmp: 3, gustAmp: 2 } },
+  { name: "rain", when: "2026-09-23T19:40:00",
+    o: { ...SEP, baseTemp: 72, nowTemp: 70, feels: 70, rh: 96, isDay: 0, code: 63, cloud: 100, nowWind: 10, nowDir: 60, nowGust: 18, nowUv: 0, windAmp: 6, gustAmp: 8, popCurve: () => 90, dailyPop: (p) => p.fill(90) } },
+  { name: "storm", when: "2026-09-23T16:30:00",
+    o: { ...SEP, baseTemp: 78, nowTemp: 76, feels: 80, rh: 88, isDay: 1, code: 95, cloud: 100, nowWind: 18, nowDir: 240, nowGust: 34, nowUv: 1, windAmp: 12, gustAmp: 18, popCurve: () => 90, dailyPop: (p) => p.fill(90) } },
+  { name: "fog", when: "2026-09-24T07:50:00",
+    o: { ...SEP, baseTemp: 70, nowTemp: 66, feels: 66, rh: 99, isDay: 1, code: 45, cloud: 100, nowWind: 1, nowDir: 90, nowGust: 3, nowUv: .2, ...calm } },
+  { name: "blow", when: "2026-09-23T14:00:00",
+    o: { ...SEP, baseTemp: 78, nowTemp: 78, feels: 78, rh: 55, isDay: 1, code: 2, cloud: 45, nowWind: 28, nowDir: 250, nowGust: 42, nowUv: 5, windAmp: 18, gustAmp: 26, windCurve: () => 28, gustCurve: () => 42 } },
+  { name: "halloween", when: "2026-10-31T19:30:00",
+    o: { ...HAL, baseTemp: 62, nowTemp: 60, feels: 60, rh: 70, isDay: 0, code: 0, cloud: 5, nowWind: 3, nowDir: 30, nowGust: 6, nowUv: 0, ...calm } },
 ];
 const OPTS = [["today", null], ["A", { opt: "A" }]];
 
@@ -44,6 +64,7 @@ const server = await serve(PORT, FONT_DIR);
 const browser = await chromium.launch(process.env.PORCH_CHROME_PATH ? { executablePath: process.env.PORCH_CHROME_PATH } : {});
 let failed = false;
 for (const T of TIMES) for (const [opt, show] of OPTS) for (const width of WIDTHS) {
+  if (!T.main && (width !== WIDTHS[0] || !show)) continue;
   const tag = `${opt}-${T.name}-${width}`;
   if (ONLY.length && !ONLY.every((o) => tag.includes(o))) continue;
   const ctx = await browser.newContext({ viewport: { width, height: 932 }, deviceScaleFactor: 3, timezoneId: "America/New_York" });
