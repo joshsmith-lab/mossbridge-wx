@@ -8462,7 +8462,7 @@ function propPnTub({open=false}={}){
   for(const x of[-6.6,-3.3,0,3.3,6.6])P.push(pnRect(x-.14,-6.2,x+.14,-.4,"sideDk",{noSil:true,op:.75}));
   P.push(pnRect(-10,-1,10,0,"sideDk",{noSil:true,op:.6}));
   const step=[pnRect(-4.4,-2.2,4.4,0,"step"),pnRect(-4.4,-2.2,4.4,-1.8,"coverLt",{noSil:true,op:.5})];
-  /* out of season the hard cover stays on: a soft rounded lip, a gentle dome, the fold across the middle */
+  /* the hard cover stays on until the fire is lit: a soft rounded lip, a gentle dome, the fold across the middle */
   if(!open){
     const C=[pBlob([[-10.9,-6.2],[-11.1,-7.1],[-10.4,-8.4],[-6,-9.1],[0,-9.3],[6,-9.1],[10.4,-8.4],[11.1,-7.1],[10.9,-6.2],[0,-5.9]],"cover"),
       pTaper([[-10.6,-6.5,.6],[0,-6.25,.7],[10.6,-6.5,.6]],"coverDk",{},{noSil:true,op:.8}),
@@ -8470,7 +8470,7 @@ function propPnTub({open=false}={}){
       pTaper([[-.1,-9.1,.24],[.1,-6.5,.24]],"coverDk",{capStart:false,capEnd:false},{noSil:true,op:.75})];
     return[{parts:P},{parts:C},{parts:step}];
   }
-  /* in season the cover stands up at the back and the water shows. The lights and the steam are drawn over this */
+  /* with the fire lit the cover stands up at the back and the water shows. The lights and the steam are drawn over this */
   const back=[pnPoly([[-9,-7.15],[-8,-10],[8,-10],[9,-7.15]],"cover"),
     pTaper([[-6.2,-9.3,.22],[0,-9.7,.26],[6.2,-9.3,.22]],"coverLt",{},{noSil:true,op:.7}),
     pnRect(-9.2,-7.7,9.2,-7,"coverDk",{noSil:true})];
@@ -10857,10 +10857,10 @@ function pnPondScene(c){
   const lit=pnHouseLights(sunAltDeg,localHour,localMin,rising);
   const lightsOn=lit.windows,strandsOn=lit.strands,pumpOn=lit.pumpkins;
   const fireOn=strandsOn&&localHour>=15&&temp>=45&&temp<68&&!wet&&!storm&&!fog&&gust<20&&!THUNDER;
-  /* the tub is open, and steaming, from October 20 through April 15. Its lights use the strands' hours:
-     one wash across the water, lagoon then moon blue */
+  /* the cover stays on until the fire is lit, and only in season, October 20 through April 15.
+     Open, it steams, and one wash crosses the water, lagoon then moon blue */
   const tubSeason=pnTubSeason(locToday());
-  const tubLit=tubSeason&&strandsOn;
+  const tubOn=tubSeason&&fireOn;
   const swayAmt=clamp(.3+gust*.05,.3,2.6),swayDur=clamp(8.5-gust*.15,3,8.5);
   /* dw: +1 when the wind blows toward the right of this north-facing frame. Everything that leans or drifts
      with the wind goes by it. In SVG (y down, turning at the foot) skewX(-a) tips the top to the right, so
@@ -10981,23 +10981,19 @@ function pnPondScene(c){
   const fireLight=fireOn?`<ellipse cx="${f1(fX)}" cy="${f1(fY+1.5)}" rx="46" ry="15" fill="url(#pnFirePool)"/><ellipse cx="${f1(fX)}" cy="${f1(fY-11)}" rx="32" ry="18" fill="url(#pnFirePool)" opacity=".72"/>`:"";
   const fireWash=fireOn?`<ellipse data-prop="fire-glow" cx="${f1(fX)}" cy="${f1(fY-5)}" rx="30" ry="14" fill="url(#pnFirePool)" opacity=".42"/>`:"";
   const tbX=hx+u((BH.winR[0][0]+BH.winR[BH.winR.length-1][1])/2),tbY=hy+3.4;
-  const tub=`<path d="M ${f1(tbX-u(9.4))} ${f1(tbY-u(9))} L ${f1(tbX+u(11.6))} ${f1(tbY-u(9))} L ${f1(tbX+u(12.6))} ${f1(tbY-u(6))} L ${f1(tbX+u(11))} ${f1(tbY-u(6))} Z" fill="${shadeC}" opacity="${(.22*shadowOp).toFixed(2)}"/><g data-prop="hot-tub" data-open="${tubSeason?1:0}" data-lit="${tubLit?1:0}">${inkAt(tbX,tbY,S,1,inkRig(propPnTub({open:tubSeason}),palAt(INK.pnTub,.04),{s:S,line:.8,heavy:.4,shade:1.1,lit:.7,light:lightAt(tbX,tbY-10)}))}</g>`;
-  /* steam the whole season, on the moving sheet, and the lights only while the strands are on.
-     Each colour is one group, so they trade places together. */
+  const tub=`<path d="M ${f1(tbX-u(9.4))} ${f1(tbY-u(9))} L ${f1(tbX+u(11.6))} ${f1(tbY-u(9))} L ${f1(tbX+u(12.6))} ${f1(tbY-u(6))} L ${f1(tbX+u(11))} ${f1(tbY-u(6))} Z" fill="${shadeC}" opacity="${(.22*shadowOp).toFixed(2)}"/><g data-prop="hot-tub" data-open="${tubOn?1:0}" data-lit="${tubOn?1:0}">${inkAt(tbX,tbY,S,1,inkRig(propPnTub({open:tubOn}),palAt(INK.pnTub,.04),{s:S,line:.8,heavy:.4,shade:1.1,lit:.7,light:lightAt(tbX,tbY-10)}))}</g>`;
+  /* steam and the wash only while the fire is lit. Each colour is one group, so they trade places together. */
   const tubFx=(()=>{
-    if(!tubSeason)return "";
+    if(!tubOn)return "";
     /* short and soft. The tallest fades out around the top of the windows, and the rightmost stays
        off the window Ghostface uses */
     const steam=[[-3.2,10,2.4,11],[.2,12.5,3,13.5],[3.4,9.5,2.1,10]].map(([x,dur,rx,ry],i)=>`<ellipse class="pn-steam" cx="${x}" cy="${(-8.5-ry).toFixed(2)}" rx="${rx}" ry="${ry}" fill="url(#pnSteam)" opacity=".75" style="--sd:${dur}s;${wallClock(dur,i*3.1)}"/>`).join("");
     const hd=22;
     const layer=(id,delay,rest,inner)=>`<g class="pn-tub-hue" data-hue="${id}" opacity="${rest}" style="--hi:.98;--hd:${hd}s;${wallClock(hd,delay)}">${inner}</g>`;
-    let lights="";
-    if(tubLit){
-      /* the wash stays on the water, with a soft halo on the tub. Nothing drops onto the paving */
-      const wash=id=>`<ellipse cx="0" cy="-6.45" rx="8.8" ry="1.7" fill="url(#${id})"/><ellipse cx="0" cy="-5.4" rx="11.2" ry="2.6" fill="url(#${id})" opacity=".42"/>`;
-      lights=layer("pnTubLagoon",0,.88,wash("pnTubLagoon"))+layer("pnTubMoon",11,.06,wash("pnTubMoon"));
-    }
-    return `<g data-prop="tub-live" data-lit="${tubLit?1:0}" transform="translate(${f1(tbX)} ${f1(tbY)}) scale(${S})">${steam}${lights}</g>`;
+    /* the wash stays on the water, with a soft halo on the tub. Nothing drops onto the paving */
+    const wash=id=>`<ellipse cx="0" cy="-6.45" rx="8.8" ry="1.7" fill="url(#${id})"/><ellipse cx="0" cy="-5.4" rx="11.2" ry="2.6" fill="url(#${id})" opacity=".42"/>`;
+    const lights=layer("pnTubLagoon",0,.88,wash("pnTubLagoon"))+layer("pnTubMoon",11,.06,wash("pnTubMoon"));
+    return `<g data-prop="tub-live" data-lit="1" transform="translate(${f1(tbX)} ${f1(tbY)}) scale(${S})">${steam}${lights}</g>`;
   })();
 
   /* ── October: a black weeping willow just left of the fire table, where a round bush was. It is up with
