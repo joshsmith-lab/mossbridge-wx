@@ -76,7 +76,7 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
   transition:background 1.2s var(--ease)}
 .sky-fx{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
 .sky-fx svg{position:absolute;inset:0;width:100%;height:100%}
-.sky>*:not(.sky-fx):not(.flash):not(.rainfx):not(.cobweb):not(.scene-dots){position:relative;z-index:2}
+.sky>*:not(.sky-fx):not(.flash):not(.rainfx):not(.cobweb){position:relative;z-index:2}
 /* Halloween's cobweb is on the glass, so it is over everything in the sky, the rain included, and
    it is out of the flow and takes no tap: nothing under it moves and every tap goes through it */
 .cobweb{position:absolute;top:0;right:0;width:0;height:0;z-index:3;pointer-events:none}
@@ -600,13 +600,6 @@ html[data-theme=dark] .alert-strip{background:#9A3317;box-shadow:0 6px 22px -8px
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 .scene{position:relative}
 .scene-frame.scene-glide{transition:transform .34s var(--ease)}
-/* three places, one quiet mark on the picture's foot so the others are visible. It stays
-   put while the picture slides, and it takes no tap */
-.sky>.scene-dots{position:absolute;left:0;right:0;bottom:13px;z-index:3;display:flex;
-  justify-content:center;align-items:center;gap:7px;height:6px;pointer-events:none}
-.scene-dots i{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.75;
-  box-shadow:0 0 0 1px var(--off-sky)}
-.scene-dots i.on{width:16px;border-radius:99px;opacity:1}
 .scene svg{display:block;width:100%;height:auto}
 /* the house keeps the phone's frame and scales it up. On a short wide screen the sky is cropped and the
    house stays: the sheets stay the full picture, bottom aligned, and the scene clips the top. 40px of
@@ -970,12 +963,12 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
  html.loading .live-dot::after{animation:none;opacity:0}
  html.loading .sky{background:transparent;color:var(--ink)}
  html.loading .sky::before{display:none}
- html.loading .now,html.loading #verdict,html.loading .scene,html.loading .scene-dots,html.loading .chips,html.loading .app>:not(header){opacity:0}
+ html.loading .now,html.loading #verdict,html.loading .scene,html.loading .chips,html.loading .app>:not(header){opacity:0}
  html.loading .now{visibility:hidden}
  html.loading #feelsRow{display:none!important}
  html.loading .chips{min-height:26px}
- html.loading .now,html.loading #verdict,html.loading .scene,html.loading .scene-dots,html.loading .chips,html.loading .app>:not(header),
- html.settled .now,html.settled #verdict,html.settled .scene,html.settled .scene-dots,html.settled .chips,html.settled .app>:not(header){transition:opacity .42s var(--ease)}
+ html.loading .now,html.loading #verdict,html.loading .scene,html.loading .chips,html.loading .app>:not(header),
+ html.settled .now,html.settled #verdict,html.settled .scene,html.settled .chips,html.settled .app>:not(header){transition:opacity .42s var(--ease)}
  .load-mark{position:fixed;left:50%;top:46%;z-index:6;width:min(280px,78vw);transform:translate(-50%,-50%);
    text-align:center;pointer-events:none;opacity:0;visibility:hidden;
    transition:opacity .42s var(--ease),visibility 0s linear .42s}
@@ -1033,7 +1026,6 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   <div class="chips" id="chips"></div>
   <div class="nowcast" id="nowcast"><span id="ncText"></span><span class="nc-bars" id="ncBars"></span></div>
   <div class="scene-frame"><div class="scene"><svg id="sceneSvg" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-label="Sun and moon over the marsh horizon"></svg><svg id="sceneSky" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneMoss" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneNear" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><div id="sceneLift" class="scene-lift" aria-hidden="true"></div><svg id="sceneFront" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneFx" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneWater" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneRefl" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneRipple" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneTop" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg></div></div>
-  <div class="scene-dots" id="sceneDots" aria-hidden="true"></div>
   <div class="cobweb" id="cobweb" aria-hidden="true" hidden></div>
 </header>
 
@@ -16805,9 +16797,6 @@ const SWAP='<svg width="10" height="10" viewBox="0 0 12 12"><path d="M2.5 4.2h6.
 function paintAddr(){
   document.getElementById("locBtn").innerHTML=
     `<span class="addr-full">${LOC.addrFull}</span><span class="addr-short">${LOC.addrShort}</span>${SWAP}`;
-  /* the mark on the picture follows the place, including a switch from the address */
-  const dots=document.getElementById("sceneDots"),at=LOC_ORDER.indexOf(LOC.id);
-  if(dots)dots.innerHTML=LOC_ORDER.map((_,n)=>n===at?'<i class="on"></i>':'<i></i>').join("");
 }
 function paintLocationShell(){
   document.getElementById("tideSection").style.display=LOC.tide?"":"none";

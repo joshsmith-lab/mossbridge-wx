@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v129/);
+  assert.match(worker, /mbwx-shell-v130/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -1435,7 +1435,7 @@ test("Denver is a parked travel scene: kept as the template, out of the rotation
   assert.match(html, /const id=dir<0\?nextLoc\(\):prevLoc\(\)/);
   assert.match(html, /drag\.lock=Math\.abs\(dx\)>Math\.abs\(dy\)\?"x":"y"/);
   assert.match(html, /if\(PRM\)\{rest\(\);setLoc\(id\);return\}/);
-  assert.match(html, /id="sceneDots"/);
+  assert.doesNotMatch(html, /sceneDots|scene-dots/);
   assert.match(html, /\.scene-frame\{margin:14px -20px 0;position:relative;z-index:2;touch-action:pan-y;/);
   assert.match(html, /const frame=document\.querySelector\("\.scene-frame"\)/);
   assert.match(html, /if\(LOC\.scene==="front-range"\)/);
@@ -2085,7 +2085,7 @@ test("Halloween's cobweb is strung across the corner of the app itself, clear of
   // through it
   assert.match(html, /<div class="cobweb" id="cobweb" aria-hidden="true" hidden><\/div>\n<\/header>/);
   assert.match(html, /\.cobweb\{position:absolute;top:0;right:0;width:0;height:0;z-index:3;pointer-events:none\}/);
-  assert.match(html, /\.sky>\*:not\(\.sky-fx\):not\(\.flash\):not\(\.rainfx\):not\(\.cobweb\):not\(\.scene-dots\)\{position:relative;z-index:2\}/);
+  assert.match(html, /\.sky>\*:not\(\.sky-fx\):not\(\.flash\):not\(\.rainfx\):not\(\.cobweb\)\{position:relative;z-index:2\}/);
   // the type it keeps off is the type the stars keep off, plus the chips, the rain strip and the alert
   assert.match(html, /const boxes=\[\.\.\.typeBoxes\("\.masthead,\.now,#verdict,#chips,#nowcast"\),/);
   assert.match(html, /const lines=typeBoxes\("\.masthead,\.now,#verdict,#chips"\);/);
