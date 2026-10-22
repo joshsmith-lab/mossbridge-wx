@@ -870,10 +870,15 @@ treeline east (Josh's directions), so this view looks north: west on the left, e
 carries `faces:"north"`, and for such a place the sun's arc is mirrored (sunrise and its time on the right,
 sunset on the left), the moon's place and shading follow it, and the wind's bearing is mirrored once
 upstream for the scene and the sky, so the palms, the grass, the spray, the rain, the clouds, the bats and
-the witch all go the way the real wind blows. The arc is a sine over the roof, its ends just over the palm
-crowns and its crown clear of the ridge. Golden hour on it is a solid warm stroke from +6° to −4°, the
-window `goldenHour()` uses, with a dot where the day crosses +6°, read from `sunPos`. The times sit just
-under each end. The sine takes 90° to that crown, which set an afternoon moon into the roof, so a moon
+the witch all go the way the real wind blows. Three looks share that sine and `sunPos`, switched by
+`?sun=1`, `2` or `3` (`SUN_LOOK`; absent is 1). 1 is a thin arc, a soft gold glow from +6° to −4°
+(the window `goldenHour()` uses) and a small dot on the arc at the hour. 2 draws no arc: the illustrated
+sun keeps the path, golden hour warms the light, and a low sun lays a long shadow and a glint on the
+windows it faces. 3 is a ribbon on the sand, sunrise at the right, gold on the golden hours, the sun's
+reflection tracking in the pond. The sunrise and sunset times sit up in open sky on every look, in the corner columns, clear of
+the palms, the roof, the house and the pond, with the thin halo they already wear and no box behind them.
+A short window crops the top of that sky, and the times drop to just under the crop, still in the corner.
+The sine takes 90° to that crown, which set an afternoon moon into the roof, so a moon
 `pnMoonInRoof` would hide takes the shallower rise (.35) and stays in the sky. A moon already clear of
 the roof keeps the sine. Josh would rather move the sun's path than shrink the house. The low sun's warmth comes
 from its own side ("morning vibe glow more prominently from the right side in the morning, then evening
@@ -903,8 +908,8 @@ the shallows at the pond's east edge in every weather but a thunderstorm, its he
 dry, with a longer wing and a small chest mark, and in October the bats hunt over the roof from sunset to dawn, the same wing with a pale chest mark. Nobody sits at the fire: the
 picture makes no claim about who is home. These are the detailed drawings. There is no animals query.
 
-The two dogs sit on the patio facing the viewer and are named by coat, never by a person's name.
-One is a blue merle Australian Shepherd, grey broken with black and white, a white blaze, copper points, one pale eye and one dark, and a bobbed tail (`merle-herder`). The other is a Blenheim Cavalier, chestnut ears and patches, a white blaze and big dark eyes (`blenheim-spaniel`). While the fire is lit the herder still lies beside it, side on. `PN_DOGS` is the table and `pnDogsPlan`
+The two dogs sit on the patio, bodies three-quarter and heads turned to the viewer, named by coat, never by a person's name.
+One is a blue merle Australian Shepherd, deep-chested, with a fluffy ruff, ears tipped forward, a white blaze and collar, copper on the cheeks, brows and legs, black marbling, dark eyes with a catchlight and a bobbed tail (`merle-herder`). The other is a Blenheim Cavalier, smaller, with long chestnut ears feathered to the chest, a white blaze, chestnut patches, a feathered tail and big dark eyes (`blenheim-spaniel`). While the fire is lit the herder still lies beside it, side on. `PN_DOGS` is the table and `pnDogsPlan`
 reads it:
 
 - both out on the patio from 7:00 inclusive until 9:00 exclusive, once the sun is up (elevation at least −0.83°)

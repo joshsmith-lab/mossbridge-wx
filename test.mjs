@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v117/);
+  assert.match(worker, /mbwx-shell-v118/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -6293,6 +6293,14 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(html, /const labL=f=>px\(f\)<W\/2;/);
   assert.match(html, /const pnArc=mirrorSky\?\{x0:28,y0:GY-70,top:20,k:1\}:null;/);
   assert.match(html, /return pnArc\?a<=6&&a>=-4:a<=6/);
+  assert.match(html, /const sunPick=typeof location!=="undefined"\?String\(location\.search\|\|""\)\.match\(\/\[\?&\]sun=\(\[123\]\)\\b\/\)/);
+  assert.match(html, /const SUN_LOOK=sunPick\?\+sunPick\[1\]:1/);
+  assert.match(html, /data-sun-times="1"/);
+  assert.match(html, /const y0=Math\.max\(14,visTop\+14\);/);
+  assert.match(html, /data-sun="1"/);
+  assert.match(html, /data-dial="horizon"/);
+  assert.match(html, /data-light="long-shadow"/);
+  assert.match(html, /data-light="glint"/);
   // a moon the sine would set into the roof takes the shallower rise and stays in the sky
   assert.match(html, /function pnMoonInRoof\(x,y\)/);
   assert.match(html, /if\(pnArc&&pnMoonInRoof\(x,y\)\)/);
