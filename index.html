@@ -10832,8 +10832,8 @@ function pnRigBat(beat){
    shorter, so the doubled lights stay in the frame) and has its fountain mid-pond on the door's line. The
    weather stays honest: the strands and the fire table from evening golden hour until 10:00, the windows from sunset until 10:30 (the fire only on a cool dry
    evening, and only while the strands are on), the strands' ends tucked into the sabals' boots so the palms' sway never
-   shows a loose end, the fountain leans and its spray drifts downwind, and the reflection is glass in a calm, strips in a breeze
-   and glints in a blow. The low sun's warmth comes from its own side. In October (holidayOn) the fence carries
+   shows a loose end, the fountain leans and its spray drifts downwind, and the reflection is glass in a calm. In a breeze
+   and a blow the light on it is a few short arcs, never a bar across the pond. The low sun's warmth comes from its own side. In October (holidayOn) the fence carries
    pumpkin lights, on by day and from dusk until 10:30, each run a swag between posts, a little tree by the fire table is wrapped in purple and orange, each pillar
    holds an orange pumpkin and a white one, the gate has two lanterns from the carving day, Ghostface is a dim layer
    clipped inside the glass of the rightmost east window (the window is the same sash as the others, and he stays after the lamps go out at 10:30), and on Halloween night the trick-or-treater stands at the gate.
@@ -11128,20 +11128,25 @@ function pnPondScene(c){
     .replace(/(<use href="#[^"]+" fill="[^"]*" stroke="[^"]*" )stroke-width="[^"]*"/g,'$1stroke-width="0"');
   const k=.8;
   const wGlass=wind<3&&!wet,wBlow=wind>=10||gust>=22||rainK>=.65;
-  let strips="";
-  if(!wGlass){const r=mulberry(2207),n=wBlow?12:6;
-    for(let i=0;i<n;i++){const y=pondY+1.2+(i+.2+r()*.6)*(H+20-pondY)/n,hgt=wBlow?.5+r()*.5:.7+r()*.6;
-      strips+=`<rect x="${f1(-12)}" y="${f1(y)}" width="${W+24}" height="${f1(hgt)}"/>`}}
+  /* a full-width bar read as a seam across the reflection. A ripple is a short arc, a little of the width,
+     bowed, with round ends, scattered so they never rule a line. */
+  let ripples="";
+  if(!wGlass){const r=mulberry(2207),n=wBlow?9:5,span=H+16-pondY,ys=[];
+    for(let i=0;i<n;i++){let y=pondY+2.4+r()*span,guard=0;
+      while(ys.some(p=>Math.abs(p-y)<4)&&guard++<8)y=pondY+2.4+r()*span;
+      ys.push(y);
+      const len=(wBlow?14:20)+r()*(wBlow?16:22),x=r()*(W-len);
+      const bow=(.45+r()*.8)*(r()<.5?-1:1),sw=(wBlow?.55:.45)+r()*.16,op=(wBlow?.85:.7)+r()*.15;
+      ripples+=`<path d="M ${f1(x)} ${f1(y)} Q ${f1(x+len/2)} ${f1(y+bow)} ${f1(x+len)} ${f1(y)}" stroke-width="${sw.toFixed(2)}" stroke-linecap="round" opacity="${op.toFixed(2)}"/>`}}
   const drift=!wGlass&&!PRM?` style="animation:pnDrift ${(wBlow?3.2:6.5).toFixed(1)}s ease-in-out infinite alternate;--dx:${dw*(wBlow?1.6:.8)}px;${wallClock(wBlow?6.4:13)}"`:"";
   const waterTop=mix(mix(mix(skyS[2],skyS[1],.4),"#2F5468",.2),"#2E4A44",.45),waterBot=mix(mix(mix(skyS[1],skyS[0],.6),"#163246",.38),"#1E3430",.4);
   const reflOp=fog?.32:wet?.62:.82;
   const refl=`<g clip-path="url(#pnWaterClip)"><g transform="translate(0 ${f1(pondY+1+fenceB*k)}) scale(1 ${-k})">${still}</g></g>`
     +`<rect x="${f1(-12)}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${mix(mix(skyS[0],"#1F3F52",.5),"#1E3430",.4)}" opacity=".42"/>`;
-  /* the strips are the light caught on the ripples: each is drawn where it is, its fill the reflection's own fade
-     (pnStripFill is the reflection's fade, .85 to .45, times the strips' opacity), which is the same light a mask over one wide rect gave
-     and leaves the moving sheet nothing to mask */
-  const stripC=mix(skyS[2],"#FFFFFF",.3),stripOp=wBlow?.45:.32;
-  const breakUp=wGlass?"":`<g${drift}><g fill="url(#pnStripFill)">${strips}</g></g>`;
+  /* each arc takes the reflection's own fade (pnStripFill, .85 down to .45), so the light thins as the
+     reflection does, and the moving sheet still has nothing to mask */
+  const stripC=mix(skyS[2],"#FFFFFF",.3),stripOp=wBlow?.42:.32;
+  const breakUp=wGlass?"":`<g${drift}><g fill="none" stroke="url(#pnStripFill)">${ripples}</g></g>`;
 
   /* ── the fountain, mid-pond on the back door's line, in the porch's reflection (where it is): a tall narrow V
      of spray out of a dark float, and a ring of small low jets round its foot. The plume leans downwind as far
@@ -11264,7 +11269,7 @@ function pnPondScene(c){
      (#sceneLift), the fence, its pillars and what stands at it (#sceneFront), the fire's flame, a guttering
      candle's pumpkin, the bats, the witch and the near rain, with its mask (#sceneFx), the low sun's wash, the does, the fog and the pond
      (#sceneWater), its reflection (#sceneRefl), the light on the ripples, the rain's rings and the fountain
-     (#sceneRipple, with the sand's edge under the fountain, and the heron, the does and the sliders), and over it all the low sun on the water and the times
+     (#sceneRipple, the short ripples with the sand's edge under the fountain, and the heron, the does and the sliders), and over it all the low sun on the water and the times
      (#sceneTop). Each only repaints itself. Where a moving thing was drawn under a still one, nothing on the
      sheets between comes near it. They keep a colour of their own (renderScene), all but #sceneTop, whose times
      are in the sky's ink, so the sky's colour transition restyles none of them, and #sceneSvg's defs, which every
