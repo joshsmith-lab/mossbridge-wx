@@ -859,17 +859,25 @@ straight down from the back door, fountain grass along the inside of the fence u
 the sand, and the pond with its aerating fountain on the door's line ("directly center on the house/door").
 The frame is mostly house with a little room each side: the neighbours are close, so none are drawn ("drop
 reference to other houses around it because the fact is they are very close"). It is laid out in a 320 by
-194 frame, a phone's, and keeps the 194 at every width (`sceneH`, and the early script's copy): on a wider
-screen the wood, the lawn, the sand and the pond run on to the frame's edges, because the shorter frame the
-other places take there cut the roof flat at the top and stood the noon sun behind it.
+194 frame, a phone's, and that is the frame at every width (`sceneH`, and the early script's copy, with
+`W` locked to 320 for the pond). A wider screen scales that picture up to fill the width and crops the
+sky when the scaled frame would eat the first screen (`pondFit`, keeping at least the roof). It does not
+add ground at the sides. The farm and Beaufort still widen with `appW()/1.22`. The main roof carries a
+white ridge cap the full length of the ridge, the same board as the slope rakes it meets.
 
 **It faces north, and the sky knows it.** From the house the pond is south, the fire pit west and the
 treeline east (Josh's directions), so this view looks north: west on the left, east on the right. `LOCS.mb`
 carries `faces:"north"`, and for such a place the sun's arc is mirrored (sunrise and its time on the right,
 sunset on the left), the moon's place and shading follow it, and the wind's bearing is mirrored once
 upstream for the scene and the sky, so the palms, the grass, the spray, the rain, the clouds, the bats and
-the witch all go the way the real wind blows. The arc rides over the roof, its ends just over the palm
-crowns, because Josh would rather move the sun's path than shrink the house. The low sun's warmth comes
+the witch all go the way the real wind blows. The house draws no arc. The illustrated sun keeps that
+sine and `sunPos`, golden hour warms the light, and a low sun lays a long shadow and a glint on the
+windows it faces. The sunrise and sunset times sit up in open sky, in the corner columns, clear of
+the palms, the roof, the house and the pond, with the thin halo they already wear and no box behind them.
+A short window crops the top of that sky, and the times drop to just under the crop, still in the corner.
+The sine takes 90° to that crown, which set an afternoon moon into the roof, so a moon
+`pnMoonInRoof` would hide takes the shallower rise (.35) and stays in the sky. A moon already clear of
+the roof keeps the sine. Josh would rather move the sun's path than shrink the house. The low sun's warmth comes
 from its own side ("morning vibe glow more prominently from the right side in the morning, then evening
 vibes to the left"): a warm horizon, a warm wash over the house and the land and the pond from that side,
 building from about 14° up and gone by about 7° below, muted by cloud, fog, rain and storms. Midday is
@@ -897,20 +905,9 @@ the shallows at the pond's east edge in every weather but a thunderstorm, its he
 dry, with a longer wing and a small chest mark, and in October the bats hunt over the roof from sunset to dawn, the same wing with a pale chest mark. Nobody sits at the fire: the
 picture makes no claim about who is home. These are the detailed drawings. There is no animals query.
 
-The two dogs are drawn on the patio and named by coat, never by a person's name.
-One is a blue merle Australian Shepherd, grey broken with black and white, copper points, a fluffy mane and a bobbed tail (`merle-herder`). The other is a Blenheim Cavalier, chestnut and white, with long feathered ears (`blenheim-spaniel`). `PN_DOGS` is the table and `pnDogsPlan`
-reads it:
+The dogs are not in the picture: not on the patio, not by the fire, and not in the screen door, at any hour. The drawing and the schedule are gone.
 
-- both out on the patio from 7:00 inclusive until 9:00 exclusive, once the sun is up (elevation at least −0.83°)
-- both out from 5:00 until that same dusk
-- while the fire table is lit, the herder lies beside it and the spaniel is the shape in the screen door
-- after dusk both are inside, and one shape stands in the screen door (the spaniel while the fire is lit, otherwise the herder). Lit glass takes a dark fill. After 10:30 the fill is pale, so it still reads
-- they stay in for rain or snow, a thunderstorm, 92° or hotter, 36° or colder, a missing temperature, or an active warning (the outdoor warning the sentence cards use, or the storm card's lead). A watch does not count. Fog and wind do not keep them in
-- a thunderstorm hides the door shape too. Any other dark hour keeps it, including rain
-
-The motion is a tail wag and a head turn, transforms only, and they hold still under reduced motion.
-
-Carolina pond sliders (`pnTurtlesPlan`) are small. In the water only a little head breaks the surface, with at most a very faint low-opacity rippled hint of the shell below it. On the bank, on a warm clear day, one small slider basks, in proportion and clearly smaller than the heron and the dogs. On a warm clear day, the sun at least 6° up and the air at least 60°, two heads break the surface and one basks on the east sand. A milder day, 48° and up, keeps one head. Rain keeps one head and no basking. A dry night keeps one dim head. A storm, snow, a cold day or a wet night keeps them down. A head dips and comes back on its own clock.
+Carolina pond sliders (`pnTurtlesPlan`) are small. In the water only a little head breaks the surface, with at most a very faint low-opacity rippled hint of the shell below it. On the bank, on a warm clear day, one small slider basks, in proportion and clearly smaller than the heron. On a warm clear day, the sun at least 6° up and the air at least 60°, two heads break the surface and one basks on the east sand. A milder day, 48° and up, keeps one head. Rain keeps one head and no basking. A dry night keeps one dim head. A storm, snow, a cold day or a wet night keeps them down. A head dips and comes back on its own clock.
 
 **October.** The blood moon, the bats, the witch and the cobweb are shared with the other places; the sky
 over the house is small, so the bats and the witch fly in front of the roof. The house's own, each a
@@ -2264,8 +2261,9 @@ halos and reading pills use the same paper, computed before the charts draw.
 The scene is closer through a smaller logical frame: `Math.max(320,appW()/1.22)`. Positions are
 recomputed inside that frame before it fits the phone, rather than cropping off the outer
 animals or scaling individual creatures separately. It gives about 22% enlargement at 393px;
-at the narrowest 320px phone the scene keeps its full supported frame. Preserve the relative
-sizes of the Storybook Ink cast, the sun path, edge residents, and every holiday clearance.
+at the narrowest 320px phone the scene keeps its full supported frame. The house across the pond
+is the exception: its frame stays 320 by 194 and a wide screen scales that picture (see Porters Neck).
+Preserve the relative sizes of the Storybook Ink cast, the sun path, edge residents, and every holiday clearance.
 The fuller scene earns its playfulness from the existing drawings and their behavior.
 
 ## Interaction and reading refinements
