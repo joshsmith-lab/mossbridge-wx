@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v128/);
+  assert.match(worker, /mbwx-shell-v129/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -1429,6 +1429,15 @@ test("Denver is a parked travel scene: kept as the template, out of the rotation
   // a phone last left on a parked place opens at home, not on a place it cannot tap back to
   assert.match(html, /LOC=LOC_ORDER\.includes\(saved\)\?LOCS\[saved\]:LOCS\.mb/);
   assert.match(html, /const nextLoc=\(\)=>LOC_ORDER\[\(LOC_ORDER\.indexOf\(LOC\.id\)\+1\)%LOC_ORDER\.length\]/);
+  assert.match(html, /const prevLoc=\(\)=>LOC_ORDER\[\(LOC_ORDER\.indexOf\(LOC\.id\)\+LOC_ORDER\.length-1\)%LOC_ORDER\.length\]/);
+  // the address still steps forward, and a sideways swipe on the picture goes either way and wraps
+  assert.match(html, /document\.getElementById\("locBtn"\)\.addEventListener\("click",\(\)=>setLoc\(nextLoc\(\)\)\)/);
+  assert.match(html, /const id=dir<0\?nextLoc\(\):prevLoc\(\)/);
+  assert.match(html, /drag\.lock=Math\.abs\(dx\)>Math\.abs\(dy\)\?"x":"y"/);
+  assert.match(html, /if\(PRM\)\{rest\(\);setLoc\(id\);return\}/);
+  assert.match(html, /id="sceneDots"/);
+  assert.match(html, /\.scene-frame\{margin:14px -20px 0;position:relative;z-index:2;touch-action:pan-y;/);
+  assert.match(html, /const frame=document\.querySelector\("\.scene-frame"\)/);
   assert.match(html, /if\(LOC\.scene==="front-range"\)/);
   assert.match(html, /data-species="black-billed-magpie"/);
   assert.match(html, /data-species="mule-deer"/);
@@ -2076,7 +2085,7 @@ test("Halloween's cobweb is strung across the corner of the app itself, clear of
   // through it
   assert.match(html, /<div class="cobweb" id="cobweb" aria-hidden="true" hidden><\/div>\n<\/header>/);
   assert.match(html, /\.cobweb\{position:absolute;top:0;right:0;width:0;height:0;z-index:3;pointer-events:none\}/);
-  assert.match(html, /\.sky>\*:not\(\.sky-fx\):not\(\.flash\):not\(\.rainfx\):not\(\.cobweb\)\{position:relative;z-index:2\}/);
+  assert.match(html, /\.sky>\*:not\(\.sky-fx\):not\(\.flash\):not\(\.rainfx\):not\(\.cobweb\):not\(\.scene-dots\)\{position:relative;z-index:2\}/);
   // the type it keeps off is the type the stars keep off, plus the chips, the rain strip and the alert
   assert.match(html, /const boxes=\[\.\.\.typeBoxes\("\.masthead,\.now,#verdict,#chips,#nowcast"\),/);
   assert.match(html, /const lines=typeBoxes\("\.masthead,\.now,#verdict,#chips"\);/);
@@ -3504,8 +3513,10 @@ test("every line reads the same way: one machine, and readers that say only what
   const css = html.slice(html.indexOf("<style>"), html.indexOf("</style>"));
   const code = html.slice(html.indexOf("<script>"));
 
-  // One machine. The gesture code is the explorer's alone, and nothing of the old per-chart peeks is left
-  assert.equal(code.split('addEventListener("pointerdown"').length - 1, 1, "one pointerdown in the file");
+  // One machine for the charts. The picture's swipe is the other pointerdown, and nothing of the
+  // old per-chart peeks is left
+  assert.equal(code.split('addEventListener("pointerdown"').length - 1, 2, "the explorer, and the picture's swipe");
+  assert.match(code, /function sceneSwipe\(\)\{[\s\S]*?frame\.addEventListener\("pointerdown"/);
   assert.doesNotMatch(html, /HOURLY_PEEK|TIDE_PEEK|setupHourlyPeek|setupTidePeek|PeekLive|hourly-cursor|tide-cursor/);
   assert.match(html, /xpReset\(\);LAST=null;/, "the loading and error shell resets every explorer");
   assert.match(html, /\}else xpPublish\("tide",null\);/, "a paint with no tide chart publishes none");
