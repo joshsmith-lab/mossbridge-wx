@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v124/);
+  assert.match(worker, /mbwx-shell-v125/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -6295,11 +6295,9 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(html, /return pnArc\?a<=6&&a>=-4:a<=6/);
   assert.doesNotMatch(html, /SUN_LOOK|sunPick|\?sun=|data-dial="horizon"|data-sun="1"|data-sun="3"|data-sun-arc/);
   assert.match(html, /data-sun-times="1"/);
-  assert.match(html, /data-sun-mark="\$\{sunMark\}"/);
-  assert.match(html, /\/\[\?&\]mark=\(\[abc\]\)/);
+  assert.match(html, /const TIME_ADV=6\.6,CHEV_W=6\.6,CHEV_H=5\.6,STEM=1\.4,GAP=2,CAP_MID=4\.4;/);
   assert.match(html, /skyLabs=\{rise:place\("R",clock\(sunrise\)\),set:place\("L",clock\(sunset\)\)\}/);
-  assert.match(html, /"SUNRISE"/);
-  assert.match(html, /"SUNSET"/);
+  assert.doesNotMatch(html, /data-sun-mark|mark=b|"SUNRISE"/);
   assert.match(html, /const y0=Math\.max\(14,visTop\+14\);/);
   assert.match(html, /const fit=pnArc\?pnSunFit\(py\(f\),visTop,squash\):\{y:py\(f\),s:1\};/);
   assert.match(html, /data-light="long-shadow"/);
