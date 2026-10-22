@@ -36,7 +36,7 @@ const TIMES = [
   /* the full moon over the house's east end, the string lights still on */
   { name: "sep-night", main: true, when: "2026-09-26T21:30:00",
     o: { ...SEP, baseTemp: 66, nowTemp: 64, feels: 64, rh: 72, isDay: 0, code: 0, cloud: 4, nowWind: 2, nowDir: 30, nowGust: 5, nowUv: 0, ...calm } },
-  /* half past ten: the string lights and the fire are off (Josh: off at 10 pm), the house still lit */
+  /* half past ten: the strands, the fire and the windows are off (they go out at 10:30) */
   { name: "sep-late", when: "2026-09-26T22:30:00",
     o: { ...SEP, baseTemp: 66, nowTemp: 64, feels: 64, rh: 72, isDay: 0, code: 0, cloud: 4, nowWind: 2, nowDir: 30, nowGust: 5, nowUv: 0, ...calm } },
   { name: "oct-night", main: true, when: "2026-10-24T21:30:00",

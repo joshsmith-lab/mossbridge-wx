@@ -877,12 +877,11 @@ neutral.
 
 **The lights keep the family's hours.** The bistro strands run from one point over the back door to a
 sabal on each side, a V seen from above ("the bistro lights go from door to each palm - forming a V"),
-crossing the windows as they swag forward. They are on from sunset to 10 pm on the place's clock
-(`PN_STRANDS_OUT`), "they go off at 10pm", and hang still from the sabals, each end tucked into its palm's
+crossing the windows as they swag forward. They are on from sunset until 10:30 pm on the place's clock
+(`PN_LIGHTS_OUT`), and hang still from the sabals, each end tucked into its palm's
 boots so the palms' sway never shows a loose end. The fire table
 (`propPnFireTable`) burns only while the strands are on, between 45° and 68°, dry, in no storm or fog,
-with gusts under 20 and no thunder (`fireOn`), and the light on its cap and the chairs facing it is its own. The windows and the porch light the house from sunset; when
-they go out is one constant (`PN_LIGHTS_OUT`), unset until Josh says. The two review drawings (`?house=a` and `?house=b`, `pnHouseLights`) keep the windows, the porch and the strands on from dusk until 10:30 pm and off overnight. Josh picked A. The main roof is one trapezoid: its lower edge is the outer bottom corners of the two gables, the ridge is 0.87 of that span and the rise is 0.30 of it, the photo's ratios, and each gable peak is 0.45 of that rise. The siding, the shakes and the metal roof are white, with the seams and a little shade for depth, and at night that white goes blue-gray with the sky. The only house lights are the strands out to the palms, off at 10:30. In October the orange pumpkin lights
+with gusts under 20 and no thunder (`fireOn`), and the light on its cap and the chairs facing it is its own. The windows and the porch light the house from sunset until the same 10:30, then stay off overnight (`pnHouseLights`). Josh picked this drawing and it is the house everyone sees. The main roof is one trapezoid: its lower edge is the outer bottom corners of the two gables, the ridge is 0.87 of that span and the rise is 0.30 of it, the photo's ratios, and each gable peak is 0.45 of that rise. The siding, the shakes and the metal roof are white, with the seams and a little shade for depth, and at night that white goes blue-gray with the sky. The only house lights are the strands out to the palms, off at 10:30. In October the orange pumpkin lights
 along the fence hang in swags, high at each post and low in the middle, five or six bulbs to a bay. They are on by day and from dusk until 10:30, then the wire stays up and the bulbs go dark until the sun is up. They are on the holiday
 calendar like every decoration, and gone the morning of November 1.
 
@@ -904,7 +903,7 @@ left of the fire table (`light-tree`, in the round bush's place: drooping black 
 lights that stay lit by day and all night, past the 10:30 lights-out, fills only), one orange and one white pumpkin on each pillar ("put
 one orange and one white pumpkin on both fence stantions - then carve them on time"), both carved and lit
 from the carving day by the candle rules (`pumpkin`, `white-pumpkin`, then `jack-o-lantern`), two lanterns
-at the gate, Ghostface peeking round the house's east corner (he lived in the marsh's oak; on `?house=a` and `?house=b` he is a small face in the rightmost east window, and he stays after the lamps go out), and on Halloween
+at the gate, Ghostface as a small face in the rightmost east window (he lived in the marsh's oak, and he stays after the lamps go out), and on Halloween
 night the trick-or-treater at the gate, on its own rules. With nobody's cormorant on a dock, the kid is out
 from sunset (the marsh's raw-dusk case kept the kid off the dock; the house's, case 48, has it at the gate).
 
