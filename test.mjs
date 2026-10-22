@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v121/);
+  assert.match(worker, /mbwx-shell-v122/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -6410,7 +6410,7 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.doesNotMatch(skySheet, /gulls|sceneClouds|palm|grass|fountain|bats|witchFly|breakUp|pondMoving|fireFlame|pumpkins|gateLanterns|heron|deer|animation/);
   assert.match(fn, /sheet\("sceneSky"\)\.innerHTML=gulls\+\(skyOver\?sunBody\+moonShown\+sideSky:""\)\+sceneClouds/);
   assert.match(fn, /document\.getElementById\("sceneLift"\)\.innerHTML=grassLift\+PALMS\.map\(palmLift\)\.join\(""\);/);
-  assert.match(fn, /sheet\("sceneFx"\)\.innerHTML=fireFlame\+\(guttering\?pumpkins\+gateLanterns:""\)\+dogs\+bats\+witchFly\(witch\)/);
+  assert.match(fn, /sheet\("sceneFx"\)\.innerHTML=fireFlame\+\(guttering\?pumpkins\+gateLanterns:""\)\+bats\+witchFly\(witch\)/);
   assert.match(fn, /sheet\("sceneRipple"\)\.innerHTML=pondMoving;/);
   for (const name of ["sceneNear", "sceneFront", "sceneWater", "sceneTop"]) {
     const from = fn.slice(fn.indexOf(`sheet("${name}").innerHTML=`)), body = from.slice(0, from.indexOf(";\n"));
@@ -6444,9 +6444,9 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(scene, /\["sceneSvg", "sceneNear", "sceneFront", "sceneWater", "sceneRefl", "sceneTop"\]/);
   for (const name of ["coast-night", "coast-rain", "coast-afternoon", "coast-blow", "coast-halloween"]) assert.match(webkit, new RegExp(`name: "${name}", loc: "mb"`));
   // the detailed drawings are the house. There is no animals query. The heron nods, the gulls are the
-  // house gull, and the dogs and the sliders come out on their own table.
+  // house gull, and the sliders come out on their own table. The dogs are not drawn.
   assert.doesNotMatch(html, /pnAnimalLook|\?animals=/);
-  assert.match(fn, /const plan=pnDogsPlan/);
+  assert.doesNotMatch(fn, /pnDogsPlan|propPnHerder|propPnSpaniel|pnDoorShape|doorSil/);
   assert.doesNotMatch(fn, /heron-still|rigHeron\(phase\)|flightBird\("gull"/);
   assert.match(fn, /propPnHeron\(phase\(8\.5\)\)/);
   assert.match(fn, /pnHouseGull\(/);
@@ -6468,32 +6468,12 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.doesNotMatch(peekFn, /mullW|mullion|data-glass|pnPeekGlass|railH|openLast/);
 });
 
-test("the house dogs and the pond sliders keep to their table", async () => {
+test("the pond sliders keep to their table, and the dogs are not drawn", async () => {
   const html = await readFile(new URL("index.html", root), "utf8");
-  const src = html.slice(html.indexOf("const PN_DOGS="), html.indexOf("function propPnHerder("));
+  const src = html.slice(html.indexOf("function pnTurtlesPlan("), html.indexOf("function propPnHeron("));
   const ctx = vm.createContext({});
-  vm.runInContext(src + "\nglobalThis.PN_DOGS=PN_DOGS;globalThis.pnDogsPlan=pnDogsPlan;globalThis.pnTurtlesPlan=pnTurtlesPlan;", ctx);
+  vm.runInContext(src + "\nglobalThis.pnTurtlesPlan=pnTurtlesPlan;", ctx);
   const plain = (v) => JSON.parse(JSON.stringify(v));
-  assert.deepEqual(plain(ctx.PN_DOGS), { morning: [7 * 60, 9 * 60], evening: 17 * 60, dusk: -.83, heat: 92, cold: 36 });
-  const dogs = (o) => plain(ctx.pnDogsPlan({ mins: 8 * 60, sunAlt: 20, wet: false, storm: false, temp: 70, warned: false, fire: false, ...o }));
-  const both = { out: "both", door: false, fire: false };
-  const inside = { out: "none", door: false, fire: false };
-  assert.deepEqual(dogs({ mins: 7 * 60 }), both);
-  assert.deepEqual(dogs({ mins: 8 * 60 + 59 }), both);
-  assert.deepEqual(dogs({ mins: 9 * 60 }), inside);
-  assert.deepEqual(dogs({ mins: 6 * 60 + 59 }), inside);
-  assert.deepEqual(dogs({ mins: 7 * 60 + 30, sunAlt: -2 }), { out: "none", door: true, fire: false });
-  assert.deepEqual(dogs({ mins: 17 * 60, sunAlt: 5 }), both);
-  assert.deepEqual(dogs({ mins: 19 * 60, sunAlt: -1 }), { out: "none", door: true, fire: false });
-  assert.deepEqual(dogs({ mins: 20 * 60, sunAlt: -10, fire: true }), { out: "one", door: true, fire: true });
-  assert.deepEqual(dogs({ mins: 20 * 60, sunAlt: -10, wet: true, fire: true }), { out: "none", door: true, fire: false });
-  assert.deepEqual(dogs({ temp: 92 }), inside);
-  assert.deepEqual(dogs({ temp: 36 }), inside);
-  assert.deepEqual(dogs({ temp: null }), inside);
-  assert.deepEqual(dogs({ temp: 37 }), both);
-  assert.deepEqual(dogs({ mins: 21 * 60, sunAlt: -20, storm: true, fire: true }), { out: "none", door: false, fire: false });
-  assert.deepEqual(dogs({ warned: true }), inside);
-  assert.deepEqual(dogs({ wet: true }), inside);
   const turtles = (o) => plain(ctx.pnTurtlesPlan({ sunAlt: 30, wet: false, storm: false, temp: 70, snowing: false, ...o }));
   assert.deepEqual(turtles({}), { heads: 2, bask: true, dim: false });
   assert.deepEqual(turtles({ sunAlt: 4, temp: 55 }), { heads: 1, bask: false, dim: false });
@@ -6504,8 +6484,6 @@ test("the house dogs and the pond sliders keep to their table", async () => {
   assert.deepEqual(turtles({ sunAlt: -5, wet: true }), { heads: 0, bask: false, dim: false });
   assert.deepEqual(turtles({ storm: true }), { heads: 0, bask: false, dim: false });
   assert.deepEqual(turtles({ snowing: true }), { heads: 0, bask: false, dim: false });
-  assert.match(html, /merle-herder/);
-  assert.match(html, /blenheim-spaniel/);
-  assert.match(html, /data-dogs=/);
+  assert.doesNotMatch(html, /pnDogsPlan|propPnHerder|propPnSpaniel|pnDoorShape|PN_DOGS|PN_HERDER|PN_SPANIEL|merle-herder|blenheim-spaniel|data-dogs|pn-wag|pnWag/);
   assert.match(html, /data-turtles="1"/);
 });

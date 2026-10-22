@@ -905,20 +905,9 @@ the shallows at the pond's east edge in every weather but a thunderstorm, its he
 dry, with a longer wing and a small chest mark, and in October the bats hunt over the roof from sunset to dawn, the same wing with a pale chest mark. Nobody sits at the fire: the
 picture makes no claim about who is home. These are the detailed drawings. There is no animals query.
 
-The two dogs sit on the patio at the scale of the door and the chairs, bodies three-quarter and heads turned to the viewer, named by coat, never by a person's name.
-One is a blue merle Australian Shepherd about the height of a chair back, noticeably bigger than the other: a long fluffy coat, small black merle patches, a grey face with copper on the cheeks, brows and muzzle, a narrow white blaze on the muzzle only, a long tapered muzzle, one icy blue eye and one brown, soft triangular ears whose tips fold forward, and a big tan mane with a white chest (`merle-herder`). The other is a smaller Blenheim Cavalier: a round white head with a broad blaze, chestnut over the eyes and the head, long curly chestnut ear curtains to the chest, a white body with chestnut patches and a feathered tail (`blenheim-spaniel`). While the fire is lit the herder still lies beside it, side on. `PN_DOGS` is the table and `pnDogsPlan`
-reads it:
+The dogs are not in the picture: not on the patio, not by the fire, and not in the screen door, at any hour. The drawing and the schedule are gone.
 
-- both out on the patio from 7:00 inclusive until 9:00 exclusive, once the sun is up (elevation at least −0.83°)
-- both out from 5:00 until that same dusk
-- while the fire table is lit, the herder lies beside it and the spaniel is the shape in the screen door
-- after dusk both are inside, and one shape stands in the screen door (the spaniel while the fire is lit, otherwise the herder). Lit glass takes a dark fill. After 10:30 the fill is pale, so it still reads
-- they stay in for rain or snow, a thunderstorm, 92° or hotter, 36° or colder, a missing temperature, or an active warning (the outdoor warning the sentence cards use, or the storm card's lead). A watch does not count. Fog and wind do not keep them in
-- a thunderstorm hides the door shape too. Any other dark hour keeps it, including rain
-
-The motion is a tail wag and a head turn, transforms only, and they hold still under reduced motion.
-
-Carolina pond sliders (`pnTurtlesPlan`) are small. In the water only a little head breaks the surface, with at most a very faint low-opacity rippled hint of the shell below it. On the bank, on a warm clear day, one small slider basks, in proportion and clearly smaller than the heron and the dogs. On a warm clear day, the sun at least 6° up and the air at least 60°, two heads break the surface and one basks on the east sand. A milder day, 48° and up, keeps one head. Rain keeps one head and no basking. A dry night keeps one dim head. A storm, snow, a cold day or a wet night keeps them down. A head dips and comes back on its own clock.
+Carolina pond sliders (`pnTurtlesPlan`) are small. In the water only a little head breaks the surface, with at most a very faint low-opacity rippled hint of the shell below it. On the bank, on a warm clear day, one small slider basks, in proportion and clearly smaller than the heron. On a warm clear day, the sun at least 6° up and the air at least 60°, two heads break the surface and one basks on the east sand. A milder day, 48° and up, keeps one head. Rain keeps one head and no basking. A dry night keeps one dim head. A storm, snow, a cold day or a wet night keeps them down. A head dips and comes back on its own clock.
 
 **October.** The blood moon, the bats, the witch and the cobweb are shared with the other places; the sky
 over the house is small, so the bats and the witch fly in front of the roof. The house's own, each a
