@@ -199,6 +199,12 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes pnSpray{from{transform:skewX(calc(var(--sk,1deg) * -.4))}to{transform:skewX(var(--sk,1deg))}}
 @keyframes pnDrops{from{transform:translateX(calc(var(--dx,1px) * -.3));opacity:.75}to{transform:translateX(var(--dx,1px));opacity:1}}
 @keyframes pnFlick{0%{transform:scale(1,1);opacity:1}35%{transform:scale(1.02,calc(1 - var(--fk,.1)));opacity:.88}70%{transform:scale(.98,calc(1 + var(--fk,.1) * .6));opacity:1}100%{transform:scale(1,calc(1 - var(--fk,.1) * .5));opacity:.93}}
+/* the hot tub, in season: short soft steam, and the wash trades lagoon for moon blue.
+   Opacity and a short rise only, and reduced motion leaves the wisps and one quiet colour. */
+:is(#sceneSvg,.scene-layer) .pn-steam{transform-box:fill-box;transform-origin:center bottom;animation:pnSteam var(--sd,9s) ease-in infinite}
+@keyframes pnSteam{0%{transform:translateY(0);opacity:.6}20%{opacity:.85}100%{transform:translateY(-12px);opacity:0}}
+:is(#sceneSvg,.scene-layer) .pn-tub-hue{animation:pnTubHue var(--hd,18s) ease-in-out infinite}
+@keyframes pnTubHue{0%,20%{opacity:var(--hi,.62)}48%{opacity:.16}74%,100%{opacity:var(--lo,.03)}}
 .scene-layer .bft-flag[style]{animation:bftFlag var(--fd,1.4s) ease-in-out infinite alternate}
 @keyframes bftFlag{from{transform:skewY(calc(var(--fs,2deg) * -1))}to{transform:skewY(var(--fs,2deg))}}
 .scene-layer :is(.bft-sock,.bft-sock-tail)[style]{animation:bftFlutter var(--fd,1.6s) ease-in-out infinite alternate}
@@ -8298,9 +8304,9 @@ const pnHEll = (cx, cy, rx, ry, role, x) => part(`M ${pnF(cx - rx)} ${pnF(cy)} a
    the lawn ── */
 
 /* The fire table, as Josh's photo has it: a long box of stacked stone under a pale concrete cap, seen a
-   little from above, with a dark trough down the middle of the cap and, lit, a long low line of gas flame
-   standing out of it. Origin: the middle of its front at the ground; about 21 wide and 7 tall. The flames
-   are their own group, `pn-flame`, pivoting on the trough (PN_FT_BASE), so the scene can flicker them. */
+   little from above, with a dark trough down the middle of the cap and, lit, a small fire standing out of
+   it. Origin: the middle of its front at the ground; about 21 wide and 7 tall. The flames are three
+   `pn-flame` groups, each pivoting on its own part of the trough, so the scene can flicker them apart. */
 const PN_FT_BASE=[0,-6.9];
 INK.pnFireTable={stone:"#A89580",stoneLt:"#C4B39C",stoneDk:"#857261",stoneGy:"#9A958C",mortar:"#5E5249",cap:"#D9D3C6",capTop:"#E6E1D5",capEdge:"#B9B2A4",
   trough:"#2C2A2E",glass:"#3A4A55",flame:"rgb(255,150,52)",core:"rgb(255,214,110)",heart:"rgb(255,246,214)",blue:"rgb(96,150,255)",rimLit:"rgb(255,196,110)",
@@ -8320,17 +8326,19 @@ function propPnFireTable({lit=false}={}){
     pnPoly([[-7.7,-7.8],[-7.6,-8.5],[7.6,-8.5],[7.7,-7.8]],"glass",{noSil:true,op:.85})];
   if(lit)cap.push(pnPoly([[-11.6,-6.6],[-11.3,-9.2],[11.3,-9.2],[11.6,-6.6]],"rimLit",{noSil:true,op:.34}),pnRect(-12.1,-7.1,12.1,-5.8,"rimLit",{noSil:true,op:.24}));
   const L=[{parts:body},{parts:cap}];
-  if(lit){const fl=[],fr=mulberry(77);
-    /* a low line of gas flame: blue at the trough, a yellow-white core, orange only at the tips */
-    for(let x=-6.6;x<=6.7;x+=1.65){const h=1.1+fr()*.9+(Math.abs(x)<4?.5:0),w=.95+fr()*.25,lean=(fr()-.5)*.45;
-      fl.push(pBlob(pnTongue(x,-7.75,.42,w*.9,0),"blue",{soft:true,op:.85}),pBlob(pnTongue(x,-8.05,h,w,lean),"flame",{soft:true}),pBlob(pnTongue(x,-8,h*.7,w*.72,lean*.5),"core",{soft:true}),pBlob(pnTongue(x,-7.95,h*.4,w*.5,0),"heart",{soft:true}))}
-    L.push({cls:"pn-flame",pivot:[0,-8.1],layers:[{parts:fl}]})}
+  if(lit){const fr=mulberry(77);
+    /* a small fire: blue at the trough, a yellow-white heart, orange around it. Three clusters, so they
+       flicker apart rather than as one line. Tall enough to read on a phone, still under the window heads */
+    for(const [a,b] of [[-6.5,-2.1],[-1.7,1.7],[2.1,6.5]]){const fl=[];
+      for(let x=a;x<=b+1e-6;x+=1.55){const mid=Math.abs(x)<1.8,h=5.4+fr()*3.1+(mid?1.5:0),w=1.35+fr()*.5,lean=(fr()-.5)*.8;
+        fl.push(pBlob(pnTongue(x,-7.7,.85,w*.8,0),"blue",{soft:true,op:.9}),pBlob(pnTongue(x,-8.05,h,w*1.2,lean),"flame",{soft:true}),pBlob(pnTongue(x,-8,h*.58,w*.72,lean*.45),"core",{soft:true}),pBlob(pnTongue(x,-7.95,h*.3,w*.4,0),"heart",{soft:true}))}
+      L.push({cls:"pn-flame",pivot:[(a+b)/2,-8.1],layers:[{parts:fl}]})}}
   return L;
 }
 function pnFireTableGlow(night=0){
-  const id=`pnft${++pnGlowUid}`,a=.3+.45*night;
-  return `<defs><radialGradient id="${id}" gradientUnits="userSpaceOnUse" cx="0" cy="-8" r="16"><stop offset="0" stop-color="rgb(255,200,110)" stop-opacity="${f1(a*100)/100}"/><stop offset=".45" stop-color="rgb(255,160,70)" stop-opacity="${f1(a*.35*100)/100}"/><stop offset="1" stop-color="rgb(255,140,50)" stop-opacity="0"/></radialGradient></defs>`
-    +`<ellipse cx="0" cy="-6" rx="17" ry="11" fill="url(#${id})"/>`;
+  const id=`pnft${++pnGlowUid}`,a=.62+.34*night;
+  return `<defs><radialGradient id="${id}" gradientUnits="userSpaceOnUse" cx="0" cy="-6" r="24"><stop offset="0" stop-color="rgb(255,214,120)" stop-opacity="${f1(Math.min(1,a)*100)/100}"/><stop offset=".42" stop-color="rgb(255,140,48)" stop-opacity="${f1(a*.72*100)/100}"/><stop offset="1" stop-color="rgb(255,100,28)" stop-opacity="0"/></radialGradient></defs>`
+    +`<ellipse cx="0" cy="-3.2" rx="24" ry="15" fill="url(#${id})"/>`;
 }
 BFT["pn-firetable"]={pal:INK.pnFireTable,box:[-13,-12,26,13],s:1,dist:.05,o:{line:.85,heavy:.45,shade:1.1,lit:.8},
   states:{off:{lit:false},lit:{lit:true}},draw:st=>propPnFireTable(st),extra:(st,lt)=>st.lit?pnFireTableGlow(lt&&lt.night?1:0):""};
@@ -8440,18 +8448,29 @@ BFT["pn-doe"]={pal:INK.pnDoe,box:[-18,-52,44,54],s:.18,dist:.1,o:{line:1.4,heavy
    wall, a taupe hard cover a little domed with its fold across the middle, panelled sides and a small step.
    Origin: the middle of its front at the ground; about 20 wide and 8 tall (house units) */
 INK.pnTub={cover:"#9C9184",coverDk:"#7F7569",coverLt:"#B8AE9F",side:"#7C736A",sideDk:"#625A53",step:"#8A8178",
+  water:"#16323A",waterLt:"#4E7A80",rim:"#C9BEB0",
   ink:"#2A1B33",shade:"#3A2350",lit:"#FFF1D4",shadeOp:.3,litOp:.4};
-function propPnTub(){
+function propPnTub({open=false}={}){
   const P=[pnRect(-10,-6.6,10,0,"side")];
   for(const x of[-6.6,-3.3,0,3.3,6.6])P.push(pnRect(x-.14,-6.2,x+.14,-.4,"sideDk",{noSil:true,op:.75}));
   P.push(pnRect(-10,-1,10,0,"sideDk",{noSil:true,op:.6}));
-  /* the hard cover: a soft rounded lip all round, a gentle dome, the fold across the middle */
-  const C=[pBlob([[-10.9,-6.2],[-11.1,-7.1],[-10.4,-8.4],[-6,-9.1],[0,-9.3],[6,-9.1],[10.4,-8.4],[11.1,-7.1],[10.9,-6.2],[0,-5.9]],"cover"),
-    pTaper([[-10.6,-6.5,.6],[0,-6.25,.7],[10.6,-6.5,.6]],"coverDk",{},{noSil:true,op:.8}),
-    pTaper([[-10.2,-8.1,.35],[-6,-8.85,.4],[0,-9.05,.42],[5,-8.9,.3]],"coverLt",{},{noSil:true,op:.75}),
-    pTaper([[-.1,-9.1,.24],[.1,-6.5,.24]],"coverDk",{capStart:false,capEnd:false},{noSil:true,op:.75})];
-  const S=[pnRect(-4.4,-2.2,4.4,0,"step"),pnRect(-4.4,-2.2,4.4,-1.8,"coverLt",{noSil:true,op:.5})];
-  return[{parts:P},{parts:C},{parts:S}];
+  const step=[pnRect(-4.4,-2.2,4.4,0,"step"),pnRect(-4.4,-2.2,4.4,-1.8,"coverLt",{noSil:true,op:.5})];
+  /* out of season the hard cover stays on: a soft rounded lip, a gentle dome, the fold across the middle */
+  if(!open){
+    const C=[pBlob([[-10.9,-6.2],[-11.1,-7.1],[-10.4,-8.4],[-6,-9.1],[0,-9.3],[6,-9.1],[10.4,-8.4],[11.1,-7.1],[10.9,-6.2],[0,-5.9]],"cover"),
+      pTaper([[-10.6,-6.5,.6],[0,-6.25,.7],[10.6,-6.5,.6]],"coverDk",{},{noSil:true,op:.8}),
+      pTaper([[-10.2,-8.1,.35],[-6,-8.85,.4],[0,-9.05,.42],[5,-8.9,.3]],"coverLt",{},{noSil:true,op:.75}),
+      pTaper([[-.1,-9.1,.24],[.1,-6.5,.24]],"coverDk",{capStart:false,capEnd:false},{noSil:true,op:.75})];
+    return[{parts:P},{parts:C},{parts:step}];
+  }
+  /* in season the cover stands up at the back and the water shows. The lights and the steam are drawn over this */
+  const back=[pnPoly([[-9,-7.15],[-8,-10],[8,-10],[9,-7.15]],"cover"),
+    pTaper([[-6.2,-9.3,.22],[0,-9.7,.26],[6.2,-9.3,.22]],"coverLt",{},{noSil:true,op:.7}),
+    pnRect(-9.2,-7.7,9.2,-7,"coverDk",{noSil:true})];
+  const water=[pnRect(-10.5,-7.15,10.5,-5.4,"rim"),
+    pBlob([[-8.7,-5.75],[-9.3,-6.95],[0,-7.3],[9.3,-6.95],[8.7,-5.75],[0,-5.5]],"water"),
+    pTaper([[-6.4,-6.5,.26],[0,-6.8,.32],[6.4,-6.5,.26]],"waterLt",{},{noSil:true,op:.6})];
+  return[{parts:P},{parts:back},{parts:water},{parts:step}];
 }
 BFT["pn-tub"]={pal:INK.pnTub,box:[-12,-10,24,11],s:1,dist:.05,o:{line:.8,heavy:.4,shade:1.1,lit:.7},draw:()=>propPnTub()};
 /* ── Porters Neck: the family's house from across the pond ─────────────────────────────────────────
@@ -10651,6 +10670,11 @@ function pnHouseLights(sunAlt,hour,minute,rising){
   const strands=sunAlt<=6&&!rising&&mins>=12*60&&mins<PN_STRANDS_OUT;
   return{windows,strands,pumpkins:!dark||windows};
 }
+/* The hot tub is in use from late October through April 15, on the place's own calendar,
+   and the window wraps the year the way a season does. Steam shows the whole of that season,
+   day and night. The underwater lights follow the strands: on at evening golden hour, off at 10:00. */
+const PN_TUB=["10-20","04-15"];
+function pnTubSeason(d){return inSeason(d,PN_TUB)}
 /* A standing Ghostface in the rightmost east window, October only. The window itself is the
    house's own sash, drawn with the others. He is a dim layer clipped inside the two sash
    openings, clear of the meeting rail and the frame, so those stay the window's own ink.
@@ -10826,6 +10850,10 @@ function pnPondScene(c){
   const lit=pnHouseLights(sunAltDeg,localHour,localMin,rising);
   const lightsOn=lit.windows,strandsOn=lit.strands,pumpOn=lit.pumpkins;
   const fireOn=strandsOn&&localHour>=15&&temp>=45&&temp<68&&!wet&&!storm&&!fog&&gust<20&&!THUNDER;
+  /* the tub is open, and steaming, from October 20 through April 15. Its lights use the strands' hours:
+     one wash across the water, lagoon then moon blue */
+  const tubSeason=pnTubSeason(locToday());
+  const tubLit=tubSeason&&strandsOn;
   const swayAmt=clamp(.3+gust*.05,.3,2.6),swayDur=clamp(8.5-gust*.15,3,8.5);
   /* dw: +1 when the wind blows toward the right of this north-facing frame. Everything that leans or drifts
      with the wind goes by it. In SVG (y down, turning at the foot) skewX(-a) tips the top to the right, so
@@ -10924,14 +10952,17 @@ function pnPondScene(c){
     +(wet?`<path d="M ${f1(hx-u(60))} ${f1(hy+2.2)} L ${f1(hx+u(56))} ${f1(hy+2.2)}" stroke="${wetSheen}" stroke-width="1.1" opacity=".35"/><path d="M ${f1(doorX-6)} ${f1(hy+6.2)} L ${f1(doorX+6)} ${f1(hy+6.2)} M ${f1(doorX-7)} ${f1(hy+7.7)} L ${f1(doorX+7)} ${f1(hy+7.7)}" stroke="${wetSheen}" stroke-width=".5" opacity=".35"/>`:"");
   const fX=hx+u(-42),fY=hy+5.6,fS=1.12;
   const FL=propPnFireTable({lit:fireOn});
-  if(fireOn&&!PRM){const fd=clamp(1.5-gust*.03,.7,1.5);FL[FL.length-1].style=`--fk:${clamp(.08+gust*.01,.08,.28).toFixed(2)};animation:pnFlick ${fd.toFixed(2)}s ease-in-out infinite alternate;${wallClock(2*fd)}`}
+  const flameLs=FL.filter(L=>L.cls==="pn-flame"),bodyLs=FL.filter(L=>L.cls!=="pn-flame");
+  /* each cluster flickers on its own clock, a little harder than a gas line, still the one pnFlick */
+  if(fireOn&&!PRM){const fd=clamp(1.5-gust*.03,.7,1.5),fk=clamp(.18+gust*.01,.18,.36);
+    flameLs.forEach((L,i)=>{L.style=`--fk:${fk.toFixed(2)};animation:pnFlick ${(fd*(.82+i*.16)).toFixed(2)}s ease-in-out infinite alternate;${wallClock(2*fd,i*.55)}`})}
   const firePal=palAt(INK.pnFireTable,.03),fireO={s:fS,line:.85,heavy:.45,shade:1.1,lit:.8,light:lightAt(fX,fY-8)},fireGlow=fireOn?pnFireTableGlow(Math.max(nightK,.6)):"";
-  const fire=`<g data-prop="fire-table" data-lit="${fireOn?1:0}">${inkAt(fX,fY,fS,1,fireGlow+inkRig(FL,firePal,fireO))}</g>`;
-  /* a flickering flame is the table's last layer, and it goes on the moving sheet (#sceneFx) with the table
-     left on the still one under it: nothing drawn between them in the picture comes near it */
+  /* the flames go on the moving sheet (#sceneFx). The stone stays on the still one under them */
   const flicking=fireOn&&!PRM;
-  const fireStill=flicking?`<g data-prop="fire-table" data-lit="1">${inkAt(fX,fY,fS,1,fireGlow+inkRig(FL.slice(0,-1),firePal,fireO))}</g>`:fire;
-  const fireFlame=flicking?`<g data-prop="fire-flame">${inkAt(fX,fY,fS,1,inkRig(FL.slice(-1),firePal,fireO))}</g>`:"";
+  const fireStill=`<g data-prop="fire-table" data-lit="${fireOn?1:0}">${inkAt(fX,fY,fS,1,fireGlow+inkRig(flicking?bodyLs:FL,firePal,fireO))}</g>`;
+  const fireFlame=flicking?`<g data-prop="fire-flame">${inkAt(fX,fY,fS,1,inkRig(flameLs,firePal,fireO))}</g>`:"";
+  /* the pond's copy is this whole table, flames included. The copy strips every animation before it is drawn */
+  const fire=`<g data-prop="fire-table" data-lit="${fireOn?1:0}">${inkAt(fX,fY,fS,1,fireGlow+inkRig(FL,firePal,fireO))}</g>`;
   const chBase=palAt(dark?{...INK.pnChair,black:"#45434F",blackDk:"#2E2C36"}:INK.pnChair,.03);
   const chPal=fireOn?{...chBase,lit:"#FFB86A",litOp:.95}:dark?{...chBase,lit:"#AFC4E6",litOp:.75}:chBase;
   const cs=1.18;
@@ -10939,9 +10970,28 @@ function pnPondScene(c){
     light:fireOn?[fX-x,(fY-7)-(y-5)]:lightAt(x,y-5)}));
   const chairsBack=`<g data-prop="chairs">${chair(fX+7,fY-3.4,"side","black",-1)}${chair(fX-9,fY-3.6,"side","black")}</g>`;
   const chairs=`<g data-prop="chairs">${chair(fX-17.5,fY+.5,"side","black")}${chair(fX+17.5,fY+.5,"side","black",-1)}</g>`;
-  const fireLight=fireOn?`<ellipse cx="${f1(fX)}" cy="${f1(fY-1)}" rx="30" ry="6" fill="url(#pnWash)"/><ellipse cx="${f1(fX)}" cy="${f1(fY-10)}" rx="20" ry="10" fill="url(#pnWash)" opacity=".55"/>`:"";
+  /* a warm pool on the paving under the chairs, and a wash up the wall behind the fire. The chairs sit in it */
+  const fireLight=fireOn?`<ellipse cx="${f1(fX)}" cy="${f1(fY+1.5)}" rx="46" ry="15" fill="url(#pnFirePool)"/><ellipse cx="${f1(fX)}" cy="${f1(fY-11)}" rx="32" ry="18" fill="url(#pnFirePool)" opacity=".72"/>`:"";
+  const fireWash=fireOn?`<ellipse data-prop="fire-glow" cx="${f1(fX)}" cy="${f1(fY-5)}" rx="30" ry="14" fill="url(#pnFirePool)" opacity=".42"/>`:"";
   const tbX=hx+u((BH.winR[0][0]+BH.winR[BH.winR.length-1][1])/2),tbY=hy+3.4;
-  const tub=`<path d="M ${f1(tbX-u(9.4))} ${f1(tbY-u(9))} L ${f1(tbX+u(11.6))} ${f1(tbY-u(9))} L ${f1(tbX+u(12.6))} ${f1(tbY-u(6))} L ${f1(tbX+u(11))} ${f1(tbY-u(6))} Z" fill="${shadeC}" opacity="${(.22*shadowOp).toFixed(2)}"/><g data-prop="hot-tub">${inkAt(tbX,tbY,S,1,inkRig(propPnTub(),palAt(INK.pnTub,.04),{s:S,line:.8,heavy:.4,shade:1.1,lit:.7,light:lightAt(tbX,tbY-10)}))}</g>`;
+  const tub=`<path d="M ${f1(tbX-u(9.4))} ${f1(tbY-u(9))} L ${f1(tbX+u(11.6))} ${f1(tbY-u(9))} L ${f1(tbX+u(12.6))} ${f1(tbY-u(6))} L ${f1(tbX+u(11))} ${f1(tbY-u(6))} Z" fill="${shadeC}" opacity="${(.22*shadowOp).toFixed(2)}"/><g data-prop="hot-tub" data-open="${tubSeason?1:0}" data-lit="${tubLit?1:0}">${inkAt(tbX,tbY,S,1,inkRig(propPnTub({open:tubSeason}),palAt(INK.pnTub,.04),{s:S,line:.8,heavy:.4,shade:1.1,lit:.7,light:lightAt(tbX,tbY-10)}))}</g>`;
+  /* steam the whole season, on the moving sheet, and the lights only while the strands are on.
+     Each colour is one group, so they trade places together. */
+  const tubFx=(()=>{
+    if(!tubSeason)return "";
+    /* short and soft. The tallest fades out around the top of the windows, and the rightmost stays
+       off the window Ghostface uses */
+    const steam=[[-3.2,10,2.4,11],[.2,12.5,3,13.5],[3.4,9.5,2.1,10]].map(([x,dur,rx,ry],i)=>`<ellipse class="pn-steam" cx="${x}" cy="${(-8.5-ry).toFixed(2)}" rx="${rx}" ry="${ry}" fill="url(#pnSteam)" opacity=".75" style="--sd:${dur}s;${wallClock(dur,i*3.1)}"/>`).join("");
+    const hd=22;
+    const layer=(id,delay,rest,inner)=>`<g class="pn-tub-hue" data-hue="${id}" opacity="${rest}" style="--hi:.98;--hd:${hd}s;${wallClock(hd,delay)}">${inner}</g>`;
+    let lights="";
+    if(tubLit){
+      /* the wash stays on the water, with a soft halo on the tub. Nothing drops onto the paving */
+      const wash=id=>`<ellipse cx="0" cy="-6.45" rx="8.8" ry="1.7" fill="url(#${id})"/><ellipse cx="0" cy="-5.4" rx="11.2" ry="2.6" fill="url(#${id})" opacity=".42"/>`;
+      lights=layer("pnTubLagoon",0,.88,wash("pnTubLagoon"))+layer("pnTubMoon",11,.06,wash("pnTubMoon"));
+    }
+    return `<g data-prop="tub-live" data-lit="${tubLit?1:0}" transform="translate(${f1(tbX)} ${f1(tbY)}) scale(${S})">${steam}${lights}</g>`;
+  })();
 
   /* ── October: a black weeping willow just left of the fire table, where a round bush was. It is up with
      the other decorations and gone the morning of November 1. Its purple and orange lights stay lit the
@@ -11219,6 +11269,10 @@ function pnPondScene(c){
       <mask id="pnFadeIn" maskUnits="userSpaceOnUse" x="${f1(-12)}" y="${f1(Y(0))}" width="${W+24}" height="${f1(H+10)}"><rect x="${f1(-12)}" y="${f1(Y(0))}" width="${W+24}" height="${f1(H+10)}" fill="url(#pnTopFade)"/></mask>
       <radialGradient id="pnUplight"><stop offset="0" stop-color="rgb(255,196,120)" stop-opacity=".38"/><stop offset="1" stop-color="rgb(255,180,100)" stop-opacity="0"/></radialGradient>
       <radialGradient id="pnWash"><stop offset="0" stop-color="rgb(255,170,90)" stop-opacity=".45"/><stop offset="1" stop-color="rgb(255,160,80)" stop-opacity="0"/></radialGradient>
+      <radialGradient id="pnFirePool"><stop offset="0" stop-color="rgb(255,176,64)" stop-opacity=".9"/><stop offset=".38" stop-color="rgb(255,120,36)" stop-opacity=".62"/><stop offset=".72" stop-color="rgb(255,96,24)" stop-opacity=".28"/><stop offset="1" stop-color="rgb(255,80,16)" stop-opacity="0"/></radialGradient>
+      <linearGradient id="pnSteam" x1=".5" y1="1" x2=".5" y2="0"><stop offset="0" stop-color="#E4F1F6" stop-opacity=".9"/><stop offset=".22" stop-color="#F3F9FB" stop-opacity=".62"/><stop offset=".5" stop-color="#F7FBFD" stop-opacity=".28"/><stop offset=".75" stop-color="#F7FBFD" stop-opacity=".06"/><stop offset="1" stop-color="#F7FBFD" stop-opacity="0"/></linearGradient>
+      <radialGradient id="pnTubLagoon"><stop offset="0" stop-color="#D4FFF4" stop-opacity="1"/><stop offset=".42" stop-color="#12B8C4" stop-opacity=".95"/><stop offset=".74" stop-color="#0A7E9A" stop-opacity=".55"/><stop offset="1" stop-color="#086888" stop-opacity="0"/></radialGradient>
+      <radialGradient id="pnTubMoon"><stop offset="0" stop-color="#F2F7FF" stop-opacity="1"/><stop offset=".42" stop-color="#5B92F0" stop-opacity=".92"/><stop offset=".74" stop-color="#3A68D0" stop-opacity=".5"/><stop offset="1" stop-color="#2A50B0" stop-opacity="0"/></radialGradient>
       <linearGradient id="pnLawn" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(farY)}" x2="0" y2="${f1(sandY)}"><stop offset="0" stop-color="${air(lawnTop,.05)}"/><stop offset="1" stop-color="${air(lawnFoot,.02)}"/></linearGradient>
       <linearGradient id="pnPond" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(pondY)}" x2="0" y2="${f1(Y(194))}"><stop offset="0" stop-color="${waterTop}"/><stop offset="1" stop-color="${waterBot}"/></linearGradient>
       <linearGradient id="cloudInk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${tone(mix("#FFFFFF",skyS[1],.25))}"/><stop offset=".6" stop-color="${tone(mix("#FFF4E6",skyS[2],.35))}"/><stop offset="1" stop-color="${mix(tone("#FFF4E6"),litC,.5*litK)}"/></linearGradient>
@@ -11236,7 +11290,7 @@ function pnPondScene(c){
   const landPaint=()=>{sheet("sceneNear").innerHTML=`${lawn}${farWood}${house}${sunGlint}${patio}${sunGround}${boards}${fireLight}${chairsBack}${fireStill}${chairs}${tub}${tree}${swagMid}${peek}`;
   document.getElementById("sceneLift").innerHTML=grassLift+PALMS.map(palmLift).join("");
   sheet("sceneFront").innerHTML=fence+(guttering?"":pumpkins)+gateKid+(guttering?"":gateLanterns);
-  sheet("sceneFx").innerHTML=fireFlame+(guttering?pumpkins+gateLanterns:"")+bats+witchFly(witch)+(nearRainL?`<defs>${nearRainL.defs}</defs>${nearRainL.drops}`:"")};
+  sheet("sceneFx").innerHTML=fireWash+fireFlame+(guttering?pumpkins+gateLanterns:"")+bats+witchFly(witch)+(nearRainL?`<defs>${nearRainL.defs}</defs>${nearRainL.drops}`:"")+tubFx};
   const waterPaint=()=>{sheet("sceneWater").innerHTML=`
       ${glowK>.02?`<g data-light="side-wash" mask="url(#pnFadeIn)"><rect x="${f1(-12)}" y="${f1(Y(14))}" width="${W+24}" height="${f1(sandY-Y(14))}" fill="url(#pnSideWash)" opacity="${(.3*glowK).toFixed(2)}"/>`
         +`<rect x="${f1(-12)}" y="${f1(Y(14))}" width="${W+24}" height="${f1(hy-Y(14)+1)}" fill="url(#pnSideWash)" clip-path="url(#pnHouseClip)" opacity="${(.32*glowK).toFixed(2)}"/></g>`:""}
