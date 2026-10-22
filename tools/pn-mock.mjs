@@ -50,8 +50,12 @@ const TIMES = [
     o: { ...SEP, baseTemp: 78, nowTemp: 76, feels: 80, rh: 88, isDay: 1, code: 95, cloud: 100, nowWind: 18, nowDir: 240, nowGust: 34, nowUv: 1, windAmp: 12, gustAmp: 18, popCurve: () => 90, dailyPop: (p) => p.fill(90) } },
   { name: "fog", when: "2026-09-24T07:50:00",
     o: { ...SEP, baseTemp: 70, nowTemp: 66, feels: 66, rh: 99, isDay: 1, code: 45, cloud: 100, nowWind: 1, nowDir: 90, nowGust: 3, nowUv: .2, ...calm } },
-  { name: "blow", when: "2026-09-23T14:00:00",
-    o: { ...SEP, baseTemp: 78, nowTemp: 78, feels: 78, rh: 55, isDay: 1, code: 2, cloud: 45, nowWind: 28, nowDir: 250, nowGust: 42, nowUv: 5, windAmp: 18, gustAmp: 26, windCurve: () => 28, gustCurve: () => 42 } },
+  /* a hard blow from the west-southwest (250): this view looks north, so everything streams to the RIGHT */
+  { name: "blow-west", when: "2026-09-23T14:00:00",
+    o: { ...SEP, baseTemp: 78, nowTemp: 78, feels: 78, rh: 55, isDay: 1, code: 2, cloud: 45, nowWind: 28, nowDir: 250, nowGust: 42, nowUv: 5, windAmp: 18, gustAmp: 26, windCurve: () => 28, gustCurve: () => 42, dirCurve: () => 250 } },
+  /* and from the east-northeast (70): everything streams to the LEFT */
+  { name: "blow-east", when: "2026-09-23T14:00:00",
+    o: { ...SEP, baseTemp: 78, nowTemp: 78, feels: 78, rh: 55, isDay: 1, code: 2, cloud: 45, nowWind: 28, nowDir: 70, nowGust: 42, nowUv: 5, windAmp: 18, gustAmp: 26, windCurve: () => 28, gustCurve: () => 42, dirCurve: () => 70 } },
   { name: "halloween", when: "2026-10-31T19:30:00",
     o: { ...HAL, baseTemp: 62, nowTemp: 60, feels: 60, rh: 70, isDay: 0, code: 0, cloud: 5, nowWind: 3, nowDir: 30, nowGust: 6, nowUv: 0, ...calm } },
 ];
