@@ -42,6 +42,9 @@ const TIMES = [
     o: { ...OCT, baseTemp: 60, nowTemp: 58, feels: 58, rh: 72, isDay: 0, code: 0, cloud: 4, nowWind: 3, nowDir: 30, nowGust: 6, nowUv: 0, ...calm } },
   { name: "sunrise", when: "2026-09-23T07:16:00",
     o: { ...SEP, baseTemp: 68, nowTemp: 64, feels: 64, rh: 86, isDay: 1, code: 1, cloud: 14, nowWind: 3, nowDir: 40, nowGust: 6, nowUv: .1, ...calm } },
+  /* half an hour after sunrise: the morning's warmth on the right */
+  { name: "golden-am", when: "2026-09-23T07:33:00",
+    o: { ...SEP, baseTemp: 70, nowTemp: 66, feels: 66, rh: 82, isDay: 1, code: 1, cloud: 10, nowWind: 3, nowDir: 40, nowGust: 6, nowUv: .3, ...calm } },
   { name: "golden", when: "2026-09-23T18:40:00",
     o: { ...SEP, baseTemp: 76, nowTemp: 74, feels: 74, rh: 60, isDay: 1, code: 1, cloud: 12, nowWind: 5, nowDir: 200, nowGust: 9, nowUv: .3, windAmp: 3, gustAmp: 2 } },
   { name: "rain", when: "2026-09-23T19:40:00",
