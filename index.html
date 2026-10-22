@@ -7910,7 +7910,7 @@ function runGlyph(id,len=32,maxH=Infinity){
 }
 
 /* ── Porters Neck: the windmill palm ─────────────────────────────────────────────────────
-   Trachycarpus fortunei, the one between the patio's sabals. What has to survive on a phone is
+   Trachycarpus fortunei, one between the sabals on each side of the house. What has to survive on a phone is
    what tells it from a small sabal: a slim trunk wrapped in dark brown hair, shaggy at its edges
    and fattest just under the head, and a compact round head of stiff, near-circular fans, each on
    a long thin stalk of its own, held up and out with a few lower ones drooping and one or two dead
@@ -8094,11 +8094,12 @@ BFT["pn-windmill"]={pal:INK.pnWindmill,box:[-16,-48,34,52],s:1,dist:.1,states:PN
 const pnTongue=(x,y0,h,w,lean)=>[[x-w,y0],[x-w*.95,y0-h*.3],[x-w*.45+lean*.5,y0-h*.68],[x+lean,y0-h],[x+w*.5+lean*.55,y0-h*.62],[x+w*.95,y0-h*.28],[x+w,y0],[x,y0+.35]];
 let pnGlowUid=0;
 /* ── Porters Neck: the surfboards ─────────────────────────────────────────────────────
-   Three boards leaning together against something on their left (the palm's trunk or a fence
-   post, drawn by the scene, not here): a cream longboard at the back resting on it, a coral
-   shortboard leaning on the longboard, and a little teal fish with a swallow tail in front.
-   Seen deck on, each a little turned so its right-hand rail shows as a darker band (the light
-   is from the upper left). y=0 is the ground; every board stands on its tail there.
+   Three boards standing in a wood rack, one shared lean, tails on the ground: a cream
+   longboard at the back, a coral shortboard, and a little teal fish with a swallow tail
+   in front. Seen mostly deck on, each a little turned so its right-hand rail shows as a
+   darker band (the light is from the upper left). The half-widths are a real board's
+   proportion, about a fifth of the length, so a longboard at the house's scale is a
+   longboard and not a plank. y=0 is the ground; every board stands on its tail there.
    Nothing is random: the three boards are fixed, so the scene never reshuffles them. */
 const PN_BOARD_COL = {
   /* the cream longboard and its one thin rust stripe */
@@ -8107,13 +8108,15 @@ const PN_BOARD_COL = {
   coral: "#E98A70", coralRail: "#C76A55", stringer: "#F6E7D2", fin: "#4B5A63",
   /* the teal fish */
   teal: "#5FAFAA", tealRail: "#3F8A87", tealStr: "#E7F0E8",
+  /* the rack they stand in */
+  rack: "#7A5A3C",
   ink: "#2A1B33", shade: "#3A2350", lit: "#FFF1CC", litOp: .55,
 };
 /* a board's outline as half-widths along its length, tail (0) to nose (1): [t, half-width] */
 const PN_BOARD_SHAPE = {
-  long: [[0, 1.6], [.03, 2.25], [.12, 2.65], [.4, 2.85], [.66, 2.7], [.84, 2.2], [.93, 1.5], [.975, .85]],
-  short: [[0, 1.35], [.03, 1.85], [.15, 2.25], [.45, 2.4], [.7, 2.1], [.86, 1.45], [.95, .8], [.985, .4]],
-  fish: [[0, 1.75], [.04, 2.2], [.2, 2.55], [.5, 2.7], [.74, 2.3], [.9, 1.45], [.98, .55]],
+  long: [[0, 1.35], [.03, 1.9], [.12, 2.25], [.4, 2.4], [.66, 2.28], [.84, 1.85], [.93, 1.25], [.975, .72]],
+  short: [[0, 1.15], [.03, 1.55], [.15, 1.9], [.45, 2.05], [.7, 1.78], [.86, 1.22], [.95, .68], [.985, .34]],
+  fish: [[0, 1.48], [.04, 1.85], [.2, 2.15], [.5, 2.28], [.74, 1.95], [.9, 1.22], [.98, .48]],
 };
 /* the board's own frame to the scene's: foot at (fx, 0), leaning left by `deg`, u across (+ right),
    v along it (+ up toward the nose) */
@@ -8144,8 +8147,8 @@ function pnBoard(fx, deg, L, shape, cols, o = {}) {
   const T = (pts) => pts.map(([u, v, w]) => { const [x, y] = at(u, v); return [x, y - lift, w]; });
   const parts = [];
   if (o.fin) {
-    /* the fin under the tail, its tip peeking out past the right rail, raked back toward the tail */
-    parts.push(pBlob(P([[1.2, 3.9], [2.3, 3.3], [3.15, 1.9], [3.45, .75], [2.7, 1.05], [1.2, 1.4]]), "fin"));
+    /* the fin under the tail, raked back, its tip kept inside the rail so the stack stays one width */
+    parts.push(pBlob(P([[.35, 2.8], [.95, 2.15], [1.35, 1.15], [1.2, .4], [.75, .7], [.15, 1.05]]), "fin"));
   }
   parts.push(pBlob(P(outline), cols.rail));
   parts.push(pBlob(P(deck), cols.deck));
@@ -8153,11 +8156,15 @@ function pnBoard(fx, deg, L, shape, cols, o = {}) {
   return { parts, lift };
 }
 function pnBoards() {
-  /* back to front: the longboard on the post, the shortboard on the longboard, the fish in front */
-  const lb = pnBoard(0, 12, 22.4, "long", { rail: "rail", deck: "deck", stripe: "stripe" });
-  const sb = pnBoard(4.6, 14, 16.2, "short", { rail: "coralRail", deck: "coral", stripe: "stringer" });
-  const fb = pnBoard(8.4, 9, 12.6, "fish", { rail: "tealRail", deck: "teal", stripe: "tealStr" }, { swallow: true, fin: true });
-  return [{ parts: lb.parts }, { parts: sb.parts }, { parts: fb.parts }];
+  /* one lean, a tight stack centred on x=0, tails on y=0. The longboard is at the back
+     and the other two step out just enough to read. Two posts and a rail, feet on the
+     same ground, the rail crossing the boards. */
+  const lean = 2;
+  const rack = [pnRect(-2.05, -10.4, -1.2, 0, "rack"), pnRect(1.85, -10.4, 2.7, 0, "rack"), pnRect(-2.05, -9.35, 2.7, -8.35, "rack")];
+  const lb = pnBoard(.01, lean, 22.4, "long", { rail: "rail", deck: "deck", stripe: "stripe" });
+  const sb = pnBoard(.39, lean, 16.2, "short", { rail: "coralRail", deck: "coral", stripe: "stringer" });
+  const fb = pnBoard(.73, lean, 12.6, "fish", { rail: "tealRail", deck: "teal", stripe: "tealStr" }, { swallow: true, fin: true });
+  return [{ parts: rack }, { parts: lb.parts }, { parts: sb.parts }, { parts: fb.parts }];
 }
 BFT["pn-boards"] = {
   pal: PN_BOARD_COL,
@@ -8343,6 +8350,22 @@ function propPnChair({view="side",tone="black"}={}){
 BFT["pn-chair"]={pal:INK.pnChair,box:[-6,-11.5,12,12],s:1,dist:.05,o:{line:.7,heavy:.35,shade:1,lit:.8},
   states:{side:{view:"side"},wood:{view:"side",tone:"wood"},front:{view:"front"}},draw:st=>propPnChair(st)};
 
+/* Halloween's black weeping willow, chair height to a person's, where a round bush stood just left of the
+   fire table. A short trunk and long locks that hang. The lights are the scene's, strung on these locks. */
+function propPnWillow(){
+  const hang=(pts)=>pTaper(pts,"veil",{capStart:false});
+  return [
+    pTaper([[.15,0,1.25],[-.1,-5.2,.95],[-.3,-9,.62]],"bark"),
+    hang([[-.2,-8.2,.36],[-2.2,-11.4,.28],[-4.4,-9,.2],[-5.6,-5.2,.13],[-5.7,-1.8,.07]]),
+    hang([[-.15,-7,.34],[-2.5,-8.6,.24],[-4.1,-6,.17],[-4.6,-2.6,.09]]),
+    hang([[.05,-6.2,.3],[-1.3,-7.4,.22],[-2.3,-4.6,.14],[-2.4,-1.9,.07]]),
+    hang([[-.35,-8.8,.28],[-1.7,-12.4,.2],[-3.1,-10.2,.13],[-3.4,-6.6,.08]]),
+    hang([[-.15,-8.6,.32],[.15,-12.2,.24],[.7,-8,.15],[.35,-3.4,.09],[.1,-1.5,.06]]),
+    hang([[0,-7.8,.32],[1.5,-10.4,.24],[2.9,-8,.16],[3.2,-4.4,.1],[3,-2.1,.07]]),
+    hang([[.1,-6.4,.28],[1.7,-7.2,.2],[2.6,-4.2,.13],[2.4,-1.8,.07]]),
+  ];
+}
+
 /* The compass dial on the porch's back wall, seen through the screen door: a navy wrought-iron ring, an
    inner ring, an eight-point star (long north, east, south and west, short between) and, where it is big
    enough to carry them, the letters. What has to read at a few pixels is a ring with a star in it. r is the
@@ -8425,14 +8448,16 @@ BFT["pn-tub"]={pal:INK.pnTub,box:[-12,-10,24,11],s:1,dist:.05,o:{line:.8,heavy:.
    two equal white front gables, each with shakes in its peak over a frieze board and lap siding below,
    and between them, centred on the house, the screened porch under the main roof carried down at a lower
    pitch, with the stainless flue rising through it. Tall double-hung windows with one
-   meeting rail: the west pair mulled in one casing, the east three apart. Light comes from above: hard
+   meeting rail: the west pair mulled in one casing, the east four apart. Light comes from above: hard
    cast shadows under each rake, under the porch roof across the porch's top third, under every window head
    and sill, and the east returns in shade. Casings, rakes and porch posts are inked units of their own.
-   Origin: the middle of the facade (the back door) at the ground, y up negative; -64 to 64 wide, the ridge at -77.
-   The roof's and the sheen's colours are handed in by the scene (the sky's, a step lighter).
+   Origin: the middle of the facade (the back door) at the ground, y up negative; -60 to 60 wide. The main
+   roof is one trapezoid: its lower corners are the gables' outer bottom corners, the ridge is 0.87 of that
+   span and the rise is 0.30 of it (the ridge at -66), and each gable peak is 0.45 of that rise. The walls,
+   the shakes and the roof are white. The scene hands those colours in.
    States: day, night (the windows, the porch and its panel lit, each a little different). */
-const PN_BH={l:-60,r:60,ridge:-77,eave:-38,roofL:-64,roofR:64,ridgeL:-46,ridgeR:46,geave:-30,gl:[-60,-19.2],gr:[19.2,60],peakL:[-39.6,-51],peakR:[39.6,-51],porch:[-19.2,19.2],porchEave:-27,porchTop:-41,
-  door:[-4.8,4.8],panel:[-15.8,-11.8],dial:[0,-19.4,3.4],winL:[[-49.7,-40.2],[-39,-29.5]],winR:[[23.4,32.8],[34.9,44.3],[46.4,55.8]],winT:-25,winB:-4};
+const PN_HA={l:-60,r:60,ridge:-66,eave:-30,roofL:-60,roofR:60,ridgeL:-52,ridgeR:52,geave:-30,gl:[-60,-19.2],gr:[19.2,60],peakL:[-39.6,-46],peakR:[39.6,-46],porch:[-19.2,19.2],porchEave:-27,porchTop:-41,
+  door:[-4.8,4.8],panel:[-15.8,-11.8],dial:[0,-19.4,4.1],winL:[[-50.2,-41.2],[-39.6,-30.6]],winR:[[21.6,28.4],[31.2,38],[40.8,47.6],[50.4,57.2]],winT:-27,winB:-3.4};
 INK.pnBackHouse={
   wall:"#F2F0EA",wallShade:"#C6CBD2",siding:"#DDDAD2",shake:"#E4E0D6",shakeDk:"#B9B4AA",end:"#CDD2D8",roof:"#B4C2CC",roofDk:"#8F9DA8",seam:"#8A98A4",seamLit:"#E6EEF3",
   trim:"#FBFAF6",cast:"#5B6170",glass:"#34434E",glassUp:"#7F98A8",frame:"#FBFAF6",porchWall:"#E7E4DC",shiplap:"#CBC6BC",screen:"#4C525A",panel:"#8A8070",post:"#FBFAF6",
@@ -8440,49 +8465,57 @@ INK.pnBackHouse={
   glassOn:"rgb(255,206,132)",glassDim:"rgb(232,170,104)",glassHot:"rgb(255,236,190)",porchOn:"rgb(250,186,112)",panelOn:"rgb(255,240,200)",glow:"rgb(255,186,100)",
   ink:"#2A1B33",shade:"#3A2350",lit:"#FFF6E2",shadeOp:.32,litOp:.5};
 /* the house's outline for the paper grain laid over it: the big roof, the walls, the gables */
-function pnBackHouseSil(){
-  const B=PN_BH;
-  return[`M ${B.l} 0 L ${B.l} ${B.geave} L ${B.roofL} ${B.eave} L ${B.ridgeL} ${B.ridge} L ${B.ridgeR} ${B.ridge} L ${B.roofR} ${B.eave} L ${B.r} ${B.geave} L ${B.r} 0 Z`];
+function pnBackHouseSil(B=PN_HA){
+  const roof=`L ${B.roofL} ${B.eave} L ${B.ridgeL} ${B.ridge} L ${B.ridgeR} ${B.ridge} L ${B.roofR} ${B.eave}`;
+  return[`M ${B.l} 0 L ${B.l} ${B.geave} ${roof} L ${B.r} ${B.geave} L ${B.r} 0 Z`];
 }
-function pnBackHouse({night=false,shadowOp=1}={}){
-  const B=PN_BH,L=[],ge=B.geave;
+function pnBackHouse({night=false,lit=null,shadowOp=1,B=PN_HA}={}){
+  const lamps=lit==null?!!night:!!lit,L=[],ge=B.geave;
   const cast=(pts,op=.3)=>pnPoly(pts,"cast",{noSil:true,op:op*shadowOp});
   const strip=(a,b,w,role="trim",o)=>{const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy),nx=-dy/l*w/2,ny=dx/l*w/2;
     return pnPoly([[a[0]-nx,a[1]-ny],[b[0]-nx,b[1]-ny],[b[0]+nx,b[1]+ny],[a[0]+nx,a[1]+ny]],role,o)};
-  /* the big roof, straight and even: one ridge, the same pitch at both ends, a white rake board down each */
-  {const parts=[pnPoly([[B.roofL,B.eave],[B.ridgeL,B.ridge],[B.ridgeR,B.ridge],[B.roofR,B.eave]],"roof")];
-    const r=mulberry(808);
-    for(let i=0;i<17;i++){const t=(i+.5)/17,x=B.ridgeL+1+t*(B.ridgeR-B.ridgeL-2),xb=x*(B.roofR-2)/(B.ridgeR-1)+(r()-.5)*.5,xm=(x+xb)/2+(r()-.5)*.4;
-      parts.push(pTaper([[x+.45,B.ridge+.8,.18],[xm+.5,(B.ridge+B.eave)/2,.24],[xb+.55,B.eave-.5,.3]],"seamLit",{capStart:false,capEnd:false},{noSil:true,op:.55}));
-      parts.push(pTaper([[x,B.ridge+.6,.2],[xm,(B.ridge+B.eave)/2,.28],[xb,B.eave-.5,.36]],"seam",{capStart:false,capEnd:false},{noSil:true,op:.7}))}
+  /* the big roof, one trapezoid: one ridge, the same pitch at both ends, a white rake board down each slope */
+  {const roofPts=[[B.roofL,B.eave],[B.ridgeL,B.ridge],[B.ridgeR,B.ridge],[B.roofR,B.eave]];
+    const parts=[pnPoly(roofPts,"roof")];
+    const yR=B.ridge,yE=B.eave;
+    for(let i=0;i<17;i++){const t=(i+.5)/17,x=B.ridgeL+1+t*(B.ridgeR-B.ridgeL-2);
+      const xb=x*(B.roofR-2)/(B.ridgeR-1);
+      const xm=(x+xb)/2;
+      parts.push(pTaper([[x+.45,yR+.8,.18],[xm+.5,(yR+yE)/2,.24],[xb+.55,yE-.5,.3]],"seamLit",{capStart:false,capEnd:false},{noSil:true,op:.55}));
+      parts.push(pTaper([[x,yR+.6,.2],[xm,(yR+yE)/2,.28],[xb,yE-.5,.36]],"seam",{capStart:false,capEnd:false},{noSil:true,op:.7}))}
     parts.push(pTaper([[B.ridgeL+.4,B.ridge,1],[B.ridgeR-.4,B.ridge,1]],"trim",{capStart:false,capEnd:false},{noSil:true,op:.7}));
     L.push({parts});
     L.push({parts:[strip([B.roofL-.6,B.eave+.6],[B.ridgeL-.3,B.ridge-.4],1.6),strip([B.ridgeR+.3,B.ridge-.4],[B.roofR+.6,B.eave+.6],1.6)]});}
   /* between the gables the main roof carries on down over the porch at a lower pitch, a break across it where
-     the pitch changes, and the stainless flue rises through it */
+     the pitch changes, and the stainless flue rises through it. When the trapezoid's lower edge is the
+     gables' own outer corners, that band is only the porch's lip and it stops at the inner rakes */
   {const[p0,p1]=B.porch,e=B.porchEave,t=B.eave,mx=(p0+p1)/2;
-    const parts=[pnPoly([[p0-15,t-.4],[p1+15,t-.4],[p1+7,e+.6],[p0-7,e+.6]],"roof")];
-    const r=mulberry(808);
-    for(let i=0;i<17;i++){const tt=(i+.5)/17,x0=B.ridgeL+1+tt*(B.ridgeR-B.ridgeL-2),x=x0*(B.roofR-2)/(B.ridgeR-1)+(r()-.5)*.5;
-      if(x<p0-14||x>p1+14)continue;const xb=x*.98;
+    const yG=B.geave,yP=B.peakL[1],along=(x0,x1,y)=>x0+(x1-x0)*(y-yG)/(yP-yG);
+    const topL=along(B.gl[1],B.peakL[0],t)+.4,topR=along(B.gr[0],B.peakR[0],t)-.4;
+    const botL=p0+.3,botR=p1-.3;
+    const parts=[pnPoly([[topL,t-.4],[topR,t-.4],[botR,e+.6],[botL,e+.6]],"roof")];
+    for(let i=0;i<17;i++){const tt=(i+.5)/17,x0=B.ridgeL+1+tt*(B.ridgeR-B.ridgeL-2),x=x0*(B.roofR-2)/(B.ridgeR-1);
+      if(x<topL+1||x>topR-1)continue;const xb=x*.98;
       parts.push(pTaper([[x+.5,t,.26],[xb+.5,e,.3]],"seamLit",{capStart:false,capEnd:false},{noSil:true,op:.5}),pTaper([[x,t,.3],[xb,e,.34]],"seam",{capStart:false,capEnd:false},{noSil:true,op:.7}))}
-    parts.push(pTaper([[p0-15,t+.1,.5],[p1+15,t+.1,.5]],"roofDk",{capStart:false,capEnd:false},{noSil:true,op:.45}));
+    parts.push(pTaper([[topL,t+.1,.5],[topR,t+.1,.5]],"roofDk",{capStart:false,capEnd:false},{noSil:true,op:.45}));
     L.push({parts});
     L.push({parts:[pnRect(p0-2.6,e-.4,p1+2.6,e+1.4,"trim")]});
     /* the flue: a plain round stainless pipe, a lit edge down it, and a flat rain cap wider than the pipe
        on two short legs, so it never reads as a sign */
-    const f0=e-6.5,f1=t-4.5;
+    /* the pipe stands on the porch roof. When the main eave has come down to the gable line the old
+       offset collapses the pipe, so it keeps the height it had over the porch */
+    let f0=e-6.5,f1=t-4.5;if(f1>f0-4)f1=f0-9;
     L.push({parts:[pnRect(mx-.62,f1,mx+.62,f0,"flue"),pnRect(mx-.82,f0-.6,mx+.82,f0,"flueDk",{noSil:true,op:.7}),
       pnRect(mx-.58,f1-.7,mx-.38,f1,"flueDk",{noSil:true}),pnRect(mx+.38,f1-.7,mx+.58,f1,"flueDk",{noSil:true}),
       pTaper([[mx-.3,f0-.2,.22],[mx-.3,f1+.1,.22]],"seamLit",{capStart:false,capEnd:false},{noSil:true,op:.85})]},
       {parts:[pnRect(mx-1.55,f1-1.3,mx+1.55,f1-.65,"flue"),pnRect(mx-1.55,f1-.95,mx+1.55,f1-.65,"flueDk",{noSil:true,op:.6})]});}
   /* the porch: a white shiplap wall behind dark screens, the tall lit panel, the dial behind the screen door */
-  {const[p0,p1]=B.porch,top=B.porchEave+1.4,parts=[pnRect(p0,top,p1,0,night?"porchOn":"porchWall")];
+  {const[p0,p1]=B.porch,top=B.porchEave+1.4,parts=[pnRect(p0,top,p1,0,lamps?"porchOn":"porchWall")];
     for(let y=top+2.2;y<-.5;y+=1.7)parts.push(pnRect(p0+.4,y-.1,p1-.4,y+.1,"shiplap",{noSil:true,op:night?.3:.45}));
-    if(night)for(let i=0;i<5;i++){const k=1-i*.16;parts.push(pnHEll(0,-12,13*k,10*k,"glow",{soft:true,noSil:true,op:.1}))}
-    const[a0,a1]=B.panel;parts.push(pnRect(a0,top+2.2,a1,-4.2,night?"panelOn":"panel",{noSil:true}));
+    if(lamps)for(let i=0;i<5;i++){const k=1-i*.16;parts.push(pnHEll(0,-12,13*k,10*k,"glow",{soft:true,noSil:true,op:.1}))}
+    const[a0,a1]=B.panel;parts.push(pnRect(a0,top+2.2,a1,-4.2,lamps?"panelOn":"panel",{noSil:true}));
     const[dx,dy,dr]=B.dial;
-    for(const p of propPnDial({r:dr,cx:dx,cy:dy}))parts.push({...p,role:p.role==="wall"?(night?"porchOn":"porchWall"):p.role,noSil:true});
+    for(const p of propPnDial({r:dr,cx:dx,cy:dy}))parts.push({...p,role:p.role==="wall"?(lamps?"porchOn":"porchWall"):p.role,noSil:true});
     const[d0,d1]=B.door,sc={noSil:true,op:night?.45:.5};
     parts.push(pnRect(p0+1.2,top+1,d0-1.2,-4.6,"screen",sc),pnRect(d1+1.2,top+1,p1-1.2,-4.6,"screen",sc),pnRect(p0+1.2,-3.6,d0-1.2,-.4,"screen",{...sc,op:sc.op*.8}),pnRect(d1+1.2,-3.6,p1-1.2,-.4,"screen",{...sc,op:sc.op*.8}));
     parts.push(pnRect(d0+.9,top+2.2,d1-.9,-12.4,"screen",{noSil:true,op:night?.18:.22}),pnRect(d0+.9,-11.4,d1-.9,-4.4,"screen",sc),pnRect(d0+.9,-3.6,d1-.9,-1,"screen",{noSil:true,op:sc.op*.6}));
@@ -8494,15 +8527,15 @@ function pnBackHouse({night=false,shadowOp=1}={}){
     for(const x of[p0+.8,-9.8,9.8,p1-.8])posts.push(pnRect(x-.75,top,x+.75,0,"post"));
     posts.push(pnRect(p0,top,p1,top+1.2,"post"),pnRect(p0,-4.8,d0,-3.6,"post"),pnRect(d1,-4.8,p1,-3.6,"post"));
     posts.push(pnRect(d0,top+1.3,d0+1,0,"post"),pnRect(d1-1,top+1.3,d1,0,"post"),pnRect(d0,top+1.3,d1,top+2.3,"post"),pnRect(d0,-12.4,d1,-11.4,"post"),pnRect(d0,-4.4,d1,-3.6,"post"));
-    L.push({parts:posts});}
+    L.push({parts:posts})}
   /* the gables: white wall with lap siding under a frieze board, shakes in the peak, the rakes and their
      returns, the shadows the rakes cast, the windows */
   const gable=([x0,x1],[px,py],east)=>{
     const parts=[pnPoly([[x0,0],[x0,ge],[px,py],[x1,ge],[x1,0]],"wall")];
-    for(let y=-1.8;y>ge+2.2;y-=1.35)parts.push(pnRect(x0+.6,y-.09,x1-.6,y+.09,"siding",{noSil:true,op:.75}));
-    /* shakes: four courses in the triangle above the frieze */
-    const fz=ge-1.6;
-    for(let c=0;c<4;c++){const y0=fz-c*((fz-py-3)/4),y1=fz-(c+1)*((fz-py-3)/4),hw=t=>((x1-x0)/2)*(1-(fz-t)/(fz-py))-.6,cx=px;
+    for(let y=-1.8;y>ge+2.2;y-=1.35)parts.push(pnRect(x0+.6,y-.09,x1-.6,y+.09,"siding",{noSil:true,op:0.92}));
+    /* shakes: six courses in the triangle above the frieze, so the peaks read */
+    const fz=ge-1.6,nC=6;
+    for(let c=0;c<nC;c++){const y0=fz-c*((fz-py-3)/nC),y1=fz-(c+1)*((fz-py-3)/nC),hw=t=>((x1-x0)/2)*(1-(fz-t)/(fz-py))-.6,cx=px;
       parts.push(pnPoly([[cx-hw(y0),y0],[cx+hw(y0),y0],[cx+hw(y1),y1],[cx-hw(y1),y1]],"shake",{noSil:true}));
       const rr=mulberry(c*31+(east?7:3));let x=cx-hw(y0)+.4+(c%2)*.7;
       while(x<cx+hw(y0)-.4){const w=1.1+rr()*.6;parts.push(pnRect(x-.07,y1+.3,x+.07,y0,"shakeDk",{noSil:true,op:.55}));x+=w}
@@ -8519,12 +8552,12 @@ function pnBackHouse({night=false,shadowOp=1}={}){
     pnRect(x0-.3,ge+1.2,x0+1.3,0,"trim"),pnRect(x1-1.3,ge+1.2,x1+.3,0,"trim")];
   /* a window: tall double-hung, one meeting rail; by day the upper sash holds the sky and the lower is dark,
      under the head's shadow; at night it is lit, one dimmer, one with a lamp, one with a blind drawn */
-  const glassOf=(i)=>night?(i===1?"glassDim":"glassOn"):"glass";
+  const glassOf=(i)=>lamps?(i===1?"glassDim":"glassOn"):"glass";
   const sashes=(w0,w1,i)=>{const t=B.winT,b=B.winB,m=(t+b)/2,P=[];
     P.push(pnRect(w0,t,w1,b,glassOf(i),{noSil:true}));
     if(!night)P.push(pnRect(w0,t,w1,m,"glassUp",{noSil:true,op:.6}));
-    if(night&&i===3)for(let k=0;k<3;k++)P.push(pnHEll(w0+(w1-w0)*.65,b-4.6,3.4-k,3.4-k,"glassHot",{noSil:true,op:.35}));
-    if(night&&i===4)P.push(pnRect(w0,t,w1,t+5.6,"glassDim",{noSil:true,op:.9}),pnRect(w0,t+5.4,w1,t+5.9,"frame",{noSil:true,op:.8}));
+    if(lamps&&i===3)for(let k=0;k<3;k++)P.push(pnHEll(w0+(w1-w0)*.65,b-4.6,3.4-k,3.4-k,"glassHot",{noSil:true,op:.35}));
+    if(lamps&&i===4)P.push(pnRect(w0,t,w1,t+5.6,"glassDim",{noSil:true,op:.9}),pnRect(w0,t+5.4,w1,t+5.9,"frame",{noSil:true,op:.8}));
     P.push(pnRect(w0,m-.32,w1,m+.32,"frame",{noSil:true}),cast([[w0,t],[w1,t],[w1,t+2.1],[w0,t+1.6]],night?.12:.38));
     return P};
   const L0=gable(B.gl,B.peakL,false),R0=gable(B.gr,B.peakR,true);
@@ -8532,11 +8565,11 @@ function pnBackHouse({night=false,shadowOp=1}={}){
   B.winR.forEach(([w0,w1],i)=>R0.parts.push(...sashes(w0,w1,i+2)));
   const casing=[],cas=(w0,w1)=>{const t=B.winT,b=B.winB;casing.push(pnRect(w0-1.4,t-2.2,w1+1.4,t,"trim"),pnRect(w0-1.4,t,w0,b,"trim"),pnRect(w1,t,w1+1.4,b,"trim"),pnRect(w0-2,b,w1+2,b+1.3,"trim"));
     casing.push(cast([[w0-2,b+1.3],[w1+2,b+1.3],[w1+1.6,b+2.4],[w0-1.6,b+2.4]],.3))};
-  cas(B.winL[0][0],B.winL[1][1]);casing.push(pnRect(B.winL[0][1],B.winT,B.winL[1][0],B.winB,"trim"));
+  cas(B.winL[0][0],B.winL[B.winL.length-1][1]);casing.push(pnRect(B.winL[0][1],B.winT,B.winL[1][0],B.winB,"trim"));
   for(const[w0,w1]of B.winR)cas(w0,w1);
   L.push(L0,{parts:trims(B.gl[0],B.gl[1],...B.peakL)},R0,{parts:trims(B.gr[0],B.gr[1],...B.peakR)},{parts:casing});
   /* at night the lit glass lays warm pools on the wall under each window, falling off to the night */
-  if(night){const wash=[],g=(x,y,rx,ry,op=.07)=>{for(let i=0;i<5;i++){const k=1-i*.17;wash.push(pnHEll(x,y,rx*k,ry*k,"glow",{soft:true,noSil:true,op}))}};
+  if(lamps){const wash=[],g=(x,y,rx,ry,op=.07)=>{for(let i=0;i<5;i++){const k=1-i*.17;wash.push(pnHEll(x,y,rx*k,ry*k,"glow",{soft:true,noSil:true,op}))}};
     g(-39.6,-2,12,4.5,.08);for(const[w0,w1]of B.winR)g((w0+w1)/2,-1.6,6,3.6,.07);g(-39.6,-14,14,12,.04);g(39.6,-14,20,12,.04);L.push({parts:wash});}
   return L;
 }
@@ -8796,7 +8829,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
   const humid=weather.relative_humidity_2m||0,temp=weather.temperature_2m||60;
   const W=Math.max(320,appW()/1.22),H=sceneH(W),GY=H-30;   /* taller frame on a phone */
   const sp=sunPos(now), mp=moonPos(now), mph=moonPhase(now);
-  const sunAltDeg=sp.alt*180/Math.PI,localHour=now.getHours(),month=now.getMonth();
+  const sunAltDeg=sp.alt*180/Math.PI,localHour=now.getHours(),localMin=now.getMinutes(),month=now.getMonth();
   const seasonalFlies=dark&&month>=4&&month<=8&&temp>=60&&quietWeather&&wind<18;
   const showFlies=seasonalFlies&&!PRM;
   /* how many is a question of how warm it is: a few at 60, a dozen once it is properly summer */
@@ -10003,7 +10036,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
   /* Porters Neck: the house from across the pond (pnPondScene). The marsh below is parked, reached by no
      place, as Denver's Front Range is */
   if(LOC.view==="pond"){
-    pnPondScene({W,H,GY,sp,mp,mph,sunAltDeg,localHour,month,cloud,wind,gust,code,wet,snowing,storm,fog,humid,temp,dark,tideDir,
+    pnPondScene({W,H,GY,sp,mp,mph,sunAltDeg,localHour,localMin,month,cloud,wind,gust,code,wet,snowing,storm,fog,humid,temp,dark,tideDir,
       skyS,goldK,rising,nightK,gloom,tone,hazeC,air,lineC,inkAir,shadeC,texOn,paperK,arc,goldArc,sunBody,moonBody,sunTimes,
       glintX,glintCol,glintOp,sunXY,moonXY,moonR,veil,lightAt,litC,litK,shadeK,inkPal,castShadow,flatParts,phase,
       chopK,wDur,windFrom,downwind,BANDS,bandAmp,waveDelay,bandOf,specular,rainK,cloudShadows,ringAt,flightBird,showFlies,flyCount,crabAt,thunder:THUNDER,
@@ -10450,12 +10483,40 @@ function liftKit(W,H){
   const liftIn=(b,inner,p,anim="")=>`<div class="lift" style="${origin(b,p)}${anim?";"+anim:""}">${inner}</div>`;
   return{partsOf,boxOf,pct,origin,liftSvg,liftAt,liftIn};
 }
-/* Porters Neck's light schedule, on the place's own clock. The string lights and the fire table go off at
-   PN_STRANDS_OUT, 10 pm (Josh: "they go off at 10pm"), and stay off through the small hours until the next
-   sunset. The windows and the porch go off at PN_LIGHTS_OUT (null: on all night, which Josh has not decided).
-   The pumpkin lights on the fence are on day and night all October, the holiday's own calendar (Josh: "the
-   pumpkin lights stay on 24/7 until halloween"): PN_PUMPKIN_LIGHTS switches them */
-const PN_STRANDS_OUT=22,PN_LIGHTS_OUT=null,PN_PUMPKIN_LIGHTS=true;
+/* Porters Neck's light schedule, on the place's own clock. The windows, the porch, the strands and the
+   fire table are on from sunset until 10:30 pm (PN_LIGHTS_OUT) and off through the small hours until the
+   next sunset. The pumpkin lights are October only. They stay on through the day and from dusk until
+   the same 10:30, then the wire stays up and the bulbs go dark until the sun is up.
+   PN_PUMPKIN_LIGHTS switches the string. */
+const PN_LIGHTS_OUT=22*60+30,PN_PUMPKIN_LIGHTS=true;
+/* windows, strands and the fence's pumpkin lights. Windows and strands are on only after dusk and before
+   10:30. The pumpkin lights are on by day and from dusk until 10:30, then off through the small hours
+   until the sun is up. hour and minute are the place's clock. */
+function pnHouseLights(sunAlt,hour,minute){
+  const dark=sunAlt<-.83,mins=hour*60+(minute||0);
+  const on=dark&&mins>=12*60&&mins<PN_LIGHTS_OUT;
+  return{windows:on,strands:on,pumpkins:!dark||on};
+}
+/* a small Ghostface in the rightmost east window's lower pane. Hood and mask only, paper white so the
+   face reads on dark daytime glass and on the warm night glass, clipped to the pane so the meeting rail,
+   a stile and the sill hide the chin and one edge. The drawing is sized to that one pane, inside the window. */
+function pnPeekGhost(hx,hy,S,B){
+  const[w0,w1]=B.winR[B.winR.length-1],t=B.winT,b=B.winB,m=(t+b)/2;
+  const X=v=>hx+v*S,Y=v=>hy+v*S;
+  const x0=X(w0),x1=X(w1),yM=Y(m),yB=Y(b);
+  const paneW=x1-x0,paneH=yB-yM,F=12.2,maskW=5*F,maskH=7.58*F;
+  const winW=X(w1+1.4)-X(w0-1.4),winH=Y(b+1.3)-Y(t-2.2);
+  const sc=Math.min((paneW*.72)/maskW,(paneH*.8)/maskH,winW/maskW,winH/maskH);
+  const ca=Math.cos(.28),sa=Math.sin(.28),eye=([x,y])=>[(x*ca-y*sa)*F,(x*sa+y*ca)*F];
+  const[ex,ey]=eye([0,-1.05]);
+  const aimX=(x0+x1)/2+paneW*.16,aimY=yB-paneH*.34;
+  const pal={hood:"#26232D",mask:"#F6F3EC",eye:"#07060A",ink:"#1A1422",shade:"#3A3044",lit:"#FFF8EE",shadeOp:.2,litOp:.45};
+  const face=inkRig(propGhostface().slice(1),pal,{s:sc,line:.4,heavy:.15,shade:.5,lit:.35,light:[-.3,-1]});
+  const id="pnPeekClip";
+  /* the clip is on a group with no transform of its own: on the scaled group it would be
+     read in the face's units and the chin and one cheek would sit on the frame */
+  return `<g class="decor" data-decor="ghostface" data-peek="window" data-win="${f1(X(w0-1.4))} ${f1(Y(t-2.2))} ${f1(X(w1+1.4))} ${f1(Y(b+1.3))}" data-pane="${f1(x0)} ${f1(yM)} ${f1(x1)} ${f1(yB)}"><defs><clipPath id="${id}"><rect x="${f1(x0+.15)}" y="${f1(yM+.25)}" width="${f1(Math.max(1,paneW-.7))}" height="${f1(Math.max(1,paneH-.7))}"/></clipPath></defs><g clip-path="url(#${id})"><g transform="translate(${f1(aimX)} ${f1(aimY)}) scale(${sc.toFixed(3)}) translate(${f1(-ex)} ${f1(-ey)})">${face}</g></g></g>`;
+}
 /* ── Porters Neck: the house from across the pond (pnPondScene) ─────────────────────────────────────────
    The family's house seen from the far bank of the pond, framed the way Josh's photo frames it: the house is
    the picture, its roof's mass high in the frame, a palm group at each side and just enough room for them.
@@ -10464,35 +10525,35 @@ const PN_STRANDS_OUT=22,PN_LIGHTS_OUT=null,PN_PUMPKIN_LIGHTS=true;
    to match. Back to front: a close dark wood behind the house's sides (the neighbours are very close and are
    left out, but the house never stands in open land), the house, the patio with the fire table and its
    Adirondack chairs to the west and the hot tub under the middle east window, the string lights in a V from
-   the back door out to a sabal on each side, two sabals at the west and two sabals and the windmill palm at
-   the east, the black fence between its two white pillars with a gate on the door's line and fountain grass
+   the back door out to a sabal on each side, a sabal, a windmill palm and a sabal at the west and the same
+   group at the east, the black fence between its two white pillars with a gate on the door's line and fountain grass
    inside it, a strip of lawn, the sand and the pond, which holds the picture upside down (pressed a little
    shorter, so the doubled lights stay in the frame) and has its fountain mid-pond on the door's line. The
-   weather stays honest: the strands and the fire table from sunset until 10 pm (the fire only on a cool dry
-   evening), the windows after sunset, the strands' ends tucked into the sabals' boots so the palms' sway never
+   weather stays honest: the strands, the fire table and the windows from sunset until 10:30 (the fire only on a cool dry
+   evening), the strands' ends tucked into the sabals' boots so the palms' sway never
    shows a loose end, the fountain leans and its spray drifts downwind, and the reflection is glass in a calm, strips in a breeze
    and glints in a blow. The low sun's warmth comes from its own side. In October (holidayOn) the fence carries
-   pumpkin lights day and night, a little tree by the fire table is wrapped in purple and orange, each pillar
-   holds an orange pumpkin and a white one, the gate has two lanterns from the carving day, Ghostface peeks
-   round the east corner, and on Halloween night the trick-or-treater stands at the gate. Laid out in a
+   pumpkin lights, on by day and from dusk until 10:30, each run a swag between posts, a little tree by the fire table is wrapped in purple and orange, each pillar
+   holds an orange pumpkin and a white one, the gate has two lanterns from the carving day, Ghostface is a small face
+   in the rightmost east window (he stays after the lamps go out at 10:30), and on Halloween night the trick-or-treater stands at the gate. Laid out in a
    320 by 194 frame (sceneH), centred on wider ones, where the wood, the lawn, the sand and the pond run on to
    the frame's edges */
 function pnPondScene(c){
-  const{W,H,GY,sunAltDeg,localHour,month,cloud,wind,gust,code,wet,snowing,storm,fog,temp,dark,
+  const{W,H,GY,sunAltDeg,localHour,localMin,month,cloud,wind,gust,code,wet,snowing,storm,fog,temp,dark,
     skyS,goldK,rising,nightK,gloom,tone,air,lineC,inkAir,shadeC,texOn,paperK,arc,goldArc,sunBody,moonBody,sunTimes,
     sunXY,moonXY,veil,lightAt,litC,litK,shadeK,inkPal,castShadow,flatParts,phase,chopK,windFrom,downwind,rainK,
     halloween,carved,candles,trickOrTreat,batN,batColony,batKeep,witchPlan,witchFly,pumpkinAt,hallowDefs,candleDefs,moonR,flightBird}=c;
   const ox=(W-320)/2,oy=H-194,X=x=>x+ox,Y=y=>y+oy;
   /* the house's scale: about three fifths of the frame's width at 390 */
   const S=1.45,hx=X(160),hy=Y(138),u=v=>v*S;
+  const BH=PN_HA;
   const fenceB=Y(149),fenceT=fenceB-7.5,sandY=Y(152.5),pondY=Y(155),farY=hy-1;
   /* the back door's line: the steps, the gate and the fountain are all on it */
-  const doorX=hx+u((PN_BH.door[0]+PN_BH.door[1])/2);
+  const doorX=hx+u((BH.door[0]+BH.door[1])/2);
   const palAt=(pal,d)=>{const o={};for(const[k,v]of Object.entries(pal))o[k]=typeof v==="string"&&v[0]==="#"&&!["ink","shade","lit"].includes(k)?air(v,d):v;
     return Object.assign(o,{ink:inkAir(d),shade:shadeC,lit:litC,litOp:(pal.litOp??.5)*litK,shadeOp:(pal.shadeOp??.32)*shadeK})};
-  /* PN_LIGHTS_OUT is the hour the strands and the windows go off (null: they stay on all night) */
-  const lightsOn=sunAltDeg< -.83&&!(PN_LIGHTS_OUT!=null&&(localHour>=PN_LIGHTS_OUT||localHour<12));
-  const strandsOn=sunAltDeg< -.83&&localHour>=12&&localHour<PN_STRANDS_OUT;
+  const lit=pnHouseLights(sunAltDeg,localHour,localMin);
+  const lightsOn=lit.windows,strandsOn=lit.strands,pumpOn=lit.pumpkins;
   const fireOn=strandsOn&&localHour>=15&&temp>=45&&temp<68&&!wet&&!storm&&!fog&&gust<20&&!THUNDER;
   const swayAmt=clamp(.3+gust*.05,.3,2.6),swayDur=clamp(8.5-gust*.15,3,8.5);
   /* dw: +1 when the wind blows toward the right of this north-facing frame. Everything that leans or drifts
@@ -10517,27 +10578,33 @@ function pnPondScene(c){
   const farWood=`<path d="${wood}" fill="${air("#5E7A66",.42)}" stroke="${mix(inkAir(.42),air("#5E7A66",.42),.45)}" stroke-width=".55"/>`
     +(tex?`<path d="${wood}" fill="${tex}" opacity="${(.5*paperK).toFixed(2)}"/>`:"");
 
-  /* ── the house: the roof is the sky behind its ridge, a little darker and greyer */
-  const roofSky=mix(skyS[1],skyS[2],.35),roofC=dark?mix(roofSky,"#8C99A8",.32):mix(roofSky,"#F4F6F8",.24);
-  const hPal={...palAt(INK.pnBackHouse,.04),roof:roofC,roofDk:mix(roofC,"#2A2F3A",.22),seam:mix(roofC,"#2A2F3A",dark?.3:.24),seamLit:mix(roofC,dark?"#9FB4CC":"#F4F8FA",dark?.25:.45)};
+  /* ── the house is white, the way the photo is: siding, shakes and the metal, seams and a little shade
+     for depth. At night the same sky tone takes that white to blue-gray */
+  const hPal={...palAt(INK.pnBackHouse,.04)};
+  Object.assign(hPal,palAt({wall:"#F7F6F3",siding:"#E6E8EB",shake:"#F6F5F2",shakeDk:"#C9CED4",porchWall:"#E6E8EB",shiplap:"#D5D8DC",found:"#C8CBD0",panel:"#C5C8CC"},.03));
+  hPal.roof=dark?mix(air("#E6EDF3",.05),"#7A90A6",.42):"#F4F6F5";
+  hPal.roofDk=dark?mix(hPal.roof,"#1C2838",.32):"#D5DCE3";
+  hPal.seam=dark?mix(hPal.roof,"#152030",.4):"#C5CED6";
+  hPal.seamLit=dark?"#D4DEE8":"#FFFFFF";
   const sunSide=lightAt(hx,hy-u(40))[0]<0?-1:1,shadowOp=clamp(1-veil*.7-gloom*.8,.25,1);
   const sheen=`<defs><linearGradient id="pnSheen" x1="${sunSide<0?1:0}" y1="0" x2="${sunSide<0?0:1}" y2="0"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/><stop offset=".55" stop-color="#FFFFFF" stop-opacity="0"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="${(dark?.06:.22*(1-veil*.6)).toFixed(2)}"/></linearGradient></defs>`
-    +`<path d="M ${PN_BH.roofL} ${PN_BH.eave} L ${PN_BH.ridgeL} ${PN_BH.ridge} L ${PN_BH.ridgeR} ${PN_BH.ridge} L ${PN_BH.roofR} ${PN_BH.eave} Z" fill="url(#pnSheen)"/>`;
-  const house=`<g data-prop="house">${inkAt(hx,hy,S,1,pnBackHouseGlow({night:lightsOn})+inkRig(pnBackHouse({night:lightsOn,shadowOp}),hPal,{s:S,light:lightAt(hx,hy-u(40)),line:1.4,heavy:1,shade:1.6,lit:.9})
-    +sheen+(tex?pnBackHouseSil().map(d=>`<path d="${d}" fill="${tex}" opacity="${(.55*paperK).toFixed(2)}"/>`).join(""):""))}</g>`;
-  top(hx+u(PN_BH.roofL)-4,hx+u(PN_BH.roofR)+4,hy+u(PN_BH.ridge)-4);
-  /* in October Ghostface peeks round the house's east corner, half of him behind it */
-  const gfX=hx+u(63.5),gfY=hy-u(8.7);
-  const ghost=halloween?`<g class="decor" data-decor="ghostface"><g transform="translate(${f1(gfX)} ${f1(gfY)}) rotate(10) scale(${f1(-.085*S*100)/100} ${f1(.085*S*100)/100})">${inkRig(propGhostface(),palAt(INK.ghostface,.05),{s:.085*S,flip:-1,line:.5,heavy:.25,shade:.7,lit:.45,light:lightAt(gfX,gfY)})}</g></g>`:"";
+    +`<path d="M ${BH.roofL} ${BH.eave} L ${BH.ridgeL} ${BH.ridge} L ${BH.ridgeR} ${BH.ridge} L ${BH.roofR} ${BH.eave} Z" fill="url(#pnSheen)"/>`;
+  const houseNight=sunAltDeg<-.83;
+  const house=`<g data-prop="house" data-lit="${lightsOn?1:0}">${inkAt(hx,hy,S,1,pnBackHouseGlow({night:lightsOn})+inkRig(pnBackHouse({night:houseNight,lit:lightsOn,shadowOp,B:BH}),hPal,{s:S,light:lightAt(hx,hy-u(40)),line:1.4,heavy:1,shade:1.6,lit:.9})
+    +sheen+(tex?pnBackHouseSil(BH).map(d=>`<path d="${d}" fill="${tex}" opacity="${(.55*paperK).toFixed(2)}"/>`).join(""):""))}</g>`;
+  top(hx+u(BH.roofL)-4,hx+u(BH.roofR)+4,hy+u(BH.ridge)-4);
+  /* in October Ghostface is a small face in the rightmost east window, and he stays after the lamps go out:
+     he is a decoration, not a light, and the dark pane is where the white mask reads */
+  const peek=halloween?pnPeekGhost(hx,hy,S,BH):"";
 
-  /* ── the palms at the fence, two sabals at the west and two sabals with a windmill palm low between them
-     at the east. Each sways from its foot with the gusts, each a little differently. The strands hang still
-     from the sabals, each end tucked into its palm's boots. Their crowns stay under the sun times */
+  /* ── the palms at the fence. Each end of the house is the same group: a sabal, a windmill palm low
+     between them, and a sabal, the west group mirroring the east. Each sways from its foot with the gusts.
+     The strands hang still from the inner sabal on each side, the end tucked into its boots. */
   const pw=bftPalmWind(gust,downwind),ps=.9;
-  const PALMS=[[26,"s",7,47,-.04],[52,"s",8,51,.03],[266,"s",9,50,-.03],[282,"w",1,20],[298,"s",10,46,.05]].map(([x,kind,seed,h,lean=0],i)=>{
+  const PALMS=[[26,"s",7,47,-.04],[39,"w",2,20],[52,"s",8,51,.03],[266,"s",9,50,-.03],[282,"w",1,20],[298,"s",10,46,.05]].map(([x,kind,seed,h,lean=0],i)=>{
     const px=X(x),Lr=kind==="s"?rigBftPalmetto(seed,{h,lean,boots:.4,wind:pw}):rigPnWindmill(seed,{h,wind:pw,n:8,dead:1,size:.95});
     const[bx,by,bw,bh]=pathBox(flatParts(Lr).map(p=>p.d));top(px+bx*ps-4,px+(bx+bw)*ps+4,fenceB+by*ps-4);
-    return{x:px,kind,Lr,crownY:fenceB+by*ps+bh*ps*(kind==="s"?.32:.36),i,amt:swayAmt*[.9,1,1.1,.65,.85][i],dur:swayDur*[1.04,1,.94,.86,1.08][i]}});
+    return{x:px,kind,Lr,crownY:fenceB+by*ps+bh*ps*(kind==="s"?.32:.36),i,amt:swayAmt*[.9,.72,1,1.1,.65,.85][i],dur:swayDur*[1.04,.9,1,.94,.86,1.08][i]}});
   const palmSvg=(P,extra="",boxed=false)=>{const st=PRM||boxed?"":` style="transform-box:view-box;transform-origin:${f1(P.x)}px ${f1(fenceB)}px;${leanTo(P.amt,.4)};animation:swayTree ${P.dur.toFixed(1)}s ease-in-out infinite alternate;${wallClock(2*P.dur,P.i*1.9)}"`;
     const pal=P.kind==="s"?palAt({...INK.bftPalm,boot:"#C9B48E",bootLt:"#DDCCA8"},.04):palAt({...INK.pnWindmill,wmFrond:"#7FA160",wmFrondLt:"#97B872",wmFrondFar:"#5E8050",fibre:"#7A5E46"},.04);
     const up=lightsOn&&P.kind==="s"?`<ellipse data-light="uplight" cx="${f1(P.x)}" cy="${f1(fenceB-16)}" rx="5" ry="18" fill="url(#pnUplight)"/>`:"";
@@ -10551,8 +10618,8 @@ function pnPondScene(c){
     return liftAt(b,liftSvg(b,g),[P.x,fenceB],PRM?"":`${leanTo(P.amt,.4)};animation:swayTree ${P.dur.toFixed(1)}s ease-in-out infinite alternate;${wallClock(2*P.dur,P.i*1.9)}`)};
 
   /* ── the string lights: two strands from one eye over the back door, a V, each sagging out to the nearer
-     sabal on its side: clear teardrops on drops by day, light from sunset until 10 pm */
-  const L0=PALMS[1],R0=PALMS[2];
+     sabal on its side: clear teardrops on drops by day, light from sunset until 10:30 */
+  const L0=PALMS[2],R0=PALMS[3];
   /* Josh: "the bistro lights go from door to each palm - forming a V". Both strands start at one eye over
      the back door and each sags out and forward to its sabal, crossing in front of the windows */
   const vtx=[doorX,hy+u(-26.4)];
@@ -10574,10 +10641,10 @@ function pnPondScene(c){
   const swagMid=`<g data-prop="string-lights" data-lit="${strandsOn?1:0}">${[0,1].map(spanSvg).join("")}${eye}</g>`;
   const swagL="",swagR="";
 
-  /* ── the patio along the back of the house: on its west end the fire table with its chairs, a black
-     one either side turned to it and the natural wood one behind, facing out; on its east end the hot tub
-     against the wall. Lit, the fire warms the cap and the chairs' faces toward it; after dark without it
-     the black chairs keep a cool edge from the sky, so they stay shapes */
+  /* ── the patio along the back of the house: on its west end the fire table with its chairs, all of them
+     black, one either side turned to it and one behind facing out; on its east end the hot tub against the
+     wall. Lit, the fire warms the cap and the chairs' faces toward it; after dark without it the black
+     chairs keep a cool edge from the sky, so they stay shapes */
   const paveC=air(wet?"#A89A82":"#C8B79B",.04),riseC=air(wet?"#7E715E":"#9C8B70",.04),wetSheen=mix(skyS[2],"#FFFFFF",.4);
   const patio=`<path d="M ${f1(hx+u(-64))} ${f1(hy-.3)} L ${f1(hx+u(64))} ${f1(hy-.3)} L ${f1(hx+u(66))} ${f1(hy+5.4)} L ${f1(hx+u(-66))} ${f1(hy+5.4)} Z" fill="${paveC}" stroke="${inkAir(.08)}" stroke-width=".4"/>`
     /* three low paver steps straight down from the door to the gate, each a little wider than the last */
@@ -10598,26 +10665,31 @@ function pnPondScene(c){
   const cs=1.18;
   const chair=(x,y,view,tone,flip=1)=>inkAt(x,y,cs,flip,inkRig(propPnChair({view,tone}),chPal,{s:cs,flip,line:.7,heavy:.35,shade:1,lit:fireOn?1.6:dark?1.3:.8,
     light:fireOn?[fX-x,(fY-7)-(y-5)]:lightAt(x,y-5)}));
-  const chairsBack=`<g data-prop="chairs">${chair(fX+7,fY-3.4,"side","black",-1)}${chair(fX-9,fY-3.6,"side","wood")}</g>`;
+  const chairsBack=`<g data-prop="chairs">${chair(fX+7,fY-3.4,"side","black",-1)}${chair(fX-9,fY-3.6,"side","black")}</g>`;
   const chairs=`<g data-prop="chairs">${chair(fX-17.5,fY+.5,"side","black")}${chair(fX+17.5,fY+.5,"side","black",-1)}</g>`;
   const fireLight=fireOn?`<ellipse cx="${f1(fX)}" cy="${f1(fY-1)}" rx="30" ry="6" fill="url(#pnWash)"/><ellipse cx="${f1(fX)}" cy="${f1(fY-10)}" rx="20" ry="10" fill="url(#pnWash)" opacity=".55"/>`:"";
-  const tbX=hx+u((PN_BH.winR[1][0]+PN_BH.winR[1][1])/2),tbY=hy+3.4;
+  const tbX=hx+u((BH.winR[1][0]+BH.winR[1][1])/2),tbY=hy+3.4;
   const tub=`<path d="M ${f1(tbX-u(9.4))} ${f1(tbY-u(9))} L ${f1(tbX+u(11.6))} ${f1(tbY-u(9))} L ${f1(tbX+u(12.6))} ${f1(tbY-u(6))} L ${f1(tbX+u(11))} ${f1(tbY-u(6))} Z" fill="${shadeC}" opacity="${(.22*shadowOp).toFixed(2)}"/><g data-prop="hot-tub">${inkAt(tbX,tbY,S,1,inkRig(propPnTub(),palAt(INK.pnTub,.04),{s:S,line:.8,heavy:.4,shade:1.1,lit:.7,light:lightAt(tbX,tbY-10)}))}</g>`;
 
-  /* ── October: a little tree at the house's west corner wrapped in purple and orange lights */
+  /* ── October: a black weeping willow just left of the fire table, where a round bush was. It is up with
+     the other decorations and gone the morning of November 1. Its purple and orange lights stay lit the
+     whole time it is out, by day and all night, past the 10:30 lights-out. They are fills, no blur, and
+     they hold still: a twinkle would be an animation on this still sheet, which WebKit repaints whole. */
   let tree="";
-  if(halloween){const tx=hx+u(-62)-2,ty=hy+3.6,r=mulberry(3131),k=1.35;
-    let dots="",glows="";
-    for(let i=0;i<30;i++){const t=i/30,y=ty-k*(1.2+t*12.5),w=k*(1-t*.85)*3.4,x=tx+Math.sin(t*Math.PI*8.5)*w*(.75+r()*.25),c=i%2?"#B46CFF":"#FF9A3A";
-      if(lightsOn){glows+=`<circle cx="${f1(x)}" cy="${f1(y)}" r="2.4" fill="${c}" opacity=".24"/>`;dots+=`<circle cx="${f1(x)}" cy="${f1(y)}" r=".6" fill="${i%2?"#E2C4FF":"#FFD9A8"}"/>`}
-      else dots+=`<circle cx="${f1(x)}" cy="${f1(y)}" r=".5" fill="${air(i%2?"#7A4FA8":"#C86A2A",.04)}"/>`}
-    tree=`<g class="decor" data-decor="light-tree"><g>${inkAt(tx,ty,k,1,inkUnit([pTaper([[0,0,.9],[0,-3,.7]],"wood"),part(scallop(0,-8,4,7.2,9,707,{flat:.3,jitter:.3}),"leaf")],palAt({wood:"#5A4636",leaf:"#3F5E40"},.04),{s:k,light:lightAt(tx,ty-8)}))}${glows}${dots}</g></g>`}
+  if(halloween){const tx=hx+u(-63)-3,ty=hy+3.6,k=1.35,halo=dark?1.85:1.5,ha=dark?.58:.46;
+    const bulbs=[[-2.2,-10.6,1],[-4.2,-8.2,0],[-5.3,-4.8,1],[-5.2,-2.4,0],[-2.4,-7.6,0],[-4,-5.4,1],[-4.3,-3,0],
+      [-1.2,-6.8,1],[-2.1,-4.2,0],[-1.6,-11.6,0],[-2.9,-9.4,1],[.2,-11.4,1],[.55,-7.6,0],[.3,-3.8,1],[.15,-2,0],
+      [1.5,-9.6,0],[2.7,-7.2,1],[3,-4.2,0],[2.2,-2.4,1]];
+    const lights=bulbs.map(([x,y,purp])=>`<circle cx="${f1(x)}" cy="${f1(y)}" r="${halo}" fill="${purp?"#C084FC":"#FF8A2A"}" opacity="${ha}"/><circle cx="${f1(x)}" cy="${f1(y)}" r=".48" fill="${purp?"#F6E8FF":"#FFE8C8"}"/>`).join("");
+    const wPal=palAt({bark:"#16141A",veil:"#100E14"},.02);
+    tree=`<g class="decor" data-decor="light-tree" data-lit="1">${inkAt(tx,ty,k,1,inkUnit(propPnWillow(),wPal,{s:k,line:.6,heavy:.3,shade:.85,lit:.5,light:lightAt(tx,ty-12)})+lights)}</g>`}
 
   /* ── the fence runs only between its two white pillars, which mark its ends: tall square stucco posts with
      a cap, a top and a bottom rail and sparse ticks, and a gate of the same black and the same height on the
-     door's line, its two posts a little proud with a ball on each. In October (PN_PUMPKIN_LIGHTS) a string of
-     little pumpkin lights runs along the top rail day and night, in two runs that leave the gate clear, and
-     each pillar carries an orange pumpkin and a white one, carved and lit from the carving day the way every
+     door's line, its two posts a little proud with a ball on each. In October (PN_PUMPKIN_LIGHTS) orange
+     pumpkin lights drape the top rail in swags, high at each post and low in the middle, six bulbs to a
+     bay (five on a short one), warm while they are on and dark after 10:30. Two runs leave the gate clear.
+     Each pillar carries an orange pumpkin and a white one, carved and lit from the carving day the way every
      pumpkin is (pumpkinAt) */
   const fx0=X(10),fx1=X(310),gx0=doorX-6.2,gx1=doorX+6.2,fenceC=air("#24252B",.03),pillarC=air("#EDEAE3",.03),pillarH=13.5,pillarW=7.2;
   let ticks="";for(let x=fx0+pillarW/2+2;x<fx1-pillarW/2-1;x+=5){if(x>gx0-1.5&&x<gx1+1.5)continue;ticks+=`M ${f1(x)} ${f1(fenceT+.6)} L ${f1(x)} ${f1(fenceB-.4)} `}
@@ -10631,11 +10703,21 @@ function pnPondScene(c){
       +`<rect x="${f1(lit<0?x0+pillarW*.62:x0)}" y="${f1(t+1.2)}" width="${f1(pillarW*.38)}" height="${f1(pillarH-1.2)}" fill="${shadeC}" opacity="${(.14*shadeK).toFixed(2)}"/>`
       +`<rect x="${f1(x0-.8)}" y="${f1(t-1.5)}" width="${f1(pillarW+1.6)}" height="1.6" fill="${pillarC}" stroke="${lineC}" stroke-width=".45"/>`
       +(tex?`<rect x="${f1(x0)}" y="${f1(t)}" width="${pillarW}" height="${pillarH}" fill="${tex}" opacity="${(.7*paperK).toFixed(2)}"/>`:"")+`</g>`};
-  const pumpRun=(x0,x1,seed)=>{const r=mulberry(seed);let out="";
-    for(let x=x0;x<x1;x+=7+r()*.7){const y=fenceT+1.8+r()*.6;
-      out+=`<circle cx="${f1(x)}" cy="${f1(y)}" r="${fog?5:3.4}" fill="url(#pnPumpGlow)" opacity="${dark?1:sunAltDeg<6?.6:.28}"/><ellipse cx="${f1(x)}" cy="${f1(y)}" rx="1.1" ry=".9" fill="#FF8A2A"/><ellipse cx="${f1(x-.2)}" cy="${f1(y-.1)}" rx=".48" ry=".4" fill="#FFD08A"/><rect x="${f1(x-.14)}" y="${f1(y-1.3)}" width=".28" height=".5" fill="#3E5A2A"/>`}
-    return out?`<g class="decor" data-decor="pumpkin-lights"><g>${out}</g></g>`:""};
-  const pumpLights=PN_PUMPKIN_LIGHTS&&halloween?pumpRun(fx0+pillarW/2+3,gx0-12,4646)+pumpRun(gx1+12.5,fx1-pillarW/2-2,4747):"";
+  /* one swag per bay: the wire is high at the posts and low in the middle (4*t*(1-t)), and the bulbs
+     hang on it, six when the bay has room and five when it does not. Lit, they glow warm orange.
+     Off, the wire and the bulbs stay, dark, so the string is still hung. */
+  const pumpSwag=(x0,x1,seed)=>{const r=mulberry(seed),span=x1-x0,bays=Math.max(1,Math.round(span/40));
+    let wire="",bulbs="";
+    for(let i=0;i<bays;i++){const a=x0+span*i/bays,b=x0+span*(i+1)/bays,yH=fenceT+.45,sag=3.05+r()*.4;
+      const at=t=>[a+(b-a)*t,yH+sag*4*t*(1-t)];
+      const m=at(.5),cq=[2*m[0]-(a+b)/2,2*m[1]-yH];
+      wire+=`M ${f1(a)} ${f1(yH)} Q ${f1(cq[0])} ${f1(cq[1])} ${f1(b)} ${f1(yH)} `;
+      const n=(b-a)>36?6:5;
+      for(let k=1;k<=n;k++){const[x,y]=at(k/(n+1));
+        const glow=pumpOn?`<circle cx="${f1(x)}" cy="${f1(y)}" r="${fog?4.4:3.1}" fill="url(#pnPumpGlow)" opacity="${dark?1:sunAltDeg<6?.62:.3}"/>`:"";
+        bulbs+=glow+`<ellipse cx="${f1(x)}" cy="${f1(y)}" rx="1.05" ry=".86" fill="${pumpOn?"#FF8A2A":air("#8A5A32",.2)}"/><ellipse cx="${f1(x-.16)}" cy="${f1(y-.1)}" rx=".4" ry=".32" fill="${pumpOn?"#FFD08A":air("#C4A07A",.25)}"/>`}}
+    return `<g><path d="${wire}" fill="none" stroke="${mix(lineC,"#3A2A22",.45)}" stroke-width=".32"/>${bulbs}</g>`};
+  const pumpLights=PN_PUMPKIN_LIGHTS&&halloween?`<g class="decor" data-decor="pumpkin-lights" data-lit="${pumpOn?1:0}">${pumpSwag(fx0+pillarW/2+1.2,gx0-1.4,4646)}${pumpSwag(gx1+1.4,fx1-pillarW/2-1.2,4747)}</g>`:"";
   const fence=`<g data-prop="fence"><path d="M ${f1(fx0)} ${f1(fenceT+.9)} L ${f1(gx0)} ${f1(fenceT+.9)} M ${f1(gx1)} ${f1(fenceT+.9)} L ${f1(fx1)} ${f1(fenceT+.9)} M ${f1(fx0)} ${f1(fenceB-1.5)} L ${f1(gx0)} ${f1(fenceB-1.5)} M ${f1(gx1)} ${f1(fenceB-1.5)} L ${f1(fx1)} ${f1(fenceB-1.5)}" stroke="${fenceC}" stroke-width=".8"/><path d="${ticks}" stroke="${fenceC}" stroke-width=".5" opacity=".85"/>${gateSvg}${pillar(fx0)}${pillar(fx1)}</g>${pumpLights}`;
   /* Josh: "one orange and one white pumpkin on both fence stantions - then carve them on time" */
   const capY=fenceB-pillarH-1.5;
@@ -10670,10 +10752,13 @@ function pnPondScene(c){
     gateKid=(kid?`<g class="decor" data-decor="trick-or-treater">${inkAt(kX,kY,kS,1,inkRig(propTrickOrTreater(-1),palAt(INK.trickOrTreater,.03),{s:kS,line:.7,heavy:.3,shade:.9,lit:.5,light:lightAt(kX,kY-6)}))}</g>`:"");
     gateLanterns=carved?pumpkinAt(doorX-11.5,hy+10.1,1,{w:4.4,h:3.4,carved,seed:6,lights:kidLit})+pumpkinAt(doorX+11.5,hy+10.1,1,{w:4,h:3.1,carved,seed:9,lights:kidLit}):""}
   const gateHallo=gateKid+gateLanterns;
-  /* the boards lean on the near east sabal. The golf cart is left out: at this crop there is no side
-     edge for it that is not the palms */
-  const bX=R0.x+3.9,bS=.56;
-  const boards=`<g data-prop="surfboards">${inkAt(bX,fenceB-.2,bS,1,inkRig(pnBoards(),palAt(PN_BOARD_COL,.03),{s:bS,line:.9,heavy:.45,shade:1.3,lit:.9,light:lightAt(bX,fenceB-10)}))}</g>`;
+  /* the boards stand in a rack on the patio, against the blank wall between the west windows
+     and the porch. The stack is centred in that bay (its own drawing is centred on x=0), tails
+     on the paving, one slight lean. Clear of the sill, the porch post, the palms and the ghost.
+     The golf cart stays out: at this crop both edges are palms. */
+  const bayL=hx+u(BH.winL[BH.winL.length-1][1]+2),bayR=hx+u(BH.porch[0]+.05),bS=1.46;
+  const bX=(bayL+bayR)/2,bY=hy+.35;
+  const boards=`<g data-prop="surfboards" data-bay="${f1(bayL)} ${f1(bayR)}"><ellipse cx="${f1(bX)}" cy="${f1(bY+.4)}" rx="${f1(2.9*bS)}" ry=".62" fill="${shadeC}" opacity="${(.22*shadowOp).toFixed(2)}"/>${inkAt(bX,bY,bS,1,inkRig(pnBoards(),palAt(PN_BOARD_COL,.03),{s:bS,line:.85,heavy:.4,shade:1.2,lit:.85,light:lightAt(bX,bY-16)}))}</g>`;
 
   /* ── the lawn, the sand, the does at first and last light */
   /* the lawn is green through the growing season and goes to straw in the winter */
@@ -10690,8 +10775,8 @@ function pnPondScene(c){
 
   /* ── the land, back to front; the reflection is the same picture turned over at the water and pressed
      shorter (k), the storybook's licence, so the porch's lights are doubled inside the frame */
-  const standing=`${farWood}${ghost}${house}${patio}${fireLight}${chairsBack}${fire}${chairs}${tub}${tree}${swagMid}`
-    +grasses+PALMS.map((P,i)=>palmSvg(P,i===1?swagL:i===2?swagR:"")).join("")+`${fence}${pumpkins}${boards}`;
+  const standing=`${farWood}${house}${patio}${boards}${fireLight}${chairsBack}${fire}${chairs}${tub}${tree}${swagMid}${peek}`
+    +grasses+PALMS.map((P,i)=>palmSvg(P,i===2?swagL:i===3?swagR:"")).join("")+`${fence}${pumpkins}`;
   /* the copy holds still (its animations come off) and its light on the water is the flame's orange */
   /* a still picture: no style that moves it, no class (so no candle flickers in the water), no data name
      (so nothing in the water is taken for the thing itself) */
@@ -10747,7 +10832,7 @@ function pnPondScene(c){
   /* rain in front of the house, which is a tall silhouette the sky's rain falls behind (nearRainLayer): from
      just under the ridge it falls in front of the roof, the walls and the palms, and it lands on the lawn at the
      sand, where the pond's rings take it */
-  const rainTop=hy+u(PN_BH.ridge)+2,rainLand=sandY;
+  const rainTop=hy+u(BH.ridge)+2,rainLand=sandY;
   const nearRainL=wet&&!snowing&&!PRM?nearRainLayer({W,top:rainTop,land:rainLand,code,wind,downwind,dark,seed:5381,id:"pnrain"}):null;
   let rainRings="";
   if(wet&&!snowing&&!PRM){const wr=mulberry(7139),rings=3+Math.round(rainK*5);
@@ -10777,12 +10862,12 @@ function pnPondScene(c){
   /* the house fills the frame, so the night's flyers work in front of its roof: the witch flies past over
      the palms' crowns, and through the moon when a line can cross it there, and the bats hunt round the roof
      and over the crowns, never down past the eaves */
-  const wLow=GY-100,palmTops=tops.slice(1),eaveY=hy+u(PN_BH.eave)-2,witch=witchPlan(17,wLow,(x,y)=>y<wLow&&palmTops.every(([a,b,t])=>x+moonR<a||x-moonR>b||y+moonR<t),palmTops);
+  const wLow=GY-100,palmTops=tops.slice(1),eaveY=hy+u(BH.eave)-2,witch=witchPlan(17,wLow,(x,y)=>y<wLow&&palmTops.every(([a,b,t])=>x+moonR<a||x-moonR>b||y+moonR<t),palmTops);
   const bats=batN?batColony(8,(x0,x1)=>Math.min(GY-40,eaveY,...palmTops.filter(([a,b])=>x1>a&&x0<b).map(t=>t[2])),batKeep(witch??null)):"";
 
   /* a moon whose disc is behind the house is not drawn at all, so its haze cannot spill round the roof
      like a fire */
-  const behindHouse=([x,y])=>{const lx=(x-hx)/S,ly=(y-hy)/S,B=PN_BH,poly=[[B.l,0],[B.l,B.geave],[B.roofL,B.eave],[B.ridgeL,B.ridge],[B.ridgeR,B.ridge],[B.roofR,B.eave],[B.r,B.geave],[B.r,0]];
+  const behindHouse=([x,y])=>{const lx=(x-hx)/S,ly=(y-hy)/S,B=BH,poly=[[B.l,0],[B.l,B.geave],[B.roofL,B.eave],[B.ridgeL,B.ridge],[B.ridgeR,B.ridge],[B.roofR,B.eave],[B.r,B.geave],[B.r,0]];
     let inside=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const[xi,yi]=poly[i],[xj,yj]=poly[j];if((yi>ly)!==(yj>ly)&&lx<(xj-xi)*(ly-yi)/(yj-yi)+xi)inside=!inside}return inside};
   const moonShown=moonXY&&behindHouse(moonXY)?"":moonBody;
   /* Sheets. WebKit, which draws every iPhone browser, repaints an SVG sheet whole whenever anything in it
@@ -10791,7 +10876,7 @@ function pnPondScene(c){
      nothing that moves is in #sceneSvg. The still picture is laid out on still sheets and what moves goes between
      them, back to front exactly as it was drawn in one: the sky (#sceneSvg), what moves in it (#sceneSky: the
      clouds and the gulls, with the sun and the moon over them when a gull would cross either), the house, the
-     patio and the strands (#sceneNear), the fountain grass and the palms, each a box the compositor sways
+     patio, the surfboard rack and the strands (#sceneNear), the fountain grass and the palms, each a box the compositor sways
      (#sceneLift), the fence, its pillars and what stands at it (#sceneFront), the fire's flame, a guttering
      candle's pumpkin, the bats, the witch and the near rain, with its mask (#sceneFx), the low sun's wash, the does, the fog and the pond
      (#sceneWater), its reflection (#sceneRefl), the light on the ripples, the rain's rings and the fountain
@@ -10827,16 +10912,16 @@ function pnPondScene(c){
       <linearGradient id="pnStripFill" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(pondY)}" x2="0" y2="${f1(Y(194))}"><stop offset="0" stop-color="${stripC}" stop-opacity="${(.85*stripOp).toFixed(4)}"/><stop offset="1" stop-color="${stripC}" stop-opacity="${(.45*stripOp).toFixed(4)}"/></linearGradient>
       <radialGradient id="pnSideSky" gradientUnits="userSpaceOnUse" cx="${f1(side>0?W+10:-10)}" cy="${f1(pondY-14)}" r="${f1(W*.85)}" gradientTransform="translate(${f1(side>0?W+10:-10)} ${f1(pondY-14)}) scale(1 ${Math.min(.55,(pondY-Y(0)+26)/(W*.85)).toFixed(3)}) translate(${f1(-(side>0?W+10:-10))} ${f1(-(pondY-14))})"><stop offset="0" stop-color="${warm}" stop-opacity=".75"/><stop offset=".45" stop-color="${warm}" stop-opacity=".28"/><stop offset="1" stop-color="${warm}" stop-opacity="0"/></radialGradient>
       <linearGradient id="pnSideWash" x1="${side>0?1:0}" y1="0" x2="${side>0?0:1}" y2="0"><stop offset="0" stop-color="${warm}" stop-opacity=".9"/><stop offset=".55" stop-color="${warm}" stop-opacity=".12"/><stop offset="1" stop-color="${warm}" stop-opacity="0"/></linearGradient>
-      <clipPath id="pnHouseClip">${pnBackHouseSil().map(d=>`<path transform="translate(${f1(hx)} ${f1(hy)}) scale(${S})" d="${d}"/>`).join("")}</clipPath>
+      <clipPath id="pnHouseClip">${pnBackHouseSil(BH).map(d=>`<path transform="translate(${f1(hx)} ${f1(hy)}) scale(${S})" d="${d}"/>`).join("")}</clipPath>
       ${candleDefs||""}${hallowDefs||""}
       ${tex?`<pattern id="paper" width="160" height="160" patternUnits="userSpaceOnUse"><image href="${paperTex()}" width="160" height="160"/></pattern>`:""}
     </defs>
     <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
     ${goldArc}${skyOver?"":sunBody+moonShown+sideSky}`;
   sheet("sceneSky").innerHTML=gulls+(skyOver?sunBody+moonShown+sideSky:"")+sceneClouds};
-  const landPaint=()=>{sheet("sceneNear").innerHTML=`${lawn}${farWood}${ghost}${house}${patio}${fireLight}${chairsBack}${fireStill}${chairs}${tub}${tree}${swagMid}`;
+  const landPaint=()=>{sheet("sceneNear").innerHTML=`${lawn}${farWood}${house}${patio}${boards}${fireLight}${chairsBack}${fireStill}${chairs}${tub}${tree}${swagMid}${peek}`;
   document.getElementById("sceneLift").innerHTML=grassLift+PALMS.map(palmLift).join("");
-  sheet("sceneFront").innerHTML=fence+(guttering?"":pumpkins)+boards+gateKid+(guttering?"":gateLanterns);
+  sheet("sceneFront").innerHTML=fence+(guttering?"":pumpkins)+gateKid+(guttering?"":gateLanterns);
   sheet("sceneFx").innerHTML=fireFlame+(guttering?pumpkins+gateLanterns:"")+bats+witchFly(witch)+(nearRainL?`<defs>${nearRainL.defs}</defs>${nearRainL.drops}`:"")};
   const waterPaint=()=>{sheet("sceneWater").innerHTML=`
       ${glowK>.02?`<g data-light="side-wash" mask="url(#pnFadeIn)"><rect x="${f1(-12)}" y="${f1(Y(14))}" width="${W+24}" height="${f1(sandY-Y(14))}" fill="url(#pnSideWash)" opacity="${(.3*glowK).toFixed(2)}"/>`
