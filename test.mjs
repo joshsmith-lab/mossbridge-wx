@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v125/);
+  assert.match(worker, /mbwx-shell-v126/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -6343,6 +6343,33 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
     same(on(dark, 2, 15), false, false, false, "stays off overnight");
     same(on(dark, 11, 50), false, false, false);
   }
+  // the hot tub steams from October 20 through April 15, and its lights are the strands' hours
+  assert.match(html, /const PN_TUB=\["10-20","04-15"\];/);
+  assert.match(html, /function pnTubSeason\(d\)\{return inSeason\(d,PN_TUB\)\}/);
+  assert.match(fn, /const tubSeason=pnTubSeason\(locToday\(\)\);/);
+  assert.match(fn, /const tubLit=tubSeason&&strandsOn;/);
+  assert.match(fn, /const tubLook=new URLSearchParams\(location\.search\)\.get\("tub"\)==="b"\?"b":"a";/);
+  assert.match(fn, /propPnTub\(\{open:tubSeason\}\)/);
+  assert.match(fn, /data-prop="tub-live"/);
+  assert.match(html, /@keyframes pnSteam\{0%\{transform:translateY\(0\);opacity:\.4\}18%\{opacity:\.75\}100%\{transform:translateY\(-20px\);opacity:0\}\}/);
+  assert.match(html, /@keyframes pnTubHue\{0%,20%\{opacity:var\(--hi,\.62\)\}48%\{opacity:\.16\}74%,100%\{opacity:var\(--lo,\.03\)\}\}/);
+  assert.match(fn, /if\(tubLook==="b"\)/);
+  assert.match(fn, /pnTubAmber/);
+  assert.match(fn, /pnTubChamp/);
+  {
+    const ctx = vm.createContext({});
+    const block = html.slice(html.indexOf("const mdOf="), html.indexOf("const holidayOn="))
+      + html.slice(html.indexOf("const PN_TUB="), html.indexOf("function pnPeekGhost("));
+    vm.runInContext(block + "\nglobalThis.pnTubSeason=pnTubSeason;", ctx);
+    const on = (iso) => ctx.pnTubSeason(iso);
+    assert.equal(on("2026-10-19"), false, "the day before the season");
+    assert.equal(on("2026-10-20"), true, "October 20 starts it");
+    assert.equal(on("2026-10-22"), true);
+    assert.equal(on("2026-01-15"), true, "midwinter is in");
+    assert.equal(on("2026-04-15"), true, "April 15 is the last day");
+    assert.equal(on("2026-04-16"), false);
+    assert.equal(on("2026-07-04"), false);
+  }
   {
     const ctx = vm.createContext({});
     const block = html.slice(html.indexOf("const PN_HA="), html.indexOf("INK.pnBackHouse"));
@@ -6466,7 +6493,7 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(fn, /if\(staged\[0\]\.childElementCount\|\|up\)\{landPaint\(\);waterPaint\(\);return\}/);
   // rain falls in front of the house too, on the moving sheet with its own mask, and lands at the sand
   assert.match(fn, /const rainTop=hy\+u\(BH\.ridge\)\+2,rainLand=sandY;/);
-  assert.match(fn, /\+\(nearRainL\?`<defs>\$\{nearRainL\.defs\}<\/defs>\$\{nearRainL\.drops\}`:""\)\};/);
+  assert.match(fn, /\+\(nearRainL\?`<defs>\$\{nearRainL\.defs\}<\/defs>\$\{nearRainL\.drops\}`:""\)\+tubFx\};/);
   // the logical frame stays 320 by 194. A wide screen scales that picture and crops the sky
   assert.match(html, /const sceneH=W=>LOC\.view==="pond"\?194:/);
   assert.match(html, /const W=LOC\.view==="pond"\?320:Math\.max\(320,appW\(\)\/1\.22\)/);
