@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v105/);
+  assert.match(worker, /mbwx-shell-v106/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -1539,7 +1539,7 @@ test("the scenes dress for the holidays and take it all down when they pass", as
   assert.match(html, /decorAt\(shock\.parts,INK\.cornShock,shock\.x,shock\.y,shock\.s\)/);
   // the harness looks at them in and out of season, lit and unlit
   const scene = await readFile(new URL("tools/scene.mjs", root), "utf8");
-  for (const name of ["27-marsh-halloween-night", "28-marsh-halloween-cold-morning", "29-marsh-halloween-rain-night", "31-ridge-halloween-night", "32-ridge-november-morning", "35-marsh-november-small-hours"])
+  for (const name of ["27-house-halloween-night", "45-house-carved-week-morning", "29-house-halloween-rain-night", "31-ridge-halloween-night", "32-ridge-november-morning", "35-house-november-small-hours"])
     assert.match(scene, new RegExp(`name: "${name}"`));
   assert.match(scene, /decorations are \[/);
 });
@@ -1617,12 +1617,12 @@ test("a trick-or-treater comes on Halloween night, from sunset, and stays in whe
   assert.ok(Math.abs(mx0 + mw + x0) < 1, "side -1 mirrors the kid");
   assert.match(html, /trickOrTreater:\{sheet:"#F3F0E8",[^}]*pail:"#F57A18",/);
   // the harnesses look at the kid: close up in the rig, out on Halloween night at both places and
-  // in a drizzle, in for the night in the rain, and kept off the dock while the cormorant has it
+  // in a drizzle, in for the night in the rain, and at the house's gate from the minute it is dark enough
   assert.match(rig, /"trick-or-treater": \["trickOrTreater", \(c\) => c\.propTrickOrTreater\(\)/);
   assert.match(rig, /ghostface \| witch \| trick-or-treater/);
-  for (const name of ["27-marsh-halloween-night", "31-ridge-halloween-night", "46-marsh-halloween-drizzle-night"])
+  for (const name of ["27-house-halloween-night", "31-ridge-halloween-night", "46-house-halloween-drizzle-night", "48-house-halloween-cold-dusk"])
     assert.match(scene, new RegExp(`name: "${name}"[^\\n]*decor: \\[[^\\]]*"trick-or-treater"`));
-  for (const name of ["47-ridge-halloween-rain-night", "48-marsh-halloween-cold-dusk", "29-marsh-halloween-rain-night", "38-marsh-october-moon"])
+  for (const name of ["47-ridge-halloween-rain-night", "29-house-halloween-rain-night", "38-house-october-moon"])
     assert.doesNotMatch(scene.match(new RegExp(`name: "${name}"[^\\n]*`))[0], /trick-or-treater/);
   assert.match(scene, /const MORE = \/\^\([^)]*\btrick-or-treater\b[^)]*\)\$\/;/);
   assert.match(scene, /out\.hits\.push\(`\$\{el\.dataset\.decor\} runs into \$\{o\.dataset\.decor\}`\)/);
@@ -1679,9 +1679,10 @@ test("a black cat sits on the dock and on the farm's top rail in October, and go
   // the harnesses look at it: close up in the rig, by day and with its eyeshine, out on every dry
   // October scene, in in the rain, off the dock on the cold morning, and gone in November
   assert.match(rig, /cat: \["blackCat", \(c\) => c\.propBlackCat\(\)/);
-  for (const n of ["26-marsh-october-afternoon", "27-marsh-halloween-night", "37-marsh-october-fog-morning", "30-ridge-october-afternoon", "31-ridge-halloween-night", "41-ridge-october-dusk"])
+  for (const n of ["30-ridge-october-afternoon", "31-ridge-halloween-night", "41-ridge-october-dusk"])
     assert.match(decorOf(n), /"black-cat"/, n);
-  for (const n of ["28-marsh-halloween-cold-morning", "29-marsh-halloween-rain-night", "34-ridge-halloween-rain-night", "46-marsh-halloween-drizzle-night", "48-marsh-halloween-cold-dusk", "32-ridge-november-morning", "35-marsh-november-small-hours"])
+  // the house at Porters Neck has no dock and no rail for it: the cat sits out at the farm alone
+  for (const n of ["26-house-october-afternoon", "27-house-halloween-night", "34-ridge-halloween-rain-night", "46-house-halloween-drizzle-night", "48-house-halloween-cold-dusk", "32-ridge-november-morning", "35-house-november-small-hours"])
     assert.doesNotMatch(decorOf(n), /"black-cat"/, n);
   assert.match(agents, /\*\*A black cat sits out in October\.\*\*/);
 });
@@ -1699,10 +1700,12 @@ test("eyes open in the dark at both places on October nights, blink once and go"
   assert.deepEqual(keyframes("darkEyes").sort(), ["opacity", "transform"]);
   // they are light, so the sky does not tone them
   assert.match(html, /fill="\$\{c==="gold"\?"#F6C64E":"#C2F45C"\}"/);
-  for (const n of ["27-marsh-halloween-night", "38-marsh-october-moon", "31-ridge-halloween-night", "33-ridge-october-night", "39-ridge-october-moon"])
+  for (const n of ["31-ridge-halloween-night", "33-ridge-october-night", "39-ridge-october-moon"])
     assert.match(decorOf(n), /"eyes"/, n);
+  // the eyes were in the marsh's spartina, which is parked: the house's lawn has none
+  for (const n of ["27-house-halloween-night", "38-house-october-moon"]) assert.doesNotMatch(decorOf(n), /"eyes"/, n);
   // not at dusk, when the first bats are out against the last of the light, nor in the rain
-  for (const n of ["40-marsh-october-dusk", "41-ridge-october-dusk", "48-marsh-halloween-cold-dusk", "26-marsh-october-afternoon", "29-marsh-halloween-rain-night", "34-ridge-halloween-rain-night", "35-marsh-november-small-hours"])
+  for (const n of ["40-house-october-dusk", "41-ridge-october-dusk", "48-house-halloween-cold-dusk", "26-house-october-afternoon", "29-house-halloween-rain-night", "34-ridge-halloween-rain-night", "35-house-november-small-hours"])
     assert.doesNotMatch(decorOf(n), /"eyes"/, n);
   assert.match(agents, /\*\*Eyes in the dark\.\*\*/);
 });
@@ -1726,7 +1729,7 @@ test("a scarecrow stands across the farm pond in October with a crow on its arm 
   assert.match(rig, /scarecrow: \["scarecrow", \(c\) => c\.propScarecrow\(true\)/);
   for (const n of ["30-ridge-october-afternoon", "31-ridge-halloween-night", "34-ridge-halloween-rain-night", "47-ridge-halloween-rain-night", "41-ridge-october-dusk"])
     assert.match(decorOf(n), /"scarecrow"/, n);
-  for (const n of ["26-marsh-october-afternoon", "27-marsh-halloween-night", "32-ridge-november-morning"]) assert.doesNotMatch(decorOf(n), /"scarecrow"/, n);
+  for (const n of ["26-house-october-afternoon", "27-house-halloween-night", "32-ridge-november-morning"]) assert.doesNotMatch(decorOf(n), /"scarecrow"/, n);
   assert.match(agents, /\*\*A scarecrow stands across the pond at the farm\.\*\*/);
 });
 
@@ -1752,7 +1755,7 @@ test("a cheesecloth ghost hangs in the farm's big hardwood and swings with the g
   assert.doesNotMatch(prop, /class=|style=|Math\.random|animation/);
   assert.match(rig, /"sheet-ghost": \["cheesecloth", \(c\) => c\.propCheeseclothGhost\(\)/);
   for (const n of ["30-ridge-october-afternoon", "31-ridge-halloween-night", "34-ridge-halloween-rain-night"]) assert.match(decorOf(n), /"sheet-ghost"/, n);
-  for (const n of ["26-marsh-october-afternoon", "27-marsh-halloween-night", "32-ridge-november-morning"]) assert.doesNotMatch(decorOf(n), /"sheet-ghost"/, n);
+  for (const n of ["26-house-october-afternoon", "27-house-halloween-night", "32-ridge-november-morning"]) assert.doesNotMatch(decorOf(n), /"sheet-ghost"/, n);
   assert.match(agents, /\*\*A cheesecloth ghost hangs in the big hardwood at the farm\.\*\*/);
 });
 
@@ -1770,8 +1773,8 @@ test("will-o'-the-wisps drift low over the marsh on dry still October nights, an
   assert.match(coast, /const rakeX=W\*\.645,rakeD=scallop\(0,1\.2,15,2\.8,11,41,\{flat:\.9,bulge:\.7\}\),\[rakeBx\]=pathBox\(\[rakeD\]\);/);
   assert.match(coast, /<g data-prop="rake" transform="translate\(\$\{rakeX\.toFixed\(1\)\}/);
   assert.match(coast, /const wispX=residentX\+48,wispSpan=Math\.min\(Math\.min\(dkX-66,rakeX\+rakeBx-9\)-wispX,118\);/);
-  for (const n of ["27-marsh-halloween-night", "38-marsh-october-moon"]) assert.match(decorOf(n), /"wisps"/, n);
-  for (const n of ["29-marsh-halloween-rain-night", "40-marsh-october-dusk", "31-ridge-halloween-night", "35-marsh-november-small-hours"]) assert.doesNotMatch(decorOf(n), /"wisps"/, n);
+  // the marsh lights belong to the marsh, which is parked: no scene the harness runs has them now
+  for (const n of ["27-house-halloween-night", "38-house-october-moon", "29-house-halloween-rain-night", "40-house-october-dusk", "31-ridge-halloween-night", "35-house-november-small-hours"]) assert.doesNotMatch(decorOf(n), /"wisps"/, n);
   // and the scene harness walks every one of the new things through its own motion and keeps it in
   // the frame, off every animal and a pixel clear of every other decoration, at 320, 390, 430 and 760
   assert.match(scene, /const MORE = \/\^\(black-cat\|eyes\|wisps\|scarecrow\|sheet-ghost\|trick-or-treater\)\$\/;/);
@@ -1822,7 +1825,7 @@ test("Halloween's moon keeps its place and its phase, and only changes colour", 
   assert.match(html, /moonBody=`<g data-moon="\$\{hm\.kind\}" data-decor="\$\{hm\.kind\}-moon" data-disc=/);
   assert.match(html, /moonXY=\[x,y\];moonR=r;/);
   const scene = await readFile(new URL("tools/scene.mjs", root), "utf8");
-  for (const name of ["38-marsh-october-moon", "39-ridge-october-moon"]) assert.match(scene, new RegExp(`name: "${name}"[^\\n]*"blood-moon"[^\\n]*moon: true`));
+  for (const name of ["38-house-october-moon", "39-ridge-october-moon"]) assert.match(scene, new RegExp(`name: "${name}"[^\\n]*"blood-moon"[^\\n]*moon: true`));
   assert.match(scene, /const want = cs\.when\.slice\(5, 7\) === "10" && moon\.pick \? moon\.pick : "ordinary";/);
   // and it adds no motion
   const body = html.slice(html.indexOf("if(hm){"), html.indexOf("}else moonBody="));
@@ -1873,9 +1876,9 @@ test("Ghostface peeks out of the live oak for October, and never moves", async (
   // the harnesses look at him: close up in the rig, and in every October marsh scene
   assert.match(rig, /ghostface: \["ghostface", \(c\) => c\.propGhostface\(\)/);
   assert.match(rig, /lumina \| cornshock \| bale \| loft-head \| ghostface/);
-  for (const name of ["26-marsh-october-afternoon", "27-marsh-halloween-night", "28-marsh-halloween-cold-morning", "29-marsh-halloween-rain-night", "36-marsh-october-golden-evening", "37-marsh-october-fog-morning"])
+  for (const name of ["26-house-october-afternoon", "27-house-halloween-night", "45-house-carved-week-morning", "29-house-halloween-rain-night", "36-house-october-golden-evening", "37-house-october-fog-morning"])
     assert.match(scene, new RegExp(`name: "${name}"[^\\n]*decor: \\["ghostface"`));
-  assert.match(scene, /name: "35-marsh-november-small-hours"[^\n]*decor: \[\]/);
+  assert.match(scene, /name: "35-house-november-small-hours"[^\n]*decor: \[\]/);
   // he stands still and the oak sways over him, so the scene harness samples both eyes at both
   // ends of the sway, in the scene's wind and in a gale, and fails 40% of either hidden
   assert.match(scene, /if \(cs\.decor\?\.includes\("ghostface"\)\)/);
@@ -1937,9 +1940,9 @@ test("bats come out over both scenes on October nights, from sunset to dawn, and
   assert.match(html, /bat:\{body:"#4A3833",wing:"#2C2228"/);
   // the harnesses look at them: close up in the rig, and walked through their loops in every scene
   assert.match(rig, /bat: \["bat", \(c\) => c\.rigBat\(\)/);
-  for (const [name, n] of [["27-marsh-halloween-night", 6], ["31-ridge-halloween-night", 4], ["33-ridge-october-night", 6], ["38-marsh-october-moon", 7], ["39-ridge-october-moon", 6], ["40-marsh-october-dusk", 7], ["41-ridge-october-dusk", 7]])
+  for (const [name, n] of [["27-house-halloween-night", 6], ["31-ridge-halloween-night", 4], ["33-ridge-october-night", 6], ["38-house-october-moon", 7], ["39-ridge-october-moon", 6], ["40-house-october-dusk", 7], ["41-ridge-october-dusk", 7]])
     assert.match(scene, new RegExp(`name: "${name}"[^\\n]*"bat"[^\\n]*bats: ${n},`));
-  for (const name of ["26-marsh-october-afternoon", "29-marsh-halloween-rain-night", "30-ridge-october-afternoon", "34-ridge-halloween-rain-night", "32-ridge-november-morning", "35-marsh-november-small-hours"])
+  for (const name of ["26-house-october-afternoon", "29-house-halloween-rain-night", "30-ridge-october-afternoon", "34-ridge-halloween-rain-night", "32-ridge-november-morning", "35-house-november-small-hours"])
     assert.doesNotMatch(scene, new RegExp(`name: "${name}"[^\\n]*bats:`));
   assert.match(scene, /if \(bat\.colony !== want\)/);
   assert.match(scene, /why\.add\("goes behind the scenery"\)/);
@@ -2020,9 +2023,9 @@ test("a witch flies over both scenes on October nights, on the wind, across the 
   // the harnesses look at her: close up in the rig, and walked across at 320, 390 and 430 in every
   // scene she is out in, never behind a tree, and held off the disc under reduced motion
   assert.match(rig, /witch: \["witch", \(c\) => c\.propWitch\(\)/);
-  for (const name of ["27-marsh-halloween-night", "31-ridge-halloween-night", "33-ridge-october-night", "38-marsh-october-moon", "39-ridge-october-moon"])
+  for (const name of ["27-house-halloween-night", "31-ridge-halloween-night", "33-ridge-october-night", "38-house-october-moon", "39-ridge-october-moon"])
     assert.match(scene, new RegExp(`name: "${name}"[^\\n]*witch: true`));
-  for (const name of ["29-marsh-halloween-rain-night", "34-ridge-halloween-rain-night", "35-marsh-november-small-hours", "36-marsh-october-golden-evening", "40-marsh-october-dusk", "41-ridge-october-dusk"])
+  for (const name of ["29-house-halloween-rain-night", "34-ridge-halloween-rain-night", "35-house-november-small-hours", "36-house-october-golden-evening", "40-house-october-dusk", "41-ridge-october-dusk"])
     assert.doesNotMatch(scene, new RegExp(`name: "${name}"[^\\n]*witch: true`));
   assert.match(scene, /if \(!!witch !== !!cs\.witch\)/);
   assert.match(scene, /the witch's path misses the moon/);
@@ -6251,4 +6254,63 @@ test("Beaufort's coastal waters on the page's own refresh: never waited for, pai
     const r = await page.open("2026-10-16T17:05:00Z", { zone: [sca] });
     assert.ok(r.paints.every((p) => p.zone === undefined), `${loc} reads no coastal waters`);
   }
+});
+
+test("Porters Neck is the house from across the pond: it looks north, and its lights keep the family's hours", async () => {
+  const [html, scene, pond] = await Promise.all([
+    readFile(new URL("index.html", root), "utf8"),
+    readFile(new URL("tools/scene.mjs", root), "utf8"),
+    readFile(new URL("tools/pond.mjs", root), "utf8"),
+  ]);
+  const fn = html.slice(html.indexOf("function pnPondScene(c){"), html.indexOf("/* ── the lowcountry: Beaufort, South Carolina"));
+  assert.ok(fn.length > 1000, "the scene is extractable");
+  // the switch-over, the way Denver was parked: the place carries its view and the way it faces, and the
+  // marsh stays in the file reached by no place
+  assert.match(html, /mb:\{id:"mb",[\s\S]*?view:"pond",faces:"north",/);
+  assert.match(html, /if\(LOC\.view==="pond"\)\{\n    pnPondScene\(\{/);
+  assert.ok(html.includes("/* marsh: hazy maritime treeline, loblollies, live oak, spartina bank, dock, heron */"), "the marsh is parked, not deleted");
+  assert.doesNotMatch(html, /PN_SHOW|pnShow/);
+  // it looks north, so east is on the right: the sun's arc, the moon, the time labels and the wind's bearing
+  // are mirrored for a place that faces north, and for no other
+  assert.match(html, /const mirrorSky=LOC\.faces==="north";/);
+  assert.match(html, /const px=f=>pnArc\?pnArc\.x0\+\(1-f\)\*\(W-2\*pnArc\.x0\):30\+f\*arcSpan;/);
+  assert.match(html, /const labL=f=>px\(f\)<W\/2;/);
+  assert.match(html, /if\(LOC\.faces==="north"\)windDir=\(360-windDir\)%360;/);
+  assert.match(html, /if\(LOC\.faces==="north"\)weather=\{\.\.\.weather,wind_direction_10m:/);
+  // the strands go off at 10 pm and stay off through the small hours; the fire table keeps the same hours
+  // and only burns on a cool dry evening; the windows' hour is one constant, not yet decided
+  assert.match(html, /const PN_STRANDS_OUT=22,PN_LIGHTS_OUT=null,PN_PUMPKIN_LIGHTS=true;/);
+  assert.match(fn, /const strandsOn=sunAltDeg< -\.83&&localHour>=12&&localHour<PN_STRANDS_OUT;/);
+  assert.match(fn, /const fireOn=strandsOn&&localHour>=15&&temp>=45&&temp<68&&!wet&&!storm&&!fog&&gust<20&&!THUNDER;/);
+  assert.match(fn, /const lightsOn=sunAltDeg< -\.83&&!\(PN_LIGHTS_OUT!=null&&/);
+  // the pumpkin lights are on day and night all October, on the holiday's own calendar, and never otherwise
+  assert.match(fn, /const pumpLights=PN_PUMPKIN_LIGHTS&&halloween\?/);
+  assert.doesNotMatch(fn.slice(fn.indexOf("const pumpRun="), fn.indexOf("const pumpLights=")), /lightsOn|strandsOn/);
+  // one orange and one white pumpkin on each pillar, carved and lit from the carving day like every pumpkin
+  assert.match(fn, /const pumpkins=halloween\?\[\[fx0,3,5\],\[fx1,4,7\]\]\.map\(\(\[x,so,sw\]\)=>pumpkinAt\(x-2\.1,capY,1,\{w:5,h:3\.9,carved,seed:so\}\)\+pumpkinAt\(x\+2\.4,capY,1,\{w:4\.3,h:3\.4,carved,seed:sw,white:true\}\)\)/);
+  assert.match(html, /const carved=halloween&&mdOf\(today\)>=hol\.carved;/);
+  // the fountain is mid-pond on the back door's line, and so are the steps and the gate; the hot tub sits
+  // under the middle of the three east windows
+  assert.match(fn, /const doorX=hx\+u\(\(PN_BH\.door\[0\]\+PN_BH\.door\[1\]\)\/2\);/);
+  assert.match(fn, /const fnX=doorX,/);
+  assert.match(fn, /gx0=doorX-6\.2,gx1=doorX\+6\.2/);
+  assert.match(fn, /const tbX=hx\+u\(\(PN_BH\.winR\[1\]\[0\]\+PN_BH\.winR\[1\]\[1\]\)\/2\)/);
+  assert.equal((html.match(/winR:\[\[[^\]]*\],\[[^\]]*\],\[[^\]]*\]\]/) || []).length, 1, "three windows east of the porch");
+  // the fence runs only between its two white pillars, which mark its ends
+  assert.match(fn, /const fx0=X\(10\),fx1=X\(310\)/);
+  assert.match(fn, /\$\{pillar\(fx0\)\}\$\{pillar\(fx1\)\}/);
+  assert.match(fn, /M \$\{f1\(fx0\)\} \$\{f1\(fenceT\+\.9\)\}/);
+  // the neighbours are very close and are left out: no other house is drawn
+  assert.doesNotMatch(fn, /neighbour|Farmhouse|farmhouse/);
+  assert.doesNotMatch(html, /propPnFarmhouse|INK\.pnFarmhouse/);
+  // two sabals at the west, two sabals and the windmill palm at the east, the strands a V from the door
+  assert.match(fn, /const PALMS=\[\[26,"s",7,47,-\.04\],\[52,"s",8,51,\.03\],\[266,"s",9,50,-\.03\],\[282,"w",1,20\],\[298,"s",10,46,\.05\]\]/);
+  assert.match(fn, /const pts=\[\[L0\.x\+\.6,L0\.crownY\+7\],vtx,\[R0\.x-\.6,R0\.crownY\+7\]\];/);
+  // nothing in it moves under reduced motion
+  for (const m of fn.matchAll(/animation:(\w+)/g)) assert.ok(["swayTree", "pnFlick", "pnDrift", "pnSpray", "pnDrops", "drift"].includes(m[1]), m[1]);
+  // the harness runs the house through its moments, the carved week's lit pillar pumpkins among them
+  assert.match(scene, /name: "44-house-carved-week-night"[^\n]*"jack-o-lantern"[^\n]*candles: 6,/);
+  assert.match(scene, /name: "27-house-halloween-night"[^\n]*"trick-or-treater"[^\n]*candles: 6,/);
+  assert.match(scene, /name: "02-house-blow-west"[^\n]*\n[^\n]*to the right/);
+  assert.match(pond, /node tools\/pond\.mjs/);
 });

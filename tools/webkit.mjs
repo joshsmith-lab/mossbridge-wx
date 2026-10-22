@@ -27,7 +27,7 @@ const args = process.argv.slice(2), STRICT = args.includes("--strict"), words = 
 const MODES = words.filter((w) => w === "idle" || w === "open"), ONLY = words.filter((w) => w !== "idle" && w !== "open");
 
 const CASES = [
-  { name: "coast-night", loc: "mb", when: "2026-10-24T21:30:00", note: "the moon a night short of full, bats, the witch, the marsh lights, a little cloud",
+  { name: "coast-night", loc: "mb", when: "2026-10-24T21:30:00", note: "the house at Porters Neck under the moon a night short of full: bats, the witch, the lit pillar pumpkins and gate lanterns, the pumpkin lights, the strands, the fountain, a little cloud",
     o: { baseTemp: 64, nowTemp: 62, feels: 62, rh: 75, isDay: 0, code: 0, cloud: 30, nowWind: 6, nowDir: 30, nowGust: 10, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
       sunrise: "07:30", sunset: "18:26", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
   { name: "farm-night", loc: "sp", when: "2026-10-12T21:00:00", note: "an October night at the barn: bats, the witch, the fox and the owl",

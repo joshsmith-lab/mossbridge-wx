@@ -1,22 +1,20 @@
 /**
- * Previews of Porters Neck from across the pond, for Josh. renderScene draws it when window.PN_SHOW is
- * {opt:"A"} at Porters Neck; without it the scene is today's marsh, unchanged. This serves the page on
- * the shared fixtures, sets PN_SHOW before the page loads, and writes the header (the sky and its scene)
- * for the preview (and today's scene for the main four), at a September noon, dusk and night and an October
- * night, and at sunrise, golden hour, in rain, a thunderstorm, fog and a hard blow, and on Halloween night.
+ * The house at Porters Neck from across the pond (pnPondScene), in every light and weather it has to look
+ * right in: shoots the sky block (the header with its scene) and a close crop of the lower scene for each
+ * moment, so the picture can be reviewed at phone size without waiting for the weather.
  *
- *   TZ=America/New_York node tools/pn-mock.mjs                 # every option, every time, at 390
- *   TZ=America/New_York node tools/pn-mock.mjs A night         # only the shots whose tag matches
- *   PORCH_PN_WIDTHS=320,390 TZ=America/New_York node tools/pn-mock.mjs
+ *   TZ=America/New_York node tools/pond.mjs                 # every moment at 390 (the main four at every width)
+ *   TZ=America/New_York node tools/pond.mjs night           # only the moments whose name matches
+ *   PORCH_PN_WIDTHS=390,320,430 TZ=America/New_York node tools/pond.mjs
  *
- * Writes tools/shots/pn/pn-<option>-<time>-<width>.png (the header) and pn-...-near.png (the lower half of
- * the scene alone, for the small things). Exits non-zero on a page error.
+ * Writes tools/shots/pond/pond-<moment>-<width>.png and pond-<moment>-<width>-near.png. Exits non-zero on a
+ * page error.
  */
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { serve, stage, ROOT } from "./fixtures.mjs";
 
-const OUT = path.join(ROOT, "tools", "shots", "pn");
+const OUT = path.join(ROOT, "tools", "shots", "pond");
 const FONT_DIR = process.env.PORCH_FONT_DIR || "";
 const PORT = Number(process.env.PORCH_PORT || 8841);
 const WIDTHS = (process.env.PORCH_PN_WIDTHS || "390").split(",").map(Number);
@@ -62,7 +60,6 @@ const TIMES = [
   { name: "halloween", when: "2026-10-31T19:30:00",
     o: { ...HAL, baseTemp: 62, nowTemp: 60, feels: 60, rh: 70, isDay: 0, code: 0, cloud: 5, nowWind: 3, nowDir: 30, nowGust: 6, nowUv: 0, ...calm } },
 ];
-const OPTS = [["today", null], ["A", { opt: "A" }]];
 
 let chromium;
 try { ({ chromium } = await import("playwright")); } catch { console.error("playwright is not installed"); process.exit(1); }
@@ -70,9 +67,9 @@ mkdirSync(OUT, { recursive: true });
 const server = await serve(PORT, FONT_DIR);
 const browser = await chromium.launch(process.env.PORCH_CHROME_PATH ? { executablePath: process.env.PORCH_CHROME_PATH } : {});
 let failed = false;
-for (const T of TIMES) for (const [opt, show] of OPTS) for (const width of WIDTHS) {
-  if (!T.main && (width !== WIDTHS[0] || !show)) continue;
-  const tag = `${opt}-${T.name}-${width}`;
+for (const T of TIMES) for (const width of WIDTHS) {
+  if (!T.main && width !== WIDTHS[0]) continue;
+  const tag = `${T.name}-${width}`;
   if (ONLY.length && !ONLY.every((o) => tag.includes(o))) continue;
   const ctx = await browser.newContext({ viewport: { width, height: 932 }, deviceScaleFactor: 3, timezoneId: "America/New_York" });
   const page = await ctx.newPage();
@@ -80,7 +77,6 @@ for (const T of TIMES) for (const [opt, show] of OPTS) for (const width of WIDTH
   page.on("pageerror", (e) => errs.push(String(e)));
   page.on("console", (m) => { if (m.type() === "error") errs.push("console: " + m.text()); });
   await stage(page, { now: new Date(T.when), loc: "mb", o: T.o, fontDir: FONT_DIR, port: PORT });
-  if (show) await page.addInitScript((s) => { window.PN_SHOW = s; }, show);
   await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: "domcontentloaded" });
   try {
     await page.waitForFunction(() => !document.getElementById("refreshBtn")?.classList.contains("spin")
@@ -91,10 +87,10 @@ for (const T of TIMES) for (const [opt, show] of OPTS) for (const width of WIDTH
   await page.evaluate(() => typeof finishReveal === "function" && finishReveal());
   const info = await page.evaluate(() => ({ anims: document.getAnimations().filter((a) => a.playState === "running").length,
     deer: document.querySelectorAll("#sceneSvg .deer, #sceneSvg .doe").length, fire: document.querySelectorAll("#sceneSvg .pn-flame").length }));
-  await page.locator(".sky").screenshot({ path: path.join(OUT, `pn-${tag}.png`) }).catch((e) => errs.push("sky shot: " + e.message));
+  await page.locator(".sky").screenshot({ path: path.join(OUT, `pond-${tag}.png`) }).catch((e) => errs.push("sky shot: " + e.message));
   /* and the lower half of the scene alone, for the small things (the fire table, the chairs, the dial, the does) */
   const box = await page.locator("#sceneSvg").boundingBox();
-  if (box) await page.screenshot({ path: path.join(OUT, `pn-${tag}-near.png`), clip: { x: box.x, y: box.y + box.height * .45, width: box.width, height: box.height * .55 } }).catch((e) => errs.push("near shot: " + e.message));
+  if (box) await page.screenshot({ path: path.join(OUT, `pond-${tag}-near.png`), clip: { x: box.x, y: box.y + box.height * .45, width: box.width, height: box.height * .55 } }).catch((e) => errs.push("near shot: " + e.message));
   console.log(`${tag}: ${info.anims} animations, deer ${info.deer}, flames ${info.fire}${errs.length ? "\n  " + errs.join("\n  ") : ""}`);
   if (errs.length) failed = true;
   await ctx.close();

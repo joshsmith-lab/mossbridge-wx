@@ -288,7 +288,8 @@ try{
   });
 
   for(const loc of ["sp","mb"])await check(`header-parks-and-resumes-${loc}`,async()=>{
-    const c={...CASES[0],loc},name=loc==="sp"?"deerGraze":"heronScan";
+    // the farm's buck grazes; at Porters Neck the heron holds still, so the fountain's spray is the gesture
+    const c={...CASES[0],loc},name=loc==="sp"?"deerGraze":"pnSpray";
     const {context,page,errors}=await open(c);
     try{
       await page.evaluate(()=>finishReveal());
