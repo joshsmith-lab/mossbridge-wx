@@ -919,7 +919,7 @@ left of the fire table (`light-tree`, in the round bush's place: drooping black 
 lights that stay lit by day and all night, past the 10:30 lights-out, fills only), one orange and one white pumpkin on each pillar ("put
 one orange and one white pumpkin on both fence stantions - then carve them on time"), both carved and lit
 from the carving day by the candle rules (`pumpkin`, `white-pumpkin`, then `jack-o-lantern`), two lanterns
-at the gate, Ghostface standing behind the glass of the rightmost east window, smaller and set back in the dark room so the frame, the mullion and a tint of glass sit in front of him and the mask is a dim off-white (he lived in the marsh's oak, October only, and he stays after the lamps go out at 10:30), and on Halloween
+at the gate, Ghostface standing behind the glass of the rightmost east window, smaller and set back in the dark room so the frame, the meeting rail and a tint of glass sit in front of him and the mask is a dim off-white, with no vertical bar, the same as the other east windows (he lived in the marsh's oak, October only, and he stays after the lamps go out at 10:30), and on Halloween
 night the trick-or-treater at the gate, on its own rules. With nobody's cormorant on a dock, the kid is out
 from sunset (the marsh's raw-dusk case kept the kid off the dock; the house's, case 48, has it at the gate).
 

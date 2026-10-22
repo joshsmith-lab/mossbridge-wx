@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v114/);
+  assert.match(worker, /mbwx-shell-v115/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -6444,6 +6444,8 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(peekFn, /data-decor="ghostface" data-peek="window"/);
   assert.match(peekFn, /data-glass="front"/);
   assert.doesNotMatch(peekFn, /propGhostface/);
+  // the rightmost east window matches the others: a frame and a meeting rail, and no vertical bar
+  assert.doesNotMatch(peekFn, /mullW|mullion/);
 });
 
 test("the house dogs and the pond sliders keep to their table", async () => {

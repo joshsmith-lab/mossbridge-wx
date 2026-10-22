@@ -8562,7 +8562,7 @@ function pnBackHouse({night=false,lit=null,shadowOp=1,B=PN_HA,openLast=false}={}
      under the head's shadow; at night it is lit, one dimmer, one with a lamp, one with a blind drawn */
   const glassOf=(i)=>lamps?(i===1?"glassDim":"glassOn"):"glass";
   /* October leaves the last east window an open dark room: the ghost stands in it, and the
-     glass, the mullion and the casing are painted in front of him (pnPeekGhost) */
+     glass, the meeting rail and the casing are painted in front of him (pnPeekGhost) */
   const lastOpen=openLast?B.winR[B.winR.length-1][0]:null;
   const sashes=(w0,w1,i)=>{const t=B.winT,b=B.winB,m=(t+b)/2,P=[];
     if(w0===lastOpen){P.push(pnRect(w0,t,w1,b,"room",{noSil:true}));return P}
@@ -10511,8 +10511,9 @@ function pnHouseLights(sunAlt,hour,minute){
 }
 /* A standing Ghostface in the rightmost east window, October only. He is set back in the dark
    room, smaller than the pane, the way a person stands a few feet behind the glass. The frame,
-   the mullion and a tint of glass are painted after him, so he is never in front of the pane.
-   He is not a lamp: he stays after 10:30. The oak's Ghostface is untouched. */
+   the meeting rail and a tint of glass are painted after him, so he is never in front of the pane.
+   The east windows have no vertical bar, and this one matches them. He is not a lamp: he stays
+   after 10:30. The oak's Ghostface is untouched. */
 function pnPeekGhost(hx,hy,S,B){
   const[w0,w1]=B.winR[B.winR.length-1],t=B.winT,b=B.winB,m=(t+b)/2;
   const X=v=>hx+v*S,Y=v=>hy+v*S;
@@ -10526,11 +10527,10 @@ function pnPeekGhost(hx,hy,S,B){
   const fig=inkRig(pnWindowGhost(),pal,{s:S*gs,line:.5,heavy:.12,shade:.22,lit:.4,light:[-.15,-1]});
   const id="pnPeekClip",gid="pnPeekGlass";
   const box=(xa,ya,xb,yb)=>`<rect x="${f1(X(xa))}" y="${f1(Y(ya))}" width="${f1((xb-xa)*S)}" height="${f1((yb-ya)*S)}" fill="#F7F6F2" stroke="#2A2430" stroke-width=".4"/>`;
-  const railH=.7*S,mullW=.62*S;
+  const railH=.7*S;
   const glass=`<rect x="${f1(x0)}" y="${f1(yT)}" width="${f1(x1-x0)}" height="${f1(yB-yT)}" fill="url(#${gid})"/>`
     +`<polygon points="${f1(x0)},${f1(yT+(yB-yT)*.06)} ${f1(x0+(x1-x0)*.58)},${f1(yT)} ${f1(x0+(x1-x0)*.78)},${f1(yT)} ${f1(x0)},${f1(yT+(yB-yT)*.26)}" fill="#E4EEF2" opacity=".14"/>`
     +`<rect x="${f1(x0)}" y="${f1(yM-railH/2)}" width="${f1(x1-x0)}" height="${f1(railH)}" fill="#F4F2EC" stroke="#2A2430" stroke-width=".35"/>`
-    +`<rect x="${f1((x0+x1)/2-mullW/2)}" y="${f1(yT)}" width="${f1(mullW)}" height="${f1(yB-yT)}" fill="#F4F2EC" stroke="#2A2430" stroke-width=".35"/>`
     +box(w0-1.4,t-2.2,w1+1.4,t)+box(w0-1.4,t,w0,b)+box(w1,t,w1+1.4,b)+box(w0-2,b,w1+2,b+1.3);
   /* the clipped figure is the first child: the scene harness measures that, and a defs
      ahead of it has an empty box that reads as off the frame. The glass group is after him. */
