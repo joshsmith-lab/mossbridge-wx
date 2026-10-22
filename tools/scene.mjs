@@ -43,60 +43,140 @@ try {
 }
 
 /**
+ * Porters Neck is the house from across the pond (pnPondScene); the parked marsh has no cases.
  * Wall-clock times are real Porters Neck / Shady Spring times, chosen so the
  * solar altitude lands where the scenario name says it does.
  * `tidePhase` shifts the tide fixture so a scene can be caught on a falling or
  * a rising tide.
  */
 const CASES = [
-  // ── marsh ──────────────────────────────────────────────────────────────
-  { name: "01-marsh-calm-noon", loc: "mb", when: "2026-08-02T13:10:00", tidePhase: 0,
-    note: "high sun, UV 9.6, 5 mph: water should be barely breathing, heat shimmer over the flat",
+  // ── the house at Porters Neck (pnPondScene) ─────────────────────────────
+  { name: "01-house-calm-noon", loc: "mb", when: "2026-08-02T13:10:00", tidePhase: 0,
+    note: "high sun, 5 mph: the pond nearly glass, the strands cream beads, the heron still at the east edge",
     o: { baseTemp: 88, nowTemp: 94, feels: 103, rh: 62, isDay: 1, code: 0, cloud: 6, nowWind: 5, nowDir: 200, nowGust: 8, nowUv: 9.6, uvMax: 10, windAmp: 4, gustAmp: 6,
       popCurve: () => 3, dailyPop: (p) => p.fill(8) } },
-  { name: "02-marsh-windy-afternoon", loc: "mb", when: "2026-08-02T15:00:00", tidePhase: 3,
-    note: "25 mph gusting 38: chop on the water, restless spartina, wave travelling downwind",
-    o: { baseTemp: 82, nowTemp: 84, feels: 89, rh: 58, isDay: 1, code: 1, cloud: 26, nowWind: 25, nowDir: 235, nowGust: 38, nowUv: 6.4, uvMax: 8, windAmp: 16, gustAmp: 28,
-      popCurve: () => 10, dailyPop: (p) => p.fill(15) } },
-  { name: "03-marsh-golden-evening", loc: "mb", when: "2026-08-02T20:10:00", tidePhase: 0,
-    note: "sun between +6 and -4: the ordinary dotted arc should warm quietly near the horizon",
+  { name: "02-house-blow-west", loc: "mb", when: "2026-08-02T15:00:00", tidePhase: 3,
+    note: "28 gusting 42 from the west-southwest: this view looks north, so the palms, the grass, the spray and the rain all stream to the right",
+    o: { baseTemp: 82, nowTemp: 84, feels: 89, rh: 58, isDay: 1, code: 1, cloud: 26, nowWind: 28, nowDir: 250, nowGust: 42, nowUv: 6.4, uvMax: 8, windAmp: 16, gustAmp: 28,
+      windCurve: () => 28, gustCurve: () => 42, dirCurve: () => 250, popCurve: () => 10, dailyPop: (p) => p.fill(15) } },
+  { name: "28-house-blow-east", loc: "mb", when: "2026-08-02T15:00:00", tidePhase: 3,
+    note: "the same blow from the east-northeast: everything streams to the left",
+    o: { baseTemp: 82, nowTemp: 84, feels: 89, rh: 58, isDay: 1, code: 1, cloud: 26, nowWind: 28, nowDir: 70, nowGust: 42, nowUv: 6.4, uvMax: 8, windAmp: 16, gustAmp: 28,
+      windCurve: () => 28, gustCurve: () => 42, dirCurve: () => 70, popCurve: () => 10, dailyPop: (p) => p.fill(15) } },
+  { name: "03-house-golden-evening", loc: "mb", when: "2026-08-02T20:10:00", tidePhase: 0,
+    note: "the sun low in the west: its warmth on the left, the sunset time clear of the crowns, the does out",
     o: { baseTemp: 84, nowTemp: 86, feels: 92, rh: 70, isDay: 1, code: 1, cloud: 14, nowWind: 8, nowDir: 200, nowGust: 14, nowUv: 0.5, uvMax: 9, windAmp: 8, gustAmp: 13,
       popCurve: () => 8, dailyPop: (p) => p.fill(15) } },
-  { name: "04-marsh-warm-clear-night", loc: "mb", when: "2026-08-02T23:10:00", tidePhase: 0,
-    note: "78F, clear, August: fireflies, earthshine on the moon, the odd shooting star",
+  { name: "04-house-warm-clear-night", loc: "mb", fire: false, when: "2026-08-02T23:10:00", tidePhase: 0, moon: true,
+    note: "78F, clear, August, past ten: the strands and the fire off, the windows lit, the moon over the east palms and doubled in the pond",
     o: { baseTemp: 79, nowTemp: 78, feels: 82, rh: 80, isDay: 0, code: 0, cloud: 8, nowWind: 4, nowDir: 38, nowGust: 7, nowUv: 0, uvMax: 9, windAmp: 5, gustAmp: 8,
       popCurve: () => 5, dailyPop: (p) => p.fill(10) } },
-  { name: "05-marsh-storm-afternoon", loc: "mb", when: "2026-08-02T16:45:00", tidePhase: 0,
-    note: "code 95: angled rain, splash ticks, the rare bolt behind the treeline",
+  { name: "05-house-storm-afternoon", loc: "mb", when: "2026-08-02T16:45:00", tidePhase: 0,
+    note: "code 95: the bolt in the sky behind the roof, everything dimmed, the heron in",
     o: { baseTemp: 84, nowTemp: 81, feels: 88, rh: 88, isDay: 1, code: 95, cloud: 96, nowWind: 17, nowDir: 250, nowGust: 34, nowUv: 1.2, uvMax: 8, windAmp: 14, gustAmp: 26, nowcast: true,
       popCurve: (i, hr) => (hr >= 14 && hr <= 21 ? 78 : 20), dailyPop: (p) => { p[0] = 85; p[1] = 65; } } },
-  { name: "06-marsh-fog-morning", loc: "mb", when: "2026-08-02T07:30:00", tidePhase: 0,
-    note: "code 45: layered mist over the water, the marsh's best mood",
+  { name: "06-house-fog-morning", loc: "mb", when: "2026-08-02T07:30:00", tidePhase: 0,
+    note: "code 45: the house soft, the pond flat and pale, no edge across the sky",
     o: { baseTemp: 74, nowTemp: 73, feels: 75, rh: 97, isDay: 1, code: 45, cloud: 88, nowWind: 3, nowDir: 120, nowGust: 6, nowUv: 0.6, uvMax: 7, windAmp: 4, gustAmp: 6,
       popCurve: () => 12, dailyPop: (p) => p.fill(20) } },
-  { name: "07-marsh-drizzle-midday", loc: "mb", when: "2026-08-02T12:30:00", tidePhase: 0,
-    note: "code 53: sparse, slow drops. Must not look like the downpour beside it",
+  { name: "07-house-drizzle-midday", loc: "mb", when: "2026-08-02T12:30:00", tidePhase: 0,
+    note: "code 53: sparse, slow drops and a few rings. Must not look like the downpour beside it",
     o: { baseTemp: 76, nowTemp: 77, feels: 80, rh: 90, isDay: 1, code: 53, cloud: 90, nowWind: 7, nowDir: 90, nowGust: 12, nowUv: 1.8, uvMax: 6, windAmp: 6, gustAmp: 10,
       popCurve: () => 60, dailyPop: (p) => p.fill(65) } },
-  { name: "08-marsh-downpour-midday", loc: "mb", when: "2026-08-02T12:30:00", tidePhase: 0,
-    note: "code 82: dense, fast, hard angle. Must not look like the drizzle beside it",
+  { name: "08-house-downpour-midday", loc: "mb", when: "2026-08-02T12:30:00", tidePhase: 0,
+    note: "code 82: dense, fast, hard angle, the reflection broken. Must not look like the drizzle beside it",
     o: { baseTemp: 76, nowTemp: 75, feels: 79, rh: 94, isDay: 1, code: 82, cloud: 98, nowWind: 21, nowDir: 240, nowGust: 33, nowUv: 1.1, uvMax: 6, windAmp: 14, gustAmp: 24,
       popCurve: () => 90, dailyPop: (p) => p.fill(90) } },
-  // the same downpour on an October afternoon: the oystercatcher and the cobweb's spider are out
-  // too, and with the crab out it ran 122 animations, past the ceiling
-  { name: "49-marsh-october-downpour-midday", loc: "mb", when: "2026-10-09T12:30:00", tidePhase: 0, decor: ["ghostface", "pumpkin", "blood-moon"], candles: 0,
-    note: "code 82 in October: the busiest daytime frame, the crab down its burrow",
+  { name: "49-house-october-downpour-midday", loc: "mb", when: "2026-10-09T12:30:00", tidePhase: 0, decor: ["ghostface", "light-tree", "pumpkin", "pumpkin-lights", "white-pumpkin", "blood-moon"], candles: 0,
+    note: "code 82 in October: the pumpkin lights still on in the rain by day, and the cobweb's spider out",
     o: { baseTemp: 76, nowTemp: 75, feels: 79, rh: 94, isDay: 1, code: 82, cloud: 98, nowWind: 21, nowDir: 240, nowGust: 33, nowUv: 1.1, uvMax: 6, windAmp: 14, gustAmp: 24,
       popCurve: () => 90, dailyPop: (p) => p.fill(90) } },
-  // ── ridge ──────────────────────────────────────────────────────────────
+  { name: "14-house-golden-morning", loc: "mb", when: "2026-08-02T06:35:00",
+    note: "sunrise: the sun over the east palms, its warmth on the right, rose and clean, and it should not look like the evening",
+    o: { baseTemp: 76, nowTemp: 72, feels: 74, rh: 86, isDay: 1, code: 1, cloud: 16, nowWind: 5, nowDir: 30, nowGust: 9, nowUv: 0.4, uvMax: 9, windAmp: 6, gustAmp: 10,
+      popCurve: () => 8, dailyPop: (p) => p.fill(15) } },
+  { name: "13-house-freezing-rain", loc: "mb", when: "2026-01-14T08:10:00",
+    note: "code 67: falls like rain because it is rain, but must never be called rain; the lawn gone to straw",
+    o: { baseTemp: 33, nowTemp: 32, feels: 24, rh: 92, isDay: 1, code: 67, cloud: 97, nowWind: 12, nowDir: 40, nowGust: 21, nowUv: 0.4, uvMax: 2,
+      windAmp: 9, gustAmp: 16, sunrise: "07:14", sunset: "17:20",
+      popCurve: () => 90, dailyPop: (p) => p.fill(90) } },
+  { name: "24-house-night-rain", loc: "mb", fire: false, when: "2026-05-12T21:20:00",
+    note: "rain after dark before ten: the strands lit, the fire off, rings on the pond and the reflection broken",
+    o: { baseTemp: 64, nowTemp: 63, feels: 63, rh: 95, isDay: 0, code: 63, cloud: 96, nowWind: 11, nowDir: 220, nowGust: 20, nowUv: 0, uvMax: 5,
+      windAmp: 9, gustAmp: 17, sunrise: "06:11", sunset: "20:04",
+      popCurve: () => 88, dailyPop: (p) => p.fill(88) } },
+  { name: "25-house-thunder-nearby", loc: "mb", when: "2026-08-25T16:30:00",
+    note: "the ordinary Wilmington August afternoon: rain in the grid cell, thunderstorms two hours out, the bolt in the sky",
+    o: { baseTemp: 84, nowTemp: 82, feels: 92, rh: 86, isDay: 1, code: 80, cloud: 92, nowWind: 13, nowDir: 235, nowGust: 24, nowUv: 1.6, uvMax: 8,
+      windAmp: 11, gustAmp: 20,
+      hourlyCode: (i, hr) => (hr >= 17 && hr <= 21 ? 95 : hr >= 14 ? 80 : 3),
+      popCurve: (i, hr) => (hr >= 14 && hr <= 21 ? 72 : 20), dailyPop: (p) => { p[0] = 80; p[1] = 55; } } },
+  // ── the holidays ───────────────────────────────────────────────────────
+  // `decor` is what has to be set out (and nothing else), `candles` how many are lit. Each one
+  // with decorations out also writes a close-up of them, because a pumpkin is a few pixels
+  // across on a phone and has to hold up at both sizes.
+  { name: "26-house-october-afternoon", loc: "mb", when: "2026-10-10T15:30:00", decor: ["ghostface", "light-tree", "pumpkin", "pumpkin-lights", "white-pumpkin", "blood-moon"], candles: 0,
+    note: "Halloween is up: an orange and a white pumpkin on each pillar, nothing carved yet, the pumpkin lights on by day, Ghostface at the east corner",
+    o: { baseTemp: 71, nowTemp: 75, feels: 75, rh: 55, isDay: 1, code: 1, cloud: 18, nowWind: 9, nowDir: 40, nowGust: 15, nowUv: 3.4, uvMax: 5, windAmp: 6, gustAmp: 10,
+      sunrise: "07:13", sunset: "18:44", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "27-house-halloween-night", loc: "mb", when: "2026-10-31T20:40:00", decor: ["ghostface", "jack-o-lantern", "light-tree", "pumpkin-lights", "trick-or-treater", "bat", "witch"], candles: 6, bats: 6, witch: true,
+    note: "Halloween night: both pillars' pumpkins and the gate's lanterns lit, the trick-or-treater at the gate between them, the bats out and the witch crossing in front of the roof",
+    o: { baseTemp: 63, nowTemp: 61, feels: 61, rh: 80, isDay: 0, code: 0, cloud: 8, nowWind: 7, nowDir: 30, nowGust: 12, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
+      sunrise: "07:32", sunset: "18:18", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "29-house-halloween-rain-night", loc: "mb", when: "2026-10-31T20:40:00", decor: ["ghostface", "jack-o-lantern", "light-tree", "pumpkin-lights"], candles: 0,
+    note: "rain on Halloween night: the trick-or-treater stays in, no candle is lit, the bats and the witch are in, and the pumpkin lights stay on",
+    o: { baseTemp: 63, nowTemp: 61, feels: 61, rh: 96, isDay: 0, code: 63, cloud: 96, nowWind: 11, nowDir: 60, nowGust: 19, nowUv: 0, uvMax: 4, windAmp: 8, gustAmp: 14,
+      sunrise: "07:32", sunset: "18:18", popCurve: () => 85, dailyPop: (p) => p.fill(85) } },
+  { name: "46-house-halloween-drizzle-night", loc: "mb", when: "2026-10-31T20:40:00", decor: ["ghostface", "jack-o-lantern", "light-tree", "pumpkin-lights", "trick-or-treater", "bat", "witch"], candles: 0, bats: 2, witch: true,
+    note: "a drizzly Halloween night: a drizzle does not keep a kid in, so the trick-or-treater is at the gate, and no candle is lit in the wet",
+    o: { baseTemp: 63, nowTemp: 61, feels: 61, rh: 96, isDay: 0, code: 53, cloud: 94, nowWind: 7, nowDir: 30, nowGust: 12, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
+      sunrise: "07:32", sunset: "18:18", popCurve: () => 55, dailyPop: (p) => p.fill(55) } },
+  { name: "48-house-halloween-cold-dusk", loc: "mb", when: "2026-10-31T18:22:00", decor: ["ghostface", "jack-o-lantern", "light-tree", "pumpkin-lights", "trick-or-treater", "bat"], candles: 6, bats: 2,
+    note: "a raw Halloween evening a few minutes after sunset: the candles just lit, the first couple of bats out, the trick-or-treater already at the gate, and the witch not up until it is dark",
+    o: { baseTemp: 50, nowTemp: 46, feels: 42, rh: 70, isDay: 0, code: 1, cloud: 12, nowWind: 8, nowDir: 350, nowGust: 13, nowUv: 0, uvMax: 4, windAmp: 6, gustAmp: 10,
+      sunrise: "07:32", sunset: "18:18", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "36-house-october-golden-evening", loc: "mb", when: "2026-10-10T18:25:00", decor: ["ghostface", "light-tree", "pumpkin", "pumpkin-lights", "white-pumpkin"], candles: 0,
+    note: "golden hour in October: Ghostface's mask and the pumpkins warm with the house, the warmth from the west, and nothing is lit yet but the pumpkin lights",
+    o: { baseTemp: 71, nowTemp: 72, feels: 72, rh: 60, isDay: 1, code: 1, cloud: 18, nowWind: 8, nowDir: 40, nowGust: 13, nowUv: 0.2, uvMax: 5, windAmp: 6, gustAmp: 10,
+      sunrise: "07:13", sunset: "18:44", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "37-house-october-fog-morning", loc: "mb", when: "2026-10-14T09:40:00", decor: ["ghostface", "light-tree", "pumpkin", "pumpkin-lights", "white-pumpkin"], candles: 0,
+    note: "code 45 in October: the fog softens the house and widens the pumpkin lights' halos",
+    o: { baseTemp: 62, nowTemp: 61, feels: 61, rh: 99, isDay: 1, code: 45, cloud: 100, nowWind: 2, nowDir: 60, nowGust: 4, nowUv: 0.8, uvMax: 4, windAmp: 1, gustAmp: 2,
+      sunrise: "07:17", sunset: "18:38", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "38-house-october-moon", loc: "mb", when: "2026-10-24T21:30:00", decor: ["ghostface", "jack-o-lantern", "light-tree", "pumpkin-lights", "bat", "witch", "blood-moon"], candles: 6, moon: true, bats: 7, witch: true,
+    note: "the carving day under the moon a night short of full: the pillars' pumpkins and the gate's lanterns carved and lit, Halloween's moon over the roof's east end, the bats keeping off it and the witch crossing it",
+    o: { baseTemp: 64, nowTemp: 62, feels: 62, rh: 75, isDay: 0, code: 0, cloud: 6, nowWind: 6, nowDir: 30, nowGust: 10, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
+      sunrise: "07:30", sunset: "18:26", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "44-house-carved-week-night", loc: "mb", when: "2026-10-26T21:30:00", decor: ["ghostface", "jack-o-lantern", "light-tree", "pumpkin-lights", "bat", "witch", "blood-moon"], candles: 6, moon: true, bats: 7, witch: true,
+    note: "the carved week after dark with a westerly: an orange and a white jack-o-lantern lit on each pillar and the gate's two lit, the full moon over the east palms",
+    o: { baseTemp: 64, nowTemp: 62, feels: 62, rh: 75, isDay: 0, code: 0, cloud: 6, nowWind: 6, nowDir: 250, nowGust: 10, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
+      sunrise: "07:27", sunset: "18:23", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  // the moon too high over the roof for her line to cross it in open sky: she leaves it alone and passes well
+  // clear of it, never along its rim, which no other case at the house reaches
+  { name: "50-house-october-moon-high", loc: "mb", fire: false, when: "2026-10-27T01:00:00", decor: ["ghostface", "jack-o-lantern", "light-tree", "pumpkin-lights", "bat", "witch", "blood-moon"], candles: 6, moon: true, bats: 7, witch: true,
+    note: "an hour after midnight the night after the full moon, the moon high over the roof: the strands and the fire off, the jack-o-lanterns lit, the witch leaving the moon alone and passing well clear of it",
+    o: { baseTemp: 60, nowTemp: 58, feels: 58, rh: 78, isDay: 0, code: 0, cloud: 4, nowWind: 4, nowDir: 30, nowGust: 7, nowUv: 0, uvMax: 4, windAmp: 3, gustAmp: 5,
+      sunrise: "07:28", sunset: "18:22", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "45-house-carved-week-morning", loc: "mb", fire: false, when: "2026-10-27T08:40:00", decor: ["ghostface", "jack-o-lantern", "light-tree", "pumpkin-lights"], candles: 0,
+    note: "a cold morning in the carved week: the jack-o-lanterns out and dark, no candle by day",
+    o: { baseTemp: 50, nowTemp: 45, feels: 41, rh: 70, isDay: 1, code: 1, cloud: 22, nowWind: 12, nowDir: 350, nowGust: 20, nowUv: 1.2, uvMax: 4, windAmp: 8, gustAmp: 12,
+      sunrise: "07:28", sunset: "18:23", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  // October dusk, the sun a few degrees under: the bats are coming out, a couple at first and more as it
+  // darkens, and the witch is not up yet, because she waits for the dark
+  { name: "40-house-october-dusk", loc: "mb", when: "2026-10-10T19:02:00", decor: ["ghostface", "light-tree", "pumpkin", "pumpkin-lights", "white-pumpkin", "bat"], candles: 0, bats: 7,
+    fire: true,
+    note: "twenty minutes after sunset in October, calm and clear at 66°: the strands and the fire just lit (it burns under 68), the first bats out over the roof and the palms",
+    o: { baseTemp: 68, nowTemp: 66, feels: 66, rh: 70, isDay: 0, code: 0, cloud: 8, nowWind: 5, nowDir: 40, nowGust: 9, nowUv: 0, uvMax: 5, windAmp: 4, gustAmp: 7,
+      sunrise: "07:13", sunset: "18:44", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  { name: "35-house-november-small-hours", loc: "mb", when: "2026-11-01T00:30:00", decor: [], candles: 0,
+    note: "half past midnight on November 1 2026, the night the clocks go back: Halloween is over, and the wall clock, which once ran an hour slow here and read October 31, reads November 1",
+    o: { baseTemp: 60, nowTemp: 58, feels: 58, rh: 82, isDay: 0, code: 0, cloud: 10, nowWind: 6, nowDir: 20, nowGust: 10, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
+      sunrise: "06:33", sunset: "17:17", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  // ── the ridge ──────────────────────────────────────────────────────────
   { name: "09-ridge-clear-day", loc: "sp", when: "2026-08-02T14:00:00",
     note: "hawk circling, hardwoods working, pond breathing",
     o: { baseTemp: 74, nowTemp: 79, feels: 79, rh: 50, isDay: 1, code: 1, cloud: 15, nowWind: 11, nowDir: 285, nowGust: 19, nowUv: 6.8, uvMax: 8, windAmp: 8, gustAmp: 14,
       popCurve: () => 6, dailyPop: (p) => p.fill(12) } },
-  { name: "14-marsh-golden-morning", loc: "mb", when: "2026-08-02T06:35:00",
-    note: "the other end of the day: rose and clean, and it should not look like the evening",
-    o: { baseTemp: 76, nowTemp: 72, feels: 74, rh: 86, isDay: 1, code: 1, cloud: 16, nowWind: 5, nowDir: 30, nowGust: 9, nowUv: 0.4, uvMax: 9, windAmp: 6, gustAmp: 10,
-      popCurve: () => 8, dailyPop: (p) => p.fill(15) } },
   { name: "15-ridge-golden-evening", loc: "sp", when: "2026-08-02T20:30:00",
     note: "amber, heavier, reaching further down the page than the morning does",
     o: { baseTemp: 72, nowTemp: 73, feels: 73, rh: 62, isDay: 1, code: 1, cloud: 14, nowWind: 6, nowDir: 290, nowGust: 11, nowUv: 0.3, uvMax: 8, windAmp: 6, gustAmp: 10,
@@ -110,11 +190,6 @@ const CASES = [
     o: { baseTemp: 28, nowTemp: 27, feels: 18, rh: 84, isDay: 1, code: 73, cloud: 95, nowWind: 8, nowDir: 315, nowGust: 15, nowUv: 0.7, uvMax: 2,
       windAmp: 7, gustAmp: 12, sunrise: "07:36", sunset: "17:22",
       popCurve: () => 85, dailyPop: (p) => p.fill(85) } },
-  { name: "13-marsh-freezing-rain", loc: "mb", when: "2026-01-14T08:10:00",
-    note: "code 67: falls like rain because it is rain, but must never be called rain",
-    o: { baseTemp: 33, nowTemp: 32, feels: 24, rh: 92, isDay: 1, code: 67, cloud: 97, nowWind: 12, nowDir: 40, nowGust: 21, nowUv: 0.4, uvMax: 2,
-      windAmp: 9, gustAmp: 16, sunrise: "07:14", sunset: "17:20",
-      popCurve: () => 90, dailyPop: (p) => p.fill(90) } },
   { name: "10-ridge-cold-night", loc: "sp", when: "2026-01-14T22:40:00",
     note: "24F January overcast: owl, no fireflies, everything slow",
     o: { baseTemp: 27, nowTemp: 24, feels: 16, rh: 76, isDay: 0, code: 3, cloud: 82, nowWind: 9, nowDir: 320, nowGust: 17, nowUv: 0, uvMax: 2, windAmp: 7, gustAmp: 13,
@@ -125,49 +200,6 @@ const CASES = [
     o: { baseTemp: 64, nowTemp: 64, feels: 63, rh: 91, isDay: 1, code: 61, cloud: 90, nowWind: 8, nowDir: 245, nowGust: 14, nowUv: 1.4, uvMax: 5,
       windAmp: 7, gustAmp: 12, sunrise: "06:14", sunset: "20:26",
       popCurve: () => 72, dailyPop: (p) => p.fill(70) } },
-  { name: "24-marsh-night-rain", loc: "mb", when: "2026-05-12T22:20:00",
-    note: "the only frame that puts the raccoon and the fiddler crab out together: neither may float, and the crab needs open water behind it",
-    o: { baseTemp: 64, nowTemp: 63, feels: 63, rh: 95, isDay: 0, code: 63, cloud: 96, nowWind: 11, nowDir: 220, nowGust: 20, nowUv: 0, uvMax: 5,
-      windAmp: 9, gustAmp: 17, sunrise: "06:11", sunset: "20:04",
-      popCurve: () => 88, dailyPop: (p) => p.fill(88) } },
-  { name: "25-marsh-thunder-nearby", loc: "mb", when: "2026-08-25T16:30:00",
-    note: "the ordinary Wilmington August afternoon: rain in the grid cell, thunderstorms two hours out. The old rule drew no lightning at all here",
-    o: { baseTemp: 84, nowTemp: 82, feels: 92, rh: 86, isDay: 1, code: 80, cloud: 92, nowWind: 13, nowDir: 235, nowGust: 24, nowUv: 1.6, uvMax: 8,
-      windAmp: 11, gustAmp: 20,
-      hourlyCode: (i, hr) => (hr >= 17 && hr <= 21 ? 95 : hr >= 14 ? 80 : 3),
-      popCurve: (i, hr) => (hr >= 14 && hr <= 21 ? 72 : 20), dailyPop: (p) => { p[0] = 80; p[1] = 55; } } },
-  // ── the holidays ───────────────────────────────────────────────────────
-  // `decor` is what has to be set out (and nothing else), `candles` how many are lit. Each one
-  // with decorations out also writes a close-up of them, because a pumpkin is seven pixels
-  // across on a phone and has to hold up at both sizes.
-  { name: "26-marsh-october-afternoon", loc: "mb", when: "2026-10-10T15:30:00", decor: ["ghostface", "pumpkin", "blood-moon", "black-cat"], candles: 0,
-    note: "Halloween is up: two pumpkins on the dock, nothing carved yet, Ghostface in the oak's fork, the oystercatcher on the rake",
-    o: { baseTemp: 71, nowTemp: 75, feels: 75, rh: 55, isDay: 1, code: 1, cloud: 18, nowWind: 9, nowDir: 40, nowGust: 15, nowUv: 3.4, uvMax: 5, windAmp: 6, gustAmp: 10,
-      sunrise: "07:13", sunset: "18:44", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
-  { name: "27-marsh-halloween-night", loc: "mb", when: "2026-10-31T20:40:00", decor: ["ghostface", "jack-o-lantern", "pumpkin", "trick-or-treater", "bat", "witch", "black-cat", "eyes", "wisps"], candles: 1, bats: 6, witch: true,
-    note: "Halloween night: the carved one lit, its light on the water, the candle guttering in a light breeze, and a trick-or-treater at the landward end of the dock, the black cat beside the lantern, eyes in the spartina and three marsh lights low over the water",
-    o: { baseTemp: 63, nowTemp: 61, feels: 61, rh: 80, isDay: 0, code: 0, cloud: 8, nowWind: 7, nowDir: 30, nowGust: 12, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
-      sunrise: "07:32", sunset: "18:18", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
-  { name: "28-marsh-halloween-cold-morning", loc: "mb", when: "2026-10-27T08:40:00", decor: ["ghostface", "jack-o-lantern", "pumpkin"], candles: 0,
-    note: "a cold snap in the carved week: the cormorant on the middle piling beside the pumpkins, the black cat in and the dock left to it, and no candle by day",
-    o: { baseTemp: 50, nowTemp: 45, feels: 41, rh: 70, isDay: 1, code: 1, cloud: 22, nowWind: 12, nowDir: 350, nowGust: 20, nowUv: 1.2, uvMax: 4, windAmp: 8, gustAmp: 12,
-      sunrise: "07:28", sunset: "18:23", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
-  { name: "29-marsh-halloween-rain-night", loc: "mb", when: "2026-10-29T21:00:00", decor: ["ghostface", "jack-o-lantern", "pumpkin", "blood-moon"], candles: 0,
-    note: "rain in the carved week: the pumpkins stay out and the candle is not lit, and the cat, the eyes and the marsh lights are in",
-    o: { baseTemp: 64, nowTemp: 63, feels: 63, rh: 95, isDay: 0, code: 63, cloud: 96, nowWind: 11, nowDir: 60, nowGust: 19, nowUv: 0, uvMax: 3, windAmp: 8, gustAmp: 14,
-      sunrise: "07:30", sunset: "18:20", popCurve: () => 85, dailyPop: (p) => p.fill(85) } },
-  { name: "36-marsh-october-golden-evening", loc: "mb", when: "2026-10-10T18:25:00", decor: ["ghostface", "pumpkin", "black-cat"], candles: 0,
-    note: "golden hour in October: Ghostface's mask and the pumpkins warm with the oak, and nothing is lit yet",
-    o: { baseTemp: 71, nowTemp: 72, feels: 72, rh: 60, isDay: 1, code: 1, cloud: 18, nowWind: 8, nowDir: 40, nowGust: 13, nowUv: 0.2, uvMax: 5, windAmp: 6, gustAmp: 10,
-      sunrise: "07:13", sunset: "18:44", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
-  { name: "37-marsh-october-fog-morning", loc: "mb", when: "2026-10-14T09:40:00", decor: ["ghostface", "pumpkin", "black-cat"], candles: 0,
-    note: "code 45 in October: the fog takes the oak back and Ghostface greys with it, the mask still the palest thing in the crown",
-    o: { baseTemp: 62, nowTemp: 61, feels: 61, rh: 99, isDay: 1, code: 45, cloud: 100, nowWind: 2, nowDir: 60, nowGust: 4, nowUv: 0.8, uvMax: 4, windAmp: 1, gustAmp: 2,
-      sunrise: "07:17", sunset: "18:38", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
-  { name: "38-marsh-october-moon", loc: "mb", when: "2026-10-24T21:30:00", decor: ["ghostface", "jack-o-lantern", "pumpkin", "bat", "witch", "blood-moon", "black-cat", "eyes", "wisps"], candles: 1, moon: true, bats: 7, witch: true,
-    note: "the moon a night short of full over the marsh in the carved week: Halloween's moon (HALLOWEEN_MOON) in its real place and phase, its light on the water in its own colour, the bats keeping off it and the witch crossing it",
-    o: { baseTemp: 64, nowTemp: 62, feels: 62, rh: 75, isDay: 0, code: 0, cloud: 6, nowWind: 6, nowDir: 30, nowGust: 10, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
-      sunrise: "07:30", sunset: "18:26", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
   { name: "30-ridge-october-afternoon", loc: "sp", when: "2026-10-10T13:30:00", decor: ["corn-shock", "straw-bale", "pumpkin", "white-pumpkin", "michael-myers", "blood-moon", "scarecrow", "sheet-ghost", "black-cat"], candles: 0,
     note: "Halloween at the barn door: corn shock, bale, pumpkins, the hens working the yard beside it, the black cat on the rail, the scarecrow with its crow and the cheesecloth ghost in the hardwood",
     o: { baseTemp: 55, nowTemp: 57, feels: 57, rh: 60, isDay: 1, code: 1, cloud: 20, nowWind: 7, nowDir: 280, nowGust: 13, nowUv: 3.1, uvMax: 4, windAmp: 6, gustAmp: 10,
@@ -188,10 +220,8 @@ const CASES = [
     note: "the same moon over the ridge in the carved week: Halloween's moon clear of the crest, its light on the pond in its own colour, and the witch crossing it",
     o: { baseTemp: 46, nowTemp: 43, feels: 40, rh: 72, isDay: 0, code: 0, cloud: 8, nowWind: 6, nowDir: 300, nowGust: 10, nowUv: 0, uvMax: 3, windAmp: 5, gustAmp: 8,
       sunrise: "07:43", sunset: "18:33", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
-  // nights where the moon sits where the witch once went wrong: under her band at the farm, so a
-  // climb through it started in the barnyard and ran through the owl (and at 900 out of the barn,
-  // past the loft); a full moon low in the east on the coast with a westerly; and a moon over the
-  // coast's sunrise time that she cannot cross, where she once flew along its rim
+  // nights where the moon sits where the witch once went wrong at the farm: under her band, so a climb
+  // through it started in the barnyard and ran through the owl (and at 900 out of the barn, past the loft)
   { name: "42-ridge-october-evening-westerly", loc: "sp", when: "2026-10-20T19:30:00", decor: ["corn-shock", "straw-bale", "pumpkin", "white-pumpkin", "michael-myers", "bat", "witch", "blood-moon", "scarecrow", "sheet-ghost", "black-cat", "eyes"], candles: 0, moon: true, bats: 7, witch: true, witchWidths: [900],
     note: "an early October evening at the farm with a westerly, the moon low under her band: she leaves it alone and climbs across open sky, never out of the barnyard",
     o: { baseTemp: 54, nowTemp: 52, feels: 52, rh: 70, isDay: 0, code: 0, cloud: 6, nowWind: 6, nowDir: 250, nowGust: 10, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
@@ -200,35 +230,12 @@ const CASES = [
     note: "two nights on, a little later and a wind from due west: the moon still under her band, and nothing in the yard",
     o: { baseTemp: 54, nowTemp: 52, feels: 52, rh: 70, isDay: 0, code: 0, cloud: 6, nowWind: 6, nowDir: 270, nowGust: 10, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
       sunrise: "07:40", sunset: "18:37", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
-  { name: "44-marsh-full-moon-westerly", loc: "mb", when: "2026-10-26T21:30:00", decor: ["ghostface", "jack-o-lantern", "pumpkin", "bat", "witch", "blood-moon", "black-cat", "eyes", "wisps"], candles: 1, moon: true, bats: 7, witch: true,
-    note: "Halloween's full moon low in the east with a westerly: under reduced motion she holds still clear of the sunrise time, the disc and the bats",
-    o: { baseTemp: 64, nowTemp: 62, feels: 62, rh: 75, isDay: 0, code: 0, cloud: 6, nowWind: 6, nowDir: 250, nowGust: 10, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
-      sunrise: "07:27", sunset: "18:23", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
-  { name: "45-marsh-october-moon-by-the-time", loc: "mb", when: "2026-10-20T21:00:00", decor: ["ghostface", "pumpkin", "bat", "witch", "blood-moon", "black-cat", "eyes", "wisps"], candles: 0, moon: true, bats: 7, witch: true,
-    note: "the moon at the height of the sunrise time, where no straight line crosses it clear of the time: she leaves it alone, well over it, never on its rim",
-    o: { baseTemp: 64, nowTemp: 62, feels: 62, rh: 75, isDay: 0, code: 0, cloud: 6, nowWind: 6, nowDir: 30, nowGust: 10, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
-      sunrise: "07:22", sunset: "18:30", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
-  // Halloween night's trick-or-treater keeps the night itself, from sunset: out in a drizzle (with the
-  // candles not lit, because they are not in the wet), in for the night in the rain, and on a cold
-  // evening at the coast kept off the dock until dark, because the cormorant has the middle piling
-  { name: "46-marsh-halloween-drizzle-night", loc: "mb", when: "2026-10-31T20:40:00", decor: ["ghostface", "jack-o-lantern", "pumpkin", "trick-or-treater", "bat", "witch"], candles: 0, bats: 2, witch: true,
-    note: "a drizzly Halloween night on the coast: a drizzle does not keep a kid in, so the trick-or-treater is on the dock, and the candle is not lit in the wet",
-    o: { baseTemp: 63, nowTemp: 61, feels: 61, rh: 96, isDay: 0, code: 53, cloud: 94, nowWind: 7, nowDir: 30, nowGust: 12, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
-      sunrise: "07:32", sunset: "18:18", popCurve: () => 55, dailyPop: (p) => p.fill(55) } },
   { name: "47-ridge-halloween-rain-night", loc: "sp", when: "2026-10-31T20:15:00", decor: ["corn-shock", "straw-bale", "jack-o-lantern", "white-pumpkin", "michael-myers", "scarecrow", "sheet-ghost"], candles: 0,
     note: "rain on Halloween night at the farm: the trick-or-treater stays in, nothing is lit, and the door is left to the pumpkins",
     o: { baseTemp: 48, nowTemp: 45, feels: 40, rh: 96, isDay: 0, code: 63, cloud: 96, nowWind: 10, nowDir: 230, nowGust: 18, nowUv: 0, uvMax: 3, windAmp: 7, gustAmp: 12,
       sunrise: "07:47", sunset: "18:27", popCurve: () => 85, dailyPop: (p) => p.fill(85) } },
-  { name: "48-marsh-halloween-cold-dusk", loc: "mb", when: "2026-10-31T18:22:00", decor: ["ghostface", "jack-o-lantern", "pumpkin", "bat"], candles: 1, bats: 2,
-    note: "a raw Halloween evening on the coast, just after sunset: the candle is lit, and the cormorant has the middle piling until dark, so the trick-or-treater is not on the dock yet",
-    o: { baseTemp: 50, nowTemp: 46, feels: 42, rh: 70, isDay: 0, code: 1, cloud: 12, nowWind: 8, nowDir: 350, nowGust: 13, nowUv: 0, uvMax: 4, windAmp: 6, gustAmp: 10,
-      sunrise: "07:32", sunset: "18:18", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
-  // October dusk at each place, the sun a few degrees under: the bats are coming out, a couple at
-  // first and more as it darkens, and the witch is not up yet, because she waits for the dark
-  { name: "40-marsh-october-dusk", loc: "mb", when: "2026-10-10T19:02:00", decor: ["ghostface", "pumpkin", "bat", "black-cat"], candles: 0, bats: 7,
-    note: "twenty minutes after sunset in October, calm and clear: the first bats out over the marsh, against the last of the light",
-    o: { baseTemp: 70, nowTemp: 68, feels: 68, rh: 70, isDay: 0, code: 0, cloud: 8, nowWind: 5, nowDir: 40, nowGust: 9, nowUv: 0, uvMax: 5, windAmp: 4, gustAmp: 7,
-      sunrise: "07:13", sunset: "18:44", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  // October dusk at the farm, the sun a few degrees under: the bats are coming out, and the witch is not up
+  // yet, because she waits for the dark
   { name: "41-ridge-october-dusk", loc: "sp", when: "2026-10-10T19:12:00", decor: ["corn-shock", "straw-bale", "pumpkin", "white-pumpkin", "michael-myers", "bat", "scarecrow", "sheet-ghost", "black-cat"], candles: 0, bats: 7,
     note: "October dusk at the farm: the bats come out over the far ridge, and the vulture has gone to roost",
     o: { baseTemp: 58, nowTemp: 56, feels: 56, rh: 66, isDay: 0, code: 1, cloud: 12, nowWind: 5, nowDir: 280, nowGust: 9, nowUv: 0, uvMax: 4, windAmp: 4, gustAmp: 7,
@@ -237,10 +244,6 @@ const CASES = [
     note: "the morning after: everything Halloween put out has come down",
     o: { baseTemp: 50, nowTemp: 47, feels: 45, rh: 66, isDay: 1, code: 2, cloud: 35, nowWind: 6, nowDir: 250, nowGust: 11, nowUv: 1.8, uvMax: 3, windAmp: 5, gustAmp: 9,
       sunrise: "06:48", sunset: "17:26", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
-  { name: "35-marsh-november-small-hours", loc: "mb", when: "2026-11-01T00:30:00", decor: [], candles: 0,
-    note: "half past midnight on November 1 2026, the night the clocks go back: Halloween is over, and the wall clock, which once ran an hour slow here and read October 31, reads November 1",
-    o: { baseTemp: 60, nowTemp: 58, feels: 58, rh: 82, isDay: 0, code: 0, cloud: 10, nowWind: 6, nowDir: 20, nowGust: 10, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
-      sunrise: "06:33", sunset: "17:17", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
   { name: "23-ridge-night-downpour", loc: "sp", when: "2026-05-12T22:40:00",
     note: "the hardest test of the ridge rain: dark theme, code 82, drops over a black fold",
     o: { baseTemp: 62, nowTemp: 61, feels: 61, rh: 96, isDay: 0, code: 82, cloud: 97, nowWind: 15, nowDir: 210, nowGust: 26, nowUv: 0, uvMax: 5,
@@ -300,6 +303,10 @@ async function open(cs, { width, height = 932, reducedMotion, dpr = 2 }) {
   // The charts' entrance is a one-shot sweep that waits for the chart to be on screen. It is
   // not idle motion, so settle it before counting animations, timing layout or taking shots.
   await page.evaluate(() => typeof finishReveal === "function" && finishReveal());
+  // The house is painted on a stack of sheets and boxes (pnPondScene), each of which takes no tap, so what is
+  // under a point is only found with them taking one for the length of a check (html.hit-all), and what is
+  // drawn there is anything in the scene but a sheet or a box itself
+  await page.addStyleTag({ content: ".hit-all .scene .scene-layer,.hit-all .scene .scene-lift{pointer-events:auto!important}" });
   return { ctx, page, errs };
 }
 
@@ -307,7 +314,7 @@ async function open(cs, { width, height = 932, reducedMotion, dpr = 2 }) {
  * on an unrelated loop can look plausible in one screenshot and still describe nothing. */
 async function animalContactCheck(page) {
   return page.evaluate(() => {
-    const svg = document.getElementById("sceneSvg"), issues = [], checked = [];
+    const svg = document.querySelector(".scene"), issues = [], checked = [];
     const point = (el, x, y) => new DOMPoint(x, y).matrixTransform(el.getScreenCTM());
     const centre = (el) => point(el, +el.getAttribute("cx"), +el.getAttribute("cy"));
     const opacity = (el) => Number(getComputedStyle(el).opacity);
@@ -350,7 +357,18 @@ async function animalContactCheck(page) {
         if (svg.querySelector('[data-water-contact="raccoon"]')) issues.push("raccoon: dry-bank animal has a water ring");
       }
       const heron = svg.querySelector('[data-species="great-blue-heron"]');
-      if (heron) {
+      // the house's heron stands still at the pond's east edge, side on: it has no footfalls and no strike
+      // to answer, so it must hold no motion at all and stand with its feet in the shallows
+      if (heron?.classList.contains("heron-still")) {
+        checked.push("heron still at the water's edge");
+        if (heron.getAnimations({ subtree: true }).length) issues.push("heron: a still heron is moving");
+        const pond = svg.querySelector('rect[fill="url(#pnPond)"]');
+        if (!pond) issues.push("heron: no pond to stand in");
+        else {
+          const h = heron.getBoundingClientRect(), w = pond.getBoundingClientRect();
+          if (h.bottom < w.top || h.bottom > w.top + 12) issues.push("heron: its feet are not in the shallows");
+        }
+      } else if (heron) {
         checked.push("heron footfalls and strike"); clock(150000, "heron");
         const near = svg.querySelector('[data-water-contact="heron-near"]'), far = svg.querySelector('[data-water-contact="heron-far"]'), bill = svg.querySelector('[data-water-contact="heron-bill"]');
         if (!near || !far || !bill) issues.push("heron: a water contact is missing");
@@ -449,23 +467,23 @@ async function walkWitch(page) {
      can leave the sky scrolled away, and the page parks the header's motion while it is off screen */
   await page.evaluate(() => new Promise((r) => { scrollTo({ top: 0, behavior: "instant" }); requestAnimationFrame(() => requestAnimationFrame(r)); }));
   return page.evaluate(() => {
-    const w = document.querySelector('#sceneSvg [data-fly="witch"]');
+    const w = document.querySelector('.scene [data-fly="witch"]');
     if (!w) return null;
-    const svg = document.getElementById("sceneSvg"), F = svg.getBoundingClientRect();
+    const svg = document.getElementById("sceneSvg"), F = svg.getBoundingClientRect(), scene = document.querySelector(".scene"), drawn = (e) => scene.contains(e) && !e.matches(".scene, .scene > svg, .scene-lift, .scene-lift .lift, .scene-lift .lift > svg");
     const a = w.getAnimations().find((x) => x.animationName === "witchCross");
     if (!a) return { still: true };
     const D = a.effect.getComputedTiming().duration, dl = a.effect.getTiming().delay;
     const phaseNow = ((a.currentTime - dl) % D + D) % D, run = WITCH_RUN;
     const drift = (((Date.now() - run.t0 - phaseNow) % D) + D) % D;
-    const ground = [...svg.querySelectorAll("[data-species],[data-decor]")].filter((el) => !["gull", "hawk", "bat"].includes(el.dataset.species)
+    const ground = [...scene.querySelectorAll("[data-species],[data-decor]")].filter((el) => !["gull", "hawk", "bat"].includes(el.dataset.species)
       && !el.classList.contains("ff") && !/^(bat|witch|(blood|harvest)-moon)$/.test(el.dataset.decor || ""));
     const mp = w.dataset.across ? w.dataset.across.split(" ").map(Number) : null, M = svg.getScreenCTM();
     const moon = mp ? [M.a * mp[0] + M.e, M.d * mp[1] + M.f] : null;
     // a moon she leaves alone she passes well clear of, never along its rim
-    const md = !mp && svg.querySelector("[data-disc]"), disc = md ? (([x, y, r]) => [M.a * x + M.e, M.d * y + M.f, r * M.a])(md.dataset.disc.split(" ").map(Number)) : null;
+    const md = !mp && scene.querySelector("[data-disc]"), disc = md ? (([x, y, r]) => [M.a * x + M.e, M.d * y + M.f, r * M.a])(md.dataset.disc.split(" ").map(Number)) : null;
     let rim = 0;
-    const was = a.currentTime; a.pause();
-    const labels = [...svg.querySelectorAll("text.suntime")].map((t) => t.getBoundingClientRect());
+    const was = a.currentTime; a.pause(); document.documentElement.classList.add("hit-all");
+    const labels = [...scene.querySelectorAll("text.suntime")].map((t) => t.getBoundingClientRect());
     const mine = (e) => w.contains(e);
     // weather in front of her is weather, not scenery she went behind
     const weather = (e) => /url\(#(fogveil|mist)\)/.test(e.getAttribute("fill") || "") || !!e.closest(".nearrain,.splash,[class*=rain]");
@@ -487,7 +505,7 @@ async function walkWitch(page) {
         let on = 0, hid = 0;
         for (let u = 0; u < 12; u++) for (let v = 0; v < 6; v++) {
           const x = b.left + (u + .5) / 12 * b.width, y = b.top + (v + .5) / 6 * b.height;
-          const stack = document.elementsFromPoint(x, y).filter((e) => svg.contains(e) && e !== svg && !weather(e));
+          const stack = document.elementsFromPoint(x, y).filter((e) => drawn(e) && !weather(e));
           const k = stack.findIndex(mine);
           if (k < 0) continue;
           on++; if (k > 0) hid++;
@@ -499,7 +517,7 @@ async function walkWitch(page) {
         if (!best || dist < best.dist) best = { dist, inside: moon[0] > b.left && moon[0] < b.right && moon[1] > b.top && moon[1] < b.bottom };
       }
     }
-    a.currentTime = was; a.play();
+    a.currentTime = was; a.play(); document.documentElement.classList.remove("hit-all");
     return { cycle: D / 1000, drift: Math.min(drift, D - drift) / 1000, lead: (run.t0 - run.open) / 1000, ends, topCut, onLabel, rim,
       hidden: Math.round(hidden * 100), hits: [...new Set(hits)], moon: !!moon, best };
   });
@@ -527,9 +545,10 @@ function reportWitch(cs, width, witch) {
  * tail's flick, the blink, the drift, the swing) and the whole of where it goes has to stay inside
  * the frame, off every animal, and a pixel clear of every other decoration. */
 const MORE = /^(black-cat|eyes|wisps|scarecrow|sheet-ghost|trick-or-treater)$/;
+const STRUNG = /^pumpkin-lights$/;
 async function decorCheck(page) {
-  return page.evaluate((MOREs) => {
-    const MORE = new RegExp(MOREs), svg = document.getElementById("sceneSvg"), frame = svg.getBoundingClientRect();
+  return page.evaluate(([MOREs, STRUNGs]) => {
+    const MORE = new RegExp(MOREs), STRUNG = new RegExp(STRUNGs), svg = document.querySelector(".scene"), frame = document.getElementById("sceneSvg").getBoundingClientRect();
     const items = [...svg.querySelectorAll("[data-decor]")], SKY = /^(bat|witch|(blood|harvest)-moon)$/;
     const painted = (el) => el.firstElementChild.getBoundingClientRect();
     // the union of everywhere it goes, its own animations walked over 24 steps and put back
@@ -551,6 +570,9 @@ async function decorCheck(page) {
     // the bats, the witch and the moon are in the sky and are looked at on their own below
     for (const [el, b] of ground) {
       if (b.left < frame.left - 2 || b.right > frame.right + 2 || b.top < frame.top - 2 || b.bottom > frame.bottom + 2) out.clipped.push(el.dataset.decor);
+      // the pumpkin lights are strung along the whole fence, so an animal on the lawn in front of the fence
+      // stands in front of them: they are kept off the other decorations below, and off nothing else
+      if (STRUNG.test(el.dataset.decor)) continue;
       for (const a of svg.querySelectorAll("[data-species]")) {
         if (["gull", "hawk"].includes(a.dataset.species) || a.classList.contains("ff")) continue;
         const A = a.getBoundingClientRect();
@@ -586,7 +608,7 @@ async function decorCheck(page) {
     }
     out.hits = [...new Set(out.hits)];
     return out;
-  }, MORE.source);
+  }, [MORE.source, STRUNG.source]);
 }
 function reportDecor(cs, width, decor) {
   for (const h of decor.hits) problems.push(`${cs.name} ${width}: ${h}`);
@@ -678,7 +700,7 @@ for (const cs of cases) {
     for (const [sel, suffix] of [[".sky", "sky"], [".scene", "scene"], ["#tideSection", "tide"]]) {
       try { await page.locator(sel).screenshot({ path: path.join(OUT, `${cs.name}-${suffix}.png`) }); } catch {}
     }
-    const species = await page.locator("#sceneSvg [data-species]").evaluateAll((els) =>
+    const species = await page.locator(".scene [data-species]").evaluateAll((els) =>
       [...new Set(els.map((el) => el.getAttribute("data-species")))].filter(Boolean));
     console.log(`    wildlife: ${species.join(", ") || "none"}`);
     const stormy = [95, 96, 99].includes(cs.o.code);
@@ -691,7 +713,7 @@ for (const cs of cases) {
     }
     const clipped=await page.evaluate(()=>{
       const frame=document.getElementById("sceneSvg").getBoundingClientRect(),out=[];
-      for(const el of document.querySelectorAll("#sceneSvg [data-species]")){
+      for(const el of document.querySelectorAll(".scene [data-species]")){
         if(["gull","hawk"].includes(el.dataset.species)||el.classList.contains("ff"))continue;
         const b=el.getBoundingClientRect();
         if(b.left<frame.left-2||b.right>frame.right+2||b.top<frame.top-2||b.bottom>frame.bottom+2)
@@ -700,6 +722,18 @@ for (const cs of cases) {
       return out;
     });
     if(clipped.length)problems.push(`${cs.name}: wildlife clipped at ${PHONE_WIDTH}px: ${clipped.join(", ")}`);
+
+    // ── the house moves nothing on its still sheets ──
+    // WebKit, which draws every iPhone browser, repaints an SVG sheet whole while anything in it moves, and the
+    // house's picture is far too much to repaint every frame (9 frames a second, October 2026), so what moves is on
+    // sheets and in boxes of its own (pnPondScene) and #sceneSvg and the other still sheets run no animation at all
+    if (cs.loc === "mb") {
+      const sheets = await page.evaluate(() => Object.fromEntries(["sceneSvg", "sceneNear", "sceneFront", "sceneWater", "sceneRefl", "sceneTop"]
+        .map((id) => [id, document.getElementById(id).getAnimations({ subtree: true }).map((a) => a.animationName || "a transition")])));
+      const moving = Object.entries(sheets).filter(([, a]) => a.length);
+      console.log(`    still sheets: ${moving.length ? "!! " + moving.map(([id, a]) => `#${id} runs ${[...new Set(a)].join(", ")}`).join("; ") : "#sceneSvg and the house's other still sheets run no animation"}`);
+      for (const [id, a] of moving) problems.push(`${cs.name}: ${a.length} animation(s) run in #${id} at the house (${[...new Set(a)].join(", ")}), which WebKit would repaint whole every frame`);
+    }
 
     // ── the holiday: what is set out, whether it is lit, and whether it is in anyone's way ──
     // Decorations go up and come down on the calendar, so a scene outside the window must have
@@ -718,6 +752,14 @@ for (const cs of cases) {
       reportDecor(cs, PHONE_WIDTH, decor);
     }
 
+    // ── the fire table at the house: lit only after sunset and before 10 pm, between 45° and 68°, dry, with
+    // gusts under 20 (fireOn). A case that says what the fire is doing is held to it ──
+    if (cs.fire !== undefined) {
+      const lit = await page.evaluate(() => document.querySelector('.scene [data-prop="fire-table"]')?.getAttribute("data-lit") ?? null);
+      if (lit === null) problems.push(`${cs.name}: no fire table drawn`);
+      else if ((lit === "1") !== cs.fire) problems.push(`${cs.name}: the fire is ${lit === "1" ? "lit" : "out"}, expected ${cs.fire ? "lit" : "out"}`);
+    }
+
     // ── Halloween's cobweb, on the glass over the header, clear of every word ──
     reportWeb(cs, PHONE_WIDTH, await webCheck(page));
 
@@ -727,25 +769,29 @@ for (const cs of cases) {
     // stroke, and at every step it has to stay inside the frame, off the moon's and the sun's
     // disc, off the times on the arc, clear of every animal and decoration, and in open sky: the
     // topmost thing at its body has to be a bat, never a tree, a fold or the treeline in front of it.
+    // The shots above leave the page scrolled down past the picture, where every point is off the screen and
+    // the walk found nothing to test (until October 22 2026, so "all in open sky" was said of every case), so
+    // the scene is brought on screen for the walk and the scroll put back after it.
     {
       const bat = await page.evaluate(() => {
-        const svg = document.getElementById("sceneSvg"), frame = svg.getBoundingClientRect();
-        const colony = svg.querySelector(".bats"), list = [...svg.querySelectorAll(".bat")];
+        const sy = scrollY; document.querySelector(".scene").scrollIntoView({ block: "center", behavior: "instant" });
+        const svg = document.getElementById("sceneSvg"), frame = svg.getBoundingClientRect(), scene = document.querySelector(".scene"), drawn = (e) => scene.contains(e) && !e.matches(".scene, .scene > svg, .scene-lift, .scene-lift .lift, .scene-lift .lift > svg");
+        const colony = scene.querySelector(".bats"), list = [...scene.querySelectorAll(".bat")];
         const out = { colony: colony ? Number(colony.dataset.colony) : 0, placed: list.length, hits: [] };
-        if (!list.length) return out;
+        if (!list.length) { scrollTo({ top: sy, behavior: "instant" }); return out; }
         const k = frame.width / svg.viewBox.baseVal.width;
         const M = svg.getScreenCTM();
-        const discs = [...[...svg.querySelectorAll("[data-disc]")].map((g) => {
+        const discs = [...[...scene.querySelectorAll("[data-disc]")].map((g) => {
           const [x, y, r] = g.dataset.disc.split(" ").map(Number); return [M.a * x + M.e, M.d * y + M.f, r * k];
-        }), ...[...svg.querySelectorAll('ellipse[fill="url(#sunglow)"]')].map((c) => {
+        }), ...[...scene.querySelectorAll('ellipse[fill="url(#sunglow)"]')].map((c) => {
           const b = c.getBoundingClientRect(); return [b.left + b.width / 2, b.top + b.height / 2, 13 * k];
         })];
-        const texts = [...svg.querySelectorAll("text")].map((t) => t.getBoundingClientRect());
+        const texts = [...scene.querySelectorAll("text")].map((t) => t.getBoundingClientRect());
         // the witch flies through them on her way across, in front, so she is not in their way
-        const others = [...svg.querySelectorAll("[data-species],[data-decor]")].filter((e) => !e.classList.contains("bat") && !/^(bat|witch|(blood|harvest)-moon)$/.test(e.dataset.decor || ""))
+        const others = [...scene.querySelectorAll("[data-species],[data-decor]")].filter((e) => !e.classList.contains("bat") && !/^(bat|witch|(blood|harvest)-moon)$/.test(e.dataset.decor || ""))
           .map((e) => [e.dataset.species || e.dataset.decor, e.getBoundingClientRect()]);
         const anims = list.flatMap((b) => b.getAnimations({ subtree: true }));
-        anims.forEach((a) => a.pause());
+        anims.forEach((a) => a.pause()); document.documentElement.classList.add("hit-all");
         const meet = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
         list.forEach((b, n) => {
           const fly = b.querySelector(".bat-fly").getAnimations()[0], wings = [...b.querySelectorAll(".bat-wing")].map((w) => w.getAnimations()[0]);
@@ -758,13 +804,16 @@ for (const cs of cases) {
             for (const [dx, dy, dr] of discs) if (Math.hypot(Math.min(Math.max(dx, r.left), r.right) - dx, Math.min(Math.max(dy, r.top), r.bottom) - dy) < dr) why.add("crosses the moon or the sun");
             for (const t of texts) if (meet(r, t) > 2) why.add("crosses a time on the arc");
             for (const [name, o] of others) if (meet(r, o) > 2) why.add(`meets the ${name}`);
-            // fog and mist are weather in front of it, not scenery it went behind
-            const top = document.elementsFromPoint(cx, cy).find((e) => svg.contains(e) && e !== svg && !/url\(#(fogveil|mist)\)/.test(e.getAttribute("fill") || ""));
+            // fog, mist and rain are weather in front of it, and a glow or a wash is light, not scenery it went
+            // behind (the house's low sun washes the land and the sky from its side, on a sheet over the bats)
+            const weather = (e) => /url\(#(fogveil|mist|pn\w*(Glow|Wash|Uplight|Sky))\)/.test(e.getAttribute("fill") || "") || !!e.closest("[data-light], .nearrain, .splash, [class*=rain]");
+            const top = document.elementsFromPoint(cx, cy).find((e) => drawn(e) && !weather(e));
             if (top && !top.closest(".bat")) why.add("goes behind the scenery");
           }
           for (const w of why) out.hits.push(`bat ${n + 1} ${w}`);
         });
-        anims.forEach((a) => a.play());
+        anims.forEach((a) => a.play()); document.documentElement.classList.remove("hit-all");
+        scrollTo({ top: sy, behavior: "instant" });
         return out;
       });
       const want = cs.bats ?? 0;
@@ -779,7 +828,7 @@ for (const cs of cases) {
     // ── the moon: Halloween's in the October window, the ordinary one every other night ──
     // It keeps its place and its phase, so whether it is up is the sky's business, and a scene
     // marked `moon` is one where it has to be.
-    const moon = await page.evaluate(() => ({ kind: document.querySelector("#sceneSvg [data-moon]")?.dataset.moon ?? null,
+    const moon = await page.evaluate(() => ({ kind: document.querySelector(".scene [data-moon]")?.dataset.moon ?? null,
       pick: typeof HALLOWEEN_MOON === "undefined" ? null : HALLOWEEN_MOON }));
     if (moon.kind) {
       const want = cs.when.slice(5, 7) === "10" && moon.pick ? moon.pick : "ordinary";
@@ -825,10 +874,43 @@ for (const cs of cases) {
     // the sway a limb crosses the edge of an eye. Each eye is sampled on its own fill at both ends
     // of the sway, in this scene's wind and again at the oak's full throw in a gale (1.4°), and the
     // scene fails if the oak hides 40% of either. The oak is put back running as it was.
-    if (cs.decor?.includes("ghostface")) {
+    // At the house he peeks round its east corner instead, half of him behind it and still: both his eyes have
+    // to show, so the house (or anything else) may cover no more than a sliver of either: under 10%.
+    if (cs.decor?.includes("ghostface") && await page.locator('.scene [data-prop="house"]').count()) {
       const gf = await page.evaluate(() => {
-        const g = document.querySelector('#sceneSvg [data-decor="ghostface"]');
-        const oak = [...document.querySelectorAll('#sceneSvg g[style*="swayTree"]')].find((n) => n.querySelector(".moss"));
+        const g = document.querySelector('.scene [data-decor="ghostface"]');
+        if (!g) return null;
+        g.scrollIntoView({ block: "center" });
+        const feats = [...g.querySelectorAll("path")].slice(-3).sort((p, q) => p.getBoundingClientRect().top - q.getBoundingClientRect().top).slice(0, 2);
+        document.documentElement.classList.add("hit-all");
+        const scene = document.querySelector(".scene"), drawn = (e) => scene.contains(e) && !e.matches(".scene, .scene > svg, .scene-lift, .scene-lift .lift, .scene-lift .lift > svg");
+        const eyes = feats.map((p) => {
+          const b = p.getBoundingClientRect(), pt = p.ownerSVGElement.createSVGPoint(), m = p.getScreenCTM().inverse();
+          let tot = 0, hid = 0;
+          for (let i = 0; i < 24; i++) for (let j = 0; j < 24; j++) {
+            pt.x = b.left + (i + .5) / 24 * b.width; pt.y = b.top + (j + .5) / 24 * b.height;
+            if (!p.isPointInFill(pt.matrixTransform(m))) continue;
+            // light and weather are not things in front of him: the low sun's wash, a palm's uplight, a bulb's glow,
+            // the fog, and the rain falling past
+            const light = (el) => !!el.closest("[data-light], .nearrain, .splash, [class*=rain]") || /url\(#(fogveil|mist|pn\w*(Glow|Wash|Uplight|Sky))\)/.test(el.getAttribute("fill") || "");
+            const top = document.elementsFromPoint(pt.x, pt.y).find((el) => drawn(el) && !light(el));
+            if (!top) continue;
+            tot++; if (!g.contains(top)) hid++;
+          }
+          return tot ? Math.round(hid / tot * 100) : 100;
+        });
+        document.documentElement.classList.remove("hit-all");
+        return eyes;
+      });
+      if (!gf) problems.push(`${cs.name}: no Ghostface at the house's corner`);
+      else {
+        console.log(`    ghostface eyes hidden at the house's corner: ${gf.join("% / ")}%`);
+        if (gf.some((v) => v >= 10)) problems.push(`${cs.name}: the house hides 10% or more of a Ghostface eye (${gf.join("% / ")}%)`);
+      }
+    } else if (cs.decor?.includes("ghostface")) {
+      const gf = await page.evaluate(() => {
+        const g = document.querySelector('.scene [data-decor="ghostface"]');
+        const oak = [...document.querySelectorAll('.scene g[style*="swayTree"]')].find((n) => n.querySelector(".moss"));
         const a = oak?.getAnimations().find((x) => x.animationName === "swayTree");
         if (!g || !a) return null;
         g.scrollIntoView({ block: "center" });
@@ -931,8 +1013,9 @@ for (const cs of cases) {
     if (cs.loc === "mb") {
       const WADERS = ["great-blue-heron", "oystercatcher", "cormorant", "fiddler-crab"];
       const floating = await page.evaluate((waders) => {
-        const svg = document.getElementById("sceneSvg");
-        const water = svg.querySelector('rect[fill="url(#waterband)"]');
+        const svg = document.querySelector(".scene");
+        // the marsh's water band, or the house's pond, where only the heron may stand
+        const water = svg.querySelector('rect[fill="url(#waterband)"]') || svg.querySelector('rect[fill="url(#pnPond)"]');
         if (!water) return [];
         const w = water.getBoundingClientRect(), out = [];
         for (const el of svg.querySelectorAll("[data-species]")) {
@@ -1008,7 +1091,7 @@ for (const cs of cases) {
         await page.evaluate(()=>document.getAnimations().forEach(a=>a.pause()));
         for(const [label,fraction] of [["rest",0],["first",.4],["gesture",.8],["return",.9]]){
           await page.evaluate(({subject,fraction})=>{
-            const animal=document.querySelector(`#sceneSvg [data-species="${subject}"]`);
+            const animal=document.querySelector(`.scene [data-species="${subject}"]`);
             const root=animal?.closest(".crab-run")||animal;
             for(const a of root?.getAnimations({subtree:true})||[]){
               const duration=a.effect?.getComputedTiming().duration;
@@ -1040,7 +1123,7 @@ for (const cs of cases) {
     for (const width of [320, 390, PHONE_WIDTH].filter((w, i, a) => a.indexOf(w) === i)) {
       const { ctx, page, errs } = await open(cs, { width, dpr: width === 390 ? 2 : 5 });
       const box = await page.evaluate(() => {
-        const bs = [...document.querySelectorAll("#sceneSvg [data-decor]")].filter((el) => !/^(bat|witch|(blood|harvest)-moon)$/.test(el.dataset.decor))
+        const bs = [...document.querySelectorAll(".scene [data-decor]")].filter((el) => !/^(bat|witch|(blood|harvest)-moon)$/.test(el.dataset.decor))
           .map((el) => el.getBoundingClientRect());
         if (!bs.length) return null;
         const x0 = Math.min(...bs.map((b) => b.left)), y0 = Math.min(...bs.map((b) => b.top));
@@ -1082,7 +1165,7 @@ for (const cs of cases) {
     const running = await page.evaluate(() => document.getAnimations().length);
     // she holds still beside the moon, never over it, so its real phase still shows
     const rest = await page.evaluate(() => {
-      const svg = document.getElementById("sceneSvg"), w = svg.querySelector('[data-fly="witch"]'), m = svg.querySelector("[data-disc]");
+      const svg = document.getElementById("sceneSvg"), w = document.querySelector('.scene [data-fly="witch"]'), m = document.querySelector(".scene [data-disc]");
       if (!w || !m) return null;
       const [x, y, r] = m.dataset.disc.split(" ").map(Number), M = svg.getScreenCTM(), cx = M.a * x + M.e, cy = M.d * y + M.f, b = w.getBoundingClientRect();
       return { gap: Math.hypot(Math.min(Math.max(cx, b.left), b.right) - cx, Math.min(Math.max(cy, b.top), b.bottom) - cy), r: r * M.a };
@@ -1092,8 +1175,9 @@ for (const cs of cases) {
     // and wherever she holds, she is not on a sunrise or sunset time, a bat, an animal, a decoration
     // or behind the scenery
     const held = await page.evaluate(() => {
-      const svg = document.getElementById("sceneSvg"), w = svg.querySelector('[data-fly="witch"]');
+      const svg = document.querySelector(".scene"), scene = svg, w = svg.querySelector('[data-fly="witch"]');
       if (!w) return null;
+      const drawn = (e) => scene.contains(e) && !e.matches(".scene, .scene > svg, .scene-lift, .scene-lift .lift, .scene-lift .lift > svg");
       const b = w.getBoundingClientRect(), on = [];
       const meet = (A) => Math.max(0, Math.min(A.right, b.right) - Math.max(A.left, b.left)) * Math.max(0, Math.min(A.bottom, b.bottom) - Math.max(A.top, b.top));
       for (const t of svg.querySelectorAll("text.suntime")) if (meet(t.getBoundingClientRect()) > 0) on.push(`the time ${t.textContent}`);
@@ -1104,16 +1188,23 @@ for (const cs of cases) {
       }
       const weather = (e) => /url\(#(fogveil|mist)\)/.test(e.getAttribute("fill") || "") || !!e.closest(".nearrain,.splash,[class*=rain]");
       let n = 0, hid = 0;
+      document.documentElement.classList.add("hit-all");
       for (let u = 0; u < 12; u++) for (let v = 0; v < 6; v++) {
-        const st = document.elementsFromPoint(b.left + (u + .5) / 12 * b.width, b.top + (v + .5) / 6 * b.height).filter((e) => svg.contains(e) && e !== svg && !weather(e));
+        const st = document.elementsFromPoint(b.left + (u + .5) / 12 * b.width, b.top + (v + .5) / 6 * b.height).filter((e) => drawn(e) && !weather(e));
         const k = st.findIndex((e) => w.contains(e));
         if (k < 0) continue; n++; if (k > 0) hid++;
       }
+      document.documentElement.classList.remove("hit-all");
       return { on: [...new Set(on)], hidden: n ? Math.round(100 * hid / n) : 0 };
     });
     if (held) console.log(`    reduced motion: the witch holds still ${held.on.length ? "on " + held.on.join(", ") : "clear of the times, the bats and the scenery"}, ${held.hidden}% of her behind it`);
     if (held?.on.length) problems.push(`${cs.name}: under reduced motion the witch holds still on ${held.on.join(", ")}`);
     if (held && held.hidden > 15) problems.push(`${cs.name}: under reduced motion the scenery hides ${held.hidden}% of the still witch`);
+    // the first close-up shot of the sky rasters its sheets once more: on October 22 2026 one pixel of the house's
+    // pond at 430 in freezing rain came out 24 levels darker in it than in every shot after, with the page itself
+    // unchanged (a full-page shot of that pixel held still throughout). So a shot is thrown away first, and a scene
+    // that moves still differs between the two that count
+    await page.locator(".sky").screenshot();
     const one = await page.locator(".sky").screenshot({ path: path.join(OUT, `${cs.name}-prm.png`) });
     await page.waitForTimeout(1400);
     const two = await page.locator(".sky").screenshot();

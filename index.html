@@ -177,6 +177,7 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 /* only Beaufort has boxes; empty, at the other places, the container is not there at all, because even empty it
    moved a pixel of the coast's still picture under reduced motion */
 .scene .scene-lift:empty{display:none}
+.scene .scene-layer:empty{display:none}
 .scene-lift .lift{position:absolute;overflow:hidden}
 .scene-lift .lift>.lift{position:absolute;left:0;top:0;width:100%;height:100%}
 /* a drawing runs on past the frame inside its box, and the frame is cut once, here, where it does not turn: cut
@@ -185,6 +186,13 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes bftRockLift{from{transform:rotate(calc(var(--rk,1deg) * -1)) translateY(var(--rty,.25px))}to{transform:rotate(var(--rk,1deg)) translateY(calc(var(--rty,.25px) * -1))}}
 .scene-layer :is(.bft-flag,.bft-sock,.bft-sock-tail,.bft-balloon),.scene-lift .bft-bones-wave{transform-box:view-box;transform-origin:0 0}
 @keyframes bftTurn{from{transform:rotate(var(--sway-neg,-.6deg))}to{transform:rotate(var(--sway,.6deg))}}
+/* the house at Porters Neck (pnPondScene): the gas flames flicker at their base, the fountain's jets lean and its spray drifts on the gusts, the reflection's ripples drift, and the heron holds still */
+:is(#sceneSvg,.scene-layer) .pn-flame{transform-box:view-box;transform-origin:0 0}
+@keyframes pnDrift{from{transform:translateX(calc(var(--dx,1px) * -1))}to{transform:translateX(var(--dx,1px))}}
+:is(#sceneSvg,.scene-layer) .heron-still *{animation:none!important}
+@keyframes pnSpray{from{transform:skewX(calc(var(--sk,1deg) * -.4))}to{transform:skewX(var(--sk,1deg))}}
+@keyframes pnDrops{from{transform:translateX(calc(var(--dx,1px) * -.3));opacity:.75}to{transform:translateX(var(--dx,1px));opacity:1}}
+@keyframes pnFlick{0%{transform:scale(1,1);opacity:1}35%{transform:scale(1.02,calc(1 - var(--fk,.1)));opacity:.88}70%{transform:scale(.98,calc(1 + var(--fk,.1) * .6));opacity:1}100%{transform:scale(1,calc(1 - var(--fk,.1) * .5));opacity:.93}}
 .scene-layer .bft-flag[style]{animation:bftFlag var(--fd,1.4s) ease-in-out infinite alternate}
 @keyframes bftFlag{from{transform:skewY(calc(var(--fs,2deg) * -1))}to{transform:skewY(var(--fs,2deg))}}
 .scene-layer :is(.bft-sock,.bft-sock-tail)[style]{animation:bftFlutter var(--fd,1.6s) ease-in-out infinite alternate}
@@ -991,7 +999,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   <p class="verdict" id="verdict">Reading the sky…</p>
   <div class="chips" id="chips"></div>
   <div class="nowcast" id="nowcast"><span id="ncText"></span><span class="nc-bars" id="ncBars"></span></div>
-  <div class="scene"><svg id="sceneSvg" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-label="Sun and moon over the marsh horizon"></svg><svg id="sceneSky" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneMoss" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneNear" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><div id="sceneLift" class="scene-lift" aria-hidden="true"></div><svg id="sceneFx" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg></div>
+  <div class="scene"><svg id="sceneSvg" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-label="Sun and moon over the marsh horizon"></svg><svg id="sceneSky" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneMoss" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneNear" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><div id="sceneLift" class="scene-lift" aria-hidden="true"></div><svg id="sceneFront" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneFx" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneWater" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneRefl" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneRipple" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneTop" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg></div>
   <div class="cobweb" id="cobweb" aria-hidden="true" hidden></div>
 </header>
 
@@ -1170,7 +1178,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
     return{lit:mix(mix(D.lit,H.lit,k),mix(D.lit,H.litLow,k),low),edge:mix(D.edge,H.edge,kk),unlit:mix(D.unlit,H.unlit,kk),glow:mix(D.glow,H.glow,k)};
   };
   var PLACES={
-    mb:{full:"Moss Bridge Ct · Porters Neck",short:"Porters Neck",lat:34.2982,lon:-77.7896,scene:"marsh",tide:true,fish:false,year:"The year · Wilmington",airport:"Wilmington",label:"Sun and moon over the marsh horizon",snowy:false},
+    mb:{full:"Moss Bridge Ct · Porters Neck",short:"Porters Neck",lat:34.2982,lon:-77.7896,scene:"marsh",view:"pond",tide:true,fish:false,year:"The year · Wilmington",airport:"Wilmington",label:"Sun and moon over the house from across the pond, its palms, string lights and fountain",snowy:false},
     sp:{full:"Bob Plumley Rd · Shady Spring",short:"Shady Spring",lat:37.8215,lon:-80.9942,scene:"ridge",tide:false,fish:true,year:"The year · Shady Spring",airport:"Beckley",label:"Sun and moon over Appalachian ridgelines and the farm pond",snowy:true},
     bft:{full:"Coosaw Club Dr · Beaufort",short:"Beaufort",lat:32.4938,lon:-80.6151,scene:"lowcountry",tide:true,fish:false,year:"The year · Beaufort",airport:"Beaufort MCAS",water:"Beaufort River",label:"Sun and moon over the Beaufort River, the swing bridge and a live oak hung with moss",snowy:false,windRow:true,runsTall:[5]}
   };
@@ -1228,7 +1236,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   }
   document.getElementById("loadMark").innerHTML=mark+'<p class="verdict">Reading the sky\u2026</p>';
   var aw=Math.min(760,Math.max(320,document.querySelector(".app").clientWidth||760));
-  var W=Math.max(320,aw/1.22),H=Math.round((L.scene==="marsh"?150:168)+(760-W)*.10),cw=aw-40,ch=Math.round(165+(760-cw)*.09);
+  var W=Math.max(320,aw/1.22),H=L.view==="pond"?194:Math.round((L.scene==="marsh"?150:168)+(760-W)*.10),cw=aw-40,ch=Math.round(165+(760-cw)*.09);
   document.getElementById("sceneSvg").setAttribute("viewBox","0 0 "+W+" "+H);
   var box=function(el,h){document.getElementById(el).setAttribute("viewBox","0 0 "+cw+" "+h)};
   /* Beaufort's tide chart carries its wind row under the lows, and its in-season row under that: both are
@@ -1245,8 +1253,11 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
 const LOCS={
   mb:{id:"mb",addrFull:"Moss Bridge Ct · Porters Neck",addrShort:"Porters Neck",
       lat:34.2982,lon:-77.7896,scene:"marsh",kind:"coast",
+      /* the scene is the house from across the pond (pnPondScene), which looks north: its sky runs east on
+         the right to west on the left. The marsh scene is parked, reached by no place */
+      view:"pond",faces:"north",
       tz:"America/New_York",tzLabel:"ET",
-      sceneLabel:"Sun and moon over the marsh horizon",
+      sceneLabel:"Sun and moon over the house from across the pond, its palms, string lights and fountain",
       marine:{lat:34.26,lon:-77.68},tide:8658163,
       /* the beach's NWS zone, Coastal New Hanover, read for its tropical watches and warnings alone:
          Debby's and PTC Eight's tropical storm warnings were on the beach and not at the house */
@@ -1670,6 +1681,9 @@ if(CLOUD_RO)CLOUD_RO.observe(document.getElementById("skyFx"));
 /* warm the canvas and getImageData path while the loading shell waits on the network */
 requestAnimationFrame(()=>setTimeout(()=>{if(!CLOUD_MEMO.size)cloudLayer({fill:"#FFFFFF",puffs:[[50,40,30,12]]},64,48)}));
 function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd,code){
+  /* a place whose scene looks north (LOCS.*.faces) has east on its right: the wind's bearing is mirrored east
+     for west there, and the rain leans and the clouds drift the way the scene's palms stream */
+  if(LOC.faces==="north")windDir=(360-windDir)%360;
   const night=clamp((-altDeg-2)/8,0,1);
   const st=starField();
   /* Only the low third of the sky scintillates. That is where you are looking through the
@@ -7895,6 +7909,644 @@ function runGlyph(id,len=32,maxH=Infinity){
   return RUN_SVG[key]=`<svg viewBox="${bx} ${by} ${bw} ${bh}" width="${(bw*s).toFixed(1)}" height="${(bh*s).toFixed(1)}" aria-hidden="true">${inkRig(f.rig(),{...RUN_INK,...f.pal},{s,line:.8,heavy:.32,shade:1.1,lit:.6,light:[-.5,-1]})}</svg>`;
 }
 
+/* ── Porters Neck: the windmill palm ─────────────────────────────────────────────────────
+   Trachycarpus fortunei, the one between the patio's sabals. What has to survive on a phone is
+   what tells it from a small sabal: a slim trunk wrapped in dark brown hair, shaggy at its edges
+   and fattest just under the head, and a compact round head of stiff, near-circular fans, each on
+   a long thin stalk of its own, held up and out with a few lower ones drooping and one or two dead
+   ones hanging brown against the hair. The sabal's fans are costapalmate hands that hang; these
+   are palmate wheels that stand, split to about half way into straight fingers that only bend at
+   their very tips.
+
+   y=0 is the ground, x=0 the foot of the trunk. Like rigBftPalmetto it is the crown's back half
+   (pn-windmill-crown, behind the trunk), the trunk, and the crown's front half (pn-windmill-crown
+   again, holding pn-windmill-head, the fans held up, and pn-windmill-skirt, the fans held out and
+   hanging). Both crown halves pivot at the trunk's top; head and skirt at the heart. It reuses the
+   sabal's stalk (bftPalmStalk), underside line (bftPalmShift) and wind value (bftPalmWind); the
+   fan and the trunk are its own. Seeded through mulberry, so a repaint never reshuffles it. */
+INK.pnWindmill={
+  fibre:"#5C4331",fibreLt:"#7C5D41",fibreDk:"#33241A",stub:"#7A6346",
+  wmFrond:"#557C45",wmFrondLt:"#6E9450",wmFrondFar:"#3A5A35",wmPetiole:"#566A3A",wmRib:"#88A866",
+  wmDead:"#93744D",wmPleatDead:"#5E4630",
+  ink:"#2A1B33",shade:"#3A2350",lit:"#FFE6B0",shadeOp:.34,litOp:.5};
+
+/* one palmate fan: (hx,hy) the hastula, a the direction it points, L its radius, sp the share of
+   the circle it shows (up to about 1.6π face on), n segments. Every finger is nearly the same
+   length, so the fan's rim is round; they are joined to `notch` of the way out, straight and stiff
+   (droop is small) and bend only at the tip (tip). Returns the blade outline and its ribs */
+function pnWmFan(hx,hy,a,L,sp,droop,n,r,{notch=.46,tip=.3,blow=0,round=.1}={}){
+  const C=[];
+  for(let i=-1;i<=n;i++){
+    const u=n>1?i/(n-1):.5,off=u-.5,ao=Math.min(1,Math.abs(off)*2),phi=a+off*sp;
+    const len=L*(1-round*ao*ao)*(.93+r()*.14),td=tip*(.6+r()*.8),bw=blow*(.8+r()*.4);
+    /* a stiff finger: straight out, a little gravity, and its last third tipped over */
+    C.push(t=>[hx+Math.cos(phi)*len*t+bw*len*t*t,hy+Math.sin(phi)*len*t+droop*len*t*t+td*len*Math.max(0,t-.66)**2*5]);
+  }
+  const c=(i,t)=>C[i+1](t);
+  const E=(i,t,side,k0=.5)=>{const p=c(i,t),q=c(i+side,t),k=k0*Math.min(1,(1-t)/(1-notch));return[p[0]+(q[0]-p[0])*k,p[1]+(q[1]-p[1])*k]};
+  const q=(f,t0,t1)=>{const P0=f(t0),M=f((t0+t1)/2),P3=f(t1);return` Q ${P2([2*M[0]-(P0[0]+P3[0])/2,2*M[1]-(P0[1]+P3[1])/2])} ${P2(P3)}`};
+  const o0=t=>E(0,t,-1,.42),o1=t=>E(n-1,t,1,.42);
+  let blade=`M ${P2([hx,hy])}`+q(o0,0,notch)+q(o0,notch,1);
+  for(let i=0;i<n-1;i++)blade+=q(t=>E(i,t,1),1,notch)+q(t=>E(i+1,t,-1),notch,1);
+  blade+=q(o1,1,notch)+q(o1,notch,0)+" Z";
+  /* each finger's own rib, a hairline from near the hastula out along it: the pleats that make a
+     windmill fan read as stiff */
+  const ribs=[];
+  for(let i=0;i<n;i+=1){const p0=c(i,.12),p1=c(i,.5),p2=c(i,.8),d=Math.hypot(p1[0]-p0[0],p1[1]-p0[1])||1,nx=-(p1[1]-p0[1])/d*.09,ny=(p1[0]-p0[0])/d*.09;
+    ribs.push(`M ${P2([p0[0]-nx,p0[1]-ny])} L ${P2([p1[0]-nx*.7,p1[1]-ny*.7])} L ${P2(p2)} L ${P2([p1[0]+nx*.7,p1[1]+ny*.7])} L ${P2([p0[0]+nx,p0[1]+ny])} Z`)}
+  return{blade,ribs};
+}
+
+/* the trunk: a slim column wrapped in hair. The hair is the whole silhouette, ragged at both
+   edges with uneven tufts that hang down, thicker up the trunk and fattest under the head. Inside
+   it the hair lies in mats, one over the next like shingles, each mat's frayed lower edge a dark
+   fringe over the one under it, and up top the stubs of old stalks stand out of it */
+function pnWmTrunk(h,lean,r){
+  const f=t=>1.5*t-.5*t**3,sweep=(r()-.5)*.06;
+  const T=t=>[lean*h*f(t)+sweep*h*Math.sin(Math.PI*t),-h*t];
+  /* width: a little flare at the foot, slim through the middle, swelling with hair to the head */
+  const wAt=t=>{const base=2.3+.7*Math.max(0,1-t/.08)-.2*t,hair=1.7*t**2.4;const k=Math.max(0,(t-.95)/.05);return(base+hair)*(1-.4*k*k)};
+  const P=[];
+  /* each edge: random steps up the trunk, and at each a tuft, out and hanging down, or a notch in */
+  const edge=s=>{const E=[];let y=0;
+    while(y<h){const t=y/h,[x]=T(t),w=wAt(t)/2,sh=.22+1.15*t**1.3;
+      if(r()<.72){const out=sh*(.45+r()*.8)*(r()<.15?1.7:1);E.push([x+s*(w-.1),-y],[x+s*(w+out),-y+.35+out*(.4+r()*.5)])}
+      else E.push([x+s*(w-.15-r()*.2*sh),-y]);
+      y+=.4+r()*.65}
+    return E};
+  const Lft=edge(-1).reverse(),Rgt=edge(1);
+  const[cx,cy]=T(1);
+  const top=[[cx+wAt(1)*.3,cy-.5],[cx,cy-.7],[cx-wAt(1)*.3,cy-.5]];
+  const foot=[];for(let k=0;k<=5;k++){const u=-.5+k/5;foot.push([u*(wAt(0)+.3),.5+(k%2?.25:0)])}
+  /* foot left to right, up the right edge, over the top, down the left */
+  P.push(part(`M ${[...foot,...Rgt,...top,...Lft].map(P2).join(" L ")} Z`,"fibre"));
+  /* the beard: long strands hanging off the trunk's shoulders just under the head */
+  for(const s of[-1,1])for(let k=0;k<3;k++){
+    const t=.92-k*.05-r()*.03,[x,y]=T(t),w=wAt(t)/2,len=2.2+r()*2.4;
+    P.push(pTaper([[x+s*(w-.3),y-.2,1.1],[x+s*(w+.4+r()*.5),y+len*.5,.75],[x+s*(w+.2+r()*.7),y+len,.1]],"fibre",{per:3}));
+  }
+  /* the mats: a frayed fringe across the trunk every couple of units, its threads hanging */
+  const fr=[],lt=[];
+  for(let y=1.8+r();y<h-1.4;y+=1.7+r()*1.1){
+    const t=y/h,[x]=T(t),w=wAt(t)/2-.15,sh=.5+.9*t;
+    const tilt=(r()-.5)*.8;
+    let d=`M ${P2([x-w,-y+tilt])}`;const back=[];
+    const n=Math.max(3,Math.round(w*2/.42));
+    for(let i=0;i<=n;i++){const u=i/n,px=x-w+2*w*u,py=-y+tilt*(1-2*u);
+      const hang=i%2?sh*(.3+r()*.9):.05+r()*.15;
+      d+=` L ${P2([px,py+hang])}`;back.push([px,py-.32])}
+    d+=" L "+back.reverse().map(P2).join(" L ")+" Z";
+    fr.push(d);
+    /* the lit top of the mat under it: a few short pale strands */
+    for(let k=0;k<2;k++){const px=x-w*.55+r()*w*.9,len=.6+r()*.5;
+      lt.push(`M ${P2([px-.07,-y+.5])} L ${P2([px+.07,-y+.5])} L ${P2([px+.16,-y+.5+len])} L ${P2([px+.02,-y+.5+len])} Z`)}
+  }
+  P.push(part(fr.join(" "),"fibreDk",{noSil:true,op:.8}));
+  P.push(part(lt.join(" "),"fibreLt",{noSil:true,op:.8}));
+  /* the stubs of old stalks, cut short, standing up and out of the hair over the top third */
+  for(let y=h*.7;y<h-2.4;y+=1.8+r()*1.4){
+    const t=y/h,[x]=T(t),w=wAt(t)/2;
+    for(const s of[-1,1]){if(r()<.45)continue;
+      const ang=.6+r()*.5,len=.9+r()*.9,bx=x+s*(w-.6),tx=x+s*(w+Math.cos(ang)*len),ty=-y-Math.sin(ang)*len;
+      P.push(pTaper([[bx,-y+.3,.75],[tx,ty,.4]],"stub",{per:2,capEnd:false}));
+    }
+  }
+  return{parts:P,top:[cx,cy],T,wAt};
+}
+
+/* the head: fans set round the heart on a sphere, most held up and out, the lowest drooping. Each
+   is a long thin stalk, then the fan at its end, opening wider the more it faces us */
+function pnWmCrown(hx,hy,seed,{wind=0,size=1,dead=2,nF=13}={}){
+  const aw=Math.min(1,Math.abs(wind)),wk=.4*aw**1.15,down0=wind<0?Math.PI:0;
+  const comb=(a,k=1)=>{let d=down0-a;d=Math.atan2(Math.sin(d),Math.cos(d));return a+d*wk*k};
+  const r=mulberry(seed*6113+29),G=2.39996,PL=7.2*size,BL=5.9*size,F=[];
+  for(let k=0;k<nF;k++){
+    const u=(k+.5)/nF,el=1.42-2.05*u**.9+(r()-.5)*.16,az=k*G+seed*1.3+(r()-.5)*.5;
+    const px=Math.cos(el)*Math.cos(az),py=-Math.sin(el),pz=Math.cos(el)*Math.sin(az);
+    /* the stalk arches: it leaves the heart steeper and the fan carries on near its line, stiff */
+    const by=py+.12+.22*Math.max(0,-el+.2),bh=Math.hypot(px,by),bl=bh/Math.hypot(px,by,pz);
+    const ba=bh<.2?-Math.PI/2+(px>=0?.3:-.3):Math.atan2(by,px),pl=Math.hypot(px,py),pa=pl<.25?ba:Math.atan2(py,px);
+    const hz=Math.hypot(px,pz),sx=hz<.3?.85:Math.abs(pz)/hz;
+    /* rounder than the sabal's: never less than a half wheel, nearly a whole one face on */
+    const sp=Math.max(1.9,Math.min(4.6,2*Math.atan(4.2*Math.max(.15,sx)/Math.max(.45,bl))));
+    F.push({k,pa,ba,dz:pz,sp,plen:PL*Math.max(.35,pl)*(.85+r()*.3),L:BL*(.7+.3*bl)*(.9+r()*.2),
+      droop:.04+.1*Math.max(0,Math.sin(ba))+.03*r(),tip:.12+.3*Math.max(0,el<0?-el:0)+.1*r(),n:9+Math.round(sx*3+r()),lt:r()<.4});
+  }
+  const draw=(f,far)=>{
+    const fr=mulberry(seed*211+f.k*23),pa2=comb(f.pa,.6),half=f.plen*.5;
+    const p1=[hx+Math.cos(f.pa)*half,hy+Math.sin(f.pa)*half],hq=[p1[0]+Math.cos(pa2)*half,p1[1]+Math.sin(pa2)*half+f.plen*.12*f.droop*4];
+    const fan=pnWmFan(hq[0],hq[1],comb(f.ba),f.L,f.sp*(1-.25*aw),f.droop*(1-.3*aw),far?Math.max(7,f.n-3):f.n,fr,{notch:.42+fr()*.1,tip:f.tip,blow:.22*wind});
+    const stalk=part(bftPalmStalk([[hx+Math.cos(f.pa)*.3,hy+Math.sin(f.pa)*.3,.62],[...p1,.44],[...hq,.3]]),far?"wmFrondFar":"wmPetiole");
+    const blade=part(fan.blade,far?"wmFrondFar":f.lt?"wmFrondLt":"wmFrond");
+    return{stalk,blade:far?[blade]:[part(bftPalmShift(fan.blade,.08,.28),"ink",{noSil:true,op:.7}),blade,part(fan.ribs.join(" "),"wmRib",{noSil:true,op:.6})]};
+  };
+  /* the dead ones: folded shut, brown, hanging straight down against the hair under the head */
+  const D=[];
+  for(let j=0;j<dead;j++){
+    const rr=mulberry(seed*389+j*31),side=j%2?1:-1,ay=hy+2+j*.9+rr()*.6;
+    const hq=[hx+side*(1.4+rr()*.8)+wind*1.2,ay+3.4+rr()*1.2];
+    const fan=pnWmFan(hq[0],hq[1],Math.PI/2+side*(.08+rr()*.12)-wind*.2,BL*(.85+rr()*.2),.7+rr()*.25,.02,6,rr,{notch:.5,tip:.05,blow:.1*wind,round:.05});
+    D.push({front:j<2||dead===1,parts:[part(bftPalmStalk([[hx+side*.6,ay-.5,.8],[(hx+hq[0])/2,(ay+hq[1])/2,.6],[...hq,.45]]),"wmDead"),
+      part(bftPalmShift(fan.blade,.08,.28),"ink",{noSil:true,op:.55}),part(fan.blade,"wmDead"),part(fan.ribs.join(" "),"wmPleatDead",{noSil:true,op:.6})]});
+  }
+  /* the head's own shade at the heart, small and round, so the gaps between the wheels read as
+     depth; and the heart itself over the stalks' roots */
+  const core=part(scallop(hx+wind*1.2,hy-.6,2.4*(1-.25*aw),2,8,seed*41+7,{flat:.25,jitter:.3,bulge:.6}),"wmFrondFar");
+  const cap=part(scallop(hx+wind*.6,hy+.2,1.7,1.4,7,seed*43+1,{flat:.25,jitter:.3}),"wmFrondFar",{noSil:true});
+  /* the spear: the next leaf, still folded shut, standing straight up out of the heart, the
+     windmill palm's own mark at the top of the head */
+  const sx=hx+wind*1.6;
+  const spear=[pTaper([[hx,hy-.4,1.15],[(hx+sx)/2+wind*.4,hy-3.4,.85],[sx+wind*1.2,hy-6.8*size,.12]],"wmFrondLt",{per:4}),
+    part(bftPalmStalk([[hx,hy-.8,.18],[(hx+sx)/2+wind*.4,hy-3.4,.14],[sx+wind*1.1,hy-6.2*size,.05]]),"wmRib",{noSil:true,op:.8})];
+  return{F,D,draw,core,cap,spear};
+}
+
+/* the whole palm, as rig layers. h is the trunk's height to the head (the whole tree stands about
+   h+11), lean a fraction of h, wind -1..1 (bftPalmWind(gust, downwind)), size the head's scale,
+   dead 0..3 hanging fronds, n the living fans. pose (preview only) bakes transforms into the
+   joints {crown, head, skirt}; style puts the same inline style on both crown halves */
+function rigPnWindmill(seed=1,{h=32,lean=0,wind=0,size=1,dead=3,n=13,pose={},style={}}={}){
+  const fin=(v,d)=>Number.isFinite(+v)?+v:d;h=Math.max(10,fin(h,32));lean=fin(lean,0);wind=Math.max(-1,Math.min(1,fin(wind,0)));
+  const r=mulberry(seed*92821+13),tr=pnWmTrunk(h,lean,r),[cx,cy]=tr.top,hx=cx,hy=cy-.9;
+  const cr=pnWmCrown(hx,hy,seed,{wind,size:fin(size,1),dead:fin(dead,2),nF:fin(n,15)});
+  const tf=k=>(pose[k]?` transform="${pose[k]}"`:"")+(style[k]?` style="${style[k]}"`:"");
+  const byDz=(p,q)=>p.dz-q.dz,up=f=>Math.sin(f.ba)<-.35;
+  const back=cr.F.filter(f=>f.dz<-.15).sort(byDz),front=cr.F.filter(f=>f.dz>=-.15);
+  const unit=(list,far,pre=[],mid=[])=>{const d=list.map(f=>cr.draw(f,far));return[...pre,...d.map(x=>x.stalk),...mid,...d.flatMap(x=>x.blade)]};
+  const lay=parts=>parts.some(p=>!p.noSil)?[{parts}]:[];
+  return[
+    {open:`<g class="pn-windmill-crown"${tf("crown")}>`,pivot:[cx,cy],layers:lay(unit(back,true,cr.D.filter(d=>!d.front).flatMap(d=>d.parts)))},
+    {parts:tr.parts},
+    {open:`<g class="pn-windmill-crown"${tf("crown")}>`,pivot:[cx,cy],layers:[
+      {open:`<g class="pn-windmill-head"${tf("head")}>`,pivot:[hx,hy],layers:lay(unit(front.filter(up).sort(byDz),false,[cr.core,...cr.spear]))},
+      {open:`<g class="pn-windmill-skirt"${tf("skirt")}>`,pivot:[hx,hy],layers:lay(unit(front.filter(f=>!up(f)).sort(byDz),false,cr.D.filter(d=>d.front).flatMap(d=>d.parts),[cr.cap]))}]}];
+}
+
+const PN_WM_STATES={
+  calm:{wind:0},
+  gusty:{wind:bftPalmWind(25,1),pose:{crown:"rotate(1.5)",head:"rotate(1)",skirt:"rotate(-1)"}},
+  windy:{wind:bftPalmWind(40,1),pose:{crown:"rotate(3.5)",head:"rotate(2.5)",skirt:"rotate(-2)"}}};
+BFT["pn-windmill"]={pal:INK.pnWindmill,box:[-16,-48,34,52],s:1,dist:.1,states:PN_WM_STATES,
+  draw:st=>rigPnWindmill(1,{h:32,wind:st.wind,pose:st.pose})};
+/* ── Porters Neck: a gas flame. One tongue of it, x its root, y0 the root's height, h tall, w half wide, leaning
+   by lean; the fire table builds its line of flame from them (propPnFireTable). pnGlowUid keeps each glow's
+   gradient id its own */
+const pnTongue=(x,y0,h,w,lean)=>[[x-w,y0],[x-w*.95,y0-h*.3],[x-w*.45+lean*.5,y0-h*.68],[x+lean,y0-h],[x+w*.5+lean*.55,y0-h*.62],[x+w*.95,y0-h*.28],[x+w,y0],[x,y0+.35]];
+let pnGlowUid=0;
+/* ── Porters Neck: the surfboards ─────────────────────────────────────────────────────
+   Three boards leaning together against something on their left (the palm's trunk or a fence
+   post, drawn by the scene, not here): a cream longboard at the back resting on it, a coral
+   shortboard leaning on the longboard, and a little teal fish with a swallow tail in front.
+   Seen deck on, each a little turned so its right-hand rail shows as a darker band (the light
+   is from the upper left). y=0 is the ground; every board stands on its tail there.
+   Nothing is random: the three boards are fixed, so the scene never reshuffles them. */
+const PN_BOARD_COL = {
+  /* the cream longboard and its one thin rust stripe */
+  deck: "#EFE3C4", rail: "#CDBF9C", stripe: "#B4553A",
+  /* the coral shortboard, its stringer, and the fin that peeks out under its tail */
+  coral: "#E98A70", coralRail: "#C76A55", stringer: "#F6E7D2", fin: "#4B5A63",
+  /* the teal fish */
+  teal: "#5FAFAA", tealRail: "#3F8A87", tealStr: "#E7F0E8",
+  ink: "#2A1B33", shade: "#3A2350", lit: "#FFF1CC", litOp: .55,
+};
+/* a board's outline as half-widths along its length, tail (0) to nose (1): [t, half-width] */
+const PN_BOARD_SHAPE = {
+  long: [[0, 1.6], [.03, 2.25], [.12, 2.65], [.4, 2.85], [.66, 2.7], [.84, 2.2], [.93, 1.5], [.975, .85]],
+  short: [[0, 1.35], [.03, 1.85], [.15, 2.25], [.45, 2.4], [.7, 2.1], [.86, 1.45], [.95, .8], [.985, .4]],
+  fish: [[0, 1.75], [.04, 2.2], [.2, 2.55], [.5, 2.7], [.74, 2.3], [.9, 1.45], [.98, .55]],
+};
+/* the board's own frame to the scene's: foot at (fx, 0), leaning left by `deg`, u across (+ right),
+   v along it (+ up toward the nose) */
+function pnBoardFrame(fx, deg, L) {
+  const a = deg * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
+  const at = (u, v) => [fx + u * c - v * s, -u * s - v * c];
+  return { at, L };
+}
+/* one board: the whole outline in its rail colour, the deck inset off the right rail, and its
+   stripe. A swallow tail cuts a notch into the tail. Returns parts already lifted so the lowest
+   point of the board is on the ground */
+function pnBoard(fx, deg, L, shape, cols, o = {}) {
+  const { at } = pnBoardFrame(fx, deg, L);
+  const S = PN_BOARD_SHAPE[shape];
+  /* the outline: up the right side, round the nose, down the left, across the tail */
+  const right = S.map(([t, w]) => [w, t * L]);
+  const left = S.slice().reverse().map(([t, w]) => [-w, t * L]);
+  const nose = [[0, L]];
+  const tail = o.swallow ? [[-.25, .2], [0, 1.15], [.25, .2]] : [[0, -.12]];
+  const outline = [...right, ...nose, ...left, ...tail];
+  /* the deck: the same outline pulled in off the right rail */
+  const inset = (pts, k) => pts.map(([u, v]) => [u > 0 ? u - k * Math.min(1, u / 1.2) : u, v]);
+  const deck = inset(outline, .7);
+  /* lift the board so its lowest point stands on the ground */
+  const all = outline.map(([u, v]) => at(u, v));
+  const lift = Math.max(...all.map((p) => p[1]));
+  const P = (pts) => pts.map(([u, v]) => { const [x, y] = at(u, v); return [x, y - lift]; });
+  const T = (pts) => pts.map(([u, v, w]) => { const [x, y] = at(u, v); return [x, y - lift, w]; });
+  const parts = [];
+  if (o.fin) {
+    /* the fin under the tail, its tip peeking out past the right rail, raked back toward the tail */
+    parts.push(pBlob(P([[1.2, 3.9], [2.3, 3.3], [3.15, 1.9], [3.45, .75], [2.7, 1.05], [1.2, 1.4]]), "fin"));
+  }
+  parts.push(pBlob(P(outline), cols.rail));
+  parts.push(pBlob(P(deck), cols.deck));
+  if (cols.stripe) parts.push(pTaper(T([[-.35, .1 * L, .5], [-.35, .55 * L, .52], [-.3, .9 * L, .38]]), cols.stripe));
+  return { parts, lift };
+}
+function pnBoards() {
+  /* back to front: the longboard on the post, the shortboard on the longboard, the fish in front */
+  const lb = pnBoard(0, 12, 22.4, "long", { rail: "rail", deck: "deck", stripe: "stripe" });
+  const sb = pnBoard(4.6, 14, 16.2, "short", { rail: "coralRail", deck: "coral", stripe: "stringer" });
+  const fb = pnBoard(8.4, 9, 12.6, "fish", { rail: "tealRail", deck: "teal", stripe: "tealStr" }, { swallow: true, fin: true });
+  return [{ parts: lb.parts }, { parts: sb.parts }, { parts: fb.parts }];
+}
+BFT["pn-boards"] = {
+  pal: PN_BOARD_COL,
+  box: [-8, -24, 28, 25],
+  s: 1,
+  dist: .06,
+  o: { line: .9, heavy: .45, shade: 1.3, lit: .9 },
+  draw: () => pnBoards(),
+  /* a guide only, for looking: the lawn and the post the boards lean on (the scene draws its own) */
+  extra: (st, lt) => {
+    const night = lt && lt.night, lawn = night ? "#1E2A27" : "#6F8A4A", post = night ? "#2A2A33" : "#7A6552";
+    return `<rect x="-120" y="0" width="260" height="12" fill="${lawn}"/>`
+      + `<rect x="-7.6" y="-24" width="2.6" height="24" fill="${post}" opacity=".85"/>`;
+  },
+};
+/* ── Porters Neck: the family's golf cart ─────────────────────────────────────────────
+   The big black four-seater, side on, facing right (+x): a flat roof on thin struts, the front
+   bench and the rear flip seat back to back, a steering wheel on its column, small wheels with grey
+   hubs, a chrome bumper and a headlamp. A touch chunky and round, because it is the storybook's cart.
+   It is black, and a black cart on a lawn at night is a hole in the picture, so the black is lifted
+   (a dark plum-grey, the black cat's) and it takes a wide cool lit edge, the way the black widow and
+   the cat are given theirs. y=0 is the ground, under the tyres. Nothing in it is random. */
+const PN_CART_COL = {
+  body: "#2B2731", far: "#18151D", roof: "#2E2A35", strut: "#3A3642", seat: "#CDBB98", seatDk: "#A8946F",
+  tyre: "#19171C", hub: "#9DA3AA", chrome: "#DCE1E5", glass: "#BFD8E2", lamp: "#F4E7BC", glint: "#F6F8FA", step: "#4A4552",
+  ink: "#0C0A10", shade: "#000000", shadeOp: .38, lit: "#CFDDF2", litOp: .55,
+};
+const PN_CART_O = { line: .95, heavy: .45, shade: 1.3, lit: 1 };
+const pnSeg = (x0, y0, x1, y1, w, role, x) => pTaper([[x0, y0, w], [x1, y1, w]], role, { capStart: true, capEnd: true }, x);
+const pnRing = (cx, cy, rx, ry, role, x, n = 14) => pBlob(Array.from({ length: n }, (_, i) => {
+  const a = i / n * Math.PI * 2; return [cx + Math.cos(a) * rx, cy + Math.sin(a) * ry];
+}), role, x);
+/* the wheel centres and their radius */
+const PN_CART_WHEEL = { r: 2.45, xs: [-7.6, 7.4] };
+function pnCart(st = {}) {
+  const { r, xs } = PN_CART_WHEEL, wy = -r;
+  /* the body: a chunky tub from the rear bumper to the front cowl, arched over both wheels */
+  const arch = (wx) => [[wx + 3.3, -2.3], [wx + 2.9, -4.4], [wx + 1.6, -5.55], [wx, -5.9], [wx - 1.6, -5.55], [wx - 2.9, -4.4], [wx - 3.3, -2.3]];
+  const body = [
+    [-12.4, -2.6], [-12.7, -4.6], [-12.4, -7.2], [-11.2, -7.6],    /* the rear, its rack under the flip seat */
+    [-3.5, -7.4], [3.6, -7.3],                                     /* the floor line under the seats */
+    [6.4, -7.6], [8.6, -8.9], [10.4, -9.2], [11.7, -8.4],          /* the front cowl rising to the dash */
+    [12.6, -6.4], [12.7, -3.6], [12.2, -2.4],                      /* the nose */
+    ...arch(xs[1]),
+    [1.5, -2.1], [-2.5, -2.1],
+    ...arch(xs[0]),
+  ];
+  const wheel = (wx) => [
+    pnRing(wx, wy, r, r, "tyre"),
+    pnRing(wx, wy, r * .5, r * .5, "hub", { noSil: true }),
+    pDot(wx - .3, wy - .3, .28, "glint", { noSil: true }),
+  ];
+  const layers = [
+    /* the far side: the far struts and the far wheels, a shade behind */
+    { parts: [pnSeg(-10.6, -7.4, -11.3, -15.3, .5, "far"), pnSeg(8.3, -9, 7.2, -15.3, .5, "far")] },
+    /* the wheels, behind the body so the arches cut over them */
+    { parts: wheel(xs[0]) }, { parts: wheel(xs[1]) },
+    /* the body tub and its rocker step */
+    { parts: [pBlob(body, "body"), pTaper([[-4.6, -2.75, .7], [4.2, -2.75, .7]], "step", { capStart: false, capEnd: false })] },
+    /* the seats: the front bench facing forward and the rear flip seat facing back, back to back */
+    { parts: [
+      pBlob([[-.6, -7.4], [-.9, -8.6], [-.4, -8.95], [4.3, -8.95], [4.7, -8.5], [4.4, -7.45]], "seat"),
+      pBlob([[-1.5, -8.7], [-1.95, -11.9], [-1.4, -12.3], [-.4, -12.15], [-.1, -11.6], [-.25, -8.7]], "seat"),
+      pBlob([[-10.9, -7.45], [-11.2, -8.6], [-10.7, -8.95], [-5.6, -8.95], [-5.2, -8.5], [-5.5, -7.45]], "seat"),
+      pBlob([[-4.1, -8.7], [-4.3, -11.6], [-3.95, -12.15], [-2.8, -12.3], [-2.3, -11.9], [-2.75, -8.7]], "seat"),
+      pTaper([[.3, -8.1, .2], [4, -8.1, .2]], "seatDk", { capStart: false, capEnd: false }, { noSil: true }),
+      pTaper([[-10.2, -8.1, .2], [-6, -8.1, .2]], "seatDk", { capStart: false, capEnd: false }, { noSil: true }),
+    ] },
+    /* the steering column and the wheel, raked back from the dash */
+    { parts: [pnSeg(8.1, -8.8, 6.3, -11.2, .45, "strut"), pnSeg(5.2, -10.3, 7.3, -12.3, .65, "body")] },
+    /* the near struts, the windscreen, the roof */
+    { parts: [
+      pnSeg(-10.9, -7.5, -11.6, -15.4, .55, "strut"), pnSeg(9.2, -9.1, 8.1, -15.4, .55, "strut"),
+      pBlob([[9.25, -9.3], [8.2, -15.2], [8.75, -15.2], [9.95, -9.4]], "glass", { noSil: true, op: .4 }),
+      pBlob([[-12.3, -15.2], [-12.75, -15.45], [-12.85, -15.9], [-12.6, -16.45], [-12, -16.6], [0, -16.65], [9.8, -16.6], [10.45, -16.4], [10.7, -15.9], [10.5, -15.4], [9.9, -15.2], [0, -15.15]], "roof"),
+    ] },
+    /* the chrome: the front bumper, the rear bumper, and the headlamp in the cowl */
+    { parts: [
+      pTaper([[13.1, -4.9, .6], [13.25, -3.8, .65], [13.1, -2.7, .6]], "chrome"),
+      pTaper([[-12.4, -3.4, .55], [-13.15, -3.4, .55]], "chrome"),
+      pnRing(11.7, -7.2, .62, .72, "lamp", { noSil: true }),
+      pnRing(11.75, -7.2, .3, .35, "glint", { noSil: true }),
+    ] },
+  ];
+  /* at night a thin cool rim along the tops the moon catches, in the light's own colour, so the black
+     cart keeps its outline against a dark lawn */
+  if (st.night) layers.push({ parts: [
+    pTaper([[-12.2, -16.6, .3], [0, -16.68, .34], [9.9, -16.62, .3]], "lit", {}, { noSil: true, op: .55 }),
+    pTaper([[6.5, -7.6, .22], [8.6, -8.95, .3], [10.4, -9.25, .3], [11.6, -8.5, .22]], "lit", {}, { noSil: true, op: .5 }),
+    pTaper([[-12.3, -7.25, .22], [-11.2, -7.65, .26], [-6, -7.55, .2]], "lit", {}, { noSil: true, op: .4 }),
+  ] });
+  return layers;
+}
+BFT["pn-cart"] = {
+  pal: PN_CART_COL,
+  box: [-14, -17.5, 28.5, 18],
+  s: 1,
+  dist: .06,
+  o: PN_CART_O,
+  states: { day: {}, night: { night: true } },
+  draw: (st) => pnCart(st),
+  extra: (st, lt) => {
+    const night = lt && lt.night, lawn = night ? "#1E2A27" : "#6F8A4A";
+    return `<rect x="-120" y="0" width="260" height="12" fill="${lawn}"/>`;
+  },
+};
+/* ── Porters Neck: the hand the house and its patio are drawn in. pnPoly and pnRect are polygons whose every
+   corner is nudged by a slow wobble keyed on where it is (pnW), so a corner two faces share moves the same way
+   in both and they stay joined, the long edges lean a hair, and nothing is ruled. pnHEll is an ellipse */
+const pnF = (v) => Math.round(v * 100) / 100;
+/* the hand: every corner is nudged by a slow wobble keyed on where it is, so a corner two faces share
+   moves the same way in both and they stay joined, the long edges lean a hair, and nothing is ruled */
+const pnW = ([x, y]) => [x + .26 * Math.sin(y * .12 + x * .05) , y + .2 * Math.sin(x * .1 + 1.3)];
+const pnPoly = (pts, role, x) => part("M " + pts.map((q) => pnW(q)).map((p) => `${pnF(p[0])} ${pnF(p[1])}`).join(" L ") + " Z", role, x);
+const pnRect = (x0, y0, x1, y1, role, x) => pnPoly([[x0, y0], [x1, y0], [x1, y1], [x0, y1]], role, x);
+const pnHEll = (cx, cy, rx, ry, role, x) => part(`M ${pnF(cx - rx)} ${pnF(cy)} a ${pnF(rx)} ${pnF(ry)} 0 1 0 ${pnF(2 * rx)} 0 a ${pnF(rx)} ${pnF(ry)} 0 1 0 ${pnF(-2 * rx)} 0 Z`, role, x);
+/* ── Porters Neck: the patio's fire table, the Adirondack chairs, the porch's compass dial and the does on
+   the lawn ── */
+
+/* The fire table, as Josh's photo has it: a long box of stacked stone under a pale concrete cap, seen a
+   little from above, with a dark trough down the middle of the cap and, lit, a long low line of gas flame
+   standing out of it. Origin: the middle of its front at the ground; about 21 wide and 7 tall. The flames
+   are their own group, `pn-flame`, pivoting on the trough (PN_FT_BASE), so the scene can flicker them. */
+const PN_FT_BASE=[0,-6.9];
+INK.pnFireTable={stone:"#A89580",stoneLt:"#C4B39C",stoneDk:"#857261",stoneGy:"#9A958C",mortar:"#5E5249",cap:"#D9D3C6",capTop:"#E6E1D5",capEdge:"#B9B2A4",
+  trough:"#2C2A2E",glass:"#3A4A55",flame:"rgb(255,150,52)",core:"rgb(255,214,110)",heart:"rgb(255,246,214)",blue:"rgb(96,150,255)",rimLit:"rgb(255,196,110)",
+  ink:"#2A1B33",shade:"#3A2350",lit:"#FFF1CC",shadeOp:.3,litOp:.45};
+function propPnFireTable({lit=false}={}){
+  const r=mulberry(4242),body=[pnRect(-11,-6.6,11,0,"mortar")];
+  /* the stone: uneven courses of flat stones, each a little different in colour and length */
+  const tones=["stone","stoneLt","stoneDk","stoneGy","stone"];
+  for(let y=0,row=0;y>-6.5;row++){const h=1+r()*.4,y0=y,y1=Math.max(-6.55,y-h);let x=-10.9+(row%2?r()*1.2:0);
+    if(row%2)body.push(pnRect(-10.9,y1+.1,x-.12,y0-.1,tones[(row+2)%5],{noSil:true}));
+    while(x<10.9){const w=1.8+r()*2.6,x1=Math.min(10.9,x+w);body.push(pnRect(x+.1,y1+.1,x1-.1,y0-.1,tones[Math.floor(r()*5)],{noSil:true}));x=x1}
+    y=y1}
+  body.push(pnRect(-11,-6.6,11,-5.8,"mortar",{noSil:true,op:.5}));
+  /* the cap: a thick slab of pale concrete, its top seen from a little above, and the trough in it */
+  const cap=[pnPoly([[-12,-6.4],[-11.6,-9.4],[11.6,-9.4],[12,-6.4]],"capTop"),pnRect(-12.1,-7.1,12.1,-5.7,"cap"),
+    pnRect(-12.1,-6.1,12.1,-5.7,"capEdge",{noSil:true,op:.8}),pnPoly([[-8,-7.6],[-7.8,-8.7],[7.8,-8.7],[8,-7.6]],"trough",{noSil:true}),
+    pnPoly([[-7.7,-7.8],[-7.6,-8.5],[7.6,-8.5],[7.7,-7.8]],"glass",{noSil:true,op:.85})];
+  if(lit)cap.push(pnPoly([[-11.6,-6.6],[-11.3,-9.2],[11.3,-9.2],[11.6,-6.6]],"rimLit",{noSil:true,op:.34}),pnRect(-12.1,-7.1,12.1,-5.8,"rimLit",{noSil:true,op:.24}));
+  const L=[{parts:body},{parts:cap}];
+  if(lit){const fl=[],fr=mulberry(77);
+    /* a low line of gas flame: blue at the trough, a yellow-white core, orange only at the tips */
+    for(let x=-6.6;x<=6.7;x+=1.65){const h=1.1+fr()*.9+(Math.abs(x)<4?.5:0),w=.95+fr()*.25,lean=(fr()-.5)*.45;
+      fl.push(pBlob(pnTongue(x,-7.75,.42,w*.9,0),"blue",{soft:true,op:.85}),pBlob(pnTongue(x,-8.05,h,w,lean),"flame",{soft:true}),pBlob(pnTongue(x,-8,h*.7,w*.72,lean*.5),"core",{soft:true}),pBlob(pnTongue(x,-7.95,h*.4,w*.5,0),"heart",{soft:true}))}
+    L.push({cls:"pn-flame",pivot:[0,-8.1],layers:[{parts:fl}]})}
+  return L;
+}
+function pnFireTableGlow(night=0){
+  const id=`pnft${++pnGlowUid}`,a=.3+.45*night;
+  return `<defs><radialGradient id="${id}" gradientUnits="userSpaceOnUse" cx="0" cy="-8" r="16"><stop offset="0" stop-color="rgb(255,200,110)" stop-opacity="${f1(a*100)/100}"/><stop offset=".45" stop-color="rgb(255,160,70)" stop-opacity="${f1(a*.35*100)/100}"/><stop offset="1" stop-color="rgb(255,140,50)" stop-opacity="0"/></radialGradient></defs>`
+    +`<ellipse cx="0" cy="-6" rx="17" ry="11" fill="url(#${id})"/>`;
+}
+BFT["pn-firetable"]={pal:INK.pnFireTable,box:[-13,-12,26,13],s:1,dist:.05,o:{line:.85,heavy:.45,shade:1.1,lit:.8},
+  states:{off:{lit:false},lit:{lit:true}},draw:st=>propPnFireTable(st),extra:(st,lt)=>st.lit?pnFireTableGlow(lt&&lt.night?1:0):""};
+
+/* An Adirondack chair, the fan-backed porch chair, about 7 tall: `side` is three-quarters on, facing +x,
+   `front` faces us. The slats are inside the silhouette; the ink holds the fan back, the broad arms and
+   the legs, which is what reads as an Adirondack at a few pixels */
+INK.pnChair={wood:"#B48A5A",woodDk:"#8E6A44",black:"#2C2A31",blackDk:"#1A181E",
+  ink:"#1A141E",shade:"#000000",lit:"#FFE9C8",shadeOp:.32,litOp:.5};
+function propPnChair({view="side",tone="black"}={}){
+  const c=tone==="wood"?"wood":"black",d=tone==="wood"?"woodDk":"blackDk",P=[],F=[];
+  if(view==="side"){
+    /* the far arm and legs a shade behind */
+    F.push(pnPoly([[-3.1,-5.3],[2.2,-5.6],[2.4,-5.0],[-3.0,-4.8]],d),pTaper([[2.6,-5.2,.55],[2.9,0,.55]],d,{capStart:false}));
+    /* the fan back, leaning back, its top rounded */
+    P.push(pnPoly([[-3.6,-3.3],[-1.0,-3.0],[-2.3,-9.6],[-3.4,-10.3],[-4.7,-10.0],[-5.5,-9.2]],c));
+    P.push(pnPoly([[-3.5,-3.4],[2.6,-2.8],[2.7,-2.1],[-3.4,-2.5]],c));
+    P.push(pTaper([[-3.2,-2.6,.6],[-3.8,0,.6]],c,{capStart:false}),pTaper([[2.2,-5.1,.65],[2.4,0,.65]],c,{capStart:false}));
+    P.push(pnPoly([[-3.9,-5.0],[2.9,-5.3],[3.1,-4.6],[-3.8,-4.4]],c));
+    /* the slats: two hairlines up the back */
+    for(const t of[.35,.65])P.push(pTaper([[-3.6+2.6*t,-3.4,.12],[-5.3+3*t,-9.4,.12]],d,{capStart:false,capEnd:false},{noSil:true,op:.8}));
+  }else{
+    P.push(pnPoly([[-2.8,-3.6],[2.8,-3.6],[3.2,-9.0],[2.2,-10.3],[0,-10.9],[-2.2,-10.3],[-3.2,-9.0]],c));
+    for(const x of[-1.65,-.55,.55,1.65])P.push(pTaper([[x,-3.8,.14],[x*1.12,-10.1,.14]],d,{capStart:false,capEnd:false},{noSil:true,op:.8}));
+    P.push(pnRect(-3.2,-3.4,3.2,-2.4,c),pnRect(-4.6,-5.2,-2.6,-4.5,c),pnRect(2.6,-5.2,4.6,-4.5,c));
+    P.push(pTaper([[-3.9,-4.6,.6],[-3.9,0,.6]],c,{capStart:false}),pTaper([[3.9,-4.6,.6],[3.9,0,.6]],c,{capStart:false}),pTaper([[-2.6,-2.6,.55],[-2.7,0,.55]],d,{capStart:false}),pTaper([[2.6,-2.6,.55],[2.7,0,.55]],d,{capStart:false}));
+  }
+  return[{parts:F.length?F:[pnRect(0,0,.01,.01,d,{noSil:true,op:0})]},{parts:P}];
+}
+BFT["pn-chair"]={pal:INK.pnChair,box:[-6,-11.5,12,12],s:1,dist:.05,o:{line:.7,heavy:.35,shade:1,lit:.8},
+  states:{side:{view:"side"},wood:{view:"side",tone:"wood"},front:{view:"front"}},draw:st=>propPnChair(st)};
+
+/* The compass dial on the porch's back wall, seen through the screen door: a navy wrought-iron ring, an
+   inner ring, an eight-point star (long north, east, south and west, short between) and, where it is big
+   enough to carry them, the letters. What has to read at a few pixels is a ring with a star in it. r is the
+   ring's radius; bg the wall behind, so the ring is a ring and not a disc */
+INK.pnDial={iron:"#22304A",wall:"#ECE7DC",ink:"#1A1A26",shade:"#000000",lit:"#FFFFFF",shadeOp:.2,litOp:.3};
+function propPnDial({r=10,letters=false,cx=0,cy=0}={}){
+  const E=(x,y,rx,role,o)=>pnHEll(cx+x,cy+y,rx,rx,role,o);
+  const P=[E(0,0,r,"iron"),E(0,0,r*.86,"wall",{noSil:true}),E(0,0,r*.6,"iron",{noSil:true}),E(0,0,r*.53,"wall",{noSil:true})];
+  const star=[];for(let i=0;i<16;i++){const a=i*Math.PI/8-Math.PI/2,R=i%4===0?r*.84:i%2===0?r*.5:r*.15;star.push([cx+Math.cos(a)*R,cy+Math.sin(a)*R])}
+  P.push(part("M "+star.map(p=>`${f1(p[0]*100)/100} ${f1(p[1]*100)/100}`).join(" L ")+" Z","iron",{noSil:true}));
+  /* the ring's little cross-bars at the diagonals */
+  for(let i=0;i<4;i++){const a=Math.PI/4+i*Math.PI/2,c=Math.cos(a),s=Math.sin(a);P.push(pTaper([[cx+c*r*.84,cy+s*r*.84,r*.05],[cx+c*r,cy+s*r,r*.05]],"iron",{capStart:false,capEnd:false},{noSil:true}))}
+  if(letters){const h=r*.13,w=r*.09,at=(a,R)=>[cx+Math.cos(a)*R,cy+Math.sin(a)*R],T=(pts)=>pTaper(pts.map(([x,y])=>[x,y,r*.035]),"iron",{},{noSil:true});
+    const [nx,ny]=at(-Math.PI/2,r*.73),[ex,ey]=at(0,r*.73),[sx,sy]=at(Math.PI/2,r*.73),[wx,wy]=at(Math.PI,r*.73);
+    /* each letter sits on the ring's white band, with its star point stopping short of it */
+    for(const[x,y]of[[nx,ny],[ex,ey],[sx,sy],[wx,wy]])P.push(pnHEll(x,y,h*1.2,h*1.2,"wall",{noSil:true}));
+    P.push(T([[nx-w,ny+h],[nx-w,ny-h],[nx+w,ny+h],[nx+w,ny-h]]));
+    P.push(T([[ex+w,ey-h],[ex-w,ey-h],[ex-w,ey+h],[ex+w,ey+h]]),T([[ex-w,ey],[ex+w*.7,ey]]));
+    P.push(T([[sx+w,sy-h*.8],[sx,sy-h],[sx-w,sy-h*.6],[sx+w,sy+h*.4],[sx,sy+h],[sx-w,sy+h*.8]]));
+    P.push(T([[wx-w*1.2,wy-h],[wx-w*.6,wy+h],[wx,wy-h*.2],[wx+w*.6,wy+h],[wx+w*1.2,wy-h]]));}
+  return P;
+}
+BFT["pn-dial"]={pal:INK.pnDial,box:[-12,-12,24,24],s:1,dist:.03,o:{line:.6,heavy:.2,shade:.6,lit:.4},ground:false,
+  states:{close:{r:10,letters:true},porch:{r:3.4}},draw:st=>propPnDial(st)};
+
+/* A whitetail doe, side on and facing +x: fine-boned, no antlers, slim legs with the hock bent back, a
+   long neck, big ears and the white flag of a tail. About 30 long and 46 tall at the ears; the scene draws
+   her small. `graze` puts her head down to the grass */
+INK.pnDoe={body:"#A9764B",far:"#80583A",belly:"#E9DCC6",white:"#F7F1E6",ear:"#9A6B45",earIn:"#E5CDB2",nose:"#1E161E",eye:"#16111A",hoof:"#2A1B33",
+  ink:"#2A1B33",shade:"#3A2350",lit:"#FFE2A8",shadeOp:.32,litOp:.55};
+function propPnDoe({graze=false}={}){
+  const far=[pTaper([[9,-21,2.4],[9.6,-11,1.25],[9.4,-4,1],[9.8,-.4,1.15]],"far"),pTaper([[-11,-24,3.4],[-13.6,-14,1.6],[-12.4,-5,1],[-12.2,-.4,1.15]],"far")];
+  const hx=graze?20:17,hy=graze?-8:-43;
+  const neck=graze?[[9,-27,5.6],[14,-20,3.6],[18,-11,2.8]]:[[9,-27,5.6],[12.4,-35,3.8],[15.4,-40.5,3]];
+  const head=graze?[[hx-2.4,hy-2.2],[hx+3.6,hy+2.6],[hx+5,hy+4.4],[hx+3.4,hy+5],[hx-1.8,hy+2.4],[hx-3,hy]]:[[hx-2.6,hy-1.6],[hx+1.6,hy-1.4],[hx+6.6,hy+1.4],[hx+6.8,hy+2.6],[hx+5.4,hy+3.2],[hx,hy+2.2],[hx-2.4,hy+1.4]];
+  const ears=graze?[[hx-2.6,hy-1],[hx-6.2,hy-4.6]]:[[hx-1.6,hy-1.8],[hx-3.6,hy-7.4]];
+  const body=[
+    pBlob([[-14.4,-28.4],[-10,-31.6],[2,-31.4],[9.6,-30.6],[12,-26.2],[10.4,-21.4],[4,-20],[-6,-20.4],[-12.4,-21.6],[-15.2,-24.6]],"body"),
+    pTaper(neck,"body"),
+    pBlob(head,"body"),
+    pBlob([[ears[0][0],ears[0][1]],[ears[1][0]-1.8,ears[1][1]+1.2],[ears[1][0],ears[1][1]],[ears[1][0]+1.6,ears[1][1]+1.8],[ears[0][0]+1.6,ears[0][1]+.2]],"ear"),
+    pBlob([[ears[0][0]+.3,ears[0][1]-.3],[ears[1][0]-.7,ears[1][1]+1.6],[ears[1][0]+.2,ears[1][1]+1.1],[ears[0][0]+1.1,ears[0][1]-.2]],"earIn",{noSil:true}),
+    pBlob([[-6,-20.6],[4,-20.2],[2,-22.4],[-5,-22.6]],"belly",{noSil:true,op:.85}),
+    pTaper([[8,-21.6,2],[8.4,-11,1.15],[8.2,-4,.95],[8.6,-.4,1.1]],"body"),
+    pTaper([[-9.6,-24,3.4],[-12.4,-13.6,1.55],[-11,-5,.95],[-10.8,-.4,1.1]],"body"),
+    pTaper([[8.2,-1.6,1],[8.6,-.3,1.1]],"hoof",{capStart:false}),pTaper([[-10.9,-1.6,1],[-10.8,-.3,1.1]],"hoof",{capStart:false}),
+    /* the white flag, up */
+    pBlob([[-14.4,-29.2],[-16.6,-33.6],[-15.6,-35.4],[-13.8,-33.4],[-13.4,-30]],"white"),
+    pDot(graze?hx+4.6:hx+6.4,graze?hy+4.6:hy+1.9,.7,"nose",{noSil:true}),
+    pDot(graze?hx+.4:hx+1.8,graze?hy+.6:hy,.55,"eye",{noSil:true}),
+    pBlob(graze?[[hx+3,hy+4.6],[hx+4.4,hy+5],[hx+2,hy+3.6]]:[[hx+3.6,hy+2.6],[hx+5.8,hy+3.1],[hx+3.4,hy+3.4]],"white",{noSil:true}),
+  ];
+  return[{parts:far},{parts:body}];
+}
+BFT["pn-doe"]={pal:INK.pnDoe,box:[-18,-52,44,54],s:.18,dist:.1,o:{line:1.4,heavy:.7,shade:1.6,lit:1.2},
+  states:{alert:{},graze:{graze:true}},draw:st=>propPnDoe(st)};
+
+/* The hot tub on the east end of the patio, as Josh's photo has it: a low squarish spa against the house
+   wall, a taupe hard cover a little domed with its fold across the middle, panelled sides and a small step.
+   Origin: the middle of its front at the ground; about 20 wide and 8 tall (house units) */
+INK.pnTub={cover:"#9C9184",coverDk:"#7F7569",coverLt:"#B8AE9F",side:"#7C736A",sideDk:"#625A53",step:"#8A8178",
+  ink:"#2A1B33",shade:"#3A2350",lit:"#FFF1D4",shadeOp:.3,litOp:.4};
+function propPnTub(){
+  const P=[pnRect(-10,-6.6,10,0,"side")];
+  for(const x of[-6.6,-3.3,0,3.3,6.6])P.push(pnRect(x-.14,-6.2,x+.14,-.4,"sideDk",{noSil:true,op:.75}));
+  P.push(pnRect(-10,-1,10,0,"sideDk",{noSil:true,op:.6}));
+  /* the hard cover: a soft rounded lip all round, a gentle dome, the fold across the middle */
+  const C=[pBlob([[-10.9,-6.2],[-11.1,-7.1],[-10.4,-8.4],[-6,-9.1],[0,-9.3],[6,-9.1],[10.4,-8.4],[11.1,-7.1],[10.9,-6.2],[0,-5.9]],"cover"),
+    pTaper([[-10.6,-6.5,.6],[0,-6.25,.7],[10.6,-6.5,.6]],"coverDk",{},{noSil:true,op:.8}),
+    pTaper([[-10.2,-8.1,.35],[-6,-8.85,.4],[0,-9.05,.42],[5,-8.9,.3]],"coverLt",{},{noSil:true,op:.75}),
+    pTaper([[-.1,-9.1,.24],[.1,-6.5,.24]],"coverDk",{capStart:false,capEnd:false},{noSil:true,op:.75})];
+  const S=[pnRect(-4.4,-2.2,4.4,0,"step"),pnRect(-4.4,-2.2,4.4,-1.8,"coverLt",{noSil:true,op:.5})];
+  return[{parts:P},{parts:C},{parts:S}];
+}
+BFT["pn-tub"]={pal:INK.pnTub,box:[-12,-10,24,11],s:1,dist:.05,o:{line:.8,heavy:.4,shade:1.1,lit:.7},draw:()=>propPnTub()};
+/* ── Porters Neck: the family's house from across the pond ─────────────────────────────────────────
+   The back of the house the way Josh's photo has it, square on, drawn as a building and not a diagram.
+   The big standing-seam roof is straight and even over the house (Josh: "it's symmetrical to the house"):
+   one ridge, the same pitch at both ends, a white rake board down each. Under it, gable, porch, gable:
+   two equal white front gables, each with shakes in its peak over a frieze board and lap siding below,
+   and between them, centred on the house, the screened porch under the main roof carried down at a lower
+   pitch, with the stainless flue rising through it. Tall double-hung windows with one
+   meeting rail: the west pair mulled in one casing, the east three apart. Light comes from above: hard
+   cast shadows under each rake, under the porch roof across the porch's top third, under every window head
+   and sill, and the east returns in shade. Casings, rakes and porch posts are inked units of their own.
+   Origin: the middle of the facade (the back door) at the ground, y up negative; -64 to 64 wide, the ridge at -77.
+   The roof's and the sheen's colours are handed in by the scene (the sky's, a step lighter).
+   States: day, night (the windows, the porch and its panel lit, each a little different). */
+const PN_BH={l:-60,r:60,ridge:-77,eave:-38,roofL:-64,roofR:64,ridgeL:-46,ridgeR:46,geave:-30,gl:[-60,-19.2],gr:[19.2,60],peakL:[-39.6,-51],peakR:[39.6,-51],porch:[-19.2,19.2],porchEave:-27,porchTop:-41,
+  door:[-4.8,4.8],panel:[-15.8,-11.8],dial:[0,-19.4,3.4],winL:[[-49.7,-40.2],[-39,-29.5]],winR:[[23.4,32.8],[34.9,44.3],[46.4,55.8]],winT:-25,winB:-4};
+INK.pnBackHouse={
+  wall:"#F2F0EA",wallShade:"#C6CBD2",siding:"#DDDAD2",shake:"#E4E0D6",shakeDk:"#B9B4AA",end:"#CDD2D8",roof:"#B4C2CC",roofDk:"#8F9DA8",seam:"#8A98A4",seamLit:"#E6EEF3",
+  trim:"#FBFAF6",cast:"#5B6170",glass:"#34434E",glassUp:"#7F98A8",frame:"#FBFAF6",porchWall:"#E7E4DC",shiplap:"#CBC6BC",screen:"#4C525A",panel:"#8A8070",post:"#FBFAF6",
+  iron:"#22304A",found:"#A39D94",flue:"#C9CED3",flueDk:"#8E959C",
+  glassOn:"rgb(255,206,132)",glassDim:"rgb(232,170,104)",glassHot:"rgb(255,236,190)",porchOn:"rgb(250,186,112)",panelOn:"rgb(255,240,200)",glow:"rgb(255,186,100)",
+  ink:"#2A1B33",shade:"#3A2350",lit:"#FFF6E2",shadeOp:.32,litOp:.5};
+/* the house's outline for the paper grain laid over it: the big roof, the walls, the gables */
+function pnBackHouseSil(){
+  const B=PN_BH;
+  return[`M ${B.l} 0 L ${B.l} ${B.geave} L ${B.roofL} ${B.eave} L ${B.ridgeL} ${B.ridge} L ${B.ridgeR} ${B.ridge} L ${B.roofR} ${B.eave} L ${B.r} ${B.geave} L ${B.r} 0 Z`];
+}
+function pnBackHouse({night=false,shadowOp=1}={}){
+  const B=PN_BH,L=[],ge=B.geave;
+  const cast=(pts,op=.3)=>pnPoly(pts,"cast",{noSil:true,op:op*shadowOp});
+  const strip=(a,b,w,role="trim",o)=>{const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy),nx=-dy/l*w/2,ny=dx/l*w/2;
+    return pnPoly([[a[0]-nx,a[1]-ny],[b[0]-nx,b[1]-ny],[b[0]+nx,b[1]+ny],[a[0]+nx,a[1]+ny]],role,o)};
+  /* the big roof, straight and even: one ridge, the same pitch at both ends, a white rake board down each */
+  {const parts=[pnPoly([[B.roofL,B.eave],[B.ridgeL,B.ridge],[B.ridgeR,B.ridge],[B.roofR,B.eave]],"roof")];
+    const r=mulberry(808);
+    for(let i=0;i<17;i++){const t=(i+.5)/17,x=B.ridgeL+1+t*(B.ridgeR-B.ridgeL-2),xb=x*(B.roofR-2)/(B.ridgeR-1)+(r()-.5)*.5,xm=(x+xb)/2+(r()-.5)*.4;
+      parts.push(pTaper([[x+.45,B.ridge+.8,.18],[xm+.5,(B.ridge+B.eave)/2,.24],[xb+.55,B.eave-.5,.3]],"seamLit",{capStart:false,capEnd:false},{noSil:true,op:.55}));
+      parts.push(pTaper([[x,B.ridge+.6,.2],[xm,(B.ridge+B.eave)/2,.28],[xb,B.eave-.5,.36]],"seam",{capStart:false,capEnd:false},{noSil:true,op:.7}))}
+    parts.push(pTaper([[B.ridgeL+.4,B.ridge,1],[B.ridgeR-.4,B.ridge,1]],"trim",{capStart:false,capEnd:false},{noSil:true,op:.7}));
+    L.push({parts});
+    L.push({parts:[strip([B.roofL-.6,B.eave+.6],[B.ridgeL-.3,B.ridge-.4],1.6),strip([B.ridgeR+.3,B.ridge-.4],[B.roofR+.6,B.eave+.6],1.6)]});}
+  /* between the gables the main roof carries on down over the porch at a lower pitch, a break across it where
+     the pitch changes, and the stainless flue rises through it */
+  {const[p0,p1]=B.porch,e=B.porchEave,t=B.eave,mx=(p0+p1)/2;
+    const parts=[pnPoly([[p0-15,t-.4],[p1+15,t-.4],[p1+7,e+.6],[p0-7,e+.6]],"roof")];
+    const r=mulberry(808);
+    for(let i=0;i<17;i++){const tt=(i+.5)/17,x0=B.ridgeL+1+tt*(B.ridgeR-B.ridgeL-2),x=x0*(B.roofR-2)/(B.ridgeR-1)+(r()-.5)*.5;
+      if(x<p0-14||x>p1+14)continue;const xb=x*.98;
+      parts.push(pTaper([[x+.5,t,.26],[xb+.5,e,.3]],"seamLit",{capStart:false,capEnd:false},{noSil:true,op:.5}),pTaper([[x,t,.3],[xb,e,.34]],"seam",{capStart:false,capEnd:false},{noSil:true,op:.7}))}
+    parts.push(pTaper([[p0-15,t+.1,.5],[p1+15,t+.1,.5]],"roofDk",{capStart:false,capEnd:false},{noSil:true,op:.45}));
+    L.push({parts});
+    L.push({parts:[pnRect(p0-2.6,e-.4,p1+2.6,e+1.4,"trim")]});
+    /* the flue: a plain round stainless pipe, a lit edge down it, and a flat rain cap wider than the pipe
+       on two short legs, so it never reads as a sign */
+    const f0=e-6.5,f1=t-4.5;
+    L.push({parts:[pnRect(mx-.62,f1,mx+.62,f0,"flue"),pnRect(mx-.82,f0-.6,mx+.82,f0,"flueDk",{noSil:true,op:.7}),
+      pnRect(mx-.58,f1-.7,mx-.38,f1,"flueDk",{noSil:true}),pnRect(mx+.38,f1-.7,mx+.58,f1,"flueDk",{noSil:true}),
+      pTaper([[mx-.3,f0-.2,.22],[mx-.3,f1+.1,.22]],"seamLit",{capStart:false,capEnd:false},{noSil:true,op:.85})]},
+      {parts:[pnRect(mx-1.55,f1-1.3,mx+1.55,f1-.65,"flue"),pnRect(mx-1.55,f1-.95,mx+1.55,f1-.65,"flueDk",{noSil:true,op:.6})]});}
+  /* the porch: a white shiplap wall behind dark screens, the tall lit panel, the dial behind the screen door */
+  {const[p0,p1]=B.porch,top=B.porchEave+1.4,parts=[pnRect(p0,top,p1,0,night?"porchOn":"porchWall")];
+    for(let y=top+2.2;y<-.5;y+=1.7)parts.push(pnRect(p0+.4,y-.1,p1-.4,y+.1,"shiplap",{noSil:true,op:night?.3:.45}));
+    if(night)for(let i=0;i<5;i++){const k=1-i*.16;parts.push(pnHEll(0,-12,13*k,10*k,"glow",{soft:true,noSil:true,op:.1}))}
+    const[a0,a1]=B.panel;parts.push(pnRect(a0,top+2.2,a1,-4.2,night?"panelOn":"panel",{noSil:true}));
+    const[dx,dy,dr]=B.dial;
+    for(const p of propPnDial({r:dr,cx:dx,cy:dy}))parts.push({...p,role:p.role==="wall"?(night?"porchOn":"porchWall"):p.role,noSil:true});
+    const[d0,d1]=B.door,sc={noSil:true,op:night?.45:.5};
+    parts.push(pnRect(p0+1.2,top+1,d0-1.2,-4.6,"screen",sc),pnRect(d1+1.2,top+1,p1-1.2,-4.6,"screen",sc),pnRect(p0+1.2,-3.6,d0-1.2,-.4,"screen",{...sc,op:sc.op*.8}),pnRect(d1+1.2,-3.6,p1-1.2,-.4,"screen",{...sc,op:sc.op*.8}));
+    parts.push(pnRect(d0+.9,top+2.2,d1-.9,-12.4,"screen",{noSil:true,op:night?.18:.22}),pnRect(d0+.9,-11.4,d1-.9,-4.4,"screen",sc),pnRect(d0+.9,-3.6,d1-.9,-1,"screen",{noSil:true,op:sc.op*.6}));
+    /* the porch roof's shadow across the top third */
+    parts.push(cast([[p0,top],[p1,top],[p1,top+8],[p0,top+6.5]],night?.12:.3));
+    L.push({parts});
+    /* the white posts, rails and the screen door, inked: they are what the porch is at a few pixels */
+    const posts=[];
+    for(const x of[p0+.8,-9.8,9.8,p1-.8])posts.push(pnRect(x-.75,top,x+.75,0,"post"));
+    posts.push(pnRect(p0,top,p1,top+1.2,"post"),pnRect(p0,-4.8,d0,-3.6,"post"),pnRect(d1,-4.8,p1,-3.6,"post"));
+    posts.push(pnRect(d0,top+1.3,d0+1,0,"post"),pnRect(d1-1,top+1.3,d1,0,"post"),pnRect(d0,top+1.3,d1,top+2.3,"post"),pnRect(d0,-12.4,d1,-11.4,"post"),pnRect(d0,-4.4,d1,-3.6,"post"));
+    L.push({parts:posts});}
+  /* the gables: white wall with lap siding under a frieze board, shakes in the peak, the rakes and their
+     returns, the shadows the rakes cast, the windows */
+  const gable=([x0,x1],[px,py],east)=>{
+    const parts=[pnPoly([[x0,0],[x0,ge],[px,py],[x1,ge],[x1,0]],"wall")];
+    for(let y=-1.8;y>ge+2.2;y-=1.35)parts.push(pnRect(x0+.6,y-.09,x1-.6,y+.09,"siding",{noSil:true,op:.75}));
+    /* shakes: four courses in the triangle above the frieze */
+    const fz=ge-1.6;
+    for(let c=0;c<4;c++){const y0=fz-c*((fz-py-3)/4),y1=fz-(c+1)*((fz-py-3)/4),hw=t=>((x1-x0)/2)*(1-(fz-t)/(fz-py))-.6,cx=px;
+      parts.push(pnPoly([[cx-hw(y0),y0],[cx+hw(y0),y0],[cx+hw(y1),y1],[cx-hw(y1),y1]],"shake",{noSil:true}));
+      const rr=mulberry(c*31+(east?7:3));let x=cx-hw(y0)+.4+(c%2)*.7;
+      while(x<cx+hw(y0)-.4){const w=1.1+rr()*.6;parts.push(pnRect(x-.07,y1+.3,x+.07,y0,"shakeDk",{noSil:true,op:.55}));x+=w}
+      parts.push(pnRect(cx-hw(y0),y0-.32,cx+hw(y0),y0,"shakeDk",{noSil:true,op:.8}))}
+    parts.push(pnRect(x0+.3,fz-.2,x1-.3,fz+1.4,"trim",{noSil:true}));
+    /* the rakes cast their shadow down onto the gable face; the east return is in shade */
+    parts.push(cast([[x0+1,ge+.6],[px,py+2.2],[x1-1,ge+.6],[x1-1,ge+2.6],[px,py+4.6],[x0+1,ge+2.6]],.28));
+    parts.push(cast([[x1-3.4,ge+1.1],[x1+1.6,ge+1.1],[x1+1.6,ge+2.4],[x1-3.4,ge+2.4]],.35));
+    parts.push(cast([[x1-1.2,ge+1],[x1,ge+1],[x1,0],[x1-1.2,0]],.18));
+    parts.push(pnRect(x0,-1,x1,0,"found",{noSil:true,op:.45}));
+    return{parts};
+  };
+  const trims=(x0,x1,px,py)=>[strip([x0-2.2,ge+1.2],[px,py-.8],1.9),strip([px,py-.8],[x1+2.2,ge+1.2],1.9),pnRect(x0-2,ge-.4,x0+4,ge+1.3,"trim"),pnRect(x1-4,ge-.4,x1+2,ge+1.3,"trim"),
+    pnRect(x0-.3,ge+1.2,x0+1.3,0,"trim"),pnRect(x1-1.3,ge+1.2,x1+.3,0,"trim")];
+  /* a window: tall double-hung, one meeting rail; by day the upper sash holds the sky and the lower is dark,
+     under the head's shadow; at night it is lit, one dimmer, one with a lamp, one with a blind drawn */
+  const glassOf=(i)=>night?(i===1?"glassDim":"glassOn"):"glass";
+  const sashes=(w0,w1,i)=>{const t=B.winT,b=B.winB,m=(t+b)/2,P=[];
+    P.push(pnRect(w0,t,w1,b,glassOf(i),{noSil:true}));
+    if(!night)P.push(pnRect(w0,t,w1,m,"glassUp",{noSil:true,op:.6}));
+    if(night&&i===3)for(let k=0;k<3;k++)P.push(pnHEll(w0+(w1-w0)*.65,b-4.6,3.4-k,3.4-k,"glassHot",{noSil:true,op:.35}));
+    if(night&&i===4)P.push(pnRect(w0,t,w1,t+5.6,"glassDim",{noSil:true,op:.9}),pnRect(w0,t+5.4,w1,t+5.9,"frame",{noSil:true,op:.8}));
+    P.push(pnRect(w0,m-.32,w1,m+.32,"frame",{noSil:true}),cast([[w0,t],[w1,t],[w1,t+2.1],[w0,t+1.6]],night?.12:.38));
+    return P};
+  const L0=gable(B.gl,B.peakL,false),R0=gable(B.gr,B.peakR,true);
+  B.winL.forEach(([w0,w1],i)=>L0.parts.push(...sashes(w0,w1,i)));
+  B.winR.forEach(([w0,w1],i)=>R0.parts.push(...sashes(w0,w1,i+2)));
+  const casing=[],cas=(w0,w1)=>{const t=B.winT,b=B.winB;casing.push(pnRect(w0-1.4,t-2.2,w1+1.4,t,"trim"),pnRect(w0-1.4,t,w0,b,"trim"),pnRect(w1,t,w1+1.4,b,"trim"),pnRect(w0-2,b,w1+2,b+1.3,"trim"));
+    casing.push(cast([[w0-2,b+1.3],[w1+2,b+1.3],[w1+1.6,b+2.4],[w0-1.6,b+2.4]],.3))};
+  cas(B.winL[0][0],B.winL[1][1]);casing.push(pnRect(B.winL[0][1],B.winT,B.winL[1][0],B.winB,"trim"));
+  for(const[w0,w1]of B.winR)cas(w0,w1);
+  L.push(L0,{parts:trims(B.gl[0],B.gl[1],...B.peakL)},R0,{parts:trims(B.gr[0],B.gr[1],...B.peakR)},{parts:casing});
+  /* at night the lit glass lays warm pools on the wall under each window, falling off to the night */
+  if(night){const wash=[],g=(x,y,rx,ry,op=.07)=>{for(let i=0;i<5;i++){const k=1-i*.17;wash.push(pnHEll(x,y,rx*k,ry*k,"glow",{soft:true,noSil:true,op}))}};
+    g(-39.6,-2,12,4.5,.08);for(const[w0,w1]of B.winR)g((w0+w1)/2,-1.6,6,3.6,.07);g(-39.6,-14,14,12,.04);g(39.6,-14,20,12,.04);L.push({parts:wash});}
+  return L;
+}
+/* the porch's light spilling out over the patio at night, a trapezoid, under the ink */
+function pnBackHouseGlow(st){
+  if(!st.night)return"";
+  return `<path d="M -19.2 0 L 19.2 0 L 29 5 L -29 5 Z" fill="rgb(255,186,104)" opacity=".26"/><path d="M -15 0 L 15 0 L 21 3 L -21 3 Z" fill="rgb(255,206,140)" opacity=".2"/>`;
+}
+BFT["pn-backhouse"]={pal:INK.pnBackHouse,box:[-68,-82,136,88],s:1,dist:.06,o:{line:1.4,heavy:1,shade:1.6,lit:.9},
+  states:{day:{night:false},night:{night:true}},draw:st=>pnBackHouse(st),extra:st=>pnBackHouseGlow(st)};
 /* ── the scene: arc, sun / moon, marsh horizon ──────── */
 /* The same fish is a mark on the moon line and a visitor to the farm pond. */
 function fishBite(x,y,s,pal,{delay=0,pond=false,tilt=0,offset=0}={}){
@@ -8047,6 +8699,10 @@ function fishMotion(){
 
 const appW=()=>clamp(document.querySelector(".app").clientWidth||760,320,760);
 const chartH=w=>Math.round(165+(760-w)*.09);
+/* the scene's frame is taller on a phone, where it is narrower. The house across the pond is drawn in a
+   320 by 194 frame and keeps its 194 at every width, the sides running on in land, wood and water, because a
+   wider screen's shorter frame cut its roof flat at the top and stood the noon sun behind it */
+const sceneH=W=>LOC.view==="pond"?194:Math.round((LOC.scene==="marsh"?150:168)+(760-W)*.10);
 /* Every line runs the same width (Josh, October 9 2026: "the width of the week part doesn't extend
    as far as the other lines. everything should be even"). The hours, the week, the water, the moon
    and the year each start their line and its fill CHART_IN inside the content edge and end CHART_IN
@@ -8088,6 +8744,8 @@ let SCENE_TIDE=null;
    picture still match, and keep the last sun and moon reading to hand back. Cleared
    whenever the svg is emptied. */
 let SCENE_KEY="",SCENE_META=null,RAIN_KEY="";
+/* counts the scene's drawings, so a first paint of the house written a part a frame stops when a newer one starts */
+let SCENE_DRAW=0;
 function scenePictureKey(now,weather,dark,tideDir,fishWins){
   const sp=sunPos(now),mp=moonPos(now);
   const sun=sp.alt*180/Math.PI,malt=mp.alt*180/Math.PI;
@@ -8114,13 +8772,29 @@ function scenePictureKey(now,weather,dark,tideDir,fishWins){
 function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen){
   const pictureKey=scenePictureKey(now,weather,dark,tideDir,fishWins);
   const sceneSvg=document.getElementById("sceneSvg");
+  /* a scene that looks north (LOCS.*.faces) has east on its right: the wind's bearing is mirrored east for
+     west for everything the scene draws (the palms, the spray, the grass, the cloud shadows, the bats and the
+     witch), as renderSkyFx does for the sky. Its sun rides over the house, so its rays may run up past the
+     scene's top */
+  sceneSvg.style.overflow=LOC.faces==="north"?"visible":"";
+  /* and so may the sheets over it that reach past the frame (pnPondScene): the sky's carries the sun when a gull
+     would cross it, and the water, its reflection, its ripples and the light on it run on under the frame's foot
+     to the header's edge, as they do in the picture under them. The others keep to the frame: a composited sheet
+     let overflow was raster again in Chrome a second after it showed, and its edges stepped 4 levels */
+  const reach=new Set(["sceneSky","sceneWater","sceneRefl","sceneRipple","sceneTop"]);
+  for(const el of document.querySelectorAll(".scene > .scene-layer"))el.style.overflow=reach.has(el.id)?sceneSvg.style.overflow:"";
+  /* the house's sheets keep a colour of their own, all but the one with the times on it (sunTimes): none of
+     them uses the sky's text colour, and inheriting it, every one was restyled and repainted on each frame of
+     the sky's .8s colour transition, which runs whenever the page opens or the theme turns (pnPondScene) */
+  for(const el of document.querySelectorAll(".scene > .scene-layer,.scene > .scene-lift"))el.style.color=LOC.view==="pond"&&el.id!=="sceneTop"?"#000":"";
+  if(LOC.faces==="north")weather={...weather,wind_direction_10m:(360-(Number(weather.wind_direction_10m)||0)%360)%360};
   if(pictureKey===SCENE_KEY&&SCENE_META&&sceneSvg.childElementCount){andThen(SCENE_META);return}
   const commit=meta=>(SCENE_KEY=pictureKey,SCENE_META=meta);
   const cloud=weather.cloud_cover||0,wind=weather.wind_speed_10m||0,code=weather.weather_code;
   const wet=isWet(code),snowing=isSnow(code);
   const storm=[95,96,99].includes(code),fog=[45,48].includes(code),quietWeather=!wet&&!storm;
   const humid=weather.relative_humidity_2m||0,temp=weather.temperature_2m||60;
-  const W=Math.max(320,appW()/1.22),H=Math.round((LOC.scene==="marsh"?150:168)+(760-W)*.10),GY=H-30;   /* taller frame on a phone */
+  const W=Math.max(320,appW()/1.22),H=sceneH(W),GY=H-30;   /* taller frame on a phone */
   const sp=sunPos(now), mp=moonPos(now), mph=moonPhase(now);
   const sunAltDeg=sp.alt*180/Math.PI,localHour=now.getHours(),month=now.getMonth();
   const seasonalFlies=dark&&month>=4&&month<=8&&temp>=60&&quietWeather&&wind<18;
@@ -8153,8 +8827,15 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
   const shadeC=mix(mix("#3A2350","#27364C",gloom),"#050A18",nightK);
   const texOn=!!paperTex(),paperK=(1-nightK*.72)*(fog?.5:1);
   const arcTop=24, arcSpan=W-60;
-  const px=f=>30+f*arcSpan;
-  const py=f=>GY-Math.sin(Math.PI*f)*(GY-arcTop);
+  /* a scene that looks north (LOCS.*.faces, the house at Porters Neck) has east on the right: the sun rises
+     on the right and sets on the left, and the moon follows. Everywhere else the sky runs east to west */
+  const mirrorSky=LOC.faces==="north";
+  /* and there the house fills the frame, so the sun's path rides over it: its ends sit in open sky just
+     above the palm crowns at either side, it climbs steeply off them and runs flat across the top, clear
+     of the ridge with room for the rays (pnArc). The time labels sit just inside the ends, over the crowns */
+  const pnArc=mirrorSky?{x0:14,y0:GY-80,top:10,k:.35}:null;
+  const px=f=>pnArc?pnArc.x0+(1-f)*(W-2*pnArc.x0):30+f*arcSpan;
+  const py=f=>pnArc?pnArc.y0-Math.pow(Math.max(0,Math.sin(Math.PI*f)),pnArc.k)*(pnArc.y0-pnArc.top):GY-Math.sin(Math.PI*f)*(GY-arcTop);
   let arc=`M ${px(0)} ${py(0)}`;
   for(let f=.02;f<=1.001;f+=.02)arc+=` L ${px(f).toFixed(1)} ${py(f).toFixed(1)}`;
 
@@ -8191,7 +8872,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
      sunrise time landed on a tree. Moving them a little further up their own arc lifts them
      into open sky in every scene without moving a single tree, and the same paint-order halo
      the charts already use keeps them legible over a ridgeline or a rooftop. */
-  const lab=(f,t)=>`<text class="suntime" x="${(px(f)+(f<.5?-16:16)).toFixed(1)}" y="${(py(f)-9).toFixed(1)}" text-anchor="${f<.5?"end":"start"}">${t}</text>`;
+  const labL=f=>px(f)<W/2;
+  const labX=f=>pnArc?(labL(f)?pnArc.x0+12:W-pnArc.x0-12):px(f)+(labL(f)?-16:16),labY=f=>pnArc?pnArc.y0-5:py(f)-9,labA=f=>(pnArc?!labL(f):labL(f))?"end":"start";
+  const lab=(f,t)=>`<text class="suntime" x="${labX(f).toFixed(1)}" y="${labY(f).toFixed(1)}" text-anchor="${labA(f)}">${t}</text>`;
   /* .7 was fine when these sat quietly at the ends of the arc. They are the only two
      numbers written on the sky, so they get to be read. */
   const sunTimes=`<g font-family="Spline Sans Mono,ui-monospace,monospace" font-size="10" font-weight="600" fill="currentColor" opacity=".92">
@@ -8230,11 +8913,11 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     /* moon by true altitude / azimuth, mapped east→west across the arc */
     const az=(mp.az*180/Math.PI+180+360)%360;           /* 0=N, 90=E */
     const f=clamp((az-60)/240,.02,.98);
-    const x=px(f), y=GY-Math.sin(clamp(mp.alt,0,Math.PI/2))*(GY-arcTop)*1.05;
+    const x=px(f), y=pnArc?pnArc.y0-Math.pow(Math.sin(clamp(mp.alt,0,Math.PI/2)),pnArc.k)*(pnArc.y0-pnArc.top):GY-Math.sin(clamp(mp.alt,0,Math.PI/2))*(GY-arcTop)*1.05;
     /* in October the moon is Halloween's (HALLOWEEN_MOON), in its own place and phase */
     const hm=HALLOWEEN_MOON&&holidayOn(locToday())?.id==="halloween"?halloweenMoon(HALLOWEEN_MOON,{altDeg:mp.alt*180/Math.PI,sunAltDeg,up,skyAlt:LOC.scene==="ridge"?22:0}):null;
     const r=hm?hm.r:11, ill=mph.fraction, ph=mph.phase;
-    const k=(1-2*ill)*r, waxing=ph<.5;
+    const k=(1-2*ill)*r, waxing=(ph<.5)!==mirrorSky;
     const sweep=waxing?(ill>.5?0:1):(ill>.5?1:0);
     const term=`M ${x} ${y-r} A ${Math.abs(k).toFixed(2)} ${r} 0 0 ${sweep} ${x} ${y+r} A ${r} ${r} 0 0 ${waxing?0:1} ${x} ${y-r} Z`;
     const mOp=(up?clamp(.44-sp.alt*180/Math.PI*.016,.14,.44)*(1-veil*.85):1)*(storm?.3:1);
@@ -8521,7 +9204,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
        of them, from her hat (14px over her seat) to her boots, with room for her lean and her bob,
        over each label's width and her own length either side; and it keeps above anything
        standing up into her band */
-    const labs=[.17,.83].map(f=>{const lx=px(f)+(f<.5?-16:16),ly=py(f)-9;return f<.5?[lx-30,lx,ly]:[lx,lx+30,ly]});
+    const labs=[.17,.83].map(f=>{const lx=labX(f),ly=labY(f);return labA(f)==="end"?[lx-30,lx,ly]:[lx,lx+30,ly]});
     const under=(y0,y1,a,b,top)=>[a-23,b+23].every(x=>yAt(y0,y1,x)<top);
     const clear=(y0,y1)=>labs.every(([a,b,ly])=>{const ya=yAt(y0,y1,a-22),yb=yAt(y0,y1,b+22);return Math.min(ya,yb)>ly+21||Math.max(ya,yb)<ly-19})
       &&tops.every(([a,b,t])=>under(y0,y1,a,b,t-6));
@@ -8752,7 +9435,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     return out+`</g>`;
   };
   /* the two times written on the arc, as boxes a bat stays out of */
-  const timeBoxes=[.17,.83].map(f=>{const x=px(f)+(f<.5?-16:16),y=py(f)-9;return f<.5?[x-40,y-10,x+2,y+3]:[x-2,y-10,x+40,y+3]});
+  const timeBoxes=[.17,.83].map(f=>{const x=labX(f),y=labY(f);return labA(f)==="end"?[x-40,y-10,x+2,y+3]:[x-2,y-10,x+40,y+3]});
   /* and, under reduced motion, the witch where she holds still (witchPlan) */
   const batKeep=wp=>wp&&wp.box?[...timeBoxes,wp.box]:timeBoxes;
 
@@ -8824,8 +9507,12 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
   const sceneGen=RENDER_GEN;
   requestAnimationFrame(()=>{
   if(sceneGen!==RENDER_GEN)return;
-  /* the moving layer is Beaufort's alone; every other scene draws in one sheet */
-  if(LOC.scene!=="lowcountry")for(const id of ["sceneSky","sceneMoss","sceneNear","sceneLift","sceneFx"])document.getElementById(id).innerHTML="";
+  SCENE_DRAW++;for(const el of document.querySelectorAll(".scene > .scene-layer,.scene > .scene-lift"))el.style.visibility="";
+  /* the moving layer is Beaufort's alone; every other scene draws in one sheet, but the house, which writes its
+     own (pnPondScene) and leaves them up under its next paint until that is written */
+  if(LOC.scene!=="lowcountry")for(const id of LOC.view==="pond"?["sceneMoss"]:["sceneSky","sceneMoss","sceneNear","sceneLift","sceneFx"])document.getElementById(id).innerHTML="";
+  /* and the house's further sheets are Porters Neck's alone (pnPondScene) */
+  if(LOC.view!=="pond")for(const id of ["sceneFront","sceneWater","sceneRefl","sceneRipple","sceneTop"]){const el=document.getElementById(id);el.innerHTML="";if(id==="sceneRefl")el.removeAttribute("style")}
   if(LOC.scene==="front-range"){
     /* ── Denver: high plains foreground, the Front Range, cottonwood and city edge ── */
     const ink=dark?"#07161B":"#173029",base=GY+10,g=mulberry(5280);
@@ -9181,40 +9868,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
        out again at the grass line, so the pond's own rings and ticks carry the rain down
        on the water and nothing white runs off the foot of the picture into the page. */
     const nrTop=base-rTop*.94,nrLand=base+4;
-    let nearRain="";
-    if(wet&&!snowing&&!PRM){
-      /* how hard, how fast: off the same row of RAIN the sky layer reads, rather than off
-         rainK, so freezing rain gets the near drops too. It falls as liquid, it is the one
-         condition here a driver needs to see coming, and rainK has no entry for it. */
-      const [,nrFall,nrWeight]=RAIN[code]||RAIN[63];
-      const nrK=clamp((nrWeight-.55)/.7,0,1),span=nrLand-nrTop;
-      const nrTan=Math.tan(clamp(wind*.62,0,18)*downwind*Math.PI/180);
-      const nr=mulberry(5347),drops=10+Math.round(nrK*9);
-      /* A drop's length is 2.6 frames at 30Hz, the slow step a phone falls to, and it
-         is still capped to the ridge face. Sized for 60Hz, a light rain was shorter than
-         one slow frame and read as dashes. The taper keeps a dead-vertical drop from
-         collapsing to a zero-width box. Across the frame they are dealt one to a slot
-         rather than thrown at random, which is what stacked three over the barn. The
-         delay is the clock plus this drop's own seed, so a rebuild picks it up. A scene unit
-         is k screen pixels (the frame came closer in for the phone, W=appW/1.22), so the step
-         and the timing are taken on screen and turned back into units. */
-      const k=appW()/W,step=968/k/nrFall/30,hw=(1.25+nrK*1.05)/2,cs=1/Math.hypot(1,nrTan),slot=(W+68)/drops;
-      nearRain=`<g mask="url(#ridgerain)" fill="${dark?'#DCE9F0':'#F4FAFC'}">`
-        +Array.from({length:drops},(_,i)=>{
-          /* Speed is not a taste: the layer above crosses 880px in nrFall seconds, and the
-             near drops are timed off that same rate on screen (a unit is k px) and land a
-             little quicker, being nearer. Timed by feel instead they came
-             out four times slower than the rain over the ridgeline, which is what made a
-             long one read as a slash drawn across the picture rather than as a drop. Long
-             and quick is a raindrop. Long and slow is a scratch. */
-          const len=clamp(step*2.6,22,span*.72)*(.85+nr()*.3),travel=span+len;
-          const d=travel*k*nrFall/968*(.9+nr()*.2);
-          const tx=-34+(i+.15+nr()*.7)*slot,ty=nrTop-len,hx=tx+len*nrTan,nx=cs,ny=-nrTan*cs,tw=.15;
-          const P=(x,y)=>`${x.toFixed(1)} ${y.toFixed(1)}`;
-          const delay=(Date.now()/1000+nr()*d)%d;
-          return `<path class="nearrain" d="M ${P(tx+nx*tw,ty+ny*tw)} L ${P(hx+nx*hw,nrTop+ny*hw)} A ${hw.toFixed(2)} ${hw.toFixed(2)} 0 0 1 ${P(hx-nx*hw,nrTop-ny*hw)} L ${P(tx-nx*tw,ty-ny*tw)} Z" opacity="${(.38+nrK*.24+nr()*.13).toFixed(2)}" style="--nx:${(travel*nrTan).toFixed(0)}px;--ny:${travel.toFixed(0)}px;animation-duration:${d.toFixed(2)}s;animation-delay:-${delay.toFixed(2)}s"/>`;
-        }).join("")+`</g>`;
-    }
+    const nearRainL=wet&&!snowing&&!PRM?nearRainLayer({W,top:nrTop,land:nrLand,code,wind,downwind,dark,seed:5347,id:"ridgerain"}):null,nearRain=nearRainL?nearRainL.drops:"";
 
     /* cattails at the pond ends: a stem, a brown head, a spike, and a leaf or two. Each group
        sways with the band it stands in */
@@ -9310,11 +9964,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
         ${candles?candleDefs:""}${hallowDefs}
         <radialGradient id="flyglow"><stop offset="0" stop-color="#F8F7B0" stop-opacity=".7"/><stop offset=".45" stop-color="#F8F7B0" stop-opacity=".18"/><stop offset="1" stop-color="#F8F7B0" stop-opacity="0"/></radialGradient>
         ${texOn?`<pattern id="paper" width="160" height="160" patternUnits="userSpaceOnUse"><image href="${paperTex()}" width="160" height="160"/></pattern>`:""}
-        ${nearRain?`<linearGradient id="ridgerainfade" gradientUnits="userSpaceOnUse" x1="0" y1="${nrTop.toFixed(1)}" x2="0" y2="${nrLand.toFixed(1)}">
-          <stop offset="0" stop-color="#000000"/><stop offset="${(26/(nrLand-nrTop)).toFixed(3)}" stop-color="#FFFFFF"/>
-          <stop offset="${((nrLand-16-nrTop)/(nrLand-nrTop)).toFixed(3)}" stop-color="#FFFFFF"/><stop offset="1" stop-color="#000000"/></linearGradient>
-        <mask id="ridgerain" maskUnits="userSpaceOnUse" x="0" y="${nrTop.toFixed(1)}" width="${W}" height="${(nrLand-nrTop).toFixed(1)}">
-          <rect x="0" y="${nrTop.toFixed(1)}" width="${W}" height="${(nrLand-nrTop).toFixed(1)}" fill="url(#ridgerainfade)"/></mask>`:""}
+        ${nearRainL?nearRainL.defs:""}
       </defs>
       <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
       ${goldArc}
@@ -9350,6 +10000,16 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     andThen(commit({sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05}));return;
   }
 
+  /* Porters Neck: the house from across the pond (pnPondScene). The marsh below is parked, reached by no
+     place, as Denver's Front Range is */
+  if(LOC.view==="pond"){
+    pnPondScene({W,H,GY,sp,mp,mph,sunAltDeg,localHour,month,cloud,wind,gust,code,wet,snowing,storm,fog,humid,temp,dark,tideDir,
+      skyS,goldK,rising,nightK,gloom,tone,hazeC,air,lineC,inkAir,shadeC,texOn,paperK,arc,goldArc,sunBody,moonBody,sunTimes,
+      glintX,glintCol,glintOp,sunXY,moonXY,moonR,veil,lightAt,litC,litK,shadeK,inkPal,castShadow,flatParts,phase,
+      chopK,wDur,windFrom,downwind,BANDS,bandAmp,waveDelay,bandOf,specular,rainK,cloudShadows,ringAt,flightBird,showFlies,flyCount,crabAt,thunder:THUNDER,
+      halloween,carved,candles,trickOrTreat,nightEyes,batN,batColony,batKeep,witchPlan,witchFly,pumpkinAt,catAt,kidAt,darkEyes,hallowDefs,candleDefs,moonR,deerAt,carved,candles});
+    andThen(commit({sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05}));return;
+  }
   if(LOC.scene==="lowcountry"){
     lowcountryScene({W,H,GY,sp,mp,mph,sunAltDeg,localHour,month,cloud,wind,gust,code,wet,snowing,storm,fog,humid,temp,dark,tideDir,
       skyS,goldK,rising,nightK,gloom,tone,hazeC,air,lineC,inkAir,shadeC,texOn,paperK,arc,goldArc,sunBody,moonBody,sunTimes,
@@ -9359,6 +10019,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     andThen(commit({sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05}));return;
   }
 
+  /* parked: this was Porters Neck's scene until October 2026, and no place reaches it now */
   /* marsh: hazy maritime treeline, loblollies, live oak, spartina bank, dock, heron */
   const base=GY+10;
   const g=mulberry(991);
@@ -9720,6 +10381,500 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
   });
 }
 
+/* ── What turns whole goes in a box of its own (#sceneLift). WebKit, which draws every iPhone browser, repaints
+   an SVG sheet whole whenever anything in it moves, and the sheet's cost is what it holds. A box is placed in
+   the scene's units, as fractions of the frame, so it sits exactly where the drawing did at every width; the
+   drawing in it is still, in the scene's own coordinates and line weights, and the box turns about the
+   drawing's joint, which WebKit leaves to the compositor and repaints nothing. Beaufort's palmetto crowns and
+   boat and Porters Neck's palms and fountain grass are boxes, made with this one kit for a W by H frame */
+/* Rain in front of a tall silhouette. Everything in the sky's rain layer falls behind the picture and is inked
+   against the sky, so from a ridgeline or a roofline down it is a dark line on a dark fold, or a pale one on a
+   white wall, and it reads as nothing at all. These are the near drops: fewer, longer, quicker and pale, on the
+   same lean and the same rate as the rain above them. They fade in across the crest (top) instead of starting
+   on a cut line, and they land on the ground (land): they fade out again there, so the water's own rings carry
+   the rain down and nothing white runs off the foot of the picture into the page. The ridge's (October 2026,
+   the farm) and the house's at Porters Neck both draw from here. Returns the drops and their mask's defs */
+function nearRainLayer({W,top,land,code,wind,downwind,dark,seed,id}){
+  /* how hard, how fast: off the same row of RAIN the sky layer reads, rather than off
+     rainK, so freezing rain gets the near drops too. It falls as liquid, it is the one
+     condition here a driver needs to see coming, and rainK has no entry for it. */
+  const [,nrFall,nrWeight]=RAIN[code]||RAIN[63];
+  const nrK=clamp((nrWeight-.55)/.7,0,1),span=land-top;
+  const nrTan=Math.tan(clamp(wind*.62,0,18)*downwind*Math.PI/180);
+  const nr=mulberry(seed),drops=10+Math.round(nrK*9);
+  /* A drop's length is 2.6 frames at 30Hz, the slow step a phone falls to, and it
+     is still capped to the face it falls in front of. Sized for 60Hz, a light rain was shorter than
+     one slow frame and read as dashes. The taper keeps a dead-vertical drop from
+     collapsing to a zero-width box. Across the frame they are dealt one to a slot
+     rather than thrown at random, which is what stacked three over the barn. The
+     delay is the clock plus this drop's own seed, so a rebuild picks it up. A scene unit
+     is k screen pixels (the frame came closer in for the phone, W=appW/1.22), so the step
+     and the timing are taken on screen and turned back into units. */
+  const k=appW()/W,step=968/k/nrFall/30,hw=(1.25+nrK*1.05)/2,cs=1/Math.hypot(1,nrTan),slot=(W+68)/drops;
+  const out=`<g mask="url(#${id})" fill="${dark?'#DCE9F0':'#F4FAFC'}">`
+    +Array.from({length:drops},(_,i)=>{
+      /* Speed is not a taste: the layer above crosses 880px in nrFall seconds, and the
+         near drops are timed off that same rate on screen (a unit is k px) and land a
+         little quicker, being nearer. Timed by feel instead they came
+         out four times slower than the rain over the ridgeline, which is what made a
+         long one read as a slash drawn across the picture rather than as a drop. Long
+         and quick is a raindrop. Long and slow is a scratch. */
+      const len=clamp(step*2.6,22,span*.72)*(.85+nr()*.3),travel=span+len;
+      const d=travel*k*nrFall/968*(.9+nr()*.2);
+      const tx=-34+(i+.15+nr()*.7)*slot,ty=top-len,hx=tx+len*nrTan,nx=cs,ny=-nrTan*cs,tw=.15;
+      const P=(x,y)=>`${x.toFixed(1)} ${y.toFixed(1)}`;
+      const delay=(Date.now()/1000+nr()*d)%d;
+      return `<path class="nearrain" d="M ${P(tx+nx*tw,ty+ny*tw)} L ${P(hx+nx*hw,top+ny*hw)} A ${hw.toFixed(2)} ${hw.toFixed(2)} 0 0 1 ${P(hx-nx*hw,top-ny*hw)} L ${P(tx-nx*tw,ty-ny*tw)} Z" opacity="${(.38+nrK*.24+nr()*.13).toFixed(2)}" style="--nx:${(travel*nrTan).toFixed(0)}px;--ny:${travel.toFixed(0)}px;animation-duration:${d.toFixed(2)}s;animation-delay:-${delay.toFixed(2)}s"/>`;
+    }).join("")+`</g>`;
+  const defs=`<linearGradient id="${id}fade" gradientUnits="userSpaceOnUse" x1="0" y1="${top.toFixed(1)}" x2="0" y2="${land.toFixed(1)}">
+          <stop offset="0" stop-color="#000000"/><stop offset="${(26/(land-top)).toFixed(3)}" stop-color="#FFFFFF"/>
+          <stop offset="${((land-16-top)/(land-top)).toFixed(3)}" stop-color="#FFFFFF"/><stop offset="1" stop-color="#000000"/></linearGradient>
+        <mask id="${id}" maskUnits="userSpaceOnUse" x="0" y="${top.toFixed(1)}" width="${W}" height="${(land-top).toFixed(1)}">
+          <rect x="0" y="${top.toFixed(1)}" width="${W}" height="${(land-top).toFixed(1)}" fill="url(#${id}fade)"/></mask>`;
+  return{drops:out,defs};
+}
+function liftKit(W,H){
+  const partsOf=L=>L.flatMap(l=>l.parts||partsOf(l.layers||[]));
+  const boxOf=(layers,dx,dy,m=3,also=null)=>{const ds=partsOf(layers).map(p=>p.d);if(!ds.length)return null;let[bx,by,bw,bh]=pathBox(ds);
+    if(also){const x1=Math.max(bx+bw,also[0]+also[2]),y1=Math.max(by+bh,also[1]+also[3]);bx=Math.min(bx,also[0]);by=Math.min(by,also[1]);bw=x1-bx;bh=y1-by}
+    const x0=Math.floor((dx+bx-m)*10)/10,y0=Math.floor((dy+by-m)*10)/10;return[x0,y0,Math.ceil((dx+bx+bw+m-x0)*10)/10,Math.ceil((dy+by+bh+m-y0)*10)/10]};
+  const pct=v=>(v*100).toFixed(4)+"%",origin=(b,p)=>`transform-origin:${pct((p[0]-b[0])/b[2])} ${pct((p[1]-b[1])/b[3])}`;
+  /* the drawing in a box is the whole frame's, laid over the scene's other sheets and seen through the box.
+     It is placed in the frame's own width and height (cqw, cqh), because placed as a share of its box the
+     browser's rounding of the box is multiplied by the frame's size over the box's, and the drawing landed up
+     to a third of a pixel off the picture under it; the shares stay as the fallback for an older browser. It
+     keeps the sheets' own fit of the frame to the box, as their sheets do */
+  const liftSvg=(b,inner)=>`<svg viewBox="0 0 ${W} ${H}" style="left:${pct(-b[0]/b[2])};top:${pct(-b[1]/b[3])};width:${pct(W/b[2])};height:${pct(H/b[3])};left:${(-b[0]/W*100).toFixed(4)}cqw;top:${(-b[1]/H*100).toFixed(4)}cqh;width:100cqw;height:100cqh">${inner}</svg>`;
+  const liftAt=(b,inner,p,anim="")=>`<div class="lift" style="left:${pct(b[0]/W)};top:${pct(b[1]/H)};width:${pct(b[2]/W)};height:${pct(b[3]/H)}${p?";"+origin(b,p):""}${anim?";"+anim:""}">${inner}</div>`;
+  /* a box inside a box, the same size, turning on its own joint inside its parent's turn */
+  const liftIn=(b,inner,p,anim="")=>`<div class="lift" style="${origin(b,p)}${anim?";"+anim:""}">${inner}</div>`;
+  return{partsOf,boxOf,pct,origin,liftSvg,liftAt,liftIn};
+}
+/* Porters Neck's light schedule, on the place's own clock. The string lights and the fire table go off at
+   PN_STRANDS_OUT, 10 pm (Josh: "they go off at 10pm"), and stay off through the small hours until the next
+   sunset. The windows and the porch go off at PN_LIGHTS_OUT (null: on all night, which Josh has not decided).
+   The pumpkin lights on the fence are on day and night all October, the holiday's own calendar (Josh: "the
+   pumpkin lights stay on 24/7 until halloween"): PN_PUMPKIN_LIGHTS switches them */
+const PN_STRANDS_OUT=22,PN_LIGHTS_OUT=null,PN_PUMPKIN_LIGHTS=true;
+/* ── Porters Neck: the house from across the pond (pnPondScene) ─────────────────────────────────────────
+   The family's house seen from the far bank of the pond, framed the way Josh's photo frames it: the house is
+   the picture, its roof's mass high in the frame, a palm group at each side and just enough room for them.
+   LOCS.mb.faces is "north", so west (the fire table, the sunset) is on the left and east (the hot tub, the
+   sunrise) on the right, and renderScene and renderSkyFx mirror the sun's arc, the moon and the wind's bearing
+   to match. Back to front: a close dark wood behind the house's sides (the neighbours are very close and are
+   left out, but the house never stands in open land), the house, the patio with the fire table and its
+   Adirondack chairs to the west and the hot tub under the middle east window, the string lights in a V from
+   the back door out to a sabal on each side, two sabals at the west and two sabals and the windmill palm at
+   the east, the black fence between its two white pillars with a gate on the door's line and fountain grass
+   inside it, a strip of lawn, the sand and the pond, which holds the picture upside down (pressed a little
+   shorter, so the doubled lights stay in the frame) and has its fountain mid-pond on the door's line. The
+   weather stays honest: the strands and the fire table from sunset until 10 pm (the fire only on a cool dry
+   evening), the windows after sunset, the strands' ends tucked into the sabals' boots so the palms' sway never
+   shows a loose end, the fountain leans and its spray drifts downwind, and the reflection is glass in a calm, strips in a breeze
+   and glints in a blow. The low sun's warmth comes from its own side. In October (holidayOn) the fence carries
+   pumpkin lights day and night, a little tree by the fire table is wrapped in purple and orange, each pillar
+   holds an orange pumpkin and a white one, the gate has two lanterns from the carving day, Ghostface peeks
+   round the east corner, and on Halloween night the trick-or-treater stands at the gate. Laid out in a
+   320 by 194 frame (sceneH), centred on wider ones, where the wood, the lawn, the sand and the pond run on to
+   the frame's edges */
+function pnPondScene(c){
+  const{W,H,GY,sunAltDeg,localHour,month,cloud,wind,gust,code,wet,snowing,storm,fog,temp,dark,
+    skyS,goldK,rising,nightK,gloom,tone,air,lineC,inkAir,shadeC,texOn,paperK,arc,goldArc,sunBody,moonBody,sunTimes,
+    sunXY,moonXY,veil,lightAt,litC,litK,shadeK,inkPal,castShadow,flatParts,phase,chopK,windFrom,downwind,rainK,
+    halloween,carved,candles,trickOrTreat,batN,batColony,batKeep,witchPlan,witchFly,pumpkinAt,hallowDefs,candleDefs,moonR,flightBird}=c;
+  const ox=(W-320)/2,oy=H-194,X=x=>x+ox,Y=y=>y+oy;
+  /* the house's scale: about three fifths of the frame's width at 390 */
+  const S=1.45,hx=X(160),hy=Y(138),u=v=>v*S;
+  const fenceB=Y(149),fenceT=fenceB-7.5,sandY=Y(152.5),pondY=Y(155),farY=hy-1;
+  /* the back door's line: the steps, the gate and the fountain are all on it */
+  const doorX=hx+u((PN_BH.door[0]+PN_BH.door[1])/2);
+  const palAt=(pal,d)=>{const o={};for(const[k,v]of Object.entries(pal))o[k]=typeof v==="string"&&v[0]==="#"&&!["ink","shade","lit"].includes(k)?air(v,d):v;
+    return Object.assign(o,{ink:inkAir(d),shade:shadeC,lit:litC,litOp:(pal.litOp??.5)*litK,shadeOp:(pal.shadeOp??.32)*shadeK})};
+  /* PN_LIGHTS_OUT is the hour the strands and the windows go off (null: they stay on all night) */
+  const lightsOn=sunAltDeg< -.83&&!(PN_LIGHTS_OUT!=null&&(localHour>=PN_LIGHTS_OUT||localHour<12));
+  const strandsOn=sunAltDeg< -.83&&localHour>=12&&localHour<PN_STRANDS_OUT;
+  const fireOn=strandsOn&&localHour>=15&&temp>=45&&temp<68&&!wet&&!storm&&!fog&&gust<20&&!THUNDER;
+  const swayAmt=clamp(.3+gust*.05,.3,2.6),swayDur=clamp(8.5-gust*.15,3,8.5);
+  /* dw: +1 when the wind blows toward the right of this north-facing frame. Everything that leans or drifts
+     with the wind goes by it. In SVG (y down, turning at the foot) skewX(-a) tips the top to the right, so
+     a sway that leans downwind runs from a little upwind (skewX(+dw·a/3)) to well downwind (skewX(-dw·a)) */
+  const dw=downwind<0?-1:1,leanTo=(a,back=.35)=>`--tsway:${(-dw*a).toFixed(2)}deg;--tsway-neg:${(dw*a*back).toFixed(2)}deg`;
+  const wallClock=(p,off=0)=>`animation-delay:-${((Date.now()/1000+off)%p).toFixed(1)}s`;
+  const tex=texOn?"url(#paper)":"";
+  /* the low sun's warmth comes from its own side: this view looks north, so the morning's is on the right and
+     the evening's on the left. It swells round sunrise and sunset (from 14° up to 7° under) and cloud, fog,
+     rain and storms mute it. Still layers only: the sky's horizon, a wash over the land and the house from
+     that side, a warm rim on the near palms (lightAt already turns their lit edges to it) and the pond */
+  const sunAlt=sunAltDeg,side=rising?1:-1;
+  const glowK=(sunAlt<1?clamp((sunAlt+7)/8,0,1):clamp((14-sunAlt)/13,0,1))*(1-veil*.85)*(1-gloom)*(fog?.3:1)*(wet||storm?.15:1);
+  const warm=rising?"#FFB488":"#FFA04A";
+  const tops=[];const top=(x0,x1,t)=>tops.push([x0,x1,t]);
+
+  /* ── behind the house's sides, a close dark wood of live oaks and wax myrtles, so the house never
+     stands in open land; it is low behind the house and rises a little at the edges */
+  const wood=(()=>{const r=mulberry(612);let d=`M ${f1(-12)} ${f1(farY+2)} L ${f1(-12)} ${f1(farY-30)}`,x=-12;
+    while(x<(W+12)){const w=7+r()*10,mid=Math.abs(x-hx)<u(55),y=farY-(mid?8:16)-r()*(mid?5:12);x+=w;d+=` A ${f1(w*.62)} ${f1(w*.62)} 0 0 1 ${f1(x)} ${f1(y)}`}return d+` L ${f1(W+12)} ${f1(farY+2)} Z`})();
+  const farWood=`<path d="${wood}" fill="${air("#5E7A66",.42)}" stroke="${mix(inkAir(.42),air("#5E7A66",.42),.45)}" stroke-width=".55"/>`
+    +(tex?`<path d="${wood}" fill="${tex}" opacity="${(.5*paperK).toFixed(2)}"/>`:"");
+
+  /* ── the house: the roof is the sky behind its ridge, a little darker and greyer */
+  const roofSky=mix(skyS[1],skyS[2],.35),roofC=dark?mix(roofSky,"#8C99A8",.32):mix(roofSky,"#F4F6F8",.24);
+  const hPal={...palAt(INK.pnBackHouse,.04),roof:roofC,roofDk:mix(roofC,"#2A2F3A",.22),seam:mix(roofC,"#2A2F3A",dark?.3:.24),seamLit:mix(roofC,dark?"#9FB4CC":"#F4F8FA",dark?.25:.45)};
+  const sunSide=lightAt(hx,hy-u(40))[0]<0?-1:1,shadowOp=clamp(1-veil*.7-gloom*.8,.25,1);
+  const sheen=`<defs><linearGradient id="pnSheen" x1="${sunSide<0?1:0}" y1="0" x2="${sunSide<0?0:1}" y2="0"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/><stop offset=".55" stop-color="#FFFFFF" stop-opacity="0"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="${(dark?.06:.22*(1-veil*.6)).toFixed(2)}"/></linearGradient></defs>`
+    +`<path d="M ${PN_BH.roofL} ${PN_BH.eave} L ${PN_BH.ridgeL} ${PN_BH.ridge} L ${PN_BH.ridgeR} ${PN_BH.ridge} L ${PN_BH.roofR} ${PN_BH.eave} Z" fill="url(#pnSheen)"/>`;
+  const house=`<g data-prop="house">${inkAt(hx,hy,S,1,pnBackHouseGlow({night:lightsOn})+inkRig(pnBackHouse({night:lightsOn,shadowOp}),hPal,{s:S,light:lightAt(hx,hy-u(40)),line:1.4,heavy:1,shade:1.6,lit:.9})
+    +sheen+(tex?pnBackHouseSil().map(d=>`<path d="${d}" fill="${tex}" opacity="${(.55*paperK).toFixed(2)}"/>`).join(""):""))}</g>`;
+  top(hx+u(PN_BH.roofL)-4,hx+u(PN_BH.roofR)+4,hy+u(PN_BH.ridge)-4);
+  /* in October Ghostface peeks round the house's east corner, half of him behind it */
+  const gfX=hx+u(63.5),gfY=hy-u(8.7);
+  const ghost=halloween?`<g class="decor" data-decor="ghostface"><g transform="translate(${f1(gfX)} ${f1(gfY)}) rotate(10) scale(${f1(-.085*S*100)/100} ${f1(.085*S*100)/100})">${inkRig(propGhostface(),palAt(INK.ghostface,.05),{s:.085*S,flip:-1,line:.5,heavy:.25,shade:.7,lit:.45,light:lightAt(gfX,gfY)})}</g></g>`:"";
+
+  /* ── the palms at the fence, two sabals at the west and two sabals with a windmill palm low between them
+     at the east. Each sways from its foot with the gusts, each a little differently. The strands hang still
+     from the sabals, each end tucked into its palm's boots. Their crowns stay under the sun times */
+  const pw=bftPalmWind(gust,downwind),ps=.9;
+  const PALMS=[[26,"s",7,47,-.04],[52,"s",8,51,.03],[266,"s",9,50,-.03],[282,"w",1,20],[298,"s",10,46,.05]].map(([x,kind,seed,h,lean=0],i)=>{
+    const px=X(x),Lr=kind==="s"?rigBftPalmetto(seed,{h,lean,boots:.4,wind:pw}):rigPnWindmill(seed,{h,wind:pw,n:8,dead:1,size:.95});
+    const[bx,by,bw,bh]=pathBox(flatParts(Lr).map(p=>p.d));top(px+bx*ps-4,px+(bx+bw)*ps+4,fenceB+by*ps-4);
+    return{x:px,kind,Lr,crownY:fenceB+by*ps+bh*ps*(kind==="s"?.32:.36),i,amt:swayAmt*[.9,1,1.1,.65,.85][i],dur:swayDur*[1.04,1,.94,.86,1.08][i]}});
+  const palmSvg=(P,extra="",boxed=false)=>{const st=PRM||boxed?"":` style="transform-box:view-box;transform-origin:${f1(P.x)}px ${f1(fenceB)}px;${leanTo(P.amt,.4)};animation:swayTree ${P.dur.toFixed(1)}s ease-in-out infinite alternate;${wallClock(2*P.dur,P.i*1.9)}"`;
+    const pal=P.kind==="s"?palAt({...INK.bftPalm,boot:"#C9B48E",bootLt:"#DDCCA8"},.04):palAt({...INK.pnWindmill,wmFrond:"#7FA160",wmFrondLt:"#97B872",wmFrondFar:"#5E8050",fibre:"#7A5E46"},.04);
+    const up=lightsOn&&P.kind==="s"?`<ellipse data-light="uplight" cx="${f1(P.x)}" cy="${f1(fenceB-16)}" rx="5" ry="18" fill="url(#pnUplight)"/>`:"";
+    return `<g class="pn-palm" data-prop="${P.kind==="s"?"sabal":"windmill-palm"}"${st}>${inkAt(P.x,fenceB,ps,1,inkRig(P.Lr,pal,{s:ps,light:lightAt(P.x,fenceB-40),...BFT_PALM_O}))}${up}${extra}</g>`};
+  /* on the page each palm is a box of its own (liftKit) that the compositor sways about its foot: the same
+     drawing, still, and the same sway on the box, so WebKit repaints nothing while the palms move */
+  const{liftSvg,liftAt}=liftKit(W,H);
+  const palmLift=P=>{const g=palmSvg(P,"",true),[bx,by,bw,bh]=pathBox(flatParts(P.Lr).map(p=>p.d));
+    const x0=Math.min(P.x+bx*ps,P.x-5)-4,y0=fenceB+by*ps-4,x1=Math.max(P.x+(bx+bw)*ps,P.x+5)+4,y1=Math.max(fenceB+(by+bh)*ps,fenceB+2)+4;
+    const b=[Math.floor(x0*10)/10,Math.floor(y0*10)/10,Math.ceil((x1-x0)*10)/10+.1,Math.ceil((y1-y0)*10)/10+.1];
+    return liftAt(b,liftSvg(b,g),[P.x,fenceB],PRM?"":`${leanTo(P.amt,.4)};animation:swayTree ${P.dur.toFixed(1)}s ease-in-out infinite alternate;${wallClock(2*P.dur,P.i*1.9)}`)};
+
+  /* ── the string lights: two strands from one eye over the back door, a V, each sagging out to the nearer
+     sabal on its side: clear teardrops on drops by day, light from sunset until 10 pm */
+  const L0=PALMS[1],R0=PALMS[2];
+  /* Josh: "the bistro lights go from door to each palm - forming a V". Both strands start at one eye over
+     the back door and each sags out and forward to its sabal, crossing in front of the windows */
+  const vtx=[doorX,hy+u(-26.4)];
+  const pts=[[L0.x+.6,L0.crownY+7],vtx,[R0.x-.6,R0.crownY+7]];
+  const sags=[u(7.2),u(7.6)];
+  const br=mulberry(9031),bR=1.25;
+  const spanSvg=(k)=>{const a=pts[k],b=pts[k+1],len=Math.hypot(b[0]-a[0],b[1]-a[1]),sag=sags[k];
+    const at=t=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t+4*sag*t*(1-t)+(sag>3?.6*Math.sin(t*Math.PI*2)*t*(1-t)*4:0)];
+    const m=at(.5),cq=[2*m[0]-(a[0]+b[0])/2,2*m[1]-(a[1]+b[1])/2];
+    let glow="",beads="";const n=Math.max(1,Math.round(len/8));
+    for(let q=0;q<n;q++){const t=clamp((q+.5+(br()-.5)*.35)/n,k===0?.04:.07,k===0?.93:.96),[x,y]=at(t),by=y+2+br()*.4,tear=`M ${f1(x)} ${f1(by-1.5)} Q ${f1(x+1.25)} ${f1(by-.2)} ${f1(x+.95)} ${f1(by+.55)} Q ${f1(x)} ${f1(by+1.5)} ${f1(x-.95)} ${f1(by+.55)} Q ${f1(x-1.25)} ${f1(by-.2)} ${f1(x)} ${f1(by-1.5)} Z`;
+      if(strandsOn){glow+=`<circle cx="${f1(x)}" cy="${f1(by)}" r="${fog?9.5:6}" fill="url(#pnBulbGlow)"${fog?` opacity=".7"`:""}/>`;
+        beads+=`<line x1="${f1(x)}" y1="${f1(y)}" x2="${f1(x)}" y2="${f1(by-1.5)}" stroke="${lineC}" stroke-width=".24"/><path d="${tear}" fill="#FFD27A"/><circle cx="${f1(x)}" cy="${f1(by+.25)}" r=".62" fill="#FFFFFF"/>`}
+      else beads+=`<line x1="${f1(x)}" y1="${f1(y)}" x2="${f1(x)}" y2="${f1(by-1.5)}" stroke="${lineC}" stroke-width=".24"/><path d="${tear}" fill="${mix(skyS[2],"#FFFFFF",.55)}" fill-opacity=".55" stroke="${mix(lineC,"#F1EAD6",.2)}" stroke-width=".24"/><circle cx="${f1(x)}" cy="${f1(by+.2)}" r=".3" fill="${lineC}"/>`}
+    /* at night each span lays a warm pool on the wall behind it */
+    if(strandsOn)glow=`<ellipse cx="${f1(m[0])}" cy="${f1(m[1]+5)}" rx="${f1(len*.45)}" ry="7" fill="url(#pnWash)" opacity=".5"/>`+glow;
+    return `${glow}<path d="M ${f1(a[0])} ${f1(a[1])} Q ${f1(cq[0])} ${f1(cq[1])} ${f1(b[0])} ${f1(b[1])}" fill="none" stroke="${mix(lineC,"#2B2328",.4)}" stroke-width=".36"/>${beads}`};
+  const eye=`<circle cx="${f1(vtx[0])}" cy="${f1(vtx[1])}" r=".8" fill="${lineC}"/><path d="M ${f1(vtx[0])} ${f1(vtx[1]-.8)} L ${f1(vtx[0])} ${f1(vtx[1]-2.2)}" stroke="${lineC}" stroke-width=".5"/>`;
+  const swagMid=`<g data-prop="string-lights" data-lit="${strandsOn?1:0}">${[0,1].map(spanSvg).join("")}${eye}</g>`;
+  const swagL="",swagR="";
+
+  /* ── the patio along the back of the house: on its west end the fire table with its chairs, a black
+     one either side turned to it and the natural wood one behind, facing out; on its east end the hot tub
+     against the wall. Lit, the fire warms the cap and the chairs' faces toward it; after dark without it
+     the black chairs keep a cool edge from the sky, so they stay shapes */
+  const paveC=air(wet?"#A89A82":"#C8B79B",.04),riseC=air(wet?"#7E715E":"#9C8B70",.04),wetSheen=mix(skyS[2],"#FFFFFF",.4);
+  const patio=`<path d="M ${f1(hx+u(-64))} ${f1(hy-.3)} L ${f1(hx+u(64))} ${f1(hy-.3)} L ${f1(hx+u(66))} ${f1(hy+5.4)} L ${f1(hx+u(-66))} ${f1(hy+5.4)} Z" fill="${paveC}" stroke="${inkAir(.08)}" stroke-width=".4"/>`
+    /* three low paver steps straight down from the door to the gate, each a little wider than the last */
+    +[[5.4,6.9,13],[6.9,8.4,15.5],[8.4,10.1,18]].map(([a,b,w])=>`<path d="M ${f1(doorX-w/2)} ${f1(hy+a)} L ${f1(doorX+w/2)} ${f1(hy+a)} L ${f1(doorX+w/2+.6)} ${f1(hy+b)} L ${f1(doorX-w/2-.6)} ${f1(hy+b)} Z" fill="${paveC}" stroke="${inkAir(.08)}" stroke-width=".35"/><path d="M ${f1(doorX-w/2-.3)} ${f1(hy+b-.5)} L ${f1(doorX+w/2+.3)} ${f1(hy+b-.5)}" stroke="${riseC}" stroke-width=".9" opacity=".7"/>`).join("")
+    +(wet?`<path d="M ${f1(hx-u(60))} ${f1(hy+2.2)} L ${f1(hx+u(56))} ${f1(hy+2.2)}" stroke="${wetSheen}" stroke-width="1.1" opacity=".35"/><path d="M ${f1(doorX-6)} ${f1(hy+6.2)} L ${f1(doorX+6)} ${f1(hy+6.2)} M ${f1(doorX-7)} ${f1(hy+7.7)} L ${f1(doorX+7)} ${f1(hy+7.7)}" stroke="${wetSheen}" stroke-width=".5" opacity=".35"/>`:"");
+  const fX=hx+u(-42),fY=hy+5.6,fS=1.12;
+  const FL=propPnFireTable({lit:fireOn});
+  if(fireOn&&!PRM){const fd=clamp(1.5-gust*.03,.7,1.5);FL[FL.length-1].style=`--fk:${clamp(.08+gust*.01,.08,.28).toFixed(2)};animation:pnFlick ${fd.toFixed(2)}s ease-in-out infinite alternate;${wallClock(2*fd)}`}
+  const firePal=palAt(INK.pnFireTable,.03),fireO={s:fS,line:.85,heavy:.45,shade:1.1,lit:.8,light:lightAt(fX,fY-8)},fireGlow=fireOn?pnFireTableGlow(Math.max(nightK,.6)):"";
+  const fire=`<g data-prop="fire-table" data-lit="${fireOn?1:0}">${inkAt(fX,fY,fS,1,fireGlow+inkRig(FL,firePal,fireO))}</g>`;
+  /* a flickering flame is the table's last layer, and it goes on the moving sheet (#sceneFx) with the table
+     left on the still one under it: nothing drawn between them in the picture comes near it */
+  const flicking=fireOn&&!PRM;
+  const fireStill=flicking?`<g data-prop="fire-table" data-lit="1">${inkAt(fX,fY,fS,1,fireGlow+inkRig(FL.slice(0,-1),firePal,fireO))}</g>`:fire;
+  const fireFlame=flicking?`<g data-prop="fire-flame">${inkAt(fX,fY,fS,1,inkRig(FL.slice(-1),firePal,fireO))}</g>`:"";
+  const chBase=palAt(dark?{...INK.pnChair,black:"#45434F",blackDk:"#2E2C36"}:INK.pnChair,.03);
+  const chPal=fireOn?{...chBase,lit:"#FFB86A",litOp:.95}:dark?{...chBase,lit:"#AFC4E6",litOp:.75}:chBase;
+  const cs=1.18;
+  const chair=(x,y,view,tone,flip=1)=>inkAt(x,y,cs,flip,inkRig(propPnChair({view,tone}),chPal,{s:cs,flip,line:.7,heavy:.35,shade:1,lit:fireOn?1.6:dark?1.3:.8,
+    light:fireOn?[fX-x,(fY-7)-(y-5)]:lightAt(x,y-5)}));
+  const chairsBack=`<g data-prop="chairs">${chair(fX+7,fY-3.4,"side","black",-1)}${chair(fX-9,fY-3.6,"side","wood")}</g>`;
+  const chairs=`<g data-prop="chairs">${chair(fX-17.5,fY+.5,"side","black")}${chair(fX+17.5,fY+.5,"side","black",-1)}</g>`;
+  const fireLight=fireOn?`<ellipse cx="${f1(fX)}" cy="${f1(fY-1)}" rx="30" ry="6" fill="url(#pnWash)"/><ellipse cx="${f1(fX)}" cy="${f1(fY-10)}" rx="20" ry="10" fill="url(#pnWash)" opacity=".55"/>`:"";
+  const tbX=hx+u((PN_BH.winR[1][0]+PN_BH.winR[1][1])/2),tbY=hy+3.4;
+  const tub=`<path d="M ${f1(tbX-u(9.4))} ${f1(tbY-u(9))} L ${f1(tbX+u(11.6))} ${f1(tbY-u(9))} L ${f1(tbX+u(12.6))} ${f1(tbY-u(6))} L ${f1(tbX+u(11))} ${f1(tbY-u(6))} Z" fill="${shadeC}" opacity="${(.22*shadowOp).toFixed(2)}"/><g data-prop="hot-tub">${inkAt(tbX,tbY,S,1,inkRig(propPnTub(),palAt(INK.pnTub,.04),{s:S,line:.8,heavy:.4,shade:1.1,lit:.7,light:lightAt(tbX,tbY-10)}))}</g>`;
+
+  /* ── October: a little tree at the house's west corner wrapped in purple and orange lights */
+  let tree="";
+  if(halloween){const tx=hx+u(-62)-2,ty=hy+3.6,r=mulberry(3131),k=1.35;
+    let dots="",glows="";
+    for(let i=0;i<30;i++){const t=i/30,y=ty-k*(1.2+t*12.5),w=k*(1-t*.85)*3.4,x=tx+Math.sin(t*Math.PI*8.5)*w*(.75+r()*.25),c=i%2?"#B46CFF":"#FF9A3A";
+      if(lightsOn){glows+=`<circle cx="${f1(x)}" cy="${f1(y)}" r="2.4" fill="${c}" opacity=".24"/>`;dots+=`<circle cx="${f1(x)}" cy="${f1(y)}" r=".6" fill="${i%2?"#E2C4FF":"#FFD9A8"}"/>`}
+      else dots+=`<circle cx="${f1(x)}" cy="${f1(y)}" r=".5" fill="${air(i%2?"#7A4FA8":"#C86A2A",.04)}"/>`}
+    tree=`<g class="decor" data-decor="light-tree"><g>${inkAt(tx,ty,k,1,inkUnit([pTaper([[0,0,.9],[0,-3,.7]],"wood"),part(scallop(0,-8,4,7.2,9,707,{flat:.3,jitter:.3}),"leaf")],palAt({wood:"#5A4636",leaf:"#3F5E40"},.04),{s:k,light:lightAt(tx,ty-8)}))}${glows}${dots}</g></g>`}
+
+  /* ── the fence runs only between its two white pillars, which mark its ends: tall square stucco posts with
+     a cap, a top and a bottom rail and sparse ticks, and a gate of the same black and the same height on the
+     door's line, its two posts a little proud with a ball on each. In October (PN_PUMPKIN_LIGHTS) a string of
+     little pumpkin lights runs along the top rail day and night, in two runs that leave the gate clear, and
+     each pillar carries an orange pumpkin and a white one, carved and lit from the carving day the way every
+     pumpkin is (pumpkinAt) */
+  const fx0=X(10),fx1=X(310),gx0=doorX-6.2,gx1=doorX+6.2,fenceC=air("#24252B",.03),pillarC=air("#EDEAE3",.03),pillarH=13.5,pillarW=7.2;
+  let ticks="";for(let x=fx0+pillarW/2+2;x<fx1-pillarW/2-1;x+=5){if(x>gx0-1.5&&x<gx1+1.5)continue;ticks+=`M ${f1(x)} ${f1(fenceT+.6)} L ${f1(x)} ${f1(fenceB-.4)} `}
+  let gate="";for(let x=gx0+1.6;x<gx1-1;x+=1.85)gate+=`M ${f1(x)} ${f1(fenceT+.2-.9*Math.sin(Math.PI*(x-gx0)/(gx1-gx0)))} L ${f1(x)} ${f1(fenceB-.6)} `;
+  const gateSvg=`<g data-prop="gate"><path d="${gate}" stroke="${fenceC}" stroke-width=".42"/><path d="M ${f1(gx0)} ${f1(fenceT+.7)} Q ${f1(doorX)} ${f1(fenceT-1.1)} ${f1(gx1)} ${f1(fenceT+.7)} M ${f1(gx0)} ${f1(fenceB-1.5)} L ${f1(gx1)} ${f1(fenceB-1.5)} M ${f1(gx0)} ${f1(fenceT+3.6)} L ${f1(gx1)} ${f1(fenceT+3.6)}" fill="none" stroke="${fenceC}" stroke-width=".7"/>`
+    +[gx0,gx1].map(x=>`<rect x="${f1(x-.6)}" y="${f1(fenceT-1.2)}" width="1.2" height="${f1(fenceB-fenceT+1.2)}" fill="${fenceC}"/><circle cx="${f1(x)}" cy="${f1(fenceT-1.6)}" r=".75" fill="${fenceC}"/>`).join("")
+    +`<rect x="${f1(gx1-2.2)}" y="${f1(fenceT+3.1)}" width="1.1" height="1" fill="${mix(fenceC,"#9A9AA0",.4)}"/></g>`;
+  /* a square stucco pillar: its lit face and its shade side, a cap a little proud, and a grain of stucco */
+  const pillar=x=>{const x0=x-pillarW/2,t=fenceB-pillarH,lit=lightAt(x,t)[0]<0?-1:1;
+    return `<g data-prop="pillar"><rect x="${f1(x0)}" y="${f1(t)}" width="${pillarW}" height="${pillarH}" fill="${pillarC}" stroke="${lineC}" stroke-width=".55"/>`
+      +`<rect x="${f1(lit<0?x0+pillarW*.62:x0)}" y="${f1(t+1.2)}" width="${f1(pillarW*.38)}" height="${f1(pillarH-1.2)}" fill="${shadeC}" opacity="${(.14*shadeK).toFixed(2)}"/>`
+      +`<rect x="${f1(x0-.8)}" y="${f1(t-1.5)}" width="${f1(pillarW+1.6)}" height="1.6" fill="${pillarC}" stroke="${lineC}" stroke-width=".45"/>`
+      +(tex?`<rect x="${f1(x0)}" y="${f1(t)}" width="${pillarW}" height="${pillarH}" fill="${tex}" opacity="${(.7*paperK).toFixed(2)}"/>`:"")+`</g>`};
+  const pumpRun=(x0,x1,seed)=>{const r=mulberry(seed);let out="";
+    for(let x=x0;x<x1;x+=7+r()*.7){const y=fenceT+1.8+r()*.6;
+      out+=`<circle cx="${f1(x)}" cy="${f1(y)}" r="${fog?5:3.4}" fill="url(#pnPumpGlow)" opacity="${dark?1:sunAltDeg<6?.6:.28}"/><ellipse cx="${f1(x)}" cy="${f1(y)}" rx="1.1" ry=".9" fill="#FF8A2A"/><ellipse cx="${f1(x-.2)}" cy="${f1(y-.1)}" rx=".48" ry=".4" fill="#FFD08A"/><rect x="${f1(x-.14)}" y="${f1(y-1.3)}" width=".28" height=".5" fill="#3E5A2A"/>`}
+    return out?`<g class="decor" data-decor="pumpkin-lights"><g>${out}</g></g>`:""};
+  const pumpLights=PN_PUMPKIN_LIGHTS&&halloween?pumpRun(fx0+pillarW/2+3,gx0-12,4646)+pumpRun(gx1+12.5,fx1-pillarW/2-2,4747):"";
+  const fence=`<g data-prop="fence"><path d="M ${f1(fx0)} ${f1(fenceT+.9)} L ${f1(gx0)} ${f1(fenceT+.9)} M ${f1(gx1)} ${f1(fenceT+.9)} L ${f1(fx1)} ${f1(fenceT+.9)} M ${f1(fx0)} ${f1(fenceB-1.5)} L ${f1(gx0)} ${f1(fenceB-1.5)} M ${f1(gx1)} ${f1(fenceB-1.5)} L ${f1(fx1)} ${f1(fenceB-1.5)}" stroke="${fenceC}" stroke-width=".8"/><path d="${ticks}" stroke="${fenceC}" stroke-width=".5" opacity=".85"/>${gateSvg}${pillar(fx0)}${pillar(fx1)}</g>${pumpLights}`;
+  /* Josh: "one orange and one white pumpkin on both fence stantions - then carve them on time" */
+  const capY=fenceB-pillarH-1.5;
+  const pumpkins=halloween?[[fx0,3,5],[fx1,4,7]].map(([x,so,sw])=>pumpkinAt(x-2.1,capY,1,{w:5,h:3.9,carved,seed:so})+pumpkinAt(x+2.4,capY,1,{w:4.3,h:3.4,carved,seed:sw,white:true})).join(""):"";
+  /* ── fountain grass along the inside of the fence, from each pillar up to the gate: fine blades arching
+     out and feathery plumes, green-gold through the summer and tan from October; bent by the gusts and
+     swaying on them, one group a side */
+  const summer=month>=4&&month<=8,blC=air(summer?"#93A057":"#B4A06C",.03),plC=air(summer?"#D9CC8E":"#E6D6AC",.03),gInk=mix(lineC,blC,.5);
+  const bend=clamp(gust/40,0,1)*dw;
+  const tuft=(x,r)=>{const h=6.2+r()*2.2,n=9;let blades="",plumes="";
+    for(let k=0;k<n;k++){const t=(k/(n-1))-.5,ang=t*1.5+bend*.55,hh=h*(1-Math.abs(t)*.45)*(.85+r()*.3),tx=x+Math.sin(ang)*hh*.75+bend*1.4,ty=fenceB-.4-Math.cos(ang)*hh;
+      blades+=`M ${f1(x-.3)} ${f1(fenceB-.3)} Q ${f1(x+Math.sin(ang)*hh*.25)} ${f1(fenceB-hh*.7)} ${f1(tx)} ${f1(ty)} Q ${f1(x+Math.sin(ang)*hh*.25+.35)} ${f1(fenceB-hh*.62)} ${f1(x+.3)} ${f1(fenceB-.3)} Z `}
+    for(let k=0;k<4;k++){const t=(k/3)-.5,ang=t*1.1+bend*.7,hh=h*1.08,cx=x+Math.sin(ang)*hh*.62+bend*1.6,cy=fenceB-Math.cos(ang)*hh*.86,rot=ang*57.3;
+      plumes+=`<ellipse cx="${f1(cx)}" cy="${f1(cy)}" rx=".75" ry="2.1" transform="rotate(${f1(rot)} ${f1(cx)} ${f1(cy)})"/>`}
+    return `<path d="${blades}" fill="${blC}" stroke="${gInk}" stroke-width=".18"/><g fill="${plC}" opacity=".9">${plumes}</g>`};
+  const grassSide=(x0,x1,seed,box=false)=>{const r=mulberry(seed);let g="";for(let x=x0;x<x1;x+=8.4+r()*2.4)g+=tuft(x,r);
+    const amt=clamp(.6+gust*.12,.6,4.5),dur=clamp(5-gust*.08,1.6,5);
+    const sway=`${leanTo(amt,.3)};animation:swayTree ${dur.toFixed(1)}s ease-in-out infinite alternate;${wallClock(2*dur,seed%7)}`;
+    /* on the page each side is a box (liftKit), swayed about the blades' common foot (fenceB-.3, the foot of
+       the group's fill box, which is all a skew's origin needs) */
+    if(box){const b=[Math.floor((x0-14)*10)/10,Math.floor((fenceB-16)*10)/10,Math.ceil((x1-x0+28)*10)/10,18];
+      return liftAt(b,liftSvg(b,`<g data-prop="grasses"><g class="pn-grass">${g}</g></g>`),[(x0+x1)/2,fenceB-.3],PRM?"":sway)}
+    const st=PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;${sway}"`;
+    return `<g class="pn-grass"${st}>${g}</g>`};
+  const grasses=`<g data-prop="grasses">${grassSide(fx0+6,gx0-5,2525)}${grassSide(gx1+6,fx1-4,2626)}</g>`;
+  const grassLift=grassSide(fx0+6,gx0-5,2525,true)+grassSide(gx1+6,fx1-4,2626,true);
+  /* ── Halloween night: two carved lanterns on the bottom step either side of the path (lit with the
+     candles, from the 24th), and on the 31st after dark the trick-or-treater at the gate, lit by them */
+  let gateKid="",gateLanterns="";
+  if(halloween){const kS=.11,kX=doorX,kY=fenceB+1.4;
+    const kid=trickOrTreat?{parts:propTrickOrTreater(-1).flatMap(l=>l.parts),x:kX,y:kY,s:kS}:null,kidLit=kid?[{...kid,face:true,edge:.8}]:[];
+    gateKid=(kid?`<g class="decor" data-decor="trick-or-treater">${inkAt(kX,kY,kS,1,inkRig(propTrickOrTreater(-1),palAt(INK.trickOrTreater,.03),{s:kS,line:.7,heavy:.3,shade:.9,lit:.5,light:lightAt(kX,kY-6)}))}</g>`:"");
+    gateLanterns=carved?pumpkinAt(doorX-11.5,hy+10.1,1,{w:4.4,h:3.4,carved,seed:6,lights:kidLit})+pumpkinAt(doorX+11.5,hy+10.1,1,{w:4,h:3.1,carved,seed:9,lights:kidLit}):""}
+  const gateHallo=gateKid+gateLanterns;
+  /* the boards lean on the near east sabal. The golf cart is left out: at this crop there is no side
+     edge for it that is not the palms */
+  const bX=R0.x+3.9,bS=.56;
+  const boards=`<g data-prop="surfboards">${inkAt(bX,fenceB-.2,bS,1,inkRig(pnBoards(),palAt(PN_BOARD_COL,.03),{s:bS,line:.9,heavy:.45,shade:1.3,lit:.9,light:lightAt(bX,fenceB-10)}))}</g>`;
+
+  /* ── the lawn, the sand, the does at first and last light */
+  /* the lawn is green through the growing season and goes to straw in the winter */
+  const greenK=[0,.1,.35,.7,1,1,1,1,.95,.7,.35,.1][month],lawnTop=mix("#7A6E44","#5E7A3A",greenK),lawnFoot=mix("#94804F","#7C9846",greenK);
+  const lawn=`<rect x="${f1(-12)}" y="${f1(farY-.4)}" width="${W+24}" height="${f1(sandY-farY+.4)}" fill="url(#pnLawn)"/>`
+    +(tex?`<rect x="${f1(-12)}" y="${f1(farY)}" width="${W+24}" height="${f1(sandY-farY)}" fill="${tex}" opacity="${(.6*paperK).toFixed(2)}"/>`:"")
+    +`<path d="M ${f1(-12)} ${f1(sandY)} Q ${f1(X(90))} ${f1(sandY-.7)} ${f1(X(180))} ${f1(sandY-.2)} T ${f1(W+12)} ${f1(sandY-.4)} L ${f1(W+12)} ${f1(pondY+.3)} L ${f1(-12)} ${f1(pondY+.3)} Z" fill="${air("#D2C19C",.03)}"/>`;
+  let deer="";
+  if(sunAltDeg> -6&&sunAltDeg<10&&!wet&&!storm){
+    const dS=.44,dY=Y(151.6),dPal=palAt(INK.pnDoe,.04),doe=(x,graze,flip)=>castShadow(flatParts([{parts:propPnDoe({graze}).flatMap(l=>l.parts)}]),x,dY,dS,flip)
+      +`<g class="wildlife doe" data-species="whitetail-doe">${inkAt(x,dY,dS,flip,inkRig(propPnDoe({graze}),dPal,{s:dS,flip,line:1.4,heavy:.7,shade:1.6,lit:1.2,light:lightAt(x,dY-6)}))}</g>`;
+    deer=doe(X(108),false,1)+doe(X(216),true,-1);
+  }
+
+  /* ── the land, back to front; the reflection is the same picture turned over at the water and pressed
+     shorter (k), the storybook's licence, so the porch's lights are doubled inside the frame */
+  const standing=`${farWood}${ghost}${house}${patio}${fireLight}${chairsBack}${fire}${chairs}${tub}${tree}${swagMid}`
+    +grasses+PALMS.map((P,i)=>palmSvg(P,i===1?swagL:i===2?swagR:"")).join("")+`${fence}${pumpkins}${boards}`;
+  /* the copy holds still (its animations come off) and its light on the water is the flame's orange */
+  /* a still picture: no style that moves it, no class (so no candle flickers in the water), no data name
+     (so nothing in the water is taken for the thing itself) */
+  /* and a picture of its own: every id the copy defines is its own (r-), and so is every reference to one, so
+     nothing in the water points at the land's sheets, whose repaints would then repaint the water */
+  const stillRaw=(standing+gateHallo).replace(/ style="[^"]*animation[^"]*"/g,"").replace(/ class="[^"]*"/g,"").replace(/ data-[a-z-]+="[^"]*"/g,"");
+  const stillIds=new Set([...stillRaw.matchAll(/ id="([^"]+)"/g)].map(m=>m[1]));
+  const still=stillRaw.replace(/ id="([^"]+)"/g,' id="r$1"').replace(/(href="#|url\(#)([^")]+)/g,(m,p,id)=>stillIds.has(id)?p+"r"+id:m)
+    .replace(/url\(#pnBulbGlow\)/g,"url(#pnBulbGlowR)").replace(/#FFD27A/g,"#FFA75A")
+    .replace(/(<use href="#[^"]+" fill="[^"]*" stroke="[^"]*" )stroke-width="[^"]*"/g,'$1stroke-width="0"');
+  const k=.8;
+  const wGlass=wind<3&&!wet,wBlow=wind>=10||gust>=22||rainK>=.65;
+  let strips="";
+  if(!wGlass){const r=mulberry(2207),n=wBlow?12:6;
+    for(let i=0;i<n;i++){const y=pondY+1.2+(i+.2+r()*.6)*(H+20-pondY)/n,hgt=wBlow?.5+r()*.5:.7+r()*.6;
+      strips+=`<rect x="${f1(-12)}" y="${f1(y)}" width="${W+24}" height="${f1(hgt)}"/>`}}
+  const drift=!wGlass&&!PRM?` style="animation:pnDrift ${(wBlow?3.2:6.5).toFixed(1)}s ease-in-out infinite alternate;--dx:${dw*(wBlow?1.6:.8)}px;${wallClock(wBlow?6.4:13)}"`:"";
+  const waterTop=mix(mix(mix(skyS[2],skyS[1],.4),"#2F5468",.2),"#2E4A44",.45),waterBot=mix(mix(mix(skyS[1],skyS[0],.6),"#163246",.38),"#1E3430",.4);
+  const reflOp=fog?.32:wet?.62:.82;
+  const refl=`<g clip-path="url(#pnWaterClip)"><g transform="translate(0 ${f1(pondY+1+fenceB*k)}) scale(1 ${-k})">${still}</g></g>`
+    +`<rect x="${f1(-12)}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${mix(mix(skyS[0],"#1F3F52",.5),"#1E3430",.4)}" opacity=".42"/>`;
+  /* the strips are the light caught on the ripples: each is drawn where it is, its fill the reflection's own fade
+     (pnStripFill is the reflection's fade, .85 to .45, times the strips' opacity), which is the same light a mask over one wide rect gave
+     and leaves the moving sheet nothing to mask */
+  const stripC=mix(skyS[2],"#FFFFFF",.3),stripOp=wBlow?.45:.32;
+  const breakUp=wGlass?"":`<g${drift}><g fill="url(#pnStripFill)">${strips}</g></g>`;
+
+  /* ── the fountain, mid-pond on the back door's line, in the porch's reflection (where it is): a tall narrow V
+     of spray out of a dark float, and a ring of small low jets round its foot. The plume leans downwind as far
+     as the gusts say and its spray drifts on them; it is lit warm from below after dark; in a calm it only
+     plays a little, the way running water does, and under reduced motion it holds still. Its own pressed copy
+     is in the water under it */
+  const fnX=doorX,fnY=Y(178),lean=clamp(gust/40,0,.62)*dw;
+  const fountain=(copy)=>{const jc=lightsOn?"rgb(255,226,170)":air("#F4F8FA",.06),dc=lightsOn?"rgb(255,214,150)":air("#FFFFFF",.06);
+    const ph=30,tx=fnX+lean*14,spread=4.6;
+    /* the V: two veils of spray from the nozzle out to its rim, fainter toward the top, and a bright core */
+    let jets=`<path d="M ${f1(fnX-.5)} ${f1(fnY)} Q ${f1(fnX+lean*7-spread*.35)} ${f1(fnY-ph*.6)} ${f1(tx-spread)} ${f1(fnY-ph)} L ${f1(tx+spread)} ${f1(fnY-ph)} Q ${f1(fnX+lean*7+spread*.35)} ${f1(fnY-ph*.6)} ${f1(fnX+.5)} ${f1(fnY)} Z" fill="url(#pnPlume)" opacity=".85"/>`
+      +`<path d="M ${f1(fnX)} ${f1(fnY)} Q ${f1(fnX+lean*7)} ${f1(fnY-ph*.6)} ${f1(tx)} ${f1(fnY-ph+1)}" fill="none" stroke="${lightsOn?"rgb(255,248,225)":"#FFFFFF"}" stroke-width=".55" opacity=".9"/>`;
+    for(const e of[-1,1])jets+=`<path d="M ${f1(fnX+e*.3)} ${f1(fnY)} Q ${f1(fnX+lean*7+e*spread*.45)} ${f1(fnY-ph*.62)} ${f1(tx+e*spread*1.05)} ${f1(fnY-ph+.4)}" fill="none" stroke="${jc}" stroke-width=".42" opacity=".75"/>`;
+    /* the ring of small low jets round its foot, each a little arc of spray */
+    for(let i=0;i<8;i++){const a=i/8*Math.PI*2,jx=fnX+Math.cos(a)*11,jy=fnY+Math.sin(a)*2.4,h=2.4+(Math.sin(a)>0?.8:0);
+      jets+=`<path d="M ${f1(jx-.6)} ${f1(jy)} Q ${f1(jx+lean*2)} ${f1(jy-h*1.4)} ${f1(jx+.6+lean*2.5)} ${f1(jy)}" fill="none" stroke="${jc}" stroke-width=".45" opacity=".7"/>`}
+    const r=mulberry(5151);let drops="";
+    for(let i=0;i<26;i++){const t=r(),a=(r()-.5)*2,x=fnX+(tx-fnX)*t+a*spread*(.3+t*.9)+lean*Math.abs(lean)*16*r()*t,y=fnY-ph*t*(1-Math.abs(lean)*.25)-r()*2;drops+=`<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(.24+r()*.28)}" fill="${dc}" opacity="${(.45+r()*.4).toFixed(2)}"/>`}
+    for(let i=0;i<14;i++){const a=(r()-.5)*2,x=tx+a*(spread+2.5)+lean*6*r(),y=fnY-ph+2.5-r()*3+Math.abs(a)*4.5;drops+=`<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(.28+r()*.3)}" fill="${dc}" opacity=".8"/>`}
+    const sway=!copy&&!PRM?` style="transform-box:view-box;transform-origin:${f1(fnX)}px ${f1(fnY)}px;--sk:${(-dw*(.6+gust*.12)).toFixed(2)}deg;animation:pnSpray ${clamp(3.2-gust*.06,1.2,3.2).toFixed(1)}s ease-in-out infinite alternate;${wallClock(6.4)}"`:"";
+    const drift2=!copy&&!PRM?` style="transform-box:view-box;transform-origin:${f1(fnX)}px ${f1(fnY)}px;--dx:${(dw*(.7+gust*.09)).toFixed(2)}px;animation:pnDrops ${clamp(2.4-gust*.04,1,2.4).toFixed(1)}s ease-in-out infinite alternate;${wallClock(4.8,1.1)}"`:"";
+    return `${lightsOn?`<ellipse cx="${f1(fnX)}" cy="${f1(fnY-6)}" rx="15" ry="16" fill="url(#pnWash)" opacity=".95"/>`:""}<g class="pn-jets"${sway}>${jets}</g><g class="pn-drops"${drift2}>${drops}</g>`
+      +`<ellipse cx="${f1(fnX)}" cy="${f1(fnY+.2)}" rx="3.2" ry=".9" fill="${air("#2A2F33",.06)}"/><ellipse cx="${f1(fnX)}" cy="${f1(fnY)}" rx="5" ry="1.1" fill="${lightsOn?"rgb(255,220,170)":air("#F4F8FA",.06)}" opacity=".55"/>`
+      +`<ellipse cx="${f1(fnX)}" cy="${f1(fnY+.6)}" rx="14" ry="3" fill="none" stroke="${lightsOn?"rgb(255,210,150)":air("#EAF2F6",.06)}" stroke-width=".4" opacity=".45"/>`};
+  const fountainSvg=`<g data-prop="fountain"><g opacity=".3" transform="translate(0 ${f1(fnY*(1+k)+.6)}) scale(1 ${-k})">${fountain(true)}</g>${fountain(false)}</g>`;
+
+  /* rain in front of the house, which is a tall silhouette the sky's rain falls behind (nearRainLayer): from
+     just under the ridge it falls in front of the roof, the walls and the palms, and it lands on the lawn at the
+     sand, where the pond's rings take it */
+  const rainTop=hy+u(PN_BH.ridge)+2,rainLand=sandY;
+  const nearRainL=wet&&!snowing&&!PRM?nearRainLayer({W,top:rainTop,land:rainLand,code,wind,downwind,dark,seed:5381,id:"pnrain"}):null;
+  let rainRings="";
+  if(wet&&!snowing&&!PRM){const wr=mulberry(7139),rings=3+Math.round(rainK*5);
+    for(let i=0;i<rings;i++)rainRings+=`<ellipse class="water-ring" cx="${f1(10+wr()*(W-20))}" cy="${f1(pondY+4+wr()*(H-pondY-6))}" rx="${f1(3+wr()*4)}" ry="${f1(.9+wr()*.8)}" fill="none" stroke="${dark?"#B7D6E1":"#183C4B"}" stroke-width=".6" style="animation-delay:-${(wr()*3.8).toFixed(1)}s"/>`}
+  /* the heron is the pond's resident: it stands at the water's east edge, side on and still, so it always
+     reads as a heron (its strike and its wade are the marsh's), in every weather but a thunderstorm */
+  const showHeron=!storm;
+  const hrX=X(300),hrY=pondY+1.8,hrS=.3;
+  const heron=showHeron?`<g class="wildlife heron heron-still" data-species="great-blue-heron" transform="translate(${f1(hrX)} ${f1(hrY)}) scale(${-hrS} ${hrS})">${inkRig(rigHeron(phase),inkPal(INK.heron),{s:hrS,flip:-1,light:lightAt(hrX,hrY-20)})}</g>`
+    +`<ellipse cx="${f1(hrX)}" cy="${f1(hrY+.5)}" rx="5" ry=".9" fill="none" stroke="${dark?"#B7D6E1":"#183C4B"}" stroke-width=".45" opacity=".5"/>`:"";
+  const pondStill=`<rect x="${f1(-12)}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="url(#pnPond)"/>`
+    +(tex?`<rect x="${f1(-12)}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${tex}" opacity="${(.4*paperK).toFixed(2)}"/>`:"");
+  /* the sand's edge is under the fountain, which stands in front of it */
+  const sandLine=`<path d="M ${f1(-12)} ${f1(pondY+.2)} L ${f1(W+12)} ${f1(pondY+.2)}" stroke="${air("#6E5E44",.03)}" stroke-width=".7" opacity=".6"/>`;
+  const pondMoving=breakUp+(fog?`<rect x="${f1(-12)}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${dark?"#96ABB5":"#F5F3E8"}" opacity=".3"/>`:"")+rainRings+sandLine+fountainSvg;
+
+  /* ── the sky's own things: clouds, gulls by day, and Halloween's bats and witch over the roof */
+  let sceneClouds="";
+  if(!(cloud<10||cloud>85)&&!wet&&!storm&&!fog){
+    const rush=clamp(1+wind/11,1,4.2),rev=windFrom>180?"alternate-reverse":"alternate";
+    for(const[fx,y,s,sd]of[[.18,GY-128,.58,4],[.84,GY-140,.46,11]].slice(0,cloud>40?2:1))
+      sceneClouds+=`<g class="drift" style="animation:drift ${(110/rush).toFixed(0)}s ease-in-out infinite ${rev};${phase(Math.round(110/rush)*2)}">${inkAt(W*fx,y,s,sd%2?-1:1,
+        inkUnit(propCloud(sd),{body:"url(#cloudInk)",ink:mix(lineC,skyS[1],.45),shade:mix(shadeC,skyS[1],.4),lit:litC,litOp:.5*litK,shadeOp:.28},{s,light:[0,-1],line:.9,heavy:.4}))}</g>`;
+  }
+  const gullAt=[[W*.12,GY-120],[W*.88,GY-132]];
+  const gulls=!wet&&!storm&&!dark&&!(localHour<12||localHour>=16)?flightBird("gull",gullAt[0][0],gullAt[0][1],.5,.3,-2.6,8)+flightBird("gull",gullAt[1][0],gullAt[1][1],.4,.22,-7.1,10):"";
+  /* the house fills the frame, so the night's flyers work in front of its roof: the witch flies past over
+     the palms' crowns, and through the moon when a line can cross it there, and the bats hunt round the roof
+     and over the crowns, never down past the eaves */
+  const wLow=GY-100,palmTops=tops.slice(1),eaveY=hy+u(PN_BH.eave)-2,witch=witchPlan(17,wLow,(x,y)=>y<wLow&&palmTops.every(([a,b,t])=>x+moonR<a||x-moonR>b||y+moonR<t),palmTops);
+  const bats=batN?batColony(8,(x0,x1)=>Math.min(GY-40,eaveY,...palmTops.filter(([a,b])=>x1>a&&x0<b).map(t=>t[2])),batKeep(witch??null)):"";
+
+  /* a moon whose disc is behind the house is not drawn at all, so its haze cannot spill round the roof
+     like a fire */
+  const behindHouse=([x,y])=>{const lx=(x-hx)/S,ly=(y-hy)/S,B=PN_BH,poly=[[B.l,0],[B.l,B.geave],[B.roofL,B.eave],[B.ridgeL,B.ridge],[B.ridgeR,B.ridge],[B.roofR,B.eave],[B.r,B.geave],[B.r,0]];
+    let inside=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const[xi,yi]=poly[i],[xj,yj]=poly[j];if((yi>ly)!==(yj>ly)&&lx<(xj-xi)*(ly-yi)/(yj-yi)+xi)inside=!inside}return inside};
+  const moonShown=moonXY&&behindHouse(moonXY)?"":moonBody;
+  /* Sheets. WebKit, which draws every iPhone browser, repaints an SVG sheet whole whenever anything in it
+     moves, and this picture (the house, the palms and the pond holding all of it upside down) is far too much to
+     paint sixty times a second: in one sheet it ran at 9 frames a second on a WKWebView (tools/webkit.mjs). So
+     nothing that moves is in #sceneSvg. The still picture is laid out on still sheets and what moves goes between
+     them, back to front exactly as it was drawn in one: the sky (#sceneSvg), what moves in it (#sceneSky: the
+     clouds and the gulls, with the sun and the moon over them when a gull would cross either), the house, the
+     patio and the strands (#sceneNear), the fountain grass and the palms, each a box the compositor sways
+     (#sceneLift), the fence, its pillars and what stands at it (#sceneFront), the fire's flame, a guttering
+     candle's pumpkin, the bats, the witch and the near rain, with its mask (#sceneFx), the low sun's wash, the does, the fog and the pond
+     (#sceneWater), its reflection (#sceneRefl), the light on the ripples, the rain's rings and the fountain
+     (#sceneRipple, with the sand's edge under the fountain), and over it all the low sun on the water, the heron and the times
+     (#sceneTop). Each only repaints itself. Where a moving thing was drawn under a still one, nothing on the
+     sheets between comes near it. They keep a colour of their own (renderScene), all but #sceneTop, whose times
+     are in the sky's ink, so the sky's colour transition restyles none of them, and #sceneSvg's defs, which every
+     sheet draws with, keep theirs too */
+  const sheet=id=>{const el=document.getElementById(id);el.setAttribute("viewBox",`0 0 ${W} ${H}`);return el};
+  /* a gull crossing the sun, the moon or the low sun's glow is drawn under them, so then they ride with it */
+  const nearGull=(p,r)=>p&&gullAt.some(([x,y])=>Math.abs(x-p[0])<r+7&&Math.abs(y-p[1])<r+7);
+  const skyOver=!!gulls&&(glowK>.02||nearGull(sunXY,38)||!!moonShown&&nearGull(moonXY,halloween?moonR*6.6:26));
+  const sideSky=`${glowK>.02?`<rect data-light="side-sky" x="${f1(-20)}" y="${f1(Y(0)-40)}" width="${W+40}" height="${f1(pondY-Y(0)+40)}" fill="url(#pnSideSky)" opacity="${(.85*glowK).toFixed(2)}"/>`:""}`;
+  /* a pumpkin whose candle gutters goes up whole, its paint with its flame, so the pair on a pillar keep their order */
+  const guttering=/class="candle flicker"/.test(pumpkins+gateLanterns);
+  const skyPaint=()=>{sheet("sceneSvg").innerHTML=`
+    <defs style="color:#000">
+      <radialGradient id="sunglow"><stop offset="0" stop-color="#FFD86E" stop-opacity=".55"/><stop offset=".42" stop-color="#FFCB55" stop-opacity=".22"/><stop offset="1" stop-color="#FFC94F" stop-opacity="0"/></radialGradient>
+      <radialGradient id="moonglow"><stop offset="0" stop-color="#EAF2FF" stop-opacity=".42"/><stop offset="1" stop-color="#EAF2FF" stop-opacity="0"/></radialGradient>
+      <radialGradient id="pnBulbGlow"><stop offset="0" stop-color="#FFC765" stop-opacity=".8"/><stop offset=".35" stop-color="#FFB24A" stop-opacity=".24"/><stop offset="1" stop-color="#FF9A3A" stop-opacity="0"/></radialGradient>
+      <radialGradient id="pnBulbGlowR"><stop offset="0" stop-color="#FF9A4A" stop-opacity=".55"/><stop offset=".4" stop-color="#FF8A3A" stop-opacity=".2"/><stop offset="1" stop-color="#FF7A30" stop-opacity="0"/></radialGradient>
+      <radialGradient id="pnPumpGlow"><stop offset="0" stop-color="#FF8A2A" stop-opacity=".6"/><stop offset="1" stop-color="#FF7A20" stop-opacity="0"/></radialGradient>
+      <linearGradient id="pnPlume" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="${lightsOn?"rgb(255,232,190)":"#FFFFFF"}" stop-opacity=".75"/><stop offset=".7" stop-color="${lightsOn?"rgb(255,222,170)":"#F4F8FA"}" stop-opacity=".35"/><stop offset="1" stop-color="${lightsOn?"rgb(255,214,150)":"#F4F8FA"}" stop-opacity=".12"/></linearGradient>
+      <linearGradient id="pnTopFade" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(Y(14))}" x2="0" y2="${f1(Y(84))}"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity="1"/></linearGradient>
+      <mask id="pnFadeIn" maskUnits="userSpaceOnUse" x="${f1(-12)}" y="${f1(Y(0))}" width="${W+24}" height="${f1(H+10)}"><rect x="${f1(-12)}" y="${f1(Y(0))}" width="${W+24}" height="${f1(H+10)}" fill="url(#pnTopFade)"/></mask>
+      <radialGradient id="pnUplight"><stop offset="0" stop-color="rgb(255,196,120)" stop-opacity=".38"/><stop offset="1" stop-color="rgb(255,180,100)" stop-opacity="0"/></radialGradient>
+      <radialGradient id="pnWash"><stop offset="0" stop-color="rgb(255,170,90)" stop-opacity=".45"/><stop offset="1" stop-color="rgb(255,160,80)" stop-opacity="0"/></radialGradient>
+      <linearGradient id="pnLawn" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(farY)}" x2="0" y2="${f1(sandY)}"><stop offset="0" stop-color="${air(lawnTop,.05)}"/><stop offset="1" stop-color="${air(lawnFoot,.02)}"/></linearGradient>
+      <linearGradient id="pnPond" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(pondY)}" x2="0" y2="${f1(Y(194))}"><stop offset="0" stop-color="${waterTop}"/><stop offset="1" stop-color="${waterBot}"/></linearGradient>
+      <linearGradient id="cloudInk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${tone(mix("#FFFFFF",skyS[1],.25))}"/><stop offset=".6" stop-color="${tone(mix("#FFF4E6",skyS[2],.35))}"/><stop offset="1" stop-color="${mix(tone("#FFF4E6"),litC,.5*litK)}"/></linearGradient>
+      <linearGradient id="fogveil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity="0"/><stop offset=".55" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity=".34"/><stop offset="1" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity=".06"/></linearGradient>
+      <clipPath id="pnWaterClip"><rect x="${f1(-12)}" y="${f1(pondY+.3)}" width="${W+24}" height="${f1(H-pondY+40)}"/></clipPath>
+      <linearGradient id="pnStripFill" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(pondY)}" x2="0" y2="${f1(Y(194))}"><stop offset="0" stop-color="${stripC}" stop-opacity="${(.85*stripOp).toFixed(4)}"/><stop offset="1" stop-color="${stripC}" stop-opacity="${(.45*stripOp).toFixed(4)}"/></linearGradient>
+      <radialGradient id="pnSideSky" gradientUnits="userSpaceOnUse" cx="${f1(side>0?W+10:-10)}" cy="${f1(pondY-14)}" r="${f1(W*.85)}" gradientTransform="translate(${f1(side>0?W+10:-10)} ${f1(pondY-14)}) scale(1 ${Math.min(.55,(pondY-Y(0)+26)/(W*.85)).toFixed(3)}) translate(${f1(-(side>0?W+10:-10))} ${f1(-(pondY-14))})"><stop offset="0" stop-color="${warm}" stop-opacity=".75"/><stop offset=".45" stop-color="${warm}" stop-opacity=".28"/><stop offset="1" stop-color="${warm}" stop-opacity="0"/></radialGradient>
+      <linearGradient id="pnSideWash" x1="${side>0?1:0}" y1="0" x2="${side>0?0:1}" y2="0"><stop offset="0" stop-color="${warm}" stop-opacity=".9"/><stop offset=".55" stop-color="${warm}" stop-opacity=".12"/><stop offset="1" stop-color="${warm}" stop-opacity="0"/></linearGradient>
+      <clipPath id="pnHouseClip">${pnBackHouseSil().map(d=>`<path transform="translate(${f1(hx)} ${f1(hy)}) scale(${S})" d="${d}"/>`).join("")}</clipPath>
+      ${candleDefs||""}${hallowDefs||""}
+      ${tex?`<pattern id="paper" width="160" height="160" patternUnits="userSpaceOnUse"><image href="${paperTex()}" width="160" height="160"/></pattern>`:""}
+    </defs>
+    <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
+    ${goldArc}${skyOver?"":sunBody+moonShown+sideSky}`;
+  sheet("sceneSky").innerHTML=gulls+(skyOver?sunBody+moonShown+sideSky:"")+sceneClouds};
+  const landPaint=()=>{sheet("sceneNear").innerHTML=`${lawn}${farWood}${ghost}${house}${patio}${fireLight}${chairsBack}${fireStill}${chairs}${tub}${tree}${swagMid}`;
+  document.getElementById("sceneLift").innerHTML=grassLift+PALMS.map(palmLift).join("");
+  sheet("sceneFront").innerHTML=fence+(guttering?"":pumpkins)+boards+gateKid+(guttering?"":gateLanterns);
+  sheet("sceneFx").innerHTML=fireFlame+(guttering?pumpkins+gateLanterns:"")+bats+witchFly(witch)+(nearRainL?`<defs>${nearRainL.defs}</defs>${nearRainL.drops}`:"")};
+  const waterPaint=()=>{sheet("sceneWater").innerHTML=`
+      ${glowK>.02?`<g data-light="side-wash" mask="url(#pnFadeIn)"><rect x="${f1(-12)}" y="${f1(Y(14))}" width="${W+24}" height="${f1(sandY-Y(14))}" fill="url(#pnSideWash)" opacity="${(.3*glowK).toFixed(2)}"/>`
+        +`<rect x="${f1(-12)}" y="${f1(Y(14))}" width="${W+24}" height="${f1(hy-Y(14)+1)}" fill="url(#pnSideWash)" clip-path="url(#pnHouseClip)" opacity="${(.32*glowK).toFixed(2)}"/></g>`:""}
+      ${deer}
+      ${fog?`<rect x="${f1(-12)}" y="${f1(Y(0))}" width="${W+24}" height="${f1(pondY-Y(0))}" fill="${dark?"#96ABB5":"#EEF0EC"}" opacity=".3" mask="url(#pnFadeIn)" data-light="fog"/>`:""}
+      ${pondStill}`;
+  /* the reflection is a sheet of its own, and its fade down the water (.85 to .45 from the water's edge to the
+     frame's foot, pnReflFade until October 2026) and its opacity are that sheet's CSS mask and opacity, which
+     the compositor applies: as an SVG mask the whole upside-down picture was drawn again into an offscreen
+     buffer on every repaint, 81ms of a WebKit frame. The sheet runs 40px under the frame, top aligned, so the
+     water under the frame's foot keeps its reflection as it did */
+  const rf=sheet("sceneRefl"),a=(pondY/H).toFixed(5),fade=`linear-gradient(to bottom,transparent calc((100% - 40px) * ${a}),rgba(0,0,0,.85) calc((100% - 40px) * ${a}),rgba(0,0,0,.45) calc(100% - 40px))`;
+  rf.setAttribute("preserveAspectRatio","xMidYMin meet");
+  Object.assign(rf.style,{height:"calc(100% + 40px)",opacity:String(reflOp),webkitMaskImage:fade,maskImage:fade});
+  rf.innerHTML=refl;
+  sheet("sceneRipple").innerHTML=pondMoving;
+  sheet("sceneTop").innerHTML=`
+      ${glowK>.02?`<rect data-light="side-pond" x="${f1(-12)}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="url(#pnSideWash)" opacity="${(.34*glowK).toFixed(2)}"/>`:""}
+      ${heron}
+    ${fog?`<rect x="0" y="${f1(Y(64))}" width="${W}" height="80" fill="url(#fogveil)"/>`:""}
+    ${sunTimes}`};
+  /* A first paint (nothing in the scene at all: the app opening on the loading shell) is written a part a frame,
+     hidden, and shown whole the frame after the last: in one frame the house's sheets made a WebKit frame of
+     150ms on the open, written over three none is over 70. The sky goes up at once. A paint over a picture
+     already up, the house's or another place's (a cached switch from the farm), is written in one frame, so
+     nothing in it goes missing: staged over the farm's picture, the farm went and a bare sky stood for three
+     frames before the house came. A newer drawing (SCENE_DRAW) stops one part way and shows every sheet again */
+  const staged=["sceneNear","sceneLift","sceneFront","sceneFx","sceneWater","sceneRefl","sceneRipple","sceneTop"].map(id=>document.getElementById(id));
+  const up=document.getElementById("sceneSvg").childElementCount>0;
+  skyPaint();
+  if(staged[0].childElementCount||up){landPaint();waterPaint();return}
+  for(const el of staged)el.style.visibility="hidden";
+  const gen=SCENE_DRAW,steps=[landPaint,waterPaint,()=>{for(const el of staged)el.style.visibility=""}];
+  const step=()=>{if(gen!==SCENE_DRAW)return;steps.shift()();if(steps.length)requestAnimationFrame(step)};
+  requestAnimationFrame(step);
+}
+
 /* ── the lowcountry: Beaufort, South Carolina ───────────────────────────────────────────────────
    The Beaufort River from the town's side. Back to front: Lady's Island's low maritime wood on the far
    line, the Woods Memorial swing bridge standing across the river on that line, the river itself, broad
@@ -9764,26 +10919,10 @@ function lowcountryScene(c){
   const beats=(svg,cls,amtK,seed)=>{const r=mulberry(seed);return PRM?svg:svg.replace(new RegExp(`<g class="${cls}"`,"g"),()=>{const b=beatOf(r,amtK);
     return `<g class="${cls}" style="--sway:${b.amt.toFixed(2)}deg;--sway-neg:${(-b.amt).toFixed(2)}deg;--md:${b.md.toFixed(1)}s;animation-delay:-${b.dl.toFixed(1)}s"`})};
   const beatsOf=(seed,n,amtK)=>{const r=mulberry(seed);return Array.from({length:n},()=>beatOf(r,amtK))};
-  /* ── what turns whole goes in a box of its own. WebKit repaints an SVG sheet whole whenever anything in it
-     moves, and the sheet's cost is what it holds: on October 21 2026, with only the flag fluttering, the old
-     moving layer still cost most of Beaufort's graphics work, because the palmettos' crowns and the boat were
-     in it. A box (#sceneLift) is placed in the scene's units, as fractions of the frame, so it sits exactly where
-     the drawing did at every width; the drawing in it is still, in the scene's own coordinates and line weights,
-     and the box turns about the drawing's joint, which WebKit leaves to the compositor and repaints nothing */
-  const partsOf=L=>L.flatMap(l=>l.parts||partsOf(l.layers||[]));
-  const boxOf=(layers,dx,dy,m=3,also=null)=>{const ds=partsOf(layers).map(p=>p.d);if(!ds.length)return null;let[bx,by,bw,bh]=pathBox(ds);
-    if(also){const x1=Math.max(bx+bw,also[0]+also[2]),y1=Math.max(by+bh,also[1]+also[3]);bx=Math.min(bx,also[0]);by=Math.min(by,also[1]);bw=x1-bx;bh=y1-by}
-    const x0=Math.floor((dx+bx-m)*10)/10,y0=Math.floor((dy+by-m)*10)/10;return[x0,y0,Math.ceil((dx+bx+bw+m-x0)*10)/10,Math.ceil((dy+by+bh+m-y0)*10)/10]};
-  const pct=v=>(v*100).toFixed(4)+"%",origin=(b,p)=>`transform-origin:${pct((p[0]-b[0])/b[2])} ${pct((p[1]-b[1])/b[3])}`;
-  /* the drawing in a box is the whole frame's, laid over the scene's other sheets and seen through the box.
-     It is placed in the frame's own width and height (cqw, cqh), because placed as a share of its box the
-     browser's rounding of the box is multiplied by the frame's size over the box's, and the drawing landed up
-     to a third of a pixel off the picture under it; the shares stay as the fallback for an older browser. It
-     keeps the sheets' own fit of the frame to the box, as their sheets do */
-  const liftSvg=(b,inner)=>`<svg viewBox="0 0 ${W} ${H}" style="left:${pct(-b[0]/b[2])};top:${pct(-b[1]/b[3])};width:${pct(W/b[2])};height:${pct(H/b[3])};left:${(-b[0]/W*100).toFixed(4)}cqw;top:${(-b[1]/H*100).toFixed(4)}cqh;width:100cqw;height:100cqh">${inner}</svg>`;
-  const liftAt=(b,inner,p,anim="")=>`<div class="lift" style="left:${pct(b[0]/W)};top:${pct(b[1]/H)};width:${pct(b[2]/W)};height:${pct(b[3]/H)}${p?";"+origin(b,p):""}${anim?";"+anim:""}">${inner}</div>`;
-  /* a box inside a box, the same size, turning on its own joint inside its parent's turn */
-  const liftIn=(b,inner,p,anim="")=>`<div class="lift" style="${origin(b,p)}${anim?";"+anim:""}">${inner}</div>`;
+  /* ── what turns whole goes in a box of its own (liftKit). On October 21 2026, with only the flag fluttering,
+     the old moving layer still cost most of Beaufort's graphics work, because the palmettos' crowns and the
+     boat were in it */
+  const{partsOf,boxOf,pct,origin,liftSvg,liftAt,liftIn}=liftKit(W,H);
   const turn=bt=>PRM?"":`--sway:${bt.amt.toFixed(2)}deg;--sway-neg:${(-bt.amt).toFixed(2)}deg;animation:bftTurn ${bt.md.toFixed(1)}s ease-in-out -${bt.dl.toFixed(1)}s infinite alternate`;
 
   /* ── the far shore, seen from the waterway east of the bridge: Lady's Island's low wood on the left, and
@@ -15262,7 +16401,7 @@ function loadMoon(ink){
 }
 /* The empty pictures keep the size the loaded page will give them, so the handoff does not jump. */
 function loadFrame(){
-  const aw=appW(),W=Math.max(320,aw/1.22),H=Math.round((LOC.scene==="marsh"?150:168)+(760-W)*.10);
+  const aw=appW(),W=Math.max(320,aw/1.22),H=sceneH(W);
   document.getElementById("sceneSvg").setAttribute("viewBox",`0 0 ${W} ${H}`);
   const cw=aw-40,ch=chartH(cw),box=(id,h)=>document.getElementById(id).setAttribute("viewBox",`0 0 ${cw} ${h}`);
   /* Beaufort's tide chart carries its wind row under the lows, so its box is that much taller */
@@ -15320,10 +16459,11 @@ function paintLoadingState(){
   for(const id of ["feels","hiNow","loNow"])document.getElementById(id).textContent="—";
   document.getElementById("feelsRow").hidden=false;
   document.getElementById("verdict").textContent="Reading the sky…";
-  for(const id of ["chips","skyFx","rainFx","sceneSvg","sceneSky","sceneMoss","sceneNear","sceneLift","sceneFx","hourlySvg","hrLabels","weekRows","weekSvg","moonTxt","uvSvg","moonSvg","yearSvg"])
+  for(const id of ["chips","skyFx","rainFx","sceneSvg","sceneSky","sceneMoss","sceneNear","sceneLift","sceneFront","sceneFx","sceneWater","sceneRefl","sceneRipple","sceneTop","hourlySvg","hrLabels","weekRows","weekSvg","moonTxt","uvSvg","moonSvg","yearSvg"])
     document.getElementById(id).innerHTML="";
   document.getElementById("weekRows").style.minHeight="";
-  SCENE_KEY="";SCENE_META=null;RAIN_KEY="";
+  SCENE_KEY="";SCENE_META=null;RAIN_KEY="";SCENE_DRAW++;
+  for(const el of document.querySelectorAll(".scene > .scene-layer,.scene > .scene-lift"))el.style.visibility="";
   document.getElementById("flash").className="flash";
   document.getElementById("rainFx").className="rainfx";
   document.getElementById("hourlyNote").textContent="";

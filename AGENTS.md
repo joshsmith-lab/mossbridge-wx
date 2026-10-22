@@ -10,7 +10,8 @@ A single-file, build-free PWA. `index.html` is the whole application,
 
 Production is <https://joshsmith-lab.github.io/mossbridge-wx/>, served from
 `main`, and it is shared with family. The `LOCS` table holds
-`mb` (Moss Bridge Ct, Porters Neck NC, coastal, gets the water + tides + the beach zone's tropical warnings),
+`mb` (Moss Bridge Ct, Porters Neck NC, coastal, gets the water + tides + the beach zone's tropical warnings;
+since October 21 2026 its scene is the family's own house across the pond, see Porters Neck below),
 `sp` (Bob Plumley Rd, Shady Spring WV, inland) and `bft` (Coosaw Club Dr, Lady's Island, Beaufort SC,
 the third place since October 15 2026, Jen's family, coastal, with its own "lowcountry" scene; see
 Beaufort below), the permanent family places, in that order in `LOC_ORDER`.
@@ -490,6 +491,10 @@ drawing to both views.
 In September 2026 Josh asked for the scenes to be decorated for the holidays, with the
 decorations coming down once each holiday passes. Halloween is the first.
 
+Since October 21 2026 Porters Neck's scene is the house across the pond. The coast's notes below (the dock's
+pumpkins, Ghostface in the oak, the cat on the dock, the eyes in the spartina, the marsh lights, the kid on the
+dock) describe the parked marsh; the house's own October is under Porters Neck.
+
 On October 3 2026 he asked for more of it: "I want bats, fluttering around - more movement,
 both scenes. I want the moon to be a creepy blood moon. I want a witch to fly through the night
 sky... can you do these things? Yes, it's a weather app - it's also fun for my family....", then
@@ -829,6 +834,124 @@ Each is a transform or nothing, and each holds perfectly still under reduced mot
   and the harvest moon is kept drawn and tested beside it, a one-word change away. In the scene it
   is a decoration (`data-decor`, `blood-moon` or `harvest-moon`), and its disc (`data-disc`, with
   `moonR`) is what the bats keep off and the witch crosses.
+
+## Porters Neck: the house across the pond
+
+On October 21 2026 Josh asked whether to redo his own scene, now that Beaufort had shown what a place drawn
+for one family could be. He passed on Wrightsville Beach's pier and surf shop, which are miles from the house,
+and asked for the scene to be "whimsical and representative - not literal", then sent a photo of the house
+from across the pond at dusk ("this is my house."), and four more for vibes: the patio looking west at
+sunset, the pond looking south with its fountain, the patio looking east with the hot tub and the pines, and
+the compass on the porch. Every rule below is something he said or picked over that afternoon, and he said
+"ship it!" on the sixth round. The marsh, the live oak, its egrets, the dock and its cast are parked (below).
+
+**What it is.** `pnPondScene`, the family's house seen from across the pond, the house the picture, in Storybook Ink:
+the white board-and-batten house with its big silver standing-seam roof, straight and symmetrical over the
+house ("it's symmetrical to the house.. perhaps the photo was at an angle"), the two front gables with
+shakes in their peaks, the screened porch between them under its own low hip and its flue, and on the porch
+wall behind the white screen door the navy compass dial ("need the dial on the porch as well"). Tall
+double-hung windows, the left pair in one casing, the right three apart (a straight-on photo shows a fourth on
+the right; Josh: "keep it for now. undecided"). The fire table and its Adirondack
+chairs on the patio's west end, the hot tub on its east end centred under the middle of the three right
+windows, two sabals at the west and two sabals with a windmill palm between them at the east, the black fence running only between
+its two white pillars ("the white stanchions should mark the limit of the fence"), a gate and low steps
+straight down from the back door, fountain grass along the inside of the fence up to the gate, the lawn,
+the sand, and the pond with its aerating fountain on the door's line ("directly center on the house/door").
+The frame is mostly house with a little room each side: the neighbours are close, so none are drawn ("drop
+reference to other houses around it because the fact is they are very close"). It is laid out in a 320 by
+194 frame, a phone's, and keeps the 194 at every width (`sceneH`, and the early script's copy): on a wider
+screen the wood, the lawn, the sand and the pond run on to the frame's edges, because the shorter frame the
+other places take there cut the roof flat at the top and stood the noon sun behind it.
+
+**It faces north, and the sky knows it.** From the house the pond is south, the fire pit west and the
+treeline east (Josh's directions), so this view looks north: west on the left, east on the right. `LOCS.mb`
+carries `faces:"north"`, and for such a place the sun's arc is mirrored (sunrise and its time on the right,
+sunset on the left), the moon's place and shading follow it, and the wind's bearing is mirrored once
+upstream for the scene and the sky, so the palms, the grass, the spray, the rain, the clouds, the bats and
+the witch all go the way the real wind blows. The arc rides over the roof, its ends just over the palm
+crowns, because Josh would rather move the sun's path than shrink the house. The low sun's warmth comes
+from its own side ("morning vibe glow more prominently from the right side in the morning, then evening
+vibes to the left"): a warm horizon, a warm wash over the house and the land and the pond from that side,
+building from about 14° up and gone by about 7° below, muted by cloud, fog, rain and storms. Midday is
+neutral.
+
+**The lights keep the family's hours.** The bistro strands run from one point over the back door to a
+sabal on each side, a V seen from above ("the bistro lights go from door to each palm - forming a V"),
+crossing the windows as they swag forward. They are on from sunset to 10 pm on the place's clock
+(`PN_STRANDS_OUT`), "they go off at 10pm", and hang still from the sabals, each end tucked into its palm's
+boots so the palms' sway never shows a loose end. The fire table
+(`propPnFireTable`) burns only while the strands are on, between 45° and 68°, dry, in no storm or fog,
+with gusts under 20 and no thunder (`fireOn`), and the light on its cap and the chairs facing it is its own. The windows and the porch light the house from sunset; when
+they go out is one constant (`PN_LIGHTS_OUT`), unset until Josh says. In October the orange pumpkin lights
+along the fence are on day and night ("the pumpkin lights stay on 24/7 until halloween"), on the holiday
+calendar like every decoration, and gone the morning of November 1.
+
+**Weather.** Every reading still drives the picture: the palms, the grass and the fountain's spray lean and
+drift with the gusts, the reflection is glass in a calm, breaks into strips in a breeze and into glints in a
+blow, rain falls in front of the house as well as behind it (the house is a tall silhouette, so it has the
+near drops the ridge has, from one helper, `nearRainLayer`), rings the pond and breaks the reflection, a storm
+dims everything under the app's lightning, and fog softens the house and widens the halos.
+
+**Who is out.** Small whitetail does (`whitetail-doe`) on the lawn in front of the fence at dawn and dusk, at
+real size, and the great blue heron (`great-blue-heron`, held still by `.heron-still`) standing side-on in
+the shallows at the pond's east edge in every weather but a thunderstorm. Nobody sits at the fire: the
+picture makes no claim about who is home.
+
+**October.** The blood moon, the bats, the witch and the cobweb are shared with the other places; the sky
+over the house is small, so the bats and the witch fly in front of the roof. The house's own, each a
+`data-decor` the harness counts: the pumpkin lights (`pumpkin-lights`), the little tree wrapped in purple
+and orange lights by the fire table (`light-tree`), one orange and one white pumpkin on each pillar ("put
+one orange and one white pumpkin on both fence stantions - then carve them on time"), both carved and lit
+from the carving day by the candle rules (`pumpkin`, `white-pumpkin`, then `jack-o-lantern`), two lanterns
+at the gate, Ghostface peeking round the house's east corner (he lived in the marsh's oak), and on Halloween
+night the trick-or-treater at the gate, on its own rules. With nobody's cormorant on a dock, the kid is out
+from sunset (the marsh's raw-dusk case kept the kid off the dock; the house's, case 48, has it at the gate).
+
+**Left out, and why.** The golf cart (`pnCart` is kept, placed nowhere): at this crop both edges are palms and
+there is no honest place to park it. The neighbours' houses and the pines, which made the house read as
+standing alone in open land. The grill, the patio table and the flags, clutter at phone size. The
+surfboards stay, leaning on an east sabal.
+
+**The parked marsh.** Porters Neck's scene from September 2026 to October 21 2026 (the spartina, the live
+oak with its moss and egrets, the dock, the heron, the raccoon, the fiddler crab, the oystercatcher, the
+cormorant and the coast's October decorations) is still in index.html, reached by no place, as Denver's
+Front Range is: `LOCS.mb.view` set to anything but `"pond"` brings it back, with `faces:"north"` taken off
+(the mirrored sun's path, moon, times and wind are keyed on it, and they belong to the house's view), the
+early script's `view` taken off `PLACES.mb`, and the marsh's `sceneLabel` ("Sun and moon over the marsh
+horizon") put back in both. Its notes above (Holidays, Motion rules) describe it. Its harness cases and
+tools/egrets.mjs went with it; they are in git history before this change.
+
+**Sheets, for the iPhone.** The house is the heaviest picture in the app, and the first build ran at 9 to 11
+frames a second in `tools/webkit.mjs`'s WKWebView, because WebKit repainted the whole sheet, the house and its
+inked reflection with it, every frame a palm or a blade of grass moved; with every animation paused it ran at
+60. So nothing that moves is in a still sheet. Back to front: `#sceneSvg` the sun's path, the sun, the moon and
+the low sun's glow in the sky; `#sceneSky` the clouds and the gulls (when a gull would cross the sun, the moon
+or the glow, those ride over it here, so the stacking stays exact); `#sceneNear` the house, the patio, the
+chairs, the tub, the tree and the strands; `#sceneLift` the palms and the two bands of fountain grass as boxes
+the compositor sways (liftKit, shared with Beaufort); `#sceneFront` the fence, the pillars, the pumpkin lights,
+the boards and the kid; `#sceneFx` the fire's flame, a pumpkin while its candle flickers, the bats, the
+witch and the near rain with its own mask; `#sceneWater` the low sun's wash, the does, the land fog and the pond; `#sceneRefl` the reflection, its
+fade a CSS mask the compositor applies (an SVG mask there was 81ms of every repaint); `#sceneRipple` the
+moving strips, the rain rings, the sand line and the fountain in front of it; `#sceneTop` the low sun on the water, the heron,
+the fog veil and the sunrise and sunset times. The house's sheets keep a colour of their own, so the sky's .8s
+ink fade no longer repaints them on every frame of it; the two sheets that draw in the sky's ink, `#sceneSvg`
+(the sun's path) and `#sceneTop` (the times), still inherit it and fade with the sky's words. A first paint of the house writes the sky at once and the land and water over the
+next two frames while they are hidden, then shows them whole (`SCENE_DRAW` cancels a part-written paint); a
+paint over a picture already up, the house's or another place's, is written in one frame, because staged over
+the farm's picture on a cached switch the farm went and a bare sky stood for three frames. Measured October 21 2026 at 390 and 3x: the coast's
+night, rain, afternoon, a blow gusting 42 (`coast-blow`) and Halloween night (`coast-halloween`) all idle at 60
+and open at 58.6 to 58.9 with no frame over about 58ms, the GPU process at 2 to 9 seconds per 10 where it was
+18. Again on October 22 2026, with the near rain falling on `#sceneFx` in front of the house: every house case
+idles at 60, the rain case at 60.1 with the GPU at 5.7 seconds per 10. `tools/scene.mjs` fails a house scene
+where any still sheet runs an animation.
+
+**Seeing it.** `TZ=America/New_York node tools/pond.mjs` shoots the house at noon, sunrise, the morning and
+evening golden hours, dusk, the night with the moon, 10:30 pm with the strands off, rain, a storm, fog, a
+blow from each side, an October night and Halloween night, at 390, with close crops of the yard;
+`PORCH_PN_WIDTHS=390,320,760` also shoots the four main moments (noon, dusk, the night with the moon and the
+October night) at each further width.
+`PORCH_PN_PRM=1` shoots it under reduced motion and `PORCH_PN_FREEZE=1` stops every animation at the same
+point, so two builds can be compared pixel for pixel. `tools/scene.mjs`'s Porters Neck cases are the house's.
 
 ## Beaufort
 
@@ -1258,25 +1381,33 @@ staged paint to land at the new width (`await PAINT`) before they measure, or wh
 is the old width's charts stretched to fit. It exits non-zero when one does not show what it
 is there for.
 
-`tools/scene.mjs` is for anything that moves. Forty-three scenes force the light
-and weather that are hard to wait for: calm noon, a hard blow, golden hour, a warm
-clear night, a storm, a fog morning, drizzle against a downpour, freezing rain on
-the coast, a night of rain over the marsh, and the ridge by day, by evening with
-the buck out, in warm rain, on a snow day, on a cold January night and in a night
-downpour. Twenty-four more are Halloween: the coast on an October afternoon, at golden hour,
-at dusk with the first bats out, on a fog morning in October, and in a midday downpour in October
-(the oystercatcher and the cobweb's spider out, the crab down its burrow), the busiest daytime frame, on Halloween night with no
-moon and a trick-or-treater on the dock, in a drizzle that night with the kid still out, at a raw
-dusk that evening with the cormorant on the dock and the kid not, on a cold morning in the carved week with the cormorant on its piling, on a rainy night
-in it (bats and witch down), under the moon a night short of full in it with the witch crossing
-it, and at half past midnight on November 1 2026, the night the clocks go back, and the farm on
-an October afternoon, at dusk, on an October night before the carving, on Halloween night with
-the kid at the door, in the rain that night with the kid in, on a rainy night in the carved week, under the same moon, and on the morning of November 1. Four
-more are the nights the witch once went wrong: two early October evenings at the farm with a
-westerly and the moon under her band (walked at 900 too), where a climb through it started in
-the barnyard and ran through the owl and past the loft; Halloween's full moon low in the east on
-the coast with a westerly, where her still pose sat on the sunrise time; and a moon at the height
-of the coast's sunrise time, which she cannot cross and once flew along the rim of. On both
+Since October 21 2026 the coast's twenty-seven cases in `tools/scene.mjs` are the house across the pond (see
+Porters Neck), and `tools/egrets.mjs` went with the marsh; the marsh-only checks described below are in git
+history. `TZ=America/New_York node tools/pond.mjs` shoots the house in every moment.
+
+`tools/scene.mjs` is for anything that moves. Forty-four scenes force the light
+and weather that are hard to wait for. Thirteen are the house across the pond: calm noon, a blow
+from the west and one from the east, the evening and the morning golden hours, a warm clear night
+after the strands are off, a storm, a fog morning, drizzle against a downpour, freezing rain, a
+night of rain and thunder nearby. Seven are the ridge: by day, at golden hour, by evening with the
+buck out, on a snow day, on a cold January night, in warm rain and in a night downpour. Twenty-four
+are Halloween and the morning after it. Fourteen at the house: an October afternoon, golden
+evening, fog morning and midday downpour (the busiest daytime frame), dusk with the strands and the
+fire just lit and the first bats out, the carving day under the moon a night short of full with the
+witch crossing it, the carved week after dark with a westerly and on a cold morning, the moon too
+high over the roof for her to cross an hour after midnight (she leaves it alone and passes well
+clear of it, never along its rim), Halloween night with the kid at the gate, in a drizzle that
+night with the kid still out, in the rain that night with the kid in and the bats and the witch
+down, at a raw dusk that evening with the kid already out and the witch not up yet, and half past
+midnight on November 1 2026, the night the clocks go back. Ten at the farm: an October afternoon,
+at dusk, on an October night before the carving, on Halloween night with the kid at the door, in
+the rain that night with the kid in, on a rainy night in the carved week, under the same moon, on
+two early October evenings with a westerly and the moon under the witch's band (walked at 900 too),
+where a climb through it once started in the barnyard and ran through the owl and past the loft,
+and on the morning of November 1. The marsh's cases (the oystercatcher and the crab in the October
+downpour, the kid and the cormorant on the dock, the coast's low full moon with a westerly, and the
+moon at the height of its sunrise time that she once flew along the rim of) went with it and are
+in git history. On both
 November ones everything has to be gone, the moon's colour, the bats and the witch too: every
 scene fails whose moon is not Halloween's in October or not the ordinary one any other night,
 and the moon scenes fail if it is not up. Every October scene has the cobweb up and every other
@@ -1287,10 +1418,10 @@ its own motion at 320, 390, phone width and 760 (`decorCheck`). The Denver scene
 went out with the trip; they are in git history before the commit that parked `den`, if the next trip wants a model.
 The ridge night downpour is there on purpose: dark theme, code 82, two rain layers
 and a frog, which is where the animation count goes looking for trouble. It found
-some, which is the point of having it. The marsh night rain is there for the same
-reason from the other direction: it is the only frame that puts the raccoon and
-the fiddler crab out at the same time, so it is where two grounded animals can
-collide and where either of them can end up floating. Per scene it writes the sky
+some, which is the point of having it. The marsh's night rain was there for the same
+reason from the other direction: it was the only frame that put the raccoon and
+the fiddler crab out at the same time, so it was where two grounded animals could
+collide and where either of them could end up floating (parked with the marsh). Per scene it writes the sky
 and the scene on their own, counts the animations *still running* grouped by keyframe, reads
 `LayoutCount` off CDP while the scene idles, and proves the page holds perfectly
 still under `prefers-reduced-motion` by comparing two screenshots taken 1.4s
@@ -1299,17 +1430,18 @@ survives reduced motion, or on a scene at a family place whose wall clock is shi
 off the Eastern phone it runs in (the half past midnight scene on November 1 is the one that
 used to be).
 
-Two numbers worth knowing before you change motion: every scene idles at **0-4
-layouts per 6 seconds** (most at 0 to 2), and the busiest scene runs **117 animations** (October
-10 2026: the coast under a full moon with a westerly; the busiest daytime frame is the October
-midday downpour at 114, and the August one 112, with the crab down its burrow). If either
-jumps, you have added something that is not a `transform` or an `opacity`. Halloween's nights
-are the other busy ones, legitimately: three animations a bat, three for the witch and three for
-the spider in the cobweb, and on an October night one for the cat's tail, one for each pair of eyes
-in the dark and one for each of the coast's three marsh lights (the farm's ghost adds one when the
-gusts reach 5). So the coast under the moon with seven bats, the witch and the marsh lights out
-runs about 114 to 117, Halloween night there about 111, and the farm's October nights 84 to 90
-(the harness fails anything over 120).
+Two numbers worth knowing before you change motion: every scene idles at **0-3
+layouts per 6 seconds** (most at 0 or 1), and the busiest scene runs **108 animations** still
+running (115 in all; October 22 2026: the ridge's night downpour). At the house the busiest are its
+downpours, the October midday one at 101 and the August one at 98, because the near rain in front of
+the house is seventeen to nineteen drops, then the storm at 92. If either number jumps, you have added
+something that is not a `transform` or an `opacity`. Halloween's nights are the other busy ones,
+legitimately: three animations a bat, three for the witch and three for the spider in the cobweb, and
+at the farm one for the cat's tail and one for each pair of eyes in the dark (the farm's ghost adds one
+when the gusts reach 5). So the house under the October moon with seven bats and the witch runs 86,
+Halloween night there 83, and the farm's October nights 84 to 90 (the harness fails anything over 120).
+The parked marsh's figures (117 under a full moon with a westerly, 114 in its October midday downpour)
+went with its cases and are in git history.
 
 `tools/webkit.mjs` is the one harness that is not Chrome. Chrome runs SVG animations on its
 compositor, so it never paid for the sky's live blur, and every browser on an iPhone is WebKit,
@@ -1455,7 +1587,7 @@ Established with Josh and enforced by `test.mjs`:
   posture, negative space and a species landmark to survive a phone screen.
   Residents move only at real joints, with long rests between gestures. The
   scene should feel alive, never busy.
-- **White egrets in the live oak were approved October 7, 2026.** Up to two small great
+- **White egrets in the live oak were approved October 7, 2026** (the parked marsh's oak since October 21). Up to two small great
   egrets (`rigEgret`, `INK.egret`) rest on the coast's limbs, clear of the heron's lane
   and Ghostface's center fork. Their foot anchors, in the oak's own units, are
   `[-28,-23.5,.32,1]` and `[55,-18.2,.30,-1]` (x, y, scale, direction); the left one
@@ -1471,9 +1603,10 @@ Established with Josh and enforced by `test.mjs`:
   two. Refreshing cannot reshuffle them. Presence needs known sky code 0–3, temperature at
   least 40°, wind no more than 12 mph and gusts no more than 18 mph. Missing readings, wet
   weather, fog, or thunder nearby keep the limbs empty. These are occasional scene residents,
-  never a claim that birds have been observed. `tools/egrets.mjs` checks their times, branch
-  contact, wing motion and clearance from the heron at phone size; `tools/scene.mjs` walks
-  the heron's gestures and the egret's wing stretch to keep their silhouettes apart.
+  never a claim that birds have been observed. `tools/egrets.mjs`, which checked their times, branch
+  contact, wing motion and clearance from the heron at phone size, went with the marsh and is in git
+  history; the walk of the heron's gestures against the egret's wing stretch in `tools/scene.mjs` still
+  exists but no case reaches it while the marsh is parked.
 - **The marsh's water band is the whole lower frame, so "in the scene" is not the
   same as "on the ground."** The ridge has a pond you can test a position against;
   the marsh does not, and the pond check in `tools/scene.mjs` exempts it for exactly

@@ -27,9 +27,18 @@ const args = process.argv.slice(2), STRICT = args.includes("--strict"), words = 
 const MODES = words.filter((w) => w === "idle" || w === "open"), ONLY = words.filter((w) => w !== "idle" && w !== "open");
 
 const CASES = [
-  { name: "coast-night", loc: "mb", when: "2026-10-24T21:30:00", note: "the moon a night short of full, bats, the witch, the marsh lights, a little cloud",
+  { name: "coast-night", loc: "mb", when: "2026-10-24T21:30:00", note: "the house at Porters Neck under the moon a night short of full: bats, the witch, the lit pillar pumpkins and gate lanterns, the pumpkin lights, the strands, the fountain, a little cloud",
     o: { baseTemp: 64, nowTemp: 62, feels: 62, rh: 75, isDay: 0, code: 0, cloud: 30, nowWind: 6, nowDir: 30, nowGust: 10, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8,
       sunrise: "07:30", sunset: "18:26", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  /* the house in a hard blow (the palms, the grass, the spray and the strips on the water all at their most), and
+     on Halloween night (the trick-or-treater at the gate between the lit lanterns, the lit pillar pumpkins, the
+     pumpkin lights, the fire, the bats and the witch, the candles guttering in a breeze) */
+  { name: "coast-blow", loc: "mb", when: "2026-09-23T14:00:00", note: "the house in a hard blow from the west-southwest, gusting 42",
+    o: { baseTemp: 78, nowTemp: 78, feels: 78, rh: 55, isDay: 1, code: 2, cloud: 45, nowWind: 28, nowDir: 250, nowGust: 42, nowUv: 5, uvMax: 6, windAmp: 18, gustAmp: 26,
+      windCurve: () => 28, gustCurve: () => 42, dirCurve: () => 250, sunrise: "07:03", sunset: "19:10", popCurve: () => 4, dailyPop: (p) => p.fill(8) } },
+  { name: "coast-halloween", loc: "mb", when: "2026-10-31T20:40:00", note: "Halloween night at the house: the trick-or-treater, the lit lanterns and pillar pumpkins, the pumpkin lights, the fire, the bats and the witch",
+    o: { baseTemp: 62, nowTemp: 60, feels: 60, rh: 70, isDay: 0, code: 0, cloud: 5, nowWind: 7, nowDir: 30, nowGust: 12, nowUv: 0, uvMax: 4, windAmp: 4, gustAmp: 6,
+      sunrise: "07:32", sunset: "18:16", popCurve: () => 4, dailyPop: (p) => p.fill(8) } },
   { name: "farm-night", loc: "sp", when: "2026-10-12T21:00:00", note: "an October night at the barn: bats, the witch, the fox and the owl",
     o: { baseTemp: 52, nowTemp: 49, feels: 47, rh: 70, isDay: 0, code: 1, cloud: 20, nowWind: 6, nowDir: 280, nowGust: 11, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 9,
       sunrise: "07:27", sunset: "18:52", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
