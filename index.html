@@ -8916,23 +8916,22 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
      on the right and sets on the left, and the moon follows. Everywhere else the sky runs east to west */
   const mirrorSky=LOC.faces==="north";
   /* and there the house fills the phone's frame, so the sun's path is a sine over it (pnArc): the ends
-     sit in open sky just above the palm crowns and the crown of the arch clears the ridge. Three looks
-     share that sine and sunPos (?sun=1, 2 or 3, SUN_LOOK). The times sit up in the open sky, never on
-     the palms, the roof or the pond. Golden hour is the same window as goldenHour(), +6° to −4°. */
+     sit in open sky just above the palm crowns and the crown of the arch clears the ridge. The house
+     draws no arc. The illustrated sun keeps that path, and a low sun lays a long shadow and a glint
+     on the windows it faces. The times sit up in the open sky, never on the palms, the roof or the
+     pond. Golden hour is the same window as goldenHour(), +6° to −4°. */
   const pnArc=mirrorSky?{x0:28,y0:GY-70,top:20,k:1}:null;
-  const sunLook=pnArc?(typeof SUN_LOOK==="number"?SUN_LOOK:1):0;
   const px=f=>pnArc?pnArc.x0+(1-f)*(W-2*pnArc.x0):30+f*arcSpan;
   const py=f=>pnArc?pnArc.y0-Math.pow(Math.max(0,Math.sin(Math.PI*f)),pnArc.k)*(pnArc.y0-pnArc.top):GY-Math.sin(Math.PI*f)*(GY-arcTop);
   let arc=`M ${px(0)} ${py(0)}`;
   const arcStep=pnArc?0.01:0.02;
   for(let f=arcStep;f<=1.001;f+=arcStep)arc+=` L ${px(f).toFixed(1)} ${py(f).toFixed(1)}`;
 
-  /* Golden hour belongs to the same path as the rest of the day. On the house the hours from +6°
-     to −4° are kept (goldSegs) and each look paints them. Everywhere else the warm dots near
-     either horizon stay as they were. */
+  /* Golden hour belongs to the same path as the rest of the day. The house paints no arc, so the
+     warm dots near either horizon stay only on the other scenes. */
   const spanMs=sunset-sunrise;
   const altAtF=f=>sunPos(new Date(sunrise.getTime()+f*spanMs)).alt*180/Math.PI;
-  let goldArc="",goldSegs=[];
+  let goldArc="";
   if(spanMs>0){
     const N=160, segs=[]; let s0=null;
     const goldAt=f=>{const a=altAtF(f);return pnArc?a<=6&&a>=-4:a<=6};
@@ -8943,7 +8942,8 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     }
     if(s0!==null)segs.push([s0,1]);
     for(const[a,b]of segs){
-      if(b-a<.004)continue;
+      /* the house paints no arc. Everywhere else the warm dots stay. */
+      if(pnArc||b-a<.004)continue;
       let d=`M ${px(a).toFixed(1)} ${py(a).toFixed(1)}`;
       for(let f=a+.006;f<b;f+=.006)d+=` L ${px(f).toFixed(1)} ${py(f).toFixed(1)}`;
       d+=` L ${px(b).toFixed(1)} ${py(b).toFixed(1)}`;
@@ -8952,9 +8952,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
       const weatherLight=storm?.12:wet?.24:clamp(1-cloud/150,.35,1);
       const strength=(active?1:past?.24:(a>.5?.9:.62))*weatherLight;
       const op=(.8*strength).toFixed(2);
-      /* the house keeps the hours and paints them per look. Everywhere else the warm dots stay. */
-      if(pnArc)goldSegs.push({a,b,d,strength});
-      else goldArc+=`<path d="${d}" fill="none" stroke="#D39A3C" stroke-width="1.8" stroke-dasharray="1 7" stroke-linecap="round" opacity="${op}"/>`;
+      goldArc+=`<path d="${d}" fill="none" stroke="#D39A3C" stroke-width="1.8" stroke-dasharray="1 7" stroke-linecap="round" opacity="${op}"/>`;
     }
   }
   /* Sunrise and sunset sit just outside their arc points. Centering the words on those
@@ -9002,8 +9000,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     if(rayOp>.05)for(let i=0;i<16;i++){const a=i/16*Math.PI*2,L=i%2?4.5:8.5,c0=Math.cos(a),s0=Math.sin(a)*squash;
       rays+=`<path d="${taper([[x+c0*16.2,y+s0*16.2,2],[x+c0*(16.2+L),y+s0*(16.2+L),.2]],{per:2,capEnd:false})}"/>`}
     sunXY=[x,y];
-    /* concept 1 is a small dot on the arc, drawn with the path, so the lamp does not compete with the house */
-    if(sunLook!==1)body=`<ellipse ${cc} rx="${gr.toFixed(0)}" ry="${(gr*squash).toFixed(0)}" fill="url(#sunglow)" opacity="${(Math.max(.16,1-veil*.8)*sdim).toFixed(2)}"/>
+    body=`<ellipse ${cc} rx="${gr.toFixed(0)}" ry="${(gr*squash).toFixed(0)}" fill="url(#sunglow)" opacity="${(Math.max(.16,1-veil*.8)*sdim).toFixed(2)}"/>
       ${rays?`<g fill="#FFF3D2" opacity="${(.85*rayOp).toFixed(2)}">${rays}</g>`:""}
       <ellipse ${cc} rx="13" ry="${(13*squash).toFixed(2)}" fill="${disc}" opacity="${(Math.max(.32,1-veil**2.2*.94)*sdim).toFixed(2)}"/>
       <ellipse ${cc} rx="13" ry="${(13*squash).toFixed(2)}" fill="none" stroke="${lineC}" stroke-width="1.1" opacity="${(Math.max(.15,1-veil)*sdim*.8).toFixed(2)}"/>
@@ -9108,7 +9105,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
       const full=cssW*H/W,keep=full*.84,room=(window.innerHeight||800)*.5,cap=Math.min(full,Math.max(keep,room));
       if(full-cap>=12)visTop=H*(1-cap/full);
     }
-    const avoid=[sunXY&&[sunXY[0],sunXY[1],sunLook===1?8:28],moonXY&&[moonXY[0],moonXY[1],moonR+8]].filter(Boolean);
+    const avoid=[sunXY&&[sunXY[0],sunXY[1],28],moonXY&&[moonXY[0],moonXY[1],moonR+8]].filter(Boolean);
     const place=side=>{
       const w=40,a=side==="L"?"start":"end";
       const box=(x,y)=>a==="end"?[x-w,y-11,x+2,y+3]:[x-2,y-11,x+w,y+3];
@@ -9130,17 +9127,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     };
     skyLabs={rise:place("R"),set:place("L")};
     sunTimes=`<g data-sun-times="1" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="11" font-weight="600" fill="currentColor">${lab(0,clock(sunrise))+lab(1,clock(sunset))}</g>`;
-    const glow=goldSegs.map(s=>`<path d="${s.d}" fill="none" stroke="#F0B15A" stroke-width="8" stroke-linecap="round" opacity="${(.1*s.strength).toFixed(2)}"/>`
-      +`<path d="${s.d}" fill="none" stroke="#E8A24A" stroke-width="4" stroke-linecap="round" opacity="${(.16*s.strength).toFixed(2)}"/>`
-      +`<path data-sun-gold="1" data-alt0="${altAtF(s.a).toFixed(2)}" data-alt1="${altAtF(s.b).toFixed(2)}" d="${s.d}" fill="none" stroke="#FFE7B8" stroke-width="1.5" stroke-linecap="round" opacity="${(.3*s.strength).toFixed(2)}"/>`).join("");
-    let under="";
-    if(spanMs>0)for(let i=0;i<=100;i++){const f=i/100;if(altAtF(f)<0)under+=`<circle cx="${px(f).toFixed(1)}" cy="${py(f).toFixed(1)}" r=".6" fill="currentColor" opacity=".25"/>`}
-    const dot=sunXY?`<circle data-sun-dot="1" cx="${sunXY[0].toFixed(1)}" cy="${sunXY[1].toFixed(1)}" r="2.15" fill="#FFF8E4" stroke="currentColor" stroke-width=".65"/>`:"";
-    houseSun=sunLook===1
-      ?`<g data-sun="1"><path data-sun-arc="1" d="${arc}" fill="none" stroke="currentColor" stroke-width="1.05" stroke-linecap="round" opacity=".48"/>${under}${glow}${dot}</g>`
-      :`<g data-sun="${sunLook}"></g>`;
   }
-  const goldSpans=goldSegs.map(s=>[s.a,s.b]);
   /* ── the holiday ──────────────────────────────────────────────────────────────────
      Decorations are things set out in the scene, painted like the dock and the barn and lit by
      the same sky. They say nothing about the weather, and they move only where the air moves
@@ -10161,7 +10148,6 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
   if(LOC.view==="pond"){
     pnPondScene({W,H,GY,sp,mp,mph,sunAltDeg,localHour,localMin,month,cloud,wind,gust,code,wet,snowing,storm,fog,humid,temp,dark,tideDir,
       skyS,goldK,rising,nightK,gloom,tone,hazeC,air,lineC,inkAir,shadeC,texOn,paperK,arc,goldArc,sunBody,moonBody,sunTimes,houseSun,
-      sunLook,dayFrac,goldSpans,
       glintX,glintCol,glintOp,sunXY,moonXY,moonR,veil,lightAt,litC,litK,shadeK,inkPal,castShadow,flatParts,phase,
       chopK,wDur,windFrom,downwind,BANDS,bandAmp,waveDelay,bandOf,specular,rainK,cloudShadows,ringAt,flightBird,showFlies,flyCount,crabAt,thunder:THUNDER,
       halloween,carved,candles,trickOrTreat,nightEyes,batN,batColony,batKeep,witchPlan,witchFly,pumpkinAt,catAt,kidAt,darkEyes,hallowDefs,candleDefs,moonR,deerAt,carved,candles,warned});
@@ -10690,9 +10676,10 @@ function pnTurtlesPlan({sunAlt,wet,storm,temp,snowing}){
   return{heads:0,bask:false,dim:false};
 }
 /* Blue merle Australian Shepherd. The yard pose sits three-quarter, haunch to the left and
-   chest toward us, head turned to the viewer: a deep chest, a fluffy ruff, ears that tip
-   forward, a white blaze and collar, copper on the cheeks, brows and legs, black marbling,
-   dark eyes with a catchlight, a black nose and a bobbed tail. y=0 is the feet.
+   chest toward us, head turned to the viewer. The body is the mass: a deep chest, straight
+   front legs and a short neck ruff. The ears are moderate triangles whose tips fold forward,
+   not tall sails. A white blaze and collar, copper on the cheeks, brows and socks, black
+   marbling, dark eyes with a catchlight, a black nose and a bobbed tail. y=0 is the feet.
    `lie` is its own low pose, side on. The tail and the head are the only motion. */
 const PN_HERDER={merle:"#6A7078",black:"#2C3036",white:"#F6F3EC",copper:"#C47A45",mane:"#8A9098",ear:"#4A5058",nose:"#16141A",eye:"#1C1814",glint:"#C5D4E4",ink:"#241C28",shade:"#3A2350",lit:"#FFE2A8",shadeOp:.35,litOp:.5};
 function propPnHerder({lie=false,phase=""}={}){
@@ -10724,76 +10711,76 @@ function propPnHerder({lie=false,phase=""}={}){
     return[{parts:body},tail,head];
   }
   const body=[
-    pTaper([[-.2,-7.4,1.45],[-.05,-3.2,1.1],[.15,-.15,1.25]],"merle"),
-    pBlob([[-8.4,-1.1],[-9.6,-4.8],[-8.4,-9.2],[-3.6,-10.6],[-.8,-8.2],[-1.4,-3],[-4.6,-1]],"merle"),
-    pBlob([[-4.6,-9.2],[-1.6,-11.8],[3.2,-12],[6.2,-9.4],[6.6,-5.6],[4.4,-2.8],[.6,-2.2],[-2.6,-3.4],[-4.4,-6]],"merle"),
-    pTaper([[3.5,-7.8,1.85],[3.7,-3.2,1.35],[3.45,-.1,1.55]],"merle"),
-    pBlob([[2.5,-2.6],[4.6,-2.4],[4.7,-.15],[2.6,-.15]],"copper",{noSil:true}),
-    pBlob([[-1.1,-2.4],[.7,-2.2],[.8,-.2],[-.9,-.2]],"copper",{noSil:true}),
-    pBlob([[-6.6,-7.2],[-4,-9],[-2.2,-7.2],[-4.4,-5.4]],"black",{noSil:true}),
-    pBlob([[.4,-10.6],[3.2,-11.4],[4.2,-9.4],[1.6,-8.8]],"black",{noSil:true}),
-    pDot(-5.4,-4.4,.55,"black",{noSil:true}),
-    pBlob([[-.2,-9.2],[3.2,-9.8],[4.6,-6.6],[3.2,-3.2],[.4,-3],[-.6,-5.8]],"white",{noSil:true}),
-    pBlob([[-6.2,-3.6],[-4.6,-2.2],[-5.2,-1.4]],"copper",{noSil:true}),
+    pBlob([[-6.4,-.5],[-8.3,-2.6],[-7.6,-6.2],[-3.6,-7.3],[-1.5,-5],[-2,-2.2],[-4.4,-.4]],"merle"),
+    pBlob([[-6.2,-5.2],[-4.6,-6.3],[-3.6,-4.6],[-5.2,-3.6],[-6.6,-4.2]],"black",{noSil:true}),
+    pBlob([[-5.2,-2.4],[-3.8,-3.2],[-3.2,-1.8],[-4.6,-1.2]],"black",{noSil:true}),
+    pBlob([[-2.4,-2.3],[-2.7,-4.6],[-1.2,-7],[2.6,-7.4],[4.3,-5.2],[4.2,-2.5],[1.6,-2.2]],"merle"),
+    pBlob([[.6,-6.5],[2.4,-7],[3.1,-5.2],[1.2,-4.8],[-.2,-5.6]],"black",{noSil:true}),
+    pBlob([[-4.8,-4.4],[-3.4,-5.1],[-2.8,-4],[-4,-3.4]],"black",{noSil:true}),
+    pTaper([[-.7,-3.6,1.15],[-.62,-1.7,.95],[-.5,-.05,1.05]],"merle"),
+    pTaper([[2.15,-3.7,1.18],[2.22,-1.7,.98],[2.1,-.05,1.08]],"merle"),
+    pBlob([[-1.35,-1.55],[.05,-1.55],[.1,-.05],[-1.28,-.05]],"copper",{noSil:true}),
+    pBlob([[1.45,-1.6],[2.9,-1.6],[2.85,-.05],[1.4,-.05]],"copper",{noSil:true}),
+    pBlob([[-.4,-6.2],[1.8,-6.6],[2.2,-3.4],[.2,-2.7],[-.7,-4.2]],"white",{noSil:true}),
+    pBlob([[-3.2,-5.8],[-3.7,-7.6],[-1.4,-8.7],[1.6,-8.8],[3.3,-7.4],[2.8,-5.8],[.6,-5.2],[-1.4,-5.3]],"mane"),
+    pBlob([[-1.9,-6.9],[2.2,-7.2],[2,-6.2],[-1.6,-6]],"white",{noSil:true}),
   ];
-  const tail={open:wag,pivot:[-7.4,-6.6],layers:[{parts:[
-    pBlob([[-7.2,-7.2],[-9.8,-8.6],[-10.8,-6.8],[-9.4,-5.4],[-7.3,-5.6]],"merle"),
-    pBlob([[-9.2,-8.2],[-10.4,-8.6],[-9.6,-7.2]],"white",{noSil:true}),
+  const tail={open:wag,pivot:[-6.6,-4.8],layers:[{parts:[
+    pBlob([[-6.5,-5.2],[-9.3,-6.1],[-9.8,-5.1],[-8.5,-4.2],[-6.5,-4.4]],"merle"),
+    pBlob([[-8.7,-5.8],[-9.6,-5.6],[-9.1,-4.9]],"white",{noSil:true}),
   ]}]};
-  const head={open:nod,pivot:[1.4,-10.6],layers:[{parts:[
-    pBlob([[-2.6,-10.2],[.4,-12.8],[4.6,-12.4],[5.8,-9.6],[3.4,-8],[-.8,-8.4]],"mane"),
-    pBlob([[-3.8,-12.2],[-4.6,-15.6],[-3.2,-18.2],[.2,-19],[3.6,-18],[4.8,-15.2],[4,-12],[1.2,-11],[-1.6,-11.2]],"merle"),
-    pBlob([[-3.4,-15.4],[-7.2,-18.4],[-6.2,-23.2],[-2.8,-20.6],[-1.2,-16]],"ear"),
-    pBlob([[2.8,-15.2],[6.4,-17.8],[5.2,-22.6],[2.2,-20.2],[.6,-15.8]],"ear"),
-    pBlob([[-3.4,-19.2],[-2.2,-20.2],[-1.8,-18.6],[-2.8,-18.2]],"black",{noSil:true}),
-    pBlob([[3.2,-18.6],[2.2,-19.8],[1.8,-18.4],[2.6,-17.8]],"black",{noSil:true}),
-    pBlob([[-3.4,-15.4],[-1.5,-16.4],[-1.2,-14.4],[-2.8,-13.8]],"copper",{noSil:true}),
-    pBlob([[3.4,-15.2],[1.6,-16.2],[1.3,-14.2],[2.8,-13.6]],"copper",{noSil:true}),
-    pBlob([[-2.6,-17.2],[-1.1,-17.7],[-1.2,-16.6]],"copper",{noSil:true}),
-    pBlob([[2.6,-17],[1.2,-17.5],[1.3,-16.4]],"copper",{noSil:true}),
-    pBlob([[-.9,-17.6],[.9,-17.6],[1,-13.6],[0,-12.6],[-1,-13.6]],"white",{noSil:true}),
-    pBlob([[-2.2,-11.2],[1.6,-12.2],[3.2,-10.6],[1.2,-9.6],[-1.4,-9.8]],"white",{noSil:true}),
-    pDot(-1.7,-15.5,1.55,"eye",{noSil:true}),
-    pDot(1.65,-15.5,1.48,"eye",{noSil:true}),
-    pDot(-1.22,-15.95,.48,"glint",{noSil:true}),
-    pDot(2.08,-15.95,.44,"glint",{noSil:true}),
-    pDot(.05,-13.15,.78,"nose",{noSil:true}),
+  const head={open:nod,pivot:[.4,-7.8],layers:[{parts:[
+    pBlob([[-2.15,-8.5],[-2.55,-10.5],[-1.7,-12.15],[1.45,-12.3],[2.45,-10.6],[2.35,-8.7],[1.05,-7.7],[0,-7.45],[-1,-7.7]],"merle"),
+    pBlob([[-2.05,-10.7],[-3.05,-11.5],[-2.55,-12.85],[-1.35,-11.7],[-.85,-10.4],[-1.55,-10.2]],"ear"),
+    pBlob([[1.7,-10.55],[2.7,-11.3],[2.25,-12.7],[1.15,-11.55],[.7,-10.3],[1.3,-10.1]],"ear"),
+    pBlob([[-2.15,-11.7],[-1.45,-12.15],[-1.7,-11.2]],"black",{noSil:true}),
+    pBlob([[1.7,-11.5],[2.15,-11.95],[1.85,-11.05]],"black",{noSil:true}),
+    pBlob([[-1.9,-11.35],[-.95,-11.7],[-.9,-11],[-1.7,-10.8]],"copper",{noSil:true}),
+    pBlob([[1.75,-11.25],[.9,-11.6],[.95,-10.9],[1.7,-10.7]],"copper",{noSil:true}),
+    pBlob([[-2.05,-9.7],[-1.05,-10.1],[-.95,-9.2],[-1.9,-8.95]],"copper",{noSil:true}),
+    pBlob([[1.95,-9.6],[1,-10],[1.05,-9.1],[1.9,-8.85]],"copper",{noSil:true}),
+    pBlob([[-.45,-11.7],[.45,-11.7],[.7,-9.6],[.85,-8.1],[.4,-7.6],[0,-7.5],[-.4,-7.6],[-.85,-8.1],[-.7,-9.6]],"white",{noSil:true}),
+    pDot(-1.25,-10.55,.72,"eye",{noSil:true}),
+    pDot(1.22,-10.55,.68,"eye",{noSil:true}),
+    pDot(-.98,-10.78,.22,"glint",{noSil:true}),
+    pDot(1.46,-10.78,.2,"glint",{noSil:true}),
+    pDot(0,-7.85,.48,"nose",{noSil:true}),
   ]}]};
   return[{parts:body},tail,head];
 }
-/* Blenheim Cavalier. Sits three-quarter, haunch to the right, head turned to the viewer:
-   a rounded skull, a short muzzle, long wavy chestnut ears feathered to the chest, a white
-   blaze, chestnut patches, a feathered tail, big dark eyes with a catchlight and a black nose.
-   No lying pose. */
+/* Blenheim Cavalier. Sits three-quarter, haunch to the right, head turned to the viewer.
+   A domed skull, a short muzzle, long wavy chestnut ears that hang to the chest, a white
+   blaze with a small chestnut lozenge, chestnut patches over the eyes, a feathered tail,
+   big round dark eyes with a catchlight and a black nose. Smaller than the herder. No lying pose. */
 const PN_SPANIEL={white:"#F7F4EE",chestnut:"#8E3F24",ear:"#A24A2A",curl:"#C46A42",patch:"#7A341C",nose:"#1A1414",eye:"#1A1414",glint:"#FFF8EE",ink:"#241C28",shade:"#3A2350",lit:"#FFE2A8",shadeOp:.32,litOp:.5};
 function propPnSpaniel({phase=""}={}){
   const wag=`<g class="pn-wag" style="${phase}">`,nod=`<g class="pn-nod" style="${phase}">`;
   const body=[
-    pTaper([[-2.15,-4.4,1.3],[-2.05,-1.6,1],[ -1.95,-.08,1.15]],"white"),
-    pBlob([[1.6,-.9],[5.4,-1.1],[6.4,-4.4],[5,-7.4],[2.2,-7.8],[.8,-4.2]],"white"),
-    pBlob([[-3.8,-2],[-4.4,-6.4],[-2.2,-8.6],[2.4,-8.8],[3.6,-6.2],[2.4,-2.2],[-.6,-1.1]],"white"),
-    pTaper([[.55,-4.6,1.5],[.7,-1.5,1.1],[.5,-.08,1.3]],"white"),
-    pBlob([[-1.4,-7.6],[1.8,-8.3],[3,-6],[.6,-5.2],[-1.6,-6]],"chestnut",{noSil:true}),
-    pBlob([[3.2,-5.6],[5.1,-6.4],[5.2,-4.2],[3.5,-3.6]],"patch",{noSil:true}),
+    pBlob([[1.15,-.45],[4.55,-.55],[5.5,-3.1],[4.7,-6.05],[2.15,-6.65],[.55,-4.1],[.75,-1.1]],"white"),
+    pBlob([[-2.55,-.55],[-3.15,-3.3],[-2.35,-6.05],[1.15,-6.45],[2.15,-4.3],[1.75,-.75],[-.35,-.25]],"white"),
+    pTaper([[-1.45,-3.5,1.02],[-1.4,-1.55,.82],[-1.3,-.05,.92]],"white"),
+    pTaper([[.5,-3.7,1.06],[.55,-1.55,.86],[.45,-.05,.96]],"white"),
+    pBlob([[.15,-6.05],[2.15,-6.4],[2.5,-4.7],[.55,-4.3]],"chestnut",{noSil:true}),
+    pBlob([[3.05,-4.9],[4.35,-5.35],[4.4,-3.85],[3.15,-3.55]],"patch",{noSil:true}),
   ];
-  const tail={open:wag,pivot:[5.2,-5.8],layers:[{parts:[
-    pBlob([[4.8,-6.2],[7.4,-8.4],[8.6,-6.6],[7.4,-4.8],[5.1,-5.2]],"white"),
-    pBlob([[6.2,-7.8],[8,-8.2],[7.6,-6.4],[6,-6.2]],"chestnut",{noSil:true}),
+  const tail={open:wag,pivot:[4.35,-5.05],layers:[{parts:[
+    pBlob([[4.15,-5.3],[6.25,-7.05],[7.05,-5.7],[6.05,-4.55],[4.25,-4.75]],"white"),
+    pBlob([[5.35,-6.7],[6.7,-6.95],[6.35,-5.55],[5.15,-5.4]],"chestnut",{noSil:true}),
   ]}]};
-  const head={open:nod,pivot:[-.2,-7.6],layers:[{parts:[
-    pBlob([[-3.4,-8.2],[-4.2,-11.8],[-2.4,-14.6],[.4,-15.2],[3.2,-14.2],[4.2,-11.2],[3.2,-8],[.2,-7.2],[-1.8,-7.4]],"white"),
-    pBlob([[-2.2,-12.6],[-6.2,-13.6],[-9.4,-10.2],[-10.2,-5.4],[-9.2,-1.4],[-7.4,.2],[-5.2,-.2],[-6,-4],[-4.8,-8],[-3,-11.2]],"ear"),
-    pBlob([[2,-12.4],[5.8,-13.2],[8.6,-9.8],[9.4,-5],[8.4,-1.2],[6.8,.15],[4.8,-.35],[5.4,-4.2],[4.2,-8.2],[2.8,-11]],"ear"),
-    pTaper([[-5,-10.2,.4],[-5.5,-6.2,.5],[-5.6,-2.6,.32]],"curl",{},{noSil:true}),
-    pTaper([[4.2,-10,.35],[4.7,-6,.42],[4.8,-2.8,.28]],"curl",{},{noSil:true}),
-    pBlob([[-3.3,-12.8],[-1.15,-13.6],[-.7,-11],[-2.6,-10.4]],"chestnut",{noSil:true}),
-    pBlob([[3.2,-12.6],[1.15,-13.4],[.75,-10.8],[2.6,-10.2]],"chestnut",{noSil:true}),
-    pBlob([[-.85,-13.8],[.9,-13.8],[.75,-10],[0,-9],[-.75,-10]],"white",{noSil:true}),
-    pDot(-1.85,-11.7,1.72,"eye",{noSil:true}),
-    pDot(1.7,-11.7,1.64,"eye",{noSil:true}),
-    pDot(-1.32,-12.16,.5,"glint",{noSil:true}),
-    pDot(2.15,-12.16,.46,"glint",{noSil:true}),
-    pDot(.05,-9.55,.74,"nose",{noSil:true}),
+  const head={open:nod,pivot:[-.35,-6.05],layers:[{parts:[
+    pBlob([[-2.55,-6.5],[-3.15,-8.5],[-2.15,-10.5],[.15,-11.1],[2.35,-10.3],[3.15,-8.3],[2.55,-6.3],[.35,-5.7],[-1.35,-5.9]],"white"),
+    pBlob([[-2.1,-8.9],[-3.2,-9.7],[-4.6,-8.6],[-5.5,-7.2],[-6.15,-5.2],[-5.7,-3.4],[-6.05,-2.2],[-5.2,-1.7],[-4.3,-2.5],[-4.7,-4.4],[-3.9,-6.6],[-3,-8.1]],"ear"),
+    pBlob([[1.9,-8.75],[3.05,-9.55],[4.4,-8.4],[5.2,-6.9],[5.8,-5],[5.4,-3.2],[5.75,-2.1],[4.95,-1.6],[4.05,-2.4],[4.4,-4.2],[3.4,-6.4],[2.6,-7.9]],"ear"),
+    pTaper([[-4.7,-8.2,.28],[-5.15,-5.4,.34],[-5.2,-2.6,.2]],"curl",{},{noSil:true}),
+    pTaper([[3.9,-7.9,.24],[4.3,-5.1,.3],[4.35,-2.5,.18]],"curl",{},{noSil:true}),
+    pBlob([[-.42,-10.55],[.42,-10.55],[.32,-9.7],[-.32,-9.7]],"chestnut",{noSil:true}),
+    pBlob([[-2.35,-9.3],[-1.15,-9.9],[-.65,-8.55],[-1.55,-8.15],[-2.25,-8.55]],"chestnut",{noSil:true}),
+    pBlob([[2.25,-9.2],[1.05,-9.8],[.6,-8.45],[1.45,-8.05],[2.15,-8.45]],"chestnut",{noSil:true}),
+    pDot(-1.5,-8.75,.88,"eye",{noSil:true}),
+    pDot(1.45,-8.75,.84,"eye",{noSil:true}),
+    pDot(-1.18,-9.02,.28,"glint",{noSil:true}),
+    pDot(1.74,-9.02,.26,"glint",{noSil:true}),
+    pDot(0,-7.45,.46,"nose",{noSil:true}),
   ]}]};
   return[{parts:body},tail,head];
 }
@@ -10916,8 +10903,7 @@ function pnPondScene(c){
   const{W,H,GY,sunAltDeg,localHour,localMin,month,cloud,wind,gust,code,wet,snowing,storm,fog,temp,dark,
     skyS,goldK,rising,nightK,gloom,tone,air,lineC,inkAir,shadeC,texOn,paperK,arc,goldArc,sunBody,moonBody,sunTimes,houseSun="",
     sunXY,moonXY,veil,lightAt,litC,litK,shadeK,inkPal,castShadow,flatParts,phase,chopK,windFrom,downwind,rainK,
-    halloween,carved,candles,trickOrTreat,batN,batColony,batKeep,witchPlan,witchFly,pumpkinAt,hallowDefs,candleDefs,moonR,warned=false,
-    sunLook=1,dayFrac=.5,goldSpans=[]}=c;
+    halloween,carved,candles,trickOrTreat,batN,batColony,batKeep,witchPlan,witchFly,pumpkinAt,hallowDefs,candleDefs,moonR,warned=false}=c;
   let dogs="",doorSil="",turtleBits="";
   const ox=(W-320)/2,oy=H-194,X=x=>x+ox,Y=y=>y+oy;
   /* the house's scale: about three fifths of the frame's width at 390 */
@@ -10943,7 +10929,7 @@ function pnPondScene(c){
      rain and storms mute it. Still layers only: the sky's horizon, a wash over the land and the house from
      that side, a warm rim on the near palms (lightAt already turns their lit edges to it) and the pond */
   const sunAlt=sunAltDeg,side=rising?1:-1;
-  const glowK=Math.min(1,(sunAlt<1?clamp((sunAlt+7)/8,0,1):clamp((14-sunAlt)/13,0,1))*(1-veil*.85)*(1-gloom)*(fog?.3:1)*(wet||storm?.15:1)*(sunLook===2&&sunAlt>=-4&&sunAlt<=8&&!storm?1.45:1));
+  const glowK=Math.min(1,(sunAlt<1?clamp((sunAlt+7)/8,0,1):clamp((14-sunAlt)/13,0,1))*(1-veil*.85)*(1-gloom)*(fog?.3:1)*(wet||storm?.15:1)*(sunAlt>=-4&&sunAlt<=8&&!storm?1.45:1));
   const warm=rising?"#FFB488":"#FFA04A";
   const tops=[];const top=(x0,x1,t)=>tops.push([x0,x1,t]);
 
@@ -11224,8 +11210,8 @@ function pnPondScene(c){
   const dogAt=(hx0,sc,flip,rig,pal,sp,where)=>{const x=hx+u(hx0);
     return `<g class="wildlife" data-species="${sp}" data-dogs="${where}"><ellipse cx="${f1(x)}" cy="${f1(foot+.35)}" rx="${f1(sc*9)}" ry=".7" fill="${shadeC}" opacity=".22"/>${inkAt(x,foot,sc,flip,inkRig(rig,palAt(pal,.03),{s:sc,flip,line:1.35,heavy:.5,shade:1.15,lit:.9,light:lightAt(x,foot-8)}))}</g>`};
   if(plan.out==="both"){
-    dogs=dogAt(-20,1.42,1,propPnHerder({phase:phase(3.2)}),PN_HERDER,"merle-herder","yard")
-      +dogAt(17,1.18,1,propPnSpaniel({phase:phase(4.1)}),PN_SPANIEL,"blenheim-spaniel","yard");
+    dogs=dogAt(-15,1.02,1,propPnHerder({phase:phase(3.2)}),PN_HERDER,"merle-herder","yard")
+      +dogAt(14,.9,1,propPnSpaniel({phase:phase(4.1)}),PN_SPANIEL,"blenheim-spaniel","yard");
   }else if(plan.out==="one"){
     dogs=dogAt(-36,.7,1,propPnHerder({lie:true,phase:phase(3.2)}),PN_HERDER,"merle-herder","fire");
   }
@@ -11256,11 +11242,10 @@ function pnPondScene(c){
     +(tex?`<rect x="${f1(-12)}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${tex}" opacity="${(.4*paperK).toFixed(2)}"/>`:"");
   /* the sand's edge is under the fountain, which stands in front of it */
   const sandLine=`<path d="M ${f1(-12)} ${f1(pondY+.2)} L ${f1(W+12)} ${f1(pondY+.2)}" stroke="${air("#6E5E44",.03)}" stroke-width=".7" opacity=".6"/>`;
-  /* Concept 2 lays a long shadow and a glint on the windows the low sun actually faces.
-     Concept 3 is a ribbon on the sand, sunrise at the right, with the sun's reflection in the pond.
-     Still shapes only, built before the pond string reads them. */
-  let sunGround="",sunGlint="",sunDial="",sunTrack="";
-  if(sunLook===2&&sunXY&&sunAltDeg<16&&sunAltDeg>-1&&!storm&&veil<.8){
+  /* A low sun lays a long shadow away from itself and a glint on the windows it faces.
+     Still shapes only. Noon has neither. */
+  let sunGround="",sunGlint="";
+  if(sunXY&&sunAltDeg<16&&sunAltDeg>-1&&!storm&&veil<.8){
     const k=clamp((15-sunAltDeg)/15,.4,1),dir=sunXY[0]<hx?1:-1,len=32+k*64;
     sunGround=`<ellipse data-light="long-shadow" cx="${f1(hx+dir*len*.52)}" cy="${f1(hy+7.2)}" rx="${f1(len*.5)}" ry="${f1(3.4+k*1.8)}" fill="${shadeC}" opacity="${(.32+.2*k).toFixed(2)}"/>`;
     const faces=sunXY[0]<hx?BH.winL:BH.winR;
@@ -11270,25 +11255,7 @@ function pnPondScene(c){
         +`<path data-light="glint" d="M ${f1(x+u(2.3))} ${f1(y+u(.5))} L ${f1(x+u(3.2))} ${f1(y+u(3.4))}" stroke="#FFE4B0" stroke-width="1.05" stroke-linecap="round" opacity="${(.55+.25*k).toFixed(2)}"/>`;
     }).join("");
   }
-  if(sunLook===3){
-    const x0=48,x1=W-48,y=pondY-1.1,Xf=f=>x1-(clamp(f,0,1))*(x1-x0);
-    const bands=(goldSpans||[]).map(([a,b])=>{
-      const xa=Xf(a),xb=Xf(b),L=Math.min(xa,xb),R=Math.max(xa,xb);
-      return `<rect x="${f1(L)}" y="${f1(y-3.1)}" width="${f1(Math.max(2.4,R-L))}" height="6.2" rx="1.2" fill="#E7A24A" opacity=".84"/>`;
-    }).join("");
-    const bead=sunXY&&dayFrac>0&&dayFrac<1?`<circle data-sun-bead="1" cx="${f1(Xf(dayFrac))}" cy="${f1(y)}" r="4.6" fill="#FFF6D4" stroke="currentColor" stroke-width=".85"/>`:"";
-    sunDial=`<g data-sun="3" data-dial="horizon"><rect x="${f1(x0)}" y="${f1(y-1.45)}" width="${f1(x1-x0)}" height="2.9" rx=".9" fill="currentColor" opacity=".62"/>${bands}<circle cx="${f1(x1)}" cy="${f1(y)}" r="3.3" fill="#FFF6D4" stroke="currentColor" stroke-width=".8"/><circle cx="${f1(x0)}" cy="${f1(y)}" r="3.3" fill="#F0B15A" stroke="currentColor" stroke-width=".8"/>${bead}</g>`;
-    if(sunXY&&dayFrac>0&&dayFrac<1&&veil<.88&&!storm){
-      let sx=sunXY[0];
-      if(Math.abs(sx-doorX)<14)sx+=sx<doorX?-18:18;
-      const reach=clamp((18-sunAltDeg)/18,.35,1),yA=pondY+4,yB=pondY+4+reach*(H-pondY-8);
-      let bits="";
-      for(let i=0;i<6;i++){const t=i/5,yy=yA+(yB-yA)*t,w=(14-t*7)*(0.5+reach*.85);
-        bits+=`<ellipse cx="${f1(sx)}" cy="${f1(yy)}" rx="${f1(w)}" ry="${f1(1.2+(1-t)*1.15)}" fill="${sunAltDeg<8?"#FFB15A":"#FFE3A4"}" opacity="${((.55-t*.28)*(1-veil*.55)).toFixed(2)}"/>`}
-      sunTrack=`<g data-sun-track="1">${bits}</g>`;
-    }
-  }
-  const pondMoving=breakUp+(fog?`<rect x="${f1(-12)}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${dark?"#96ABB5":"#F5F3E8"}" opacity=".3"/>`:"")+rainRings+sandLine+fountainSvg+turtleBits+heronMove+deerMove+sunTrack;
+  const pondMoving=breakUp+(fog?`<rect x="${f1(-12)}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${dark?"#96ABB5":"#F5F3E8"}" opacity=".3"/>`:"")+rainRings+sandLine+fountainSvg+turtleBits+heronMove+deerMove;
 
   /* ── the sky's own things: clouds, gulls by day, and Halloween's bats and witch over the roof */
   let sceneClouds="";
@@ -11395,7 +11362,6 @@ function pnPondScene(c){
       ${glowK>.02?`<rect data-light="side-pond" x="${f1(-12)}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="url(#pnSideWash)" opacity="${(.34*glowK).toFixed(2)}"/>`:""}
       ${heron}
     ${fog?`<rect x="0" y="${f1(Y(64))}" width="${W}" height="80" fill="url(#fogveil)"/>`:""}
-    ${sunDial}
     ${sunTimes}`;
   pondFit()};
   /* A first paint (nothing in the scene at all: the app opening on the loading shell) is written a part a frame,
@@ -12814,8 +12780,6 @@ function stormOf(L,d,now=Date.now(),savedAt=0){
 const STORM_DEBUG=typeof location!=="undefined"&&/[?&]storm=debug\b/.test(location.search||"");
 /* The house's sun path. 1 is the thin arc, 2 the painterly sky, 3 the horizon dial.
    Absent, or anything else, is 1, so the page everyone opens stays the quiet one. */
-const sunPick=typeof location!=="undefined"?String(location.search||"").match(/[?&]sun=([123])\b/):null;
-const SUN_LOOK=sunPick?+sunPick[1]:1;
 let STORM_NOW=null;
 function paintStormDebug(model){
   STORM_NOW=model||null;
