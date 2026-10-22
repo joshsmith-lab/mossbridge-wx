@@ -1178,7 +1178,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
     return{lit:mix(mix(D.lit,H.lit,k),mix(D.lit,H.litLow,k),low),edge:mix(D.edge,H.edge,kk),unlit:mix(D.unlit,H.unlit,kk),glow:mix(D.glow,H.glow,k)};
   };
   var PLACES={
-    mb:{full:"Moss Bridge Ct · Porters Neck",short:"Porters Neck",lat:34.2982,lon:-77.7896,scene:"marsh",tide:true,fish:false,year:"The year · Wilmington",airport:"Wilmington",label:"Sun and moon over the house from across the pond, its palms, string lights and fountain",snowy:false},
+    mb:{full:"Moss Bridge Ct · Porters Neck",short:"Porters Neck",lat:34.2982,lon:-77.7896,scene:"marsh",view:"pond",tide:true,fish:false,year:"The year · Wilmington",airport:"Wilmington",label:"Sun and moon over the house from across the pond, its palms, string lights and fountain",snowy:false},
     sp:{full:"Bob Plumley Rd · Shady Spring",short:"Shady Spring",lat:37.8215,lon:-80.9942,scene:"ridge",tide:false,fish:true,year:"The year · Shady Spring",airport:"Beckley",label:"Sun and moon over Appalachian ridgelines and the farm pond",snowy:true},
     bft:{full:"Coosaw Club Dr · Beaufort",short:"Beaufort",lat:32.4938,lon:-80.6151,scene:"lowcountry",tide:true,fish:false,year:"The year · Beaufort",airport:"Beaufort MCAS",water:"Beaufort River",label:"Sun and moon over the Beaufort River, the swing bridge and a live oak hung with moss",snowy:false,windRow:true,runsTall:[5]}
   };
@@ -1236,7 +1236,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   }
   document.getElementById("loadMark").innerHTML=mark+'<p class="verdict">Reading the sky\u2026</p>';
   var aw=Math.min(760,Math.max(320,document.querySelector(".app").clientWidth||760));
-  var W=Math.max(320,aw/1.22),H=Math.round((L.scene==="marsh"?150:168)+(760-W)*.10),cw=aw-40,ch=Math.round(165+(760-cw)*.09);
+  var W=Math.max(320,aw/1.22),H=L.view==="pond"?194:Math.round((L.scene==="marsh"?150:168)+(760-W)*.10),cw=aw-40,ch=Math.round(165+(760-cw)*.09);
   document.getElementById("sceneSvg").setAttribute("viewBox","0 0 "+W+" "+H);
   var box=function(el,h){document.getElementById(el).setAttribute("viewBox","0 0 "+cw+" "+h)};
   /* Beaufort's tide chart carries its wind row under the lows, and its in-season row under that: both are
@@ -8699,6 +8699,10 @@ function fishMotion(){
 
 const appW=()=>clamp(document.querySelector(".app").clientWidth||760,320,760);
 const chartH=w=>Math.round(165+(760-w)*.09);
+/* the scene's frame is taller on a phone, where it is narrower. The house across the pond is drawn in a
+   320 by 194 frame and keeps its 194 at every width, the sides running on in land, wood and water, because a
+   wider screen's shorter frame cut its roof flat at the top and stood the noon sun behind it */
+const sceneH=W=>LOC.view==="pond"?194:Math.round((LOC.scene==="marsh"?150:168)+(760-W)*.10);
 /* Every line runs the same width (Josh, October 9 2026: "the width of the week part doesn't extend
    as far as the other lines. everything should be even"). The hours, the week, the water, the moon
    and the year each start their line and its fill CHART_IN inside the content edge and end CHART_IN
@@ -8790,7 +8794,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
   const wet=isWet(code),snowing=isSnow(code);
   const storm=[95,96,99].includes(code),fog=[45,48].includes(code),quietWeather=!wet&&!storm;
   const humid=weather.relative_humidity_2m||0,temp=weather.temperature_2m||60;
-  const W=Math.max(320,appW()/1.22),H=Math.round((LOC.scene==="marsh"?150:168)+(760-W)*.10),GY=H-30;   /* taller frame on a phone */
+  const W=Math.max(320,appW()/1.22),H=sceneH(W),GY=H-30;   /* taller frame on a phone */
   const sp=sunPos(now), mp=moonPos(now), mph=moonPhase(now);
   const sunAltDeg=sp.alt*180/Math.PI,localHour=now.getHours(),month=now.getMonth();
   const seasonalFlies=dark&&month>=4&&month<=8&&temp>=60&&quietWeather&&wind<18;
@@ -9864,40 +9868,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
        out again at the grass line, so the pond's own rings and ticks carry the rain down
        on the water and nothing white runs off the foot of the picture into the page. */
     const nrTop=base-rTop*.94,nrLand=base+4;
-    let nearRain="";
-    if(wet&&!snowing&&!PRM){
-      /* how hard, how fast: off the same row of RAIN the sky layer reads, rather than off
-         rainK, so freezing rain gets the near drops too. It falls as liquid, it is the one
-         condition here a driver needs to see coming, and rainK has no entry for it. */
-      const [,nrFall,nrWeight]=RAIN[code]||RAIN[63];
-      const nrK=clamp((nrWeight-.55)/.7,0,1),span=nrLand-nrTop;
-      const nrTan=Math.tan(clamp(wind*.62,0,18)*downwind*Math.PI/180);
-      const nr=mulberry(5347),drops=10+Math.round(nrK*9);
-      /* A drop's length is 2.6 frames at 30Hz, the slow step a phone falls to, and it
-         is still capped to the ridge face. Sized for 60Hz, a light rain was shorter than
-         one slow frame and read as dashes. The taper keeps a dead-vertical drop from
-         collapsing to a zero-width box. Across the frame they are dealt one to a slot
-         rather than thrown at random, which is what stacked three over the barn. The
-         delay is the clock plus this drop's own seed, so a rebuild picks it up. A scene unit
-         is k screen pixels (the frame came closer in for the phone, W=appW/1.22), so the step
-         and the timing are taken on screen and turned back into units. */
-      const k=appW()/W,step=968/k/nrFall/30,hw=(1.25+nrK*1.05)/2,cs=1/Math.hypot(1,nrTan),slot=(W+68)/drops;
-      nearRain=`<g mask="url(#ridgerain)" fill="${dark?'#DCE9F0':'#F4FAFC'}">`
-        +Array.from({length:drops},(_,i)=>{
-          /* Speed is not a taste: the layer above crosses 880px in nrFall seconds, and the
-             near drops are timed off that same rate on screen (a unit is k px) and land a
-             little quicker, being nearer. Timed by feel instead they came
-             out four times slower than the rain over the ridgeline, which is what made a
-             long one read as a slash drawn across the picture rather than as a drop. Long
-             and quick is a raindrop. Long and slow is a scratch. */
-          const len=clamp(step*2.6,22,span*.72)*(.85+nr()*.3),travel=span+len;
-          const d=travel*k*nrFall/968*(.9+nr()*.2);
-          const tx=-34+(i+.15+nr()*.7)*slot,ty=nrTop-len,hx=tx+len*nrTan,nx=cs,ny=-nrTan*cs,tw=.15;
-          const P=(x,y)=>`${x.toFixed(1)} ${y.toFixed(1)}`;
-          const delay=(Date.now()/1000+nr()*d)%d;
-          return `<path class="nearrain" d="M ${P(tx+nx*tw,ty+ny*tw)} L ${P(hx+nx*hw,nrTop+ny*hw)} A ${hw.toFixed(2)} ${hw.toFixed(2)} 0 0 1 ${P(hx-nx*hw,nrTop-ny*hw)} L ${P(tx-nx*tw,ty-ny*tw)} Z" opacity="${(.38+nrK*.24+nr()*.13).toFixed(2)}" style="--nx:${(travel*nrTan).toFixed(0)}px;--ny:${travel.toFixed(0)}px;animation-duration:${d.toFixed(2)}s;animation-delay:-${delay.toFixed(2)}s"/>`;
-        }).join("")+`</g>`;
-    }
+    const nearRainL=wet&&!snowing&&!PRM?nearRainLayer({W,top:nrTop,land:nrLand,code,wind,downwind,dark,seed:5347,id:"ridgerain"}):null,nearRain=nearRainL?nearRainL.drops:"";
 
     /* cattails at the pond ends: a stem, a brown head, a spike, and a leaf or two. Each group
        sways with the band it stands in */
@@ -9993,11 +9964,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
         ${candles?candleDefs:""}${hallowDefs}
         <radialGradient id="flyglow"><stop offset="0" stop-color="#F8F7B0" stop-opacity=".7"/><stop offset=".45" stop-color="#F8F7B0" stop-opacity=".18"/><stop offset="1" stop-color="#F8F7B0" stop-opacity="0"/></radialGradient>
         ${texOn?`<pattern id="paper" width="160" height="160" patternUnits="userSpaceOnUse"><image href="${paperTex()}" width="160" height="160"/></pattern>`:""}
-        ${nearRain?`<linearGradient id="ridgerainfade" gradientUnits="userSpaceOnUse" x1="0" y1="${nrTop.toFixed(1)}" x2="0" y2="${nrLand.toFixed(1)}">
-          <stop offset="0" stop-color="#000000"/><stop offset="${(26/(nrLand-nrTop)).toFixed(3)}" stop-color="#FFFFFF"/>
-          <stop offset="${((nrLand-16-nrTop)/(nrLand-nrTop)).toFixed(3)}" stop-color="#FFFFFF"/><stop offset="1" stop-color="#000000"/></linearGradient>
-        <mask id="ridgerain" maskUnits="userSpaceOnUse" x="0" y="${nrTop.toFixed(1)}" width="${W}" height="${(nrLand-nrTop).toFixed(1)}">
-          <rect x="0" y="${nrTop.toFixed(1)}" width="${W}" height="${(nrLand-nrTop).toFixed(1)}" fill="url(#ridgerainfade)"/></mask>`:""}
+        ${nearRainL?nearRainL.defs:""}
       </defs>
       <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
       ${goldArc}
@@ -10420,6 +10387,52 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
    drawing in it is still, in the scene's own coordinates and line weights, and the box turns about the
    drawing's joint, which WebKit leaves to the compositor and repaints nothing. Beaufort's palmetto crowns and
    boat and Porters Neck's palms and fountain grass are boxes, made with this one kit for a W by H frame */
+/* Rain in front of a tall silhouette. Everything in the sky's rain layer falls behind the picture and is inked
+   against the sky, so from a ridgeline or a roofline down it is a dark line on a dark fold, or a pale one on a
+   white wall, and it reads as nothing at all. These are the near drops: fewer, longer, quicker and pale, on the
+   same lean and the same rate as the rain above them. They fade in across the crest (top) instead of starting
+   on a cut line, and they land on the ground (land): they fade out again there, so the water's own rings carry
+   the rain down and nothing white runs off the foot of the picture into the page. The ridge's (October 2026,
+   the farm) and the house's at Porters Neck both draw from here. Returns the drops and their mask's defs */
+function nearRainLayer({W,top,land,code,wind,downwind,dark,seed,id}){
+  /* how hard, how fast: off the same row of RAIN the sky layer reads, rather than off
+     rainK, so freezing rain gets the near drops too. It falls as liquid, it is the one
+     condition here a driver needs to see coming, and rainK has no entry for it. */
+  const [,nrFall,nrWeight]=RAIN[code]||RAIN[63];
+  const nrK=clamp((nrWeight-.55)/.7,0,1),span=land-top;
+  const nrTan=Math.tan(clamp(wind*.62,0,18)*downwind*Math.PI/180);
+  const nr=mulberry(seed),drops=10+Math.round(nrK*9);
+  /* A drop's length is 2.6 frames at 30Hz, the slow step a phone falls to, and it
+     is still capped to the face it falls in front of. Sized for 60Hz, a light rain was shorter than
+     one slow frame and read as dashes. The taper keeps a dead-vertical drop from
+     collapsing to a zero-width box. Across the frame they are dealt one to a slot
+     rather than thrown at random, which is what stacked three over the barn. The
+     delay is the clock plus this drop's own seed, so a rebuild picks it up. A scene unit
+     is k screen pixels (the frame came closer in for the phone, W=appW/1.22), so the step
+     and the timing are taken on screen and turned back into units. */
+  const k=appW()/W,step=968/k/nrFall/30,hw=(1.25+nrK*1.05)/2,cs=1/Math.hypot(1,nrTan),slot=(W+68)/drops;
+  const out=`<g mask="url(#${id})" fill="${dark?'#DCE9F0':'#F4FAFC'}">`
+    +Array.from({length:drops},(_,i)=>{
+      /* Speed is not a taste: the layer above crosses 880px in nrFall seconds, and the
+         near drops are timed off that same rate on screen (a unit is k px) and land a
+         little quicker, being nearer. Timed by feel instead they came
+         out four times slower than the rain over the ridgeline, which is what made a
+         long one read as a slash drawn across the picture rather than as a drop. Long
+         and quick is a raindrop. Long and slow is a scratch. */
+      const len=clamp(step*2.6,22,span*.72)*(.85+nr()*.3),travel=span+len;
+      const d=travel*k*nrFall/968*(.9+nr()*.2);
+      const tx=-34+(i+.15+nr()*.7)*slot,ty=top-len,hx=tx+len*nrTan,nx=cs,ny=-nrTan*cs,tw=.15;
+      const P=(x,y)=>`${x.toFixed(1)} ${y.toFixed(1)}`;
+      const delay=(Date.now()/1000+nr()*d)%d;
+      return `<path class="nearrain" d="M ${P(tx+nx*tw,ty+ny*tw)} L ${P(hx+nx*hw,top+ny*hw)} A ${hw.toFixed(2)} ${hw.toFixed(2)} 0 0 1 ${P(hx-nx*hw,top-ny*hw)} L ${P(tx-nx*tw,ty-ny*tw)} Z" opacity="${(.38+nrK*.24+nr()*.13).toFixed(2)}" style="--nx:${(travel*nrTan).toFixed(0)}px;--ny:${travel.toFixed(0)}px;animation-duration:${d.toFixed(2)}s;animation-delay:-${delay.toFixed(2)}s"/>`;
+    }).join("")+`</g>`;
+  const defs=`<linearGradient id="${id}fade" gradientUnits="userSpaceOnUse" x1="0" y1="${top.toFixed(1)}" x2="0" y2="${land.toFixed(1)}">
+          <stop offset="0" stop-color="#000000"/><stop offset="${(26/(land-top)).toFixed(3)}" stop-color="#FFFFFF"/>
+          <stop offset="${((land-16-top)/(land-top)).toFixed(3)}" stop-color="#FFFFFF"/><stop offset="1" stop-color="#000000"/></linearGradient>
+        <mask id="${id}" maskUnits="userSpaceOnUse" x="0" y="${top.toFixed(1)}" width="${W}" height="${(land-top).toFixed(1)}">
+          <rect x="0" y="${top.toFixed(1)}" width="${W}" height="${(land-top).toFixed(1)}" fill="url(#${id}fade)"/></mask>`;
+  return{drops:out,defs};
+}
 function liftKit(W,H){
   const partsOf=L=>L.flatMap(l=>l.parts||partsOf(l.layers||[]));
   const boxOf=(layers,dx,dy,m=3,also=null)=>{const ds=partsOf(layers).map(p=>p.d);if(!ds.length)return null;let[bx,by,bw,bh]=pathBox(ds);
@@ -10456,13 +10469,14 @@ const PN_STRANDS_OUT=22,PN_LIGHTS_OUT=null,PN_PUMPKIN_LIGHTS=true;
    inside it, a strip of lawn, the sand and the pond, which holds the picture upside down (pressed a little
    shorter, so the doubled lights stay in the frame) and has its fountain mid-pond on the door's line. The
    weather stays honest: the strands and the fire table from sunset until 10 pm (the fire only on a cool dry
-   evening), the windows after sunset, the palms carry their ends of the strands as they sway with the gusts,
-   the fountain leans and its spray drifts downwind, and the reflection is glass in a calm, strips in a breeze
+   evening), the windows after sunset, the strands' ends tucked into the sabals' boots so the palms' sway never
+   shows a loose end, the fountain leans and its spray drifts downwind, and the reflection is glass in a calm, strips in a breeze
    and glints in a blow. The low sun's warmth comes from its own side. In October (holidayOn) the fence carries
    pumpkin lights day and night, a little tree by the fire table is wrapped in purple and orange, each pillar
    holds an orange pumpkin and a white one, the gate has two lanterns from the carving day, Ghostface peeks
    round the east corner, and on Halloween night the trick-or-treater stands at the gate. Laid out in a
-   320-wide frame, centred on wider ones */
+   320 by 194 frame (sceneH), centred on wider ones, where the wood, the lawn, the sand and the pond run on to
+   the frame's edges */
 function pnPondScene(c){
   const{W,H,GY,sunAltDeg,localHour,month,cloud,wind,gust,code,wet,snowing,storm,fog,temp,dark,
     skyS,goldK,rising,nightK,gloom,tone,air,lineC,inkAir,shadeC,texOn,paperK,arc,goldArc,sunBody,moonBody,sunTimes,
@@ -10498,8 +10512,8 @@ function pnPondScene(c){
 
   /* ── behind the house's sides, a close dark wood of live oaks and wax myrtles, so the house never
      stands in open land; it is low behind the house and rises a little at the edges */
-  const wood=(()=>{const r=mulberry(612);let d=`M ${f1(X(-12))} ${f1(farY+2)} L ${f1(X(-12))} ${f1(farY-30)}`,x=X(-12);
-    while(x<X(332)){const w=7+r()*10,mid=Math.abs(x-hx)<u(55),y=farY-(mid?8:16)-r()*(mid?5:12);x+=w;d+=` A ${f1(w*.62)} ${f1(w*.62)} 0 0 1 ${f1(x)} ${f1(y)}`}return d+` L ${f1(X(332))} ${f1(farY+2)} Z`})();
+  const wood=(()=>{const r=mulberry(612);let d=`M ${f1(-12)} ${f1(farY+2)} L ${f1(-12)} ${f1(farY-30)}`,x=-12;
+    while(x<(W+12)){const w=7+r()*10,mid=Math.abs(x-hx)<u(55),y=farY-(mid?8:16)-r()*(mid?5:12);x+=w;d+=` A ${f1(w*.62)} ${f1(w*.62)} 0 0 1 ${f1(x)} ${f1(y)}`}return d+` L ${f1(W+12)} ${f1(farY+2)} Z`})();
   const farWood=`<path d="${wood}" fill="${air("#5E7A66",.42)}" stroke="${mix(inkAir(.42),air("#5E7A66",.42),.45)}" stroke-width=".55"/>`
     +(tex?`<path d="${wood}" fill="${tex}" opacity="${(.5*paperK).toFixed(2)}"/>`:"");
 
@@ -10516,9 +10530,9 @@ function pnPondScene(c){
   const gfX=hx+u(63.5),gfY=hy-u(8.7);
   const ghost=halloween?`<g class="decor" data-decor="ghostface"><g transform="translate(${f1(gfX)} ${f1(gfY)}) rotate(10) scale(${f1(-.085*S*100)/100} ${f1(.085*S*100)/100})">${inkRig(propGhostface(),palAt(INK.ghostface,.05),{s:.085*S,flip:-1,line:.5,heavy:.25,shade:.7,lit:.45,light:lightAt(gfX,gfY)})}</g></g>`:"";
 
-  /* ── the palms, two sabals and a windmill palm low in front of them on each side, at the fence. Each
-     sways from its foot with the gusts, each a little differently, and a strand's end is in the group of
-     the palm that holds it, so it moves only with its palm. Their crowns stay under the sun times */
+  /* ── the palms at the fence, two sabals at the west and two sabals with a windmill palm low between them
+     at the east. Each sways from its foot with the gusts, each a little differently. The strands hang still
+     from the sabals, each end tucked into its palm's boots. Their crowns stay under the sun times */
   const pw=bftPalmWind(gust,downwind),ps=.9;
   const PALMS=[[26,"s",7,47,-.04],[52,"s",8,51,.03],[266,"s",9,50,-.03],[282,"w",1,20],[298,"s",10,46,.05]].map(([x,kind,seed,h,lean=0],i)=>{
     const px=X(x),Lr=kind==="s"?rigBftPalmetto(seed,{h,lean,boots:.4,wind:pw}):rigPnWindmill(seed,{h,wind:pw,n:8,dead:1,size:.95});
@@ -10664,9 +10678,9 @@ function pnPondScene(c){
   /* ── the lawn, the sand, the does at first and last light */
   /* the lawn is green through the growing season and goes to straw in the winter */
   const greenK=[0,.1,.35,.7,1,1,1,1,.95,.7,.35,.1][month],lawnTop=mix("#7A6E44","#5E7A3A",greenK),lawnFoot=mix("#94804F","#7C9846",greenK);
-  const lawn=`<rect x="${f1(X(-12))}" y="${f1(farY-.4)}" width="${W+24}" height="${f1(sandY-farY+.4)}" fill="url(#pnLawn)"/>`
-    +(tex?`<rect x="${f1(X(-12))}" y="${f1(farY)}" width="${W+24}" height="${f1(sandY-farY)}" fill="${tex}" opacity="${(.6*paperK).toFixed(2)}"/>`:"")
-    +`<path d="M ${f1(X(-12))} ${f1(sandY)} Q ${f1(X(90))} ${f1(sandY-.7)} ${f1(X(180))} ${f1(sandY-.2)} T ${f1(X(332))} ${f1(sandY-.4)} L ${f1(X(332))} ${f1(pondY+.3)} L ${f1(X(-12))} ${f1(pondY+.3)} Z" fill="${air("#D2C19C",.03)}"/>`;
+  const lawn=`<rect x="${f1(-12)}" y="${f1(farY-.4)}" width="${W+24}" height="${f1(sandY-farY+.4)}" fill="url(#pnLawn)"/>`
+    +(tex?`<rect x="${f1(-12)}" y="${f1(farY)}" width="${W+24}" height="${f1(sandY-farY)}" fill="${tex}" opacity="${(.6*paperK).toFixed(2)}"/>`:"")
+    +`<path d="M ${f1(-12)} ${f1(sandY)} Q ${f1(X(90))} ${f1(sandY-.7)} ${f1(X(180))} ${f1(sandY-.2)} T ${f1(W+12)} ${f1(sandY-.4)} L ${f1(W+12)} ${f1(pondY+.3)} L ${f1(-12)} ${f1(pondY+.3)} Z" fill="${air("#D2C19C",.03)}"/>`;
   let deer="";
   if(sunAltDeg> -6&&sunAltDeg<10&&!wet&&!storm){
     const dS=.44,dY=Y(151.6),dPal=palAt(INK.pnDoe,.04),doe=(x,graze,flip)=>castShadow(flatParts([{parts:propPnDoe({graze}).flatMap(l=>l.parts)}]),x,dY,dS,flip)
@@ -10693,12 +10707,12 @@ function pnPondScene(c){
   let strips="";
   if(!wGlass){const r=mulberry(2207),n=wBlow?12:6;
     for(let i=0;i<n;i++){const y=pondY+1.2+(i+.2+r()*.6)*(H+20-pondY)/n,hgt=wBlow?.5+r()*.5:.7+r()*.6;
-      strips+=`<rect x="${f1(X(-12))}" y="${f1(y)}" width="${f1(Math.min(W+20,X(-12)+W+24)-X(-12))}" height="${f1(hgt)}"/>`}}
+      strips+=`<rect x="${f1(-12)}" y="${f1(y)}" width="${W+24}" height="${f1(hgt)}"/>`}}
   const drift=!wGlass&&!PRM?` style="animation:pnDrift ${(wBlow?3.2:6.5).toFixed(1)}s ease-in-out infinite alternate;--dx:${dw*(wBlow?1.6:.8)}px;${wallClock(wBlow?6.4:13)}"`:"";
   const waterTop=mix(mix(mix(skyS[2],skyS[1],.4),"#2F5468",.2),"#2E4A44",.45),waterBot=mix(mix(mix(skyS[1],skyS[0],.6),"#163246",.38),"#1E3430",.4);
   const reflOp=fog?.32:wet?.62:.82;
   const refl=`<g clip-path="url(#pnWaterClip)"><g transform="translate(0 ${f1(pondY+1+fenceB*k)}) scale(1 ${-k})">${still}</g></g>`
-    +`<rect x="${f1(X(-12))}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${mix(mix(skyS[0],"#1F3F52",.5),"#1E3430",.4)}" opacity=".42"/>`;
+    +`<rect x="${f1(-12)}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${mix(mix(skyS[0],"#1F3F52",.5),"#1E3430",.4)}" opacity=".42"/>`;
   /* the strips are the light caught on the ripples: each is drawn where it is, its fill the reflection's own fade
      (pnStripFill is the reflection's fade, .85 to .45, times the strips' opacity), which is the same light a mask over one wide rect gave
      and leaves the moving sheet nothing to mask */
@@ -10707,8 +10721,9 @@ function pnPondScene(c){
 
   /* ── the fountain, mid-pond on the back door's line, in the porch's reflection (where it is): a tall narrow V
      of spray out of a dark float, and a ring of small low jets round its foot. The plume leans downwind as far
-     as the gusts say and its spray drifts on them; it is lit warm from below after dark; it holds still in a
-     calm and under reduced motion. Its own pressed copy is in the water under it */
+     as the gusts say and its spray drifts on them; it is lit warm from below after dark; in a calm it only
+     plays a little, the way running water does, and under reduced motion it holds still. Its own pressed copy
+     is in the water under it */
   const fnX=doorX,fnY=Y(178),lean=clamp(gust/40,0,.62)*dw;
   const fountain=(copy)=>{const jc=lightsOn?"rgb(255,226,170)":air("#F4F8FA",.06),dc=lightsOn?"rgb(255,214,150)":air("#FFFFFF",.06);
     const ph=30,tx=fnX+lean*14,spread=4.6;
@@ -10729,6 +10744,11 @@ function pnPondScene(c){
       +`<ellipse cx="${f1(fnX)}" cy="${f1(fnY+.6)}" rx="14" ry="3" fill="none" stroke="${lightsOn?"rgb(255,210,150)":air("#EAF2F6",.06)}" stroke-width=".4" opacity=".45"/>`};
   const fountainSvg=`<g data-prop="fountain"><g opacity=".3" transform="translate(0 ${f1(fnY*(1+k)+.6)}) scale(1 ${-k})">${fountain(true)}</g>${fountain(false)}</g>`;
 
+  /* rain in front of the house, which is a tall silhouette the sky's rain falls behind (nearRainLayer): from
+     just under the ridge it falls in front of the roof, the walls and the palms, and it lands on the lawn at the
+     sand, where the pond's rings take it */
+  const rainTop=hy+u(PN_BH.ridge)+2,rainLand=sandY;
+  const nearRainL=wet&&!snowing&&!PRM?nearRainLayer({W,top:rainTop,land:rainLand,code,wind,downwind,dark,seed:5381,id:"pnrain"}):null;
   let rainRings="";
   if(wet&&!snowing&&!PRM){const wr=mulberry(7139),rings=3+Math.round(rainK*5);
     for(let i=0;i<rings;i++)rainRings+=`<ellipse class="water-ring" cx="${f1(10+wr()*(W-20))}" cy="${f1(pondY+4+wr()*(H-pondY-6))}" rx="${f1(3+wr()*4)}" ry="${f1(.9+wr()*.8)}" fill="none" stroke="${dark?"#B7D6E1":"#183C4B"}" stroke-width=".6" style="animation-delay:-${(wr()*3.8).toFixed(1)}s"/>`}
@@ -10738,10 +10758,11 @@ function pnPondScene(c){
   const hrX=X(300),hrY=pondY+1.8,hrS=.3;
   const heron=showHeron?`<g class="wildlife heron heron-still" data-species="great-blue-heron" transform="translate(${f1(hrX)} ${f1(hrY)}) scale(${-hrS} ${hrS})">${inkRig(rigHeron(phase),inkPal(INK.heron),{s:hrS,flip:-1,light:lightAt(hrX,hrY-20)})}</g>`
     +`<ellipse cx="${f1(hrX)}" cy="${f1(hrY+.5)}" rx="5" ry=".9" fill="none" stroke="${dark?"#B7D6E1":"#183C4B"}" stroke-width=".45" opacity=".5"/>`:"";
-  const pondStill=`<rect x="${f1(X(-12))}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="url(#pnPond)"/>`
-    +(tex?`<rect x="${f1(X(-12))}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${tex}" opacity="${(.4*paperK).toFixed(2)}"/>`:"");
-  const pondMoving=breakUp+(fog?`<rect x="${f1(X(-12))}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${dark?"#96ABB5":"#F5F3E8"}" opacity=".3"/>`:"")+rainRings+fountainSvg;
-  const sandLine=`<path d="M ${f1(X(-12))} ${f1(pondY+.2)} L ${f1(X(332))} ${f1(pondY+.2)}" stroke="${air("#6E5E44",.03)}" stroke-width=".7" opacity=".6"/>`;
+  const pondStill=`<rect x="${f1(-12)}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="url(#pnPond)"/>`
+    +(tex?`<rect x="${f1(-12)}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${tex}" opacity="${(.4*paperK).toFixed(2)}"/>`:"");
+  /* the sand's edge is under the fountain, which stands in front of it */
+  const sandLine=`<path d="M ${f1(-12)} ${f1(pondY+.2)} L ${f1(W+12)} ${f1(pondY+.2)}" stroke="${air("#6E5E44",.03)}" stroke-width=".7" opacity=".6"/>`;
+  const pondMoving=breakUp+(fog?`<rect x="${f1(-12)}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${dark?"#96ABB5":"#F5F3E8"}" opacity=".3"/>`:"")+rainRings+sandLine+fountainSvg;
 
   /* ── the sky's own things: clouds, gulls by day, and Halloween's bats and witch over the roof */
   let sceneClouds="";
@@ -10772,9 +10793,9 @@ function pnPondScene(c){
      clouds and the gulls, with the sun and the moon over them when a gull would cross either), the house, the
      patio and the strands (#sceneNear), the fountain grass and the palms, each a box the compositor sways
      (#sceneLift), the fence, its pillars and what stands at it (#sceneFront), the fire's flame, a guttering
-     candle's pumpkin, the bats and the witch (#sceneFx), the low sun's wash, the does, the fog and the pond
+     candle's pumpkin, the bats, the witch and the near rain, with its mask (#sceneFx), the low sun's wash, the does, the fog and the pond
      (#sceneWater), its reflection (#sceneRefl), the light on the ripples, the rain's rings and the fountain
-     (#sceneRipple), and over it all the sand's edge, the low sun on the water, the heron and the times
+     (#sceneRipple, with the sand's edge under the fountain), and over it all the low sun on the water, the heron and the times
      (#sceneTop). Each only repaints itself. Where a moving thing was drawn under a still one, nothing on the
      sheets between comes near it. They keep a colour of their own (renderScene), all but #sceneTop, whose times
      are in the sky's ink, so the sky's colour transition restyles none of them, and #sceneSvg's defs, which every
@@ -10795,18 +10816,18 @@ function pnPondScene(c){
       <radialGradient id="pnPumpGlow"><stop offset="0" stop-color="#FF8A2A" stop-opacity=".6"/><stop offset="1" stop-color="#FF7A20" stop-opacity="0"/></radialGradient>
       <linearGradient id="pnPlume" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="${lightsOn?"rgb(255,232,190)":"#FFFFFF"}" stop-opacity=".75"/><stop offset=".7" stop-color="${lightsOn?"rgb(255,222,170)":"#F4F8FA"}" stop-opacity=".35"/><stop offset="1" stop-color="${lightsOn?"rgb(255,214,150)":"#F4F8FA"}" stop-opacity=".12"/></linearGradient>
       <linearGradient id="pnTopFade" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(Y(14))}" x2="0" y2="${f1(Y(84))}"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity="1"/></linearGradient>
-      <mask id="pnFadeIn" maskUnits="userSpaceOnUse" x="${f1(X(-12))}" y="${f1(Y(0))}" width="${W+24}" height="${f1(H+10)}"><rect x="${f1(X(-12))}" y="${f1(Y(0))}" width="${W+24}" height="${f1(H+10)}" fill="url(#pnTopFade)"/></mask>
+      <mask id="pnFadeIn" maskUnits="userSpaceOnUse" x="${f1(-12)}" y="${f1(Y(0))}" width="${W+24}" height="${f1(H+10)}"><rect x="${f1(-12)}" y="${f1(Y(0))}" width="${W+24}" height="${f1(H+10)}" fill="url(#pnTopFade)"/></mask>
       <radialGradient id="pnUplight"><stop offset="0" stop-color="rgb(255,196,120)" stop-opacity=".38"/><stop offset="1" stop-color="rgb(255,180,100)" stop-opacity="0"/></radialGradient>
       <radialGradient id="pnWash"><stop offset="0" stop-color="rgb(255,170,90)" stop-opacity=".45"/><stop offset="1" stop-color="rgb(255,160,80)" stop-opacity="0"/></radialGradient>
       <linearGradient id="pnLawn" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(farY)}" x2="0" y2="${f1(sandY)}"><stop offset="0" stop-color="${air(lawnTop,.05)}"/><stop offset="1" stop-color="${air(lawnFoot,.02)}"/></linearGradient>
       <linearGradient id="pnPond" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(pondY)}" x2="0" y2="${f1(Y(194))}"><stop offset="0" stop-color="${waterTop}"/><stop offset="1" stop-color="${waterBot}"/></linearGradient>
       <linearGradient id="cloudInk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${tone(mix("#FFFFFF",skyS[1],.25))}"/><stop offset=".6" stop-color="${tone(mix("#FFF4E6",skyS[2],.35))}"/><stop offset="1" stop-color="${mix(tone("#FFF4E6"),litC,.5*litK)}"/></linearGradient>
       <linearGradient id="fogveil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity="0"/><stop offset=".55" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity=".34"/><stop offset="1" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity=".06"/></linearGradient>
-      <clipPath id="pnWaterClip"><rect x="${f1(X(-12))}" y="${f1(pondY+.3)}" width="${W+24}" height="${f1(H-pondY+40)}"/></clipPath>
+      <clipPath id="pnWaterClip"><rect x="${f1(-12)}" y="${f1(pondY+.3)}" width="${W+24}" height="${f1(H-pondY+40)}"/></clipPath>
       <linearGradient id="pnStripFill" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(pondY)}" x2="0" y2="${f1(Y(194))}"><stop offset="0" stop-color="${stripC}" stop-opacity="${(.85*stripOp).toFixed(4)}"/><stop offset="1" stop-color="${stripC}" stop-opacity="${(.45*stripOp).toFixed(4)}"/></linearGradient>
-      <radialGradient id="pnSideSky" gradientUnits="userSpaceOnUse" cx="${f1(side>0?W+10:-10)}" cy="${f1(pondY-14)}" r="${f1(W*.85)}" gradientTransform="translate(${f1(side>0?W+10:-10)} ${f1(pondY-14)}) scale(1 .55) translate(${f1(-(side>0?W+10:-10))} ${f1(-(pondY-14))})"><stop offset="0" stop-color="${warm}" stop-opacity=".75"/><stop offset=".45" stop-color="${warm}" stop-opacity=".28"/><stop offset="1" stop-color="${warm}" stop-opacity="0"/></radialGradient>
+      <radialGradient id="pnSideSky" gradientUnits="userSpaceOnUse" cx="${f1(side>0?W+10:-10)}" cy="${f1(pondY-14)}" r="${f1(W*.85)}" gradientTransform="translate(${f1(side>0?W+10:-10)} ${f1(pondY-14)}) scale(1 ${Math.min(.55,(pondY-Y(0)+26)/(W*.85)).toFixed(3)}) translate(${f1(-(side>0?W+10:-10))} ${f1(-(pondY-14))})"><stop offset="0" stop-color="${warm}" stop-opacity=".75"/><stop offset=".45" stop-color="${warm}" stop-opacity=".28"/><stop offset="1" stop-color="${warm}" stop-opacity="0"/></radialGradient>
       <linearGradient id="pnSideWash" x1="${side>0?1:0}" y1="0" x2="${side>0?0:1}" y2="0"><stop offset="0" stop-color="${warm}" stop-opacity=".9"/><stop offset=".55" stop-color="${warm}" stop-opacity=".12"/><stop offset="1" stop-color="${warm}" stop-opacity="0"/></linearGradient>
-      <clipPath id="pnHouseClip"><g transform="translate(${f1(hx)} ${f1(hy)}) scale(${S})">${pnBackHouseSil().map(d=>`<path d="${d}"/>`).join("")}</g></clipPath>
+      <clipPath id="pnHouseClip">${pnBackHouseSil().map(d=>`<path transform="translate(${f1(hx)} ${f1(hy)}) scale(${S})" d="${d}"/>`).join("")}</clipPath>
       ${candleDefs||""}${hallowDefs||""}
       ${tex?`<pattern id="paper" width="160" height="160" patternUnits="userSpaceOnUse"><image href="${paperTex()}" width="160" height="160"/></pattern>`:""}
     </defs>
@@ -10816,12 +10837,12 @@ function pnPondScene(c){
   const landPaint=()=>{sheet("sceneNear").innerHTML=`${lawn}${farWood}${ghost}${house}${patio}${fireLight}${chairsBack}${fireStill}${chairs}${tub}${tree}${swagMid}`;
   document.getElementById("sceneLift").innerHTML=grassLift+PALMS.map(palmLift).join("");
   sheet("sceneFront").innerHTML=fence+(guttering?"":pumpkins)+boards+gateKid+(guttering?"":gateLanterns);
-  sheet("sceneFx").innerHTML=fireFlame+(guttering?pumpkins+gateLanterns:"")+bats+witchFly(witch)};
+  sheet("sceneFx").innerHTML=fireFlame+(guttering?pumpkins+gateLanterns:"")+bats+witchFly(witch)+(nearRainL?`<defs>${nearRainL.defs}</defs>${nearRainL.drops}`:"")};
   const waterPaint=()=>{sheet("sceneWater").innerHTML=`
-      ${glowK>.02?`<g data-light="side-wash" mask="url(#pnFadeIn)"><rect x="${f1(X(-12))}" y="${f1(Y(14))}" width="${W+24}" height="${f1(sandY-Y(14))}" fill="url(#pnSideWash)" opacity="${(.3*glowK).toFixed(2)}"/>`
-        +`<rect x="${f1(X(-12))}" y="${f1(Y(14))}" width="${W+24}" height="${f1(hy-Y(14)+1)}" fill="url(#pnSideWash)" clip-path="url(#pnHouseClip)" opacity="${(.32*glowK).toFixed(2)}"/></g>`:""}
+      ${glowK>.02?`<g data-light="side-wash" mask="url(#pnFadeIn)"><rect x="${f1(-12)}" y="${f1(Y(14))}" width="${W+24}" height="${f1(sandY-Y(14))}" fill="url(#pnSideWash)" opacity="${(.3*glowK).toFixed(2)}"/>`
+        +`<rect x="${f1(-12)}" y="${f1(Y(14))}" width="${W+24}" height="${f1(hy-Y(14)+1)}" fill="url(#pnSideWash)" clip-path="url(#pnHouseClip)" opacity="${(.32*glowK).toFixed(2)}"/></g>`:""}
       ${deer}
-      ${fog?`<rect x="${f1(X(-12))}" y="${f1(Y(0))}" width="${W+24}" height="${f1(pondY-Y(0))}" fill="${dark?"#96ABB5":"#EEF0EC"}" opacity=".3" mask="url(#pnFadeIn)" data-light="fog"/>`:""}
+      ${fog?`<rect x="${f1(-12)}" y="${f1(Y(0))}" width="${W+24}" height="${f1(pondY-Y(0))}" fill="${dark?"#96ABB5":"#EEF0EC"}" opacity=".3" mask="url(#pnFadeIn)" data-light="fog"/>`:""}
       ${pondStill}`;
   /* the reflection is a sheet of its own, and its fade down the water (.85 to .45 from the water's edge to the
      frame's foot, pnReflFade until October 2026) and its opacity are that sheet's CSS mask and opacity, which
@@ -10833,19 +10854,21 @@ function pnPondScene(c){
   Object.assign(rf.style,{height:"calc(100% + 40px)",opacity:String(reflOp),webkitMaskImage:fade,maskImage:fade});
   rf.innerHTML=refl;
   sheet("sceneRipple").innerHTML=pondMoving;
-  sheet("sceneTop").innerHTML=`${sandLine}
-      ${glowK>.02?`<rect data-light="side-pond" x="${f1(X(-12))}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="url(#pnSideWash)" opacity="${(.34*glowK).toFixed(2)}"/>`:""}
+  sheet("sceneTop").innerHTML=`
+      ${glowK>.02?`<rect data-light="side-pond" x="${f1(-12)}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="url(#pnSideWash)" opacity="${(.34*glowK).toFixed(2)}"/>`:""}
       ${heron}
     ${fog?`<rect x="0" y="${f1(Y(64))}" width="${W}" height="80" fill="url(#fogveil)"/>`:""}
     ${sunTimes}`};
-  /* A first paint (the house's sheets empty: the app opening, or another place's picture in #sceneSvg alone) is
-     written a part a frame, hidden, and shown whole the frame after the last: in one frame the house's sheets
-     made a WebKit frame of 150ms on the open, written over three none is over 70. The sky goes up at once. A
-     paint over a picture already up is written in one frame, so nothing in it goes missing. A newer drawing
-     (SCENE_DRAW) stops one part way and shows every sheet again */
+  /* A first paint (nothing in the scene at all: the app opening on the loading shell) is written a part a frame,
+     hidden, and shown whole the frame after the last: in one frame the house's sheets made a WebKit frame of
+     150ms on the open, written over three none is over 70. The sky goes up at once. A paint over a picture
+     already up, the house's or another place's (a cached switch from the farm), is written in one frame, so
+     nothing in it goes missing: staged over the farm's picture, the farm went and a bare sky stood for three
+     frames before the house came. A newer drawing (SCENE_DRAW) stops one part way and shows every sheet again */
   const staged=["sceneNear","sceneLift","sceneFront","sceneFx","sceneWater","sceneRefl","sceneRipple","sceneTop"].map(id=>document.getElementById(id));
+  const up=document.getElementById("sceneSvg").childElementCount>0;
   skyPaint();
-  if(staged[0].childElementCount){landPaint();waterPaint();return}
+  if(staged[0].childElementCount||up){landPaint();waterPaint();return}
   for(const el of staged)el.style.visibility="hidden";
   const gen=SCENE_DRAW,steps=[landPaint,waterPaint,()=>{for(const el of staged)el.style.visibility=""}];
   const step=()=>{if(gen!==SCENE_DRAW)return;steps.shift()();if(steps.length)requestAnimationFrame(step)};
@@ -16378,7 +16401,7 @@ function loadMoon(ink){
 }
 /* The empty pictures keep the size the loaded page will give them, so the handoff does not jump. */
 function loadFrame(){
-  const aw=appW(),W=Math.max(320,aw/1.22),H=Math.round((LOC.scene==="marsh"?150:168)+(760-W)*.10);
+  const aw=appW(),W=Math.max(320,aw/1.22),H=sceneH(W);
   document.getElementById("sceneSvg").setAttribute("viewBox",`0 0 ${W} ${H}`);
   const cw=aw-40,ch=chartH(cw),box=(id,h)=>document.getElementById(id).setAttribute("viewBox",`0 0 ${cw} ${h}`);
   /* Beaufort's tide chart carries its wind row under the lows, so its box is that much taller */

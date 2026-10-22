@@ -652,13 +652,16 @@ test("and the rain is visible when it rains there", async () => {
   assert.match(html, /@keyframes nearFall\{/);
   assert.match(html, /const nrK=clamp\(\(nrWeight-\.55\)\/\.7,0,1\)/);
   assert.match(html, /class="nearrain"/);
-  assert.match(html, /mask="url\(#ridgerain\)"/);
+  // the ridge's drops and the house's (Porters Neck) come from one helper, each with its own mask
+  assert.match(html, /mask="url\(#\$\{id\}\)"/);
+  assert.match(html, /nearRainLayer\(\{W,top:nrTop,land:nrLand,code,wind,downwind,dark,seed:5347,id:"ridgerain"\}\)/);
+  assert.match(html, /nearRainLayer\(\{W,top:rainTop,land:rainLand,code,wind,downwind,dark,seed:5381,id:"pnrain"\}\)/);
   // it fades in across the crest instead of starting on a cut line
-  assert.match(html, /id="ridgerainfade" gradientUnits="userSpaceOnUse"/);
+  assert.match(html, /id="\$\{id\}fade" gradientUnits="userSpaceOnUse"/);
   // and it lands in the field: gone by the grass line, never run off the foot of the frame
   // into the page, which is where a downpour turned into a mess of white bars over the pond
   assert.match(html, /const nrTop=base-rTop\*\.94,nrLand=base\+4;/);
-  assert.match(html, /span=nrLand-nrTop;/);
+  assert.match(html, /span=land-top;/);
   assert.doesNotMatch(html, /span=H\+10-nrTop/);
   // a drop is 2.6 frames long at 30Hz, so a phone that steps down from 60 still
   // overlaps the streak. The 60Hz step and the 64px cap left light rain short of that.
@@ -684,7 +687,9 @@ test("and the rain is visible when it rains there", async () => {
   assert.match(html, /if\(wet&&!snowing&&!PRM\)\{\s*const pw2=mulberry\(6197\),rings=2\+Math\.round\(rainK\*3\)/);
   assert.match(html, /const ps=mulberry\(2884\),ticks=3\+Math\.round\(rainK\*5\)/);
   // snow neither rings the water nor gets a second layer of falling lines
-  assert.doesNotMatch(html, /if\(wet&&!PRM\)\{\s*const \[,nrFall/);
+  assert.match(html, /const nearRainL=wet&&!snowing&&!PRM\?nearRainLayer\(\{W,top:nrTop/);
+  assert.match(html, /const nearRainL=wet&&!snowing&&!PRM\?nearRainLayer\(\{W,top:rainTop/);
+  assert.doesNotMatch(html, /const nearRainL=wet&&!PRM\?/);
   // and a star the cloud has already taken below what an eye can find stops performing,
   // which is what pays for the drops in a night downpour
   assert.match(html, /const tw=s\.y>52&&Number\(o\)>=\.18/);
@@ -1879,9 +1884,13 @@ test("Ghostface peeks out of the live oak for October, and never moves", async (
   for (const name of ["26-house-october-afternoon", "27-house-halloween-night", "45-house-carved-week-morning", "29-house-halloween-rain-night", "36-house-october-golden-evening", "37-house-october-fog-morning"])
     assert.match(scene, new RegExp(`name: "${name}"[^\\n]*decor: \\["ghostface"`));
   assert.match(scene, /name: "35-house-november-small-hours"[^\n]*decor: \[\]/);
-  // he stands still and the oak sways over him, so the scene harness samples both eyes at both
-  // ends of the sway, in the scene's wind and in a gale, and fails 40% of either hidden
-  assert.match(scene, /if \(cs\.decor\?\.includes\("ghostface"\)\)/);
+  // at the house he peeks round its east corner and never moves, so the scene harness samples both eyes
+  // on their own fill and fails a scene where the house (or anything but light and rain) covers 10% of either
+  assert.match(scene, /if \(cs\.decor\?\.includes\("ghostface"\) && await page\.locator\('\.scene \[data-prop="house"\]'\)\.count\(\)\)/);
+  assert.match(scene, /if \(gf\.some\(\(v\) => v >= 10\)\) problems\.push\(`\$\{cs\.name\}: the house hides 10% or more of a Ghostface eye/);
+  // in the parked marsh's oak he stands still and the oak sways over him, so the harness samples both
+  // eyes at both ends of the sway, in the scene's wind and in a gale, and fails 40% of either hidden
+  assert.match(scene, /\} else if \(cs\.decor\?\.includes\("ghostface"\)\) \{/);
   assert.match(scene, /oak\.style\.setProperty\("--tsway", "1\.4deg"\)/);
   assert.match(scene, /r\.flat\(\)\.some\(\(v\) => v >= 40\)/);
   // and the notes count the scenes it runs
@@ -6348,8 +6357,17 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.doesNotMatch(html, /mask="url\(#pnReflFade\)"/);
   assert.match(html, /el\.style\.color=LOC\.view==="pond"&&el\.id!=="sceneTop"\?"#000":"";/);
   assert.match(fn, /<defs style="color:#000">/);
-  // a first paint is written a part a frame, hidden, and shown whole; a paint over a picture already up in one frame
-  assert.match(fn, /if\(staged\[0\]\.childElementCount\)\{landPaint\(\);waterPaint\(\);return\}/);
+  // a first paint is written a part a frame, hidden, and shown whole; a paint over a picture already up, the
+  // house's or another place's (a cached switch from the farm, which staged left a bare sky for three frames), in one
+  assert.match(fn, /const up=document\.getElementById\("sceneSvg"\)\.childElementCount>0;\n  skyPaint\(\);/);
+  assert.match(fn, /if\(staged\[0\]\.childElementCount\|\|up\)\{landPaint\(\);waterPaint\(\);return\}/);
+  // rain falls in front of the house too, on the moving sheet with its own mask, and lands at the sand
+  assert.match(fn, /const rainTop=hy\+u\(PN_BH\.ridge\)\+2,rainLand=sandY;/);
+  assert.match(fn, /\+\(nearRainL\?`<defs>\$\{nearRainL\.defs\}<\/defs>\$\{nearRainL\.drops\}`:""\)\};/);
+  // the frame keeps its 194 at every width, and what spans it spans the whole of it
+  assert.match(html, /const sceneH=W=>LOC\.view==="pond"\?194:/);
+  assert.match(html, /H=L\.view==="pond"\?194:Math\.round/);
+  assert.doesNotMatch(fn, /X\(-12\)|X\(332\)/);
   // and the harnesses hold it: no animation in #sceneSvg or a still sheet at the house, and WebKit's house cases
   assert.match(scene, /\["sceneSvg", "sceneNear", "sceneFront", "sceneWater", "sceneRefl", "sceneTop"\]/);
   for (const name of ["coast-night", "coast-rain", "coast-afternoon", "coast-blow", "coast-halloween"]) assert.match(webkit, new RegExp(`name: "${name}", loc: "mb"`));
