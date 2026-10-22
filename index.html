@@ -8441,13 +8441,16 @@ BFT["pn-tub"]={pal:INK.pnTub,box:[-12,-10,24,11],s:1,dist:.05,o:{line:.8,heavy:.
 const PN_BH={l:-60,r:60,ridge:-77,eave:-38,roofL:-64,roofR:64,ridgeL:-46,ridgeR:46,geave:-30,gl:[-60,-19.2],gr:[19.2,60],peakL:[-39.6,-51],peakR:[39.6,-51],porch:[-19.2,19.2],porchEave:-27,porchTop:-41,
   door:[-4.8,4.8],panel:[-15.8,-11.8],dial:[0,-19.4,3.4],winL:[[-49.7,-40.2],[-39,-29.5]],winR:[[23.4,32.8],[34.9,44.3],[46.4,55.8]],winT:-25,winB:-4};
 /* Review drawings, off the address until one is picked (?house=a, ?house=b). The shipped house above
-   stays the picture. A keeps its mass and evens the seams, deepens the shakes, sets four east windows
-   apart and hangs a row of bulbs under the porch header. B raises the roof, drops the porch ceiling,
-   mulls the four east windows into two pairs and hangs the bulbs on a shallow swag. The door, the porch
-   width and the second east window (the hot tub's) stay put. */
+   stays the picture. A is the one under review. Its ridge stays long, the way the photo's is, and where
+   the main roof meets the gables its edge is the gable's own outer rake, so the eave does not overhang
+   the triangle and there is no ear beside it. Above the peaks the ends slope out to that same line.
+   The walls, the shakes and the roof are white. No porch bulb row: a bistro swag drapes across the
+   porch opening, on the strand clock. B raises the roof, drops the porch ceiling, mulls the four east
+   windows into two pairs and hangs the bulbs on a shallow swag. The door, the porch width and the
+   second east window (the hot tub's) stay put. */
 function pnOpt(){try{const q=new URLSearchParams(location.search).get("house");return q==="a"||q==="b"?q:""}catch(e){return ""}}
-const PN_HA={l:-60,r:60,ridge:-77,eave:-38,roofL:-64,roofR:64,ridgeL:-46,ridgeR:46,geave:-30,gl:[-60,-19.2],gr:[19.2,60],peakL:[-39.6,-51],peakR:[39.6,-51],porch:[-19.2,19.2],porchEave:-27,porchTop:-41,
-  door:[-4.8,4.8],panel:[-15.8,-11.8],dial:[0,-19.4,4.1],winL:[[-50.2,-41.2],[-39.6,-30.6]],winR:[[21.6,28.4],[31.2,38],[40.8,47.6],[50.4,57.2]],winT:-27,winB:-3.4,even:1,deep:1,lap:1,bulbs:"row"};
+const PN_HA={l:-60,r:60,ridge:-77,eave:-38,roofL:-52.2,roofR:52.2,ridgeL:-36,ridgeR:36,geave:-30,gl:[-60,-19.2],gr:[19.2,60],peakL:[-39.6,-51],peakR:[39.6,-51],porch:[-19.2,19.2],porchEave:-27,porchTop:-41,
+  door:[-4.8,4.8],panel:[-15.8,-11.8],dial:[0,-19.4,4.1],winL:[[-50.2,-41.2],[-39.6,-30.6]],winR:[[21.6,28.4],[31.2,38],[40.8,47.6],[50.4,57.2]],winT:-27,winB:-3.4,even:1,deep:1,lap:1,meet:1};
 const PN_HB={l:-60,r:60,ridge:-84,eave:-42,roofL:-66,roofR:66,ridgeL:-44,ridgeR:44,geave:-33,gl:[-60,-19.2],gr:[19.2,60],peakL:[-39.6,-58],peakR:[39.6,-58],porch:[-19.2,19.2],porchEave:-22,porchTop:-46,
   door:[-4.8,4.8],panel:[-15.8,-11.8],dial:[0,-19.4,4.2],winL:[[-51,-42.2],[-40.6,-31.8]],winR:[[21.4,29.2],[30.5,38.3],[42.2,50],[51.3,59.1]],mullR:[[0,1],[2,3]],winT:-30,winB:-3.2,even:1,deep:1,lap:1,bulbs:"swag"};
 INK.pnBackHouse={
@@ -8458,31 +8461,55 @@ INK.pnBackHouse={
   ink:"#2A1B33",shade:"#3A2350",lit:"#FFF6E2",shadeOp:.32,litOp:.5};
 /* the house's outline for the paper grain laid over it: the big roof, the walls, the gables */
 function pnBackHouseSil(B=PN_BH){
-  return[`M ${B.l} 0 L ${B.l} ${B.geave} L ${B.roofL} ${B.eave} L ${B.ridgeL} ${B.ridge} L ${B.ridgeR} ${B.ridge} L ${B.roofR} ${B.eave} L ${B.r} ${B.geave} L ${B.r} 0 Z`];
+  /* A is held a unit inside the gable rake, so the stroke does not read as an ear beside the triangle */
+  const n=B.meet?1:0,roof=B.meet
+    ?`L ${B.roofL+n} ${B.eave} L ${B.peakL[0]+n} ${B.peakL[1]} L ${B.ridgeL} ${B.ridge} L ${B.ridgeR} ${B.ridge} L ${B.peakR[0]-n} ${B.peakR[1]} L ${B.roofR-n} ${B.eave}`
+    :`L ${B.roofL} ${B.eave} L ${B.ridgeL} ${B.ridge} L ${B.ridgeR} ${B.ridge} L ${B.roofR} ${B.eave}`;
+  return[`M ${B.l} 0 L ${B.l} ${B.geave} ${roof} L ${B.r} ${B.geave} L ${B.r} 0 Z`];
 }
 function pnBackHouse({night=false,lit=null,shadowOp=1,B=PN_BH,strands=false}={}){
   const lamps=lit==null?!!night:!!lit,L=[],ge=B.geave;
   const cast=(pts,op=.3)=>pnPoly(pts,"cast",{noSil:true,op:op*shadowOp});
   const strip=(a,b,w,role="trim",o)=>{const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy),nx=-dy/l*w/2,ny=dx/l*w/2;
     return pnPoly([[a[0]-nx,a[1]-ny],[b[0]-nx,b[1]-ny],[b[0]+nx,b[1]+ny],[a[0]+nx,a[1]+ny]],role,o)};
-  /* the big roof, straight and even: one ridge, the same pitch at both ends, a white rake board down each */
-  {const parts=[pnPoly([[B.roofL,B.eave],[B.ridgeL,B.ridge],[B.ridgeR,B.ridge],[B.roofR,B.eave]],"roof")];
-    const r=mulberry(808);
-    for(let i=0;i<17;i++){const t=(i+.5)/17,x=B.ridgeL+1+t*(B.ridgeR-B.ridgeL-2),xb=x*(B.roofR-2)/(B.ridgeR-1)+(B.even?0:(r()-.5)*.5),xm=(x+xb)/2+(B.even?0:(r()-.5)*.4);
-      parts.push(pTaper([[x+.45,B.ridge+.8,.18],[xm+.5,(B.ridge+B.eave)/2,.24],[xb+.55,B.eave-.5,.3]],"seamLit",{capStart:false,capEnd:false},{noSil:true,op:.55}));
-      parts.push(pTaper([[x,B.ridge+.6,.2],[xm,(B.ridge+B.eave)/2,.28],[xb,B.eave-.5,.36]],"seam",{capStart:false,capEnd:false},{noSil:true,op:.7}))}
+  /* the big roof, straight and even: one ridge, the same pitch at both ends, a white rake board down each.
+     On A the eave sits on the gable's outer rake and the edge follows it up to the peak, so nothing
+     sticks out beside the triangle. Above the peaks the ends slope out to that line. The rake board
+     is only that upper edge: the gable's own board carries the line on down */
+  {const n=B.meet?1:0,pLx=B.peakL[0]+n,pRx=B.peakR[0]-n,eL=B.roofL+n,eR=B.roofR-n;
+    const roofPts=B.meet?[[eL,B.eave],[pLx,B.peakL[1]],[B.ridgeL,B.ridge],[B.ridgeR,B.ridge],[pRx,B.peakR[1]],[eR,B.eave]]
+      :[[B.roofL,B.eave],[B.ridgeL,B.ridge],[B.ridgeR,B.ridge],[B.roofR,B.eave]];
+    const parts=[pnPoly(roofPts,"roof")];
+    const r=mulberry(808),yR=B.ridge,yE=B.eave,yP=B.peakL[1];
+    const lerp=(a,b,t)=>a+(b-a)*t;
+    const bound=y=>{if(!B.meet)return [B.roofL,B.roofR];
+      if(y<=yP){const t=(y-yR)/(yP-yR)||0;return [lerp(B.ridgeL,pLx,t),lerp(B.ridgeR,pRx,t)];}
+      const t=(y-yP)/(yE-yP)||0;return [lerp(pLx,eL,t),lerp(pRx,eR,t)];};
+    for(let i=0;i<17;i++){const t=(i+.5)/17,x=B.ridgeL+1+t*(B.ridgeR-B.ridgeL-2);
+      let xb=x*(B.roofR-2)/(B.ridgeR-1)+(B.even?0:(r()-.5)*.5);
+      if(B.meet){const xAt=y=>x+(xb-x)*(y-yR)/(yE-yR);const [lP,rP]=bound(yP),xP=xAt(yP);
+        if(xP<lP+.35)xb=x+(lP+.35-x)*(yE-yR)/(yP-yR);else if(xP>rP-.35)xb=x+(rP-.35-x)*(yE-yR)/(yP-yR);
+        const [lE,rE]=bound(yE-.4);xb=Math.min(Math.max(xb,lE+.5),rE-.5);}
+      const xm=(x+xb)/2+(B.even?0:(r()-.5)*.4);
+      parts.push(pTaper([[x+.45,yR+.8,.18],[xm+.5,(yR+yE)/2,.24],[xb+.55,yE-.5,.3]],"seamLit",{capStart:false,capEnd:false},{noSil:true,op:.55}));
+      parts.push(pTaper([[x,yR+.6,.2],[xm,(yR+yE)/2,.28],[xb,yE-.5,.36]],"seam",{capStart:false,capEnd:false},{noSil:true,op:.7}))}
     parts.push(pTaper([[B.ridgeL+.4,B.ridge,1],[B.ridgeR-.4,B.ridge,1]],"trim",{capStart:false,capEnd:false},{noSil:true,op:.7}));
     L.push({parts});
-    L.push({parts:[strip([B.roofL-.6,B.eave+.6],[B.ridgeL-.3,B.ridge-.4],1.6),strip([B.ridgeR+.3,B.ridge-.4],[B.roofR+.6,B.eave+.6],1.6)]});}
+    if(B.meet)L.push({parts:[strip([B.ridgeL,B.ridge],[pLx,B.peakL[1]-1.4],1.05),strip([B.ridgeR,B.ridge],[pRx,B.peakR[1]-1.4],1.05)]});
+    else L.push({parts:[strip([B.roofL-.6,B.eave+.6],[B.ridgeL-.3,B.ridge-.4],1.6),strip([B.ridgeR+.3,B.ridge-.4],[B.roofR+.6,B.eave+.6],1.6)]});}
   /* between the gables the main roof carries on down over the porch at a lower pitch, a break across it where
-     the pitch changes, and the stainless flue rises through it */
+     the pitch changes, and the stainless flue rises through it. On A that band stops at the gables' inner
+     rakes, so it does not cross the triangles */
   {const[p0,p1]=B.porch,e=B.porchEave,t=B.eave,mx=(p0+p1)/2;
-    const parts=[pnPoly([[p0-15,t-.4],[p1+15,t-.4],[p1+7,e+.6],[p0-7,e+.6]],"roof")];
+    const yG=B.geave,yP=B.peakL[1],along=(x0,x1,y)=>x0+(x1-x0)*(y-yG)/(yP-yG);
+    const topL=B.meet?along(B.gl[1],B.peakL[0],t)+.4:p0-15,topR=B.meet?along(B.gr[0],B.peakR[0],t)-.4:p1+15;
+    const botL=B.meet?p0+.3:p0-7,botR=B.meet?p1-.3:p1+7;
+    const parts=[pnPoly([[topL,t-.4],[topR,t-.4],[botR,e+.6],[botL,e+.6]],"roof")];
     const r=mulberry(808);
     for(let i=0;i<17;i++){const tt=(i+.5)/17,x0=B.ridgeL+1+tt*(B.ridgeR-B.ridgeL-2),x=x0*(B.roofR-2)/(B.ridgeR-1)+(B.even?0:(r()-.5)*.5);
-      if(x<p0-14||x>p1+14)continue;const xb=x*.98;
+      if(x<topL+1||x>topR-1)continue;const xb=x*.98;
       parts.push(pTaper([[x+.5,t,.26],[xb+.5,e,.3]],"seamLit",{capStart:false,capEnd:false},{noSil:true,op:.5}),pTaper([[x,t,.3],[xb,e,.34]],"seam",{capStart:false,capEnd:false},{noSil:true,op:.7}))}
-    parts.push(pTaper([[p0-15,t+.1,.5],[p1+15,t+.1,.5]],"roofDk",{capStart:false,capEnd:false},{noSil:true,op:.45}));
+    parts.push(pTaper([[topL,t+.1,.5],[topR,t+.1,.5]],"roofDk",{capStart:false,capEnd:false},{noSil:true,op:.45}));
     L.push({parts});
     L.push({parts:[pnRect(p0-2.6,e-.4,p1+2.6,e+1.4,"trim")]});
     /* the flue: a plain round stainless pipe, a lit edge down it, and a flat rain cap wider than the pipe
@@ -10573,13 +10600,22 @@ function pnPondScene(c){
   const farWood=`<path d="${wood}" fill="${air("#5E7A66",.42)}" stroke="${mix(inkAir(.42),air("#5E7A66",.42),.45)}" stroke-width=".55"/>`
     +(tex?`<path d="${wood}" fill="${tex}" opacity="${(.5*paperK).toFixed(2)}"/>`:"");
 
-  /* ── the house: the roof is the sky behind its ridge, a little darker and greyer */
+  /* ── the house: the roof is the sky behind its ridge, a little darker and greyer. A is white, the way
+     the photo is: siding, shakes and the metal, seams and a little shade for depth. At night the same
+     sky tone takes that white to blue-gray. B keeps the warmer shakes */
   const roofSky=mix(skyS[1],skyS[2],.35),roofC=dark?mix(roofSky,"#8C99A8",.32):mix(roofSky,"#F4F6F8",.24);
   const hPal={...palAt(INK.pnBackHouse,.04),roof:roofC,roofDk:mix(roofC,"#2A2F3A",.22),seam:mix(roofC,"#2A2F3A",dark?.3:.24),seamLit:mix(roofC,dark?"#9FB4CC":"#F4F8FA",dark?.25:.45)};
-  if(PN_OPT){hPal.shake="#C8C0B0";hPal.shakeDk="#7E766C"}
+  if(PN_OPT==="b"){hPal.shake="#C8C0B0";hPal.shakeDk="#7E766C"}
+  if(PN_OPT==="a"){
+    Object.assign(hPal,palAt({wall:"#F7F6F3",siding:"#E6E8EB",shake:"#F6F5F2",shakeDk:"#C9CED4",porchWall:"#E6E8EB",shiplap:"#D5D8DC",found:"#C8CBD0",panel:"#C5C8CC"},.03));
+    hPal.roof=dark?mix(air("#E6EDF3",.05),"#7A90A6",.42):"#F4F6F5";
+    hPal.roofDk=dark?mix(hPal.roof,"#1C2838",.32):"#D5DCE3";
+    hPal.seam=dark?mix(hPal.roof,"#152030",.4):"#C5CED6";
+    hPal.seamLit=dark?"#D4DEE8":"#FFFFFF";
+  }
   const sunSide=lightAt(hx,hy-u(40))[0]<0?-1:1,shadowOp=clamp(1-veil*.7-gloom*.8,.25,1);
   const sheen=`<defs><linearGradient id="pnSheen" x1="${sunSide<0?1:0}" y1="0" x2="${sunSide<0?0:1}" y2="0"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/><stop offset=".55" stop-color="#FFFFFF" stop-opacity="0"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="${(dark?.06:.22*(1-veil*.6)).toFixed(2)}"/></linearGradient></defs>`
-    +`<path d="M ${BH.roofL} ${BH.eave} L ${BH.ridgeL} ${BH.ridge} L ${BH.ridgeR} ${BH.ridge} L ${BH.roofR} ${BH.eave} Z" fill="url(#pnSheen)"/>`;
+    +`<path d="${BH.meet?`M ${BH.roofL+1} ${BH.eave} L ${BH.peakL[0]+1} ${BH.peakL[1]} L ${BH.ridgeL} ${BH.ridge} L ${BH.ridgeR} ${BH.ridge} L ${BH.peakR[0]-1} ${BH.peakR[1]} L ${BH.roofR-1} ${BH.eave} Z`:`M ${BH.roofL} ${BH.eave} L ${BH.ridgeL} ${BH.ridge} L ${BH.ridgeR} ${BH.ridge} L ${BH.roofR} ${BH.eave} Z`}" fill="url(#pnSheen)"/>`;
   const houseNight=sunAltDeg<-.83;
   const house=`<g data-prop="house" data-lit="${lightsOn?1:0}">${inkAt(hx,hy,S,1,pnBackHouseGlow({night:lightsOn})+inkRig(pnBackHouse({night:houseNight,lit:lightsOn,shadowOp,B:BH,strands:strandsOn}),hPal,{s:S,light:lightAt(hx,hy-u(40)),line:1.4,heavy:1,shade:1.6,lit:.9})
     +sheen+(tex?pnBackHouseSil(BH).map(d=>`<path d="${d}" fill="${tex}" opacity="${(.55*paperK).toFixed(2)}"/>`).join(""):""))}</g>`;
@@ -10632,7 +10668,22 @@ function pnPondScene(c){
     if(strandsOn)glow=`<ellipse cx="${f1(m[0])}" cy="${f1(m[1]+5)}" rx="${f1(len*.45)}" ry="7" fill="url(#pnWash)" opacity=".5"/>`+glow;
     return `${glow}<path d="M ${f1(a[0])} ${f1(a[1])} Q ${f1(cq[0])} ${f1(cq[1])} ${f1(b[0])} ${f1(b[1])}" fill="none" stroke="${mix(lineC,"#2B2328",.4)}" stroke-width=".36"/>${beads}`};
   const eye=`<circle cx="${f1(vtx[0])}" cy="${f1(vtx[1])}" r=".8" fill="${lineC}"/><path d="M ${f1(vtx[0])} ${f1(vtx[1]-.8)} L ${f1(vtx[0])} ${f1(vtx[1]-2.2)}" stroke="${lineC}" stroke-width=".5"/>`;
-  const swagMid=`<g data-prop="string-lights" data-lit="${strandsOn?1:0}">${[0,1].map(spanSvg).join("")}${eye}</g>`;
+  /* A has no bulb row under the header. The photo's porch light is one bistro swag across the opening,
+     high at each side and low in the middle, on the same clock as the strands out to the palms */
+  const porchSwag=PN_OPT==="a"?(()=>{
+    const yH=hy+u(BH.porchEave+2.6),a=[hx+u(BH.porch[0]+1.5),yH],b=[hx+u(BH.porch[1]-1.5),yH],sag=u(4.4);
+    const at=t=>[a[0]+(b[0]-a[0])*t,a[1]+4*sag*t*(1-t)];
+    const m=at(.5),cq=[2*m[0]-(a[0]+b[0])/2,2*m[1]-(a[1]+b[1])/2],len=b[0]-a[0],n=Math.max(9,Math.round(len/4.8));
+    let glow="",beads="";
+    for(let q=0;q<n;q++){const [x,y]=at((q+.5)/n),by=y+2;
+      const tear=`M ${f1(x)} ${f1(by-1.35)} Q ${f1(x+1.05)} ${f1(by-.1)} ${f1(x+.8)} ${f1(by+.45)} Q ${f1(x)} ${f1(by+1.25)} ${f1(x-.8)} ${f1(by+.45)} Q ${f1(x-1.05)} ${f1(by-.1)} ${f1(x)} ${f1(by-1.35)} Z`;
+      if(strandsOn){glow+=`<circle cx="${f1(x)}" cy="${f1(by)}" r="${fog?8:5}" fill="url(#pnBulbGlow)"${fog?` opacity=".7"`:""}/>`;
+        beads+=`<line x1="${f1(x)}" y1="${f1(y)}" x2="${f1(x)}" y2="${f1(by-1.35)}" stroke="${lineC}" stroke-width=".22"/><path d="${tear}" fill="#FFD27A"/><circle cx="${f1(x)}" cy="${f1(by+.15)}" r=".5" fill="#FFFFFF"/>`;}
+      else beads+=`<line x1="${f1(x)}" y1="${f1(y)}" x2="${f1(x)}" y2="${f1(by-1.35)}" stroke="${lineC}" stroke-width=".22"/><path d="${tear}" fill="${mix(skyS[2],"#FFFFFF",.55)}" fill-opacity=".55" stroke="${mix(lineC,"#F1EAD6",.2)}" stroke-width=".22"/><circle cx="${f1(x)}" cy="${f1(by+.12)}" r=".26" fill="${lineC}"/>`;}
+    if(strandsOn)glow=`<ellipse cx="${f1(m[0])}" cy="${f1(m[1]+3.5)}" rx="${f1(len*.4)}" ry="5.5" fill="url(#pnWash)" opacity=".4"/>`+glow;
+    return `<g data-porch="swag">${glow}<path d="M ${f1(a[0])} ${f1(a[1])} Q ${f1(cq[0])} ${f1(cq[1])} ${f1(b[0])} ${f1(b[1])}" fill="none" stroke="${mix(lineC,"#2B2328",.4)}" stroke-width=".34"/>${beads}</g>`;
+  })():"";
+  const swagMid=`<g data-prop="string-lights" data-lit="${strandsOn?1:0}">${[0,1].map(spanSvg).join("")}${eye}${porchSwag}</g>`;
   const swagL="",swagR="";
 
   /* ── the patio along the back of the house: on its west end the fire table with its chairs, a black
