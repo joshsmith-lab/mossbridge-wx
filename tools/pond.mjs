@@ -6,9 +6,12 @@
  *   TZ=America/New_York node tools/pond.mjs                 # every moment at 390 (the main four at every width)
  *   TZ=America/New_York node tools/pond.mjs night           # only the moments whose name matches
  *   PORCH_PN_WIDTHS=390,320,430 TZ=America/New_York node tools/pond.mjs
+ *   PORCH_PN_FREEZE=1 PORCH_PN_PRM=1 TZ=America/New_York node tools/pond.mjs   # still, for comparing two builds
  *
  * Writes tools/shots/pond/pond-<moment>-<width>.png and pond-<moment>-<width>-near.png. Exits non-zero on a
- * page error.
+ * page error. PORCH_PN_FREEZE stops every animation at the same point of its own clock and PORCH_PN_PRM shoots
+ * under reduced motion, so the shots of two builds can be compared pixel for pixel (October 2026: the house's
+ * sheets, compared with its one sheet, differed only in antialiasing).
  */
 import { mkdirSync } from "node:fs";
 import path from "node:path";
@@ -71,7 +74,7 @@ for (const T of TIMES) for (const width of WIDTHS) {
   if (!T.main && width !== WIDTHS[0]) continue;
   const tag = `${T.name}-${width}`;
   if (ONLY.length && !ONLY.every((o) => tag.includes(o))) continue;
-  const ctx = await browser.newContext({ viewport: { width, height: 932 }, deviceScaleFactor: 3, timezoneId: "America/New_York" });
+  const ctx = await browser.newContext({ viewport: { width, height: 932 }, deviceScaleFactor: 3, timezoneId: "America/New_York", reducedMotion: process.env.PORCH_PN_PRM ? "reduce" : "no-preference" });
   const page = await ctx.newPage();
   const errs = [];
   page.on("pageerror", (e) => errs.push(String(e)));
@@ -86,7 +89,10 @@ for (const T of TIMES) for (const width of WIDTHS) {
   await page.waitForTimeout(1200);
   await page.evaluate(() => typeof finishReveal === "function" && finishReveal());
   const info = await page.evaluate(() => ({ anims: document.getAnimations().filter((a) => a.playState === "running").length,
-    deer: document.querySelectorAll("#sceneSvg .deer, #sceneSvg .doe").length, fire: document.querySelectorAll("#sceneSvg .pn-flame").length }));
+    deer: document.querySelectorAll(".scene .deer, .scene .doe").length, fire: document.querySelectorAll(".scene .pn-flame").length }));
+  /* PORCH_PN_FREEZE=1 stops every animation at the same point of its own clock, whatever the wall clock said
+     when the page painted, so two builds of the picture can be compared pixel for pixel */
+  if (process.env.PORCH_PN_FREEZE) await page.evaluate(() => { for (const a of document.getAnimations()) { a.pause(); a.currentTime = (a.effect.getTiming().delay || 0) + 1e6; } });
   await page.locator(".sky").screenshot({ path: path.join(OUT, `pond-${tag}.png`) }).catch((e) => errs.push("sky shot: " + e.message));
   /* and the lower half of the scene alone, for the small things (the fire table, the chairs, the dial, the does) */
   const box = await page.locator("#sceneSvg").boundingBox();

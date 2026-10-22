@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v106/);
+  assert.match(worker, /mbwx-shell-v107/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -5689,20 +5689,26 @@ test("Beaufort is the third place: its readings, its scene in layers, its birds 
   // the scene: Beaufort alone paints into five stacked layers, so a moving thing repaints only its own
   for (const id of ["sceneSky", "sceneMoss", "sceneNear", "sceneFx"]) assert.match(html, new RegExp(`<svg id="${id}" class="scene-layer"`));
   assert.match(html, /\.scene \.scene-layer\{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;will-change:transform\}/);
-  assert.match(html, /if\(LOC\.scene!=="lowcountry"\)for\(const id of \["sceneSky","sceneMoss","sceneNear","sceneLift","sceneFx"\]\)document\.getElementById\(id\)\.innerHTML="";/);
+  // (the house writes its own sheets, so they are left up under its next paint, and its further sheets are its alone)
+  assert.match(html, /if\(LOC\.scene!=="lowcountry"\)for\(const id of LOC\.view==="pond"\?\["sceneMoss"\]:\["sceneSky","sceneMoss","sceneNear","sceneLift","sceneFx"\]\)document\.getElementById\(id\)\.innerHTML="";/);
+  assert.match(html, /if\(LOC\.view!=="pond"\)for\(const id of \["sceneFront","sceneWater","sceneRefl","sceneRipple","sceneTop"\]\)/);
   assert.match(html, /mossL\.innerHTML=`<g data-prop="moss">\$\{oakMoss\}<\/g>`;/);
   const lc = html.slice(html.indexOf("function lowcountryScene(c){"), html.indexOf("/* ── smooth path through points"));
   // what turns whole is a box of its own that the compositor turns (October 21 2026: the palmettos' crowns and the
   // boat in the moving sheet were most of Beaufort's graphics work, because WebKit repaints a sheet whole): the
   // boxes are placed as fractions of the frame, their drawings are the frame's own, placed in its width and height,
   // the crowns keep the beats they had as groups, and the water's band is a box too, under them
-  assert.match(html, /<svg id="sceneNear" class="scene-layer"[^>]*><\/svg><div id="sceneLift" class="scene-lift" aria-hidden="true"><\/div><svg id="sceneFx"/);
+  // (#sceneFront, between the boxes and #sceneFx, is the house's still front sheet, empty at Beaufort)
+  assert.match(html, /<svg id="sceneNear" class="scene-layer"[^>]*><\/svg><div id="sceneLift" class="scene-lift" aria-hidden="true"><\/div><svg id="sceneFront" class="scene-layer"[^>]*><\/svg><svg id="sceneFx"/);
   assert.match(html, /\.scene \.scene-lift\{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;container-type:size;overflow:hidden\}/);
   assert.match(html, /\.scene-lift \.lift>svg\{position:absolute;display:block;overflow:visible\}/);
   assert.match(html, /\.scene \.scene-lift:empty\{display:none\}/);
   assert.match(html, /@keyframes bftRockLift\{from\{transform:rotate\(calc\(var\(--rk,1deg\) \* -1\)\) translateY\(var\(--rty,\.25px\)\)\}/);
   assert.doesNotMatch(html, /\.scene-layer \.bft-boat-rock\[style\]|\.scene-layer :is\(\.bft-palm-crown/);
-  assert.match(lc, /const liftSvg=\(b,inner\)=>`<svg viewBox="0 0 \$\{W\} \$\{H\}" style="[^`]*;left:\$\{\(-b\[0\]\/W\*100\)\.toFixed\(4\)\}cqw;top:\$\{\(-b\[1\]\/H\*100\)\.toFixed\(4\)\}cqh;width:100cqw;height:100cqh">/);
+  // the box kit (liftKit) is shared with the house, and Beaufort takes it whole
+  assert.match(lc, /const\{partsOf,boxOf,pct,origin,liftSvg,liftAt,liftIn\}=liftKit\(W,H\);/);
+  const liftKitSrc = html.slice(html.indexOf("function liftKit(W,H){"), html.indexOf("/* Porters Neck's light schedule"));
+  assert.match(liftKitSrc, /const liftSvg=\(b,inner\)=>`<svg viewBox="0 0 \$\{W\} \$\{H\}" style="[^`]*;left:\$\{\(-b\[0\]\/W\*100\)\.toFixed\(4\)\}cqw;top:\$\{\(-b\[1\]\/H\*100\)\.toFixed\(4\)\}cqh;width:100cqw;height:100cqh">/);
   assert.match(lc, /const crownBeat=beatsOf\(61,6,\.55\),headBeat=beatsOf\(62,3,1\.1\),skirtBeat=beatsOf\(63,3,1\.1\);/);
   assert.match(lc, /const beatOf=\(r,amtK\)=>\{const amt=swayAmt\*amtK\*\(\.8\+r\(\)\*\.5\),md=swayDur\*\(\.7\+r\(\)\*\.55\),dl=\(Date\.now\(\)\/1000\+r\(\)\*9\)%9;/);
   assert.match(lc, /liftL\.innerHTML=liftAt\(waterBox,liftSvg\(waterBox,`\n    \$\{bk\?"":glint\}\$\{waterFx\}\n    \$\{mist\}`\),null,"will-change:transform"\)\+palmCrowns\+boat;/);
@@ -6257,10 +6263,11 @@ test("Beaufort's coastal waters on the page's own refresh: never waited for, pai
 });
 
 test("Porters Neck is the house from across the pond: it looks north, and its lights keep the family's hours", async () => {
-  const [html, scene, pond] = await Promise.all([
+  const [html, scene, pond, webkit] = await Promise.all([
     readFile(new URL("index.html", root), "utf8"),
     readFile(new URL("tools/scene.mjs", root), "utf8"),
     readFile(new URL("tools/pond.mjs", root), "utf8"),
+    readFile(new URL("tools/webkit.mjs", root), "utf8"),
   ]);
   const fn = html.slice(html.indexOf("function pnPondScene(c){"), html.indexOf("/* ── the lowcountry: Beaufort, South Carolina"));
   assert.ok(fn.length > 1000, "the scene is extractable");
@@ -6313,4 +6320,37 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(scene, /name: "27-house-halloween-night"[^\n]*"trick-or-treater"[^\n]*candles: 6,/);
   assert.match(scene, /name: "02-house-blow-west"[^\n]*\n[^\n]*to the right/);
   assert.match(pond, /node tools\/pond\.mjs/);
+  // Nothing that moves is in #sceneSvg. In one sheet the house ran at 9 frames a second in WebKit (October 21 2026),
+  // which repaints an SVG sheet whole while anything in it moves, so the still picture is laid out on still sheets
+  // and what moves goes on its own, back to front as it was drawn in one: the palms and the fountain grass are boxes
+  // the compositor sways, the flame, a guttering candle's pumpkin, the bats and the witch are #sceneFx, the light
+  // on the ripples, the rain's rings and the fountain #sceneRipple, the gulls and the clouds #sceneSky
+  assert.match(html, /<div class="scene"><svg id="sceneSvg"[^>]*><\/svg><svg id="sceneSky" class="scene-layer"[^>]*><\/svg><svg id="sceneMoss" class="scene-layer"[^>]*><\/svg><svg id="sceneNear" class="scene-layer"[^>]*><\/svg><div id="sceneLift" class="scene-lift" aria-hidden="true"><\/div><svg id="sceneFront" class="scene-layer"[^>]*><\/svg><svg id="sceneFx" class="scene-layer"[^>]*><\/svg><svg id="sceneWater" class="scene-layer"[^>]*><\/svg><svg id="sceneRefl" class="scene-layer"[^>]*><\/svg><svg id="sceneRipple" class="scene-layer"[^>]*><\/svg><svg id="sceneTop" class="scene-layer"[^>]*><\/svg><\/div>/);
+  const skySheet = fn.slice(fn.indexOf('const skyPaint=()=>{sheet("sceneSvg").innerHTML=`'), fn.indexOf('  sheet("sceneSky").innerHTML='));
+  assert.ok(skySheet.length > 1000, "the sky sheet's paint is extractable");
+  assert.doesNotMatch(skySheet, /gulls|sceneClouds|palm|grass|fountain|bats|witchFly|breakUp|pondMoving|fireFlame|pumpkins|gateLanterns|heron|deer|animation/);
+  assert.match(fn, /sheet\("sceneSky"\)\.innerHTML=gulls\+\(skyOver\?sunBody\+moonShown\+sideSky:""\)\+sceneClouds/);
+  assert.match(fn, /document\.getElementById\("sceneLift"\)\.innerHTML=grassLift\+PALMS\.map\(palmLift\)\.join\(""\);/);
+  assert.match(fn, /sheet\("sceneFx"\)\.innerHTML=fireFlame\+\(guttering\?pumpkins\+gateLanterns:""\)\+bats\+witchFly\(witch\)/);
+  assert.match(fn, /sheet\("sceneRipple"\)\.innerHTML=pondMoving;/);
+  for (const name of ["sceneNear", "sceneFront", "sceneWater", "sceneTop"]) {
+    const from = fn.slice(fn.indexOf(`sheet("${name}").innerHTML=`)), body = from.slice(0, from.indexOf(";\n"));
+    assert.ok(body.length > 20, name);
+    assert.doesNotMatch(body, /palm|grass|gulls|sceneClouds|bats|witch|fireFlame|breakUp|pondMoving|rainRings|fountain/, `#${name} holds something that moves`);
+  }
+  // the boxed palms and grass carry no sway of their own (the box turns), and a guttering candle takes its pumpkin up whole
+  assert.match(fn, /const palmLift=P=>\{const g=palmSvg\(P,"",true\)/);
+  assert.match(fn, /const guttering=\/class="candle flicker"\/\.test\(pumpkins\+gateLanterns\);/);
+  // the reflection's fade is its sheet's CSS mask, which the compositor applies (as an SVG mask the whole upside-down
+  // picture was drawn again into a buffer on every repaint), and the sheets keep a colour of their own, so the sky's
+  // colour transition repaints none of them
+  assert.match(fn, /Object\.assign\(rf\.style,\{height:"calc\(100% \+ 40px\)",opacity:String\(reflOp\),webkitMaskImage:fade,maskImage:fade\}\);/);
+  assert.doesNotMatch(html, /mask="url\(#pnReflFade\)"/);
+  assert.match(html, /el\.style\.color=LOC\.view==="pond"&&el\.id!=="sceneTop"\?"#000":"";/);
+  assert.match(fn, /<defs style="color:#000">/);
+  // a first paint is written a part a frame, hidden, and shown whole; a paint over a picture already up in one frame
+  assert.match(fn, /if\(staged\[0\]\.childElementCount\)\{landPaint\(\);waterPaint\(\);return\}/);
+  // and the harnesses hold it: no animation in #sceneSvg or a still sheet at the house, and WebKit's house cases
+  assert.match(scene, /\["sceneSvg", "sceneNear", "sceneFront", "sceneWater", "sceneRefl", "sceneTop"\]/);
+  for (const name of ["coast-night", "coast-rain", "coast-afternoon", "coast-blow", "coast-halloween"]) assert.match(webkit, new RegExp(`name: "${name}", loc: "mb"`));
 });

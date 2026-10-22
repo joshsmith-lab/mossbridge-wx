@@ -296,6 +296,10 @@ async function open(cs, { width, height = 932, reducedMotion, dpr = 2 }) {
   // The charts' entrance is a one-shot sweep that waits for the chart to be on screen. It is
   // not idle motion, so settle it before counting animations, timing layout or taking shots.
   await page.evaluate(() => typeof finishReveal === "function" && finishReveal());
+  // The house is painted on a stack of sheets and boxes (pnPondScene), each of which takes no tap, so what is
+  // under a point is only found with them taking one for the length of a check (html.hit-all), and what is
+  // drawn there is anything in the scene but a sheet or a box itself
+  await page.addStyleTag({ content: ".hit-all .scene .scene-layer,.hit-all .scene .scene-lift{pointer-events:auto!important}" });
   return { ctx, page, errs };
 }
 
@@ -303,7 +307,7 @@ async function open(cs, { width, height = 932, reducedMotion, dpr = 2 }) {
  * on an unrelated loop can look plausible in one screenshot and still describe nothing. */
 async function animalContactCheck(page) {
   return page.evaluate(() => {
-    const svg = document.getElementById("sceneSvg"), issues = [], checked = [];
+    const svg = document.querySelector(".scene"), issues = [], checked = [];
     const point = (el, x, y) => new DOMPoint(x, y).matrixTransform(el.getScreenCTM());
     const centre = (el) => point(el, +el.getAttribute("cx"), +el.getAttribute("cy"));
     const opacity = (el) => Number(getComputedStyle(el).opacity);
@@ -456,23 +460,23 @@ async function walkWitch(page) {
      can leave the sky scrolled away, and the page parks the header's motion while it is off screen */
   await page.evaluate(() => new Promise((r) => { scrollTo({ top: 0, behavior: "instant" }); requestAnimationFrame(() => requestAnimationFrame(r)); }));
   return page.evaluate(() => {
-    const w = document.querySelector('#sceneSvg [data-fly="witch"]');
+    const w = document.querySelector('.scene [data-fly="witch"]');
     if (!w) return null;
-    const svg = document.getElementById("sceneSvg"), F = svg.getBoundingClientRect();
+    const svg = document.getElementById("sceneSvg"), F = svg.getBoundingClientRect(), scene = document.querySelector(".scene"), drawn = (e) => scene.contains(e) && !e.matches(".scene, .scene > svg, .scene-lift, .scene-lift .lift, .scene-lift .lift > svg");
     const a = w.getAnimations().find((x) => x.animationName === "witchCross");
     if (!a) return { still: true };
     const D = a.effect.getComputedTiming().duration, dl = a.effect.getTiming().delay;
     const phaseNow = ((a.currentTime - dl) % D + D) % D, run = WITCH_RUN;
     const drift = (((Date.now() - run.t0 - phaseNow) % D) + D) % D;
-    const ground = [...svg.querySelectorAll("[data-species],[data-decor]")].filter((el) => !["gull", "hawk", "bat"].includes(el.dataset.species)
+    const ground = [...scene.querySelectorAll("[data-species],[data-decor]")].filter((el) => !["gull", "hawk", "bat"].includes(el.dataset.species)
       && !el.classList.contains("ff") && !/^(bat|witch|(blood|harvest)-moon)$/.test(el.dataset.decor || ""));
     const mp = w.dataset.across ? w.dataset.across.split(" ").map(Number) : null, M = svg.getScreenCTM();
     const moon = mp ? [M.a * mp[0] + M.e, M.d * mp[1] + M.f] : null;
     // a moon she leaves alone she passes well clear of, never along its rim
-    const md = !mp && svg.querySelector("[data-disc]"), disc = md ? (([x, y, r]) => [M.a * x + M.e, M.d * y + M.f, r * M.a])(md.dataset.disc.split(" ").map(Number)) : null;
+    const md = !mp && scene.querySelector("[data-disc]"), disc = md ? (([x, y, r]) => [M.a * x + M.e, M.d * y + M.f, r * M.a])(md.dataset.disc.split(" ").map(Number)) : null;
     let rim = 0;
-    const was = a.currentTime; a.pause();
-    const labels = [...svg.querySelectorAll("text.suntime")].map((t) => t.getBoundingClientRect());
+    const was = a.currentTime; a.pause(); document.documentElement.classList.add("hit-all");
+    const labels = [...scene.querySelectorAll("text.suntime")].map((t) => t.getBoundingClientRect());
     const mine = (e) => w.contains(e);
     // weather in front of her is weather, not scenery she went behind
     const weather = (e) => /url\(#(fogveil|mist)\)/.test(e.getAttribute("fill") || "") || !!e.closest(".nearrain,.splash,[class*=rain]");
@@ -494,7 +498,7 @@ async function walkWitch(page) {
         let on = 0, hid = 0;
         for (let u = 0; u < 12; u++) for (let v = 0; v < 6; v++) {
           const x = b.left + (u + .5) / 12 * b.width, y = b.top + (v + .5) / 6 * b.height;
-          const stack = document.elementsFromPoint(x, y).filter((e) => svg.contains(e) && e !== svg && !weather(e));
+          const stack = document.elementsFromPoint(x, y).filter((e) => drawn(e) && !weather(e));
           const k = stack.findIndex(mine);
           if (k < 0) continue;
           on++; if (k > 0) hid++;
@@ -506,7 +510,7 @@ async function walkWitch(page) {
         if (!best || dist < best.dist) best = { dist, inside: moon[0] > b.left && moon[0] < b.right && moon[1] > b.top && moon[1] < b.bottom };
       }
     }
-    a.currentTime = was; a.play();
+    a.currentTime = was; a.play(); document.documentElement.classList.remove("hit-all");
     return { cycle: D / 1000, drift: Math.min(drift, D - drift) / 1000, lead: (run.t0 - run.open) / 1000, ends, topCut, onLabel, rim,
       hidden: Math.round(hidden * 100), hits: [...new Set(hits)], moon: !!moon, best };
   });
@@ -537,7 +541,7 @@ const MORE = /^(black-cat|eyes|wisps|scarecrow|sheet-ghost|trick-or-treater)$/;
 const STRUNG = /^pumpkin-lights$/;
 async function decorCheck(page) {
   return page.evaluate(([MOREs, STRUNGs]) => {
-    const MORE = new RegExp(MOREs), STRUNG = new RegExp(STRUNGs), svg = document.getElementById("sceneSvg"), frame = svg.getBoundingClientRect();
+    const MORE = new RegExp(MOREs), STRUNG = new RegExp(STRUNGs), svg = document.querySelector(".scene"), frame = document.getElementById("sceneSvg").getBoundingClientRect();
     const items = [...svg.querySelectorAll("[data-decor]")], SKY = /^(bat|witch|(blood|harvest)-moon)$/;
     const painted = (el) => el.firstElementChild.getBoundingClientRect();
     // the union of everywhere it goes, its own animations walked over 24 steps and put back
@@ -689,7 +693,7 @@ for (const cs of cases) {
     for (const [sel, suffix] of [[".sky", "sky"], [".scene", "scene"], ["#tideSection", "tide"]]) {
       try { await page.locator(sel).screenshot({ path: path.join(OUT, `${cs.name}-${suffix}.png`) }); } catch {}
     }
-    const species = await page.locator("#sceneSvg [data-species]").evaluateAll((els) =>
+    const species = await page.locator(".scene [data-species]").evaluateAll((els) =>
       [...new Set(els.map((el) => el.getAttribute("data-species")))].filter(Boolean));
     console.log(`    wildlife: ${species.join(", ") || "none"}`);
     const stormy = [95, 96, 99].includes(cs.o.code);
@@ -702,7 +706,7 @@ for (const cs of cases) {
     }
     const clipped=await page.evaluate(()=>{
       const frame=document.getElementById("sceneSvg").getBoundingClientRect(),out=[];
-      for(const el of document.querySelectorAll("#sceneSvg [data-species]")){
+      for(const el of document.querySelectorAll(".scene [data-species]")){
         if(["gull","hawk"].includes(el.dataset.species)||el.classList.contains("ff"))continue;
         const b=el.getBoundingClientRect();
         if(b.left<frame.left-2||b.right>frame.right+2||b.top<frame.top-2||b.bottom>frame.bottom+2)
@@ -711,6 +715,18 @@ for (const cs of cases) {
       return out;
     });
     if(clipped.length)problems.push(`${cs.name}: wildlife clipped at ${PHONE_WIDTH}px: ${clipped.join(", ")}`);
+
+    // ── the house moves nothing on its still sheets ──
+    // WebKit, which draws every iPhone browser, repaints an SVG sheet whole while anything in it moves, and the
+    // house's picture is far too much to repaint every frame (9 frames a second, October 2026), so what moves is on
+    // sheets and in boxes of its own (pnPondScene) and #sceneSvg and the other still sheets run no animation at all
+    if (cs.loc === "mb") {
+      const sheets = await page.evaluate(() => Object.fromEntries(["sceneSvg", "sceneNear", "sceneFront", "sceneWater", "sceneRefl", "sceneTop"]
+        .map((id) => [id, document.getElementById(id).getAnimations({ subtree: true }).map((a) => a.animationName || "a transition")])));
+      const moving = Object.entries(sheets).filter(([, a]) => a.length);
+      console.log(`    still sheets: ${moving.length ? "!! " + moving.map(([id, a]) => `#${id} runs ${[...new Set(a)].join(", ")}`).join("; ") : "#sceneSvg and the house's other still sheets run no animation"}`);
+      for (const [id, a] of moving) problems.push(`${cs.name}: ${a.length} animation(s) run in #${id} at the house (${[...new Set(a)].join(", ")}), which WebKit would repaint whole every frame`);
+    }
 
     // ── the holiday: what is set out, whether it is lit, and whether it is in anyone's way ──
     // Decorations go up and come down on the calendar, so a scene outside the window must have
@@ -740,23 +756,23 @@ for (const cs of cases) {
     // topmost thing at its body has to be a bat, never a tree, a fold or the treeline in front of it.
     {
       const bat = await page.evaluate(() => {
-        const svg = document.getElementById("sceneSvg"), frame = svg.getBoundingClientRect();
-        const colony = svg.querySelector(".bats"), list = [...svg.querySelectorAll(".bat")];
+        const svg = document.getElementById("sceneSvg"), frame = svg.getBoundingClientRect(), scene = document.querySelector(".scene"), drawn = (e) => scene.contains(e) && !e.matches(".scene, .scene > svg, .scene-lift, .scene-lift .lift, .scene-lift .lift > svg");
+        const colony = scene.querySelector(".bats"), list = [...scene.querySelectorAll(".bat")];
         const out = { colony: colony ? Number(colony.dataset.colony) : 0, placed: list.length, hits: [] };
         if (!list.length) return out;
         const k = frame.width / svg.viewBox.baseVal.width;
         const M = svg.getScreenCTM();
-        const discs = [...[...svg.querySelectorAll("[data-disc]")].map((g) => {
+        const discs = [...[...scene.querySelectorAll("[data-disc]")].map((g) => {
           const [x, y, r] = g.dataset.disc.split(" ").map(Number); return [M.a * x + M.e, M.d * y + M.f, r * k];
-        }), ...[...svg.querySelectorAll('ellipse[fill="url(#sunglow)"]')].map((c) => {
+        }), ...[...scene.querySelectorAll('ellipse[fill="url(#sunglow)"]')].map((c) => {
           const b = c.getBoundingClientRect(); return [b.left + b.width / 2, b.top + b.height / 2, 13 * k];
         })];
-        const texts = [...svg.querySelectorAll("text")].map((t) => t.getBoundingClientRect());
+        const texts = [...scene.querySelectorAll("text")].map((t) => t.getBoundingClientRect());
         // the witch flies through them on her way across, in front, so she is not in their way
-        const others = [...svg.querySelectorAll("[data-species],[data-decor]")].filter((e) => !e.classList.contains("bat") && !/^(bat|witch|(blood|harvest)-moon)$/.test(e.dataset.decor || ""))
+        const others = [...scene.querySelectorAll("[data-species],[data-decor]")].filter((e) => !e.classList.contains("bat") && !/^(bat|witch|(blood|harvest)-moon)$/.test(e.dataset.decor || ""))
           .map((e) => [e.dataset.species || e.dataset.decor, e.getBoundingClientRect()]);
         const anims = list.flatMap((b) => b.getAnimations({ subtree: true }));
-        anims.forEach((a) => a.pause());
+        anims.forEach((a) => a.pause()); document.documentElement.classList.add("hit-all");
         const meet = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
         list.forEach((b, n) => {
           const fly = b.querySelector(".bat-fly").getAnimations()[0], wings = [...b.querySelectorAll(".bat-wing")].map((w) => w.getAnimations()[0]);
@@ -770,12 +786,12 @@ for (const cs of cases) {
             for (const t of texts) if (meet(r, t) > 2) why.add("crosses a time on the arc");
             for (const [name, o] of others) if (meet(r, o) > 2) why.add(`meets the ${name}`);
             // fog and mist are weather in front of it, not scenery it went behind
-            const top = document.elementsFromPoint(cx, cy).find((e) => svg.contains(e) && e !== svg && !/url\(#(fogveil|mist)\)/.test(e.getAttribute("fill") || ""));
+            const top = document.elementsFromPoint(cx, cy).find((e) => drawn(e) && !/url\(#(fogveil|mist)\)/.test(e.getAttribute("fill") || ""));
             if (top && !top.closest(".bat")) why.add("goes behind the scenery");
           }
           for (const w of why) out.hits.push(`bat ${n + 1} ${w}`);
         });
-        anims.forEach((a) => a.play());
+        anims.forEach((a) => a.play()); document.documentElement.classList.remove("hit-all");
         return out;
       });
       const want = cs.bats ?? 0;
@@ -790,7 +806,7 @@ for (const cs of cases) {
     // ── the moon: Halloween's in the October window, the ordinary one every other night ──
     // It keeps its place and its phase, so whether it is up is the sky's business, and a scene
     // marked `moon` is one where it has to be.
-    const moon = await page.evaluate(() => ({ kind: document.querySelector("#sceneSvg [data-moon]")?.dataset.moon ?? null,
+    const moon = await page.evaluate(() => ({ kind: document.querySelector(".scene [data-moon]")?.dataset.moon ?? null,
       pick: typeof HALLOWEEN_MOON === "undefined" ? null : HALLOWEEN_MOON }));
     if (moon.kind) {
       const want = cs.when.slice(5, 7) === "10" && moon.pick ? moon.pick : "ordinary";
@@ -838,13 +854,15 @@ for (const cs of cases) {
     // scene fails if the oak hides 40% of either. The oak is put back running as it was.
     // At the house he peeks round its east corner instead, half of him behind it and still: both his eyes have
     // to show, so the house (or anything else) may cover no more than a sliver of either.
-    if (cs.decor?.includes("ghostface") && await page.locator('#sceneSvg [data-prop="house"]').count()) {
+    if (cs.decor?.includes("ghostface") && await page.locator('.scene [data-prop="house"]').count()) {
       const gf = await page.evaluate(() => {
-        const g = document.querySelector('#sceneSvg [data-decor="ghostface"]');
+        const g = document.querySelector('.scene [data-decor="ghostface"]');
         if (!g) return null;
         g.scrollIntoView({ block: "center" });
         const feats = [...g.querySelectorAll("path")].slice(-3).sort((p, q) => p.getBoundingClientRect().top - q.getBoundingClientRect().top).slice(0, 2);
-        return feats.map((p) => {
+        document.documentElement.classList.add("hit-all");
+        const scene = document.querySelector(".scene"), drawn = (e) => scene.contains(e) && !e.matches(".scene, .scene > svg, .scene-lift, .scene-lift .lift, .scene-lift .lift > svg");
+        const eyes = feats.map((p) => {
           const b = p.getBoundingClientRect(), pt = p.ownerSVGElement.createSVGPoint(), m = p.getScreenCTM().inverse();
           let tot = 0, hid = 0;
           for (let i = 0; i < 24; i++) for (let j = 0; j < 24; j++) {
@@ -852,12 +870,14 @@ for (const cs of cases) {
             if (!p.isPointInFill(pt.matrixTransform(m))) continue;
             // light is not a thing in front of him: the low sun's wash, a palm's uplight, a bulb's glow, the fog
             const light = (el) => !!el.closest("[data-light]") || /url\(#(fogveil|mist|pn\w*(Glow|Wash|Uplight|Sky))\)/.test(el.getAttribute("fill") || "");
-            const top = document.elementsFromPoint(pt.x, pt.y).find((el) => el.closest("#sceneSvg") && el.tagName !== "svg" && !light(el));
+            const top = document.elementsFromPoint(pt.x, pt.y).find((el) => drawn(el) && !light(el));
             if (!top) continue;
             tot++; if (!g.contains(top)) hid++;
           }
           return tot ? Math.round(hid / tot * 100) : 100;
         });
+        document.documentElement.classList.remove("hit-all");
+        return eyes;
       });
       if (!gf) problems.push(`${cs.name}: no Ghostface at the house's corner`);
       else {
@@ -866,8 +886,8 @@ for (const cs of cases) {
       }
     } else if (cs.decor?.includes("ghostface")) {
       const gf = await page.evaluate(() => {
-        const g = document.querySelector('#sceneSvg [data-decor="ghostface"]');
-        const oak = [...document.querySelectorAll('#sceneSvg g[style*="swayTree"]')].find((n) => n.querySelector(".moss"));
+        const g = document.querySelector('.scene [data-decor="ghostface"]');
+        const oak = [...document.querySelectorAll('.scene g[style*="swayTree"]')].find((n) => n.querySelector(".moss"));
         const a = oak?.getAnimations().find((x) => x.animationName === "swayTree");
         if (!g || !a) return null;
         g.scrollIntoView({ block: "center" });
@@ -970,7 +990,7 @@ for (const cs of cases) {
     if (cs.loc === "mb") {
       const WADERS = ["great-blue-heron", "oystercatcher", "cormorant", "fiddler-crab"];
       const floating = await page.evaluate((waders) => {
-        const svg = document.getElementById("sceneSvg");
+        const svg = document.querySelector(".scene");
         // the marsh's water band, or the house's pond, where only the heron may stand
         const water = svg.querySelector('rect[fill="url(#waterband)"]') || svg.querySelector('rect[fill="url(#pnPond)"]');
         if (!water) return [];
@@ -1048,7 +1068,7 @@ for (const cs of cases) {
         await page.evaluate(()=>document.getAnimations().forEach(a=>a.pause()));
         for(const [label,fraction] of [["rest",0],["first",.4],["gesture",.8],["return",.9]]){
           await page.evaluate(({subject,fraction})=>{
-            const animal=document.querySelector(`#sceneSvg [data-species="${subject}"]`);
+            const animal=document.querySelector(`.scene [data-species="${subject}"]`);
             const root=animal?.closest(".crab-run")||animal;
             for(const a of root?.getAnimations({subtree:true})||[]){
               const duration=a.effect?.getComputedTiming().duration;
@@ -1080,7 +1100,7 @@ for (const cs of cases) {
     for (const width of [320, 390, PHONE_WIDTH].filter((w, i, a) => a.indexOf(w) === i)) {
       const { ctx, page, errs } = await open(cs, { width, dpr: width === 390 ? 2 : 5 });
       const box = await page.evaluate(() => {
-        const bs = [...document.querySelectorAll("#sceneSvg [data-decor]")].filter((el) => !/^(bat|witch|(blood|harvest)-moon)$/.test(el.dataset.decor))
+        const bs = [...document.querySelectorAll(".scene [data-decor]")].filter((el) => !/^(bat|witch|(blood|harvest)-moon)$/.test(el.dataset.decor))
           .map((el) => el.getBoundingClientRect());
         if (!bs.length) return null;
         const x0 = Math.min(...bs.map((b) => b.left)), y0 = Math.min(...bs.map((b) => b.top));
@@ -1122,7 +1142,7 @@ for (const cs of cases) {
     const running = await page.evaluate(() => document.getAnimations().length);
     // she holds still beside the moon, never over it, so its real phase still shows
     const rest = await page.evaluate(() => {
-      const svg = document.getElementById("sceneSvg"), w = svg.querySelector('[data-fly="witch"]'), m = svg.querySelector("[data-disc]");
+      const svg = document.getElementById("sceneSvg"), w = document.querySelector('.scene [data-fly="witch"]'), m = document.querySelector(".scene [data-disc]");
       if (!w || !m) return null;
       const [x, y, r] = m.dataset.disc.split(" ").map(Number), M = svg.getScreenCTM(), cx = M.a * x + M.e, cy = M.d * y + M.f, b = w.getBoundingClientRect();
       return { gap: Math.hypot(Math.min(Math.max(cx, b.left), b.right) - cx, Math.min(Math.max(cy, b.top), b.bottom) - cy), r: r * M.a };
@@ -1132,8 +1152,9 @@ for (const cs of cases) {
     // and wherever she holds, she is not on a sunrise or sunset time, a bat, an animal, a decoration
     // or behind the scenery
     const held = await page.evaluate(() => {
-      const svg = document.getElementById("sceneSvg"), w = svg.querySelector('[data-fly="witch"]');
+      const svg = document.querySelector(".scene"), scene = svg, w = svg.querySelector('[data-fly="witch"]');
       if (!w) return null;
+      const drawn = (e) => scene.contains(e) && !e.matches(".scene, .scene > svg, .scene-lift, .scene-lift .lift, .scene-lift .lift > svg");
       const b = w.getBoundingClientRect(), on = [];
       const meet = (A) => Math.max(0, Math.min(A.right, b.right) - Math.max(A.left, b.left)) * Math.max(0, Math.min(A.bottom, b.bottom) - Math.max(A.top, b.top));
       for (const t of svg.querySelectorAll("text.suntime")) if (meet(t.getBoundingClientRect()) > 0) on.push(`the time ${t.textContent}`);
@@ -1144,11 +1165,13 @@ for (const cs of cases) {
       }
       const weather = (e) => /url\(#(fogveil|mist)\)/.test(e.getAttribute("fill") || "") || !!e.closest(".nearrain,.splash,[class*=rain]");
       let n = 0, hid = 0;
+      document.documentElement.classList.add("hit-all");
       for (let u = 0; u < 12; u++) for (let v = 0; v < 6; v++) {
-        const st = document.elementsFromPoint(b.left + (u + .5) / 12 * b.width, b.top + (v + .5) / 6 * b.height).filter((e) => svg.contains(e) && e !== svg && !weather(e));
+        const st = document.elementsFromPoint(b.left + (u + .5) / 12 * b.width, b.top + (v + .5) / 6 * b.height).filter((e) => drawn(e) && !weather(e));
         const k = st.findIndex((e) => w.contains(e));
         if (k < 0) continue; n++; if (k > 0) hid++;
       }
+      document.documentElement.classList.remove("hit-all");
       return { on: [...new Set(on)], hidden: n ? Math.round(100 * hid / n) : 0 };
     });
     if (held) console.log(`    reduced motion: the witch holds still ${held.on.length ? "on " + held.on.join(", ") : "clear of the times, the bats and the scenery"}, ${held.hidden}% of her behind it`);

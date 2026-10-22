@@ -177,6 +177,7 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 /* only Beaufort has boxes; empty, at the other places, the container is not there at all, because even empty it
    moved a pixel of the coast's still picture under reduced motion */
 .scene .scene-lift:empty{display:none}
+.scene .scene-layer:empty{display:none}
 .scene-lift .lift{position:absolute;overflow:hidden}
 .scene-lift .lift>.lift{position:absolute;left:0;top:0;width:100%;height:100%}
 /* a drawing runs on past the frame inside its box, and the frame is cut once, here, where it does not turn: cut
@@ -186,9 +187,9 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 .scene-layer :is(.bft-flag,.bft-sock,.bft-sock-tail,.bft-balloon),.scene-lift .bft-bones-wave{transform-box:view-box;transform-origin:0 0}
 @keyframes bftTurn{from{transform:rotate(var(--sway-neg,-.6deg))}to{transform:rotate(var(--sway,.6deg))}}
 /* the house at Porters Neck (pnPondScene): the gas flames flicker at their base, the fountain's jets lean and its spray drifts on the gusts, the reflection's ripples drift, and the heron holds still */
-#sceneSvg .pn-flame{transform-box:view-box;transform-origin:0 0}
+:is(#sceneSvg,.scene-layer) .pn-flame{transform-box:view-box;transform-origin:0 0}
 @keyframes pnDrift{from{transform:translateX(calc(var(--dx,1px) * -1))}to{transform:translateX(var(--dx,1px))}}
-#sceneSvg .heron-still *{animation:none!important}
+:is(#sceneSvg,.scene-layer) .heron-still *{animation:none!important}
 @keyframes pnSpray{from{transform:skewX(calc(var(--sk,1deg) * -.4))}to{transform:skewX(var(--sk,1deg))}}
 @keyframes pnDrops{from{transform:translateX(calc(var(--dx,1px) * -.3));opacity:.75}to{transform:translateX(var(--dx,1px));opacity:1}}
 @keyframes pnFlick{0%{transform:scale(1,1);opacity:1}35%{transform:scale(1.02,calc(1 - var(--fk,.1)));opacity:.88}70%{transform:scale(.98,calc(1 + var(--fk,.1) * .6));opacity:1}100%{transform:scale(1,calc(1 - var(--fk,.1) * .5));opacity:.93}}
@@ -998,7 +999,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   <p class="verdict" id="verdict">Reading the sky…</p>
   <div class="chips" id="chips"></div>
   <div class="nowcast" id="nowcast"><span id="ncText"></span><span class="nc-bars" id="ncBars"></span></div>
-  <div class="scene"><svg id="sceneSvg" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-label="Sun and moon over the marsh horizon"></svg><svg id="sceneSky" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneMoss" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneNear" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><div id="sceneLift" class="scene-lift" aria-hidden="true"></div><svg id="sceneFx" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg></div>
+  <div class="scene"><svg id="sceneSvg" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-label="Sun and moon over the marsh horizon"></svg><svg id="sceneSky" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneMoss" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneNear" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><div id="sceneLift" class="scene-lift" aria-hidden="true"></div><svg id="sceneFront" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneFx" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneWater" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneRefl" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneRipple" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><svg id="sceneTop" class="scene-layer" viewBox="0 0 760 168" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg></div>
   <div class="cobweb" id="cobweb" aria-hidden="true" hidden></div>
 </header>
 
@@ -8739,6 +8740,8 @@ let SCENE_TIDE=null;
    picture still match, and keep the last sun and moon reading to hand back. Cleared
    whenever the svg is emptied. */
 let SCENE_KEY="",SCENE_META=null,RAIN_KEY="";
+/* counts the scene's drawings, so a first paint of the house written a part a frame stops when a newer one starts */
+let SCENE_DRAW=0;
 function scenePictureKey(now,weather,dark,tideDir,fishWins){
   const sp=sunPos(now),mp=moonPos(now);
   const sun=sp.alt*180/Math.PI,malt=mp.alt*180/Math.PI;
@@ -8770,6 +8773,16 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
      witch), as renderSkyFx does for the sky. Its sun rides over the house, so its rays may run up past the
      scene's top */
   sceneSvg.style.overflow=LOC.faces==="north"?"visible":"";
+  /* and so may the sheets over it that reach past the frame (pnPondScene): the sky's carries the sun when a gull
+     would cross it, and the water, its reflection, its ripples and the light on it run on under the frame's foot
+     to the header's edge, as they do in the picture under them. The others keep to the frame: a composited sheet
+     let overflow was raster again in Chrome a second after it showed, and its edges stepped 4 levels */
+  const reach=new Set(["sceneSky","sceneWater","sceneRefl","sceneRipple","sceneTop"]);
+  for(const el of document.querySelectorAll(".scene > .scene-layer"))el.style.overflow=reach.has(el.id)?sceneSvg.style.overflow:"";
+  /* the house's sheets keep a colour of their own, all but the one with the times on it (sunTimes): none of
+     them uses the sky's text colour, and inheriting it, every one was restyled and repainted on each frame of
+     the sky's .8s colour transition, which runs whenever the page opens or the theme turns (pnPondScene) */
+  for(const el of document.querySelectorAll(".scene > .scene-layer,.scene > .scene-lift"))el.style.color=LOC.view==="pond"&&el.id!=="sceneTop"?"#000":"";
   if(LOC.faces==="north")weather={...weather,wind_direction_10m:(360-(Number(weather.wind_direction_10m)||0)%360)%360};
   if(pictureKey===SCENE_KEY&&SCENE_META&&sceneSvg.childElementCount){andThen(SCENE_META);return}
   const commit=meta=>(SCENE_KEY=pictureKey,SCENE_META=meta);
@@ -9490,8 +9503,12 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
   const sceneGen=RENDER_GEN;
   requestAnimationFrame(()=>{
   if(sceneGen!==RENDER_GEN)return;
-  /* the moving layer is Beaufort's alone; every other scene draws in one sheet */
-  if(LOC.scene!=="lowcountry")for(const id of ["sceneSky","sceneMoss","sceneNear","sceneLift","sceneFx"])document.getElementById(id).innerHTML="";
+  SCENE_DRAW++;for(const el of document.querySelectorAll(".scene > .scene-layer,.scene > .scene-lift"))el.style.visibility="";
+  /* the moving layer is Beaufort's alone; every other scene draws in one sheet, but the house, which writes its
+     own (pnPondScene) and leaves them up under its next paint until that is written */
+  if(LOC.scene!=="lowcountry")for(const id of LOC.view==="pond"?["sceneMoss"]:["sceneSky","sceneMoss","sceneNear","sceneLift","sceneFx"])document.getElementById(id).innerHTML="";
+  /* and the house's further sheets are Porters Neck's alone (pnPondScene) */
+  if(LOC.view!=="pond")for(const id of ["sceneFront","sceneWater","sceneRefl","sceneRipple","sceneTop"]){const el=document.getElementById(id);el.innerHTML="";if(id==="sceneRefl")el.removeAttribute("style")}
   if(LOC.scene==="front-range"){
     /* ── Denver: high plains foreground, the Front Range, cottonwood and city edge ── */
     const ink=dark?"#07161B":"#173029",base=GY+10,g=mulberry(5280);
@@ -10397,6 +10414,29 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
   });
 }
 
+/* ── What turns whole goes in a box of its own (#sceneLift). WebKit, which draws every iPhone browser, repaints
+   an SVG sheet whole whenever anything in it moves, and the sheet's cost is what it holds. A box is placed in
+   the scene's units, as fractions of the frame, so it sits exactly where the drawing did at every width; the
+   drawing in it is still, in the scene's own coordinates and line weights, and the box turns about the
+   drawing's joint, which WebKit leaves to the compositor and repaints nothing. Beaufort's palmetto crowns and
+   boat and Porters Neck's palms and fountain grass are boxes, made with this one kit for a W by H frame */
+function liftKit(W,H){
+  const partsOf=L=>L.flatMap(l=>l.parts||partsOf(l.layers||[]));
+  const boxOf=(layers,dx,dy,m=3,also=null)=>{const ds=partsOf(layers).map(p=>p.d);if(!ds.length)return null;let[bx,by,bw,bh]=pathBox(ds);
+    if(also){const x1=Math.max(bx+bw,also[0]+also[2]),y1=Math.max(by+bh,also[1]+also[3]);bx=Math.min(bx,also[0]);by=Math.min(by,also[1]);bw=x1-bx;bh=y1-by}
+    const x0=Math.floor((dx+bx-m)*10)/10,y0=Math.floor((dy+by-m)*10)/10;return[x0,y0,Math.ceil((dx+bx+bw+m-x0)*10)/10,Math.ceil((dy+by+bh+m-y0)*10)/10]};
+  const pct=v=>(v*100).toFixed(4)+"%",origin=(b,p)=>`transform-origin:${pct((p[0]-b[0])/b[2])} ${pct((p[1]-b[1])/b[3])}`;
+  /* the drawing in a box is the whole frame's, laid over the scene's other sheets and seen through the box.
+     It is placed in the frame's own width and height (cqw, cqh), because placed as a share of its box the
+     browser's rounding of the box is multiplied by the frame's size over the box's, and the drawing landed up
+     to a third of a pixel off the picture under it; the shares stay as the fallback for an older browser. It
+     keeps the sheets' own fit of the frame to the box, as their sheets do */
+  const liftSvg=(b,inner)=>`<svg viewBox="0 0 ${W} ${H}" style="left:${pct(-b[0]/b[2])};top:${pct(-b[1]/b[3])};width:${pct(W/b[2])};height:${pct(H/b[3])};left:${(-b[0]/W*100).toFixed(4)}cqw;top:${(-b[1]/H*100).toFixed(4)}cqh;width:100cqw;height:100cqh">${inner}</svg>`;
+  const liftAt=(b,inner,p,anim="")=>`<div class="lift" style="left:${pct(b[0]/W)};top:${pct(b[1]/H)};width:${pct(b[2]/W)};height:${pct(b[3]/H)}${p?";"+origin(b,p):""}${anim?";"+anim:""}">${inner}</div>`;
+  /* a box inside a box, the same size, turning on its own joint inside its parent's turn */
+  const liftIn=(b,inner,p,anim="")=>`<div class="lift" style="${origin(b,p)}${anim?";"+anim:""}">${inner}</div>`;
+  return{partsOf,boxOf,pct,origin,liftSvg,liftAt,liftIn};
+}
 /* Porters Neck's light schedule, on the place's own clock. The string lights and the fire table go off at
    PN_STRANDS_OUT, 10 pm (Josh: "they go off at 10pm"), and stay off through the small hours until the next
    sunset. The windows and the porch go off at PN_LIGHTS_OUT (null: on all night, which Josh has not decided).
@@ -10484,10 +10524,17 @@ function pnPondScene(c){
     const px=X(x),Lr=kind==="s"?rigBftPalmetto(seed,{h,lean,boots:.4,wind:pw}):rigPnWindmill(seed,{h,wind:pw,n:8,dead:1,size:.95});
     const[bx,by,bw,bh]=pathBox(flatParts(Lr).map(p=>p.d));top(px+bx*ps-4,px+(bx+bw)*ps+4,fenceB+by*ps-4);
     return{x:px,kind,Lr,crownY:fenceB+by*ps+bh*ps*(kind==="s"?.32:.36),i,amt:swayAmt*[.9,1,1.1,.65,.85][i],dur:swayDur*[1.04,1,.94,.86,1.08][i]}});
-  const palmSvg=(P,extra="")=>{const st=PRM?"":` style="transform-box:view-box;transform-origin:${f1(P.x)}px ${f1(fenceB)}px;${leanTo(P.amt,.4)};animation:swayTree ${P.dur.toFixed(1)}s ease-in-out infinite alternate;${wallClock(2*P.dur,P.i*1.9)}"`;
+  const palmSvg=(P,extra="",boxed=false)=>{const st=PRM||boxed?"":` style="transform-box:view-box;transform-origin:${f1(P.x)}px ${f1(fenceB)}px;${leanTo(P.amt,.4)};animation:swayTree ${P.dur.toFixed(1)}s ease-in-out infinite alternate;${wallClock(2*P.dur,P.i*1.9)}"`;
     const pal=P.kind==="s"?palAt({...INK.bftPalm,boot:"#C9B48E",bootLt:"#DDCCA8"},.04):palAt({...INK.pnWindmill,wmFrond:"#7FA160",wmFrondLt:"#97B872",wmFrondFar:"#5E8050",fibre:"#7A5E46"},.04);
     const up=lightsOn&&P.kind==="s"?`<ellipse data-light="uplight" cx="${f1(P.x)}" cy="${f1(fenceB-16)}" rx="5" ry="18" fill="url(#pnUplight)"/>`:"";
     return `<g class="pn-palm" data-prop="${P.kind==="s"?"sabal":"windmill-palm"}"${st}>${inkAt(P.x,fenceB,ps,1,inkRig(P.Lr,pal,{s:ps,light:lightAt(P.x,fenceB-40),...BFT_PALM_O}))}${up}${extra}</g>`};
+  /* on the page each palm is a box of its own (liftKit) that the compositor sways about its foot: the same
+     drawing, still, and the same sway on the box, so WebKit repaints nothing while the palms move */
+  const{liftSvg,liftAt}=liftKit(W,H);
+  const palmLift=P=>{const g=palmSvg(P,"",true),[bx,by,bw,bh]=pathBox(flatParts(P.Lr).map(p=>p.d));
+    const x0=Math.min(P.x+bx*ps,P.x-5)-4,y0=fenceB+by*ps-4,x1=Math.max(P.x+(bx+bw)*ps,P.x+5)+4,y1=Math.max(fenceB+(by+bh)*ps,fenceB+2)+4;
+    const b=[Math.floor(x0*10)/10,Math.floor(y0*10)/10,Math.ceil((x1-x0)*10)/10+.1,Math.ceil((y1-y0)*10)/10+.1];
+    return liftAt(b,liftSvg(b,g),[P.x,fenceB],PRM?"":`${leanTo(P.amt,.4)};animation:swayTree ${P.dur.toFixed(1)}s ease-in-out infinite alternate;${wallClock(2*P.dur,P.i*1.9)}`)};
 
   /* ── the string lights: two strands from one eye over the back door, a V, each sagging out to the nearer
      sabal on its side: clear teardrops on drops by day, light from sunset until 10 pm */
@@ -10525,7 +10572,13 @@ function pnPondScene(c){
   const fX=hx+u(-42),fY=hy+5.6,fS=1.12;
   const FL=propPnFireTable({lit:fireOn});
   if(fireOn&&!PRM){const fd=clamp(1.5-gust*.03,.7,1.5);FL[FL.length-1].style=`--fk:${clamp(.08+gust*.01,.08,.28).toFixed(2)};animation:pnFlick ${fd.toFixed(2)}s ease-in-out infinite alternate;${wallClock(2*fd)}`}
-  const fire=`<g data-prop="fire-table" data-lit="${fireOn?1:0}">${inkAt(fX,fY,fS,1,(fireOn?pnFireTableGlow(Math.max(nightK,.6)):"")+inkRig(FL,palAt(INK.pnFireTable,.03),{s:fS,line:.85,heavy:.45,shade:1.1,lit:.8,light:lightAt(fX,fY-8)}))}</g>`;
+  const firePal=palAt(INK.pnFireTable,.03),fireO={s:fS,line:.85,heavy:.45,shade:1.1,lit:.8,light:lightAt(fX,fY-8)},fireGlow=fireOn?pnFireTableGlow(Math.max(nightK,.6)):"";
+  const fire=`<g data-prop="fire-table" data-lit="${fireOn?1:0}">${inkAt(fX,fY,fS,1,fireGlow+inkRig(FL,firePal,fireO))}</g>`;
+  /* a flickering flame is the table's last layer, and it goes on the moving sheet (#sceneFx) with the table
+     left on the still one under it: nothing drawn between them in the picture comes near it */
+  const flicking=fireOn&&!PRM;
+  const fireStill=flicking?`<g data-prop="fire-table" data-lit="1">${inkAt(fX,fY,fS,1,fireGlow+inkRig(FL.slice(0,-1),firePal,fireO))}</g>`:fire;
+  const fireFlame=flicking?`<g data-prop="fire-flame">${inkAt(fX,fY,fS,1,inkRig(FL.slice(-1),firePal,fireO))}</g>`:"";
   const chBase=palAt(dark?{...INK.pnChair,black:"#45434F",blackDk:"#2E2C36"}:INK.pnChair,.03);
   const chPal=fireOn?{...chBase,lit:"#FFB86A",litOp:.95}:dark?{...chBase,lit:"#AFC4E6",litOp:.75}:chBase;
   const cs=1.18;
@@ -10584,18 +10637,25 @@ function pnPondScene(c){
     for(let k=0;k<4;k++){const t=(k/3)-.5,ang=t*1.1+bend*.7,hh=h*1.08,cx=x+Math.sin(ang)*hh*.62+bend*1.6,cy=fenceB-Math.cos(ang)*hh*.86,rot=ang*57.3;
       plumes+=`<ellipse cx="${f1(cx)}" cy="${f1(cy)}" rx=".75" ry="2.1" transform="rotate(${f1(rot)} ${f1(cx)} ${f1(cy)})"/>`}
     return `<path d="${blades}" fill="${blC}" stroke="${gInk}" stroke-width=".18"/><g fill="${plC}" opacity=".9">${plumes}</g>`};
-  const grassSide=(x0,x1,seed)=>{const r=mulberry(seed);let g="";for(let x=x0;x<x1;x+=8.4+r()*2.4)g+=tuft(x,r);
+  const grassSide=(x0,x1,seed,box=false)=>{const r=mulberry(seed);let g="";for(let x=x0;x<x1;x+=8.4+r()*2.4)g+=tuft(x,r);
     const amt=clamp(.6+gust*.12,.6,4.5),dur=clamp(5-gust*.08,1.6,5);
-    const st=PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;${leanTo(amt,.3)};animation:swayTree ${dur.toFixed(1)}s ease-in-out infinite alternate;${wallClock(2*dur,seed%7)}"`;
+    const sway=`${leanTo(amt,.3)};animation:swayTree ${dur.toFixed(1)}s ease-in-out infinite alternate;${wallClock(2*dur,seed%7)}`;
+    /* on the page each side is a box (liftKit), swayed about the blades' common foot (fenceB-.3, the foot of
+       the group's fill box, which is all a skew's origin needs) */
+    if(box){const b=[Math.floor((x0-14)*10)/10,Math.floor((fenceB-16)*10)/10,Math.ceil((x1-x0+28)*10)/10,18];
+      return liftAt(b,liftSvg(b,`<g data-prop="grasses"><g class="pn-grass">${g}</g></g>`),[(x0+x1)/2,fenceB-.3],PRM?"":sway)}
+    const st=PRM?"":` style="transform-box:fill-box;transform-origin:50% 100%;${sway}"`;
     return `<g class="pn-grass"${st}>${g}</g>`};
   const grasses=`<g data-prop="grasses">${grassSide(fx0+6,gx0-5,2525)}${grassSide(gx1+6,fx1-4,2626)}</g>`;
+  const grassLift=grassSide(fx0+6,gx0-5,2525,true)+grassSide(gx1+6,fx1-4,2626,true);
   /* ── Halloween night: two carved lanterns on the bottom step either side of the path (lit with the
      candles, from the 24th), and on the 31st after dark the trick-or-treater at the gate, lit by them */
-  let gateHallo="";
+  let gateKid="",gateLanterns="";
   if(halloween){const kS=.11,kX=doorX,kY=fenceB+1.4;
     const kid=trickOrTreat?{parts:propTrickOrTreater(-1).flatMap(l=>l.parts),x:kX,y:kY,s:kS}:null,kidLit=kid?[{...kid,face:true,edge:.8}]:[];
-    gateHallo=(kid?`<g class="decor" data-decor="trick-or-treater">${inkAt(kX,kY,kS,1,inkRig(propTrickOrTreater(-1),palAt(INK.trickOrTreater,.03),{s:kS,line:.7,heavy:.3,shade:.9,lit:.5,light:lightAt(kX,kY-6)}))}</g>`:"")
-      +(carved?pumpkinAt(doorX-11.5,hy+10.1,1,{w:4.4,h:3.4,carved,seed:6,lights:kidLit})+pumpkinAt(doorX+11.5,hy+10.1,1,{w:4,h:3.1,carved,seed:9,lights:kidLit}):"")}
+    gateKid=(kid?`<g class="decor" data-decor="trick-or-treater">${inkAt(kX,kY,kS,1,inkRig(propTrickOrTreater(-1),palAt(INK.trickOrTreater,.03),{s:kS,line:.7,heavy:.3,shade:.9,lit:.5,light:lightAt(kX,kY-6)}))}</g>`:"");
+    gateLanterns=carved?pumpkinAt(doorX-11.5,hy+10.1,1,{w:4.4,h:3.4,carved,seed:6,lights:kidLit})+pumpkinAt(doorX+11.5,hy+10.1,1,{w:4,h:3.1,carved,seed:9,lights:kidLit}):""}
+  const gateHallo=gateKid+gateLanterns;
   /* the boards lean on the near east sabal. The golf cart is left out: at this crop there is no side
      edge for it that is not the palms */
   const bX=R0.x+3.9,bS=.56;
@@ -10618,24 +10678,32 @@ function pnPondScene(c){
      shorter (k), the storybook's licence, so the porch's lights are doubled inside the frame */
   const standing=`${farWood}${ghost}${house}${patio}${fireLight}${chairsBack}${fire}${chairs}${tub}${tree}${swagMid}`
     +grasses+PALMS.map((P,i)=>palmSvg(P,i===1?swagL:i===2?swagR:"")).join("")+`${fence}${pumpkins}${boards}`;
-  const land=lawn+standing+gateHallo;
   /* the copy holds still (its animations come off) and its light on the water is the flame's orange */
   /* a still picture: no style that moves it, no class (so no candle flickers in the water), no data name
      (so nothing in the water is taken for the thing itself) */
-  const still=(standing+gateHallo).replace(/ style="[^"]*animation[^"]*"/g,"").replace(/ class="[^"]*"/g,"").replace(/ data-[a-z-]+="[^"]*"/g,"")
-    .replace(/id="(pn(?:fg|ft)\d+)/g,'id="r$1').replace(/url\(#(pn(?:fg|ft)\d+)/g,"url(#r$1").replace(/url\(#pnBulbGlow\)/g,"url(#pnBulbGlowR)").replace(/#FFD27A/g,"#FFA75A")
-    .replace(/(<use href="#[^"]+" fill="[^"]*" stroke="[^"]*" )stroke-width="[^"]*"/g,'$1stroke-width="0"').replace(/ id="pnSheen"/g,' id="rpnSheen"').replace(/url\(#pnSheen\)/g,"url(#rpnSheen)");
+  /* and a picture of its own: every id the copy defines is its own (r-), and so is every reference to one, so
+     nothing in the water points at the land's sheets, whose repaints would then repaint the water */
+  const stillRaw=(standing+gateHallo).replace(/ style="[^"]*animation[^"]*"/g,"").replace(/ class="[^"]*"/g,"").replace(/ data-[a-z-]+="[^"]*"/g,"");
+  const stillIds=new Set([...stillRaw.matchAll(/ id="([^"]+)"/g)].map(m=>m[1]));
+  const still=stillRaw.replace(/ id="([^"]+)"/g,' id="r$1"').replace(/(href="#|url\(#)([^")]+)/g,(m,p,id)=>stillIds.has(id)?p+"r"+id:m)
+    .replace(/url\(#pnBulbGlow\)/g,"url(#pnBulbGlowR)").replace(/#FFD27A/g,"#FFA75A")
+    .replace(/(<use href="#[^"]+" fill="[^"]*" stroke="[^"]*" )stroke-width="[^"]*"/g,'$1stroke-width="0"');
   const k=.8;
   const wGlass=wind<3&&!wet,wBlow=wind>=10||gust>=22||rainK>=.65;
   let strips="";
   if(!wGlass){const r=mulberry(2207),n=wBlow?12:6;
     for(let i=0;i<n;i++){const y=pondY+1.2+(i+.2+r()*.6)*(H+20-pondY)/n,hgt=wBlow?.5+r()*.5:.7+r()*.6;
-      strips+=`<rect x="-20" y="${f1(y)}" width="${W+40}" height="${f1(hgt)}"/>`}}
+      strips+=`<rect x="${f1(X(-12))}" y="${f1(y)}" width="${f1(Math.min(W+20,X(-12)+W+24)-X(-12))}" height="${f1(hgt)}"/>`}}
   const drift=!wGlass&&!PRM?` style="animation:pnDrift ${(wBlow?3.2:6.5).toFixed(1)}s ease-in-out infinite alternate;--dx:${dw*(wBlow?1.6:.8)}px;${wallClock(wBlow?6.4:13)}"`:"";
   const waterTop=mix(mix(mix(skyS[2],skyS[1],.4),"#2F5468",.2),"#2E4A44",.45),waterBot=mix(mix(mix(skyS[1],skyS[0],.6),"#163246",.38),"#1E3430",.4);
-  const refl=`<g mask="url(#pnReflFade)" opacity="${fog?.32:wet?.62:.82}"><g clip-path="url(#pnWaterClip)"><g transform="translate(0 ${f1(pondY+1+fenceB*k)}) scale(1 ${-k})">${still}</g></g>`
-    +`<rect x="${f1(X(-12))}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${mix(mix(skyS[0],"#1F3F52",.5),"#1E3430",.4)}" opacity=".42"/></g>`;
-  const breakUp=wGlass?"":`<g${drift}><g clip-path="url(#pnStrips)" mask="url(#pnReflFade)"><rect x="${f1(X(-12))}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${mix(skyS[2],"#FFFFFF",.3)}" opacity="${wBlow?.45:.32}"/></g></g>`;
+  const reflOp=fog?.32:wet?.62:.82;
+  const refl=`<g clip-path="url(#pnWaterClip)"><g transform="translate(0 ${f1(pondY+1+fenceB*k)}) scale(1 ${-k})">${still}</g></g>`
+    +`<rect x="${f1(X(-12))}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${mix(mix(skyS[0],"#1F3F52",.5),"#1E3430",.4)}" opacity=".42"/>`;
+  /* the strips are the light caught on the ripples: each is drawn where it is, its fill the reflection's own fade
+     (pnStripFill is the reflection's fade, .85 to .45, times the strips' opacity), which is the same light a mask over one wide rect gave
+     and leaves the moving sheet nothing to mask */
+  const stripC=mix(skyS[2],"#FFFFFF",.3),stripOp=wBlow?.45:.32;
+  const breakUp=wGlass?"":`<g${drift}><g fill="url(#pnStripFill)">${strips}</g></g>`;
 
   /* ── the fountain, mid-pond on the back door's line, in the porch's reflection (where it is): a tall narrow V
      of spray out of a dark float, and a ring of small low jets round its foot. The plume leans downwind as far
@@ -10670,9 +10738,10 @@ function pnPondScene(c){
   const hrX=X(300),hrY=pondY+1.8,hrS=.3;
   const heron=showHeron?`<g class="wildlife heron heron-still" data-species="great-blue-heron" transform="translate(${f1(hrX)} ${f1(hrY)}) scale(${-hrS} ${hrS})">${inkRig(rigHeron(phase),inkPal(INK.heron),{s:hrS,flip:-1,light:lightAt(hrX,hrY-20)})}</g>`
     +`<ellipse cx="${f1(hrX)}" cy="${f1(hrY+.5)}" rx="5" ry=".9" fill="none" stroke="${dark?"#B7D6E1":"#183C4B"}" stroke-width=".45" opacity=".5"/>`:"";
-  const pond=`<rect x="${f1(X(-12))}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="url(#pnPond)"/>`
-    +(tex?`<rect x="${f1(X(-12))}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${tex}" opacity="${(.4*paperK).toFixed(2)}"/>`:"")
-    +refl+breakUp+(fog?`<rect x="${f1(X(-12))}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${dark?"#96ABB5":"#F5F3E8"}" opacity=".3"/>`:"")+rainRings+fountainSvg+`<path d="M ${f1(X(-12))} ${f1(pondY+.2)} L ${f1(X(332))} ${f1(pondY+.2)}" stroke="${air("#6E5E44",.03)}" stroke-width=".7" opacity=".6"/>`;
+  const pondStill=`<rect x="${f1(X(-12))}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="url(#pnPond)"/>`
+    +(tex?`<rect x="${f1(X(-12))}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${tex}" opacity="${(.4*paperK).toFixed(2)}"/>`:"");
+  const pondMoving=breakUp+(fog?`<rect x="${f1(X(-12))}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${dark?"#96ABB5":"#F5F3E8"}" opacity=".3"/>`:"")+rainRings+fountainSvg;
+  const sandLine=`<path d="M ${f1(X(-12))} ${f1(pondY+.2)} L ${f1(X(332))} ${f1(pondY+.2)}" stroke="${air("#6E5E44",.03)}" stroke-width=".7" opacity=".6"/>`;
 
   /* ── the sky's own things: clouds, gulls by day, and Halloween's bats and witch over the roof */
   let sceneClouds="";
@@ -10682,7 +10751,8 @@ function pnPondScene(c){
       sceneClouds+=`<g class="drift" style="animation:drift ${(110/rush).toFixed(0)}s ease-in-out infinite ${rev};${phase(Math.round(110/rush)*2)}">${inkAt(W*fx,y,s,sd%2?-1:1,
         inkUnit(propCloud(sd),{body:"url(#cloudInk)",ink:mix(lineC,skyS[1],.45),shade:mix(shadeC,skyS[1],.4),lit:litC,litOp:.5*litK,shadeOp:.28},{s,light:[0,-1],line:.9,heavy:.4}))}</g>`;
   }
-  const gulls=!wet&&!storm&&!dark&&!(localHour<12||localHour>=16)?flightBird("gull",W*.12,GY-120,.5,.3,-2.6,8)+flightBird("gull",W*.88,GY-132,.4,.22,-7.1,10):"";
+  const gullAt=[[W*.12,GY-120],[W*.88,GY-132]];
+  const gulls=!wet&&!storm&&!dark&&!(localHour<12||localHour>=16)?flightBird("gull",gullAt[0][0],gullAt[0][1],.5,.3,-2.6,8)+flightBird("gull",gullAt[1][0],gullAt[1][1],.4,.22,-7.1,10):"";
   /* the house fills the frame, so the night's flyers work in front of its roof: the witch flies past over
      the palms' crowns, and through the moon when a line can cross it there, and the bats hunt round the roof
      and over the crowns, never down past the eaves */
@@ -10694,10 +10764,30 @@ function pnPondScene(c){
   const behindHouse=([x,y])=>{const lx=(x-hx)/S,ly=(y-hy)/S,B=PN_BH,poly=[[B.l,0],[B.l,B.geave],[B.roofL,B.eave],[B.ridgeL,B.ridge],[B.ridgeR,B.ridge],[B.roofR,B.eave],[B.r,B.geave],[B.r,0]];
     let inside=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const[xi,yi]=poly[i],[xj,yj]=poly[j];if((yi>ly)!==(yj>ly)&&lx<(xj-xi)*(ly-yi)/(yj-yi)+xi)inside=!inside}return inside};
   const moonShown=moonXY&&behindHouse(moonXY)?"":moonBody;
-  const svg=document.getElementById("sceneSvg");
-  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
-  svg.innerHTML=`
-    <defs>
+  /* Sheets. WebKit, which draws every iPhone browser, repaints an SVG sheet whole whenever anything in it
+     moves, and this picture (the house, the palms and the pond holding all of it upside down) is far too much to
+     paint sixty times a second: in one sheet it ran at 9 frames a second on a WKWebView (tools/webkit.mjs). So
+     nothing that moves is in #sceneSvg. The still picture is laid out on still sheets and what moves goes between
+     them, back to front exactly as it was drawn in one: the sky (#sceneSvg), what moves in it (#sceneSky: the
+     clouds and the gulls, with the sun and the moon over them when a gull would cross either), the house, the
+     patio and the strands (#sceneNear), the fountain grass and the palms, each a box the compositor sways
+     (#sceneLift), the fence, its pillars and what stands at it (#sceneFront), the fire's flame, a guttering
+     candle's pumpkin, the bats and the witch (#sceneFx), the low sun's wash, the does, the fog and the pond
+     (#sceneWater), its reflection (#sceneRefl), the light on the ripples, the rain's rings and the fountain
+     (#sceneRipple), and over it all the sand's edge, the low sun on the water, the heron and the times
+     (#sceneTop). Each only repaints itself. Where a moving thing was drawn under a still one, nothing on the
+     sheets between comes near it. They keep a colour of their own (renderScene), all but #sceneTop, whose times
+     are in the sky's ink, so the sky's colour transition restyles none of them, and #sceneSvg's defs, which every
+     sheet draws with, keep theirs too */
+  const sheet=id=>{const el=document.getElementById(id);el.setAttribute("viewBox",`0 0 ${W} ${H}`);return el};
+  /* a gull crossing the sun, the moon or the low sun's glow is drawn under them, so then they ride with it */
+  const nearGull=(p,r)=>p&&gullAt.some(([x,y])=>Math.abs(x-p[0])<r+7&&Math.abs(y-p[1])<r+7);
+  const skyOver=!!gulls&&(glowK>.02||nearGull(sunXY,38)||!!moonShown&&nearGull(moonXY,halloween?moonR*6.6:26));
+  const sideSky=`${glowK>.02?`<rect data-light="side-sky" x="${f1(-20)}" y="${f1(Y(0)-40)}" width="${W+40}" height="${f1(pondY-Y(0)+40)}" fill="url(#pnSideSky)" opacity="${(.85*glowK).toFixed(2)}"/>`:""}`;
+  /* a pumpkin whose candle gutters goes up whole, its paint with its flame, so the pair on a pillar keep their order */
+  const guttering=/class="candle flicker"/.test(pumpkins+gateLanterns);
+  const skyPaint=()=>{sheet("sceneSvg").innerHTML=`
+    <defs style="color:#000">
       <radialGradient id="sunglow"><stop offset="0" stop-color="#FFD86E" stop-opacity=".55"/><stop offset=".42" stop-color="#FFCB55" stop-opacity=".22"/><stop offset="1" stop-color="#FFC94F" stop-opacity="0"/></radialGradient>
       <radialGradient id="moonglow"><stop offset="0" stop-color="#EAF2FF" stop-opacity=".42"/><stop offset="1" stop-color="#EAF2FF" stop-opacity="0"/></radialGradient>
       <radialGradient id="pnBulbGlow"><stop offset="0" stop-color="#FFC765" stop-opacity=".8"/><stop offset=".35" stop-color="#FFB24A" stop-opacity=".24"/><stop offset="1" stop-color="#FF9A3A" stop-opacity="0"/></radialGradient>
@@ -10712,10 +10802,8 @@ function pnPondScene(c){
       <linearGradient id="pnPond" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(pondY)}" x2="0" y2="${f1(Y(194))}"><stop offset="0" stop-color="${waterTop}"/><stop offset="1" stop-color="${waterBot}"/></linearGradient>
       <linearGradient id="cloudInk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${tone(mix("#FFFFFF",skyS[1],.25))}"/><stop offset=".6" stop-color="${tone(mix("#FFF4E6",skyS[2],.35))}"/><stop offset="1" stop-color="${mix(tone("#FFF4E6"),litC,.5*litK)}"/></linearGradient>
       <linearGradient id="fogveil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity="0"/><stop offset=".55" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity=".34"/><stop offset="1" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity=".06"/></linearGradient>
-      <linearGradient id="pnFade" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(pondY)}" x2="0" y2="${f1(Y(194))}"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity=".45"/></linearGradient>
-      <mask id="pnReflFade" maskUnits="userSpaceOnUse" x="${f1(X(-12))}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+40)}"><rect x="${f1(X(-12))}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+40)}" fill="url(#pnFade)"/></mask>
       <clipPath id="pnWaterClip"><rect x="${f1(X(-12))}" y="${f1(pondY+.3)}" width="${W+24}" height="${f1(H-pondY+40)}"/></clipPath>
-      <clipPath id="pnStrips">${strips}</clipPath>
+      <linearGradient id="pnStripFill" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(pondY)}" x2="0" y2="${f1(Y(194))}"><stop offset="0" stop-color="${stripC}" stop-opacity="${(.85*stripOp).toFixed(4)}"/><stop offset="1" stop-color="${stripC}" stop-opacity="${(.45*stripOp).toFixed(4)}"/></linearGradient>
       <radialGradient id="pnSideSky" gradientUnits="userSpaceOnUse" cx="${f1(side>0?W+10:-10)}" cy="${f1(pondY-14)}" r="${f1(W*.85)}" gradientTransform="translate(${f1(side>0?W+10:-10)} ${f1(pondY-14)}) scale(1 .55) translate(${f1(-(side>0?W+10:-10))} ${f1(-(pondY-14))})"><stop offset="0" stop-color="${warm}" stop-opacity=".75"/><stop offset=".45" stop-color="${warm}" stop-opacity=".28"/><stop offset="1" stop-color="${warm}" stop-opacity="0"/></radialGradient>
       <linearGradient id="pnSideWash" x1="${side>0?1:0}" y1="0" x2="${side>0?0:1}" y2="0"><stop offset="0" stop-color="${warm}" stop-opacity=".9"/><stop offset=".55" stop-color="${warm}" stop-opacity=".12"/><stop offset="1" stop-color="${warm}" stop-opacity="0"/></linearGradient>
       <clipPath id="pnHouseClip"><g transform="translate(${f1(hx)} ${f1(hy)}) scale(${S})">${pnBackHouseSil().map(d=>`<path d="${d}"/>`).join("")}</g></clipPath>
@@ -10723,25 +10811,45 @@ function pnPondScene(c){
       ${tex?`<pattern id="paper" width="160" height="160" patternUnits="userSpaceOnUse"><image href="${paperTex()}" width="160" height="160"/></pattern>`:""}
     </defs>
     <path d="${arc}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1 7" stroke-linecap="round" opacity=".36"/>
-    ${goldArc}
-    ${gulls}
-    ${sunBody}${moonShown}
-    ${glowK>.02?`<rect data-light="side-sky" x="${f1(-20)}" y="${f1(Y(0)-40)}" width="${W+40}" height="${f1(pondY-Y(0)+40)}" fill="url(#pnSideSky)" opacity="${(.85*glowK).toFixed(2)}"/>`:""}
-    ${sceneClouds}
-    <g data-prop="pond-view">
-      ${land}
-      ${bats}
-      ${witchFly(witch)}
+    ${goldArc}${skyOver?"":sunBody+moonShown+sideSky}`;
+  sheet("sceneSky").innerHTML=gulls+(skyOver?sunBody+moonShown+sideSky:"")+sceneClouds};
+  const landPaint=()=>{sheet("sceneNear").innerHTML=`${lawn}${farWood}${ghost}${house}${patio}${fireLight}${chairsBack}${fireStill}${chairs}${tub}${tree}${swagMid}`;
+  document.getElementById("sceneLift").innerHTML=grassLift+PALMS.map(palmLift).join("");
+  sheet("sceneFront").innerHTML=fence+(guttering?"":pumpkins)+boards+gateKid+(guttering?"":gateLanterns);
+  sheet("sceneFx").innerHTML=fireFlame+(guttering?pumpkins+gateLanterns:"")+bats+witchFly(witch)};
+  const waterPaint=()=>{sheet("sceneWater").innerHTML=`
       ${glowK>.02?`<g data-light="side-wash" mask="url(#pnFadeIn)"><rect x="${f1(X(-12))}" y="${f1(Y(14))}" width="${W+24}" height="${f1(sandY-Y(14))}" fill="url(#pnSideWash)" opacity="${(.3*glowK).toFixed(2)}"/>`
         +`<rect x="${f1(X(-12))}" y="${f1(Y(14))}" width="${W+24}" height="${f1(hy-Y(14)+1)}" fill="url(#pnSideWash)" clip-path="url(#pnHouseClip)" opacity="${(.32*glowK).toFixed(2)}"/></g>`:""}
       ${deer}
       ${fog?`<rect x="${f1(X(-12))}" y="${f1(Y(0))}" width="${W+24}" height="${f1(pondY-Y(0))}" fill="${dark?"#96ABB5":"#EEF0EC"}" opacity=".3" mask="url(#pnFadeIn)" data-light="fog"/>`:""}
-      ${pond}
+      ${pondStill}`;
+  /* the reflection is a sheet of its own, and its fade down the water (.85 to .45 from the water's edge to the
+     frame's foot, pnReflFade until October 2026) and its opacity are that sheet's CSS mask and opacity, which
+     the compositor applies: as an SVG mask the whole upside-down picture was drawn again into an offscreen
+     buffer on every repaint, 81ms of a WebKit frame. The sheet runs 40px under the frame, top aligned, so the
+     water under the frame's foot keeps its reflection as it did */
+  const rf=sheet("sceneRefl"),a=(pondY/H).toFixed(5),fade=`linear-gradient(to bottom,transparent calc((100% - 40px) * ${a}),rgba(0,0,0,.85) calc((100% - 40px) * ${a}),rgba(0,0,0,.45) calc(100% - 40px))`;
+  rf.setAttribute("preserveAspectRatio","xMidYMin meet");
+  Object.assign(rf.style,{height:"calc(100% + 40px)",opacity:String(reflOp),webkitMaskImage:fade,maskImage:fade});
+  rf.innerHTML=refl;
+  sheet("sceneRipple").innerHTML=pondMoving;
+  sheet("sceneTop").innerHTML=`${sandLine}
       ${glowK>.02?`<rect data-light="side-pond" x="${f1(X(-12))}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="url(#pnSideWash)" opacity="${(.34*glowK).toFixed(2)}"/>`:""}
       ${heron}
-    </g>
     ${fog?`<rect x="0" y="${f1(Y(64))}" width="${W}" height="80" fill="url(#fogveil)"/>`:""}
-    ${sunTimes}`;
+    ${sunTimes}`};
+  /* A first paint (the house's sheets empty: the app opening, or another place's picture in #sceneSvg alone) is
+     written a part a frame, hidden, and shown whole the frame after the last: in one frame the house's sheets
+     made a WebKit frame of 150ms on the open, written over three none is over 70. The sky goes up at once. A
+     paint over a picture already up is written in one frame, so nothing in it goes missing. A newer drawing
+     (SCENE_DRAW) stops one part way and shows every sheet again */
+  const staged=["sceneNear","sceneLift","sceneFront","sceneFx","sceneWater","sceneRefl","sceneRipple","sceneTop"].map(id=>document.getElementById(id));
+  skyPaint();
+  if(staged[0].childElementCount){landPaint();waterPaint();return}
+  for(const el of staged)el.style.visibility="hidden";
+  const gen=SCENE_DRAW,steps=[landPaint,waterPaint,()=>{for(const el of staged)el.style.visibility=""}];
+  const step=()=>{if(gen!==SCENE_DRAW)return;steps.shift()();if(steps.length)requestAnimationFrame(step)};
+  requestAnimationFrame(step);
 }
 
 /* ── the lowcountry: Beaufort, South Carolina ───────────────────────────────────────────────────
@@ -10788,26 +10896,10 @@ function lowcountryScene(c){
   const beats=(svg,cls,amtK,seed)=>{const r=mulberry(seed);return PRM?svg:svg.replace(new RegExp(`<g class="${cls}"`,"g"),()=>{const b=beatOf(r,amtK);
     return `<g class="${cls}" style="--sway:${b.amt.toFixed(2)}deg;--sway-neg:${(-b.amt).toFixed(2)}deg;--md:${b.md.toFixed(1)}s;animation-delay:-${b.dl.toFixed(1)}s"`})};
   const beatsOf=(seed,n,amtK)=>{const r=mulberry(seed);return Array.from({length:n},()=>beatOf(r,amtK))};
-  /* ── what turns whole goes in a box of its own. WebKit repaints an SVG sheet whole whenever anything in it
-     moves, and the sheet's cost is what it holds: on October 21 2026, with only the flag fluttering, the old
-     moving layer still cost most of Beaufort's graphics work, because the palmettos' crowns and the boat were
-     in it. A box (#sceneLift) is placed in the scene's units, as fractions of the frame, so it sits exactly where
-     the drawing did at every width; the drawing in it is still, in the scene's own coordinates and line weights,
-     and the box turns about the drawing's joint, which WebKit leaves to the compositor and repaints nothing */
-  const partsOf=L=>L.flatMap(l=>l.parts||partsOf(l.layers||[]));
-  const boxOf=(layers,dx,dy,m=3,also=null)=>{const ds=partsOf(layers).map(p=>p.d);if(!ds.length)return null;let[bx,by,bw,bh]=pathBox(ds);
-    if(also){const x1=Math.max(bx+bw,also[0]+also[2]),y1=Math.max(by+bh,also[1]+also[3]);bx=Math.min(bx,also[0]);by=Math.min(by,also[1]);bw=x1-bx;bh=y1-by}
-    const x0=Math.floor((dx+bx-m)*10)/10,y0=Math.floor((dy+by-m)*10)/10;return[x0,y0,Math.ceil((dx+bx+bw+m-x0)*10)/10,Math.ceil((dy+by+bh+m-y0)*10)/10]};
-  const pct=v=>(v*100).toFixed(4)+"%",origin=(b,p)=>`transform-origin:${pct((p[0]-b[0])/b[2])} ${pct((p[1]-b[1])/b[3])}`;
-  /* the drawing in a box is the whole frame's, laid over the scene's other sheets and seen through the box.
-     It is placed in the frame's own width and height (cqw, cqh), because placed as a share of its box the
-     browser's rounding of the box is multiplied by the frame's size over the box's, and the drawing landed up
-     to a third of a pixel off the picture under it; the shares stay as the fallback for an older browser. It
-     keeps the sheets' own fit of the frame to the box, as their sheets do */
-  const liftSvg=(b,inner)=>`<svg viewBox="0 0 ${W} ${H}" style="left:${pct(-b[0]/b[2])};top:${pct(-b[1]/b[3])};width:${pct(W/b[2])};height:${pct(H/b[3])};left:${(-b[0]/W*100).toFixed(4)}cqw;top:${(-b[1]/H*100).toFixed(4)}cqh;width:100cqw;height:100cqh">${inner}</svg>`;
-  const liftAt=(b,inner,p,anim="")=>`<div class="lift" style="left:${pct(b[0]/W)};top:${pct(b[1]/H)};width:${pct(b[2]/W)};height:${pct(b[3]/H)}${p?";"+origin(b,p):""}${anim?";"+anim:""}">${inner}</div>`;
-  /* a box inside a box, the same size, turning on its own joint inside its parent's turn */
-  const liftIn=(b,inner,p,anim="")=>`<div class="lift" style="${origin(b,p)}${anim?";"+anim:""}">${inner}</div>`;
+  /* ── what turns whole goes in a box of its own (liftKit). On October 21 2026, with only the flag fluttering,
+     the old moving layer still cost most of Beaufort's graphics work, because the palmettos' crowns and the
+     boat were in it */
+  const{partsOf,boxOf,pct,origin,liftSvg,liftAt,liftIn}=liftKit(W,H);
   const turn=bt=>PRM?"":`--sway:${bt.amt.toFixed(2)}deg;--sway-neg:${(-bt.amt).toFixed(2)}deg;animation:bftTurn ${bt.md.toFixed(1)}s ease-in-out -${bt.dl.toFixed(1)}s infinite alternate`;
 
   /* ── the far shore, seen from the waterway east of the bridge: Lady's Island's low wood on the left, and
@@ -16344,10 +16436,11 @@ function paintLoadingState(){
   for(const id of ["feels","hiNow","loNow"])document.getElementById(id).textContent="—";
   document.getElementById("feelsRow").hidden=false;
   document.getElementById("verdict").textContent="Reading the sky…";
-  for(const id of ["chips","skyFx","rainFx","sceneSvg","sceneSky","sceneMoss","sceneNear","sceneLift","sceneFx","hourlySvg","hrLabels","weekRows","weekSvg","moonTxt","uvSvg","moonSvg","yearSvg"])
+  for(const id of ["chips","skyFx","rainFx","sceneSvg","sceneSky","sceneMoss","sceneNear","sceneLift","sceneFront","sceneFx","sceneWater","sceneRefl","sceneRipple","sceneTop","hourlySvg","hrLabels","weekRows","weekSvg","moonTxt","uvSvg","moonSvg","yearSvg"])
     document.getElementById(id).innerHTML="";
   document.getElementById("weekRows").style.minHeight="";
-  SCENE_KEY="";SCENE_META=null;RAIN_KEY="";
+  SCENE_KEY="";SCENE_META=null;RAIN_KEY="";SCENE_DRAW++;
+  for(const el of document.querySelectorAll(".scene > .scene-layer,.scene > .scene-lift"))el.style.visibility="";
   document.getElementById("flash").className="flash";
   document.getElementById("rainFx").className="rainfx";
   document.getElementById("hourlyNote").textContent="";
