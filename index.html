@@ -186,11 +186,11 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes bftRockLift{from{transform:rotate(calc(var(--rk,1deg) * -1)) translateY(var(--rty,.25px))}to{transform:rotate(var(--rk,1deg)) translateY(calc(var(--rty,.25px) * -1))}}
 .scene-layer :is(.bft-flag,.bft-sock,.bft-sock-tail,.bft-balloon),.scene-lift .bft-bones-wave{transform-box:view-box;transform-origin:0 0}
 @keyframes bftTurn{from{transform:rotate(var(--sway-neg,-.6deg))}to{transform:rotate(var(--sway,.6deg))}}
-/* the house at Porters Neck (pnPondScene): the gas flames flicker at their base, the fountain's jets lean and its spray drifts on the gusts, the reflection's ripples drift, and the heron holds still */
+/* the house at Porters Neck (pnPondScene): the gas flames flicker at their base, the fountain's jets lean and its spray drifts on the gusts, the reflection's ripples drift, and the heron's head nods */
 :is(#sceneSvg,.scene-layer) .pn-flame{transform-box:view-box;transform-origin:0 0}
 @keyframes pnDrift{from{transform:translateX(calc(var(--dx,1px) * -1))}to{transform:translateX(var(--dx,1px))}}
 :is(#sceneSvg,.scene-layer) .heron-still *{animation:none!important}
-/* the review animals (?animals=): a tail, a look, a turtle dipping. Transforms and opacity only. */
+/* the house animals: a tail, a look, a turtle dipping. Transforms and opacity only. */
 :is(#sceneSvg,.scene-layer) :is(.pn-wag,.pn-nod,.pn-dip){transform-box:view-box;transform-origin:0 0}
 :is(#sceneSvg,.scene-layer) .pn-wag{animation:pnWag 3.2s ease-in-out infinite}
 @keyframes pnWag{0%,46%,100%{transform:rotate(0)}52%{transform:rotate(16deg)}58%{transform:rotate(-7deg)}64%{transform:rotate(12deg)}70%{transform:rotate(0)}}
@@ -8470,14 +8470,14 @@ INK.pnBackHouse={
   wall:"#F2F0EA",wallShade:"#C6CBD2",siding:"#DDDAD2",shake:"#E4E0D6",shakeDk:"#B9B4AA",end:"#CDD2D8",roof:"#B4C2CC",roofDk:"#8F9DA8",seam:"#8A98A4",seamLit:"#E6EEF3",
   trim:"#FBFAF6",cast:"#5B6170",glass:"#34434E",glassUp:"#7F98A8",frame:"#FBFAF6",porchWall:"#E7E4DC",shiplap:"#CBC6BC",screen:"#4C525A",panel:"#8A8070",post:"#FBFAF6",
   iron:"#22304A",found:"#A39D94",flue:"#C9CED3",flueDk:"#8E959C",
-  glassOn:"rgb(255,206,132)",glassDim:"rgb(232,170,104)",glassHot:"rgb(255,236,190)",porchOn:"rgb(250,186,112)",panelOn:"rgb(255,240,200)",glow:"rgb(255,186,100)",
+  glassOn:"rgb(255,206,132)",glassDim:"rgb(232,170,104)",glassHot:"rgb(255,236,190)",porchOn:"rgb(250,186,112)",panelOn:"rgb(255,240,200)",glow:"rgb(255,186,100)",room:"#100E14",
   ink:"#2A1B33",shade:"#3A2350",lit:"#FFF6E2",shadeOp:.32,litOp:.5};
 /* the house's outline for the paper grain laid over it: the big roof, the walls, the gables */
 function pnBackHouseSil(B=PN_HA){
   const roof=`L ${B.roofL} ${B.eave} L ${B.ridgeL} ${B.ridge} L ${B.ridgeR} ${B.ridge} L ${B.roofR} ${B.eave}`;
   return[`M ${B.l} 0 L ${B.l} ${B.geave} ${roof} L ${B.r} ${B.geave} L ${B.r} 0 Z`];
 }
-function pnBackHouse({night=false,lit=null,shadowOp=1,B=PN_HA}={}){
+function pnBackHouse({night=false,lit=null,shadowOp=1,B=PN_HA,openLast=false}={}){
   const lamps=lit==null?!!night:!!lit,L=[],ge=B.geave;
   const cast=(pts,op=.3)=>pnPoly(pts,"cast",{noSil:true,op:op*shadowOp});
   const strip=(a,b,w,role="trim",o)=>{const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy),nx=-dy/l*w/2,ny=dx/l*w/2;
@@ -8561,7 +8561,11 @@ function pnBackHouse({night=false,lit=null,shadowOp=1,B=PN_HA}={}){
   /* a window: tall double-hung, one meeting rail; by day the upper sash holds the sky and the lower is dark,
      under the head's shadow; at night it is lit, one dimmer, one with a lamp, one with a blind drawn */
   const glassOf=(i)=>lamps?(i===1?"glassDim":"glassOn"):"glass";
+  /* October leaves the last east window an open dark room: the ghost stands in it, and the
+     glass, the mullion and the casing are painted in front of him (pnPeekGhost) */
+  const lastOpen=openLast?B.winR[B.winR.length-1][0]:null;
   const sashes=(w0,w1,i)=>{const t=B.winT,b=B.winB,m=(t+b)/2,P=[];
+    if(w0===lastOpen){P.push(pnRect(w0,t,w1,b,"room",{noSil:true}));return P}
     P.push(pnRect(w0,t,w1,b,glassOf(i),{noSil:true}));
     if(!night)P.push(pnRect(w0,t,w1,m,"glassUp",{noSil:true,op:.6}));
     if(lamps&&i===3)for(let k=0;k<3;k++)P.push(pnHEll(w0+(w1-w0)*.65,b-4.6,3.4-k,3.4-k,"glassHot",{noSil:true,op:.35}));
@@ -8574,11 +8578,11 @@ function pnBackHouse({night=false,lit=null,shadowOp=1,B=PN_HA}={}){
   const casing=[],cas=(w0,w1)=>{const t=B.winT,b=B.winB;casing.push(pnRect(w0-1.4,t-2.2,w1+1.4,t,"trim"),pnRect(w0-1.4,t,w0,b,"trim"),pnRect(w1,t,w1+1.4,b,"trim"),pnRect(w0-2,b,w1+2,b+1.3,"trim"));
     casing.push(cast([[w0-2,b+1.3],[w1+2,b+1.3],[w1+1.6,b+2.4],[w0-1.6,b+2.4]],.3))};
   cas(B.winL[0][0],B.winL[B.winL.length-1][1]);casing.push(pnRect(B.winL[0][1],B.winT,B.winL[1][0],B.winB,"trim"));
-  for(const[w0,w1]of B.winR)cas(w0,w1);
+  for(const[w0,w1]of B.winR)if(w0!==lastOpen)cas(w0,w1);
   L.push(L0,{parts:trims(B.gl[0],B.gl[1],...B.peakL)},R0,{parts:trims(B.gr[0],B.gr[1],...B.peakR)},{parts:casing});
   /* at night the lit glass lays warm pools on the wall under each window, falling off to the night */
   if(lamps){const wash=[],g=(x,y,rx,ry,op=.07)=>{for(let i=0;i<5;i++){const k=1-i*.17;wash.push(pnHEll(x,y,rx*k,ry*k,"glow",{soft:true,noSil:true,op}))}};
-    g(-39.6,-2,12,4.5,.08);for(const[w0,w1]of B.winR)g((w0+w1)/2,-1.6,6,3.6,.07);g(-39.6,-14,14,12,.04);g(39.6,-14,20,12,.04);L.push({parts:wash});}
+    g(-39.6,-2,12,4.5,.08);for(const[w0,w1]of B.winR)if(w0!==lastOpen)g((w0+w1)/2,-1.6,6,3.6,.07);g(-39.6,-14,14,12,.04);g(39.6,-14,20,12,.04);L.push({parts:wash});}
   return L;
 }
 /* the porch's light spilling out over the patio at night, a trapezoid, under the ink */
@@ -10505,20 +10509,32 @@ function pnHouseLights(sunAlt,hour,minute){
   const on=dark&&mins>=12*60&&mins<PN_LIGHTS_OUT;
   return{windows:on,strands:on,pumpkins:!dark||on};
 }
-/* A standing Ghostface in the rightmost east window, October only. Head and shoulders fill the
-   upper half of the glass and the robe runs on past the sill, clipped to the pane so the frame
-   hides his left side. He is not a lamp: he stays after 10:30. The oak's Ghostface is untouched. */
+/* A standing Ghostface in the rightmost east window, October only. He is set back in the dark
+   room, smaller than the pane, the way a person stands a few feet behind the glass. The frame,
+   the mullion and a tint of glass are painted after him, so he is never in front of the pane.
+   He is not a lamp: he stays after 10:30. The oak's Ghostface is untouched. */
 function pnPeekGhost(hx,hy,S,B){
   const[w0,w1]=B.winR[B.winR.length-1],t=B.winT,b=B.winB,m=(t+b)/2;
   const X=v=>hx+v*S,Y=v=>hy+v*S;
-  const x0=X(w0),x1=X(w1),yT=Y(t),yB=Y(b);
-  const mx=w0+.7;
-  const pal={robe:"#16141C",hood:"#2A2633",mask:"#F6F3EC",eye:"#07060A",ink:"#100E14",shade:"#05040A",lit:"#FFF6EA",shadeOp:.4,litOp:.55};
-  const fig=inkRig(pnWindowGhost(),pal,{s:S,line:.9,heavy:.35,shade:.7,lit:.45,light:[-.2,-1]});
-  const id="pnPeekClip";
+  const x0=X(w0),x1=X(w1),yT=Y(t),yB=Y(b),yM=Y(m);
+  /* local hood top is -11.6. gs is his size against the house, so the hood sits a few units
+     under the head of the window and the hem stops short of the sill: dark room around him */
+  const gs=.5,cx=(w0+w1)/2,sy=t+4.2+11.6*gs;
+  /* dim, not black: the room behind him is near #100E14, so a robe that dark
+     disappears, and a mask under a heavy shade reads as empty glass */
+  const pal={robe:"#3A3544",hood:"#454054",mask:"#D8D2C4",eye:"#0A090C",ink:"#221E28",shade:"#2A2432",lit:"#E6E0D4",shadeOp:.1,litOp:.32};
+  const fig=inkRig(pnWindowGhost(),pal,{s:S*gs,line:.5,heavy:.12,shade:.22,lit:.4,light:[-.15,-1]});
+  const id="pnPeekClip",gid="pnPeekGlass";
+  const box=(xa,ya,xb,yb)=>`<rect x="${f1(X(xa))}" y="${f1(Y(ya))}" width="${f1((xb-xa)*S)}" height="${f1((yb-ya)*S)}" fill="#F7F6F2" stroke="#2A2430" stroke-width=".4"/>`;
+  const railH=.7*S,mullW=.62*S;
+  const glass=`<rect x="${f1(x0)}" y="${f1(yT)}" width="${f1(x1-x0)}" height="${f1(yB-yT)}" fill="url(#${gid})"/>`
+    +`<polygon points="${f1(x0)},${f1(yT+(yB-yT)*.06)} ${f1(x0+(x1-x0)*.58)},${f1(yT)} ${f1(x0+(x1-x0)*.78)},${f1(yT)} ${f1(x0)},${f1(yT+(yB-yT)*.26)}" fill="#E4EEF2" opacity=".14"/>`
+    +`<rect x="${f1(x0)}" y="${f1(yM-railH/2)}" width="${f1(x1-x0)}" height="${f1(railH)}" fill="#F4F2EC" stroke="#2A2430" stroke-width=".35"/>`
+    +`<rect x="${f1((x0+x1)/2-mullW/2)}" y="${f1(yT)}" width="${f1(mullW)}" height="${f1(yB-yT)}" fill="#F4F2EC" stroke="#2A2430" stroke-width=".35"/>`
+    +box(w0-1.4,t-2.2,w1+1.4,t)+box(w0-1.4,t,w0,b)+box(w1,t,w1+1.4,b)+box(w0-2,b,w1+2,b+1.3);
   /* the clipped figure is the first child: the scene harness measures that, and a defs
-     ahead of it has an empty box that reads as off the frame */
-  return `<g class="decor" data-decor="ghostface" data-peek="window" data-win="${f1(X(w0-1.4))} ${f1(Y(t-2.2))} ${f1(X(w1+1.4))} ${f1(Y(b+1.3))}" data-pane="${f1(x0)} ${f1(yT)} ${f1(x1)} ${f1(yB)}"><g clip-path="url(#${id})">${inkAt(hx+mx*S,hy+m*S,S,1,fig)}</g><defs><clipPath id="${id}"><rect x="${f1(x0)}" y="${f1(yT)}" width="${f1(x1-x0)}" height="${f1(yB-yT)}"/></clipPath></defs></g>`;
+     ahead of it has an empty box that reads as off the frame. The glass group is after him. */
+  return `<g class="decor" data-decor="ghostface" data-peek="window" data-win="${f1(X(w0-1.4))} ${f1(Y(t-2.2))} ${f1(X(w1+1.4))} ${f1(Y(b+1.3))}" data-pane="${f1(x0)} ${f1(yT)} ${f1(x1)} ${f1(yB)}"><g clip-path="url(#${id})"><g opacity=".94">${inkAt(hx+cx*S,hy+sy*S,S*gs,1,fig)}</g></g><defs><clipPath id="${id}"><rect x="${f1(x0)}" y="${f1(yT)}" width="${f1(x1-x0)}" height="${f1(yB-yT)}"/></clipPath><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D5E2EA" stop-opacity=".2"/><stop offset=".42" stop-color="#9BB0BE" stop-opacity=".08"/><stop offset="1" stop-color="#6E8494" stop-opacity=".12"/></linearGradient></defs><g data-glass="front">${glass}</g></g>`;
 }
 /* Shoulder line at the meeting rail, hood top just inside the top of the glass, head tipped the
    way he cocks it. y=0 is the shoulder. The robe is left unrotated so it hangs straight. */
@@ -10566,14 +10582,11 @@ function pnTurtlesPlan({sunAlt,wet,storm,temp,snowing}){
   if(temp>=48)return{heads:1,bask:false,dim:false};
   return{heads:0,bask:false,dim:false};
 }
-/* ?animals=a is the cleaner storybook pass, ?animals=b draws the coats and feathers. Absent, the picture stays as it was. */
-function pnAnimalLook(){
-  try{const q=new URLSearchParams(location.search).get("animals");return q==="a"||q==="b"?q:""}catch(e){return""}
-}
-/* Blue merle, copper points, a pale near eye and a dark far one, fluffy at the neck.
-   y=0 is the feet and +x is the nose. `lie` is its own low pose. The tail and the head are the only motion. */
+/* Blue merle Australian Shepherd: grey broken with black and white, copper points, a pale near
+   eye and a dark far one, a fluffy mane and a bobbed tail. y=0 is the feet and +x is the nose.
+   `lie` is its own low pose. The tail and the head are the only motion. */
 const PN_HERDER={merle:"#6A7078",black:"#2C3036",white:"#F6F3EC",copper:"#C47A45",mane:"#8A9098",ear:"#4A5058",nose:"#16141A",eye:"#1C1814",glint:"#C5D4E4",ink:"#241C28",shade:"#3A2350",lit:"#FFE2A8",shadeOp:.35,litOp:.5};
-function propPnHerder({lie=false,fine=false,phase=""}={}){
+function propPnHerder({lie=false,phase=""}={}){
   const wag=`<g class="pn-wag" style="${phase}">`,nod=`<g class="pn-nod" style="${phase}">`;
   if(lie){
     const body=[
@@ -10584,9 +10597,9 @@ function propPnHerder({lie=false,fine=false,phase=""}={}){
       pTaper([[10,-2.2,1.7],[14.2,-1.5,1.15],[16.2,-.45,.9]],"merle"),
       pTaper([[-5,-1.8,1.5],[-3.2,-.7,1.05]],"merle"),
     ];
-    const tail={open:wag,pivot:[-11,-2.6],layers:[{parts:[
-      pBlob([[-11,-3],[-15.5,-5.2],[-17.4,-3.6],[-14.2,-1.8],[-11,-2]],"merle"),
-      pBlob([[-15.2,-5],[-17.2,-5.6],[-16,-3.8]],"white",{noSil:true}),
+    const tail={open:wag,pivot:[-10.4,-2.4],layers:[{parts:[
+      pBlob([[-10.6,-2.8],[-12.6,-4.2],[-13.4,-2.8],[-12.2,-1.6],[-10.6,-1.8]],"merle"),
+      pBlob([[-12.2,-4],[-13.4,-4.5],[-12.6,-3]],"white",{noSil:true}),
     ]}]};
     const head={open:nod,pivot:[11,-4.6],layers:[{parts:[
       pBlob([[9.5,-5.2],[11.5,-8.6],[15.2,-9.4],[17.6,-7.6],[17.4,-5.6],[14.2,-4.6]],"merle"),
@@ -10594,10 +10607,10 @@ function propPnHerder({lie=false,fine=false,phase=""}={}){
       pBlob([[13.6,-7.8],[16,-8.2],[16.4,-7.2],[14.4,-6.8]],"copper",{noSil:true}),
       pBlob([[15.2,-6.2],[17.2,-6.2],[17.4,-5.5],[15.6,-5.4]],"white",{noSil:true}),
       pDot(17.1,-5.7,.42,"nose",{noSil:true}),
-      pDot(14.8,-7.4,.3,"glint",{noSil:true}),
+      pDot(14.8,-7.4,.34,"glint",{noSil:true}),
       pDot(13.2,-7.6,.2,"eye",{noSil:true}),
       pBlob([[11.6,-8.4],[10.2,-11.2],[11.8,-11.4],[13,-8.8]],"ear"),
-      ...(fine?[pBlob([[12.4,-6.2],[14.6,-5.6],[13.2,-5]],"black",{noSil:true})]:[]),
+      pBlob([[12.4,-6.2],[14.6,-5.6],[13.2,-5]],"black",{noSil:true}),
     ]}]};
     return[{parts:body},tail,head];
   }
@@ -10612,11 +10625,19 @@ function propPnHerder({lie=false,fine=false,phase=""}={}){
     pBlob([[-1.5,-11.6],[5.5,-11.2],[3.5,-12.8]],"white",{noSil:true}),
     pTaper([[7.2,-11.6,2.7],[7.8,-6,1.5],[7.6,-.35,1.25]],"merle"),
     pTaper([[-6.2,-12.4,2.9],[-7.4,-6.2,1.55],[-6.6,-.35,1.25]],"merle"),
-    ...(fine?[pBlob([[2.2,-16.2],[4.6,-15.4],[3.4,-14.6]],"black",{noSil:true}),pBlob([[-7,-14.6],[-5,-13.6],[-6.4,-13.2]],"white",{noSil:true})]:[]),
+    pBlob([[2.2,-16.2],[4.6,-15.4],[3.4,-14.6]],"black",{noSil:true}),
+    pBlob([[-7,-14.6],[-5,-13.6],[-6.4,-13.2]],"white",{noSil:true}),
+    pBlob([[-6.4,-16.4],[-4.6,-17.3],[-4.8,-15.4]],"black",{noSil:true}),
+    pBlob([[6.4,-14.6],[8.6,-15.4],[8.8,-13.8],[6.6,-13.4]],"black",{noSil:true}),
+    pBlob([[-8.4,-13.4],[-6.6,-14.2],[-7,-12.6]],"white",{noSil:true}),
+    pBlob([[1.4,-12],[3.6,-12.8],[4.2,-11.4],[2.2,-11]],"white",{noSil:true}),
+    pDot(-2.2,-15.6,.45,"black",{noSil:true}),
+    pDot(4.8,-13.6,.38,"white",{noSil:true}),
+    pDot(-4.6,-14.2,.32,"black",{noSil:true}),
   ];
-  const tail={open:wag,pivot:[-9.5,-14.4],layers:[{parts:[
-    pBlob([[-9.6,-14.8],[-14,-17.8],[-16.2,-15.6],[-13,-13.2],[-9.6,-13.4]],"merle"),
-    pBlob([[-13.8,-17.6],[-16.2,-18.4],[-14.8,-15.8]],"white",{noSil:true}),
+  const tail={open:wag,pivot:[-9.2,-14.2],layers:[{parts:[
+    pBlob([[-9,-14.6],[-11.2,-16.2],[-12.4,-14.6],[-11.4,-13.2],[-9.2,-13.4]],"merle"),
+    pBlob([[-10.8,-15.8],[-12.2,-16.4],[-11.6,-14.8]],"white",{noSil:true}),
   ]}]};
   const head={open:nod,pivot:[8,-15.2],layers:[{parts:[
     pTaper([[7.4,-15.2,5.4],[10.4,-17.6,4.6],[12.2,-19.2,3.8]],"mane"),
@@ -10626,16 +10647,17 @@ function propPnHerder({lie=false,fine=false,phase=""}={}){
     pBlob([[12.2,-21.2],[13.6,-21.8],[13.8,-20.8]],"copper",{noSil:true}),
     pBlob([[15.4,-17.6],[17.6,-17.4],[17.8,-16.6],[15.8,-16.5]],"white",{noSil:true}),
     pDot(17.4,-16.9,.4,"nose",{noSil:true}),
-    pDot(15.2,-18.8,.28,"glint",{noSil:true}),
+    pDot(15.2,-18.8,.36,"glint",{noSil:true}),
     pDot(13.2,-19.6,.22,"eye",{noSil:true}),
     pBlob([[11.6,-20.2],[9.8,-23.6],[11.8,-23.8],[13.2,-20.6]],"ear"),
     pBlob([[12.8,-19.6],[14.4,-22.2],[15.2,-20]],"ear"),
   ]}]};
   return[{parts:far},{parts:body},tail,head];
 }
-/* Chestnut and white, the long ear the whole of the read. Same feet-and-nose frame, no lying pose. */
+/* Blenheim Cavalier: chestnut and white, the long feathered ear the whole of the read.
+   Same feet-and-nose frame, no lying pose. */
 const PN_SPANIEL={white:"#F7F4EE",chestnut:"#8E3F24",ear:"#A24A2A",curl:"#C46A42",patch:"#7A341C",nose:"#1A1414",eye:"#1A1414",ink:"#241C28",shade:"#3A2350",lit:"#FFE2A8",shadeOp:.32,litOp:.5};
-function propPnSpaniel({fine=false,phase=""}={}){
+function propPnSpaniel({phase=""}={}){
   const wag=`<g class="pn-wag" style="${phase}">`,nod=`<g class="pn-nod" style="${phase}">`;
   const far=[
     pTaper([[2.6,-7.2,1.45],[3,-3.4,.9],[3.1,-.3,.85]],"white"),
@@ -10652,14 +10674,16 @@ function propPnSpaniel({fine=false,phase=""}={}){
     pBlob([[-7.6,-10.8],[-8.8,-11.6],[-8.2,-10]],"curl",{noSil:true}),
   ]}]};
   const ear=[
-    pBlob([[5.2,-10.6],[3.6,-11.4],[2.6,-8.6],[2.8,-5.4],[3.6,-3.2],[4.8,-3.4],[5.2,-6.2],[5.8,-9.6]],"ear"),
-    pBlob([[3.6,-8.2],[3.2,-6],[3.8,-4.2],[4.6,-6.4]],"curl",{noSil:true}),
-    ...(fine?[pBlob([[4.2,-9.6],[3.4,-8],[4,-6.4]],"curl",{noSil:true}),pBlob([[3.2,-7.4],[2.6,-6.2],[3.2,-5.2]],"chestnut")]:[]),
+    pBlob([[5.6,-10.8],[3.2,-12.1],[1.2,-9.4],[.2,-5.4],[-.4,-1.8],[.6,-.15],[2,0],[3.1,-1.4],[2.8,-5.6],[4,-9.4]],"ear"),
+    pBlob([[2.2,-8.6],[1,-5.4],[.4,-2.2],[1.4,-.15],[2.3,-2.8],[2.5,-5.8]],"curl",{noSil:true}),
+    pBlob([[1.5,-7.4],[.6,-4.6],[1,-1.8],[1.9,-3.4]],"chestnut"),
+    pBlob([[4.4,-10.4],[3,-8.6],[3.4,-6],[4.3,-8.2]],"curl",{noSil:true}),
+    pBlob([[2.6,-6.2],[1.6,-4],[2.2,-2.2],[3,-4.6]],"curl",{noSil:true}),
   ];
   const head={open:nod,pivot:[4.6,-8.6],layers:[{parts:[
     pBlob([[3.8,-9.4],[6,-11.8],[9,-11.4],[10,-9.6],[9.2,-8.2],[6.2,-8]],"white"),
-    pBlob([[6,-11.2],[7.4,-11.8],[8,-10.6],[6.8,-10.2]],"chestnut",{noSil:true}),
-    pBlob([[7.4,-9.8],[8.8,-10],[9,-9.2],[7.8,-9]],"patch",{noSil:true}),
+    pBlob([[5.4,-11.5],[7.2,-12.3],[8.6,-11.2],[7.4,-10.2],[5.8,-10.4]],"chestnut",{noSil:true}),
+    pBlob([[7.2,-10.3],[9.1,-10.8],[9.5,-9.4],[8,-8.9]],"patch",{noSil:true}),
     pBlob([[8,-8.6],[9.4,-8.5],[9.2,-8]],"white",{noSil:true}),
     pDot(9.15,-8.35,.3,"nose",{noSil:true}),
     pDot(7.3,-10.2,.2,"eye",{noSil:true}),
@@ -10675,9 +10699,9 @@ function pnDoorShape(kind,lit){
     :"M -1.7 0 C -1.95 -3.2 -1.7 -5.4 -.15 -6.1 C 1.45 -6.7 2.15 -5 1.9 -3 L 1.7 0 Z M -1.15 -5.2 L -2.15 -7.3 L -.85 -6.7 L -.35 -5.2 Z M 1.15 -5.3 L .35 -7.1 L 1.7 -7.5 L 2.05 -5.3 Z";
   return `<path d="${d}" fill="${fill}" opacity="${op}"/>`;
 }
-/* The review heron: the same side-on stance, a quieter neck, and on B a couple of feather marks.
-   Facing -x, y=0 on the water. One joint. */
-function propPnHeron(phase,fine){
+/* The house heron: the same side-on stance, a quieter neck, and a couple of feather marks.
+   Facing -x, y=0 on the water. One joint, the head. */
+function propPnHeron(phase){
   const nod=`<g class="pn-nod" style="${phase}">`;
   const legs=[
     pTaper([[5.2,-32,2],[6.3,-18,1.25],[6.2,-6,1.05],[5.6,2.2,.9]],"legFar"),
@@ -10688,10 +10712,8 @@ function propPnHeron(phase,fine){
     pBlob([[-1,-44],[7,-45.2],[16,-37.5],[7,-35.4],[-1,-38]],"wing"),
     pTaper([[-4.2,-44.4,1.35],[-7.2,-40,.85],[-8.2,-34.5,.18]],"plume"),
     pBlob([[-3.6,-43.2],[-1.2,-44.6],[.6,-43],[-1.4,-41.6]],"crest"),
-    ...(fine?[
-      pTaper([[1,-43.2,.4],[7,-42.2,.32],[13,-38,.2]],"detail",{},{noSil:true}),
-      pTaper([[.4,-41.2,.32],[6,-40.2,.26],[11,-36.6,.16]],"detail",{},{noSil:true}),
-    ]:[]),
+    pTaper([[1,-43.2,.4],[7,-42.2,.32],[13,-38,.2]],"detail",{},{noSil:true}),
+    pTaper([[.4,-41.2,.32],[6,-40.2,.26],[11,-36.6,.16]],"detail",{},{noSil:true}),
   ];
   const neck=[
     pTaper([[-4,-40,5.4],[-5.6,-48,3.8],[-8,-54.5,3.1],[-11.2,-58.4,3.3]],"neck"),
@@ -10703,8 +10725,8 @@ function propPnHeron(phase,fine){
   ];
   return[{parts:legs},{parts:body},{open:nod,pivot:[-4,-40],layers:[{parts:neck}]}];
 }
-/* The review doe: a longer neck on its own joint, and on B a dorsal stripe and a larger throat. */
-function propPnDoeLook({graze=false,fine=false,phase=""}={}){
+/* The house doe: a longer neck on its own joint, a dorsal stripe and a larger throat. */
+function propPnDoeLook({graze=false,phase=""}={}){
   const nod=`<g class="pn-nod" style="${phase}">`;
   const far=[pTaper([[9,-21,2.4],[9.6,-11,1.25],[9.4,-4,1],[9.8,-.4,1.15]],"far"),pTaper([[-11,-24,3.4],[-13.6,-14,1.6],[-12.4,-5,1],[-12.2,-.4,1.15]],"far")];
   const hx=graze?22:18,hy=graze?-7:-48;
@@ -10718,7 +10740,7 @@ function propPnDoeLook({graze=false,fine=false,phase=""}={}){
     pTaper([[-9.6,-24,3.4],[-12.4,-13.6,1.55],[-11,-5,.95],[-10.8,-.4,1.1]],"body"),
     pTaper([[8.2,-1.6,1],[8.6,-.3,1.1]],"hoof",{capStart:false}),pTaper([[-10.9,-1.6,1],[-10.8,-.3,1.1]],"hoof",{capStart:false}),
     pBlob([[-14.4,-29.2],[-16.6,-33.6],[-15.6,-35.4],[-13.8,-33.4],[-13.4,-30]],"white"),
-    ...(fine?[pTaper([[-8,-30.6,.55],[2,-31.2,.8],[10,-29.2,.4]],"white",{},{noSil:true})]:[]),
+    pTaper([[-8,-30.6,.55],[2,-31.2,.8],[10,-29.2,.4]],"white",{},{noSil:true}),
   ];
   const look=[
     pTaper(neck,"body"),
@@ -10727,36 +10749,39 @@ function propPnDoeLook({graze=false,fine=false,phase=""}={}){
     pBlob([[ears[0][0]+.3,ears[0][1]-.3],[ears[1][0]-.7,ears[1][1]+1.6],[ears[1][0]+.2,ears[1][1]+1.1],[ears[0][0]+1.1,ears[0][1]-.2]],"earIn",{noSil:true}),
     pDot(graze?hx+4.8:hx+6.6,graze?hy+4.4:hy+1.8,.7,"nose",{noSil:true}),
     pDot(graze?hx+.6:hx+2,graze?hy+.5:hy-.1,.55,"eye",{noSil:true}),
-    pBlob(graze?[[hx+2.4,hy+3.8],[hx+5.2,hy+4.8],[hx+2.2,hy+2.6]]:fine?[[hx+2.4,hy+1.6],[hx+6.4,hy+2.8],[hx+2.8,hy+3.6]]:[[hx+3.6,hy+2.6],[hx+5.8,hy+3.1],[hx+3.4,hy+3.4]],"white",{noSil:true}),
+    pBlob(graze?[[hx+2.4,hy+3.8],[hx+5.2,hy+4.8],[hx+2.2,hy+2.6]]:[[hx+2.4,hy+1.6],[hx+6.4,hy+2.8],[hx+2.8,hy+3.6]],"white",{noSil:true}),
   ];
   return[{parts:far},{parts:body},{open:nod,pivot:[9,-27],layers:[{parts:look}]}];
 }
-/* A little over a true slider, so the stripe behind the eye still reads. The shell on the bank is the bigger of the two. */
+/* A small slider. In the water only the head is drawn. On the bank the shell, the head and the
+   tucked legs stay in proportion, and the whole turtle is placed well under the heron. */
 const PN_SLIDER={olive:"#4E6A32",shell:"#3E5A28",stripe:"#E2C15A",skin:"#5C7040",eye:"#1A1610",ink:"#241C28",shade:"#3A2350",lit:"#FFE2A8",shadeOp:.3,litOp:.45};
-function propPnSlider({bask=false,fine=false}={}){
+function propPnSlider({bask=false}={}){
   if(bask)return[{parts:[
-    pBlob([[-5.2,-1.6],[-3.4,-3.6],[.4,-4.2],[4.2,-3.4],[5.4,-1.6],[3.6,-.5],[-.2,-.2],[-3.6,-.6]],"shell"),
-    pBlob([[-3.6,-2.6],[-1,-3.4],[1.6,-3.2],[3,-2.2],[.4,-2]],"olive",{noSil:true}),
-    pTaper([[4.2,-1.8,1.35],[6.6,-2.2,1.5],[7.6,-1.5,.45]],"skin"),
-    pTaper([[5.6,-2.5,.4],[6.6,-2.9,.22]],"stripe",{},{noSil:true}),
-    pDot(6.9,-1.85,.26,"eye",{noSil:true}),
-    pTaper([[4.8,-.9,.7],[6.4,-.7,.55]],"skin"),
-    ...(fine?[pTaper([[-2.6,-3,.22],[.2,-3.6,.28],[2.6,-2.8,.2]],"stripe",{},{noSil:true})]:[]),
+    pBlob([[-4.2,-.35],[-3.5,-2.1],[-1.1,-3.15],[1.5,-3.25],[3.3,-2.3],[4.1,-.7],[2.5,.12],[-1.3,.18],[-3.3,-.05]],"shell"),
+    pBlob([[-2.3,-2.05],[-.5,-2.75],[1.15,-2.65],[2.3,-1.9],[.35,-1.5],[-1.5,-1.45]],"olive",{noSil:true}),
+    pTaper([[-2.1,-2.5,.14],[.1,-2.95,.18],[1.7,-2.4,.12]],"stripe",{},{noSil:true}),
+    pTaper([[3.15,-1.4,.62],[4.45,-1.6,.75],[5.15,-1.08,.24]],"skin"),
+    pTaper([[4.05,-1.9,.18],[4.75,-2.15,.1]],"stripe",{},{noSil:true}),
+    pDot(4.7,-1.28,.14,"eye",{noSil:true}),
+    pTaper([[3.25,-.28,.35],[4.4,-.1,.28]],"skin"),
+    pTaper([[-3.1,-.15,.3],[-4.05,.05,.18]],"skin"),
+    pBlob([[-4.3,-.1],[-5,.16],[-4.5,.32],[-3.75,.04]],"olive"),
   ]}];
   return[{parts:[
-    pBlob([[-1.15,.55],[-1.35,-1.5],[-.55,-2.9],[.55,-3.15],[1.35,-2.1],[1.25,-.2],[.35,.6]],"skin"),
-    pTaper([[-.15,-2.15,.5],[.85,-2.7,.28]],"stripe",{},{noSil:true}),
-    pDot(.85,-1.7,.24,"eye",{noSil:true}),
+    pBlob([[-.55,.28],[-.7,-.7],[-.22,-1.55],[.32,-1.7],[.72,-.95],[.62,.02],[.15,.32]],"skin"),
+    pTaper([[-.02,-1.05,.2],[.42,-1.38,.12]],"stripe",{},{noSil:true}),
+    pDot(.42,-.82,.11,"eye",{noSil:true}),
   ]}];
 }
-/* The house bats keep the same wing and the same beats. The ears run a little longer, and B adds a pale chest mark. */
-function pnRigBat(beat,fine){
+/* The house bats keep the same wing and the same beats. The ears run a little longer, and a pale chest mark sits on the body. */
+function pnRigBat(beat){
   const layers=rigBat(beat).map(L=>L.parts?{...L,parts:L.parts.slice()}:{...L,layers:L.layers.map(g=>({...g,parts:g.parts.slice()}))});
   const body=layers[layers.length-1];
   body.parts.splice(-2,2,
     pTaper([[-.5,-3.7,1.35],[-1.2,-5.15,.8],[-1.9,-6.55,.08]],"body"),
     pTaper([[.5,-3.7,1.35],[1.2,-5.15,.8],[1.9,-6.55,.08]],"body"));
-  if(fine)body.parts.push(pBlob([[-.45,.15],[.5,-.15],[.6,.95],[0,1.35],[-.6,.85]],"mark",{noSil:true}));
+  body.parts.push(pBlob([[-.45,.15],[.5,-.15],[.6,.95],[0,1.35],[-.6,.85]],"mark",{noSil:true}));
   return layers;
 }
 
@@ -10777,17 +10802,16 @@ function pnRigBat(beat,fine){
    shows a loose end, the fountain leans and its spray drifts downwind, and the reflection is glass in a calm, strips in a breeze
    and glints in a blow. The low sun's warmth comes from its own side. In October (holidayOn) the fence carries
    pumpkin lights, on by day and from dusk until 10:30, each run a swag between posts, a little tree by the fire table is wrapped in purple and orange, each pillar
-   holds an orange pumpkin and a white one, the gate has two lanterns from the carving day, Ghostface stands in
-   the rightmost east window (head and shoulders in the upper half, and he stays after the lamps go out at 10:30), and on Halloween night the trick-or-treater stands at the gate.
-   ?animals=a or b swaps in the review drawings (the heron, the gulls, the does, the bats) and brings out the pond sliders and the two dogs, on the table in PN_DOGS. Laid out in a
+   holds an orange pumpkin and a white one, the gate has two lanterns from the carving day, Ghostface stands
+   behind the glass of the rightmost east window (smaller, set back in the dark room, and he stays after the lamps go out at 10:30), and on Halloween night the trick-or-treater stands at the gate.
+   The heron, the gulls, the does and the bats are the detailed drawings, and the pond sliders and the two dogs come out on the table in PN_DOGS. Laid out in a
    320 by 194 frame (sceneH), centred on wider ones, where the wood, the lawn, the sand and the pond run on to
    the frame's edges */
 function pnPondScene(c){
   const{W,H,GY,sunAltDeg,localHour,localMin,month,cloud,wind,gust,code,wet,snowing,storm,fog,temp,dark,
     skyS,goldK,rising,nightK,gloom,tone,air,lineC,inkAir,shadeC,texOn,paperK,arc,goldArc,sunBody,moonBody,sunTimes,
     sunXY,moonXY,veil,lightAt,litC,litK,shadeK,inkPal,castShadow,flatParts,phase,chopK,windFrom,downwind,rainK,
-    halloween,carved,candles,trickOrTreat,batN,batColony,batKeep,witchPlan,witchFly,pumpkinAt,hallowDefs,candleDefs,moonR,flightBird,warned=false}=c;
-  const look=pnAnimalLook();
+    halloween,carved,candles,trickOrTreat,batN,batColony,batKeep,witchPlan,witchFly,pumpkinAt,hallowDefs,candleDefs,moonR,warned=false}=c;
   let dogs="",doorSil="",turtleBits="";
   const ox=(W-320)/2,oy=H-194,X=x=>x+ox,Y=y=>y+oy;
   /* the house's scale: about three fifths of the frame's width at 390 */
@@ -10832,15 +10856,16 @@ function pnPondScene(c){
   hPal.roofDk=dark?mix(hPal.roof,"#1C2838",.32):"#D5DCE3";
   hPal.seam=dark?mix(hPal.roof,"#152030",.4):"#C5CED6";
   hPal.seamLit=dark?"#D4DEE8":"#FFFFFF";
+  hPal.room="#100E14";
   const sunSide=lightAt(hx,hy-u(40))[0]<0?-1:1,shadowOp=clamp(1-veil*.7-gloom*.8,.25,1);
   const sheen=`<defs><linearGradient id="pnSheen" x1="${sunSide<0?1:0}" y1="0" x2="${sunSide<0?0:1}" y2="0"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/><stop offset=".55" stop-color="#FFFFFF" stop-opacity="0"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="${(dark?.06:.22*(1-veil*.6)).toFixed(2)}"/></linearGradient></defs>`
     +`<path d="M ${BH.roofL} ${BH.eave} L ${BH.ridgeL} ${BH.ridge} L ${BH.ridgeR} ${BH.ridge} L ${BH.roofR} ${BH.eave} Z" fill="url(#pnSheen)"/>`;
   const houseNight=sunAltDeg<-.83;
-  const house=`<g data-prop="house" data-lit="${lightsOn?1:0}">${inkAt(hx,hy,S,1,pnBackHouseGlow({night:lightsOn})+inkRig(pnBackHouse({night:houseNight,lit:lightsOn,shadowOp,B:BH}),hPal,{s:S,light:lightAt(hx,hy-u(40)),line:1.4,heavy:1,shade:1.6,lit:.9})
+  const house=`<g data-prop="house" data-lit="${lightsOn?1:0}">${inkAt(hx,hy,S,1,pnBackHouseGlow({night:lightsOn})+inkRig(pnBackHouse({night:houseNight,lit:lightsOn,shadowOp,B:BH,openLast:!!halloween}),hPal,{s:S,light:lightAt(hx,hy-u(40)),line:1.4,heavy:1,shade:1.6,lit:.9})
     +sheen+(tex?pnBackHouseSil(BH).map(d=>`<path d="${d}" fill="${tex}" opacity="${(.55*paperK).toFixed(2)}"/>`).join(""):""))}</g>`;
   top(hx+u(BH.roofL)-4,hx+u(BH.roofR)+4,hy+u(BH.ridge)-4);
-  /* in October Ghostface stands in the rightmost east window, head and shoulders in the upper half, and he
-     stays after the lamps go out: he is a decoration, not a light */
+  /* in October Ghostface stands behind the glass of the rightmost east window, set back in the dark
+     room, and he stays after the lamps go out: he is a decoration, not a light */
   const peek=halloween?pnPeekGhost(hx,hy,S,BH):"";
 
   /* ── the palms at the fence. Each end of the house is the same group: a sabal, a windmill palm low
@@ -11017,9 +11042,8 @@ function pnPondScene(c){
     const dS=.44,dY=Y(151.6),dPal=palAt(INK.pnDoe,.04);
     const doe=(x,graze,flip,rig)=>castShadow(flatParts(rig),x,dY,dS,flip)
       +`<g class="wildlife doe" data-species="whitetail-doe">${inkAt(x,dY,dS,flip,inkRig(rig,dPal,{s:dS,flip,line:1.4,heavy:.7,shade:1.6,lit:1.2,light:lightAt(x,dY-6)}))}</g>`;
-    if(look){const fine=look==="b",ph=phase(8.5);
-      deerMove=doe(X(108),false,1,propPnDoeLook({fine,phase:ph}))+doe(X(216),true,-1,propPnDoeLook({graze:true,fine,phase:ph}));
-    }else deer=doe(X(108),false,1,propPnDoe({}))+doe(X(216),true,-1,propPnDoe({graze:true}));
+    const ph=phase(8.5);
+    deerMove=doe(X(108),false,1,propPnDoeLook({phase:ph}))+doe(X(216),true,-1,propPnDoeLook({graze:true,phase:ph}));
   }
 
   /* ── the land, back to front; the reflection is the same picture turned over at the water and pressed
@@ -11086,42 +11110,39 @@ function pnPondScene(c){
   let rainRings="";
   if(wet&&!snowing&&!PRM){const wr=mulberry(7139),rings=3+Math.round(rainK*5);
     for(let i=0;i<rings;i++)rainRings+=`<ellipse class="water-ring" cx="${f1(10+wr()*(W-20))}" cy="${f1(pondY+4+wr()*(H-pondY-6))}" rx="${f1(3+wr()*4)}" ry="${f1(.9+wr()*.8)}" fill="none" stroke="${dark?"#B7D6E1":"#183C4B"}" stroke-width=".6" style="animation-delay:-${(wr()*3.8).toFixed(1)}s"/>`}
-  /* the two dogs and the sliders only when a review drawing is on. The dogs stand on the patio, above the
-     fence, flanking the door, and ride the fire's sheet. One lies beside the fire while it is lit. After dusk
-     a still shape stands in the screen door, with the house, and it is not copied into the reflection. */
-  if(look){const plan=pnDogsPlan({mins:localHour*60+(localMin||0),sunAlt:sunAltDeg,wet:!!wet||!!snowing,storm:!!storm,temp:temp==null?null:+temp,warned:!!warned,fire:!!fireOn});
-    const fine=look==="b",foot=hy+1.25;
-    const dogAt=(hx0,sc,flip,rig,pal,sp,where)=>{const x=hx+u(hx0);
-      return `<g class="wildlife" data-species="${sp}" data-dogs="${where}"><ellipse cx="${f1(x)}" cy="${f1(foot+.35)}" rx="${f1(sc*6.5)}" ry=".55" fill="${shadeC}" opacity=".22"/>${inkAt(x,foot,sc,flip,inkRig(rig,palAt(pal,.03),{s:sc,flip,line:.75,heavy:.35,shade:1.05,lit:.85,light:lightAt(x,foot-8)}))}</g>`};
-    if(plan.out==="both"){
-      dogs=dogAt(-14,.58,1,propPnHerder({fine,phase:phase(3.2)}),PN_HERDER,"merle-herder","yard")
-        +dogAt(16,.5,-1,propPnSpaniel({fine,phase:phase(4.1)}),PN_SPANIEL,"blenheim-spaniel","yard");
-    }else if(plan.out==="one"){
-      dogs=dogAt(-36,.58,1,propPnHerder({lie:true,fine,phase:phase(3.2)}),PN_HERDER,"merle-herder","fire");
-    }
-    if(plan.door){const spaniel=plan.fire;
-      doorSil=`<g class="wildlife" data-species="${spaniel?"blenheim-spaniel":"merle-herder"}" data-where="door">${inkAt(doorX,hy-.4,S,1,pnDoorShape(spaniel?"spaniel":"herder",lightsOn))}</g>`}
-    const tp=pnTurtlesPlan({sunAlt:sunAltDeg,wet,storm,temp:temp==null?null:+temp,snowing});
-    const waterInk=dark?"#B7D6E1":"#183C4B";
-    const head=(x,off)=>{const ink=inkRig(propPnSlider({fine}),palAt(PN_SLIDER,.05),{s:2,line:.7,heavy:.3,shade:.8,lit:.55,light:lightAt(x,pondY)});
-      const delay=PRM?"":`animation-delay:-${((Date.now()/1000+off)%12).toFixed(1)}s`;
-      return `<g class="wildlife" data-species="pond-slider" data-turtles="1" opacity="${tp.dim?".42":"1"}"><g class="pn-dip" style="${delay}">${inkAt(x,pondY+3,2,1,ink)}<ellipse cx="${f1(x)}" cy="${f1(pondY+.35)}" rx="3.4" ry=".7" fill="none" stroke="${waterInk}" stroke-width=".4" opacity=".6"/></g></g>`};
-    if(tp.heads)turtleBits=head(X(148),0)+(tp.heads>1?head(X(186),5):"");
-    if(tp.bask){const bx=X(240),by=pondY-1.5,bS=1.15;
-      turtleBits+=`<g class="wildlife" data-species="pond-slider" data-turtles="1">${inkAt(bx,by,bS,1,inkRig(propPnSlider({bask:true,fine}),palAt(PN_SLIDER,.04),{s:bS,line:.7,heavy:.3,shade:.9,lit:.6,light:lightAt(bx,by-4)}))}</g>`}
+  /* the two dogs stand on the patio, above the fence, flanking the door, and ride the fire's sheet.
+     One lies beside the fire while it is lit. After dusk a still shape stands in the screen door, with
+     the house, and it is not copied into the reflection. The sliders are little heads in the water. */
+  const plan=pnDogsPlan({mins:localHour*60+(localMin||0),sunAlt:sunAltDeg,wet:!!wet||!!snowing,storm:!!storm,temp:temp==null?null:+temp,warned:!!warned,fire:!!fireOn});
+  const foot=hy+1.25;
+  const dogAt=(hx0,sc,flip,rig,pal,sp,where)=>{const x=hx+u(hx0);
+    return `<g class="wildlife" data-species="${sp}" data-dogs="${where}"><ellipse cx="${f1(x)}" cy="${f1(foot+.35)}" rx="${f1(sc*6.5)}" ry=".55" fill="${shadeC}" opacity=".22"/>${inkAt(x,foot,sc,flip,inkRig(rig,palAt(pal,.03),{s:sc,flip,line:.75,heavy:.35,shade:1.05,lit:.85,light:lightAt(x,foot-8)}))}</g>`};
+  if(plan.out==="both"){
+    dogs=dogAt(-17,.7,1,propPnHerder({phase:phase(3.2)}),PN_HERDER,"merle-herder","yard")
+      +dogAt(17,.62,-1,propPnSpaniel({phase:phase(4.1)}),PN_SPANIEL,"blenheim-spaniel","yard");
+  }else if(plan.out==="one"){
+    dogs=dogAt(-36,.7,1,propPnHerder({lie:true,phase:phase(3.2)}),PN_HERDER,"merle-herder","fire");
   }
+  if(plan.door){const spaniel=plan.fire;
+    doorSil=`<g class="wildlife" data-species="${spaniel?"blenheim-spaniel":"merle-herder"}" data-where="door">${inkAt(doorX,hy-.4,S,1,pnDoorShape(spaniel?"spaniel":"herder",lightsOn))}</g>`}
+  const tp=pnTurtlesPlan({sunAlt:sunAltDeg,wet,storm,temp:temp==null?null:+temp,snowing});
+  const waterInk=dark?"#B7D6E1":"#183C4B";
+  const head=(x,off)=>{const sc=1.65,ink=inkRig(propPnSlider(),palAt(PN_SLIDER,.05),{s:sc,line:.5,heavy:.18,shade:.45,lit:.35,light:lightAt(x,pondY)});
+    const delay=PRM?"":`animation-delay:-${((Date.now()/1000+off)%12).toFixed(1)}s`;
+    const y=pondY+.5;
+    return `<g class="wildlife" data-species="pond-slider" data-turtles="1" data-where="water" opacity="${tp.dim?".42":"1"}"><g class="pn-dip" style="${delay}">${inkAt(x,y,sc,1,ink)}<ellipse cx="${f1(x)}" cy="${f1(pondY+2.5)}" rx="2.35" ry=".55" fill="#3E5A28" opacity=".14"/><path d="M ${f1(x-2.5)} ${f1(pondY+2.15)} Q ${f1(x-1.2)} ${f1(pondY+2.7)} ${f1(x)} ${f1(pondY+2.2)} T ${f1(x+2.5)} ${f1(pondY+2.15)}" fill="none" stroke="#3E5A28" stroke-width=".35" opacity=".16"/><ellipse cx="${f1(x)}" cy="${f1(pondY+.12)}" rx="1.35" ry=".28" fill="none" stroke="${waterInk}" stroke-width=".32" opacity=".4"/></g></g>`};
+  if(tp.heads)turtleBits=head(X(148),0)+(tp.heads>1?head(X(186),5):"");
+  if(tp.bask){const bx=X(240),by=pondY-.55,bS=.68;
+    turtleBits+=`<g class="wildlife" data-species="pond-slider" data-turtles="1" data-where="bank">${inkAt(bx,by,bS,1,inkRig(propPnSlider({bask:true}),palAt(PN_SLIDER,.04),{s:bS,line:.5,heavy:.2,shade:.65,lit:.4,light:lightAt(bx,by-3)}))}</g>`}
   /* the heron is the pond's resident: it stands at the water's east edge, side on, in every weather but a
-     thunderstorm. The review drawing nods, and rides the ripple sheet. The ordinary one holds still. */
+     thunderstorm. Its head nods, and it rides the ripple sheet. */
   const showHeron=!storm;
   const hrX=X(300),hrY=pondY+1.8;
   let heron="",heronMove="";
   if(showHeron){
     const ring=`<ellipse cx="${f1(hrX)}" cy="${f1(hrY+.5)}" rx="5" ry=".9" fill="none" stroke="${dark?"#B7D6E1":"#183C4B"}" stroke-width=".45" opacity=".5"/>`;
-    if(look){const hrS=.34,pal=inkPal(INK.heron);if(look==="b")pal.detail="#C9C6D6";
-      heronMove=`<g class="wildlife heron" data-species="great-blue-heron" transform="translate(${f1(hrX)} ${f1(hrY)}) scale(${-hrS} ${hrS})">${inkRig(propPnHeron(phase(8.5),look==="b"),pal,{s:hrS,flip:-1,light:lightAt(hrX,hrY-20)})}</g>`+ring;
-    }else{const hrS=.3;
-      heron=`<g class="wildlife heron heron-still" data-species="great-blue-heron" transform="translate(${f1(hrX)} ${f1(hrY)}) scale(${-hrS} ${hrS})">${inkRig(rigHeron(phase),inkPal(INK.heron),{s:hrS,flip:-1,light:lightAt(hrX,hrY-20)})}</g>`+ring;
-    }
+    const hrS=.34,pal=inkPal(INK.heron);pal.detail="#C9C6D6";
+    heronMove=`<g class="wildlife heron" data-species="great-blue-heron" transform="translate(${f1(hrX)} ${f1(hrY)}) scale(${-hrS} ${hrS})">${inkRig(propPnHeron(phase(8.5)),pal,{s:hrS,flip:-1,light:lightAt(hrX,hrY-20)})}</g>`+ring;
   }
   const pondStill=`<rect x="${f1(-12)}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="url(#pnPond)"/>`
     +(tex?`<rect x="${f1(-12)}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${tex}" opacity="${(.4*paperK).toFixed(2)}"/>`:"");
@@ -11138,27 +11159,24 @@ function pnPondScene(c){
         inkUnit(propCloud(sd),{body:"url(#cloudInk)",ink:mix(lineC,skyS[1],.45),shade:mix(shadeC,skyS[1],.4),lit:litC,litOp:.5*litK,shadeOp:.28},{s,light:[0,-1],line:.9,heavy:.4}))}</g>`;
   }
   const gullAt=[[W*.12,GY-120],[W*.88,GY-132]];
-  /* the review gull keeps the filled wing. B's is a little longer and carries a small chest mark.
+  /* the house gull keeps a filled wing, a little long, with a small chest mark.
      The delay is the only timing written here. The beat itself is the shared wingBeat class. */
   const pnHouseGull=(x,y,s,o,delay,dur)=>{
-    const wing=look==="b"
-      ?"-.75 -.32 C -3.8 -1.7 -8.2 -3.15 -12.4 -3.55 C -8.4 -1.45 -4.4 -.1 -.75 .75"
-      :"-.75 -.35 C -3.6 -1.6 -7.4 -2.9 -11 -3.2 C -7.6 -1.4 -4.2 -.12 -.75 .8";
+    const wing="-.75 -.32 C -3.8 -1.7 -8.2 -3.15 -12.4 -3.55 C -8.4 -1.45 -4.4 -.1 -.75 .75";
     let i=0;const flip=d=>d.replace(/-?[\d.]+/g,n=>i++%2?n:(n[0]==="-"?n.slice(1):"-"+n));
     const body=`<path d="M 0 -1.15 C .85 -.65 .8 .9 0 1.65 C -.8 .9 -.85 -.65 0 -1.15 Z"/>`
-      +(look==="b"?`<path d="M -.35 -.2 C .15 -.55 .55 -.15 .2 .35 C -.15 .15 -.45 .05 -.35 -.2 Z" fill="${tone("#C8D0D8")}" stroke="none"/>`:"");
+      +`<path d="M -.35 -.2 C .15 -.55 .55 -.15 .2 .35 C -.15 .15 -.45 .05 -.35 -.2 Z" fill="${tone("#C8D0D8")}" stroke="none"/>`;
     const st=`style="--fd:${dur}s;animation-delay:${delay}s"`;
     return `<g class="wildlife gull" data-species="gull" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${tone("#F4F1EA")}" stroke="${lineC}" stroke-width="${(.8/s).toFixed(2)}" stroke-linejoin="round" paint-order="stroke" opacity="${Math.min(1,o*2.2).toFixed(2)}">${body}
       <path class="flight-wing wing-l" ${st} d="M ${wing} Z"/><path class="flight-wing wing-r" ${st} d="M ${flip(wing)} Z"/></g>`;
   };
   const gulls=!wet&&!storm&&!dark&&!(localHour<12||localHour>=16)
-    ?(look?pnHouseGull(gullAt[0][0],gullAt[0][1],.5,.3,-2.6,8)+pnHouseGull(gullAt[1][0],gullAt[1][1],.4,.22,-7.1,10)
-      :flightBird("gull",gullAt[0][0],gullAt[0][1],.5,.3,-2.6,8)+flightBird("gull",gullAt[1][0],gullAt[1][1],.4,.22,-7.1,10)):"";
+    ?pnHouseGull(gullAt[0][0],gullAt[0][1],.5,.3,-2.6,8)+pnHouseGull(gullAt[1][0],gullAt[1][1],.4,.22,-7.1,10):"";
   /* the house fills the frame, so the night's flyers work in front of its roof: the witch flies past over
      the palms' crowns, and through the moon when a line can cross it there, and the bats hunt round the roof
      and over the crowns, never down past the eaves */
   const wLow=GY-100,palmTops=tops.slice(1),eaveY=hy+u(BH.eave)-2,witch=witchPlan(17,wLow,(x,y)=>y<wLow&&palmTops.every(([a,b,t])=>x+moonR<a||x-moonR>b||y+moonR<t),palmTops);
-  const bats=batN?batColony(8,(x0,x1)=>Math.min(GY-40,eaveY,...palmTops.filter(([a,b])=>x1>a&&x0<b).map(t=>t[2])),batKeep(witch??null),look?(beat)=>pnRigBat(beat,look==="b"):rigBat):"";
+  const bats=batN?batColony(8,(x0,x1)=>Math.min(GY-40,eaveY,...palmTops.filter(([a,b])=>x1>a&&x0<b).map(t=>t[2])),batKeep(witch??null),beat=>pnRigBat(beat)):"";
 
   /* a moon whose disc is behind the house is not drawn at all, so its haze cannot spill round the roof
      like a fire */
@@ -11175,7 +11193,7 @@ function pnPondScene(c){
      (#sceneLift), the fence, its pillars and what stands at it (#sceneFront), the fire's flame, a guttering
      candle's pumpkin, the bats, the witch and the near rain, with its mask (#sceneFx), the low sun's wash, the does, the fog and the pond
      (#sceneWater), its reflection (#sceneRefl), the light on the ripples, the rain's rings and the fountain
-     (#sceneRipple, with the sand's edge under the fountain), and over it all the low sun on the water, the heron and the times
+     (#sceneRipple, with the sand's edge under the fountain, and the heron, the does and the sliders), and over it all the low sun on the water and the times
      (#sceneTop). Each only repaints itself. Where a moving thing was drawn under a still one, nothing on the
      sheets between comes near it. They keep a colour of their own (renderScene), all but #sceneTop, whose times
      are in the sky's ink, so the sky's colour transition restyles none of them, and #sceneSvg's defs, which every

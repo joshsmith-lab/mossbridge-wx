@@ -892,20 +892,13 @@ near drops the ridge has, from one helper, `nearRainLayer`), rings the pond and 
 dims everything under the app's lightning, and fog softens the house and widens the halos.
 
 **Who is out.** Small whitetail does (`whitetail-doe`) on the lawn in front of the fence at dawn and dusk, at
-real size, and the great blue heron (`great-blue-heron`, held still by `.heron-still`) standing side-on in
-the shallows at the pond's east edge in every weather but a thunderstorm. Gulls cross at midday when it is
-dry, and in October the bats hunt over the roof from sunset to dawn. Nobody sits at the fire: the
-picture makes no claim about who is home.
+real size, with a dorsal stripe and a longer neck that nods, and the great blue heron (`great-blue-heron`) standing side-on in
+the shallows at the pond's east edge in every weather but a thunderstorm, its head nodding. Gulls cross at midday when it is
+dry, with a longer wing and a small chest mark, and in October the bats hunt over the roof from sunset to dawn, the same wing with a pale chest mark. Nobody sits at the fire: the
+picture makes no claim about who is home. These are the detailed drawings. There is no animals query.
 
-`?animals=a` and `?animals=b` are a review switch. With no query the heron, the gulls, the does and the bats
-stay as they are. A is cleaner silhouettes and proportions in the same flat ink, with one quiet motion each.
-B is the same poses with the coats, feathers and stripes drawn in, so each animal reads up close. Both bring
-out the pond sliders and the two dogs, and both use the standing ghost. The ghost, the moved tub and the
-ordinary animals are what the page shows without the query.
-
-The two dogs are the review's only, drawn small on the patio and named by coat, never by a person's name.
-One is a blue merle herder with copper points and a fluffy mane (`merle-herder`). The other is a smaller
-chestnut-and-white spaniel with long curly ears (`blenheim-spaniel`). `PN_DOGS` is the table and `pnDogsPlan`
+The two dogs are drawn on the patio and named by coat, never by a person's name.
+One is a blue merle Australian Shepherd, grey broken with black and white, copper points, a fluffy mane and a bobbed tail (`merle-herder`). The other is a Blenheim Cavalier, chestnut and white, with long feathered ears (`blenheim-spaniel`). `PN_DOGS` is the table and `pnDogsPlan`
 reads it:
 
 - both out on the patio from 7:00 inclusive until 9:00 exclusive, once the sun is up (elevation at least −0.83°)
@@ -917,7 +910,7 @@ reads it:
 
 The motion is a tail wag and a head turn, transforms only, and they hold still under reduced motion.
 
-Carolina pond sliders (`pnTurtlesPlan`), the review's only, a little over true size so the stripe behind the eye still reads. On a warm clear day, the sun at least 6° up and the air at least 60°, two heads break the surface and one basks on the east sand. A milder day, 48° and up, keeps one head. Rain keeps one head and no basking. A dry night keeps one dim head. A storm, snow, a cold day or a wet night keeps them down. A head dips and comes back on its own clock.
+Carolina pond sliders (`pnTurtlesPlan`) are small. In the water only a little head breaks the surface, with at most a very faint low-opacity rippled hint of the shell below it. On the bank, on a warm clear day, one small slider basks, in proportion and clearly smaller than the heron and the dogs. On a warm clear day, the sun at least 6° up and the air at least 60°, two heads break the surface and one basks on the east sand. A milder day, 48° and up, keeps one head. Rain keeps one head and no basking. A dry night keeps one dim head. A storm, snow, a cold day or a wet night keeps them down. A head dips and comes back on its own clock.
 
 **October.** The blood moon, the bats, the witch and the cobweb are shared with the other places; the sky
 over the house is small, so the bats and the witch fly in front of the roof. The house's own, each a
@@ -926,7 +919,7 @@ left of the fire table (`light-tree`, in the round bush's place: drooping black 
 lights that stay lit by day and all night, past the 10:30 lights-out, fills only), one orange and one white pumpkin on each pillar ("put
 one orange and one white pumpkin on both fence stantions - then carve them on time"), both carved and lit
 from the carving day by the candle rules (`pumpkin`, `white-pumpkin`, then `jack-o-lantern`), two lanterns
-at the gate, Ghostface standing in the rightmost east window, a full figure in the scream mask whose head and shoulders fill the upper half of the glass and whose robe the frame hides (he lived in the marsh's oak, October only, and he stays after the lamps go out at 10:30), and on Halloween
+at the gate, Ghostface standing behind the glass of the rightmost east window, smaller and set back in the dark room so the frame, the mullion and a tint of glass sit in front of him and the mask is a dim off-white (he lived in the marsh's oak, October only, and he stays after the lamps go out at 10:30), and on Halloween
 night the trick-or-treater at the gate, on its own rules. With nobody's cormorant on a dock, the kid is out
 from sunset (the marsh's raw-dusk case kept the kid off the dock; the house's, case 48, has it at the gate).
 

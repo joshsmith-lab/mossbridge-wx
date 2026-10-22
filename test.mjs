@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v113/);
+  assert.match(worker, /mbwx-shell-v114/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -1884,8 +1884,8 @@ test("Ghostface peeks out of the live oak for October, and never moves", async (
   for (const name of ["26-house-october-afternoon", "27-house-halloween-night", "45-house-carved-week-morning", "29-house-halloween-rain-night", "36-house-october-golden-evening", "37-house-october-fog-morning"])
     assert.match(scene, new RegExp(`name: "${name}"[^\\n]*decor: \\["ghostface"`));
   assert.match(scene, /name: "35-house-november-small-hours"[^\n]*decor: \[\]/);
-  // at the house he stands in the rightmost east window, head and shoulders in the upper half, and never moves.
-  // The glass clips the rest of him, so the harness asks for that window rather than the oak's eye sample
+  // at the house he stands behind the glass of the rightmost east window, set back and smaller, and never moves.
+  // The harness asks for that window rather than the oak's eye sample
   assert.match(scene, /if \(cs\.decor\?\.includes\("ghostface"\) && await page\.locator\('\.scene \[data-prop="house"\]'\)\.count\(\)\)/);
   assert.match(scene, /if \(!peek\) problems\.push\(`\$\{cs\.name\}: Ghostface is not in the east window`\);/);
   // in the parked marsh's oak he stands still and the oak sways over him, so the harness samples both
@@ -6428,21 +6428,27 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   // and the harnesses hold it: no animation in #sceneSvg or a still sheet at the house, and WebKit's house cases
   assert.match(scene, /\["sceneSvg", "sceneNear", "sceneFront", "sceneWater", "sceneRefl", "sceneTop"\]/);
   for (const name of ["coast-night", "coast-rain", "coast-afternoon", "coast-blow", "coast-halloween"]) assert.match(webkit, new RegExp(`name: "${name}", loc: "mb"`));
-  // the review switch paints the dogs and the sliders. With no query the ordinary heron and gulls stay
-  assert.match(fn, /if\(look\)\{const plan=pnDogsPlan/);
-  assert.match(fn, /heron-still/);
-  assert.match(fn, /rigHeron\(phase\)/);
-  assert.match(fn, /flightBird\("gull"/);
+  // the detailed drawings are the house. There is no animals query. The heron nods, the gulls are the
+  // house gull, and the dogs and the sliders come out on their own table.
+  assert.doesNotMatch(html, /pnAnimalLook|\?animals=/);
+  assert.match(fn, /const plan=pnDogsPlan/);
+  assert.doesNotMatch(fn, /heron-still|rigHeron\(phase\)|flightBird\("gull"/);
+  assert.match(fn, /propPnHeron\(phase\(8\.5\)\)/);
+  assert.match(fn, /pnHouseGull\(/);
+  assert.match(fn, /pnRigBat\(beat\)/);
+  assert.match(fn, /propPnDoeLook\(/);
+  assert.match(fn, /openLast:!!halloween/);
   const peekFn = html.slice(html.indexOf("function pnPeekGhost("), html.indexOf("function pnWindowGhost("));
   assert.match(peekFn, /yT=Y\(t\)/);
   assert.match(peekFn, /pnWindowGhost\(\)/);
   assert.match(peekFn, /data-decor="ghostface" data-peek="window"/);
+  assert.match(peekFn, /data-glass="front"/);
   assert.doesNotMatch(peekFn, /propGhostface/);
 });
 
 test("the house dogs and the pond sliders keep to their table", async () => {
   const html = await readFile(new URL("index.html", root), "utf8");
-  const src = html.slice(html.indexOf("const PN_DOGS="), html.indexOf("function pnAnimalLook("));
+  const src = html.slice(html.indexOf("const PN_DOGS="), html.indexOf("function propPnHerder("));
   const ctx = vm.createContext({});
   vm.runInContext(src + "\nglobalThis.PN_DOGS=PN_DOGS;globalThis.pnDogsPlan=pnDogsPlan;globalThis.pnTurtlesPlan=pnTurtlesPlan;", ctx);
   const plain = (v) => JSON.parse(JSON.stringify(v));
