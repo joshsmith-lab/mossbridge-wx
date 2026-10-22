@@ -884,7 +884,15 @@ the roof keeps the sine. Josh would rather move the sun's path than shrink the h
 from its own side ("morning vibe glow more prominently from the right side in the morning, then evening
 vibes to the left"): a warm horizon, a warm wash over the house and the land and the pond from that side,
 building from about 14° up and gone by about 7° below, muted by cloud, fog, rain and storms. Midday is
-neutral.
+neutral. In golden hour the flagship scene has three looks on `?gold=`, default `a`, and Josh has not picked.
+The light comes from the real side, evening on the left and morning on the right, the same side the sun and
+the times already use. `a` rakes that side: the sunlit wall, the sun-side palms and the fence go amber, long
+soft shadows stretch away from the sun, and the sky warms from that side. `b` adds a rim on the edges facing
+the sun, glints in those windows, flat shafts through the sun-side palms and warm glitter on the pond. `c` is
+a peach-to-violet sky across the scene, a bloom at the sun, the sun-side palms in silhouette and a warm streak
+on the pond. The house stays the white house. None of it is a filter or a new animation, and none of it leaves
+the scene, so the words above stay as they are. The farm and Beaufort are unchanged. Outside golden hour, and
+in cloud, fog, rain or a storm, the looks stay down and the quieter wash remains.
 
 **The lights keep the family's hours.** The bistro strands run from one point over the back door to a
 sabal on each side, a V seen from above ("the bistro lights go from door to each palm - forming a V"),

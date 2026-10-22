@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v131/);
+  assert.match(worker, /mbwx-shell-v132/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -6313,6 +6313,21 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(html, /const fit=pnArc\?pnSunFit\(py\(f\),visTop,squash\):\{y:py\(f\),s:1\};/);
   assert.match(html, /data-light="long-shadow"/);
   assert.match(html, /data-light="glint"/);
+  // golden hour on the house has three looks. the page opens on a. the light stays on the sun's own side.
+  assert.match(fn, /const goldLook=\(new URLSearchParams\(location\.search\)\.get\("gold"\)\|\|"a"\)\.toLowerCase\(\);/);
+  assert.match(fn, /const gold=goldLook==="c"\?"c":goldLook==="b"\?"b":"a";/);
+  assert.match(fn, /const gh=sunAlt>=-4&&sunAlt<=6&&!storm&&!wet&&veil<\.55&&!fog;/);
+  assert.match(fn, /const sunAlt=sunAltDeg,side=rising\?1:-1;/);
+  assert.match(fn, /const sunPalms=i=>side>0\?i>=3:i<=2;/);
+  assert.match(fn, /data-gold="\$\{gold\}"/);
+  assert.match(fn, /data-light="palm-glow"/);
+  assert.match(fn, /data-light="rays"/);
+  assert.match(fn, /data-light="glitter"/);
+  assert.match(fn, /data-light="rim"/);
+  assert.match(fn, /data-light="cinema"/);
+  assert.match(fn, /data-light="bloom"/);
+  assert.match(fn, /setAttribute\("data-gold",gold\)/);
+  assert.equal(html.split('get("gold")').length, 2, "the gold switch lives only on the house");
   // a moon the sine would set into the roof takes the shallower rise and stays in the sky
   assert.match(html, /function pnMoonInRoof\(x,y\)/);
   assert.match(html, /if\(pnArc&&pnMoonInRoof\(x,y\)\)/);
