@@ -853,7 +853,7 @@ wall behind the white screen door the navy compass dial ("need the dial on the p
 double-hung windows, the left pair in one casing, the right three apart (a straight-on photo shows a fourth on
 the right; Josh: "keep it for now. undecided"). The fire table and its Adirondack
 chairs on the patio's west end, the hot tub on its east end centred under the middle of the three right
-windows, two sabals at the west and two sabals with a windmill palm between them at the east, the black fence running only between
+windows, a sabal with a windmill palm between it and a second sabal at the west and the same group at the east, the black fence running only between
 its two white pillars ("the white stanchions should mark the limit of the fence"), a gate and low steps
 straight down from the back door, fountain grass along the inside of the fence up to the gate, the lawn,
 the sand, and the pond with its aerating fountain on the door's line ("directly center on the house/door").
@@ -882,8 +882,8 @@ crossing the windows as they swag forward. They are on from sunset to 10 pm on t
 boots so the palms' sway never shows a loose end. The fire table
 (`propPnFireTable`) burns only while the strands are on, between 45° and 68°, dry, in no storm or fog,
 with gusts under 20 and no thunder (`fireOn`), and the light on its cap and the chairs facing it is its own. The windows and the porch light the house from sunset; when
-they go out is one constant (`PN_LIGHTS_OUT`), unset until Josh says. In October the orange pumpkin lights
-along the fence are on day and night ("the pumpkin lights stay on 24/7 until halloween"), on the holiday
+they go out is one constant (`PN_LIGHTS_OUT`), unset until Josh says. The two review drawings (`?house=a` and `?house=b`, `pnHouseLights`) keep the windows, the porch and the strands on from dusk until 10:30 pm and off overnight. In October the orange pumpkin lights
+along the fence hang in swags, high at each post and low in the middle, five or six bulbs to a bay. They are on by day and from dusk until 10:30, then the wire stays up and the bulbs go dark until the sun is up. They are on the holiday
 calendar like every decoration, and gone the morning of November 1.
 
 **Weather.** Every reading still drives the picture: the palms, the grass and the fountain's spray lean and
@@ -903,14 +903,14 @@ over the house is small, so the bats and the witch fly in front of the roof. The
 and orange lights by the fire table (`light-tree`), one orange and one white pumpkin on each pillar ("put
 one orange and one white pumpkin on both fence stantions - then carve them on time"), both carved and lit
 from the carving day by the candle rules (`pumpkin`, `white-pumpkin`, then `jack-o-lantern`), two lanterns
-at the gate, Ghostface peeking round the house's east corner (he lived in the marsh's oak), and on Halloween
+at the gate, Ghostface peeking round the house's east corner (he lived in the marsh's oak; on `?house=a` and `?house=b` he is a small face in the rightmost east window, and he stays after the lamps go out), and on Halloween
 night the trick-or-treater at the gate, on its own rules. With nobody's cormorant on a dock, the kid is out
 from sunset (the marsh's raw-dusk case kept the kid off the dock; the house's, case 48, has it at the gate).
 
 **Left out, and why.** The golf cart (`pnCart` is kept, placed nowhere): at this crop both edges are palms and
 there is no honest place to park it. The neighbours' houses and the pines, which made the house read as
 standing alone in open land. The grill, the patio table and the flags, clutter at phone size. The
-surfboards stay, leaning on an east sabal.
+surfboards stay, three of them in a wood rack on the patio against the blank west wall between the windows and the porch, tails on the paving.
 
 **The parked marsh.** Porters Neck's scene from September 2026 to October 21 2026 (the spartina, the live
 oak with its moss and egrets, the dock, the heron, the raccoon, the fiddler crab, the oystercatcher, the
@@ -927,9 +927,9 @@ inked reflection with it, every frame a palm or a blade of grass moved; with eve
 60. So nothing that moves is in a still sheet. Back to front: `#sceneSvg` the sun's path, the sun, the moon and
 the low sun's glow in the sky; `#sceneSky` the clouds and the gulls (when a gull would cross the sun, the moon
 or the glow, those ride over it here, so the stacking stays exact); `#sceneNear` the house, the patio, the
-chairs, the tub, the tree and the strands; `#sceneLift` the palms and the two bands of fountain grass as boxes
-the compositor sways (liftKit, shared with Beaufort); `#sceneFront` the fence, the pillars, the pumpkin lights,
-the boards and the kid; `#sceneFx` the fire's flame, a pumpkin while its candle flickers, the bats, the
+chairs, the tub, the tree, the surfboard rack and the strands; `#sceneLift` the palms and the two bands of fountain grass as boxes
+the compositor sways (liftKit, shared with Beaufort); `#sceneFront` the fence, the pillars, the pumpkin lights
+and the kid; `#sceneFx` the fire's flame, a pumpkin while its candle flickers, the bats, the
 witch and the near rain with its own mask; `#sceneWater` the low sun's wash, the does, the land fog and the pond; `#sceneRefl` the reflection, its
 fade a CSS mask the compositor applies (an SVG mask there was 81ms of every repaint); `#sceneRipple` the
 moving strips, the rain rings, the sand line and the fountain in front of it; `#sceneTop` the low sun on the water, the heron,

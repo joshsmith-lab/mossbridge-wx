@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v107/);
+  assert.match(worker, /mbwx-shell-v108/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -6295,23 +6295,66 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(html, /if\(LOC\.faces==="north"\)weather=\{\.\.\.weather,wind_direction_10m:/);
   // the strands go off at 10 pm and stay off through the small hours; the fire table keeps the same hours
   // and only burns on a cool dry evening; the windows' hour is one constant, not yet decided
-  assert.match(html, /const PN_STRANDS_OUT=22,PN_LIGHTS_OUT=null,PN_PUMPKIN_LIGHTS=true;/);
-  assert.match(fn, /const strandsOn=sunAltDeg< -\.83&&localHour>=12&&localHour<PN_STRANDS_OUT;/);
+  assert.match(html, /const PN_STRANDS_OUT=22,PN_LIGHTS_OUT=null,PN_PUMPKIN_LIGHTS=true,PN_OPT_OUT=22\*60\+30;/);
+  assert.match(fn, /const lit=pnHouseLights\(PN_OPT,sunAltDeg,localHour,localMin\);/);
+  assert.match(fn, /const lightsOn=lit\.windows,strandsOn=lit\.strands,pumpOn=lit\.pumpkins;/);
   assert.match(fn, /const fireOn=strandsOn&&localHour>=15&&temp>=45&&temp<68&&!wet&&!storm&&!fog&&gust<20&&!THUNDER;/);
-  assert.match(fn, /const lightsOn=sunAltDeg< -\.83&&!\(PN_LIGHTS_OUT!=null&&/);
-  // the pumpkin lights are on day and night all October, on the holiday's own calendar, and never otherwise
+  // a review house puts the windows, the porch and the strands out at 10:30 and leaves them out overnight.
+  // the shipped house keeps strands at 10 pm and the windows on all night. the face in the window is not a lamp.
+  {
+    const ctx = vm.createContext({});
+    const block = html.slice(html.indexOf("const PN_STRANDS_OUT="), html.indexOf("function pnPeekGhost("));
+    vm.runInContext(block + "\nglobalThis.pnHouseLights=pnHouseLights;", ctx);
+    // the function runs in its own realm, so compare the two fields rather than the object
+    const on = (opt, alt, hour, minute) => ctx.pnHouseLights(opt, alt, hour, minute);
+    const same = (got, windows, strands, pumpkins, msg) => {
+      assert.equal(got.windows, windows, msg);
+      assert.equal(got.strands, strands, msg);
+      assert.equal(got.pumpkins, pumpkins, msg);
+    };
+    const dark = -2, day = 10;
+    for (const opt of ["", "a", "b"]) same(on(opt, day, 21, 0), false, false, true, `${opt || "shipped"} by day`);
+    same(on("", dark, 21, 0), true, true, true);
+    same(on("", dark, 22, 0), true, false, true, "shipped strands go at 10, the pumpkin string stays to 10:30");
+    same(on("", dark, 22, 29), true, false, true);
+    same(on("", dark, 22, 40), true, false, false, "pumpkin string off at 10:40");
+    same(on("", dark, 2, 10), true, false, false, "shipped windows stay on overnight, the pumpkin string does not");
+    for (const opt of ["a", "b"]) {
+      same(on(opt, dark, 19, 40), true, true, true, `${opt} on from dusk`);
+      same(on(opt, dark, 22, 0), true, true, true, `${opt} still on at 10`);
+      same(on(opt, dark, 22, 29), true, true, true, `${opt} on at 10:29`);
+      same(on(opt, dark, 22, 30), false, false, false, `${opt} off at 10:30`);
+      same(on(opt, dark, 23, 10), false, false, false);
+      same(on(opt, dark, 2, 15), false, false, false, `${opt} stays off overnight`);
+      same(on(opt, dark, 11, 50), false, false, false);
+    }
+  }
+  assert.match(fn, /const ghost=halloween&&!PN_OPT\?/);
+  assert.match(fn, /const peek=halloween&&PN_OPT\?pnPeekGhost\(hx,hy,S,BH\)/);
+  assert.match(html, /data-peek="window"/);
+  // the pumpkin lights hang in swags through October and go dark at 10:30 with the review house, the wire left up
   assert.match(fn, /const pumpLights=PN_PUMPKIN_LIGHTS&&halloween\?/);
-  assert.doesNotMatch(fn.slice(fn.indexOf("const pumpRun="), fn.indexOf("const pumpLights=")), /lightsOn|strandsOn/);
+  assert.match(fn, /data-decor="pumpkin-lights" data-lit="\$\{pumpOn\?1:0\}"/);
+  assert.match(fn, /const pumpSwag=\(x0,x1,seed\)/);
+  assert.match(fn, /yH\+sag\*4\*t\*\(1-t\)/);
+  assert.match(fn, /const n=\(b-a\)>36\?6:5;/);
+  assert.doesNotMatch(fn.slice(fn.indexOf("const pumpSwag="), fn.indexOf("const pumpLights=")), /lightsOn|strandsOn/);
+  // the surfboards stand in a rack centred on the blank west wall, tails on the patio, not on a palm
+  assert.match(fn, /const bayL=hx\+u\(BH\.winL\[BH\.winL\.length-1\]\[1\]\+2\),bayR=hx\+u\(BH\.porch\[0\]\+\.05\),bS=1\.46;/);
+  assert.match(fn, /const bX=\(bayL\+bayR\)\/2,bY=hy\+\.35;/);
+  assert.match(fn, /data-prop="surfboards"/);
+  assert.doesNotMatch(fn, /R0\.x\+3\.9|bS=\.56/);
   // one orange and one white pumpkin on each pillar, carved and lit from the carving day like every pumpkin
   assert.match(fn, /const pumpkins=halloween\?\[\[fx0,3,5\],\[fx1,4,7\]\]\.map\(\(\[x,so,sw\]\)=>pumpkinAt\(x-2\.1,capY,1,\{w:5,h:3\.9,carved,seed:so\}\)\+pumpkinAt\(x\+2\.4,capY,1,\{w:4\.3,h:3\.4,carved,seed:sw,white:true\}\)\)/);
   assert.match(html, /const carved=halloween&&mdOf\(today\)>=hol\.carved;/);
   // the fountain is mid-pond on the back door's line, and so are the steps and the gate; the hot tub sits
-  // under the middle of the three east windows
-  assert.match(fn, /const doorX=hx\+u\(\(PN_BH\.door\[0\]\+PN_BH\.door\[1\]\)\/2\);/);
+  // under the second east window, the middle of the three on the shipped house
+  assert.match(fn, /const doorX=hx\+u\(\(BH\.door\[0\]\+BH\.door\[1\]\)\/2\);/);
   assert.match(fn, /const fnX=doorX,/);
   assert.match(fn, /gx0=doorX-6\.2,gx1=doorX\+6\.2/);
-  assert.match(fn, /const tbX=hx\+u\(\(PN_BH\.winR\[1\]\[0\]\+PN_BH\.winR\[1\]\[1\]\)\/2\)/);
-  assert.equal((html.match(/winR:\[\[[^\]]*\],\[[^\]]*\],\[[^\]]*\]\]/) || []).length, 1, "three windows east of the porch");
+  assert.match(fn, /const tbX=hx\+u\(\(BH\.winR\[1\]\[0\]\+BH\.winR\[1\]\[1\]\)\/2\)/);
+  assert.equal((html.match(/winR:\[\[[^\]]*\],\[[^\]]*\],\[[^\]]*\]\]/g) || []).length, 1, "three windows east of the porch on the shipped house");
+  assert.equal((html.match(/winR:\[\[[^\]]*\],\[[^\]]*\],\[[^\]]*\],\[[^\]]*\]\]/g) || []).length, 2, "four east windows on each review house");
   // the fence runs only between its two white pillars, which mark its ends
   assert.match(fn, /const fx0=X\(10\),fx1=X\(310\)/);
   assert.match(fn, /\$\{pillar\(fx0\)\}\$\{pillar\(fx1\)\}/);
@@ -6319,8 +6362,9 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   // the neighbours are very close and are left out: no other house is drawn
   assert.doesNotMatch(fn, /neighbour|Farmhouse|farmhouse/);
   assert.doesNotMatch(html, /propPnFarmhouse|INK\.pnFarmhouse/);
-  // two sabals at the west, two sabals and the windmill palm at the east, the strands a V from the door
-  assert.match(fn, /const PALMS=\[\[26,"s",7,47,-\.04\],\[52,"s",8,51,\.03\],\[266,"s",9,50,-\.03\],\[282,"w",1,20\],\[298,"s",10,46,\.05\]\]/);
+  // a sabal, a windmill palm and a sabal at each end, the windmill between the sabals, the strands a V from the door to the inner sabals
+  assert.match(fn, /const PALMS=\[\[26,"s",7,47,-\.04\],\[39,"w",2,20\],\[52,"s",8,51,\.03\],\[266,"s",9,50,-\.03\],\[282,"w",1,20\],\[298,"s",10,46,\.05\]\]/);
+  assert.match(fn, /const L0=PALMS\[2\],R0=PALMS\[3\];/);
   assert.match(fn, /const pts=\[\[L0\.x\+\.6,L0\.crownY\+7\],vtx,\[R0\.x-\.6,R0\.crownY\+7\]\];/);
   // nothing in it moves under reduced motion
   for (const m of fn.matchAll(/animation:(\w+)/g)) assert.ok(["swayTree", "pnFlick", "pnDrift", "pnSpray", "pnDrops", "drift"].includes(m[1]), m[1]);
@@ -6362,7 +6406,7 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(fn, /const up=document\.getElementById\("sceneSvg"\)\.childElementCount>0;\n  skyPaint\(\);/);
   assert.match(fn, /if\(staged\[0\]\.childElementCount\|\|up\)\{landPaint\(\);waterPaint\(\);return\}/);
   // rain falls in front of the house too, on the moving sheet with its own mask, and lands at the sand
-  assert.match(fn, /const rainTop=hy\+u\(PN_BH\.ridge\)\+2,rainLand=sandY;/);
+  assert.match(fn, /const rainTop=hy\+u\(BH\.ridge\)\+2,rainLand=sandY;/);
   assert.match(fn, /\+\(nearRainL\?`<defs>\$\{nearRainL\.defs\}<\/defs>\$\{nearRainL\.drops\}`:""\)\};/);
   // the frame keeps its 194 at every width, and what spans it spans the whole of it
   assert.match(html, /const sceneH=W=>LOC\.view==="pond"\?194:/);
