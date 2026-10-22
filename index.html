@@ -199,10 +199,10 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes pnSpray{from{transform:skewX(calc(var(--sk,1deg) * -.4))}to{transform:skewX(var(--sk,1deg))}}
 @keyframes pnDrops{from{transform:translateX(calc(var(--dx,1px) * -.3));opacity:.75}to{transform:translateX(var(--dx,1px));opacity:1}}
 @keyframes pnFlick{0%{transform:scale(1,1);opacity:1}35%{transform:scale(1.02,calc(1 - var(--fk,.1)));opacity:.88}70%{transform:scale(.98,calc(1 + var(--fk,.1) * .6));opacity:1}100%{transform:scale(1,calc(1 - var(--fk,.1) * .5));opacity:.93}}
-/* the hot tub, in season: steam rises and the underwater lights trade one colour for the next.
-   Opacity and a short rise only, and reduced motion leaves the wisps and one quiet mix of the colours. */
+/* the hot tub, in season: short soft steam, and the wash trades lagoon for moon blue.
+   Opacity and a short rise only, and reduced motion leaves the wisps and one quiet colour. */
 :is(#sceneSvg,.scene-layer) .pn-steam{transform-box:fill-box;transform-origin:center bottom;animation:pnSteam var(--sd,9s) ease-in infinite}
-@keyframes pnSteam{0%{transform:translateY(0);opacity:.55}20%{opacity:.95}100%{transform:translateY(-46px);opacity:0}}
+@keyframes pnSteam{0%{transform:translateY(0);opacity:.6}20%{opacity:.85}100%{transform:translateY(-12px);opacity:0}}
 :is(#sceneSvg,.scene-layer) .pn-tub-hue{animation:pnTubHue var(--hd,18s) ease-in-out infinite}
 @keyframes pnTubHue{0%,20%{opacity:var(--hi,.62)}48%{opacity:.16}74%,100%{opacity:var(--lo,.03)}}
 .scene-layer .bft-flag[style]{animation:bftFlag var(--fd,1.4s) ease-in-out infinite alternate}
@@ -10850,11 +10850,10 @@ function pnPondScene(c){
   const lit=pnHouseLights(sunAltDeg,localHour,localMin,rising);
   const lightsOn=lit.windows,strandsOn=lit.strands,pumpOn=lit.pumpkins;
   const fireOn=strandsOn&&localHour>=15&&temp>=45&&temp<68&&!wet&&!storm&&!fog&&gust<20&&!THUNDER;
-  /* the tub is open, and steaming, from October 20 through April 15. Its lights use the strands' hours.
-     ?tub=b is the rim wash; anything else is the three lamps. One picture, so the other style is not drawn. */
+  /* the tub is open, and steaming, from October 20 through April 15. Its lights use the strands' hours:
+     one wash across the water, lagoon then moon blue */
   const tubSeason=pnTubSeason(locToday());
   const tubLit=tubSeason&&strandsOn;
-  const tubLook=new URLSearchParams(location.search).get("tub")==="b"?"b":"a";
   const swayAmt=clamp(.3+gust*.05,.3,2.6),swayDur=clamp(8.5-gust*.15,3,8.5);
   /* dw: +1 when the wind blows toward the right of this north-facing frame. Everything that leans or drifts
      with the wind goes by it. In SVG (y down, turning at the foot) skewX(-a) tips the top to the right, so
@@ -10975,31 +10974,23 @@ function pnPondScene(c){
   const fireLight=fireOn?`<ellipse cx="${f1(fX)}" cy="${f1(fY+1.5)}" rx="46" ry="15" fill="url(#pnFirePool)"/><ellipse cx="${f1(fX)}" cy="${f1(fY-11)}" rx="32" ry="18" fill="url(#pnFirePool)" opacity=".72"/>`:"";
   const fireWash=fireOn?`<ellipse data-prop="fire-glow" cx="${f1(fX)}" cy="${f1(fY-5)}" rx="30" ry="14" fill="url(#pnFirePool)" opacity=".42"/>`:"";
   const tbX=hx+u((BH.winR[0][0]+BH.winR[BH.winR.length-1][1])/2),tbY=hy+3.4;
-  const tub=`<path d="M ${f1(tbX-u(9.4))} ${f1(tbY-u(9))} L ${f1(tbX+u(11.6))} ${f1(tbY-u(9))} L ${f1(tbX+u(12.6))} ${f1(tbY-u(6))} L ${f1(tbX+u(11))} ${f1(tbY-u(6))} Z" fill="${shadeC}" opacity="${(.22*shadowOp).toFixed(2)}"/><g data-prop="hot-tub" data-open="${tubSeason?1:0}" data-lit="${tubLit?1:0}" data-look="${tubSeason?tubLook:""}">${inkAt(tbX,tbY,S,1,inkRig(propPnTub({open:tubSeason}),palAt(INK.pnTub,.04),{s:S,line:.8,heavy:.4,shade:1.1,lit:.7,light:lightAt(tbX,tbY-10)}))}</g>`;
+  const tub=`<path d="M ${f1(tbX-u(9.4))} ${f1(tbY-u(9))} L ${f1(tbX+u(11.6))} ${f1(tbY-u(9))} L ${f1(tbX+u(12.6))} ${f1(tbY-u(6))} L ${f1(tbX+u(11))} ${f1(tbY-u(6))} Z" fill="${shadeC}" opacity="${(.22*shadowOp).toFixed(2)}"/><g data-prop="hot-tub" data-open="${tubSeason?1:0}" data-lit="${tubLit?1:0}">${inkAt(tbX,tbY,S,1,inkRig(propPnTub({open:tubSeason}),palAt(INK.pnTub,.04),{s:S,line:.8,heavy:.4,shade:1.1,lit:.7,light:lightAt(tbX,tbY-10)}))}</g>`;
   /* steam the whole season, on the moving sheet, and the lights only while the strands are on.
-     Each colour is one group, so they trade places together and the sheet gains a handful of
-     opacity animations, not one per lamp. A is three lamps in the water. B is one wash across it. */
+     Each colour is one group, so they trade places together. */
   const tubFx=(()=>{
     if(!tubSeason)return "";
-    /* three wisps, wide enough to read at phone size, rising well clear of the rim. The rightmost stays
+    /* short and soft. The tallest fades out around the top of the windows, and the rightmost stays
        off the window Ghostface uses */
-    const steam=[[-4.6,11,5.2,30],[.3,13.5,6.2,40],[4.8,10,4.4,26]].map(([x,dur,rx,ry],i)=>`<ellipse class="pn-steam" cx="${x}" cy="${(-6.3-ry).toFixed(2)}" rx="${rx}" ry="${ry}" fill="url(#pnSteam)" opacity=".82" style="--sd:${dur}s;${wallClock(dur,i*3.1)}"/>`).join("");
-    const hd=tubLook==="b"?22:18;
+    const steam=[[-3.2,10,2.4,11],[.2,12.5,3,13.5],[3.4,9.5,2.1,10]].map(([x,dur,rx,ry],i)=>`<ellipse class="pn-steam" cx="${x}" cy="${(-8.5-ry).toFixed(2)}" rx="${rx}" ry="${ry}" fill="url(#pnSteam)" opacity=".75" style="--sd:${dur}s;${wallClock(dur,i*3.1)}"/>`).join("");
+    const hd=22;
     const layer=(id,delay,rest,inner)=>`<g class="pn-tub-hue" data-hue="${id}" opacity="${rest}" style="--hi:.98;--hd:${hd}s;${wallClock(hd,delay)}">${inner}</g>`;
     let lights="";
     if(tubLit){
-      /* colour in the water, a wash up the wall, and a pool on the paving, large enough to see at 390.
-         A is three lamps. B is one even wash, with no lamps, in a cool colour. */
-      const spill=id=>`<ellipse cx="0" cy="-15" rx="16" ry="10" fill="url(#${id})" opacity=".62"/><ellipse cx="0" cy="5.4" rx="19" ry="7.6" fill="url(#${id})" opacity=".82"/>`;
-      if(tubLook==="b"){
-        const wash=id=>`<ellipse cx="0" cy="-6.4" rx="9.4" ry="2.4" fill="url(#${id})"/>${spill(id)}`;
-        lights=layer("pnTubLagoon",0,.88,wash("pnTubLagoon"))+layer("pnTubMoon",11,.06,wash("pnTubMoon"));
-      }else{
-        const lamps=id=>[-7.4,0,7.4].map(x=>`<ellipse cx="${x}" cy="-6.45" rx="3.1" ry="2.15" fill="url(#${id})"/>`).join("")+`<ellipse cx="0" cy="-6.45" rx="8.6" ry="1.15" fill="url(#${id})" opacity=".28"/>${spill(id)}`;
-        lights=layer("pnTubAmber",0,.9,lamps("pnTubAmber"))+layer("pnTubRose",6,.05,lamps("pnTubRose"))+layer("pnTubAqua",12,.03,lamps("pnTubAqua"));
-      }
+      /* the wash stays on the water, with a soft halo on the tub. Nothing drops onto the paving */
+      const wash=id=>`<ellipse cx="0" cy="-6.45" rx="8.8" ry="1.7" fill="url(#${id})"/><ellipse cx="0" cy="-5.4" rx="11.2" ry="2.6" fill="url(#${id})" opacity=".42"/>`;
+      lights=layer("pnTubLagoon",0,.88,wash("pnTubLagoon"))+layer("pnTubMoon",11,.06,wash("pnTubMoon"));
     }
-    return `<g data-prop="tub-live" data-look="${tubLook}" data-lit="${tubLit?1:0}" transform="translate(${f1(tbX)} ${f1(tbY)}) scale(${S})">${steam}${lights}</g>`;
+    return `<g data-prop="tub-live" data-lit="${tubLit?1:0}" transform="translate(${f1(tbX)} ${f1(tbY)}) scale(${S})">${steam}${lights}</g>`;
   })();
 
   /* ── October: a black weeping willow just left of the fire table, where a round bush was. It is up with
@@ -11279,10 +11270,7 @@ function pnPondScene(c){
       <radialGradient id="pnUplight"><stop offset="0" stop-color="rgb(255,196,120)" stop-opacity=".38"/><stop offset="1" stop-color="rgb(255,180,100)" stop-opacity="0"/></radialGradient>
       <radialGradient id="pnWash"><stop offset="0" stop-color="rgb(255,170,90)" stop-opacity=".45"/><stop offset="1" stop-color="rgb(255,160,80)" stop-opacity="0"/></radialGradient>
       <radialGradient id="pnFirePool"><stop offset="0" stop-color="rgb(255,176,64)" stop-opacity=".9"/><stop offset=".38" stop-color="rgb(255,120,36)" stop-opacity=".62"/><stop offset=".72" stop-color="rgb(255,96,24)" stop-opacity=".28"/><stop offset="1" stop-color="rgb(255,80,16)" stop-opacity="0"/></radialGradient>
-      <linearGradient id="pnSteam" x1=".5" y1="1" x2=".5" y2="0"><stop offset="0" stop-color="#D5E4EC" stop-opacity="1"/><stop offset=".3" stop-color="#EEF5F8" stop-opacity=".92"/><stop offset=".68" stop-color="#F7FBFD" stop-opacity=".62"/><stop offset="1" stop-color="#F7FBFD" stop-opacity="0"/></linearGradient>
-      <radialGradient id="pnTubAmber"><stop offset="0" stop-color="#FFE4B0" stop-opacity="1"/><stop offset=".38" stop-color="#FF8C1A" stop-opacity=".95"/><stop offset=".72" stop-color="#FF7A10" stop-opacity=".55"/><stop offset="1" stop-color="#FF6A00" stop-opacity="0"/></radialGradient>
-      <radialGradient id="pnTubRose"><stop offset="0" stop-color="#FFE0EC" stop-opacity="1"/><stop offset=".4" stop-color="#E04880" stop-opacity=".92"/><stop offset=".75" stop-color="#C43870" stop-opacity=".5"/><stop offset="1" stop-color="#C43870" stop-opacity="0"/></radialGradient>
-      <radialGradient id="pnTubAqua"><stop offset="0" stop-color="#E4FFF8" stop-opacity="1"/><stop offset=".4" stop-color="#14C4B0" stop-opacity=".92"/><stop offset=".75" stop-color="#0A9A90" stop-opacity=".5"/><stop offset="1" stop-color="#0A9A90" stop-opacity="0"/></radialGradient>
+      <linearGradient id="pnSteam" x1=".5" y1="1" x2=".5" y2="0"><stop offset="0" stop-color="#E4F1F6" stop-opacity=".9"/><stop offset=".22" stop-color="#F3F9FB" stop-opacity=".62"/><stop offset=".5" stop-color="#F7FBFD" stop-opacity=".28"/><stop offset=".75" stop-color="#F7FBFD" stop-opacity=".06"/><stop offset="1" stop-color="#F7FBFD" stop-opacity="0"/></linearGradient>
       <radialGradient id="pnTubLagoon"><stop offset="0" stop-color="#D4FFF4" stop-opacity="1"/><stop offset=".42" stop-color="#12B8C4" stop-opacity=".95"/><stop offset=".74" stop-color="#0A7E9A" stop-opacity=".55"/><stop offset="1" stop-color="#086888" stop-opacity="0"/></radialGradient>
       <radialGradient id="pnTubMoon"><stop offset="0" stop-color="#F2F7FF" stop-opacity="1"/><stop offset=".42" stop-color="#5B92F0" stop-opacity=".92"/><stop offset=".74" stop-color="#3A68D0" stop-opacity=".5"/><stop offset="1" stop-color="#2A50B0" stop-opacity="0"/></radialGradient>
       <linearGradient id="pnLawn" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(farY)}" x2="0" y2="${f1(sandY)}"><stop offset="0" stop-color="${air(lawnTop,.05)}"/><stop offset="1" stop-color="${air(lawnFoot,.02)}"/></linearGradient>

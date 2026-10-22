@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v127/);
+  assert.match(worker, /mbwx-shell-v128/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -6348,15 +6348,13 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(html, /function pnTubSeason\(d\)\{return inSeason\(d,PN_TUB\)\}/);
   assert.match(fn, /const tubSeason=pnTubSeason\(locToday\(\)\);/);
   assert.match(fn, /const tubLit=tubSeason&&strandsOn;/);
-  assert.match(fn, /const tubLook=new URLSearchParams\(location\.search\)\.get\("tub"\)==="b"\?"b":"a";/);
   assert.match(fn, /propPnTub\(\{open:tubSeason\}\)/);
   assert.match(fn, /data-prop="tub-live"/);
-  assert.match(html, /@keyframes pnSteam\{0%\{transform:translateY\(0\);opacity:\.55\}20%\{opacity:\.95\}100%\{transform:translateY\(-46px\);opacity:0\}\}/);
+  assert.match(html, /@keyframes pnSteam\{0%\{transform:translateY\(0\);opacity:\.6\}20%\{opacity:\.85\}100%\{transform:translateY\(-12px\);opacity:0\}\}/);
   assert.match(html, /@keyframes pnTubHue\{0%,20%\{opacity:var\(--hi,\.62\)\}48%\{opacity:\.16\}74%,100%\{opacity:var\(--lo,\.03\)\}\}/);
-  assert.match(fn, /if\(tubLook==="b"\)/);
-  assert.match(fn, /pnTubAmber/);
   assert.match(fn, /pnTubLagoon/);
-  assert.doesNotMatch(html, /pnTubChamp/);
+  assert.doesNotMatch(fn, /tubLook|get\("tub"\)/);
+  assert.doesNotMatch(html, /pnTubAmber|pnTubRose|pnTubAqua|pnTubChamp|\?tub=/);
   {
     const ctx = vm.createContext({});
     const block = html.slice(html.indexOf("const mdOf="), html.indexOf("const holidayOn="))
