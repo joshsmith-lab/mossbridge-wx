@@ -357,11 +357,11 @@ async function animalContactCheck(page) {
         if (svg.querySelector('[data-water-contact="raccoon"]')) issues.push("raccoon: dry-bank animal has a water ring");
       }
       const heron = svg.querySelector('[data-species="great-blue-heron"]');
-      // the house's heron stands still at the pond's east edge, side on: it has no footfalls and no strike
-      // to answer, so it must hold no motion at all and stand with its feet in the shallows
-      if (heron?.classList.contains("heron-still")) {
-        checked.push("heron still at the water's edge");
-        if (heron.getAnimations({ subtree: true }).length) issues.push("heron: a still heron is moving");
+      // the house's heron has no marsh joints. It stands at the pond's east edge and may only nod its head.
+      if (heron && !heron.querySelector(".heron-leg")) {
+        checked.push("heron at the water's edge");
+        const names = [...new Set(heron.getAnimations({ subtree: true }).map((a) => a.animationName))];
+        if (names.some((n) => n !== "pnNod")) issues.push(`heron: a house heron moves more than its head (${names.join(", ")})`);
         const pond = svg.querySelector('rect[fill="url(#pnPond)"]');
         if (!pond) issues.push("heron: no pond to stand in");
         else {
@@ -584,6 +584,9 @@ async function decorCheck(page) {
     for (const [el, k] of ground.filter(([e]) => MORE.test(e.dataset.decor)))
       for (const [o, b] of ground) {
         if (o === el) continue;
+        // the pumpkin-light string's box is the whole run along the fence. The gate is left clear
+        // between the two runs, and the kid stands there, so the box is not a collision.
+        if (STRUNG.test(o.dataset.decor)) continue;
         if (Math.min(k.right, b.right) - Math.max(k.left, b.left) > -1 && Math.min(k.bottom, b.bottom) - Math.max(k.top, b.top) > -1)
           out.hits.push(`${el.dataset.decor} runs into ${o.dataset.decor}`);
       }
@@ -874,7 +877,7 @@ for (const cs of cases) {
     // the sway a limb crosses the edge of an eye. Each eye is sampled on its own fill at both ends
     // of the sway, in this scene's wind and again at the oak's full throw in a gale (1.4°), and the
     // scene fails if the oak hides 40% of either. The oak is put back running as it was.
-    // At the house he is a small face in the rightmost east window, clipped to the pane, and still.
+    // At the house he stands behind the glass of the rightmost east window, smaller and set back in the dark room, and still.
     // The clip hides his chin on purpose, so this check asks for that face and leaves the oak's eye sample to the marsh.
     if (cs.decor?.includes("ghostface") && await page.locator('.scene [data-prop="house"]').count()) {
       const peek = await page.locator('.scene [data-decor="ghostface"][data-peek="window"]').count();
@@ -993,6 +996,8 @@ for (const cs of cases) {
         for (const el of svg.querySelectorAll("[data-species]")) {
           const species = el.dataset.species;
           if (waders.includes(species)) continue;
+          // a pond slider's head is in the water on purpose. Only the one on the bank is a land animal.
+          if (species === "pond-slider" && el.dataset.where === "water") continue;
           const b = el.getBoundingClientRect();
           if (b.bottom < w.top) continue;                 // entirely on the bank
           const under = (b.bottom - w.top) / b.height;

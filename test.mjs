@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v112/);
+  assert.match(worker, /mbwx-shell-v115/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -1884,8 +1884,8 @@ test("Ghostface peeks out of the live oak for October, and never moves", async (
   for (const name of ["26-house-october-afternoon", "27-house-halloween-night", "45-house-carved-week-morning", "29-house-halloween-rain-night", "36-house-october-golden-evening", "37-house-october-fog-morning"])
     assert.match(scene, new RegExp(`name: "${name}"[^\\n]*decor: \\["ghostface"`));
   assert.match(scene, /name: "35-house-november-small-hours"[^\n]*decor: \[\]/);
-  // at the house he is a small face in the rightmost east window and never moves. The pane clips his chin
-  // on purpose, so the harness asks for that face rather than the corner's eye sample
+  // at the house he stands behind the glass of the rightmost east window, set back and smaller, and never moves.
+  // The harness asks for that window rather than the oak's eye sample
   assert.match(scene, /if \(cs\.decor\?\.includes\("ghostface"\) && await page\.locator\('\.scene \[data-prop="house"\]'\)\.count\(\)\)/);
   assert.match(scene, /if \(!peek\) problems\.push\(`\$\{cs\.name\}: Ghostface is not in the east window`\);/);
   // in the parked marsh's oak he stands still and the oak sways over him, so the harness samples both
@@ -2066,7 +2066,7 @@ test("Halloween's cobweb is strung across the corner of the app itself, clear of
   // Halloween window's, read off the place's own calendar the way the decorations are, and it is
   // strung once there is a reading: the loading and error shell has none
   assert.match(html, /if\(holidayOn\(locToday\(\)\)\?\.id!=="halloween"\|\|!LAST\)return off\(\);/);
-  assert.match(html, /LASTW=appW\(\);\n  fishSchedule\(allowedFishWins\);\n  paintCobweb\(\);\n  fishMotion\(\);\n  PAINT_DONE\(\);\n  \}\);\}\);\}\);\}\);\n\}/);
+  assert.match(html, /LASTW=appW\(\);\n  fishSchedule\(allowedFishWins\);\n  paintCobweb\(\);\n  fishMotion\(\);\n  PAINT_DONE\(\);\n  \}\);\}\);\}\);\},!!warning\);\n\}/);
   assert.match(html, /xpReset\(\);LAST=null;\n  paintCobweb\(\);\n  paintLoadMark\(\);\n\}/);
   // placed again when the alert strip opens and moves everything under it, and when the fonts land
   assert.match(html, /el\.setAttribute\("aria-expanded",open\?"true":"false"\);\n  \/\*[^\n]*\*\/\n  paintCobweb\(\);/);
@@ -4176,7 +4176,7 @@ test("a paint says when it has landed, and the harnesses wait on it rather than 
   assert.match(html, /let PAINT=Promise\.resolve\(\),PAINT_DONE=\(\)=>\{\};\nfunction paintBegin\(\)\{PAINT_DONE\(\);PAINT=new Promise\(r=>PAINT_DONE=r\)\}/);
   assert.match(html, /const gen=\+\+RENDER_GEN;\n  paintBegin\(\);/);
   // settled after the last stage, and by a superseding loading shell, so no waiter hangs
-  assert.match(html, /  fishMotion\(\);\n  PAINT_DONE\(\);\n  \}\);\}\);\}\);\}\);\n\}/);
+  assert.match(html, /  fishMotion\(\);\n  PAINT_DONE\(\);\n  \}\);\}\);\}\);\},!!warning\);\n\}/);
   assert.match(html, /RENDER_GEN\+\+;PAINT_DONE\(\);/);
   for (const f of ["interactions", "tonight", "shots"]) {
     const src = await readFile(new URL(`tools/${f}.mjs`, root), "utf8");
@@ -6340,11 +6340,11 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(fn, /const pumpkins=halloween\?\[\[fx0,3,5\],\[fx1,4,7\]\]\.map\(\(\[x,so,sw\]\)=>pumpkinAt\(x-2\.1,capY,1,\{w:5,h:3\.9,carved,seed:so\}\)\+pumpkinAt\(x\+2\.4,capY,1,\{w:4\.3,h:3\.4,carved,seed:sw,white:true\}\)\)/);
   assert.match(html, /const carved=halloween&&mdOf\(today\)>=hol\.carved;/);
   // the fountain is mid-pond on the back door's line, and so are the steps and the gate; the hot tub sits
-  // under the second east window, the hot tub's
+  // centred on the bank of four east windows
   assert.match(fn, /const doorX=hx\+u\(\(BH\.door\[0\]\+BH\.door\[1\]\)\/2\);/);
   assert.match(fn, /const fnX=doorX,/);
   assert.match(fn, /gx0=doorX-6\.2,gx1=doorX\+6\.2/);
-  assert.match(fn, /const tbX=hx\+u\(\(BH\.winR\[1\]\[0\]\+BH\.winR\[1\]\[1\]\)\/2\)/);
+  assert.match(fn, /const tbX=hx\+u\(\(BH\.winR\[0\]\[0\]\+BH\.winR\[BH\.winR\.length-1\]\[1\]\)\/2\)/);
   // every chair at the fire table is black, the one behind included
   assert.match(fn, /chair\(fX\+7,fY-3\.4,"side","black",-1\)\}\$\{chair\(fX-9,fY-3\.6,"side","black"\)/);
   assert.match(fn, /chair\(fX-17\.5,fY\+\.5,"side","black"\)\}\$\{chair\(fX\+17\.5,fY\+\.5,"side","black",-1\)/);
@@ -6397,7 +6397,7 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.doesNotMatch(skySheet, /gulls|sceneClouds|palm|grass|fountain|bats|witchFly|breakUp|pondMoving|fireFlame|pumpkins|gateLanterns|heron|deer|animation/);
   assert.match(fn, /sheet\("sceneSky"\)\.innerHTML=gulls\+\(skyOver\?sunBody\+moonShown\+sideSky:""\)\+sceneClouds/);
   assert.match(fn, /document\.getElementById\("sceneLift"\)\.innerHTML=grassLift\+PALMS\.map\(palmLift\)\.join\(""\);/);
-  assert.match(fn, /sheet\("sceneFx"\)\.innerHTML=fireFlame\+\(guttering\?pumpkins\+gateLanterns:""\)\+bats\+witchFly\(witch\)/);
+  assert.match(fn, /sheet\("sceneFx"\)\.innerHTML=fireFlame\+\(guttering\?pumpkins\+gateLanterns:""\)\+dogs\+bats\+witchFly\(witch\)/);
   assert.match(fn, /sheet\("sceneRipple"\)\.innerHTML=pondMoving;/);
   for (const name of ["sceneNear", "sceneFront", "sceneWater", "sceneTop"]) {
     const from = fn.slice(fn.indexOf(`sheet("${name}").innerHTML=`)), body = from.slice(0, from.indexOf(";\n"));
@@ -6428,4 +6428,64 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   // and the harnesses hold it: no animation in #sceneSvg or a still sheet at the house, and WebKit's house cases
   assert.match(scene, /\["sceneSvg", "sceneNear", "sceneFront", "sceneWater", "sceneRefl", "sceneTop"\]/);
   for (const name of ["coast-night", "coast-rain", "coast-afternoon", "coast-blow", "coast-halloween"]) assert.match(webkit, new RegExp(`name: "${name}", loc: "mb"`));
+  // the detailed drawings are the house. There is no animals query. The heron nods, the gulls are the
+  // house gull, and the dogs and the sliders come out on their own table.
+  assert.doesNotMatch(html, /pnAnimalLook|\?animals=/);
+  assert.match(fn, /const plan=pnDogsPlan/);
+  assert.doesNotMatch(fn, /heron-still|rigHeron\(phase\)|flightBird\("gull"/);
+  assert.match(fn, /propPnHeron\(phase\(8\.5\)\)/);
+  assert.match(fn, /pnHouseGull\(/);
+  assert.match(fn, /pnRigBat\(beat\)/);
+  assert.match(fn, /propPnDoeLook\(/);
+  assert.match(fn, /openLast:!!halloween/);
+  const peekFn = html.slice(html.indexOf("function pnPeekGhost("), html.indexOf("function pnWindowGhost("));
+  assert.match(peekFn, /yT=Y\(t\)/);
+  assert.match(peekFn, /pnWindowGhost\(\)/);
+  assert.match(peekFn, /data-decor="ghostface" data-peek="window"/);
+  assert.match(peekFn, /data-glass="front"/);
+  assert.doesNotMatch(peekFn, /propGhostface/);
+  // the rightmost east window matches the others: a frame and a meeting rail, and no vertical bar
+  assert.doesNotMatch(peekFn, /mullW|mullion/);
+});
+
+test("the house dogs and the pond sliders keep to their table", async () => {
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const src = html.slice(html.indexOf("const PN_DOGS="), html.indexOf("function propPnHerder("));
+  const ctx = vm.createContext({});
+  vm.runInContext(src + "\nglobalThis.PN_DOGS=PN_DOGS;globalThis.pnDogsPlan=pnDogsPlan;globalThis.pnTurtlesPlan=pnTurtlesPlan;", ctx);
+  const plain = (v) => JSON.parse(JSON.stringify(v));
+  assert.deepEqual(plain(ctx.PN_DOGS), { morning: [7 * 60, 9 * 60], evening: 17 * 60, dusk: -.83, heat: 92, cold: 36 });
+  const dogs = (o) => plain(ctx.pnDogsPlan({ mins: 8 * 60, sunAlt: 20, wet: false, storm: false, temp: 70, warned: false, fire: false, ...o }));
+  const both = { out: "both", door: false, fire: false };
+  const inside = { out: "none", door: false, fire: false };
+  assert.deepEqual(dogs({ mins: 7 * 60 }), both);
+  assert.deepEqual(dogs({ mins: 8 * 60 + 59 }), both);
+  assert.deepEqual(dogs({ mins: 9 * 60 }), inside);
+  assert.deepEqual(dogs({ mins: 6 * 60 + 59 }), inside);
+  assert.deepEqual(dogs({ mins: 7 * 60 + 30, sunAlt: -2 }), { out: "none", door: true, fire: false });
+  assert.deepEqual(dogs({ mins: 17 * 60, sunAlt: 5 }), both);
+  assert.deepEqual(dogs({ mins: 19 * 60, sunAlt: -1 }), { out: "none", door: true, fire: false });
+  assert.deepEqual(dogs({ mins: 20 * 60, sunAlt: -10, fire: true }), { out: "one", door: true, fire: true });
+  assert.deepEqual(dogs({ mins: 20 * 60, sunAlt: -10, wet: true, fire: true }), { out: "none", door: true, fire: false });
+  assert.deepEqual(dogs({ temp: 92 }), inside);
+  assert.deepEqual(dogs({ temp: 36 }), inside);
+  assert.deepEqual(dogs({ temp: null }), inside);
+  assert.deepEqual(dogs({ temp: 37 }), both);
+  assert.deepEqual(dogs({ mins: 21 * 60, sunAlt: -20, storm: true, fire: true }), { out: "none", door: false, fire: false });
+  assert.deepEqual(dogs({ warned: true }), inside);
+  assert.deepEqual(dogs({ wet: true }), inside);
+  const turtles = (o) => plain(ctx.pnTurtlesPlan({ sunAlt: 30, wet: false, storm: false, temp: 70, snowing: false, ...o }));
+  assert.deepEqual(turtles({}), { heads: 2, bask: true, dim: false });
+  assert.deepEqual(turtles({ sunAlt: 4, temp: 55 }), { heads: 1, bask: false, dim: false });
+  assert.deepEqual(turtles({ temp: 40 }), { heads: 0, bask: false, dim: false });
+  assert.deepEqual(turtles({ temp: null }), { heads: 0, bask: false, dim: false });
+  assert.deepEqual(turtles({ wet: true }), { heads: 1, bask: false, dim: false });
+  assert.deepEqual(turtles({ sunAlt: -5 }), { heads: 1, bask: false, dim: true });
+  assert.deepEqual(turtles({ sunAlt: -5, wet: true }), { heads: 0, bask: false, dim: false });
+  assert.deepEqual(turtles({ storm: true }), { heads: 0, bask: false, dim: false });
+  assert.deepEqual(turtles({ snowing: true }), { heads: 0, bask: false, dim: false });
+  assert.match(html, /merle-herder/);
+  assert.match(html, /blenheim-spaniel/);
+  assert.match(html, /data-dogs=/);
+  assert.match(html, /data-turtles="1"/);
 });

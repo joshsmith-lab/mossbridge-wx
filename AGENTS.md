@@ -852,7 +852,7 @@ shakes in their peaks, the screened porch between them under its own low hip and
 wall behind the white screen door the navy compass dial ("need the dial on the porch as well"). Tall
 double-hung windows, the left pair in one casing, the right three apart (a straight-on photo shows a fourth on
 the right; Josh: "keep it for now. undecided"). The fire table and its Adirondack
-chairs on the patio's west end, the hot tub on its east end centred under the middle of the three right
+chairs on the patio's west end, the hot tub on its east end centred on the bank of four east
 windows, a sabal with a windmill palm between it and a second sabal at the west and the same group at the east, the black fence running only between
 its two white pillars ("the white stanchions should mark the limit of the fence"), a gate and low steps
 straight down from the back door, fountain grass along the inside of the fence up to the gate, the lawn,
@@ -892,9 +892,25 @@ near drops the ridge has, from one helper, `nearRainLayer`), rings the pond and 
 dims everything under the app's lightning, and fog softens the house and widens the halos.
 
 **Who is out.** Small whitetail does (`whitetail-doe`) on the lawn in front of the fence at dawn and dusk, at
-real size, and the great blue heron (`great-blue-heron`, held still by `.heron-still`) standing side-on in
-the shallows at the pond's east edge in every weather but a thunderstorm. Nobody sits at the fire: the
-picture makes no claim about who is home.
+real size, with a dorsal stripe and a longer neck that nods, and the great blue heron (`great-blue-heron`) standing side-on in
+the shallows at the pond's east edge in every weather but a thunderstorm, its head nodding. Gulls cross at midday when it is
+dry, with a longer wing and a small chest mark, and in October the bats hunt over the roof from sunset to dawn, the same wing with a pale chest mark. Nobody sits at the fire: the
+picture makes no claim about who is home. These are the detailed drawings. There is no animals query.
+
+The two dogs are drawn on the patio and named by coat, never by a person's name.
+One is a blue merle Australian Shepherd, grey broken with black and white, copper points, a fluffy mane and a bobbed tail (`merle-herder`). The other is a Blenheim Cavalier, chestnut and white, with long feathered ears (`blenheim-spaniel`). `PN_DOGS` is the table and `pnDogsPlan`
+reads it:
+
+- both out on the patio from 7:00 inclusive until 9:00 exclusive, once the sun is up (elevation at least −0.83°)
+- both out from 5:00 until that same dusk
+- while the fire table is lit, the herder lies beside it and the spaniel is the shape in the screen door
+- after dusk both are inside, and one shape stands in the screen door (the spaniel while the fire is lit, otherwise the herder). Lit glass takes a dark fill. After 10:30 the fill is pale, so it still reads
+- they stay in for rain or snow, a thunderstorm, 92° or hotter, 36° or colder, a missing temperature, or an active warning (the outdoor warning the sentence cards use, or the storm card's lead). A watch does not count. Fog and wind do not keep them in
+- a thunderstorm hides the door shape too. Any other dark hour keeps it, including rain
+
+The motion is a tail wag and a head turn, transforms only, and they hold still under reduced motion.
+
+Carolina pond sliders (`pnTurtlesPlan`) are small. In the water only a little head breaks the surface, with at most a very faint low-opacity rippled hint of the shell below it. On the bank, on a warm clear day, one small slider basks, in proportion and clearly smaller than the heron and the dogs. On a warm clear day, the sun at least 6° up and the air at least 60°, two heads break the surface and one basks on the east sand. A milder day, 48° and up, keeps one head. Rain keeps one head and no basking. A dry night keeps one dim head. A storm, snow, a cold day or a wet night keeps them down. A head dips and comes back on its own clock.
 
 **October.** The blood moon, the bats, the witch and the cobweb are shared with the other places; the sky
 over the house is small, so the bats and the witch fly in front of the roof. The house's own, each a
@@ -903,7 +919,7 @@ left of the fire table (`light-tree`, in the round bush's place: drooping black 
 lights that stay lit by day and all night, past the 10:30 lights-out, fills only), one orange and one white pumpkin on each pillar ("put
 one orange and one white pumpkin on both fence stantions - then carve them on time"), both carved and lit
 from the carving day by the candle rules (`pumpkin`, `white-pumpkin`, then `jack-o-lantern`), two lanterns
-at the gate, Ghostface as a small face in the rightmost east window (he lived in the marsh's oak, and he stays after the lamps go out), and on Halloween
+at the gate, Ghostface standing behind the glass of the rightmost east window, smaller and set back in the dark room so the frame, the meeting rail and a tint of glass sit in front of him and the mask is a dim off-white, with no vertical bar, the same as the other east windows (he lived in the marsh's oak, October only, and he stays after the lamps go out at 10:30), and on Halloween
 night the trick-or-treater at the gate, on its own rules. With nobody's cormorant on a dock, the kid is out
 from sunset (the marsh's raw-dusk case kept the kid off the dock; the house's, case 48, has it at the gate).
 
