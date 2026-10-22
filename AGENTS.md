@@ -2326,6 +2326,15 @@ The fuller scene earns its playfulness from the existing drawings and their beha
   AFTER DARK went: the band and the moon already say it, so the moon has only its own box). The high always
   keeps the space above its dot; now or the low take the space under their own dot when the
   space above is taken. Check it at 320, 375, 393 and 430, not only at one width.
+- **A sideways swipe on the picture changes place (October 22 2026).** The address tap still
+  steps to the next place. A finger, a mouse or a trackpad drag on the picture itself slides
+  it: left brings the next place, right the previous, and the three wrap. The picture follows
+  the finger and eases the rest of the way, off through the sky, and the next one comes in
+  from the other side. A vertical move stays a scroll (`touch-action: pan-y`, and a 10px lock
+  that gives the gesture up once it is taller than it is wide). Three small dots sit on the
+  picture's foot, the current place a short pill, so the other places are visible without a
+  sentence. Reduced motion changes the place with no slide. One picture only, moved by a
+  transform, so the sheets are not drawn twice.
 - **Opening and switching in October 2026.** Four things a family member saw on a phone, fixed
   together on October 10 2026 after an audit of the staged paint (#75):
   - A place switch with a cache takes the last place's pictures, notes, sentences and strips down
