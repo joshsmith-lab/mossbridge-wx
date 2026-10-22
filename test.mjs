@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v109/);
+  assert.match(worker, /mbwx-shell-v110/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -6355,17 +6355,17 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(fn, /const tbX=hx\+u\(\(BH\.winR\[1\]\[0\]\+BH\.winR\[1\]\[1\]\)\/2\)/);
   assert.equal((html.match(/winR:\[\[[^\]]*\],\[[^\]]*\],\[[^\]]*\]\]/g) || []).length, 1, "three windows east of the porch on the shipped house");
   assert.equal((html.match(/winR:\[\[[^\]]*\],\[[^\]]*\],\[[^\]]*\],\[[^\]]*\]\]/g) || []).length, 2, "four east windows on each review house");
-  // A is the drawing under review: the main roof's edge is the gable rake extended, white, and the porch
-  // bulb row is gone in favour of one swag across the opening
-  assert.match(html, /const PN_HA=\{l:-60,r:60,ridge:-77,eave:-38,roofL:-52\.2,roofR:52\.2,ridgeL:-36,ridgeR:36,/);
-  assert.match(html, /meet:1\}/);
+  // A is the drawing under review: the main roof is a trapezoid whose lower corners are the gables'
+  // outer eaves, the ridge 0.87 of that span, white, and the only house lights are the V to the palms
+  assert.match(html, /const PN_HA=\{l:-60,r:60,ridge:-66,eave:-30,roofL:-60,roofR:60,ridgeL:-52,ridgeR:52,/);
+  assert.match(html, /peakL:\[-39\.6,-46\],peakR:\[39\.6,-46\],porch:\[-19\.2,19\.2\]/);
+  assert.doesNotMatch(html, /meet:1/);
   assert.doesNotMatch(html, /bulbs:"row"/);
   assert.match(html, /bulbs:"swag"/);
   assert.match(fn, /if\(PN_OPT==="a"\)\{/);
   assert.match(fn, /wall:"#F7F6F3",siding:"#E6E8EB",shake:"#F6F5F2"/);
   assert.match(fn, /hPal\.roof=dark\?mix\(air\("#E6EDF3",\.05\),"#7A90A6",\.42\):"#F4F6F5"/);
-  assert.match(fn, /const porchSwag=PN_OPT==="a"\?/);
-  assert.match(fn, /data-porch="swag"/);
+  assert.doesNotMatch(fn, /porchSwag|data-porch="swag"/);
   assert.match(fn, /if\(PN_OPT==="b"\)\{hPal\.shake="#C8C0B0"/);
   // the fence runs only between its two white pillars, which mark its ends
   assert.match(fn, /const fx0=X\(10\),fx1=X\(310\)/);
