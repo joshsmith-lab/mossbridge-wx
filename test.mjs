@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v116/);
+  assert.match(worker, /mbwx-shell-v117/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -1077,7 +1077,7 @@ test("the fuller daytime paper follows its sky, stays readable, and eases into g
   for (let alt = -3; alt < 6; alt += .1) assert.ok(ctx.blend(alt + .1) >= ctx.blend(alt));
   assert.match(html, /#hourlySvg \.tline,#weekSvg \.tline,#yearSvg \.tline,#tideSvg \.wline,#moonSvg \.wline\{stroke-width:4px\}/);
   assert.match(html, /#hourlySvg text,#weekSvg text,#yearSvg text\{font-family:var\(--disp\);font-weight:650\}/);
-  assert.match(html, /const W=Math\.max\(320,appW\(\)\/1\.22\),H=/);
+  assert.match(html, /const W=LOC\.view==="pond"\?320:Math\.max\(320,appW\(\)\/1\.22\),H=/);
   assert.match(agents, /Fuller, closer, more playful/);
 });
 
@@ -6291,6 +6291,12 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(html, /const mirrorSky=LOC\.faces==="north";/);
   assert.match(html, /const px=f=>pnArc\?pnArc\.x0\+\(1-f\)\*\(W-2\*pnArc\.x0\):30\+f\*arcSpan;/);
   assert.match(html, /const labL=f=>px\(f\)<W\/2;/);
+  assert.match(html, /const pnArc=mirrorSky\?\{x0:28,y0:GY-70,top:20,k:1\}:null;/);
+  assert.match(html, /return pnArc\?a<=6&&a>=-4:a<=6/);
+  // a moon the sine would set into the roof takes the shallower rise and stays in the sky
+  assert.match(html, /function pnMoonInRoof\(x,y\)/);
+  assert.match(html, /if\(pnArc&&pnMoonInRoof\(x,y\)\)/);
+  assert.match(html, /y=pnArc\.y0-Math\.pow\(altS,\.35\)\*\(pnArc\.y0-pnArc\.top\);/);
   assert.match(html, /if\(LOC\.faces==="north"\)windDir=\(360-windDir\)%360;/);
   assert.match(html, /if\(LOC\.faces==="north"\)weather=\{\.\.\.weather,wind_direction_10m:/);
   // the windows, the strands and the fire go off at 10:30 and stay off through the small hours.
@@ -6361,6 +6367,8 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   // the main roof is a trapezoid whose lower corners are the gables' outer eaves, the ridge 0.87 of
   // that span, white, and the only house lights are the V to the palms
   assert.match(html, /const PN_HA=\{l:-60,r:60,ridge:-66,eave:-30,roofL:-60,roofR:60,ridgeL:-52,ridgeR:52,/);
+  assert.match(html, /strip\(\[B\.ridgeL-\.4,B\.ridge-\.9\],\[B\.ridgeR\+\.4,B\.ridge-\.9\],1\.6\)/);
+  assert.match(html, /o:\{shade:\.4,lit:\.32\}/);
   assert.match(html, /peakL:\[-39\.6,-46\],peakR:\[39\.6,-46\],porch:\[-19\.2,19\.2\]/);
   assert.match(fn, /const BH=PN_HA;/);
   assert.doesNotMatch(html, /meet:1/);
@@ -6421,8 +6429,10 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   // rain falls in front of the house too, on the moving sheet with its own mask, and lands at the sand
   assert.match(fn, /const rainTop=hy\+u\(BH\.ridge\)\+2,rainLand=sandY;/);
   assert.match(fn, /\+\(nearRainL\?`<defs>\$\{nearRainL\.defs\}<\/defs>\$\{nearRainL\.drops\}`:""\)\};/);
-  // the frame keeps its 194 at every width, and what spans it spans the whole of it
+  // the logical frame stays 320 by 194. A wide screen scales that picture and crops the sky
   assert.match(html, /const sceneH=W=>LOC\.view==="pond"\?194:/);
+  assert.match(html, /const W=LOC\.view==="pond"\?320:Math\.max\(320,appW\(\)\/1\.22\)/);
+  assert.match(html, /function pondFit\(\)/);
   assert.match(html, /H=L\.view==="pond"\?194:Math\.round/);
   assert.doesNotMatch(fn, /X\(-12\)|X\(332\)/);
   // and the harnesses hold it: no animation in #sceneSvg or a still sheet at the house, and WebKit's house cases
