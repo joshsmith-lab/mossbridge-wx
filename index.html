@@ -9175,11 +9175,21 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     const lean=clamp(.45/Math.tan(Math.max(4,sunAltDeg)*Math.PI/180),.3,2.4)*(x>sunXY[0]?1:-1);
     return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) matrix(1 0 ${(-lean).toFixed(2)} -.13 0 0) scale(${(flip*s).toFixed(2)} ${s.toFixed(2)})" fill="${shadeC}" opacity="${(.22*shadowK).toFixed(2)}">${parts.map(p=>`<path d="${p.d}"/>`).join("")}</g>`};
   const flatParts=L=>L.flatMap(l=>l.parts?l.parts.filter(p=>!INK_INNER.has(p.role)&&!p.soft):flatParts(l.layers));
-  /* The house's sunrise and sunset sit up in open sky. Sunrise is the right-hand word, because the
-     house faces north, and it stays there all day. Sunset stays on the left. A thin chevron sits on
-     the inner side of each time, up for sunrise and down for sunset. Its stroke is the stem of the
-     digits, and the halo behind it is the same 1.3px the times wear, so the arrow and the numerals
-     read as one mark. The chevron is centered on the figures. They stay in the corner columns, which
+  /* The house's sunrise and sunset sit up in open sky, sunrise on the left and sunset on the right, the
+     way they read at the farm and at Beaufort: a pair of times read left to right like a clock. The
+     house faces north, so its sun rises on the right, and until October 23 2026 the times followed it
+     (sunrise right, sunset left). Josh: "I know the times/markers are on the appropriate side of the
+     screen given the orientation - but it's still not really the way my brain works", so the two words
+     swapped and the sky did not: the sun, the moon and the low sun's warmth keep their true sides, and
+     the arrow on each mark says which is which. Beside each time, on the
+     side toward the house, a little sun sits half set on a fine horizon: a gold half-disc in ink, four
+     fine rays fanned over it, and an arrow over those, up for sunrise and down for sunset. It is the
+     app icon's sun in miniature. Josh, October 23 2026, wanted the marks "more elegant/refined than...
+     minimal yes, but... something more", and picked it from three drawn into the page: this one, the
+     sun's dotted path from the horizon, and SUNRISE and SUNSET in small capitals over the time. It took
+     the place of a thin chevron. Its horizon sits on the digits' baseline, its strokes are about the
+     digits' stem and wear the same 1.3px halo the times wear, so the sun and the numerals read as one
+     mark, and sunset's disc is a shade warmer than sunrise's. They stay in the corner columns, which
      are sky from the top of the frame down to the palm crowns: the house occupies the middle from
      about x 64, and the palms start near y 90. A short window crops the top of that sky (the same
      sum pondFit uses) and the words drop to just under the crop, still in the corner. A sun or a
@@ -9187,19 +9197,24 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
      keeps a digit readable when the sky goes dark. The same spots are what the witch and the bats
      keep off. */
   if(pnArc){
-    const TIME_ADV=6.6,CHEV_W=6.6,CHEV_H=5.6,STEM=1.4,GAP=2,CAP_MID=4.4;
+    const TIME_ADV=6.6,MARK_W=15.5,STEM=1.4,GAP=2,SUN_R=3.4;
     const sceneCss=(typeof document!=="undefined"&&document.querySelector(".scene")||{clientWidth:390}).clientWidth||390;
     const haloW=STEM+1.3*320/sceneCss;
     const twOf=t=>t.length*TIME_ADV;
-    const chev=(x,top,up)=>{
-      const x2=x+CHEV_W/2,x3=x+CHEV_W,y0=top,y1=top+CHEV_H;
-      const d=up?`M ${x.toFixed(2)} ${y1.toFixed(2)} L ${x2.toFixed(2)} ${y0.toFixed(2)} L ${x3.toFixed(2)} ${y1.toFixed(2)}`:`M ${x.toFixed(2)} ${y0.toFixed(2)} L ${x2.toFixed(2)} ${y1.toFixed(2)} L ${x3.toFixed(2)} ${y0.toFixed(2)}`;
-      const attr=`fill="none" stroke-linecap="round" stroke-linejoin="miter" stroke-miterlimit="2.2" shape-rendering="geometricPrecision" d="${d}"`;
-      return `<path ${attr} stroke="var(--off-sky,#F7F4EA)" stroke-width="${haloW.toFixed(2)}" opacity=".9"/><path ${attr} stroke="currentColor" stroke-width="${STEM}"/>`;
-    };
+    const n2=v=>v.toFixed(2),hl=w=>n2(w+haloW-STEM);
+    const inked=(d,w)=>`<path d="${d}" fill="none" stroke="var(--off-sky,#F7F4EA)" stroke-width="${hl(w)}" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/><path d="${d}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    /* the little sun: gx is its left end, base the digits' baseline */
+    const sunMark=(gx,base,up)=>{
+      const cx=gx+MARK_W/2,r=SUN_R;
+      let rays="";for(const deg of[14,48,132,166]){const a=deg*Math.PI/180,c=Math.cos(a),s=Math.sin(a);rays+=`M ${n2(cx+c*(r+1.4))} ${n2(base-s*(r+1.4))} L ${n2(cx+c*(r+3.1))} ${n2(base-s*(r+3.1))} `}
+      const lo=base-r-1.7,hi=base-r-6.4,tip=up?hi:lo,back=up?1.7:-1.7;
+      const arrow=`M ${n2(cx)} ${n2(lo)} L ${n2(cx)} ${n2(hi)} M ${n2(cx-1.7)} ${n2(tip+back)} L ${n2(cx)} ${n2(tip)} L ${n2(cx+1.7)} ${n2(tip+back)}`;
+      const disc=`M ${n2(cx-r)} ${n2(base)} A ${n2(r)} ${n2(r)} 0 0 1 ${n2(cx+r)} ${n2(base)} Z`;
+      return inked(`M ${n2(gx)} ${n2(base)} L ${n2(gx+MARK_W)} ${n2(base)}`,.9)+inked(rays,.9)+inked(arrow,1)
+        +`<path d="${disc}" fill="none" stroke="var(--off-sky,#F7F4EA)" stroke-width="${hl(1)}" opacity=".9"/><path d="${disc}" fill="${up?"#F5C94D":"#F2A845"}" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/>`};
     const avoid=[sunXY&&[sunXY[0],sunXY[1],28],moonXY&&[moonXY[0],moonXY[1],moonR+8]].filter(Boolean);
-    const place=(side,t)=>{
-      const up=side==="R",tw=twOf(t),w=tw+GAP+STEM+CHEV_W+1.2,a=side==="L"?"start":"end",above=11,below=4;
+    const place=(side,t,up)=>{
+      const tw=twOf(t),w=tw+GAP+MARK_W,a=side==="L"?"start":"end",above=11,below=4;
       const box=(x,y)=>a==="end"?[x-w,y-above,x+2,y+below]:[x-2,y-above,x+w,y+below];
       const clear=(x,y)=>{
         const b=box(x,y);
@@ -9220,10 +9235,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     const markOf=s=>{
       const {x,y,a,t,up,tw}=s;
       const time=`<text class="suntime" x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${a}">${t}</text>`;
-      const ax=a==="end"?x-tw-GAP-STEM/2-CHEV_W:x+tw+GAP+STEM/2;
-      return time+chev(ax,y-CAP_MID-CHEV_H/2,up);
+      return time+sunMark(a==="end"?x-tw-GAP-MARK_W:x+tw+GAP,y,up);
     };
-    skyLabs={rise:place("R",clock(sunrise)),set:place("L",clock(sunset))};
+    skyLabs={rise:place("L",clock(sunrise),true),set:place("R",clock(sunset),false)};
     sunTimes=`<g data-sun-times="1" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="11" font-weight="600" fill="currentColor">${markOf(skyLabs.rise)+markOf(skyLabs.set)}</g>`;
   }
   /* ── the holiday ──────────────────────────────────────────────────────────────────
@@ -10698,17 +10712,20 @@ function liftKit(W,H){
    strands stay dark, and the noon gate keeps them off through the small hours while the sun is
    still going down. The pumpkin lights are October only. They stay on through the day and from
    dusk until the windows' 10:30, then the wire stays up and the bulbs go dark until the sun is up.
-   They used to share the strands' off switch. PN_PUMPKIN_LIGHTS switches the string. */
+   They used to share the strands' off switch. PN_PUMPKIN_LIGHTS switches the string. The fountain's
+   lights are on from sunset to sunrise, all night: Josh, October 23 2026, at 5:21 am, "the fountain
+   lights stay on that nice glowy vibe all night". They had shared the windows' 10:30. */
 const PN_LIGHTS_OUT=22*60+30,PN_STRANDS_OUT=22*60,PN_PUMPKIN_LIGHTS=true;
-/* windows, strands and the fence's pumpkin lights. Strands are on from evening golden hour until
-   10:00. Windows are on only after dusk and before 10:30. The pumpkin lights are on by day and from
-   dusk until 10:30, then off through the small hours until the sun is up. hour and minute are the
+/* windows, strands, the fence's pumpkin lights and the fountain. Strands are on from evening golden hour
+   until 10:00. Windows are on only after dusk and before 10:30. The pumpkin lights are on by day and from
+   dusk until 10:30, then off through the small hours until the sun is up. The fountain is lit whenever
+   the sun is down. hour and minute are the
    place's clock. rising is the sun ten minutes on, the same flag the sky uses. */
 function pnHouseLights(sunAlt,hour,minute,rising){
   const dark=sunAlt<-.83,mins=hour*60+(minute||0);
   const windows=dark&&mins>=12*60&&mins<PN_LIGHTS_OUT;
   const strands=sunAlt<=6&&!rising&&mins>=12*60&&mins<PN_STRANDS_OUT;
-  return{windows,strands,pumpkins:!dark||windows};
+  return{windows,strands,pumpkins:!dark||windows,fountain:dark};
 }
 /* The hot tub is in use from late October through April 15, on the place's own calendar,
    and the window wraps the year the way a season does. Steam shows the whole of that season,
@@ -10880,7 +10897,7 @@ function pnPondScene(c){
   const palAt=(pal,d)=>{const o={};for(const[k,v]of Object.entries(pal))o[k]=typeof v==="string"&&v[0]==="#"&&!["ink","shade","lit"].includes(k)?air(v,d):v;
     return Object.assign(o,{ink:inkAir(d),shade:shadeC,lit:litC,litOp:(pal.litOp??.5)*litK,shadeOp:(pal.shadeOp??.32)*shadeK})};
   const lit=pnHouseLights(sunAltDeg,localHour,localMin,rising);
-  const lightsOn=lit.windows,strandsOn=lit.strands,pumpOn=lit.pumpkins;
+  const lightsOn=lit.windows,strandsOn=lit.strands,pumpOn=lit.pumpkins,fnLit=lit.fountain;
   const fireOn=strandsOn&&localHour>=15&&temp>=45&&temp<68&&!wet&&!storm&&!fog&&gust<20&&!THUNDER;
   /* the cover stays on until the fire is lit, and only in season, October 20 through April 15.
      Open, it steams, and one wash crosses the water, lagoon then moon blue */
@@ -11181,7 +11198,7 @@ function pnPondScene(c){
      spray is a tulip. Each jet is a projectile's arc drawn as a brush stroke that thins to its tip, with a
      bright core up the middle three, its spray glittering off the falling ends, a little mist where the outer
      arcs come down, and a ring of short jets and foam at the float. After dark it is lit from below the way the
-     photo is: a white-hot heart at the float, the jets warm cream going to amber, a glow behind the fan, and its
+     photo is, from sunset to sunrise (fnLit, all night, past the windows' 10:30): a white-hot heart at the float, the jets warm cream going to amber, a glow behind the fan, and its
      light broken into glints on the water under it. The fan leans downwind as far as the gusts say and its spray
      drifts on them, two animations as before; under reduced motion it holds still. Its pressed copy (the jets
      only) is in the water under it */
@@ -11189,7 +11206,7 @@ function pnPondScene(c){
   const FN_N=6,FN_H=37,FN_TAN=.4;
   /* many small dots as one path, so a glittering spray is a handful of nodes on the moving sheet, not hundreds */
   const dotsPath=pts=>pts.map(([x,y,r])=>`M ${f1(x-r)} ${f1(y)} a ${f1(r)} ${f1(r)} 0 1 0 ${f1(2*r)} 0 a ${f1(r)} ${f1(r)} 0 1 0 ${f1(-2*r)} 0`).join(" ");
-  const fountain=(copy)=>{const lit=lightsOn;
+  const fountain=(copy)=>{const lit=fnLit;
     const jetC=lit?"rgb(255,228,178)":air("#F4F8FA",.06),coreC=lit?"rgb(255,250,232)":"#FFFFFF",dc=lit?"rgb(255,220,160)":air("#FFFFFF",.06),
       ringC=lit?"rgb(255,214,160)":air("#EAF2F6",.06);
     const r=mulberry(5151);
@@ -11365,7 +11382,7 @@ function pnPondScene(c){
       <mask id="pnFadeIn" maskUnits="userSpaceOnUse" x="${f1(-12)}" y="${f1(Y(0))}" width="${W+24}" height="${f1(H+10)}"><rect x="${f1(-12)}" y="${f1(Y(0))}" width="${W+24}" height="${f1(H+10)}" fill="url(#pnTopFade)"/></mask>
       <radialGradient id="pnUplight"><stop offset="0" stop-color="rgb(255,196,120)" stop-opacity=".38"/><stop offset="1" stop-color="rgb(255,180,100)" stop-opacity="0"/></radialGradient>
       <radialGradient id="pnFountainHot"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".95"/><stop offset=".3" stop-color="rgb(255,236,196)" stop-opacity=".75"/><stop offset=".7" stop-color="rgb(255,196,120)" stop-opacity=".25"/><stop offset="1" stop-color="rgb(255,180,100)" stop-opacity="0"/></radialGradient>
-      <radialGradient id="pnMist"><stop offset="0" stop-color="${lightsOn?"rgb(255,232,196)":"#FFFFFF"}" stop-opacity=".55"/><stop offset="1" stop-color="${lightsOn?"rgb(255,220,170)":"#FFFFFF"}" stop-opacity="0"/></radialGradient>
+      <radialGradient id="pnMist"><stop offset="0" stop-color="${fnLit?"rgb(255,232,196)":"#FFFFFF"}" stop-opacity=".55"/><stop offset="1" stop-color="${fnLit?"rgb(255,220,170)":"#FFFFFF"}" stop-opacity="0"/></radialGradient>
       <radialGradient id="pnWash"><stop offset="0" stop-color="rgb(255,170,90)" stop-opacity=".45"/><stop offset="1" stop-color="rgb(255,160,80)" stop-opacity="0"/></radialGradient>
       <radialGradient id="pnFirePool"><stop offset="0" stop-color="rgb(255,176,64)" stop-opacity=".9"/><stop offset=".38" stop-color="rgb(255,120,36)" stop-opacity=".62"/><stop offset=".72" stop-color="rgb(255,96,24)" stop-opacity=".28"/><stop offset="1" stop-color="rgb(255,80,16)" stop-opacity="0"/></radialGradient>
       <linearGradient id="pnSteam" x1=".5" y1="1" x2=".5" y2="0"><stop offset="0" stop-color="#E4F1F6" stop-opacity=".9"/><stop offset=".22" stop-color="#F3F9FB" stop-opacity=".62"/><stop offset=".5" stop-color="#F7FBFD" stop-opacity=".28"/><stop offset=".75" stop-color="#F7FBFD" stop-opacity=".06"/><stop offset="1" stop-color="#F7FBFD" stop-opacity="0"/></linearGradient>
@@ -14864,6 +14881,13 @@ function dayStory(c,dy,h,now){
     return "Clouds and sun";
   };
   const nice=ids=>quiet(ids)&&ids.every(i=>has(h.temp?.[i])&&+h.temp[i]>=50&&+h.temp[i]<85&&has(h.feels?.[i])&&+h.feels[i]>=50&&+h.feels[i]<85&&codeAt(i)<=2);
+  /* a quiet daylight said as one sentence: nice when it earns it, else its warmth and its sky */
+  const dayLine=(ids,view,p)=>{
+    if(nice(ids)&&has(ref)&&+ref>=68&&+ref<82&&!humid&&!(feels!=null&&(feels>=98||feels<=25)))return `Nice ${view==="Sunny"?"and sunny":"with some sun"} ${p}.`;
+    if(!view)return "";
+    const lead=tempWord?tempWord+damp:humid?"Humid":"";
+    const phrase=/^(Some sun|Some fog|Clouds and sun)$/.test(view)?(lead?lead+" with "+view.toLowerCase():view):lead?lead.replace(" and ",", ")+" and "+view.toLowerCase():view;
+    return phrase+(view.includes(", then")?".":` ${p}.`)};
   const tomorrowLine=()=>{const k=(dy.time||[]).indexOf(tomorrow),v=dy.temperature_2m_max?.[k],n=has(v)?Math.round(+v):null;
     const change=n!=null&&high!=null&&Math.abs(n-high)>=5?`${Math.abs(n-high)}° ${n>high?"warmer":"cooler"}`:"";
     const ids=daylight(tomorrow),view=quiet(ids)?sky(ids):"";
@@ -14872,7 +14896,7 @@ function dayStory(c,dy,h,now){
     if(n!=null&&nice(ids)&&n>=68&&n<82)return "Nice tomorrow, with a high of "+n+"°.";
     if(n!=null)return `Tomorrow's high is ${n}°.`;
     return view?"Some sun tomorrow.":""};
-  let second;const told=[],tsI=win.find(i=>[95,96,99].includes(+h.code?.[i]));
+  let second,laterI=null;const told=[],tsI=win.find(i=>[95,96,99].includes(+h.code?.[i]));
   if(currentlyWet){
     /* A break takes two consecutive known dry hours. Missing odds or a snow code cannot end it. */
     const dryI=win.find(i=>dry([i,i+1])&&times[i+1]-times[i]===36e5);
@@ -14884,7 +14908,7 @@ function dayStory(c,dy,h,now){
     /* The first wet stretch keeps its own name and odds, rather than borrowing a later storm. */
     const stretch=[];for(const i of win){if(i<wetI)continue;if(!has(h.pop?.[i])||+h.pop[i]<40)break;stretch.push(i)}
     const kind=wetKind(stretch),likely=Math.max(...stretch.map(i=>+h.pop[i]))>=70;
-    told.push({kind:kind||"Rain",time:h.time[wetI]});
+    told.push({kind:kind||"Rain",time:h.time[wetI]});laterI=wetI;
     second=wetI===w0
       ?(kind?`${kind} ${likely?"likely any time now.":"could start any time."}`:likely?"Rain likely any time now.":"Showers could pop up any time.")
       :kind?`${kind} ${likely?"likely":"possible"} around ${when(wetI)}`:likely?`Rain likely around ${when(wetI)}`:`Showers possible around ${when(wetI)}`;
@@ -14893,12 +14917,12 @@ function dayStory(c,dy,h,now){
     const windAt=()=>gustI===w0?"Windy now":"Windy by "+(h.time[gustI].slice(0,10)===h.time[tsI].slice(0,10)?spokenAt(h.time[gustI]):bare(gustI));
     second=tsI===w0?"Thunder nearby.":windFirst?`${windAt()}, then thunder possible around ${when(tsI)}`:`Thunder possible around ${when(tsI)}`;
     if(windFirst)told.push({kind:"Windy",time:h.time[gustI]});
-    told.push({kind:"Thunder",time:h.time[tsI]});
+    told.push({kind:"Thunder",time:h.time[tsI]});laterI=windFirst?gustI:tsI;
   }else if(maxPop!=null&&maxPop>=25){
     const kind=wetKind(win.filter(i=>has(h.pop?.[i])&&+h.pop[i]>=25));
     second=kind==="Freezing rain"?"Maybe a little freezing rain.":kind==="Snow"?"Maybe a few flurries.":"Maybe a stray shower.";
   }else if(gustI!=null){
-    second=gustI===w0?"Windy now.":`Windy by ${when(gustI)}`;told.push({kind:"Windy",time:h.time[gustI]});
+    second=gustI===w0?"Windy now.":`Windy by ${when(gustI)}`;told.push({kind:"Windy",time:h.time[gustI]});laterI=gustI;
   }else if(evening){
     /* By evening tomorrow earns the quiet headline. Its temperature can stand on the daily high,
        but its sky must have a complete daylight run. A hazard above always takes this space first. */
@@ -14913,14 +14937,19 @@ function dayStory(c,dy,h,now){
     /* fog now is the first sentence, so what comes after it is the sky of the hours after this one */
     const after=[45,48].includes(+code)?ids.filter(i=>i!==nowI):ids,later=quiet(after)?sky(after,true):"";
     if(dry(ids)&&![45,48].includes(+code)){
-      if(nice(ids)&&has(ref)&&+ref>=68&&+ref<82&&!humid&&!(feels!=null&&(feels>=98||feels<=25)))return{html:`Nice ${view==="Sunny"?"and sunny":"with some sun"} ${p}.`,told};
-      if(view){
-        const lead=tempWord?tempWord+damp:humid?"Humid":"";
-        const phrase=/^(Some sun|Some fog|Clouds and sun)$/.test(view)?(lead?lead+" with "+view.toLowerCase():view):lead?lead.replace(" and ",", ")+" and "+view.toLowerCase():view;
-        return{html:phrase+(view.includes(", then")?".":` ${p}.`)+(feels!=null&&feels>=98?" Keep the middle of the day short.":feels!=null&&feels<=25?" Bundle up.":""),told};
-      }
+      const line=dayLine(ids,view,p);
+      if(line)return{html:line+(feels!=null&&feels>=98?" Keep the middle of the day short.":feels!=null&&feels<=25?" Bundle up.":""),told};
       second="";
     }else second=!dry(ids)&&lowWet(ids)?stray(ids):dry(after)&&later&&!/fog/i.test(later)?(later==="Sunny"?"Sun later.":later==="Some sun"?"Some sun later.":later+"."):"";
+  }
+  /* A hazard that only comes after dark left the day unsaid: at 5 a.m. on a sunny October day the whole
+     headline was "Windy by 10 p.m." (Josh, October 23 2026: "doesn't tell me about today"). So when it
+     comes at or after sunset, and the daylight still to come today is quiet with every hour known, the
+     day is said first, the way a quiet day says it: "Sunny today. Windy by 10 p.m." Fog or rain now
+     keeps its own first words, and a hazard inside the daylight already says the day. */
+  if(laterI!=null&&laterI!==w0&&!evening&&!overnight&&![45,48].includes(+code)&&!isWet(+code)&&times[laterI]>=Date.parse(dy.sunset?.[di]||"")){
+    const ids=daylight(today),line=quiet(ids)?dayLine(ids,sky(ids,true),hr<12?"today":"this afternoon"):"";
+    if(line)first=line;
   }
   if(!second&&!win.length)second="Hourly forecast unavailable.";
   else if(!second&&win.some(i=>!has(h.pop?.[i])))second="Rain odds unavailable.";

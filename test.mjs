@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v134/);
+  assert.match(worker, /mbwx-shell-v135/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -3274,6 +3274,22 @@ test("the page reads top down: now, today, the week, and nothing it has already 
   // it names the first windy hour, not the windiest: gusts of 30 now are windy now, whatever comes at 4
   assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 3 }, { gust: (i) => (i === 0 ? 30 : i === 3 ? 34 : 12) }), "Windy now.");
   assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 3 }, { gust: (i) => (i === 1 ? 29 : i === 4 ? 33 : 12) }), "Windy by 2 p.m.");
+  // A hazard that only comes after dark leaves the day to be said first. October 23 2026 at 5:27 am, a
+  // sunny day with the gusts reaching 30 at ten that night, read "Windy by 10 p.m." and nothing else
+  // (Josh: "doesn't tell me about today").
+  {
+    const oct23 = (hi) => ({ time: ["2026-10-23", "2026-10-24"], temperature_2m_max: [hi, 70], sunrise: ["2026-10-23T07:23", "2026-10-24T07:24"], sunset: ["2026-10-23T18:27", "2026-10-24T18:25"] });
+    const dawn = { time: "2026-10-23T05:27", temperature_2m: 42, weather_code: 0 }, sunny = { code: () => 0 };
+    assert.equal(tell(dawn, { ...sunny, gust: (i) => (i >= 17 ? 30 : 16) }, undefined, oct23(68)), "Nice and sunny today. Windy by 10 p.m.");
+    assert.equal(tell(dawn, { ...sunny, gust: (i) => (i >= 17 ? 30 : 16) }, undefined, oct23(90)), "Warm and sunny today. Windy by 10 p.m.");
+    assert.equal(tell(dawn, { ...sunny, pop: (i) => (i === 16 ? 60 : 5) }, undefined, oct23(90)), "Warm and sunny today. Showers possible around 9 p.m.");
+    assert.equal(tell(dawn, { ...sunny, code: (i) => (i === 15 ? 95 : 0) }, undefined, oct23(90)), "Warm and sunny today. Thunder possible around 8 p.m.");
+    // a hazard inside the daylight already says the day; one the daylight's own gusts or showers would
+    // spoil gets no sky; and from five the evening's own words stand
+    assert.equal(tell(dawn, { ...sunny, gust: (i) => (i >= 10 ? 30 : 16) }, undefined, oct23(90)), "Warm today. Windy by 3 p.m.");
+    assert.equal(tell(dawn, { ...sunny, gust: (i) => (i === 8 ? 27 : i >= 17 ? 30 : 16), pop: (i) => (i === 16 ? 60 : i === 6 ? 30 : 5) }, undefined, oct23(90)), "Warm today. Showers possible around 9 p.m.");
+    assert.equal(tell({ ...dawn, time: "2026-10-23T17:10", temperature_2m: 66 }, { ...sunny, gust: (i) => (i >= 5 ? 30 : 16) }, undefined, oct23(68)), "Cool this evening. Windy by 10 p.m.");
+  }
   // One night is one night: after dark the small hours before morning are tonight's, and only
   // daylight tomorrow is "tomorrow". The Tonight card under it calls the same shower tonight's.
   assert.equal(tell({ time: "2026-08-02T21:30", temperature_2m: 72, weather_code: 1 }, { pop: (i) => (i === 4 ? 45 : 5) }), "Showers possible around 1 a.m.");
@@ -6319,8 +6335,15 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(html, /return pnArc\?a<=6&&a>=-4:a<=6/);
   assert.doesNotMatch(html, /SUN_LOOK|sunPick|\?sun=|data-dial="horizon"|data-sun="1"|data-sun="3"|data-sun-arc/);
   assert.match(html, /data-sun-times="1"/);
-  assert.match(html, /const TIME_ADV=6\.6,CHEV_W=6\.6,CHEV_H=5\.6,STEM=1\.4,GAP=2,CAP_MID=4\.4;/);
-  assert.match(html, /skyLabs=\{rise:place\("R",clock\(sunrise\)\),set:place\("L",clock\(sunset\)\)\}/);
+  // beside each time a little sun half set on a fine horizon, an arrow over it up for sunrise and down
+  // for sunset (Josh's pick of three, October 23 2026); the chevron it replaced is gone
+  assert.match(html, /const TIME_ADV=6\.6,MARK_W=15\.5,STEM=1\.4,GAP=2,SUN_R=3\.4;/);
+  assert.match(html, /return time\+sunMark\(a==="end"\?x-tw-GAP-MARK_W:x\+tw\+GAP,y,up\);/);
+  assert.match(html, /fill="\$\{up\?"#F5C94D":"#F2A845"\}" stroke="currentColor"/);
+  assert.doesNotMatch(html, /CHEV_W|CAP_MID|__sunmark/);
+  // the times read left to right like a clock, as at the other places: sunrise on the left, sunset on the
+  // right, though the house's sun rises on the right (Josh, October 23 2026)
+  assert.match(html, /skyLabs=\{rise:place\("L",clock\(sunrise\),true\),set:place\("R",clock\(sunset\),false\)\}/);
   assert.doesNotMatch(html, /data-sun-mark|mark=b|"SUNRISE"/);
   assert.match(html, /const y0=Math\.max\(14,visTop\+14\);/);
   assert.match(html, /const fit=pnArc\?pnSunFit\(py\(f\),visTop,squash,x\):\{y:py\(f\),s:1\};/);
@@ -6339,10 +6362,13 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(html, /if\(LOC\.faces==="north"\)weather=\{\.\.\.weather,wind_direction_10m:/);
   // the windows and the pumpkin lights go off at 10:30. the strands come on at evening golden
   // hour, the sun at +6° on the way down, and go off at 10:00. the fire follows the strands.
-  // the face in the window is not a lamp.
+  // the face in the window is not a lamp. the fountain is lit from sunset to sunrise, all night
+  // (Josh, at 5:21 am: "the fountain lights stay on that nice glowy vibe all night").
   assert.match(html, /const PN_LIGHTS_OUT=22\*60\+30,PN_STRANDS_OUT=22\*60,PN_PUMPKIN_LIGHTS=true;/);
   assert.match(fn, /const lit=pnHouseLights\(sunAltDeg,localHour,localMin,rising\);/);
-  assert.match(fn, /const lightsOn=lit\.windows,strandsOn=lit\.strands,pumpOn=lit\.pumpkins;/);
+  assert.match(fn, /const lightsOn=lit\.windows,strandsOn=lit\.strands,pumpOn=lit\.pumpkins,fnLit=lit\.fountain;/);
+  assert.match(fn, /const fountain=\(copy\)=>\{const lit=fnLit;/);
+  assert.doesNotMatch(fn.slice(fn.indexOf("const fountain=(copy)=>"), fn.indexOf("const fountainSvg=")), /lightsOn/);
   assert.match(fn, /const fireOn=strandsOn&&localHour>=15&&temp>=45&&temp<68&&!wet&&!storm&&!fog&&gust<20&&!THUNDER;/);
   {
     const ctx = vm.createContext({});
@@ -6371,6 +6397,10 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
     same(on(dark, 0, 30, false), false, false, false, "stays off after midnight");
     same(on(dark, 2, 15), false, false, false, "stays off overnight");
     same(on(dark, 11, 50), false, false, false);
+    for (const [alt, h, m, lit, msg] of [[day, 15, 0, false, "the fountain is dark by day"], [6, 17, 30, false, "and at golden hour"],
+      [dark, 19, 40, true, "lit from sunset"], [dark, 22, 30, true, "past the windows' 10:30"], [dark, 0, 30, true, "after midnight"],
+      [dark, 5, 21, true, "at 5:21 am"], [-.5, 7, 20, false, "dark again at sunrise"]])
+      assert.equal(on(alt, h, m).fountain, lit, msg);
   }
   // the hot tub opens with the fire, and only from October 20 through April 15
   assert.match(html, /const PN_TUB=\["10-20","04-15"\];/);
