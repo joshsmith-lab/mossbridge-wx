@@ -10710,22 +10710,22 @@ function liftKit(W,H){
    hour, the sun at +6° on the way down, the same line goldenHour() uses, and go off at 10:00
    (PN_STRANDS_OUT). The fire follows the strands. Morning golden hour is the sun rising, so the
    strands stay dark, and the noon gate keeps them off through the small hours while the sun is
-   still going down. The pumpkin lights are October only. They stay on through the day and from
-   dusk until the windows' 10:30, then the wire stays up and the bulbs go dark until the sun is up.
-   They used to share the strands' off switch. PN_PUMPKIN_LIGHTS switches the string. The fountain's
+   still going down. The pumpkin lights are October only, and while they are up they are on, by day
+   and all night, the way the willow's are: Josh, October 23 2026, "the pumpkin lights along the fence
+   similarly stay on all night (like the willow)". They had gone dark at the windows' 10:30, and before
+   that at the strands' 10:00. PN_PUMPKIN_LIGHTS switches the string. The fountain's
    lights are on from sunset to sunrise, all night: Josh, October 23 2026, at 5:21 am, "the fountain
    lights stay on that nice glowy vibe all night". They had shared the windows' 10:30. */
 const PN_LIGHTS_OUT=22*60+30,PN_STRANDS_OUT=22*60,PN_PUMPKIN_LIGHTS=true;
 /* windows, strands, the fence's pumpkin lights and the fountain. Strands are on from evening golden hour
-   until 10:00. Windows are on only after dusk and before 10:30. The pumpkin lights are on by day and from
-   dusk until 10:30, then off through the small hours until the sun is up. The fountain is lit whenever
-   the sun is down. hour and minute are the
+   until 10:00. Windows are on only after dusk and before 10:30. The pumpkin lights are always on (the
+   holiday calendar puts them up and takes them down). The fountain is lit whenever the sun is down. hour and minute are the
    place's clock. rising is the sun ten minutes on, the same flag the sky uses. */
 function pnHouseLights(sunAlt,hour,minute,rising){
   const dark=sunAlt<-.83,mins=hour*60+(minute||0);
   const windows=dark&&mins>=12*60&&mins<PN_LIGHTS_OUT;
   const strands=sunAlt<=6&&!rising&&mins>=12*60&&mins<PN_STRANDS_OUT;
-  return{windows,strands,pumpkins:!dark||windows,fountain:dark};
+  return{windows,strands,pumpkins:true,fountain:dark};
 }
 /* The hot tub is in use from late October through April 15, on the place's own calendar,
    and the window wraps the year the way a season does. Steam shows the whole of that season,
@@ -10874,7 +10874,7 @@ function pnRigBat(beat){
    evening, and only while the strands are on), the strands' ends tucked into the sabals' boots so the palms' sway never
    shows a loose end, the fountain leans and its spray drifts downwind, and the reflection is glass in a calm. In a breeze
    and a blow the light on it is a few short arcs, never a bar across the pond. The low sun's warmth comes from its own side. In October (holidayOn) the fence carries
-   pumpkin lights, on by day and from dusk until 10:30, each run a swag between posts, a little tree by the fire table is wrapped in purple and orange, each pillar
+   pumpkin lights, on by day and all night, each run a swag between posts, a little tree by the fire table is wrapped in purple and orange, each pillar
    holds an orange pumpkin and a white one, the gate has two lanterns from the carving day, Ghostface is a dim layer
    clipped inside the glass of the rightmost east window (the window is the same sash as the others, and he stays after the lamps go out at 10:30), and on Halloween night the trick-or-treater stands at the gate.
    The heron, the gulls, the does and the bats are the detailed drawings, and the pond sliders come out on the table in pnTurtlesPlan. Laid out in a
@@ -11067,7 +11067,7 @@ function pnPondScene(c){
      a cap, a top and a bottom rail and sparse ticks, and a gate of the same black and the same height on the
      door's line, its two posts a little proud with a ball on each. In October (PN_PUMPKIN_LIGHTS) orange
      pumpkin lights drape the top rail in swags, high at each post and low in the middle, six bulbs to a
-     bay (five on a short one), warm while they are on and dark after 10:30. Two runs leave the gate clear.
+     bay (five on a short one), warm by day and all night, like the willow's. Two runs leave the gate clear.
      Each pillar carries an orange pumpkin and a white one, carved and lit from the carving day the way every
      pumpkin is (pumpkinAt) */
   const fx0=X(10),fx1=X(310),gx0=doorX-6.2,gx1=doorX+6.2,fenceC=air("#24252B",.03),pillarC=air("#EDEAE3",.03),pillarH=13.5,pillarW=7.2;

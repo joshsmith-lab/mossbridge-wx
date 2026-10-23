@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v135/);
+  assert.match(worker, /mbwx-shell-v136/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -6360,7 +6360,7 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(html, /y=pnArc\.y0-Math\.pow\(altS,\.35\)\*\(pnArc\.y0-pnArc\.top\);/);
   assert.match(html, /if\(LOC\.faces==="north"\)windDir=\(360-windDir\)%360;/);
   assert.match(html, /if\(LOC\.faces==="north"\)weather=\{\.\.\.weather,wind_direction_10m:/);
-  // the windows and the pumpkin lights go off at 10:30. the strands come on at evening golden
+  // the windows go off at 10:30, the pumpkin lights stay on all night. the strands come on at evening golden
   // hour, the sun at +6° on the way down, and go off at 10:00. the fire follows the strands.
   // the face in the window is not a lamp. the fountain is lit from sunset to sunrise, all night
   // (Josh, at 5:21 am: "the fountain lights stay on that nice glowy vibe all night").
@@ -6391,12 +6391,14 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
     same(on(dark, 22, 0), true, false, true, "strands off at 10:00, windows and pumpkins stay");
     same(on(dark, 22, 1), true, false, true, "strands off at 10:01");
     same(on(dark, 22, 29), true, false, true, "windows and pumpkins on at 10:29");
-    same(on(dark, 22, 30), false, false, false, "windows and pumpkins off at 10:30");
-    same(on(dark, 22, 40), false, false, false, "pumpkin string off at 10:40");
-    same(on(dark, 23, 10), false, false, false);
-    same(on(dark, 0, 30, false), false, false, false, "stays off after midnight");
-    same(on(dark, 2, 15), false, false, false, "stays off overnight");
-    same(on(dark, 11, 50), false, false, false);
+    // the pumpkin lights stay on all night, like the willow (Josh, October 23 2026); the windows go at 10:30
+    same(on(dark, 22, 30), false, false, true, "windows off at 10:30, the pumpkin lights stay on");
+    same(on(dark, 22, 40), false, false, true, "pumpkin string still on at 10:40");
+    same(on(dark, 23, 10), false, false, true);
+    same(on(dark, 0, 30, false), false, false, true, "on after midnight");
+    same(on(dark, 2, 15), false, false, true, "on all night");
+    same(on(dark, 5, 21), false, false, true, "and at 5:21 am");
+    same(on(dark, 11, 50), false, false, true);
     for (const [alt, h, m, lit, msg] of [[day, 15, 0, false, "the fountain is dark by day"], [6, 17, 30, false, "and at golden hour"],
       [dark, 19, 40, true, "lit from sunset"], [dark, 22, 30, true, "past the windows' 10:30"], [dark, 0, 30, true, "after midnight"],
       [dark, 5, 21, true, "at 5:21 am"], [-.5, 7, 20, false, "dark again at sunrise"]])
