@@ -871,7 +871,7 @@ carries `faces:"north"`, and for such a place the sun's arc is mirrored (sunrise
 sunset on the left), the moon's place and shading follow it, and the wind's bearing is mirrored once
 upstream for the scene and the sky, so the palms, the grass, the spray, the rain, the clouds, the bats and
 the witch all go the way the real wind blows. The house draws no arc. The illustrated sun keeps that
-sine and `sunPos`, except at the crown, where it drops until the whole disc and its rays sit under the top of the frame (`pnSunFit`). Over the roof it rides above it: Josh, October 23 2026, saw the noon sun sitting on the ridge (and through the middle of the day it was half behind the roof), so wherever the disc is over the roof it keeps 5 units of sky between its foot and the highest part of the roof under it, a few percent smaller over the ridge if it must be (about .94 on a phone), and beside the roof it keeps its own path. A short window crops that sky, and when the open sky above the roof cannot hold the sun even at .86, it draws smaller and tucks behind the ridge as before. Golden hour warms the light, and a low sun lays a long shadow and a glint on the
+sine and `sunPos`, except at the crown, where it drops until the whole disc and its rays sit under the top of the frame (`pnSunFit`). Over the roof it rides above it: Josh, October 23 2026, saw the noon sun sitting on the ridge (and through the middle of the day it was half behind the roof), so wherever the disc is over the roof it keeps 5 units of sky between its foot and the highest part of the roof under it, a few percent smaller over the ridge if it must be (about .94 on a phone), and beside the roof it keeps its own path. A short window crops that sky, and when the open sky above the roof cannot hold the sun even at .86, it draws smaller and tucks behind the ridge as before. The same evening Josh saw the moon "cut off above the house too", so the moon keeps 4 units of sky over the roof under it and its top 2 under the top of the frame (`pnMoonFit`, sharing `pnRoofTop` with the sun); where both cannot hold, the top wins. Golden hour warms the light, and a low sun lays a long shadow and a glint on the
 windows it faces. The sunrise and sunset times sit up in open sky, in the corner columns, clear of
 the palms, the roof, the house and the pond, with the thin halo they already wear and no box behind them.
 Sunrise stays on the right and sunset on the left all day, because the house faces north. A thin
@@ -896,6 +896,17 @@ with gusts under 20 and no thunder (`fireOn`). Lit, it is a small fire: several 
 along the fence hang in swags, high at each post and low in the middle, five or six bulbs to a bay. They are on by day and from dusk until 10:30, then the wire stays up and the bulbs go dark until the sun is up. They are on the holiday
 calendar like every decoration, and gone the morning of November 1.
 
+**The fountain** is the fan the real one throws (Josh, October 23 2026, with a photo of it lit at night from the porch: "it just
+needs... more ... nice and impressive and symmetrical and beautiful at night", and not so much that it takes the picture from the
+house). Thirteen jets come out of one float on the door's line, mirrored about it, the middle ones tallest and nearly straight, each
+one out from it lower, wider and falling further, so the spray is a tulip about 37 units tall (`FN_N`, `FN_H`, `FN_TAN`). Each jet is
+a projectile's arc drawn as a brush stroke that thins to its tip, inside a fainter, wider veil of spray that swells past the apex,
+with a bright core up the middle three, glitter off the crowns and the falling ends (drawn as two paths of many dots, `dotsPath`, so
+the moving sheet holds a handful of nodes, not hundreds), mist where the outer arcs come down, and a ring of short jets and foam at
+the float. After dark it is lit from below: a white-hot heart at the float (`pnFountainHot`), warm cream jets, a glow behind the fan
+and a shimmer of short glints on the water under it. The fan leans downwind and its spray drifts on the gusts, the same two
+animations as before (`pnSpray`, `pnDrops`), and it holds still under reduced motion. Its pressed copy in the water is the jets alone.
+
 **Weather.** Every reading still drives the picture: the palms, the grass and the fountain's spray lean and
 drift with the gusts, the reflection is glass in a calm, and in a breeze or a blow the light on it is a few
 short arcs, never a bar across the pond. Rain falls in front of the house as well as behind it (the house is a tall silhouette, so it has the
@@ -905,8 +916,13 @@ dims everything under the app's lightning, and fog softens the house and widens 
 **Who is out.** Small whitetail does (`whitetail-doe`) on the lawn in front of the fence at dawn and dusk, at
 real size, with a dorsal stripe and a longer neck that nods, and the great blue heron (`great-blue-heron`). Josh, October 23 2026:
 "we had a great heron so bring it back", so it is the marsh's own bird and its whole 150-second life (`rigHeron`): two steps, a
-long stand, a look round on its own 97-second clock and one spear, wading in the open east water of the pond with room of its own,
-facing into the pond, at .5 of its drawing. Each footfall rings the water and the spear splashes where the bill meets it (the
+long stand, a look round on its own 97-second clock and one spear, facing into the pond. It first waded the open east water, and
+Josh sent it back the same day: "too deep - it wouldn't be that far out ... need to be believable so closer to shore". So it wades
+the east shallows a few units off the house-side bank, ankle deep, at .44 of its drawing for being across the pond, its spear
+landing in the water short of the sand (the basking slider moved to the sand right of the fountain to keep clear of it). Then:
+"add some more grass by removing some water ... refer to photo". From the porch the lawn runs well out from the fence to the
+water, so the sand and the water's edge moved down (`sandY` 159.5, `pondY` 162, from 152.5 and 155), the does stand out on that
+lawn, and the fountain's fan rises from the water in front of it. Each footfall rings the water and the spear splashes where the bill meets it (the
 `data-water-contact` rings the scene harness walks), and its reflection is the same bird turned over and pressed under it, so the
 copy steps and spears with it. It is out in every weather but a thunderstorm and a downpour (`rainK` 1, codes 65 and 82), when it hunkers
 down, which also keeps the busiest frames under the animation ceiling. Gulls cross at midday when it is

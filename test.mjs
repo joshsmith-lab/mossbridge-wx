@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v133/);
+  assert.match(worker, /mbwx-shell-v134/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -6404,7 +6404,7 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   {
     const ctx = vm.createContext({});
     const block = html.slice(html.indexOf("const PN_HA="), html.indexOf("INK.pnBackHouse"));
-    vm.runInContext(block + "\nglobalThis.pnSunFit=pnSunFit;", ctx);
+    vm.runInContext(block + "\nglobalThis.pnSunFit=pnSunFit;globalThis.pnMoonFit=pnMoonFit;", ctx);
     const ridge = 138 + -66 * 1.45, ray = 16.2 + 8.5;
     // Josh, October 23 2026: the noon sun sat on the ridge. Over the roof it keeps a little sky under it
     const noon = ctx.pnSunFit(20, 0, 1);
@@ -6416,6 +6416,15 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
       const f = ctx.pnSunFit(45, 0, 1, x);
       assert.ok(f.y + 13 * f.s <= ridge - 5 + 1e-6, `a sun at x ${x} keeps sky between it and the ridge`);
     }
+    // the moon keeps sky over the roof too (Josh, October 23 2026: "the moon is cut off above the house too"),
+    // and its top stays under the top of the frame
+    for (const x of [100, 160, 220]) {
+      const y = ctx.pnMoonFit(30, 0, x, 11);
+      assert.ok(y + 11 <= ridge - 4 + 1e-6, `a moon at x ${x} keeps sky between it and the ridge`);
+      assert.ok(y - 11 >= 2 - 1e-6, "and its top stays in the frame");
+    }
+    assert.equal(ctx.pnMoonFit(80, 0, 300, 11), 80, "beside the roof the moon keeps its place");
+    assert.match(html, /if\(pnArc\)y=pnMoonFit\(y,visTop,x,r\);/);
     const side = ctx.pnSunFit(60, 0, 1, 270);
     assert.equal(side.y, 60, "beside the roof the sun keeps its own path");
     assert.equal(side.s, 1);
@@ -6454,6 +6463,17 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   // centred on the bank of four east windows
   assert.match(fn, /const doorX=hx\+u\(\(BH\.door\[0\]\+BH\.door\[1\]\)\/2\);/);
   assert.match(fn, /const fnX=doorX,/);
+  // the fountain is the real one's fan (Josh, October 23 2026): thirteen jets mirrored about the door's line, a veil
+  // round each, a hot heart and glints on the water after dark, the glitter as a few paths, and the same two animations
+  assert.match(fn, /const FN_N=6,FN_H=37,FN_TAN=\.4;/);
+  assert.match(fn, /for\(let k=-FN_N;k<=FN_N;k\+\+\)\{/);
+  assert.match(fn, /url\(#pnFountainHot\)/);
+  assert.match(fn, /const dotsPath=pts=>/);
+  assert.doesNotMatch(html, /pnPlume/);
+  // the lawn runs on from the fence to the sand and the water starts lower (Josh: "add some more grass by removing some water")
+  assert.match(fn, /sandY=Y\(159\.5\),pondY=Y\(162\)/);
+  // the heron wades the shallows by the house-side bank, not far out in the pond
+  assert.match(fn, /const hrX=X\(257\),hrY=pondY\+5,hrS=\.44;/);
   assert.match(fn, /gx0=doorX-6\.2,gx1=doorX\+6\.2/);
   assert.match(fn, /const tbX=hx\+u\(\(BH\.winR\[0\]\[0\]\+BH\.winR\[BH\.winR\.length-1\]\[1\]\)\/2\)/);
   // every chair at the fire table is black, the one behind included
@@ -6554,7 +6574,7 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(fn, /const showHeron=!storm&&!\(wet&&rainK>=1\);/);
   assert.match(fn, /data-water-contact="heron-near"/);
   assert.match(fn, /data-water-contact="heron-bill"/);
-  assert.match(fn, /head\(X\(92\),Y\(165\),\.82,1,0\)/);
+  assert.match(fn, /head\(X\(92\),Y\(169\),\.82,1,0\)/);
   assert.match(html, /function propPnSliderUp\(\)/);
   assert.match(fn, /pnHouseGull\(/);
   assert.match(fn, /pnRigBat\(beat\)/);
