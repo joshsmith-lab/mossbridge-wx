@@ -10,7 +10,10 @@
  *   node tools/webkit.mjs --strict                             # exit non-zero under 50 frames a second
  *
  * idle waits for the live paint, finishes the charts' entrance, then counts frames for 10 seconds.
- * open counts the first 6 seconds from the first byte, with no cache. It prints the frame rate, the
+ * open counts the first 6 seconds from the first byte, with no cache. swipe (asked for by name, as in
+ * `node tools/webkit.mjs coast-afternoon swipe`) waits as idle does, then swipes the picture to the next
+ * place with a finger's pointer events and, 2.5 seconds on, back again (the first lands on a place with no
+ * cache, the second on the cached one), counting every frame through both. It prints the frame rate, the
  * median and 90th-percentile frame, the frames lost, and the CPU the web and GPU processes spent.
  * There is no Playwright here, so the fixtures are baked into a document-start script that shims
  * fetch and Date in the page. macOS only.
@@ -24,7 +27,7 @@ import { ROOT, FONT_CSS, LOC_TZ, forecast, marine, coops, erddap } from "./fixtu
 const PORT = Number(process.env.PORCH_PORT || 8930);
 const FONT_DIR = process.env.PORCH_FONT_DIR || "";
 const args = process.argv.slice(2), STRICT = args.includes("--strict"), words = args.filter((a) => !a.startsWith("--"));
-const MODES = words.filter((w) => w === "idle" || w === "open"), ONLY = words.filter((w) => w !== "idle" && w !== "open");
+const MODES = words.filter((w) => w === "idle" || w === "open" || w === "swipe"), ONLY = words.filter((w) => w !== "idle" && w !== "open" && w !== "swipe");
 
 const CASES = [
   { name: "coast-night", loc: "mb", when: "2026-10-24T21:30:00", note: "the house at Porters Neck under the moon a night short of full: bats, the witch, the lit pillar pumpkins and gate lanterns, the pumpkin lights, the strands, the fountain, a little cloud",
@@ -96,16 +99,29 @@ function pageScript(cs, mode, secs) {
     else if(/erddap\\.secoora/.test(u)){if(!FX.buoy)return Promise.resolve(new Response("Error {code=404;}",{status:404}));b=FX.buoy}
     else if(/api\\.weather\\.gov\\/alerts/.test(u))b={features:[]};else if(/api\\.weather\\.gov\\/products/.test(u))b={"@graph":[]};
     return b?Promise.resolve(new Response(JSON.stringify(b),{status:200,headers:{"Content-Type":"application/json"}})):rf.apply(this,arguments)};
-  var post=function(o){try{webkit.messageHandlers.porch.postMessage(o)}catch(e){}},iv=[],last=0,on=false;
-  (function tick(t){if(on){if(last)iv.push(t-last);last=t}requestAnimationFrame(tick)})(0);
+  var post=function(o){try{webkit.messageHandlers.porch.postMessage(o)}catch(e){}},iv=[],last=0,on=false,gl=[],held=0,slow=[];
+  /* while the picture moves (a finger on it, or its glide) each frame is also kept apart (gl), a slow one named
+     for where it fell (finger@ the move, out@ or in@ the frame of that glide), and the time the picture sits off
+     the screen between the glide out and the glide in is added up (held) */
+  (function tick(t){if(on){if(last){iv.push(t-last);var fr=document.querySelector(".scene-frame"),tf=fr&&fr.style.transform||"";
+    var ph=fr&&fr.classList.contains("scene-glide")?(tf.indexOf("(0px")>=0?"in":"out"):"";if(ph!==PH){PH=ph;PHN=0}PHN++;
+    if(fr&&(fr.classList.contains("scene-glide")||(tf&&FINGER))){gl.push(t-last);if(t-last>34)slow.push("#"+SW+" "+(FINGER?"finger@"+MOVE:tf.indexOf("(0px")>=0?"in@"+PHN:"out@"+PHN)+" "+Math.round(t-last))}else if(tf&&tf.indexOf("px")>0&&tf.indexOf("(0px")<0)held+=t-last}last=t}requestAnimationFrame(tick)})(0);
+  var PH="",PHN=0,FINGER=false,MOVE=0,SW=0;
   function report(){var s=iv.slice().sort(function(a,b){return a-b}),q=function(p){return s.length?+s[Math.min(s.length-1,Math.floor(p*s.length))].toFixed(1):null},sum=iv.reduce(function(a,b){return a+b},0);
     post({kind:"done",frames:iv.length,fps:+(iv.length/(sum/1000)).toFixed(1),p50:q(.5),p90:q(.9),max:s.length?+s[s.length-1].toFixed(1):null,
       over34:iv.filter(function(d){return d>34}).length,lost:iv.reduce(function(a,d){return a+Math.max(0,Math.round(d/16.67)-1)},0),
-      animations:document.getAnimations().filter(function(a){return a.playState==="running"}).length,dpr:devicePixelRatio,width:innerWidth})}
+      animations:document.getAnimations().filter(function(a){return a.playState==="running"}).length,dpr:devicePixelRatio,width:innerWidth,
+      glide:{n:gl.length,max:gl.length?+Math.max.apply(null,gl).toFixed(1):null,over34:gl.filter(function(d){return d>34}).length,slow:slow},held:Math.round(held)})}
   var live=function(){var s=document.getElementById("stamp");return s&&/^live/.test(s.textContent)};
   if(MODE==="open"){on=true;post({kind:"start"});setTimeout(function(){on=false;report()},SECS*1000);return}
+  /* a finger on the picture: down at one side, 12 moves 14px apart a frame each, up, and the glide does the rest */
+  var swipe=function(dir,then){var fr=document.querySelector(".scene-frame"),r=fr.getBoundingClientRect(),y=r.top+r.height*.6,x=dir<0?r.left+r.width*.8:r.left+r.width*.2,i=0,n=12;
+    var pe=function(type,cx,tgt){(tgt||document).dispatchEvent(new PointerEvent(type,{pointerId:7,pointerType:"touch",isPrimary:true,clientX:cx,clientY:y,bubbles:true,cancelable:true,button:0}))};
+    FINGER=true;MOVE=0;SW++;pe("pointerdown",x,fr);var t=setInterval(function(){i++;MOVE=i;pe("pointermove",x+dir*i*14);if(i>=n){clearInterval(t);FINGER=false;pe("pointerup",x+dir*n*14);then()}},16)};
   var w=setInterval(function(){if(!live())return;clearInterval(w);
     setTimeout(function(){try{finishReveal()}catch(e){}
+      if(MODE==="swipe")return setTimeout(function(){post({kind:"start"});on=true;last=0;
+        swipe(-1,function(){setTimeout(function(){swipe(1,function(){setTimeout(function(){on=false;report()},2500)})},2500)})},1000);
       setTimeout(function(){post({kind:"start"});on=true;last=0;setTimeout(function(){on=false;report()},SECS*1000)},1000)},3000)},50);
 })();`;
 }
@@ -138,7 +154,7 @@ const problems = [];
 for (const cs of CASES.filter((c) => !ONLY.length || ONLY.some((q) => c.name.includes(q)))) {
   console.log(`### ${cs.name}\n    ${cs.note}`);
   for (const mode of MODES.length ? MODES : ["idle", "open"]) {
-    const secs = mode === "idle" ? 10 : 6;
+    const secs = mode === "idle" ? 10 : 6;   /* a swipe's two gestures and their glides take about 5.5 */
     script = pageScript(cs, mode, secs);
     const child = spawn(runner, [`http://localhost:${PORT}/index.html`, "390", "1.5", String(secs + 40)], { stdio: ["ignore", "pipe", "inherit"] });
     let out = ""; child.stdout.on("data", (d) => { out += d; });
@@ -148,6 +164,7 @@ for (const cs of CASES.filter((c) => !ONLY.length || ONLY.some((q) => c.name.inc
     const r = JSON.parse(line), p = r.page;
     console.log(`    ${mode.padEnd(4)} ${String(p.fps).padStart(5)} fps, frames ${p.p50}ms median, ${p.p90}ms p90, ${p.max}ms worst, ${p.lost} lost, ${p.over34} over 34ms` +
       ` | cpu over ${secs}s: web ${r.cpuWeb.toFixed(1)}s, gpu ${r.cpuGpu.toFixed(1)}s | ${p.animations} animations, ${p.width}px at ${p.dpr}x`);
+    if (mode === "swipe" && p.glide) console.log(`           while it moves: ${p.glide.n} frames, ${p.glide.max}ms worst, ${p.glide.over34} over 34ms${p.glide.slow.length?` (${p.glide.slow.join(", ")})`:""} | off the screen between: ${p.held}ms over both swipes`);
     if (STRICT && mode === "idle" && p.fps < 50) problems.push(`${cs.name}: ${p.fps} frames a second at idle`);
   }
 }

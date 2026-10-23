@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v132/);
+  assert.match(worker, /mbwx-shell-v133/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -1436,7 +1436,20 @@ test("Denver is a parked travel scene: kept as the template, out of the rotation
   assert.match(html, /drag\.lock=Math\.abs\(dx\)>Math\.abs\(dy\)\?"x":"y"/);
   assert.match(html, /if\(PRM\)\{rest\(\);setLoc\(id\);return\}/);
   assert.doesNotMatch(html, /sceneDots|scene-dots/);
-  assert.match(html, /\.scene-frame\{margin:14px -20px 0;position:relative;z-index:2;touch-action:pan-y;/);
+  assert.match(html, /\.scene-frame\{margin:14px -20px 0;position:relative;z-index:2;transform:translate3d\(0,0,0\);will-change:transform;touch-action:pan-y;/);
+  // the swipe is smooth in WebKit (Josh, October 23 2026: "smooth af"): the frame carries its identity transform
+  // and its own layer from the start, the new place is painted while the picture waits off the screen and is drawn
+  // in place, all but invisible, before it slides in, the charts' pens wait, and the live forecast is asked for
+  // once the picture is home. tools/webkit.mjs has a swipe mode that counts every frame while it moves
+  assert.match(html, /function setLoc\(id,later=false\)\{/);
+  assert.match(html, /if\(!later\)refresh\(\);/);
+  assert.match(html, /REVEAL_HOLD=true;\n      setLoc\(id,true\);/);
+  assert.match(html, /Promise\.race\(\[PAINT,new Promise\(r=>setTimeout\(r,450\)\)\]\)\.then\(home\);/);
+  assert.match(html, /frame\.style\.transform="";frame\.style\.opacity="\.01";/);
+  assert.match(html, /function revealReady\(\)\{if\(REVEAL_HOLD\)/);
+  const webkitSrc = await readFile(new URL("tools/webkit.mjs", root), "utf8");
+  assert.match(webkitSrc, /w === "swipe"/);
+  assert.match(webkitSrc, /while it moves:/);
   assert.match(html, /const frame=document\.querySelector\("\.scene-frame"\)/);
   assert.match(html, /if\(LOC\.scene==="front-range"\)/);
   assert.match(html, /data-species="black-billed-magpie"/);
@@ -6310,7 +6323,7 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(html, /skyLabs=\{rise:place\("R",clock\(sunrise\)\),set:place\("L",clock\(sunset\)\)\}/);
   assert.doesNotMatch(html, /data-sun-mark|mark=b|"SUNRISE"/);
   assert.match(html, /const y0=Math\.max\(14,visTop\+14\);/);
-  assert.match(html, /const fit=pnArc\?pnSunFit\(py\(f\),visTop,squash\):\{y:py\(f\),s:1\};/);
+  assert.match(html, /const fit=pnArc\?pnSunFit\(py\(f\),visTop,squash,x\):\{y:py\(f\),s:1\};/);
   assert.match(html, /data-light="long-shadow"/);
   assert.match(html, /data-light="glint"/);
   // the light on the pond is a few short arcs. a bar the full width of the water read as a seam.
@@ -6367,9 +6380,11 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(fn, /propPnTub\(\{open:tubOn\}\)/);
   assert.doesNotMatch(fn, /open:tubSeason|tubLit=/);
   assert.match(fn, /data-prop="tub-live"/);
-  assert.match(html, /@keyframes pnSteam\{0%\{transform:translateY\(0\);opacity:\.6\}20%\{opacity:\.85\}100%\{transform:translateY\(-12px\);opacity:0\}\}/);
-  assert.match(html, /@keyframes pnTubHue\{0%,20%\{opacity:var\(--hi,\.62\)\}48%\{opacity:\.16\}74%,100%\{opacity:var\(--lo,\.03\)\}\}/);
-  assert.match(fn, /pnTubLagoon/);
+  // the steam is a low soft breath over the water, and the aqua holds steady while the tub is open (Josh,
+  // October 23 2026: "keep the aqua hot tub light lit vs pulsing")
+  assert.match(html, /@keyframes pnSteam\{0%\{transform:translateY\(0\);opacity:\.55\}25%\{opacity:\.8\}100%\{transform:translateY\(-5px\);opacity:0\}\}/);
+  assert.match(fn, /const lights=`<g data-hue="pnTubLagoon" opacity="\.9">\$\{wash\("pnTubLagoon"\)\}<\/g>`;/);
+  assert.doesNotMatch(html, /pnTubHue|pn-tub-hue|pnTubMoon/);
   assert.doesNotMatch(fn, /tubLook|get\("tub"\)/);
   assert.doesNotMatch(html, /pnTubAmber|pnTubRose|pnTubAqua|pnTubChamp|\?tub=/);
   {
@@ -6391,10 +6406,19 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
     const block = html.slice(html.indexOf("const PN_HA="), html.indexOf("INK.pnBackHouse"));
     vm.runInContext(block + "\nglobalThis.pnSunFit=pnSunFit;", ctx);
     const ridge = 138 + -66 * 1.45, ray = 16.2 + 8.5;
+    // Josh, October 23 2026: the noon sun sat on the ridge. Over the roof it keeps a little sky under it
     const noon = ctx.pnSunFit(20, 0, 1);
-    assert.equal(noon.s, 1, "a phone holds the sun at full size");
-    assert.ok(Math.abs(noon.y - (ray + 2)) < 1e-6, "noon rays clear the top of the frame");
-    assert.ok(noon.y + 13 < ridge, "on a phone the whole disc sits above the ridge");
+    assert.ok(noon.s >= .9 && noon.s < 1, `over the ridge a phone's sun is a few percent smaller (${noon.s})`);
+    assert.ok(noon.y - ray * noon.s >= 2 - 1e-6, "noon rays clear the top of the frame");
+    assert.ok(noon.y + 13 * noon.s <= ridge - 5 + 1e-6, "on a phone the whole disc sits clear above the ridge");
+    // through the middle of the day it rides over the roof, never half behind it
+    for (const x of [100, 140, 160, 200, 230, 240]) {
+      const f = ctx.pnSunFit(45, 0, 1, x);
+      assert.ok(f.y + 13 * f.s <= ridge - 5 + 1e-6, `a sun at x ${x} keeps sky between it and the ridge`);
+    }
+    const side = ctx.pnSunFit(60, 0, 1, 270);
+    assert.equal(side.y, 60, "beside the roof the sun keeps its own path");
+    assert.equal(side.s, 1);
     const wide = ctx.pnSunFit(20, 25.6, 1);
     assert.equal(wide.s, 1, "a moderate crop still holds a full sun");
     assert.ok(wide.y - ray >= 25.6, "rays stay under the crop");
@@ -6403,7 +6427,7 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
     assert.ok(short.s < 1 && short.s > 0.5, "a short window draws the sun smaller");
     assert.ok(short.y - ray * short.s >= 31 - 1e-6, "the shorter sun's rays clear the crop");
     assert.ok(short.y - 13 * short.s < ridge, "the top of the smaller disc stays above the ridge");
-    const low = ctx.pnSunFit(90, 0, 1);
+    const low = ctx.pnSunFit(90, 0, 1, 20);
     assert.equal(low.y, 90, "a low sun keeps the path");
     assert.equal(low.s, 1, "a low sun stays full size");
   }
@@ -6519,12 +6543,19 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   // and the harnesses hold it: no animation in #sceneSvg or a still sheet at the house, and WebKit's house cases
   assert.match(scene, /\["sceneSvg", "sceneNear", "sceneFront", "sceneWater", "sceneRefl", "sceneTop"\]/);
   for (const name of ["coast-night", "coast-rain", "coast-afternoon", "coast-blow", "coast-halloween"]) assert.match(webkit, new RegExp(`name: "${name}", loc: "mb"`));
-  // the detailed drawings are the house. There is no animals query. The heron nods, the gulls are the
-  // house gull, and the sliders come out on their own table. The dogs are not drawn.
+  // the detailed drawings are the house. There is no animals query. The gulls are the house gull, and the
+  // sliders come out on their own table, heads up out in the water. The dogs are not drawn. The great blue
+  // heron is back (Josh, October 23 2026): the marsh's bird and its whole life, wading in the east water, with
+  // its footfall rings, its splash and a reflection that moves with it, down in a storm and a downpour
   assert.doesNotMatch(html, /pnAnimalLook|\?animals=/);
   assert.doesNotMatch(fn, /pnDogsPlan|propPnHerder|propPnSpaniel|pnDoorShape|doorSil/);
-  assert.doesNotMatch(fn, /heron-still|rigHeron\(phase\)|flightBird\("gull"/);
-  assert.match(fn, /propPnHeron\(phase\(8\.5\)\)/);
+  assert.doesNotMatch(fn, /heron-still|flightBird\("gull"|propPnHeron/);
+  assert.match(fn, /const bird=inkRig\(rigHeron\(phase\),inkPal\(INK\.heron\)/);
+  assert.match(fn, /const showHeron=!storm&&!\(wet&&rainK>=1\);/);
+  assert.match(fn, /data-water-contact="heron-near"/);
+  assert.match(fn, /data-water-contact="heron-bill"/);
+  assert.match(fn, /head\(X\(92\),Y\(165\),\.82,1,0\)/);
+  assert.match(html, /function propPnSliderUp\(\)/);
   assert.match(fn, /pnHouseGull\(/);
   assert.match(fn, /pnRigBat\(beat\)/);
   assert.match(fn, /propPnDoeLook\(/);
@@ -6546,7 +6577,7 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
 
 test("the pond sliders keep to their table, and the dogs are not drawn", async () => {
   const html = await readFile(new URL("index.html", root), "utf8");
-  const src = html.slice(html.indexOf("function pnTurtlesPlan("), html.indexOf("function propPnHeron("));
+  const src = html.slice(html.indexOf("function pnTurtlesPlan("), html.indexOf("function propPnDoeLook("));
   const ctx = vm.createContext({});
   vm.runInContext(src + "\nglobalThis.pnTurtlesPlan=pnTurtlesPlan;", ctx);
   const plain = (v) => JSON.parse(JSON.stringify(v));

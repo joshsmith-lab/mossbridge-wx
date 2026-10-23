@@ -871,7 +871,7 @@ carries `faces:"north"`, and for such a place the sun's arc is mirrored (sunrise
 sunset on the left), the moon's place and shading follow it, and the wind's bearing is mirrored once
 upstream for the scene and the sky, so the palms, the grass, the spray, the rain, the clouds, the bats and
 the witch all go the way the real wind blows. The house draws no arc. The illustrated sun keeps that
-sine and `sunPos`, except at the crown, where it drops until the whole disc and its rays sit under the top of the frame (`pnSunFit`). A short window crops that sky, and when the open sky above the roof cannot hold the sun, it draws smaller and tucks behind the ridge. Golden hour warms the light, and a low sun lays a long shadow and a glint on the
+sine and `sunPos`, except at the crown, where it drops until the whole disc and its rays sit under the top of the frame (`pnSunFit`). Over the roof it rides above it: Josh, October 23 2026, saw the noon sun sitting on the ridge (and through the middle of the day it was half behind the roof), so wherever the disc is over the roof it keeps 5 units of sky between its foot and the highest part of the roof under it, a few percent smaller over the ridge if it must be (about .94 on a phone), and beside the roof it keeps its own path. A short window crops that sky, and when the open sky above the roof cannot hold the sun even at .86, it draws smaller and tucks behind the ridge as before. Golden hour warms the light, and a low sun lays a long shadow and a glint on the
 windows it faces. The sunrise and sunset times sit up in open sky, in the corner columns, clear of
 the palms, the roof, the house and the pond, with the thin halo they already wear and no box behind them.
 Sunrise stays on the right and sunset on the left all day, because the house faces north. A thin
@@ -892,7 +892,7 @@ crossing the windows as they swag forward. They come on at the start of evening 
 (`PN_STRANDS_OUT`). Morning golden hour leaves them dark. They hang still from the sabals, each end tucked into its palm's
 boots so the palms' sway never shows a loose end. The fire table
 (`propPnFireTable`) burns only while the strands are on, between 45° and 68°, dry, in no storm or fog,
-with gusts under 20 and no thunder (`fireOn`). Lit, it is a small fire: several tongues over the trough, flickering on the moving sheet, with a warm pool on the paving and across the chairs. The hot tub stays under its hard cover except while the fire is lit in its season, October 20 through April 15 (`PN_TUB`, `pnTubSeason`, `fireOn`). Then the cover stands open, short soft wisps of steam rise and fade out around the top of the windows, and the underwater lights come on: one wash across the water, lagoon teal then moon blue, with a soft halo on the tub. The colour stays on the water. It is a slow opacity crossfade on the moving sheet, and reduced motion leaves the steam and one quiet colour. The windows and the porch light the house from sunset until 10:30, then stay off overnight (`pnHouseLights`). The pumpkin lights keep that 10:30, on their own, and do not follow the strands. Josh picked this drawing and it is the house everyone sees. The main roof is one trapezoid: its lower edge is the outer bottom corners of the two gables, the ridge is 0.87 of that span and the rise is 0.30 of it, the photo's ratios, and each gable peak is 0.45 of that rise. The siding, the shakes and the metal roof are white, with the seams and a little shade for depth, and at night that white goes blue-gray with the sky. The only house lights are the strands out to the palms, off at 10:00. In October the orange pumpkin lights
+with gusts under 20 and no thunder (`fireOn`). Lit, it is a small fire: several tongues over the trough, flickering on the moving sheet, with a warm pool on the paving and across the chairs. Josh, October 23 2026: "that fire is a vibe", with a light touch, so its pool keeps to the patio and only a hint of it reaches the lawn and the fence. The hot tub stays under its hard cover except while the fire is lit in its season, October 20 through April 15 (`PN_TUB`, `pnTubSeason`, `fireOn`). Then the cover stands open, a low, wide, soft breath of steam rises a little over the water and thins out across the lower panes (the first tall wisps read as two pale stripes up the windows), and the underwater light comes on: one aqua wash across the water, the lagoon's teal, with a soft halo on the tub. It holds steady while the tub is open (Josh: "keep the aqua hot tub light lit vs pulsing"): the moon-blue crossfade is gone. The colour stays on the water, and reduced motion leaves the steam still. The windows and the porch light the house from sunset until 10:30, then stay off overnight (`pnHouseLights`). The pumpkin lights keep that 10:30, on their own, and do not follow the strands. Josh picked this drawing and it is the house everyone sees. The main roof is one trapezoid: its lower edge is the outer bottom corners of the two gables, the ridge is 0.87 of that span and the rise is 0.30 of it, the photo's ratios, and each gable peak is 0.45 of that rise. The siding, the shakes and the metal roof are white, with the seams and a little shade for depth, and at night that white goes blue-gray with the sky. The only house lights are the strands out to the palms, off at 10:00. In October the orange pumpkin lights
 along the fence hang in swags, high at each post and low in the middle, five or six bulbs to a bay. They are on by day and from dusk until 10:30, then the wire stays up and the bulbs go dark until the sun is up. They are on the holiday
 calendar like every decoration, and gone the morning of November 1.
 
@@ -903,14 +903,19 @@ near drops the ridge has, from one helper, `nearRainLayer`), rings the pond and 
 dims everything under the app's lightning, and fog softens the house and widens the halos.
 
 **Who is out.** Small whitetail does (`whitetail-doe`) on the lawn in front of the fence at dawn and dusk, at
-real size, with a dorsal stripe and a longer neck that nods, and the great blue heron (`great-blue-heron`) standing side-on in
-the shallows at the pond's east edge in every weather but a thunderstorm, its head nodding. Gulls cross at midday when it is
+real size, with a dorsal stripe and a longer neck that nods, and the great blue heron (`great-blue-heron`). Josh, October 23 2026:
+"we had a great heron so bring it back", so it is the marsh's own bird and its whole 150-second life (`rigHeron`): two steps, a
+long stand, a look round on its own 97-second clock and one spear, wading in the open east water of the pond with room of its own,
+facing into the pond, at .5 of its drawing. Each footfall rings the water and the spear splashes where the bill meets it (the
+`data-water-contact` rings the scene harness walks), and its reflection is the same bird turned over and pressed under it, so the
+copy steps and spears with it. It is out in every weather but a thunderstorm and a downpour (`rainK` 1, codes 65 and 82), when it hunkers
+down, which also keeps the busiest frames under the animation ceiling. Gulls cross at midday when it is
 dry, with a longer wing and a small chest mark, and in October the bats hunt over the roof from sunset to dawn, the same wing with a pale chest mark. Nobody sits at the fire: the
 picture makes no claim about who is home. These are the detailed drawings. There is no animals query.
 
 The dogs are not in the picture: not on the patio, not by the fire, and not in the screen door, at any hour. The drawing and the schedule are gone.
 
-Carolina pond sliders (`pnTurtlesPlan`) are small. In the water only a little head breaks the surface, with at most a very faint low-opacity rippled hint of the shell below it. On the bank, on a warm clear day, one small slider basks, in proportion and clearly smaller than the heron. On a warm clear day, the sun at least 6° up and the air at least 60°, two heads break the surface and one basks on the east sand. A milder day, 48° and up, keeps one head. Rain keeps one head and no basking. A dry night keeps one dim head. A storm, snow, a cold day or a wet night keeps them down. A head dips and comes back on its own clock.
+Carolina pond sliders (`pnTurtlesPlan`). Josh, October 23 2026: "pond turtles just chill with their lil heads up anywhere", so out in the water a slider is the top of its shell just breaking the surface and its head held up on its neck, the yellow stripe behind the eye (`propPnSliderUp`), out in the open water and not at the shore: one in the left water a little way out and, on a warm day, a second nearer and a little larger, right of the fountain and facing the other way, each in a faint ring of its own. At a few pixels the two shapes and the stripe read as a turtle where the little head did not. On the bank, on a warm clear day, one slider basks, now drawn large enough to read and still clearly smaller than the heron. On a warm clear day, the sun at least 6° up and the air at least 60°, two heads break the surface and one basks on the east sand. A milder day, 48° and up, keeps one head. Rain keeps one head and no basking. A dry night keeps one dim head. A storm, snow, a cold day or a wet night keeps them down. A head dips and comes back on its own clock.
 
 **October.** The blood moon, the bats, the witch and the cobweb are shared with the other places; the sky
 over the house is small, so the bats and the witch fly in front of the roof. The house's own, each a
@@ -1447,17 +1452,17 @@ off the Eastern phone it runs in (the half past midnight scene on November 1 is 
 used to be).
 
 Two numbers worth knowing before you change motion: every scene idles at **0-3
-layouts per 6 seconds** (most at 0 or 1), and the busiest scene runs **108 animations** still
-running (115 in all; October 22 2026: the ridge's night downpour). At the house the busiest are its
-downpours, the October midday one at 101 and the August one at 98, because the near rain in front of
-the house is seventeen to nineteen drops, then the storm at 92. If either number jumps, you have added
-something that is not a `transform` or an `opacity`. Halloween's nights are the other busy ones,
-legitimately: three animations a bat, three for the witch and three for the spider in the cobweb, and
-at the farm one for the cat's tail and one for each pair of eyes in the dark (the farm's ghost adds one
-when the gusts reach 5). So the house under the October moon with seven bats and the witch runs 86,
-Halloween night there 83, and the farm's October nights 84 to 90 (the harness fails anything over 120).
-The parked marsh's figures (117 under a full moon with a westerly, 114 in its October midday downpour)
-went with its cases and are in git history.
+layouts per 6 seconds** (most at 0 or 1), and the busiest scene runs **112 animations** still
+running (113 in all; October 23 2026: the house under the October moon). The great heron came back to the
+house that day with its whole life and a reflection that moves with it, eighteen animations with its rings and
+splash, so the house's nights are now its busiest: under the October moon with seven bats and the witch 112,
+the carved week's night and Halloween night 109, and freezing rain 105. Its downpours keep the heron in, at 100
+and 103, and the ridge's night downpour is 108. If either number jumps, you have added something that is not a
+`transform` or an `opacity`. Halloween's nights are busy legitimately: three animations a bat, three for the
+witch and three for the spider in the cobweb, and at the farm one for the cat's tail and one for each pair of
+eyes in the dark (the farm's ghost adds one when the gusts reach 5), so the farm's October nights run 84 to 90.
+The harness fails anything over 120, so the house has about eight to spare. The parked marsh's figures (117
+under a full moon with a westerly, 114 in its October midday downpour) went with its cases and are in git history.
 
 `tools/webkit.mjs` is the one harness that is not Chrome. Chrome runs SVG animations on its
 compositor, so it never paid for the sky's live blur, and every browser on an iPhone is WebKit,
@@ -1472,7 +1477,10 @@ second idle and 58 to 60 opening, where the live blur had held them to 10 to 23.
 still spends one to two of the Mac's cores at idle repainting the scene's moving parts, and no one
 group of them is most of it: that is the next thing to look at. At Beaufort it was the moving sheet itself,
 repainted whole for every part in it, and the crowns and the boat are boxes now (see What turns whole is a
-box, under Beaufort); the same move would serve the coast's and the farm's moving parts. `--strict` fails a case under 50
+box, under Beaufort); the same move would serve the coast's and the farm's moving parts. Its `swipe` mode, asked
+for by name (`node tools/webkit.mjs coast-afternoon swipe`), swipes the picture to the next place and back with a
+finger's pointer events and prints the frames while the picture moves, each slow one named for where it fell
+(`finger@` the move, `out@` or `in@` the frame of that glide), and the time it sat off the screen between. `--strict` fails a case under 50
 frames a second. The zoom that makes 3x assumes a Retina Mac, and the report prints the width
 and pixel ratio the page saw.
 
@@ -2334,7 +2342,17 @@ The fuller scene earns its playfulness from the existing drawings and their beha
   that gives the gesture up once it is taller than it is wide). Nothing on the picture says
   the other places are there: Josh asked for the swipe to stay a thing you find (October 22
   2026), so the three dots came off the same day they went on. Reduced motion changes the place with no slide. One picture only, moved by a
-  transform, so the sheets are not drawn twice.
+  transform, so the sheets are not drawn twice. Josh, October 23 2026, asked for it to be "smooth af".
+  Measured in `tools/webkit.mjs swipe` (a finger's pointer events to the next place and back, every frame
+  counted while the picture moves), main had four to six frames over 34ms in the two swipes, up to 144ms. Three
+  things fix it. The frame carries the identity transform and its own layer from the start
+  (`transform:translate3d(0,0,0);will-change:transform`): starting from none, the first move under a finger cost
+  WebKit a 60 to 70ms frame four frames in on the house and on Beaufort. The new place is painted while the
+  picture waits off the screen (`setLoc(id,true)`, waiting on `PAINT`, never past 450ms), then drawn in place at
+  opacity .01 for two frames, because WebKit draws a layer's tiles only once they are on the screen, and only then
+  slides in. The charts' pens wait for it (`REVEAL_HOLD`), and the live forecast is asked for once it is home. The
+  house and the farm now swipe with no frame over 34ms, Beaufort with one of about 55ms as its picture comes in,
+  and the picture is off the screen about 130ms between the glide out and the glide in.
 - **Opening and switching in October 2026.** Four things a family member saw on a phone, fixed
   together on October 10 2026 after an audit of the staged paint (#75):
   - A place switch with a cache takes the last place's pictures, notes, sentences and strips down
