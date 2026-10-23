@@ -861,7 +861,10 @@ the right; Josh: "keep it for now. undecided"). The fire table and its Adirondac
 chairs on the patio's west end, the hot tub on its east end centred on the bank of four east
 windows, a sabal with a windmill palm between it and a second sabal at the west and the same group at the east, the black fence running only between
 its two white pillars ("the white stanchions should mark the limit of the fence"), a gate and low steps
-straight down from the back door, fountain grass along the inside of the fence up to the gate, the lawn,
+straight down from the back door, fountain grass along the inside of the fence up to the gate (the palms are
+planted in that bed, their feet three units behind the fence's foot so their trunks go down behind its bottom
+rail: Josh, October 23 2026, "the tree bases are a bit off? perhaps outside the fence?", and they had stood a
+unit out on the front lawn; the trunks are three units shorter, so the crowns did not move), the lawn,
 the sand, and the pond with its aerating fountain on the door's line ("directly center on the house/door").
 The frame is mostly house with a little room each side: the neighbours are close, so none are drawn ("drop
 reference to other houses around it because the fact is they are very close"). It is laid out in a 320 by
