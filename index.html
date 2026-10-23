@@ -199,12 +199,10 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes pnSpray{from{transform:skewX(calc(var(--sk,1deg) * -.4))}to{transform:skewX(var(--sk,1deg))}}
 @keyframes pnDrops{from{transform:translateX(calc(var(--dx,1px) * -.3));opacity:.75}to{transform:translateX(var(--dx,1px));opacity:1}}
 @keyframes pnFlick{0%{transform:scale(1,1);opacity:1}35%{transform:scale(1.02,calc(1 - var(--fk,.1)));opacity:.88}70%{transform:scale(.98,calc(1 + var(--fk,.1) * .6));opacity:1}100%{transform:scale(1,calc(1 - var(--fk,.1) * .5));opacity:.93}}
-/* the hot tub, in season: short soft steam, and the wash trades lagoon for moon blue.
-   Opacity and a short rise only, and reduced motion leaves the wisps and one quiet colour. */
+/* the hot tub, in season: low soft steam over a steady aqua light.
+   Opacity and a short rise only, and reduced motion leaves the wisps still. */
 :is(#sceneSvg,.scene-layer) .pn-steam{transform-box:fill-box;transform-origin:center bottom;animation:pnSteam var(--sd,9s) ease-in infinite}
-@keyframes pnSteam{0%{transform:translateY(0);opacity:.6}20%{opacity:.85}100%{transform:translateY(-12px);opacity:0}}
-:is(#sceneSvg,.scene-layer) .pn-tub-hue{animation:pnTubHue var(--hd,18s) ease-in-out infinite}
-@keyframes pnTubHue{0%,20%{opacity:var(--hi,.62)}48%{opacity:.16}74%,100%{opacity:var(--lo,.03)}}
+@keyframes pnSteam{0%{transform:translateY(0);opacity:.55}25%{opacity:.8}100%{transform:translateY(-5px);opacity:0}}
 .scene-layer .bft-flag[style]{animation:bftFlag var(--fd,1.4s) ease-in-out infinite alternate}
 @keyframes bftFlag{from{transform:skewY(calc(var(--fs,2deg) * -1))}to{transform:skewY(var(--fs,2deg))}}
 .scene-layer :is(.bft-sock,.bft-sock-tail)[style]{animation:bftFlutter var(--fd,1.6s) ease-in-out infinite alternate}
@@ -595,8 +593,11 @@ html[data-theme=dark] .alert-strip{background:#9A3317;box-shadow:0 6px 22px -8px
 /* a sideways finger slides the picture to the next place. The slide is on the frame, not
    the scene: the opening rise (sceneIn) holds the scene's own transform, and an animation
    wins over a transform set on that same element. pan-y leaves a vertical move to the page.
-   The glide is this one transform, and only while a swipe is resolving */
-.scene-frame{margin:14px -20px 0;position:relative;z-index:2;touch-action:pan-y;touch-action:pan-y pinch-zoom;
+   The glide is this one transform, and only while a swipe is resolving. At rest the frame still carries a
+   transform, the identity (translate3d(0,0,0)), and is its own layer (will-change): starting from none, the
+   first move under a finger cost WebKit a frame of 60 to 70ms on the house and on Beaufort, four frames in,
+   and carrying it from the start, no frame of a swipe is over 34ms (tools/webkit.mjs swipe) */
+.scene-frame{margin:14px -20px 0;position:relative;z-index:2;transform:translate3d(0,0,0);will-change:transform;touch-action:pan-y;touch-action:pan-y pinch-zoom;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 .scene{position:relative}
 .scene-frame.scene-glide{transition:transform .34s var(--ease)}
@@ -8514,9 +8515,29 @@ function pnMoonInRoof(x,y){
    sun draws smaller, just enough that the tips still clear the edge and the top of the disc stays
    above the ridge, and the house covers the rest. hy 138 and scale 1.45 are the house's own,
    the same numbers pnPondScene and pnMoonInRoof use. */
-function pnSunFit(y,visTop,squash){
-  const ridge=138+PN_HA.ridge*1.45,pad=2,peek=2,ray0=16.2+8.5,disc0=13;
-  const top=visTop||0,sky=ridge-top,full=(disc0+ray0)*squash+pad;
+/* Josh, October 23 2026: the noon sun sat on the ridge, and through the middle of the day it was half
+   behind the roof. So where the sky above the roof can hold it, the sun rides over the roof with a little
+   sky (gap) between the bottom of the disc and the highest part of the roof under it, a few percent
+   smaller over the ridge if it must be, and keeps its own path everywhere else. Where it cannot (a
+   short wide window crops the sky), the rule above holds and the house covers the lower disc. */
+function pnSunFit(y,visTop,squash,x){
+  const S=1.45,hx=160,hy=138,B=PN_HA,ridge=hy+B.ridge*S,pad=2,peek=2,gap=5,ray0=16.2+8.5,disc0=13;
+  const top=visTop||0;
+  /* the highest point of the roof under a disc of half-width r centred at x (no x: the ridge) */
+  const roofTop=r=>{
+    if(x==null)return ridge;
+    const a=(x-r-hx)/S,b=(x+r-hx)/S;
+    if(b<B.roofL||a>B.roofR)return Infinity;
+    if(b>=B.ridgeL&&a<=B.ridgeR)return ridge;
+    const lx=b<B.ridgeL?b:a,t=lx<0?(lx-B.roofL)/(B.ridgeL-B.roofL):(B.roofR-lx)/(B.roofR-B.ridgeR);
+    return hy+(B.eave+(B.ridge-B.eave)*Math.min(1,Math.max(0,t)))*S};
+  let c=1;
+  for(let i=0;i<4;i++)c=Math.min(1,(roofTop(disc0*c)-gap-top-pad)/((ray0+disc0)*squash));
+  if(c>=.86){
+    const floor=top+ray0*squash*c+pad,ceil=roofTop(disc0*c)-gap-disc0*squash*c;
+    return{y:Math.max(floor,Math.min(y,ceil)),s:c};
+  }
+  const sky=ridge-top,full=(disc0+ray0)*squash+pad;
   let s=1;
   if(sky<full)s=Math.min(1,Math.max(.45,(sky-pad-peek)/(squash*(ray0-disc0))));
   const floor=top+ray0*squash*s+pad;
@@ -9036,7 +9057,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     const low=Math.sin(Math.PI*f)<.28;
     /* near the horizon the atmosphere flattens the disc and takes it further orange */
     const squash=clamp(.9+Math.max(0,sunAltDeg)/8*.1,.9,1);
-    const fit=pnArc?pnSunFit(py(f),visTop,squash):{y:py(f),s:1};
+    const fit=pnArc?pnSunFit(py(f),visTop,squash,x):{y:py(f),s:1};
     const y=fit.y,sunS=fit.s;
     const warm=clamp((8-sunAltDeg)/12,0,1);
     const disc=mix(mix(low?"#F0A03C":"#F5C94D","#E8752A",warm*.5),"#C8CFCE",veil*.72);
@@ -10732,32 +10753,6 @@ function pnTurtlesPlan({sunAlt,wet,storm,temp,snowing}){
   if(temp>=48)return{heads:1,bask:false,dim:false};
   return{heads:0,bask:false,dim:false};
 }
-/* The house heron: the same side-on stance, a quieter neck, and a couple of feather marks.
-   Facing -x, y=0 on the water. One joint, the head. */
-function propPnHeron(phase){
-  const nod=`<g class="pn-nod" style="${phase}">`;
-  const legs=[
-    pTaper([[5.2,-32,2],[6.3,-18,1.25],[6.2,-6,1.05],[5.6,2.2,.9]],"legFar"),
-    pTaper([[1.5,-32,2.15],[2.5,-16,1.4],[2.4,-6,1.15],[1.9,2.6,1]],"leg"),
-  ];
-  const body=[
-    pBlob([[-6,-42],[-1,-46.2],[8,-46.4],[15,-41],[18.5,-35],[11,-31.6],[3,-31],[-5,-33.4],[-7.4,-37.4]],"body"),
-    pBlob([[-1,-44],[7,-45.2],[16,-37.5],[7,-35.4],[-1,-38]],"wing"),
-    pTaper([[-4.2,-44.4,1.35],[-7.2,-40,.85],[-8.2,-34.5,.18]],"plume"),
-    pBlob([[-3.6,-43.2],[-1.2,-44.6],[.6,-43],[-1.4,-41.6]],"crest"),
-    pTaper([[1,-43.2,.4],[7,-42.2,.32],[13,-38,.2]],"detail",{},{noSil:true}),
-    pTaper([[.4,-41.2,.32],[6,-40.2,.26],[11,-36.6,.16]],"detail",{},{noSil:true}),
-  ];
-  const neck=[
-    pTaper([[-4,-40,5.4],[-5.6,-48,3.8],[-8,-54.5,3.1],[-11.2,-58.4,3.3]],"neck"),
-    pBlob([[-9.2,-59.2],[-12.4,-62.2],[-16.2,-61.6],[-16,-59],[-12.2,-57.6],[-9,-58.2]],"neck"),
-    pTaper([[-15.2,-60.6,1.7],[-22,-60.2,.75],[-30,-59.5,.12]],"bill",{capEnd:false}),
-    pTaper([[-10.4,-61.6,.9],[-7.2,-63,.7],[-4,-62.4,.15]],"crest"),
-    pDot(-13,-60.2,.5,"eye"),
-    pBlob([[-14.6,-59.2],[-12,-58.4],[-13.4,-58.2]],"face",{noSil:true}),
-  ];
-  return[{parts:legs},{parts:body},{open:nod,pivot:[-4,-40],layers:[{parts:neck}]}];
-}
 /* The house doe: a longer neck on its own joint, a dorsal stripe and a larger throat. */
 function propPnDoeLook({graze=false,phase=""}={}){
   const nod=`<g class="pn-nod" style="${phase}">`;
@@ -10789,6 +10784,22 @@ function propPnDoeLook({graze=false,phase=""}={}){
 /* A small slider. In the water only the head is drawn. On the bank the shell, the head and the
    tucked legs stay in proportion, and the whole turtle is placed well under the heron. */
 const PN_SLIDER={olive:"#4E6A32",shell:"#3E5A28",stripe:"#E2C15A",skin:"#5C7040",eye:"#1A1610",ink:"#241C28",shade:"#3A2350",lit:"#FFE2A8",shadeOp:.3,litOp:.45};
+/* Josh, October 23 2026: "pond turtles just chill with their lil heads up anywhere". Out in the water a
+   slider is the top of its shell just breaking the surface and its head held up on its neck, the yellow
+   stripe behind the eye: two shapes and a stripe, so it reads as a turtle at a few pixels. Facing +x, y=0
+   the water's surface, about ten units nose to tail */
+function propPnSliderUp(){
+  return[{parts:[
+    pBlob([[-4.4,.25],[-4,-1],[-2.4,-1.95],[-.2,-2.25],[1.9,-1.85],[3.2,-.9],[3.5,.25]],"shell"),
+    pBlob([[-2.6,-1.55],[-.6,-1.95],[1.4,-1.6],[2.2,-1.05],[.2,-1.12],[-1.8,-1.05]],"olive",{noSil:true}),
+    pTaper([[-2.2,-1.75,.16],[-.2,-2.05,.2],[1.6,-1.7,.14]],"stripe",{},{noSil:true}),
+    pTaper([[2.6,-.2,1.25],[3.7,-1.9,1.05],[4.5,-3.4,.95]],"skin"),
+    pBlob([[3.7,-3.2],[4,-4.35],[5,-4.85],[6.3,-4.6],[6.95,-4],[6.3,-3.45],[4.9,-3.05]],"skin"),
+    pTaper([[3.15,-.6,.2],[4.1,-2.6,.16]],"stripe",{},{noSil:true}),
+    pTaper([[4.3,-3.85,.26],[5.45,-4.25,.18]],"stripe",{},{noSil:true}),
+    pDot(5.85,-4.3,.24,"eye",{noSil:true}),
+  ]}];
+}
 function propPnSlider({bask=false}={}){
   if(bask)return[{parts:[
     pBlob([[-4.2,-.35],[-3.5,-2.1],[-1.1,-3.15],[1.5,-3.25],[3.3,-2.3],[4.1,-.7],[2.5,.12],[-1.3,.18],[-3.3,-.05]],"shell"),
@@ -10895,7 +10906,13 @@ function pnPondScene(c){
   hPal.room="#100E14";
   const sunSide=lightAt(hx,hy-u(40))[0]<0?-1:1,shadowOp=clamp(1-veil*.7-gloom*.8,.25,1);
   const sheen=`<defs><linearGradient id="pnSheen" x1="${sunSide<0?1:0}" y1="0" x2="${sunSide<0?0:1}" y2="0"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/><stop offset=".55" stop-color="#FFFFFF" stop-opacity="0"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="${(dark?.06:.22*(1-veil*.6)).toFixed(2)}"/></linearGradient></defs>`
-    +`<path d="M ${BH.roofL} ${BH.eave} L ${BH.ridgeL} ${BH.ridge} L ${BH.ridgeR} ${BH.ridge} L ${BH.roofR} ${BH.eave} Z" fill="url(#pnSheen)"/>`;
+    +`<path d="M ${BH.roofL} ${BH.eave} L ${BH.ridgeL} ${BH.ridge} L ${BH.ridgeR} ${BH.ridge} L ${BH.roofR} ${BH.eave} Z" fill="url(#pnSheen)"/>`
+    /* Josh, October 23 2026: give the roof a little form at midday, "but don't over do it, this house is
+       WHITE". By day the metal takes a faint cool shade under the ridge that is gone by the eave, and a thin
+       line of shade under the ridge cap. At night the sky's tone already models it */
+    +(dark?"":`<defs><linearGradient id="pnRoofForm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7F93A8" stop-opacity="${(.13*(1-veil*.5)).toFixed(3)}"/><stop offset=".55" stop-color="#7F93A8" stop-opacity="${(.04*(1-veil*.5)).toFixed(3)}"/><stop offset="1" stop-color="#7F93A8" stop-opacity="0"/></linearGradient></defs>`
+      +`<path d="M ${BH.roofL} ${BH.eave} L ${BH.ridgeL} ${BH.ridge} L ${BH.ridgeR} ${BH.ridge} L ${BH.roofR} ${BH.eave} Z" fill="url(#pnRoofForm)"/>`
+      +`<path d="M ${BH.ridgeL+1} ${BH.ridge+1.15} L ${BH.ridgeR-1} ${BH.ridge+1.15}" stroke="#7F93A8" stroke-width=".7" opacity=".22"/>`);
   const houseNight=sunAltDeg<-.83;
   const house=`<g data-prop="house" data-lit="${lightsOn?1:0}">${inkAt(hx,hy,S,1,pnBackHouseGlow({night:lightsOn})+inkRig(pnBackHouse({night:houseNight,lit:lightsOn,shadowOp,B:BH}),hPal,{s:S,light:lightAt(hx,hy-u(40)),line:1.4,heavy:1,shade:1.6,lit:.9})
     +sheen+(tex?pnBackHouseSil(BH).map(d=>`<path d="${d}" fill="${tex}" opacity="${(.55*paperK).toFixed(2)}"/>`).join(""):""))}</g>`;
@@ -10941,6 +10958,10 @@ function pnPondScene(c){
       if(strandsOn){glow+=`<circle cx="${f1(x)}" cy="${f1(by)}" r="${fog?9.5:6}" fill="url(#pnBulbGlow)"${fog?` opacity=".7"`:""}/>`;
         beads+=`<line x1="${f1(x)}" y1="${f1(y)}" x2="${f1(x)}" y2="${f1(by-1.5)}" stroke="${lineC}" stroke-width=".24"/><path d="${tear}" fill="#FFD27A"/><circle cx="${f1(x)}" cy="${f1(by+.25)}" r=".62" fill="#FFFFFF"/>`}
       else beads+=`<line x1="${f1(x)}" y1="${f1(y)}" x2="${f1(x)}" y2="${f1(by-1.5)}" stroke="${lineC}" stroke-width=".24"/><path d="${tear}" fill="${mix(skyS[2],"#FFFFFF",.55)}" fill-opacity=".55" stroke="${mix(lineC,"#F1EAD6",.2)}" stroke-width=".24"/><circle cx="${f1(x)}" cy="${f1(by+.2)}" r=".3" fill="${lineC}"/>`}
+    /* by day the unlit bulbs are glass and a dark cap: on the strands they read as bulbs, and turned over in
+       the pond their caps read as a dotted line across the water, so the pond's copy holds them faint
+       (data-beads, read before the copy drops its data names). Lit, the water doubles them in full */
+    if(!strandsOn)beads=`<g data-beads="day">${beads}</g>`;
     /* at night each span lays a warm pool on the wall behind it */
     if(strandsOn)glow=`<ellipse cx="${f1(m[0])}" cy="${f1(m[1]+5)}" rx="${f1(len*.45)}" ry="7" fill="url(#pnWash)" opacity=".5"/>`+glow;
     return `${glow}<path d="M ${f1(a[0])} ${f1(a[1])} Q ${f1(cq[0])} ${f1(cq[1])} ${f1(b[0])} ${f1(b[1])}" fill="none" stroke="${mix(lineC,"#2B2328",.4)}" stroke-width=".36"/>${beads}`};
@@ -10977,22 +10998,24 @@ function pnPondScene(c){
     light:fireOn?[fX-x,(fY-7)-(y-5)]:lightAt(x,y-5)}));
   const chairsBack=`<g data-prop="chairs">${chair(fX+7,fY-3.4,"side","black",-1)}${chair(fX-9,fY-3.6,"side","black")}</g>`;
   const chairs=`<g data-prop="chairs">${chair(fX-17.5,fY+.5,"side","black")}${chair(fX+17.5,fY+.5,"side","black",-1)}</g>`;
-  /* a warm pool on the paving under the chairs, and a wash up the wall behind the fire. The chairs sit in it */
-  const fireLight=fireOn?`<ellipse cx="${f1(fX)}" cy="${f1(fY+1.5)}" rx="46" ry="15" fill="url(#pnFirePool)"/><ellipse cx="${f1(fX)}" cy="${f1(fY-11)}" rx="32" ry="18" fill="url(#pnFirePool)" opacity=".72"/>`:"";
-  const fireWash=fireOn?`<ellipse data-prop="fire-glow" cx="${f1(fX)}" cy="${f1(fY-5)}" rx="30" ry="14" fill="url(#pnFirePool)" opacity=".42"/>`:"";
+  /* a warm pool on the paving under the chairs, and a wash up the wall behind the fire. The chairs sit in it.
+     Josh, October 23 2026: "that fire is a vibe", with a light touch. The pool keeps to the patio and only a
+     hint of it reaches the lawn and the fence, so the fire is warm and not a spill across the yard */
+  const fireLight=fireOn?`<ellipse cx="${f1(fX)}" cy="${f1(fY+.6)}" rx="38" ry="10.5" fill="url(#pnFirePool)" opacity=".8"/><ellipse cx="${f1(fX)}" cy="${f1(fY-11)}" rx="30" ry="17" fill="url(#pnFirePool)" opacity=".62"/>`:"";
+  const fireWash=fireOn?`<ellipse data-prop="fire-glow" cx="${f1(fX)}" cy="${f1(fY-5)}" rx="27" ry="12" fill="url(#pnFirePool)" opacity=".34"/>`:"";
   const tbX=hx+u((BH.winR[0][0]+BH.winR[BH.winR.length-1][1])/2),tbY=hy+3.4;
   const tub=`<path d="M ${f1(tbX-u(9.4))} ${f1(tbY-u(9))} L ${f1(tbX+u(11.6))} ${f1(tbY-u(9))} L ${f1(tbX+u(12.6))} ${f1(tbY-u(6))} L ${f1(tbX+u(11))} ${f1(tbY-u(6))} Z" fill="${shadeC}" opacity="${(.22*shadowOp).toFixed(2)}"/><g data-prop="hot-tub" data-open="${tubOn?1:0}" data-lit="${tubOn?1:0}">${inkAt(tbX,tbY,S,1,inkRig(propPnTub({open:tubOn}),palAt(INK.pnTub,.04),{s:S,line:.8,heavy:.4,shade:1.1,lit:.7,light:lightAt(tbX,tbY-10)}))}</g>`;
   /* steam and the wash only while the fire is lit. Each colour is one group, so they trade places together. */
   const tubFx=(()=>{
     if(!tubOn)return "";
-    /* short and soft. The tallest fades out around the top of the windows, and the rightmost stays
-       off the window Ghostface uses */
-    const steam=[[-3.2,10,2.4,11],[.2,12.5,3,13.5],[3.4,9.5,2.1,10]].map(([x,dur,rx,ry],i)=>`<ellipse class="pn-steam" cx="${x}" cy="${(-8.5-ry).toFixed(2)}" rx="${rx}" ry="${ry}" fill="url(#pnSteam)" opacity=".75" style="--sd:${dur}s;${wallClock(dur,i*3.1)}"/>`).join("");
-    const hd=22;
-    const layer=(id,delay,rest,inner)=>`<g class="pn-tub-hue" data-hue="${id}" opacity="${rest}" style="--hi:.98;--hd:${hd}s;${wallClock(hd,delay)}">${inner}</g>`;
-    /* the wash stays on the water, with a soft halo on the tub. Nothing drops onto the paving */
+    /* low, wide and soft: a breath over the water that thins out across the lower panes, never a column up
+       the windows (Josh, October 23 2026: the tall wisps read as two pale stripes on the glass) */
+    const steam=[[-4.2,11,4.2,4.6],[.3,13,5.2,5.8],[4.6,10,3.9,4.2]].map(([x,dur,rx,ry],i)=>`<ellipse class="pn-steam" cx="${x}" cy="${(-6.8-ry*.85).toFixed(2)}" rx="${rx}" ry="${ry}" fill="url(#pnSteam)" opacity=".5" style="--sd:${dur}s;${wallClock(dur,i*3.1)}"/>`).join("");
+    /* the wash stays on the water, with a soft halo on the tub. Nothing drops onto the paving. It is the
+       lagoon's aqua and it holds steady while the tub is open (Josh: "keep the aqua hot tub light lit vs
+       pulsing"): no trade with a second colour, no fade */
     const wash=id=>`<ellipse cx="0" cy="-6.45" rx="8.8" ry="1.7" fill="url(#${id})"/><ellipse cx="0" cy="-5.4" rx="11.2" ry="2.6" fill="url(#${id})" opacity=".42"/>`;
-    const lights=layer("pnTubLagoon",0,.88,wash("pnTubLagoon"))+layer("pnTubMoon",11,.06,wash("pnTubMoon"));
+    const lights=`<g data-hue="pnTubLagoon" opacity=".9">${wash("pnTubLagoon")}</g>`;
     return `<g data-prop="tub-live" data-lit="1" transform="translate(${f1(tbX)} ${f1(tbY)}) scale(${S})">${steam}${lights}</g>`;
   })();
 
@@ -11109,7 +11132,7 @@ function pnPondScene(c){
      (so nothing in the water is taken for the thing itself) */
   /* and a picture of its own: every id the copy defines is its own (r-), and so is every reference to one, so
      nothing in the water points at the land's sheets, whose repaints would then repaint the water */
-  const stillRaw=(standing+gateHallo).replace(/ style="[^"]*animation[^"]*"/g,"").replace(/ class="[^"]*"/g,"").replace(/ data-[a-z-]+="[^"]*"/g,"");
+  const stillRaw=(standing+gateHallo).replace(/<g data-beads="day">/g,'<g opacity=".28">').replace(/ style="[^"]*animation[^"]*"/g,"").replace(/ class="[^"]*"/g,"").replace(/ data-[a-z-]+="[^"]*"/g,"");
   const stillIds=new Set([...stillRaw.matchAll(/ id="([^"]+)"/g)].map(m=>m[1]));
   const still=stillRaw.replace(/ id="([^"]+)"/g,' id="r$1"').replace(/(href="#|url\(#)([^")]+)/g,(m,p,id)=>stillIds.has(id)?p+"r"+id:m)
     .replace(/url\(#pnBulbGlow\)/g,"url(#pnBulbGlowR)").replace(/#FFD27A/g,"#FFA75A")
@@ -11169,27 +11192,38 @@ function pnPondScene(c){
   let rainRings="";
   if(wet&&!snowing&&!PRM){const wr=mulberry(7139),rings=3+Math.round(rainK*5);
     for(let i=0;i<rings;i++)rainRings+=`<ellipse class="water-ring" cx="${f1(10+wr()*(W-20))}" cy="${f1(pondY+4+wr()*(H-pondY-6))}" rx="${f1(3+wr()*4)}" ry="${f1(.9+wr()*.8)}" fill="none" stroke="${dark?"#B7D6E1":"#183C4B"}" stroke-width=".6" style="animation-delay:-${(wr()*3.8).toFixed(1)}s"/>`}
-  /* the sliders are little heads in the water. */
+  /* the sliders are out in the pond with their heads up, anywhere in the open water and clear of the fountain
+     and the heron: one in the left water a little way out, and on a warm day a second nearer, right of the
+     fountain, facing the other way. The nearer one is drawn a little larger. Each rests in a faint ring of its
+     own and now and then dips under */
   const tp=pnTurtlesPlan({sunAlt:sunAltDeg,wet,storm,temp:temp==null?null:+temp,snowing});
   const waterInk=dark?"#B7D6E1":"#183C4B";
-  const head=(x,off)=>{const sc=1.65,ink=inkRig(propPnSlider(),palAt(PN_SLIDER,.05),{s:sc,line:.5,heavy:.18,shade:.45,lit:.35,light:lightAt(x,pondY)});
+  const head=(x,y,sc,flip,off)=>{const ink=inkRig(propPnSliderUp(),palAt(PN_SLIDER,.05),{s:sc,flip,line:.55,heavy:.22,shade:.5,lit:.4,light:lightAt(x,y-4)});
     const delay=PRM?"":`animation-delay:-${((Date.now()/1000+off)%12).toFixed(1)}s`;
-    const y=pondY+.5;
-    return `<g class="wildlife" data-species="pond-slider" data-turtles="1" data-where="water" opacity="${tp.dim?".42":"1"}"><g class="pn-dip" style="${delay}">${inkAt(x,y,sc,1,ink)}<ellipse cx="${f1(x)}" cy="${f1(pondY+2.5)}" rx="2.35" ry=".55" fill="#3E5A28" opacity=".14"/><path d="M ${f1(x-2.5)} ${f1(pondY+2.15)} Q ${f1(x-1.2)} ${f1(pondY+2.7)} ${f1(x)} ${f1(pondY+2.2)} T ${f1(x+2.5)} ${f1(pondY+2.15)}" fill="none" stroke="#3E5A28" stroke-width=".35" opacity=".16"/><ellipse cx="${f1(x)}" cy="${f1(pondY+.12)}" rx="1.35" ry=".28" fill="none" stroke="${waterInk}" stroke-width=".32" opacity=".4"/></g></g>`};
-  if(tp.heads)turtleBits=head(X(148),0)+(tp.heads>1?head(X(186),5):"");
-  if(tp.bask){const bx=X(240),by=pondY-.55,bS=.68;
+    return `<g class="wildlife" data-species="pond-slider" data-turtles="1" data-where="water" opacity="${tp.dim?".42":"1"}"><g class="pn-dip" style="${delay}"><ellipse cx="${f1(x+flip*.4*sc)}" cy="${f1(y+.35*sc)}" rx="${f1(5.2*sc)}" ry="${f1(.85*sc)}" fill="none" stroke="${waterInk}" stroke-width=".38" opacity=".38"/><ellipse cx="${f1(x-flip*.4*sc)}" cy="${f1(y+.55*sc)}" rx="${f1(4.2*sc)}" ry="${f1(.6*sc)}" fill="#2E4A2A" opacity=".2"/>${inkAt(x,y,sc,flip,ink)}</g></g>`};
+  if(tp.heads)turtleBits=head(X(92),Y(165),.82,1,0)+(tp.heads>1?head(X(212),Y(183.5),1,-1,5):"");
+  if(tp.bask){const bx=X(240),by=pondY-.55,bS=1;
     turtleBits+=`<g class="wildlife" data-species="pond-slider" data-turtles="1" data-where="bank">${inkAt(bx,by,bS,1,inkRig(propPnSlider({bask:true}),palAt(PN_SLIDER,.04),{s:bS,line:.5,heavy:.2,shade:.65,lit:.4,light:lightAt(bx,by-3)}))}</g>`}
-  /* the heron is the pond's resident: it stands in the east shallows, in the gap between the windmill
-     palm and the outer sabal, side on, in every weather but a thunderstorm. The pillar's pumpkins are
-     to its right, and a nod has to clear them once the phone frame is scaled up. Its head nods, and
-     it rides the ripple sheet. */
-  const showHeron=!storm;
-  const hrX=X(290),hrY=pondY+1.8;
+  /* the great blue heron is back (Josh, October 23 2026: "we had a great heron so bring it back"): the marsh's
+     own bird and its 150-second life (rigHeron), two steps, a long stand, a look round and one spear, wading in
+     the open east water with room of its own, facing into the pond. Each footfall rings the water, the spear
+     splashes where the bill meets it, and its reflection is the same bird turned over under it, so the copy
+     steps and spears with it. Out in every weather but a thunderstorm and a downpour (rainK 1: codes 65, 82),
+     when it hunkers down (that also keeps the busiest frames under the animation ceiling). It rides the ripple sheet */
+  const showHeron=!storm&&!(wet&&rainK>=1);
+  const hrX=X(258),hrY=Y(176.5),hrS=.5;
   let heron="",heronMove="";
   if(showHeron){
-    const ring=`<ellipse cx="${f1(hrX)}" cy="${f1(hrY+.5)}" rx="5" ry=".9" fill="none" stroke="${dark?"#B7D6E1":"#183C4B"}" stroke-width=".45" opacity=".5"/>`;
-    const hrS=.34,pal=inkPal(INK.heron);pal.detail="#C9C6D6";
-    heronMove=`<g class="wildlife heron" data-species="great-blue-heron" transform="translate(${f1(hrX)} ${f1(hrY)}) scale(${-hrS} ${hrS})">${inkRig(propPnHeron(phase(8.5)),pal,{s:hrS,flip:-1,light:lightAt(hrX,hrY-20)})}</g>`+ring;
+    const wi=dark?"#B7D6E1":"#183C4B";
+    const bird=inkRig(rigHeron(phase),inkPal(INK.heron),{s:hrS,light:lightAt(hrX,hrY-40*hrS)});
+    const ids=new Set([...bird.matchAll(/ id="([^"]+)"/g)].map(m=>m[1]));
+    const copy=bird.replace(/ id="([^"]+)"/g,' id="h$1"').replace(/(href="#|url\(#)([^")]+)/g,(m,p,id)=>ids.has(id)?p+"h"+id:m);
+    heronMove=`<g opacity=".26" transform="translate(${f1(hrX)} ${f1(hrY+1)}) scale(${hrS} ${-hrS*.8})">${copy}</g>`
+      +`<ellipse class="heron-step-ring near" data-water-contact="heron-near" cx="${f1(hrX-.4*hrS)}" cy="${f1(hrY+3*hrS)}" rx="3.2" ry=".9" fill="none" stroke="${wi}" stroke-width=".5" style="${phase(150)}"/>`
+      +`<ellipse class="heron-step-ring far" data-water-contact="heron-far" cx="${f1(hrX+.4*hrS)}" cy="${f1(hrY+3*hrS)}" rx="3.2" ry=".9" fill="none" stroke="${wi}" stroke-width=".5" style="${phase(150)}"/>`
+      +`<ellipse cx="${f1(hrX+1.4)}" cy="${f1(hrY+.9)}" rx="6.2" ry=".85" fill="none" stroke="${wi}" stroke-width=".4" opacity=".42"/>`
+      +`<g class="wildlife heron" data-species="great-blue-heron" transform="translate(${f1(hrX)} ${f1(hrY)}) scale(${hrS})">${bird}</g>`
+      +`<ellipse class="heron-splash" data-water-contact="heron-bill" cx="${f1(hrX-27.2*hrS)}" cy="${f1(hrY-.5)}" rx="4.6" ry="1.4" fill="none" stroke="${wi}" stroke-width=".55" style="${phase(150)}"/>`;
   }
   const pondStill=`<rect x="${f1(-12)}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="url(#pnPond)"/>`
     +(tex?`<rect x="${f1(-12)}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${tex}" opacity="${(.4*paperK).toFixed(2)}"/>`:"");
@@ -11280,7 +11314,6 @@ function pnPondScene(c){
       <radialGradient id="pnFirePool"><stop offset="0" stop-color="rgb(255,176,64)" stop-opacity=".9"/><stop offset=".38" stop-color="rgb(255,120,36)" stop-opacity=".62"/><stop offset=".72" stop-color="rgb(255,96,24)" stop-opacity=".28"/><stop offset="1" stop-color="rgb(255,80,16)" stop-opacity="0"/></radialGradient>
       <linearGradient id="pnSteam" x1=".5" y1="1" x2=".5" y2="0"><stop offset="0" stop-color="#E4F1F6" stop-opacity=".9"/><stop offset=".22" stop-color="#F3F9FB" stop-opacity=".62"/><stop offset=".5" stop-color="#F7FBFD" stop-opacity=".28"/><stop offset=".75" stop-color="#F7FBFD" stop-opacity=".06"/><stop offset="1" stop-color="#F7FBFD" stop-opacity="0"/></linearGradient>
       <radialGradient id="pnTubLagoon"><stop offset="0" stop-color="#D4FFF4" stop-opacity="1"/><stop offset=".42" stop-color="#12B8C4" stop-opacity=".95"/><stop offset=".74" stop-color="#0A7E9A" stop-opacity=".55"/><stop offset="1" stop-color="#086888" stop-opacity="0"/></radialGradient>
-      <radialGradient id="pnTubMoon"><stop offset="0" stop-color="#F2F7FF" stop-opacity="1"/><stop offset=".42" stop-color="#5B92F0" stop-opacity=".92"/><stop offset=".74" stop-color="#3A68D0" stop-opacity=".5"/><stop offset="1" stop-color="#2A50B0" stop-opacity="0"/></radialGradient>
       <linearGradient id="pnLawn" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(farY)}" x2="0" y2="${f1(sandY)}"><stop offset="0" stop-color="${air(lawnTop,.05)}"/><stop offset="1" stop-color="${air(lawnFoot,.02)}"/></linearGradient>
       <linearGradient id="pnPond" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(pondY)}" x2="0" y2="${f1(Y(194))}"><stop offset="0" stop-color="${waterTop}"/><stop offset="1" stop-color="${waterBot}"/></linearGradient>
       <linearGradient id="cloudInk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${tone(mix("#FFFFFF",skyS[1],.25))}"/><stop offset=".6" stop-color="${tone(mix("#FFF4E6",skyS[2],.35))}"/><stop offset="1" stop-color="${mix(tone("#FFF4E6"),litC,.5*litK)}"/></linearGradient>
@@ -15340,7 +15373,8 @@ const REVEAL_EASE=[.5,.04,.2,1];               /* a gentle start and a long, sof
 const REVEAL={hourly:{state:PRM?"done":"armed",seen:false,anims:[]},week:{state:PRM?"done":"armed",seen:false,anims:[]},
   tide:{state:PRM?"done":"armed",seen:false,anims:[]},moon:{state:PRM?"done":"armed",seen:false,anims:[]},
   sun:{state:PRM?"done":"armed",seen:false,anims:[]},year:{state:PRM?"done":"armed",seen:false,anims:[]}};
-let REVEAL_READY=false,REVEAL_WAIT=0;
+/* REVEAL_HOLD: a swipe is bringing the picture in, and the pens wait until it is home (sceneSwipe) */
+let REVEAL_READY=false,REVEAL_WAIT=0,REVEAL_HOLD=false;
 const bezier=(a,b,c,d)=>t=>{                  /* CSS cubic-bezier(a,b,c,d) as a function of time */
   let u=t;
   for(let i=0;i<8;i++){
@@ -15527,7 +15561,8 @@ function revealArm(){
   for(const k in REVEAL){const R=REVEAL[k];clearTimeout(R.end);for(const a of R.anims)a.cancel();R.anims=[];R.state="armed"}
   REVEAL_READY=false;clearTimeout(REVEAL_WAIT);REVEAL_WAIT=0;
 }
-function revealReady(){REVEAL_READY=true;clearTimeout(REVEAL_WAIT);REVEAL_WAIT=0;for(const k in REVEAL)revealTry(k)}
+function revealReady(){if(REVEAL_HOLD){clearTimeout(REVEAL_WAIT);REVEAL_WAIT=setTimeout(revealReady,120);return}
+  REVEAL_READY=true;clearTimeout(REVEAL_WAIT);REVEAL_WAIT=0;for(const k in REVEAL)revealTry(k)}
 if(!PRM){
   const seen=(k,on)=>{REVEAL[k].seen=on;if(on)revealTry(k);if(k==="moon"){FISH_SEEN=on;fishMotion()}};
   /* each drawing and the key it draws under, in page order */
@@ -16975,7 +17010,9 @@ function clearPlaceReadings(){
   paintStormDebug(null);paintStormCard(null);
   document.getElementById("uvDetails").style.display="none";
 }
-function setLoc(id){
+/* later: the swipe asks for the live forecast itself, once the new picture has slid home, so its paint
+   never lands under the picture while it moves */
+function setLoc(id,later=false){
   if(!LOC_ORDER.includes(id)||LOC.id===id)return;
   sceneResume();
   fishCancel();
@@ -16989,7 +17026,7 @@ function setLoc(id){
      under the farm's name */
   if(cached){paintLocationShell();clearPlaceReadings();render(cached.data,false,cached.savedAt)}
   else paintLoadingState();
-  refresh();
+  if(!later)refresh();
 }
 paintAddr();
 paintLocationShell();
@@ -17027,13 +17064,11 @@ function sceneSwipe(){
     token++;
     frame.classList.remove("scene-glide");
     frame.style.transform="";
-    frame.style.willChange="";
     gliding=false;
   };
   const glideTo=(x,done)=>{
     const mine=++token;
     frame.classList.add("scene-glide");
-    frame.style.willChange="transform";
     /* the position it already holds is the start. Then the new one eases from there */
     void frame.offsetWidth;
     frame.style.transform=`translate3d(${x}px,0,0)`;
@@ -17054,11 +17089,27 @@ function sceneSwipe(){
     gliding=true;
     if(PRM){rest();setLoc(id);return}
     glideTo(dir*w,()=>{
+      const mine=token;
       frame.classList.remove("scene-glide");
       frame.style.transform=`translate3d(${-dir*w}px,0,0)`;
-      setLoc(id);
-      void frame.offsetWidth;
-      glideTo(0,rest);
+      /* the new place is painted while the picture waits off the screen (setLoc's cached paint lands in
+         stages, PAINT), and the picture comes in only once that paint has landed and two frames have
+         gone by, so nothing is drawn under it while it moves. Moving it while the paint landed was the
+         hitch: frames of 60 to 100ms in WebKit (tools/webkit.mjs swipe). The live forecast is asked for
+         once it is home. No paint holds it longer than 450ms */
+      REVEAL_HOLD=true;
+      setLoc(id,true);
+      /* and it is drawn where it will come to rest, all but invisible (opacity .01), for the two frames before
+         it goes to the far side and comes in: WebKit draws a layer's tiles only once they are on the screen,
+         and drawn as Beaufort's picture slid in, the first frame of its glide was 60ms */
+      const done=()=>{REVEAL_HOLD=false;refresh()};
+      const home=()=>{if(mine!==token){frame.style.opacity="";done();return}
+        frame.style.transform="";frame.style.opacity=".01";
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{
+          frame.style.transform=`translate3d(${-dir*w}px,0,0)`;frame.style.opacity="";
+          if(mine!==token){done();return}
+          requestAnimationFrame(()=>{if(mine!==token){done();return}glideTo(0,()=>{rest();done()})})}))};
+      Promise.race([PAINT,new Promise(r=>setTimeout(r,450))]).then(home);
     });
   };
   frame.addEventListener("pointerdown",e=>{
@@ -17076,7 +17127,6 @@ function sceneSwipe(){
         /* taller than it is wide: this is a scroll, and the picture stays */
         drag.lock=Math.abs(dx)>Math.abs(dy)?"x":"y";
         if(drag.lock!=="x"||PRM)return;
-        frame.style.willChange="transform";
       }
       if(drag.lock!=="x"||PRM)return;
       if(ev.cancelable)ev.preventDefault();

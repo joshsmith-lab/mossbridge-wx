@@ -52,7 +52,7 @@ try {
 const CASES = [
   // ── the house at Porters Neck (pnPondScene) ─────────────────────────────
   { name: "01-house-calm-noon", loc: "mb", when: "2026-08-02T13:10:00", tidePhase: 0,
-    note: "high sun, 5 mph: the pond nearly glass, the strands cream beads, the heron still at the east edge",
+    note: "high sun, 5 mph: the pond nearly glass, the strands cream beads, the great heron wading in the east water and the sliders heads up",
     o: { baseTemp: 88, nowTemp: 94, feels: 103, rh: 62, isDay: 1, code: 0, cloud: 6, nowWind: 5, nowDir: 200, nowGust: 8, nowUv: 9.6, uvMax: 10, windAmp: 4, gustAmp: 6,
       popCurve: () => 3, dailyPop: (p) => p.fill(8) } },
   { name: "02-house-blow-west", loc: "mb", when: "2026-08-02T15:00:00", tidePhase: 3,
@@ -1180,7 +1180,10 @@ for (const cs of cases) {
     // the first close-up shot of the sky rasters its sheets once more: on October 22 2026 one pixel of the house's
     // pond at 430 in freezing rain came out 24 levels darker in it than in every shot after, with the page itself
     // unchanged (a full-page shot of that pixel held still throughout). So a shot is thrown away first, and a scene
-    // that moves still differs between the two that count
+    // that moves still differs between the two that count. One was not always enough: on October 23 2026 the lit
+    // fountain's glow at 430 on a carved-week night came out 22 levels off in the second, so two go first
+    await page.locator(".sky").screenshot();
+    await page.waitForTimeout(300);
     await page.locator(".sky").screenshot();
     const one = await page.locator(".sky").screenshot({ path: path.join(OUT, `${cs.name}-prm.png`) });
     await page.waitForTimeout(1400);
