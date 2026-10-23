@@ -897,8 +897,8 @@ along the fence hang in swags, high at each post and low in the middle, five or 
 calendar like every decoration, and gone the morning of November 1.
 
 **Weather.** Every reading still drives the picture: the palms, the grass and the fountain's spray lean and
-drift with the gusts, the reflection is glass in a calm, breaks into strips in a breeze and into glints in a
-blow, rain falls in front of the house as well as behind it (the house is a tall silhouette, so it has the
+drift with the gusts, the reflection is glass in a calm, and in a breeze or a blow the light on it is a few
+short arcs, never a bar across the pond. Rain falls in front of the house as well as behind it (the house is a tall silhouette, so it has the
 near drops the ridge has, from one helper, `nearRainLayer`), rings the pond and breaks the reflection, a storm
 dims everything under the app's lightning, and fog softens the house and widens the halos.
 
@@ -948,7 +948,7 @@ the compositor sways (liftKit, shared with Beaufort); `#sceneFront` the fence, t
 and the kid; `#sceneFx` the fire's flame, a pumpkin while its candle flickers, the bats, the
 witch and the near rain with its own mask; `#sceneWater` the low sun's wash, the does, the land fog and the pond; `#sceneRefl` the reflection, its
 fade a CSS mask the compositor applies (an SVG mask there was 81ms of every repaint); `#sceneRipple` the
-moving strips, the rain rings, the sand line and the fountain in front of it; `#sceneTop` the low sun on the water, the heron,
+short ripples on the water, the rain rings, the sand line and the fountain in front of it; `#sceneTop` the low sun on the water, the heron,
 the fog veil and the sunrise and sunset times. The house's sheets keep a colour of their own, so the sky's .8s
 ink fade no longer repaints them on every frame of it; the two sheets that draw in the sky's ink, `#sceneSvg`
 (the sun's path) and `#sceneTop` (the times), still inherit it and fade with the sky's words. A first paint of the house writes the sky at once and the land and water over the

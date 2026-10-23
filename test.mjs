@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v131/);
+  assert.match(worker, /mbwx-shell-v132/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -6313,6 +6313,11 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(html, /const fit=pnArc\?pnSunFit\(py\(f\),visTop,squash\):\{y:py\(f\),s:1\};/);
   assert.match(html, /data-light="long-shadow"/);
   assert.match(html, /data-light="glint"/);
+  // the light on the pond is a few short arcs. a bar the full width of the water read as a seam.
+  assert.match(fn, /const wGlass=wind<3&&!wet,wBlow=wind>=10\|\|gust>=22\|\|rainK>=\.65;/);
+  assert.match(fn, /len=\(wBlow\?14:20\)\+r\(\)\*\(wBlow\?16:22\),x=r\(\)\*\(W-len\)/);
+  assert.match(fn, /stroke-linecap="round"/);
+  assert.doesNotMatch(fn, /width="\$\{W\+24\}" height="\$\{f1\(hgt\)\}"/);
   // a moon the sine would set into the roof takes the shallower rise and stays in the sky
   assert.match(html, /function pnMoonInRoof\(x,y\)/);
   assert.match(html, /if\(pnArc&&pnMoonInRoof\(x,y\)\)/);
