@@ -69,7 +69,7 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
   stroke-linejoin:round;stroke-opacity:.9}
 .sky{position:relative;overflow:hidden;color:var(--on-sky);isolation:isolate;
   padding:calc(18px + env(safe-area-inset-top)) 20px 0;
-  background:linear-gradient(180deg,var(--sky1) 0%,color-mix(in srgb,var(--sky1) 58%,var(--sky2)) 22%,var(--sky2) 46%,color-mix(in srgb,var(--sky2) 52%,var(--sky3)) 70%,var(--sky3) 100%);
+  background:linear-gradient(180deg,var(--sky1) 0%,var(--sky2) 46%,var(--sky3) 100%);
   transition:background 1.2s var(--ease),color .8s var(--ease)}
 .sky::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
   background:linear-gradient(180deg,var(--scrim,transparent) 0%,transparent 68%);
@@ -10871,17 +10871,10 @@ function pnPondScene(c){
   /* the low sun's warmth comes from its own side: this view looks north, so the morning's is on the right and
      the evening's on the left. It swells round sunrise and sunset (from 14° up to 7° under) and cloud, fog,
      rain and storms mute it. Still layers only: the sky's horizon, a wash over the land and the house from
-     that side, and the pond. In golden hour (+6° to -4°, clear) the sun's side takes a gentle warm glow,
-     a paler gold in the morning and a warmer amber in the evening, and the shaded side stays a little
-     cooler and dimmer. Josh picked this on October 22 2026. The wash fades in from the top of the frame,
-     so it never cuts a line across the sky above the scene. Nothing here moves, and none of it leaves
-     the scene or the other places. */
+     that side, a warm rim on the near palms (lightAt already turns their lit edges to it) and the pond */
   const sunAlt=sunAltDeg,side=rising?1:-1;
   const glowK=Math.min(1,(sunAlt<1?clamp((sunAlt+7)/8,0,1):clamp((14-sunAlt)/13,0,1))*(1-veil*.85)*(1-gloom)*(fog?.3:1)*(wet||storm?.15:1)*(sunAlt>=-4&&sunAlt<=8&&!storm?1.45:1));
-  const gh=sunAlt>=-4&&sunAlt<=6&&!storm&&!wet&&veil<.55&&!fog;
-  const vibe=gh?1:0;
-  const warm=vibe?(rising?"#F4D4A4":"#E8923A"):(rising?"#FFB488":"#FFA04A");
-  const sunPalms=i=>side>0?i>=3:i<=2;
+  const warm=rising?"#FFB488":"#FFA04A";
   const tops=[];const top=(x0,x1,t)=>tops.push([x0,x1,t]);
 
   /* ── behind the house's sides, a close dark wood of live oaks and wax myrtles, so the house never
@@ -10922,17 +10915,12 @@ function pnPondScene(c){
   const palmSvg=(P,extra="",boxed=false)=>{const st=PRM||boxed?"":` style="transform-box:view-box;transform-origin:${f1(P.x)}px ${f1(fenceB)}px;${leanTo(P.amt,.4)};animation:swayTree ${P.dur.toFixed(1)}s ease-in-out infinite alternate;${wallClock(2*P.dur,P.i*1.9)}"`;
     const pal=P.kind==="s"?palAt({...INK.bftPalm,boot:"#C9B48E",bootLt:"#DDCCA8"},.04):palAt({...INK.pnWindmill,wmFrond:"#7FA160",wmFrondLt:"#97B872",wmFrondFar:"#5E8050",fibre:"#7A5E46"},.04);
     const up=lightsOn&&P.kind==="s"?`<ellipse data-light="uplight" cx="${f1(P.x)}" cy="${f1(fenceB-16)}" rx="5" ry="18" fill="url(#pnUplight)"/>`:"";
-    /* a small warm halo on the sun's side only, soft enough that the crown stays green */
-    const halo=vibe&&sunPalms(P.i);
-    const glow=halo?`<ellipse data-light="palm-glow" cx="${f1(P.x)}" cy="${f1((P.crownY+fenceB)/2)}" rx="14" ry="${f1(Math.max(10,(fenceB-P.crownY)*.4))}" fill="${warm}" opacity=".26"/>`:"";
-    const glowOn=halo?`<ellipse data-light="palm-glow" cx="${f1(P.x)}" cy="${f1(P.crownY+6)}" rx="10" ry="12" fill="${rising?"#F8E2C0":"#F0C48A"}" opacity=".16"/>`:"";
-    return `<g class="pn-palm" data-prop="${P.kind==="s"?"sabal":"windmill-palm"}"${st}>${glow}${inkAt(P.x,fenceB,ps,1,inkRig(P.Lr,pal,{s:ps,light:lightAt(P.x,fenceB-40),...BFT_PALM_O}))}${glowOn}${up}${extra}</g>`};
+    return `<g class="pn-palm" data-prop="${P.kind==="s"?"sabal":"windmill-palm"}"${st}>${inkAt(P.x,fenceB,ps,1,inkRig(P.Lr,pal,{s:ps,light:lightAt(P.x,fenceB-40),...BFT_PALM_O}))}${up}${extra}</g>`};
   /* on the page each palm is a box of its own (liftKit) that the compositor sways about its foot: the same
      drawing, still, and the same sway on the box, so WebKit repaints nothing while the palms move */
   const{liftSvg,liftAt}=liftKit(W,H);
   const palmLift=P=>{const g=palmSvg(P,"",true),[bx,by,bw,bh]=pathBox(flatParts(P.Lr).map(p=>p.d));
-    const pad=vibe&&sunPalms(P.i)?8:4;
-    const x0=Math.min(P.x+bx*ps,P.x-5)-pad,y0=fenceB+by*ps-pad,x1=Math.max(P.x+(bx+bw)*ps,P.x+5)+pad,y1=Math.max(fenceB+(by+bh)*ps,fenceB+2)+pad;
+    const x0=Math.min(P.x+bx*ps,P.x-5)-4,y0=fenceB+by*ps-4,x1=Math.max(P.x+(bx+bw)*ps,P.x+5)+4,y1=Math.max(fenceB+(by+bh)*ps,fenceB+2)+4;
     const b=[Math.floor(x0*10)/10,Math.floor(y0*10)/10,Math.ceil((x1-x0)*10)/10+.1,Math.ceil((y1-y0)*10)/10+.1];
     return liftAt(b,liftSvg(b,g),[P.x,fenceB],PRM?"":`${leanTo(P.amt,.4)};animation:swayTree ${P.dur.toFixed(1)}s ease-in-out infinite alternate;${wallClock(2*P.dur,P.i*1.9)}`)};
 
@@ -11211,9 +11199,8 @@ function pnPondScene(c){
      Still shapes only. Noon has neither. */
   let sunGround="",sunGlint="";
   if(sunXY&&sunAltDeg<16&&sunAltDeg>-1&&!storm&&veil<.8){
-    const k=clamp((15-sunAltDeg)/15,.4,1),dir=sunXY[0]<hx?1:-1,len=(32+k*64)*(vibe?1.16:1);
-    const ry=vibe?3.6+k*1.4:3.4+k*1.8,op=vibe?.12+.06*k:.32+.2*k;
-    sunGround=`<ellipse data-light="long-shadow" cx="${f1(hx+dir*len*.52)}" cy="${f1(hy+7.2)}" rx="${f1(len*.46)}" ry="${f1(ry)}" fill="${vibe?(rising?"#5C5348":"#6A4030"):shadeC}" opacity="${op.toFixed(2)}"/>`;
+    const k=clamp((15-sunAltDeg)/15,.4,1),dir=sunXY[0]<hx?1:-1,len=32+k*64;
+    sunGround=`<ellipse data-light="long-shadow" cx="${f1(hx+dir*len*.52)}" cy="${f1(hy+7.2)}" rx="${f1(len*.5)}" ry="${f1(3.4+k*1.8)}" fill="${shadeC}" opacity="${(.32+.2*k).toFixed(2)}"/>`;
     const faces=sunXY[0]<hx?BH.winL:BH.winR;
     sunGlint=faces.map(([w0,w1])=>{
       const x=hx+u(w0)+u((w1-w0)*.28),y=hy+u(BH.winT)+u(2.2);
@@ -11221,9 +11208,6 @@ function pnPondScene(c){
         +`<path data-light="glint" d="M ${f1(x+u(2.3))} ${f1(y+u(.5))} L ${f1(x+u(3.2))} ${f1(y+u(3.4))}" stroke="#FFE4B0" stroke-width="1.05" stroke-linecap="round" opacity="${(.55+.25*k).toFixed(2)}"/>`;
     }).join("");
   }
-  /* the shaded half of the house and the lawn, a cool veil. It dies before the sun's side. */
-  const shadeWash=vibe?`<g data-light="shade" mask="url(#pnFadeIn)"><rect x="${f1(-12)}" y="${f1(Y(14))}" width="${W+24}" height="${f1(sandY-Y(14))}" fill="url(#pnShade)" opacity=".18"/>`
-    +`<rect x="${f1(-12)}" y="${f1(Y(14))}" width="${W+24}" height="${f1(hy-Y(14)+1)}" fill="url(#pnShade)" clip-path="url(#pnHouseClip)" opacity=".22"/></g>`:"";
   const pondMoving=breakUp+(fog?`<rect x="${f1(-12)}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="${dark?"#96ABB5":"#F5F3E8"}" opacity=".3"/>`:"")+rainRings+sandLine+fountainSvg+turtleBits+heronMove+deerMove;
 
   /* ── the sky's own things: clouds, gulls by day, and Halloween's bats and witch over the roof */
@@ -11278,11 +11262,7 @@ function pnPondScene(c){
   /* a gull crossing the sun, the moon or the low sun's glow is drawn under them, so then they ride with it */
   const nearGull=(p,r)=>p&&gullAt.some(([x,y])=>Math.abs(x-p[0])<r+7&&Math.abs(y-p[1])<r+7);
   const skyOver=!!gulls&&(glowK>.02||nearGull(sunXY,38)||!!moonShown&&nearGull(moonXY,halloween?moonR*6.6:26));
-  /* the radial is centred on the horizon, and the rect used to run up out of the frame. With the scene
-     overflow visible (the sun's rays), that top edge was a hard warm line in the sky under the headline.
-     The fade mask is clear through the top of the frame, so the warmth builds and never cuts. */
-  const sideSky=`${glowK>.02?`<rect data-light="side-sky" x="${f1(-20)}" y="${f1(Y(0)-8)}" width="${W+40}" height="${f1(pondY-Y(0)+8)}" fill="url(#pnSideSky)" mask="url(#pnFadeIn)" opacity="${((vibe?.7:.85)*glowK).toFixed(2)}"/>`:""}`;
-  const goldMark=`<g data-vibe="${vibe}" data-side="${side>0?"east":"west"}"></g>`;
+  const sideSky=`${glowK>.02?`<rect data-light="side-sky" x="${f1(-20)}" y="${f1(Y(0)-40)}" width="${W+40}" height="${f1(pondY-Y(0)+40)}" fill="url(#pnSideSky)" opacity="${(.85*glowK).toFixed(2)}"/>`:""}`;
   /* a pumpkin whose candle gutters goes up whole, its paint with its flame, so the pair on a pillar keep their order */
   const guttering=/class="candle flicker"/.test(pumpkins+gateLanterns);
   const skyPaint=()=>{sheet("sceneSvg").innerHTML=`
@@ -11307,24 +11287,21 @@ function pnPondScene(c){
       <linearGradient id="fogveil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity="0"/><stop offset=".55" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity=".34"/><stop offset="1" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity=".06"/></linearGradient>
       <clipPath id="pnWaterClip"><rect x="${f1(-12)}" y="${f1(pondY+.3)}" width="${W+24}" height="${f1(H-pondY+40)}"/></clipPath>
       <linearGradient id="pnStripFill" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(pondY)}" x2="0" y2="${f1(Y(194))}"><stop offset="0" stop-color="${stripC}" stop-opacity="${(.85*stripOp).toFixed(4)}"/><stop offset="1" stop-color="${stripC}" stop-opacity="${(.45*stripOp).toFixed(4)}"/></linearGradient>
-      <radialGradient id="pnSideSky" gradientUnits="userSpaceOnUse" cx="${f1(side>0?W+10:-10)}" cy="${f1(pondY-14)}" r="${f1(W*.85)}" gradientTransform="translate(${f1(side>0?W+10:-10)} ${f1(pondY-14)}) scale(1 ${Math.min(.55,(pondY-Y(0)+26)/(W*.85)).toFixed(3)}) translate(${f1(-(side>0?W+10:-10))} ${f1(-(pondY-14))})"><stop offset="0" stop-color="${warm}" stop-opacity=".55"/><stop offset=".42" stop-color="${warm}" stop-opacity=".16"/><stop offset="1" stop-color="${warm}" stop-opacity="0"/></radialGradient>
-      <linearGradient id="pnSideWash" x1="${side>0?1:0}" y1="0" x2="${side>0?0:1}" y2="0"><stop offset="0" stop-color="${warm}" stop-opacity=".72"/><stop offset=".42" stop-color="${warm}" stop-opacity=".16"/><stop offset=".7" stop-color="${warm}" stop-opacity="0"/><stop offset="1" stop-color="${warm}" stop-opacity="0"/></linearGradient>
-      <linearGradient id="pnShade" x1="${side>0?0:1}" y1="0" x2="${side>0?1:0}" y2="0"><stop offset="0" stop-color="#6E8AA3" stop-opacity=".62"/><stop offset=".34" stop-color="#8AA0B4" stop-opacity=".22"/><stop offset=".58" stop-color="#8AA0B4" stop-opacity="0"/><stop offset="1" stop-color="#8AA0B4" stop-opacity="0"/></linearGradient>
+      <radialGradient id="pnSideSky" gradientUnits="userSpaceOnUse" cx="${f1(side>0?W+10:-10)}" cy="${f1(pondY-14)}" r="${f1(W*.85)}" gradientTransform="translate(${f1(side>0?W+10:-10)} ${f1(pondY-14)}) scale(1 ${Math.min(.55,(pondY-Y(0)+26)/(W*.85)).toFixed(3)}) translate(${f1(-(side>0?W+10:-10))} ${f1(-(pondY-14))})"><stop offset="0" stop-color="${warm}" stop-opacity=".75"/><stop offset=".45" stop-color="${warm}" stop-opacity=".28"/><stop offset="1" stop-color="${warm}" stop-opacity="0"/></radialGradient>
+      <linearGradient id="pnSideWash" x1="${side>0?1:0}" y1="0" x2="${side>0?0:1}" y2="0"><stop offset="0" stop-color="${warm}" stop-opacity=".9"/><stop offset=".55" stop-color="${warm}" stop-opacity=".12"/><stop offset="1" stop-color="${warm}" stop-opacity="0"/></linearGradient>
       <clipPath id="pnHouseClip">${pnBackHouseSil(BH).map(d=>`<path transform="translate(${f1(hx)} ${f1(hy)}) scale(${S})" d="${d}"/>`).join("")}</clipPath>
       ${candleDefs||""}${hallowDefs||""}
       ${tex?`<pattern id="paper" width="160" height="160" patternUnits="userSpaceOnUse"><image href="${paperTex()}" width="160" height="160"/></pattern>`:""}
     </defs>
-    ${goldMark}${houseSun}${skyOver?"":sunBody+moonShown+sideSky}`;
+    ${houseSun}${skyOver?"":sunBody+moonShown+sideSky}`;
   sheet("sceneSky").innerHTML=gulls+(skyOver?sunBody+moonShown+sideSky:"")+sceneClouds};
-  const sc=document.querySelector(".scene");if(sc){sc.setAttribute("data-vibe",vibe?"1":"0");sc.setAttribute("data-side",side>0?"east":"west")}
   const landPaint=()=>{sheet("sceneNear").innerHTML=`${lawn}${farWood}${house}${sunGlint}${patio}${sunGround}${boards}${fireLight}${chairsBack}${fireStill}${chairs}${tub}${tree}${swagMid}${peek}`;
   document.getElementById("sceneLift").innerHTML=grassLift+PALMS.map(palmLift).join("");
   sheet("sceneFront").innerHTML=fence+(guttering?"":pumpkins)+gateKid+(guttering?"":gateLanterns);
   sheet("sceneFx").innerHTML=fireWash+fireFlame+(guttering?pumpkins+gateLanterns:"")+bats+witchFly(witch)+(nearRainL?`<defs>${nearRainL.defs}</defs>${nearRainL.drops}`:"")+tubFx};
   const waterPaint=()=>{sheet("sceneWater").innerHTML=`
-      ${glowK>.02?`<g data-light="side-wash" mask="url(#pnFadeIn)"><rect x="${f1(-12)}" y="${f1(Y(14))}" width="${W+24}" height="${f1(sandY-Y(14))}" fill="url(#pnSideWash)" opacity="${(.28*glowK).toFixed(2)}"/>`
-        +`<rect x="${f1(-12)}" y="${f1(Y(14))}" width="${W+24}" height="${f1(hy-Y(14)+1)}" fill="url(#pnSideWash)" clip-path="url(#pnHouseClip)" opacity="${((vibe?.36:.3)*glowK).toFixed(2)}"/></g>`:""}
-      ${shadeWash}
+      ${glowK>.02?`<g data-light="side-wash" mask="url(#pnFadeIn)"><rect x="${f1(-12)}" y="${f1(Y(14))}" width="${W+24}" height="${f1(sandY-Y(14))}" fill="url(#pnSideWash)" opacity="${(.3*glowK).toFixed(2)}"/>`
+        +`<rect x="${f1(-12)}" y="${f1(Y(14))}" width="${W+24}" height="${f1(hy-Y(14)+1)}" fill="url(#pnSideWash)" clip-path="url(#pnHouseClip)" opacity="${(.32*glowK).toFixed(2)}"/></g>`:""}
       ${deer}
       ${fog?`<rect x="${f1(-12)}" y="${f1(Y(0))}" width="${W+24}" height="${f1(pondY-Y(0))}" fill="${dark?"#96ABB5":"#EEF0EC"}" opacity=".3" mask="url(#pnFadeIn)" data-light="fog"/>`:""}
       ${pondStill}`;
@@ -11339,7 +11316,7 @@ function pnPondScene(c){
   rf.innerHTML=refl;
   sheet("sceneRipple").innerHTML=pondMoving;
   sheet("sceneTop").innerHTML=`
-      ${glowK>.02?`<rect data-light="side-pond" x="${f1(-12)}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="url(#pnSideWash)" opacity="${(.32*glowK).toFixed(2)}"/>`:""}
+      ${glowK>.02?`<rect data-light="side-pond" x="${f1(-12)}" y="${f1(pondY)}" width="${W+24}" height="${f1(H-pondY+30)}" fill="url(#pnSideWash)" opacity="${(.34*glowK).toFixed(2)}"/>`:""}
       ${heron}
     ${fog?`<rect x="0" y="${f1(Y(64))}" width="${W}" height="80" fill="url(#fogveil)"/>`:""}
     ${sunTimes}`;

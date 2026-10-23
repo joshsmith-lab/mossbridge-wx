@@ -884,15 +884,7 @@ the roof keeps the sine. Josh would rather move the sun's path than shrink the h
 from its own side ("morning vibe glow more prominently from the right side in the morning, then evening
 vibes to the left"): a warm horizon, a warm wash over the house and the land and the pond from that side,
 building from about 14° up and gone by about 7° below, muted by cloud, fog, rain and storms. Midday is
-neutral. In golden hour the flagship scene takes a soft side light, and Josh picked it on October 22 2026.
-The light comes from the real side, evening on the left and morning on the right, the same side the sun and
-the times already use. The sun-facing wall, lawn and palms take a gentle warm glow, a paler gold in the
-morning and a warmer amber in the evening, and the shaded side stays a little cooler and dimmer. The wash
-fades in from the top of the frame. The scene's sky overflows so the sun's rays can, and a warm rect that
-ran up out of that frame once cut a hard line across the sky under the headline, stronger on the sun's
-side. It does not. The house stays the white house. None of it is a filter or a new animation, and none of
-it leaves the scene, so the words above stay as they are. The farm and Beaufort are unchanged. Outside
-golden hour, and in cloud, fog, rain or a storm, the extra glow stays down and the quieter wash remains.
+neutral.
 
 **The lights keep the family's hours.** The bistro strands run from one point over the back door to a
 sabal on each side, a V seen from above ("the bistro lights go from door to each palm - forming a V"),
