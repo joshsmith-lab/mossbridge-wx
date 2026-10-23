@@ -8520,17 +8520,28 @@ function pnMoonInRoof(x,y){
    sky (gap) between the bottom of the disc and the highest part of the roof under it, a few percent
    smaller over the ridge if it must be, and keeps its own path everywhere else. Where it cannot (a
    short wide window crops the sky), the rule above holds and the house covers the lower disc. */
+/* the highest point of the house's roof under a disc of half-width r centred at x (no x: the ridge), in the
+   pond frame's units, and Infinity beside the roof. The sun (pnSunFit) and the moon (pnMoonFit) keep clear of it */
+function pnRoofTop(x,r){
+  const S=1.45,hx=160,hy=138,B=PN_HA,ridge=hy+B.ridge*S;
+  if(x==null)return ridge;
+  const a=(x-r-hx)/S,b=(x+r-hx)/S;
+  if(b<B.roofL||a>B.roofR)return Infinity;
+  if(b>=B.ridgeL&&a<=B.ridgeR)return ridge;
+  const lx=b<B.ridgeL?b:a,t=lx<0?(lx-B.roofL)/(B.ridgeL-B.roofL):(B.roofR-lx)/(B.roofR-B.ridgeR);
+  return hy+(B.eave+(B.ridge-B.eave)*Math.min(1,Math.max(0,t)))*S;
+}
+/* Josh, October 23 2026, the same evening as the sun: "the moon is cut off above the house too". It sat on
+   the ridge, its foot behind the roof. So the moon keeps 4 units of sky over the roof under it, and its top
+   2 under the top of the frame (a crop's, visTop). Where the two cannot both hold, the top wins */
+function pnMoonFit(y,visTop,x,r){
+  const floor=(visTop||0)+r+2,ceil=pnRoofTop(x,r)-4-r;
+  return Math.max(floor,Math.min(y,ceil));
+}
 function pnSunFit(y,visTop,squash,x){
   const S=1.45,hx=160,hy=138,B=PN_HA,ridge=hy+B.ridge*S,pad=2,peek=2,gap=5,ray0=16.2+8.5,disc0=13;
   const top=visTop||0;
-  /* the highest point of the roof under a disc of half-width r centred at x (no x: the ridge) */
-  const roofTop=r=>{
-    if(x==null)return ridge;
-    const a=(x-r-hx)/S,b=(x+r-hx)/S;
-    if(b<B.roofL||a>B.roofR)return Infinity;
-    if(b>=B.ridgeL&&a<=B.ridgeR)return ridge;
-    const lx=b<B.ridgeL?b:a,t=lx<0?(lx-B.roofL)/(B.ridgeL-B.roofL):(B.roofR-lx)/(B.roofR-B.ridgeR);
-    return hy+(B.eave+(B.ridge-B.eave)*Math.min(1,Math.max(0,t)))*S};
+  const roofTop=r=>pnRoofTop(x,r);
   let c=1;
   for(let i=0;i<4;i++)c=Math.min(1,(roofTop(disc0*c)-gap-top-pad)/((ray0+disc0)*squash));
   if(c>=.86){
@@ -9095,6 +9106,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     /* in October the moon is Halloween's (HALLOWEEN_MOON), in its own place and phase */
     const hm=HALLOWEEN_MOON&&holidayOn(locToday())?.id==="halloween"?halloweenMoon(HALLOWEEN_MOON,{altDeg:mp.alt*180/Math.PI,sunAltDeg,up,skyAlt:LOC.scene==="ridge"?22:0}):null;
     const r=hm?hm.r:11, ill=mph.fraction, ph=mph.phase;
+    if(pnArc)y=pnMoonFit(y,visTop,x,r);
     const k=(1-2*ill)*r, waxing=(ph<.5)!==mirrorSky;
     const sweep=waxing?(ill>.5?0:1):(ill>.5?1:0);
     const term=`M ${x} ${y-r} A ${Math.abs(k).toFixed(2)} ${r} 0 0 ${sweep} ${x} ${y+r} A ${r} ${r} 0 0 ${waxing?0:1} ${x} ${y-r} Z`;
@@ -10860,7 +10872,9 @@ function pnPondScene(c){
   /* the house's scale: about three fifths of the frame's width at 390 */
   const S=1.45,hx=X(160),hy=Y(138),u=v=>v*S;
   const BH=PN_HA;
-  const fenceB=Y(149),fenceT=fenceB-7.5,sandY=Y(152.5),pondY=Y(155),farY=hy-1;
+  /* Josh, October 23 2026: "add some more grass by removing some water ... refer to photo". The lawn runs
+     on from the fence to the sand, and the water starts lower than it did (155) */
+  const fenceB=Y(149),fenceT=fenceB-7.5,sandY=Y(159.5),pondY=Y(162),farY=hy-1;
   /* the back door's line: the steps, the gate and the fountain are all on it */
   const doorX=hx+u((BH.door[0]+BH.door[1])/2);
   const palAt=(pal,d)=>{const o={};for(const[k,v]of Object.entries(pal))o[k]=typeof v==="string"&&v[0]==="#"&&!["ink","shade","lit"].includes(k)?air(v,d):v;
@@ -11116,7 +11130,7 @@ function pnPondScene(c){
     +`<path d="M ${f1(-12)} ${f1(sandY)} Q ${f1(X(90))} ${f1(sandY-.7)} ${f1(X(180))} ${f1(sandY-.2)} T ${f1(W+12)} ${f1(sandY-.4)} L ${f1(W+12)} ${f1(pondY+.3)} L ${f1(-12)} ${f1(pondY+.3)} Z" fill="${air("#D2C19C",.03)}"/>`;
   let deer="",deerMove="";
   if(sunAltDeg> -6&&sunAltDeg<10&&!wet&&!storm){
-    const dS=.44,dY=Y(151.6),dPal=palAt(INK.pnDoe,.04);
+    const dS=.44,dY=Y(155.5),dPal=palAt(INK.pnDoe,.04);
     const doe=(x,graze,flip,rig)=>castShadow(flatParts(rig),x,dY,dS,flip)
       +`<g class="wildlife doe" data-species="whitetail-doe">${inkAt(x,dY,dS,flip,inkRig(rig,dPal,{s:dS,flip,line:1.4,heavy:.7,shade:1.6,lit:1.2,light:lightAt(x,dY-6)}))}</g>`;
     const ph=phase(8.5);
@@ -11159,29 +11173,67 @@ function pnPondScene(c){
   const stripC=mix(skyS[2],"#FFFFFF",.3),stripOp=wBlow?.42:.32;
   const breakUp=wGlass?"":`<g${drift}><g fill="none" stroke="url(#pnStripFill)">${ripples}</g></g>`;
 
-  /* ── the fountain, mid-pond on the back door's line, in the porch's reflection (where it is): a tall narrow V
-     of spray out of a dark float, and a ring of small low jets round its foot. The plume leans downwind as far
-     as the gusts say and its spray drifts on them; it is lit warm from below after dark; in a calm it only
-     plays a little, the way running water does, and under reduced motion it holds still. Its own pressed copy
-     is in the water under it */
+  /* ── the fountain, mid-pond on the back door's line, in the porch's reflection (where it is). Josh, October 23
+     2026, with a photo of it lit at night from the porch: "it just needs... more ... nice and impressive and
+     symmetrical and beautiful at night", and not so much that it takes the picture from the house. So it is the
+     fan the real one throws: eleven jets out of one float, mirrored about the door's line, the middle ones
+     standing tallest and nearly straight, each one out from it lower, wider and falling further, so the whole
+     spray is a tulip. Each jet is a projectile's arc drawn as a brush stroke that thins to its tip, with a
+     bright core up the middle three, its spray glittering off the falling ends, a little mist where the outer
+     arcs come down, and a ring of short jets and foam at the float. After dark it is lit from below the way the
+     photo is: a white-hot heart at the float, the jets warm cream going to amber, a glow behind the fan, and its
+     light broken into glints on the water under it. The fan leans downwind as far as the gusts say and its spray
+     drifts on them, two animations as before; under reduced motion it holds still. Its pressed copy (the jets
+     only) is in the water under it */
   const fnX=doorX,fnY=Y(178),lean=clamp(gust/40,0,.62)*dw;
-  const fountain=(copy)=>{const jc=lightsOn?"rgb(255,226,170)":air("#F4F8FA",.06),dc=lightsOn?"rgb(255,214,150)":air("#FFFFFF",.06);
-    const ph=30,tx=fnX+lean*14,spread=4.6;
-    /* the V: two veils of spray from the nozzle out to its rim, fainter toward the top, and a bright core */
-    let jets=`<path d="M ${f1(fnX-.5)} ${f1(fnY)} Q ${f1(fnX+lean*7-spread*.35)} ${f1(fnY-ph*.6)} ${f1(tx-spread)} ${f1(fnY-ph)} L ${f1(tx+spread)} ${f1(fnY-ph)} Q ${f1(fnX+lean*7+spread*.35)} ${f1(fnY-ph*.6)} ${f1(fnX+.5)} ${f1(fnY)} Z" fill="url(#pnPlume)" opacity=".85"/>`
-      +`<path d="M ${f1(fnX)} ${f1(fnY)} Q ${f1(fnX+lean*7)} ${f1(fnY-ph*.6)} ${f1(tx)} ${f1(fnY-ph+1)}" fill="none" stroke="${lightsOn?"rgb(255,248,225)":"#FFFFFF"}" stroke-width=".55" opacity=".9"/>`;
-    for(const e of[-1,1])jets+=`<path d="M ${f1(fnX+e*.3)} ${f1(fnY)} Q ${f1(fnX+lean*7+e*spread*.45)} ${f1(fnY-ph*.62)} ${f1(tx+e*spread*1.05)} ${f1(fnY-ph+.4)}" fill="none" stroke="${jc}" stroke-width=".42" opacity=".75"/>`;
-    /* the ring of small low jets round its foot, each a little arc of spray */
-    for(let i=0;i<8;i++){const a=i/8*Math.PI*2,jx=fnX+Math.cos(a)*11,jy=fnY+Math.sin(a)*2.4,h=2.4+(Math.sin(a)>0?.8:0);
-      jets+=`<path d="M ${f1(jx-.6)} ${f1(jy)} Q ${f1(jx+lean*2)} ${f1(jy-h*1.4)} ${f1(jx+.6+lean*2.5)} ${f1(jy)}" fill="none" stroke="${jc}" stroke-width=".45" opacity=".7"/>`}
-    const r=mulberry(5151);let drops="";
-    for(let i=0;i<26;i++){const t=r(),a=(r()-.5)*2,x=fnX+(tx-fnX)*t+a*spread*(.3+t*.9)+lean*Math.abs(lean)*16*r()*t,y=fnY-ph*t*(1-Math.abs(lean)*.25)-r()*2;drops+=`<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(.24+r()*.28)}" fill="${dc}" opacity="${(.45+r()*.4).toFixed(2)}"/>`}
-    for(let i=0;i<14;i++){const a=(r()-.5)*2,x=tx+a*(spread+2.5)+lean*6*r(),y=fnY-ph+2.5-r()*3+Math.abs(a)*4.5;drops+=`<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(.28+r()*.3)}" fill="${dc}" opacity=".8"/>`}
-    const sway=!copy&&!PRM?` style="transform-box:view-box;transform-origin:${f1(fnX)}px ${f1(fnY)}px;--sk:${(-dw*(.6+gust*.12)).toFixed(2)}deg;animation:pnSpray ${clamp(3.2-gust*.06,1.2,3.2).toFixed(1)}s ease-in-out infinite alternate;${wallClock(6.4)}"`:"";
-    const drift2=!copy&&!PRM?` style="transform-box:view-box;transform-origin:${f1(fnX)}px ${f1(fnY)}px;--dx:${(dw*(.7+gust*.09)).toFixed(2)}px;animation:pnDrops ${clamp(2.4-gust*.04,1,2.4).toFixed(1)}s ease-in-out infinite alternate;${wallClock(4.8,1.1)}"`:"";
-    return `${lightsOn?`<ellipse cx="${f1(fnX)}" cy="${f1(fnY-6)}" rx="15" ry="16" fill="url(#pnWash)" opacity=".95"/>`:""}<g class="pn-jets"${sway}>${jets}</g><g class="pn-drops"${drift2}>${drops}</g>`
-      +`<ellipse cx="${f1(fnX)}" cy="${f1(fnY+.2)}" rx="3.2" ry=".9" fill="${air("#2A2F33",.06)}"/><ellipse cx="${f1(fnX)}" cy="${f1(fnY)}" rx="5" ry="1.1" fill="${lightsOn?"rgb(255,220,170)":air("#F4F8FA",.06)}" opacity=".55"/>`
-      +`<ellipse cx="${f1(fnX)}" cy="${f1(fnY+.6)}" rx="14" ry="3" fill="none" stroke="${lightsOn?"rgb(255,210,150)":air("#EAF2F6",.06)}" stroke-width=".4" opacity=".45"/>`};
+  const FN_N=6,FN_H=37,FN_TAN=.4;
+  /* many small dots as one path, so a glittering spray is a handful of nodes on the moving sheet, not hundreds */
+  const dotsPath=pts=>pts.map(([x,y,r])=>`M ${f1(x-r)} ${f1(y)} a ${f1(r)} ${f1(r)} 0 1 0 ${f1(2*r)} 0 a ${f1(r)} ${f1(r)} 0 1 0 ${f1(-2*r)} 0`).join(" ");
+  const fountain=(copy)=>{const lit=lightsOn;
+    const jetC=lit?"rgb(255,228,178)":air("#F4F8FA",.06),coreC=lit?"rgb(255,250,232)":"#FFFFFF",dc=lit?"rgb(255,220,160)":air("#FFFFFF",.06),
+      ringC=lit?"rgb(255,214,160)":air("#EAF2F6",.06);
+    const r=mulberry(5151);
+    let jets="",veils="",cores="",mist="";const bright=[],dim=[];
+    for(let k=-FN_N;k<=FN_N;k++){
+      const a=k/FN_N,ab=Math.abs(a),h=FN_H*(1-.44*ab**1.3),fall=.1+.55*ab,sEnd=1+Math.sqrt(fall),run=2*h*FN_TAN*a;
+      /* s runs from the float (0) through the apex (1) to the falling end; x is the jet's run and the wind's lean,
+         y the projectile's height */
+      const at=s=>{const y=fnY-h*(2*s-s*s),up=fnY-y;return[fnX+run*s+lean*up*.42+a*.8,y]};
+      const pts=[];for(let i=0;i<=10;i++){const s=sEnd*i/10,[x,y]=at(s);pts.push([x,y,(1.15-.8*i/10)*(1-.25*ab)])}
+      const op=(lit?.9:.74)-(lit?.24:.24)*ab;
+      jets+=`<path d="${taper(pts,{per:3,capEnd:true})}" fill="${jetC}" opacity="${op.toFixed(2)}"/>`;
+      if(copy)continue;
+      /* the spray round each jet: a wider, fainter stroke that swells where the water breaks up past the apex */
+      veils+=`<path d="${taper(pts.map(([x,y],i)=>[x,y,1.4+2.2*Math.sin(Math.PI*Math.min(1,i/10*1.25))]),{per:3})}" fill="${jetC}" opacity="${(lit?.17:.13).toFixed(2)}"/>`;
+      if(ab<=.2){const cp=pts.slice(0,8).map(([x,y,w])=>[x,y,w*.42]);cores+=`<path d="${taper(cp,{per:3})}" fill="${coreC}" opacity="${lit?.96:.82}"/>`}
+      /* glitter: a few drops along the rise, more off the crown and the falling end, some falling free below it */
+      const nd=7+Math.round(ab*8);
+      for(let i=0;i<nd;i++){const s=.35+r()*(sEnd-.35+.35),[x,y]=at(Math.min(s,sEnd)),sc=.9+ab*2.2,free=Math.max(0,s-sEnd);
+        (r()<.45?bright:dim).push([x+(r()-.5)*sc+free*a*5,y+(r()-.35)*sc*.8+free*16,.18+r()*.26])}
+      if(ab>=.5){const[x,y]=at(sEnd);mist+=`<ellipse cx="${f1(x)}" cy="${f1(y+1.6)}" rx="${f1(2.6+ab*1.6)}" ry="${f1(3.2+ab)}" fill="url(#pnMist)" opacity="${lit?.6:.45}"/>`}
+    }
+    if(copy)return `<g>${jets}</g>`;
+    /* the ring of short jets round the float, each a little arc of spray, and the foam where they land */
+    let ring="";
+    for(let i=0;i<10;i++){const t=i/10*Math.PI*2,jx=fnX+Math.cos(t)*7.5,jy=fnY+Math.sin(t)*1.7,hh=2+(Math.sin(t)>0?.9:0);
+      ring+=`M ${f1(jx-.5)} ${f1(jy)} Q ${f1(jx+Math.cos(t)*1.2+lean*2)} ${f1(jy-hh*1.5)} ${f1(jx+Math.cos(t)*2.2+lean*2.5)} ${f1(jy+.2)} `}
+    ring=`<path d="${ring}" fill="none" stroke="${ringC}" stroke-width=".42" opacity=".72"/>`;
+    const heart=lit?`<ellipse cx="${f1(fnX)}" cy="${f1(fnY-16)}" rx="27" ry="23" fill="url(#pnWash)" opacity=".95"/>`
+      +`<ellipse cx="${f1(fnX)}" cy="${f1(fnY-2.5)}" rx="8" ry="7" fill="url(#pnFountainHot)"/>`:"";
+    const base=`<ellipse cx="${f1(fnX)}" cy="${f1(fnY+.3)}" rx="3.4" ry=".95" fill="${air("#2A2F33",.06)}"/>`
+      +`<ellipse cx="${f1(fnX)}" cy="${f1(fnY)}" rx="9.5" ry="1.9" fill="${lit?"rgb(255,232,190)":air("#F4F8FA",.06)}" opacity="${lit?.5:.38}"/>`
+      +`<ellipse cx="${f1(fnX)}" cy="${f1(fnY+.7)}" rx="14.5" ry="3" fill="none" stroke="${ringC}" stroke-width=".4" stroke-dasharray="2.2 1.6" opacity=".38"/>`
+      +(lit?`<path d="${dotsPath([[fnX-2.7,fnY+.4,.55],[fnX+2.7,fnY+.4,.55]])}" fill="#FFF6E2"/><path d="${dotsPath([[fnX,fnY+.9,.75]])}" fill="#FFFFFF"/>`:"");
+    /* its light on the water: a shimmer of short glints in a column under the float, widening a little and thinning
+       toward the foot of the frame, with a few strays off its sides */
+    const wr=mulberry(5353),gB=[],gD=[];
+    for(let i=0;i<9;i++){const y=fnY+2.4+i*1.65,spread=4.5+i*.9,n=3+Math.round(wr()*2);
+      for(let j=0;j<n;j++){const x=fnX+lean*1.5+(wr()-.5)*2*spread,w=1+wr()*(3.2-i*.2);(j%2?gD:gB).push(`M ${f1(x-w/2)} ${f1(y+(wr()-.5)*.6)} l ${f1(w)} 0`)}}
+    const gc=lit?"rgb(255,216,156)":"#FFFFFF";
+    const glints=`<path d="${gB.join(" ")}" stroke="${gc}" stroke-width=".6" stroke-linecap="round" opacity="${lit?.62:.32}"/><path d="${gD.join(" ")}" stroke="${gc}" stroke-width=".45" stroke-linecap="round" opacity="${lit?.34:.18}"/>`;
+    const sway=!PRM?` style="transform-box:view-box;transform-origin:${f1(fnX)}px ${f1(fnY)}px;--sk:${(-dw*(.6+gust*.12)).toFixed(2)}deg;animation:pnSpray ${clamp(3.2-gust*.06,1.2,3.2).toFixed(1)}s ease-in-out infinite alternate;${wallClock(6.4)}"`:"";
+    const drift2=!PRM?` style="transform-box:view-box;transform-origin:${f1(fnX)}px ${f1(fnY)}px;--dx:${(dw*(.7+gust*.09)).toFixed(2)}px;animation:pnDrops ${clamp(2.4-gust*.04,1,2.4).toFixed(1)}s ease-in-out infinite alternate;${wallClock(4.8,1.1)}"`:"";
+    return `${heart}${glints}<g class="pn-jets"${sway}>${veils}${jets}${cores}${mist}</g><g class="pn-drops"${drift2}><path d="${dotsPath(dim)}" fill="${dc}" opacity=".55"/><path d="${dotsPath(bright)}" fill="${lit?"rgb(255,244,214)":"#FFFFFF"}" opacity=".9"/></g>${ring}${base}`};
   const fountainSvg=`<g data-prop="fountain"><g opacity=".3" transform="translate(0 ${f1(fnY*(1+k)+.6)}) scale(1 ${-k})">${fountain(true)}</g>${fountain(false)}</g>`;
 
   /* rain in front of the house, which is a tall silhouette the sky's rain falls behind (nearRainLayer): from
@@ -11201,17 +11253,20 @@ function pnPondScene(c){
   const head=(x,y,sc,flip,off)=>{const ink=inkRig(propPnSliderUp(),palAt(PN_SLIDER,.05),{s:sc,flip,line:.55,heavy:.22,shade:.5,lit:.4,light:lightAt(x,y-4)});
     const delay=PRM?"":`animation-delay:-${((Date.now()/1000+off)%12).toFixed(1)}s`;
     return `<g class="wildlife" data-species="pond-slider" data-turtles="1" data-where="water" opacity="${tp.dim?".42":"1"}"><g class="pn-dip" style="${delay}"><ellipse cx="${f1(x+flip*.4*sc)}" cy="${f1(y+.35*sc)}" rx="${f1(5.2*sc)}" ry="${f1(.85*sc)}" fill="none" stroke="${waterInk}" stroke-width=".38" opacity=".38"/><ellipse cx="${f1(x-flip*.4*sc)}" cy="${f1(y+.55*sc)}" rx="${f1(4.2*sc)}" ry="${f1(.6*sc)}" fill="#2E4A2A" opacity=".2"/>${inkAt(x,y,sc,flip,ink)}</g></g>`};
-  if(tp.heads)turtleBits=head(X(92),Y(165),.82,1,0)+(tp.heads>1?head(X(212),Y(183.5),1,-1,5):"");
-  if(tp.bask){const bx=X(240),by=pondY-.55,bS=1;
+  if(tp.heads)turtleBits=head(X(92),Y(169),.82,1,0)+(tp.heads>1?head(X(212),Y(183.5),1,-1,5):"");
+  if(tp.bask){const bx=X(203),by=pondY-.55,bS=1;
     turtleBits+=`<g class="wildlife" data-species="pond-slider" data-turtles="1" data-where="bank">${inkAt(bx,by,bS,1,inkRig(propPnSlider({bask:true}),palAt(PN_SLIDER,.04),{s:bS,line:.5,heavy:.2,shade:.65,lit:.4,light:lightAt(bx,by-3)}))}</g>`}
   /* the great blue heron is back (Josh, October 23 2026: "we had a great heron so bring it back"): the marsh's
-     own bird and its 150-second life (rigHeron), two steps, a long stand, a look round and one spear, wading in
-     the open east water with room of its own, facing into the pond. Each footfall rings the water, the spear
+     own bird and its 150-second life (rigHeron), two steps, a long stand, a look round and one spear, wading the
+     east shallows by the house-side bank, facing into the pond. Each footfall rings the water, the spear
      splashes where the bill meets it, and its reflection is the same bird turned over under it, so the copy
      steps and spears with it. Out in every weather but a thunderstorm and a downpour (rainK 1: codes 65, 82),
      when it hunkers down (that also keeps the busiest frames under the animation ceiling). It rides the ripple sheet */
   const showHeron=!storm&&!(wet&&rainK>=1);
-  const hrX=X(258),hrY=Y(176.5),hrS=.5;
+  /* Josh, October 23 2026: "too deep - it wouldn't be that far out ... need to be believable so closer to
+     shore". It wades the shallows a few units off the house-side bank, ankle deep, drawn a little smaller for
+     being across the pond, its spear landing in the water short of the sand */
+  const hrX=X(257),hrY=pondY+5,hrS=.44;
   let heron="",heronMove="";
   if(showHeron){
     const wi=dark?"#B7D6E1":"#183C4B";
@@ -11306,10 +11361,11 @@ function pnPondScene(c){
       <radialGradient id="pnBulbGlow"><stop offset="0" stop-color="#FFC765" stop-opacity=".8"/><stop offset=".35" stop-color="#FFB24A" stop-opacity=".24"/><stop offset="1" stop-color="#FF9A3A" stop-opacity="0"/></radialGradient>
       <radialGradient id="pnBulbGlowR"><stop offset="0" stop-color="#FF9A4A" stop-opacity=".55"/><stop offset=".4" stop-color="#FF8A3A" stop-opacity=".2"/><stop offset="1" stop-color="#FF7A30" stop-opacity="0"/></radialGradient>
       <radialGradient id="pnPumpGlow"><stop offset="0" stop-color="#FF8A2A" stop-opacity=".6"/><stop offset="1" stop-color="#FF7A20" stop-opacity="0"/></radialGradient>
-      <linearGradient id="pnPlume" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="${lightsOn?"rgb(255,232,190)":"#FFFFFF"}" stop-opacity=".75"/><stop offset=".7" stop-color="${lightsOn?"rgb(255,222,170)":"#F4F8FA"}" stop-opacity=".35"/><stop offset="1" stop-color="${lightsOn?"rgb(255,214,150)":"#F4F8FA"}" stop-opacity=".12"/></linearGradient>
       <linearGradient id="pnTopFade" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(Y(14))}" x2="0" y2="${f1(Y(84))}"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity="1"/></linearGradient>
       <mask id="pnFadeIn" maskUnits="userSpaceOnUse" x="${f1(-12)}" y="${f1(Y(0))}" width="${W+24}" height="${f1(H+10)}"><rect x="${f1(-12)}" y="${f1(Y(0))}" width="${W+24}" height="${f1(H+10)}" fill="url(#pnTopFade)"/></mask>
       <radialGradient id="pnUplight"><stop offset="0" stop-color="rgb(255,196,120)" stop-opacity=".38"/><stop offset="1" stop-color="rgb(255,180,100)" stop-opacity="0"/></radialGradient>
+      <radialGradient id="pnFountainHot"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".95"/><stop offset=".3" stop-color="rgb(255,236,196)" stop-opacity=".75"/><stop offset=".7" stop-color="rgb(255,196,120)" stop-opacity=".25"/><stop offset="1" stop-color="rgb(255,180,100)" stop-opacity="0"/></radialGradient>
+      <radialGradient id="pnMist"><stop offset="0" stop-color="${lightsOn?"rgb(255,232,196)":"#FFFFFF"}" stop-opacity=".55"/><stop offset="1" stop-color="${lightsOn?"rgb(255,220,170)":"#FFFFFF"}" stop-opacity="0"/></radialGradient>
       <radialGradient id="pnWash"><stop offset="0" stop-color="rgb(255,170,90)" stop-opacity=".45"/><stop offset="1" stop-color="rgb(255,160,80)" stop-opacity="0"/></radialGradient>
       <radialGradient id="pnFirePool"><stop offset="0" stop-color="rgb(255,176,64)" stop-opacity=".9"/><stop offset=".38" stop-color="rgb(255,120,36)" stop-opacity=".62"/><stop offset=".72" stop-color="rgb(255,96,24)" stop-opacity=".28"/><stop offset="1" stop-color="rgb(255,80,16)" stop-opacity="0"/></radialGradient>
       <linearGradient id="pnSteam" x1=".5" y1="1" x2=".5" y2="0"><stop offset="0" stop-color="#E4F1F6" stop-opacity=".9"/><stop offset=".22" stop-color="#F3F9FB" stop-opacity=".62"/><stop offset=".5" stop-color="#F7FBFD" stop-opacity=".28"/><stop offset=".75" stop-color="#F7FBFD" stop-opacity=".06"/><stop offset="1" stop-color="#F7FBFD" stop-opacity="0"/></linearGradient>
