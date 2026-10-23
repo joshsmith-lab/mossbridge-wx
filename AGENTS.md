@@ -128,7 +128,13 @@ place name.
   Tomorrow's sky needs the complete sunrise-to-sunset hourly run; a shortened cache can still
   say `Tomorrow's high is 72°.` from the known daily forecast, but cannot promise its sky.
   Missing sunrise or sunset cannot invent a daylight window. Hazards always take this space
-  first, and tomorrow is said for tomorrow. The wall clock governs the sentence even when a
+  first, and tomorrow is said for tomorrow. A hazard that only comes at or after sunset does not
+  take the day's words from it: on October 23 2026 at 5:27 am, a sunny day with the gusts reaching 30
+  at ten that night, the whole headline was `Windy by 10 p.m.`, and Josh said it "doesn't tell me
+  about today". So when the daylight still to come is quiet with every hour known, the day is said
+  first, the way a quiet day says it (`Sunny today. Windy by 10 p.m.`, `Warm and sunny today. Showers
+  possible around 9 p.m.`). A hazard inside the daylight already says the day and keeps its words,
+  and from 5 p.m. the evening's own words stand. The wall clock governs the sentence even when a
   cached reading was written hours earlier. Rain lets up only after two consecutive known
   dry hours; missing odds never make a break. Thunder at the first wet hour keeps its name
   instead of becoming rain, and rain falling now cannot hide thunder still to come.
@@ -867,16 +873,23 @@ white ridge cap the full length of the ridge, the same board as the slope rakes 
 
 **It faces north, and the sky knows it.** From the house the pond is south, the fire pit west and the
 treeline east (Josh's directions), so this view looks north: west on the left, east on the right. `LOCS.mb`
-carries `faces:"north"`, and for such a place the sun's arc is mirrored (sunrise and its time on the right,
-sunset on the left), the moon's place and shading follow it, and the wind's bearing is mirrored once
+carries `faces:"north"`, and for such a place the sun's arc is mirrored (the sun rises on the right and
+sets on the left; its two times read left to right, below), the moon's place and shading follow it, and the wind's bearing is mirrored once
 upstream for the scene and the sky, so the palms, the grass, the spray, the rain, the clouds, the bats and
 the witch all go the way the real wind blows. The house draws no arc. The illustrated sun keeps that
 sine and `sunPos`, except at the crown, where it drops until the whole disc and its rays sit under the top of the frame (`pnSunFit`). Over the roof it rides above it: Josh, October 23 2026, saw the noon sun sitting on the ridge (and through the middle of the day it was half behind the roof), so wherever the disc is over the roof it keeps 5 units of sky between its foot and the highest part of the roof under it, a few percent smaller over the ridge if it must be (about .94 on a phone), and beside the roof it keeps its own path. A short window crops that sky, and when the open sky above the roof cannot hold the sun even at .86, it draws smaller and tucks behind the ridge as before. The same evening Josh saw the moon "cut off above the house too", so the moon keeps 4 units of sky over the roof under it and its top 2 under the top of the frame (`pnMoonFit`, sharing `pnRoofTop` with the sun); where both cannot hold, the top wins. Golden hour warms the light, and a low sun lays a long shadow and a glint on the
 windows it faces. The sunrise and sunset times sit up in open sky, in the corner columns, clear of
 the palms, the roof, the house and the pond, with the thin halo they already wear and no box behind them.
-Sunrise stays on the right and sunset on the left all day, because the house faces north. A thin
-chevron sits beside each time, on the side toward the house, up for sunrise and down for sunset.
-Its stroke matches the digits and it wears their halo. Josh picked this on October 22 2026.
+Sunrise is on the left and sunset on the right all day, as at the farm and at Beaufort, though the
+house's sun rises on the right: the times followed the sky (sunrise right) until October 23 2026, when
+Josh said it was "not really the way my brain works", so the two words swapped and the sky did not.
+Beside each time, on the side toward the house, a little sun sits half set on a fine horizon (`sunMark`): a gold
+half-disc in ink, four fine rays fanned over it and an arrow over those, up for sunrise and down for
+sunset, the app icon's sun in miniature. Its horizon is the digits' baseline and its strokes wear their
+halo. Josh asked on October 23 2026 for something "more elegant/refined than... minimal yes, but...
+something more" than the thin chevron he had picked the day before, and chose this from three drawn into
+the page (the others were the sun's dotted path off the horizon, and SUNRISE and SUNSET in small capitals
+over the time).
 A short window crops the top of that sky, and the times drop to just under the crop, still in the corner.
 The sine takes 90° to that crown, which set an afternoon moon into the roof, so a moon
 `pnMoonInRoof` would hide takes the shallower rise (.35) and stays in the sky. A moon already clear of
@@ -904,7 +917,9 @@ a projectile's arc drawn as a brush stroke that thins to its tip, inside a faint
 with a bright core up the middle three, glitter off the crowns and the falling ends (drawn as two paths of many dots, `dotsPath`, so
 the moving sheet holds a handful of nodes, not hundreds), mist where the outer arcs come down, and a ring of short jets and foam at
 the float. After dark it is lit from below: a white-hot heart at the float (`pnFountainHot`), warm cream jets, a glow behind the fan
-and a shimmer of short glints on the water under it. The fan leans downwind and its spray drifts on the gusts, the same two
+and a shimmer of short glints on the water under it. Its lights are on from sunset to sunrise, all night (`fnLit`, `pnHouseLights`'s
+`fountain`): Josh, the next morning at 5:21, "the fountain lights stay on that nice glowy vibe all night"; they had gone out with the
+windows at 10:30. The fan leans downwind and its spray drifts on the gusts, the same two
 animations as before (`pnSpray`, `pnDrops`), and it holds still under reduced motion. Its pressed copy in the water is the jets alone.
 
 **Weather.** Every reading still drives the picture: the palms, the grass and the fountain's spray lean and
