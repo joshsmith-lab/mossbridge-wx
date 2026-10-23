@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v136/);
+  assert.match(worker, /mbwx-shell-v137/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -6542,6 +6542,13 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.doesNotMatch(html, /propPnFarmhouse|INK\.pnFarmhouse/);
   // a sabal, a windmill palm and a sabal at each end, the windmill between the sabals, the strands a V from the door to the inner sabals
   assert.match(fn, /const PALMS=\[\[26,"s",7,47,-\.04\],\[39,"w",2,20\],\[52,"s",8,51,\.03\],\[266,"s",9,50,-\.03\],\[282,"w",1,20\],\[298,"s",10,46,\.05\]\]/);
+  // the palms are planted in the bed behind the fence, not on the lawn in front of it (Josh, October 23 2026),
+  // and their trunks are that much shorter, so the crowns stand where they stood
+  assert.match(fn, /const pw=bftPalmWind\(gust,downwind\),ps=\.9,PALM_BACK=3;/);
+  assert.match(fn, /const px=X\(x\),foot=fenceB-PALM_BACK,th=h-PALM_BACK\/ps;/);
+  assert.match(fn, /crownY:foot\+by\*ps\+\(bh\*ps\+PALM_BACK\)\*/);
+  assert.match(fn, /inkAt\(P\.x,P\.foot,ps,1,/);
+  assert.match(fn, /return liftAt\(b,liftSvg\(b,g\),\[P\.x,P\.foot\]/);
   assert.match(fn, /const L0=PALMS\[2\],R0=PALMS\[3\];/);
   assert.match(fn, /const pts=\[\[L0\.x\+\.6,L0\.crownY\+7\],vtx,\[R0\.x-\.6,R0\.crownY\+7\]\];/);
   // nothing in it moves under reduced motion

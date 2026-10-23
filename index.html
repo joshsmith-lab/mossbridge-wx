@@ -10954,23 +10954,28 @@ function pnPondScene(c){
 
   /* ── the palms at the fence. Each end of the house is the same group: a sabal, a windmill palm low
      between them, and a sabal, the west group mirroring the east. Each sways from its foot with the gusts.
-     The strands hang still from the inner sabal on each side, the end tucked into its boots. */
-  const pw=bftPalmWind(gust,downwind),ps=.9;
+     The strands hang still from the inner sabal on each side, the end tucked into its boots.
+     They are planted in the bed behind the fence, their feet PALM_BACK units back from its foot: Josh, October
+     23 2026, "the tree bases are a bit off? perhaps outside the fence?", and they were, a unit in front of the
+     fence's foot on the front lawn, under its bottom rail. Each trunk is that much shorter, so the crowns, the
+     strands tied into them and everything kept clear of them stand where they stood. */
+  const pw=bftPalmWind(gust,downwind),ps=.9,PALM_BACK=3;
   const PALMS=[[26,"s",7,47,-.04],[39,"w",2,20],[52,"s",8,51,.03],[266,"s",9,50,-.03],[282,"w",1,20],[298,"s",10,46,.05]].map(([x,kind,seed,h,lean=0],i)=>{
-    const px=X(x),Lr=kind==="s"?rigBftPalmetto(seed,{h,lean,boots:.4,wind:pw}):rigPnWindmill(seed,{h,wind:pw,n:8,dead:1,size:.95});
-    const[bx,by,bw,bh]=pathBox(flatParts(Lr).map(p=>p.d));top(px+bx*ps-4,px+(bx+bw)*ps+4,fenceB+by*ps-4);
-    return{x:px,kind,Lr,crownY:fenceB+by*ps+bh*ps*(kind==="s"?.32:.36),i,amt:swayAmt*[.9,.72,1,1.1,.65,.85][i],dur:swayDur*[1.04,.9,1,.94,.86,1.08][i]}});
-  const palmSvg=(P,extra="",boxed=false)=>{const st=PRM||boxed?"":` style="transform-box:view-box;transform-origin:${f1(P.x)}px ${f1(fenceB)}px;${leanTo(P.amt,.4)};animation:swayTree ${P.dur.toFixed(1)}s ease-in-out infinite alternate;${wallClock(2*P.dur,P.i*1.9)}"`;
+    const px=X(x),foot=fenceB-PALM_BACK,th=h-PALM_BACK/ps;
+    const Lr=kind==="s"?rigBftPalmetto(seed,{h:th,lean,boots:.4,wind:pw}):rigPnWindmill(seed,{h:th,wind:pw,n:8,dead:1,size:.95});
+    const[bx,by,bw,bh]=pathBox(flatParts(Lr).map(p=>p.d));top(px+bx*ps-4,px+(bx+bw)*ps+4,foot+by*ps-4);
+    return{x:px,foot,kind,Lr,crownY:foot+by*ps+(bh*ps+PALM_BACK)*(kind==="s"?.32:.36),i,amt:swayAmt*[.9,.72,1,1.1,.65,.85][i],dur:swayDur*[1.04,.9,1,.94,.86,1.08][i]}});
+  const palmSvg=(P,extra="",boxed=false)=>{const st=PRM||boxed?"":` style="transform-box:view-box;transform-origin:${f1(P.x)}px ${f1(P.foot)}px;${leanTo(P.amt,.4)};animation:swayTree ${P.dur.toFixed(1)}s ease-in-out infinite alternate;${wallClock(2*P.dur,P.i*1.9)}"`;
     const pal=P.kind==="s"?palAt({...INK.bftPalm,boot:"#C9B48E",bootLt:"#DDCCA8"},.04):palAt({...INK.pnWindmill,wmFrond:"#7FA160",wmFrondLt:"#97B872",wmFrondFar:"#5E8050",fibre:"#7A5E46"},.04);
-    const up=lightsOn&&P.kind==="s"?`<ellipse data-light="uplight" cx="${f1(P.x)}" cy="${f1(fenceB-16)}" rx="5" ry="18" fill="url(#pnUplight)"/>`:"";
-    return `<g class="pn-palm" data-prop="${P.kind==="s"?"sabal":"windmill-palm"}"${st}>${inkAt(P.x,fenceB,ps,1,inkRig(P.Lr,pal,{s:ps,light:lightAt(P.x,fenceB-40),...BFT_PALM_O}))}${up}${extra}</g>`};
+    const up=lightsOn&&P.kind==="s"?`<ellipse data-light="uplight" cx="${f1(P.x)}" cy="${f1(P.foot-16)}" rx="5" ry="18" fill="url(#pnUplight)"/>`:"";
+    return `<g class="pn-palm" data-prop="${P.kind==="s"?"sabal":"windmill-palm"}"${st}>${inkAt(P.x,P.foot,ps,1,inkRig(P.Lr,pal,{s:ps,light:lightAt(P.x,fenceB-40),...BFT_PALM_O}))}${up}${extra}</g>`};
   /* on the page each palm is a box of its own (liftKit) that the compositor sways about its foot: the same
      drawing, still, and the same sway on the box, so WebKit repaints nothing while the palms move */
   const{liftSvg,liftAt}=liftKit(W,H);
   const palmLift=P=>{const g=palmSvg(P,"",true),[bx,by,bw,bh]=pathBox(flatParts(P.Lr).map(p=>p.d));
-    const x0=Math.min(P.x+bx*ps,P.x-5)-4,y0=fenceB+by*ps-4,x1=Math.max(P.x+(bx+bw)*ps,P.x+5)+4,y1=Math.max(fenceB+(by+bh)*ps,fenceB+2)+4;
+    const x0=Math.min(P.x+bx*ps,P.x-5)-4,y0=P.foot+by*ps-4,x1=Math.max(P.x+(bx+bw)*ps,P.x+5)+4,y1=Math.max(P.foot+(by+bh)*ps,P.foot+2)+4;
     const b=[Math.floor(x0*10)/10,Math.floor(y0*10)/10,Math.ceil((x1-x0)*10)/10+.1,Math.ceil((y1-y0)*10)/10+.1];
-    return liftAt(b,liftSvg(b,g),[P.x,fenceB],PRM?"":`${leanTo(P.amt,.4)};animation:swayTree ${P.dur.toFixed(1)}s ease-in-out infinite alternate;${wallClock(2*P.dur,P.i*1.9)}`)};
+    return liftAt(b,liftSvg(b,g),[P.x,P.foot],PRM?"":`${leanTo(P.amt,.4)};animation:swayTree ${P.dur.toFixed(1)}s ease-in-out infinite alternate;${wallClock(2*P.dur,P.i*1.9)}`)};
 
   /* ── the string lights: two strands from one eye over the back door, a V, each sagging out to the nearer
      sabal on its side: clear teardrops on drops by day, light from evening golden hour until 10:00 */
