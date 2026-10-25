@@ -1462,16 +1462,17 @@ Since October 21 2026 the coast's twenty-seven cases in `tools/scene.mjs` are th
 Porters Neck), and `tools/egrets.mjs` went with the marsh; the marsh-only checks described below are in git
 history. `TZ=America/New_York node tools/pond.mjs` shoots the house in every moment.
 
-`tools/scene.mjs` is for anything that moves. Forty-four scenes force the light
+`tools/scene.mjs` is for anything that moves. Forty-five scenes force the light
 and weather that are hard to wait for. Thirteen are the house across the pond: calm noon, a blow
 from the west and one from the east, the evening and the morning golden hours, a warm clear night
 after the strands are off, a storm, a fog morning, drizzle against a downpour, freezing rain, a
 night of rain and thunder nearby. Seven are the ridge: by day, at golden hour, by evening with the
-buck out, on a snow day, on a cold January night, in warm rain and in a night downpour. Twenty-four
-are Halloween and the morning after it. Fourteen at the house: an October afternoon, golden
+buck out, on a snow day, on a cold January night, in warm rain and in a night downpour. Twenty-five
+are Halloween and the morning after it. Fifteen at the house: an October afternoon, golden
 evening, fog morning and midday downpour (the busiest daytime frame), dusk with the strands and the
 fire just lit and the first bats out, the carving day under the moon a night short of full with the
-witch crossing it, the carved week after dark with a westerly and on a cold morning, the moon too
+witch crossing it, the carved week after dark with a westerly and on a cold morning (the hawk in, by the day's draw), a clear morning
+that week with the red-tailed hawk on the west end of the ridge (`hawk: true`), the moon too
 high over the roof for her to cross an hour after midnight (she leaves it alone and passes well
 clear of it, never along its rim), Halloween night with the kid at the gate, in a drizzle that
 night with the kid still out, in the rain that night with the kid in and the bats and the witch
