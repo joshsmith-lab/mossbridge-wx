@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v137/);
+  assert.match(worker, /mbwx-shell-v138/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -6369,7 +6369,8 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.match(fn, /const lightsOn=lit\.windows,strandsOn=lit\.strands,pumpOn=lit\.pumpkins,fnLit=lit\.fountain;/);
   assert.match(fn, /const fountain=\(copy\)=>\{const lit=fnLit;/);
   assert.doesNotMatch(fn.slice(fn.indexOf("const fountain=(copy)=>"), fn.indexOf("const fountainSvg=")), /lightsOn/);
-  assert.match(fn, /const fireOn=strandsOn&&localHour>=15&&temp>=45&&temp<68&&!wet&&!storm&&!fog&&gust<20&&!THUNDER;/);
+  // a gas fire table holds in a breeze: lit up to gusts of 33 (Josh, October 24 2026, out at it gusting 31)
+  assert.match(fn, /const fireOn=strandsOn&&localHour>=15&&temp>=45&&temp<68&&!wet&&!storm&&!fog&&gust<33&&!THUNDER;/);
   {
     const ctx = vm.createContext({});
     const block = html.slice(html.indexOf("const PN_LIGHTS_OUT="), html.indexOf("function pnPeekGhost("));
