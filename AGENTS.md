@@ -128,13 +128,17 @@ place name.
   Tomorrow's sky needs the complete sunrise-to-sunset hourly run; a shortened cache can still
   say `Tomorrow's high is 72°.` from the known daily forecast, but cannot promise its sky.
   Missing sunrise or sunset cannot invent a daylight window. Hazards always take this space
-  first, and tomorrow is said for tomorrow. A hazard that only comes at or after sunset does not
-  take the day's words from it: on October 23 2026 at 5:27 am, a sunny day with the gusts reaching 30
-  at ten that night, the whole headline was `Windy by 10 p.m.`, and Josh said it "doesn't tell me
-  about today". So when the daylight still to come is quiet with every hour known, the day is said
-  first, the way a quiet day says it (`Sunny today. Windy by 10 p.m.`, `Warm and sunny today. Showers
-  possible around 9 p.m.`). A hazard inside the daylight already says the day and keeps its words,
-  and from 5 p.m. the evening's own words stand. The wall clock governs the sentence even when a
+  first, and tomorrow is said for tomorrow. A hazard does not take the day's words from it: on October
+  23 2026 at 5:27 am, a sunny day with the gusts reaching 30 at ten that night, the whole headline was
+  `Windy by 10 p.m.`, and Josh said it "doesn't tell me about today"; two mornings later, sunny again,
+  it was `Windy by 9 a.m.` ("again - not it. what's the sun doing? cloudy? nice? sunny? soupy?"). So
+  when every hour of the daylight still to come is known and dry, the day is said first, the way a
+  quiet day says it, and the hazard after it. Wind is not the sky, so a windy daylight is said at any
+  hour, beside the wind (`Sunny today. Windy by 9 a.m.`, `Clouds and sun this afternoon. Windy now.`),
+  and a windy day is never nice. Rain or thunder that comes only at or after sunset leaves a quiet
+  daylight to be said (`Warm and sunny today. Showers possible around 9 p.m.`); inside the daylight
+  the rain is the day's sky and keeps its words. A sky with an hour unknown says the wind alone, and
+  from 5 p.m. the evening's own words stand. The wall clock governs the sentence even when a
   cached reading was written hours earlier. Rain lets up only after two consecutive known
   dry hours; missing odds never make a break. Thunder at the first wet hour keeps its name
   instead of becoming rain, and rain falling now cannot hide thunder still to come.
