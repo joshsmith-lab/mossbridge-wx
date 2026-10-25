@@ -898,6 +898,17 @@ something more" than the thin chevron he had picked the day before, and chose th
 the page (the others were the sun's dotted path off the horizon, and SUNRISE and SUNSET in small capitals
 over the time).
 A short window crops the top of that sky, and the times drop to just under the crop, still in the corner.
+Each time keeps to its own corner column all day. The sun rides the top of the sky over the house, so it crosses
+the sunset corner in the middle of the morning and the sunrise corner in the late afternoon, and the moon
+crosses them at night; a word it would cover used to step sideways along the top, and at 3:55 on October 25
+2026 the sunrise time stood past the sun in the middle of the sky (Josh: the sun times "being weird", on his
+iPhone Duo and "it still needs to look right on other phones too"). Now both times step down their corners
+together, on one level line, the highest that clears the disc and its rays, the house, and, from noon to 4,
+the bands the two gulls cross (`PN_GULLS`, shared with the gulls themselves), so a gull never flies behind a
+word. Only when no height clears both does each go alone, still in its corner (in December the moon can hold
+the sunset corner while the sun holds the sunrise one), then clear of the disc alone, and only then along the
+top as before. The house's frame is the same at every width, so this is the same at 320, 390, 430, 466 (the
+Duo's cover screen) and 760.
 The sine takes 90° to that crown, which set an afternoon moon into the roof, so a moon
 `pnMoonInRoof` would hide takes the shallower rise (.35) and stays in the sky. A moon already clear of
 the roof keeps the sine. Josh would rather move the sun's path than shrink the house. The low sun's warmth comes
@@ -2429,6 +2440,16 @@ The fuller scene earns its playfulness from the existing drawings and their beha
     (`codeAt`), so a cloudy reading never sits beside `Nice and sunny this afternoon.` And a wet
     sky at an hour with odds under 25, every reading known, is `Maybe a stray shower.` (`lowWet`,
     `stray`), never `Forecast details unavailable.`, which is for real gaps.
+- **The sides keep clear of a status bar that stands down the edge (October 25 2026).** Folded, the iPhone Duo's
+  cover screen (466 by 678 points, Josh's everyday phone) puts the status bar in a column on the camera's side,
+  and a web page is told about it as a side safe-area inset (about 84 points), not a top one. The page only kept
+  the top and bottom insets, so the warning strip, the live stamp and the cobweb ran under the column. The
+  header's sides are now the larger of 20px and the side inset (`.sky`), and the picture still runs edge to edge
+  (`.scene-frame`'s margins take the same sum back). The cobweb's corner is the rail's inner edge
+  (`paintCobweb`'s `rail`, read off the sky's own padding), a point under the stamp's margin there, because
+  beside the rail the stamp's words end at the corner with no gutter. Everywhere else the side insets are 0 and
+  the page is what it was. There is no Duo to test on here: Chrome's `Emulation.setSafeAreaInsetsOverride` at
+  466 by 678 with a right inset of 84 is how it was checked.
 - **The paper is worked out, never read back (October 21 2026).** `render()` read the paper (`--paper`,
   `--wash`, `--line`) back with `getComputedStyle` just after setting the sky's colours, which made the browser
   restyle the whole page to answer, Beaufort's five to six thousand picture nodes with it. On a cached open,

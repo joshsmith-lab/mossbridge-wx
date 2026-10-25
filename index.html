@@ -67,8 +67,12 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
    so it closes every counter and the time becomes a blob. */
 .suntime{paint-order:stroke;stroke:var(--off-sky,#F7F4EA);stroke-width:1.3px;
   stroke-linejoin:round;stroke-opacity:.9}
+/* the sides keep clear of a status bar that stands down the edge: folded, the iPhone Duo's cover screen
+   puts it in a column on the camera's side, reported as a side inset and not a top one, and the strip,
+   the stamp and the cobweb ran under it (Josh, October 25 2026, his everyday phone). Everywhere else
+   the side insets are 0 and this is the 20px it always was. The picture still runs edge to edge */
 .sky{position:relative;overflow:hidden;color:var(--on-sky);isolation:isolate;
-  padding:calc(18px + env(safe-area-inset-top)) 20px 0;
+  padding:calc(18px + env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) 0 max(20px,env(safe-area-inset-left));
   background:linear-gradient(180deg,var(--sky1) 0%,var(--sky2) 46%,var(--sky3) 100%);
   transition:background 1.2s var(--ease),color .8s var(--ease)}
 .sky::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
@@ -600,7 +604,7 @@ html[data-theme=dark] .alert-strip{background:#9A3317;box-shadow:0 6px 22px -8px
    transform, the identity (translate3d(0,0,0)), and is its own layer (will-change): starting from none, the
    first move under a finger cost WebKit a frame of 60 to 70ms on the house and on Beaufort, four frames in,
    and carrying it from the start, no frame of a swipe is over 34ms (tools/webkit.mjs swipe) */
-.scene-frame{margin:14px -20px 0;position:relative;z-index:2;transform:translate3d(0,0,0);will-change:transform;touch-action:pan-y;touch-action:pan-y pinch-zoom;
+.scene-frame{margin:14px calc(-1 * max(20px,env(safe-area-inset-right))) 0 calc(-1 * max(20px,env(safe-area-inset-left)));position:relative;z-index:2;transform:translate3d(0,0,0);will-change:transform;touch-action:pan-y;touch-action:pan-y pinch-zoom;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 .scene{position:relative}
 .scene-frame.scene-glide{transition:transform .34s var(--ease)}
@@ -9282,32 +9286,51 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
       const disc=`M ${n2(cx-r)} ${n2(base)} A ${n2(r)} ${n2(r)} 0 0 1 ${n2(cx+r)} ${n2(base)} Z`;
       return inked(`M ${n2(gx)} ${n2(base)} L ${n2(gx+MARK_W)} ${n2(base)}`,.9)+inked(rays,.9)+inked(arrow,1)
         +`<path d="${disc}" fill="none" stroke="var(--off-sky,#F7F4EA)" stroke-width="${hl(1)}" opacity=".9"/><path d="${disc}" fill="${up?"#F5C94D":"#F2A845"}" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/>`};
+    /* Each time keeps to its own corner column. When the sun or the moon crosses that corner (the sun rides the
+       top of the sky over the house most of the day, so it reaches the sunset corner in the middle of the morning
+       and the sunrise corner in the late afternoon), the times step down the open sky in their corners, both on
+       one level line, the highest that clears the disc and its rays. Josh, October 25 2026, at 3:55 with the sun
+       in the sunrise corner: the sun times "being weird". The sunrise time had stepped sideways, past the sun,
+       into the middle of the sky. Only when one corner has no room at any height does its time go alone, still
+       in its corner, at the highest height clear of the disc alone (the rays may run behind its halo), and only
+       when even that fails does it step along the top as it did. While the midday gulls are out the times keep
+       off the bands they cross (PN_GULLS), so a gull never flies behind a word. */
     const avoid=[sunXY&&[sunXY[0],sunXY[1],28],moonXY&&[moonXY[0],moonXY[1],moonR+8]].filter(Boolean);
-    const place=(side,t,up)=>{
-      const tw=twOf(t),w=tw+GAP+MARK_W,a=side==="L"?"start":"end",above=11,below=4;
+    const discs=[sunXY&&[sunXY[0],sunXY[1],17],moonXY&&[moonXY[0],moonXY[1],moonR+3]].filter(Boolean);
+    const gullBands=PN_GULLS.out(wet,storm,dark,localHour)?PN_GULLS.bands(W,GY):[];
+    const y0=Math.max(14,visTop+14),rows=[];for(let y=y0;y+4<=86;y+=2)rows.push(y);
+    const corner=(side,t,up)=>{
+      const tw=twOf(t),w=tw+GAP+MARK_W,a=side==="L"?"start":"end",above=11,below=4,x0=side==="L"?12:W-12;
       const box=(x,y)=>a==="end"?[x-w,y-above,x+2,y+below]:[x-2,y-above,x+w,y+below];
-      const clear=(x,y)=>{
+      const clear=(x,y,keep=avoid)=>{
         const b=box(x,y);
         if(b[0]<3||b[2]>W-3||b[1]<visTop+1.5||b[3]>86)return false;
         if(b[2]>64&&b[0]<256&&b[3]>38)return false;
-        return !avoid.some(([cx,cy,r])=>{const qx=Math.max(b[0],Math.min(cx,b[2])),qy=Math.max(b[1],Math.min(cy,b[3]));return (qx-cx)**2+(qy-cy)**2<r*r});
+        if(gullBands.some(g=>b[2]>g[0]&&b[0]<g[2]&&b[3]>g[1]&&b[1]<g[3]))return false;
+        return !keep.some(([cx,cy,r])=>{const qx=Math.max(b[0],Math.min(cx,b[2])),qy=Math.max(b[1],Math.min(cy,b[3]));return (qx-cx)**2+(qy-cy)**2<r*r});
       };
-      const y0=Math.max(14,visTop+14);
-      const x0=side==="L"?12:W-12,step=side==="L"?8:-8;
-      for(const y of[y0,y0+8,y0+16])for(let i=0;i<16;i++){
-        const x=x0+step*i;
-        if(side==="L"&&x>W*.46)break;
-        if(side==="R"&&x<W*.54)break;
-        if(clear(x,y))return{x,y,a,box:box(x,y),t,up,tw};
-      }
-      return{x:x0,y:y0,a,box:box(x0,y0),t,up,tw};
+      const at=(x,y)=>({x,y,a,box:box(x,y),t,up,tw});
+      const alone=()=>{
+        for(const keep of[avoid,discs]){const y=rows.find(y=>clear(x0,y,keep));if(y!=null)return at(x0,y)}
+        const step=side==="L"?8:-8;
+        for(const y of[y0,y0+8,y0+16])for(let i=1;i<16;i++){
+          const x=x0+step*i;
+          if(side==="L"&&x>W*.46)break;
+          if(side==="R"&&x<W*.54)break;
+          if(clear(x,y))return at(x,y);
+        }
+        return at(x0,y0);
+      };
+      return{x0,clear,at,alone};
     };
+    const rise=corner("L",clock(sunrise),true),set=corner("R",clock(sunset),false);
+    const level=rows.find(y=>rise.clear(rise.x0,y)&&set.clear(set.x0,y));
     const markOf=s=>{
       const {x,y,a,t,up,tw}=s;
       const time=`<text class="suntime" x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${a}">${t}</text>`;
       return time+sunMark(a==="end"?x-tw-GAP-MARK_W:x+tw+GAP,y,up);
     };
-    skyLabs={rise:place("L",clock(sunrise),true),set:place("R",clock(sunset),false)};
+    skyLabs=level!=null?{rise:rise.at(rise.x0,level),set:set.at(set.x0,level)}:{rise:rise.alone(),set:set.alone()};
     sunTimes=`<g data-sun-times="1" font-family="Spline Sans Mono,ui-monospace,monospace" font-size="11" font-weight="600" fill="currentColor">${markOf(skyLabs.rise)+markOf(skyLabs.set)}</g>`;
   }
   /* ── the holiday ──────────────────────────────────────────────────────────────────
@@ -10775,6 +10798,11 @@ function liftKit(W,H){
   const liftIn=(b,inner,p,anim="")=>`<div class="lift" style="${origin(b,p)}${anim?";"+anim:""}">${inner}</div>`;
   return{partsOf,boxOf,pct,origin,liftSvg,liftAt,liftIn};
 }
+/* the house's two midday gulls: where each starts, the band its crossing sweeps (--gx and --gy in the scene,
+   with room for its wings), and the hours they are out. The sun times keep off the bands while they fly */
+const PN_GULLS={at:(W,GY)=>[[W*.12,GY-120],[W*.88,GY-132]],
+  bands:(W,GY)=>[[W*.12-8,GY-120-16-7,W*.12+W*.55+8,GY-120+7],[W*.88-W*.46-8,GY-132-7,W*.88+8,GY-132+9+7]],
+  out:(wet,storm,dark,hour)=>!wet&&!storm&&!dark&&hour>=12&&hour<16};
 /* Porters Neck's light schedule, on the place's own clock. The windows and the porch are on from
    sunset until 10:30 pm (PN_LIGHTS_OUT). The bistro strands come on at the start of evening golden
    hour, the sun at +6° on the way down, the same line goldenHour() uses, and go off at 10:00
@@ -11398,7 +11426,7 @@ function pnPondScene(c){
       sceneClouds+=`<g class="drift" style="animation:drift ${(110/rush).toFixed(0)}s ease-in-out infinite ${rev};${phase(Math.round(110/rush)*2)}">${inkAt(W*fx,y,s,sd%2?-1:1,
         inkUnit(propCloud(sd),{body:"url(#cloudInk)",ink:mix(lineC,skyS[1],.45),shade:mix(shadeC,skyS[1],.4),lit:litC,litOp:.5*litK,shadeOp:.28},{s,light:[0,-1],line:.9,heavy:.4}))}</g>`;
   }
-  const gullAt=[[W*.12,GY-120],[W*.88,GY-132]];
+  const gullAt=PN_GULLS.at(W,GY);
   /* the house gull keeps a filled wing, a little long, with a small chest mark.
      The delay is the only timing written here. The beat itself is the shared wingBeat class. */
   const pnHouseGull=(x,y,s,o,delay,dur)=>{
@@ -11410,7 +11438,7 @@ function pnPondScene(c){
     return `<g class="wildlife gull" data-species="gull" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})" fill="${tone("#F4F1EA")}" stroke="${lineC}" stroke-width="${(.8/s).toFixed(2)}" stroke-linejoin="round" paint-order="stroke" opacity="${Math.min(1,o*2.2).toFixed(2)}">${body}
       <path class="flight-wing wing-l" ${st} d="M ${wing} Z"/><path class="flight-wing wing-r" ${st} d="M ${flip(wing)} Z"/></g>`;
   };
-  const gulls=!wet&&!storm&&!dark&&!(localHour<12||localHour>=16)
+  const gulls=PN_GULLS.out(wet,storm,dark,localHour)
     ?pnHouseGull(gullAt[0][0],gullAt[0][1],.5,.3,-2.6,8)+pnHouseGull(gullAt[1][0],gullAt[1][1],.4,.22,-7.1,10):"";
   /* the house fills the frame, so the night's flyers work in front of its roof: the witch flies past over
      the palms' crowns, and through the moon when a line can cross it there, and the bats hunt round the roof
@@ -16719,7 +16747,13 @@ function paintCobweb(){
   const boxes=[...typeBoxes(".masthead,.now,#verdict,#chips,#nowcast"),
     ...[...document.querySelectorAll("#chips .chip,#nowcast.on,#alertStrip.on")].map(e=>e.getBoundingClientRect())]
     .filter(b=>b.width&&b.height).map(rel);
-  const W=S.width,plan=webPlan(boxes,{W,top:Math.max(0,...mast.map(b=>b.b)),Rmax:clamp(W*.27,72,128)});
+  /* a status bar standing down the right edge (the iPhone Duo's cover screen) is glass the web cannot be
+     strung across: its corner is the rail's inner edge, which the sky's own padding already keeps */
+  const pr=parseFloat(getComputedStyle(document.getElementById("sky")).paddingRight)||20,rail=pr>20.5?pr:0;
+  el.style.right=rail?rail+"px":"";
+  /* beside the rail the stamp's words end at the corner, with no gutter, so the corner hangs a point under
+     their margin rather than on its very edge */
+  const W=S.width-rail,plan=webPlan(boxes,{W,top:Math.max(0,...mast.map(b=>b.b))+(rail?1:0),Rmax:clamp(W*.27,72,128)});
   if(!plan)return off();
   /* the silk is the sky's own two inks: on a bright sky a pale thread with the sky's dark ink along
      its shadow side, the inked line; on a dark one (night, and a dusk or a dawn dark enough for the
