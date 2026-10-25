@@ -898,6 +898,17 @@ something more" than the thin chevron he had picked the day before, and chose th
 the page (the others were the sun's dotted path off the horizon, and SUNRISE and SUNSET in small capitals
 over the time).
 A short window crops the top of that sky, and the times drop to just under the crop, still in the corner.
+Each time keeps to its own corner column all day. The sun rides the top of the sky over the house, so it crosses
+the sunset corner in the middle of the morning and the sunrise corner in the late afternoon, and the moon
+crosses them at night; a word it would cover used to step sideways along the top, and at 3:55 on October 25
+2026 the sunrise time stood past the sun in the middle of the sky (Josh: the sun times "being weird", on his
+iPhone Duo and "it still needs to look right on other phones too"). Now both times step down their corners
+together, on one level line, the highest that clears the disc and its rays, the house, and, from noon to 4,
+the bands the two gulls cross (`PN_GULLS`, shared with the gulls themselves), so a gull never flies behind a
+word. Only when no height clears both does each go alone, still in its corner (in December the moon can hold
+the sunset corner while the sun holds the sunrise one), then clear of the disc alone, and only then along the
+top as before. The house's frame is the same at every width, so this is the same at 320, 390, 430, 466 (the
+Duo's cover screen) and 760.
 The sine takes 90° to that crown, which set an afternoon moon into the roof, so a moon
 `pnMoonInRoof` would hide takes the shallower rise (.35) and stays in the sky. A moon already clear of
 the roof keeps the sine. Josh would rather move the sun's path than shrink the house. The low sun's warmth comes

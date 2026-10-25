@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v140/);
+  assert.match(worker, /mbwx-shell-v141/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -6350,9 +6350,16 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.doesNotMatch(html, /CHEV_W|CAP_MID|__sunmark/);
   // the times read left to right like a clock, as at the other places: sunrise on the left, sunset on the
   // right, though the house's sun rises on the right (Josh, October 23 2026)
-  assert.match(html, /skyLabs=\{rise:place\("L",clock\(sunrise\),true\),set:place\("R",clock\(sunset\),false\)\}/);
+  assert.match(html, /const rise=corner\("L",clock\(sunrise\),true\),set=corner\("R",clock\(sunset\),false\);/);
+  // each time keeps to its own corner: when the sun or the moon (or, at midday, the gulls' crossing) is in a
+  // corner, both step down their corners on one level line, never sideways past the sun into the middle of
+  // the sky (Josh, October 25 2026, at 3:55 with the sun in the sunrise corner)
+  assert.match(html, /const level=rows\.find\(y=>rise\.clear\(rise\.x0,y\)&&set\.clear\(set\.x0,y\)\);/);
+  assert.match(html, /skyLabs=level!=null\?\{rise:rise\.at\(rise\.x0,level\),set:set\.at\(set\.x0,level\)\}:\{rise:rise\.alone\(\),set:set\.alone\(\)\};/);
+  assert.match(html, /const gullBands=PN_GULLS\.out\(wet,storm,dark,localHour\)\?PN_GULLS\.bands\(W,GY\):\[\];/);
+  assert.match(html, /const gulls=PN_GULLS\.out\(wet,storm,dark,localHour\)\n/);
   assert.doesNotMatch(html, /data-sun-mark|mark=b|"SUNRISE"/);
-  assert.match(html, /const y0=Math\.max\(14,visTop\+14\);/);
+  assert.match(html, /const y0=Math\.max\(14,visTop\+14\),rows=\[\];for\(let y=y0;y\+4<=86;y\+=2\)rows\.push\(y\);/);
   assert.match(html, /const fit=pnArc\?pnSunFit\(py\(f\),visTop,squash,x\):\{y:py\(f\),s:1\};/);
   assert.match(html, /data-light="long-shadow"/);
   assert.match(html, /data-light="glint"/);
