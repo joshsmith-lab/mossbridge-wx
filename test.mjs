@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v139/);
+  assert.match(worker, /mbwx-shell-v140/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -6577,7 +6577,40 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.doesNotMatch(skySheet, /gulls|sceneClouds|palm|grass|fountain|bats|witchFly|breakUp|pondMoving|fireFlame|pumpkins|gateLanterns|heron|deer|animation/);
   assert.match(fn, /sheet\("sceneSky"\)\.innerHTML=gulls\+\(skyOver\?sunBody\+moonShown\+sideSky:""\)\+sceneClouds/);
   assert.match(fn, /document\.getElementById\("sceneLift"\)\.innerHTML=grassLift\+PALMS\.map\(palmLift\)\.join\(""\);/);
-  assert.match(fn, /sheet\("sceneFx"\)\.innerHTML=fireWash\+fireFlame\+\(guttering\?pumpkins\+gateLanterns:""\)\+bats\+witchFly\(witch\)/);
+  assert.match(fn, /sheet\("sceneFx"\)\.innerHTML=fireWash\+fireFlame\+\(guttering\?pumpkins\+gateLanterns:""\)\+hawk\+bats\+witchFly\(witch\)/);
+  // a red-tailed hawk on a corner of the roof, sometimes (Josh, October 25 2026): the west end of the ridge in the
+  // morning and the east end late in the afternoon, each sitting the day's own draw, never at midday or after dark,
+  // in no rain, fog, storm or thunder, and one animation, its head's dip
+  {
+    const ctx = vm.createContext({});
+    const pick = (re) => html.match(re)[0];
+    vm.runInContext(pick(/function mulberry\(a\)\{[\s\S]*?\n\}/) + "\n" + pick(/function pnHawkOut\(day,hour,sunAlt\)\{[\s\S]*?\n\}/) + "\nglobalThis.f=pnHawkOut;", ctx);
+    const out = (d, h, a = 20) => ctx.f(d, h, a);
+    assert.equal(out("2026-10-25", 9), null, "not this morning");
+    assert.equal(out("2026-10-25", 16.5), "pm", "this afternoon, on the east end");
+    assert.equal(out("2026-10-28", 9), "am", "the 28th's morning, on the west end");
+    assert.equal(out("2026-10-28", 9), out("2026-10-28", 10), "one draw for the whole sitting");
+    assert.equal(out("2026-10-22", 13), null, "the gulls have midday");
+    assert.equal(out("2026-10-22", 17, 1), null, "in before the sun is down");
+    assert.equal(out("2026-10-22", 8, -2), null, "and out only once it is up");
+    let am = 0, pm = 0;
+    for (let d = new Date("2026-01-01T12:00:00Z"); d < new Date("2027-01-01T12:00:00Z"); d.setUTCDate(d.getUTCDate() + 1)) {
+      const day = d.toISOString().slice(0, 10);
+      if (out(day, 9)) am++;
+      if (out(day, 17)) pm++;
+    }
+    assert.ok(am > 140 && am < 225 && pm > 140 && pm < 225, `about half the sittings: ${am} mornings, ${pm} afternoons`);
+  }
+  assert.match(fn, /if\(sit&&!wet&&!storm&&!fog&&!THUNDER\)\{/);
+  assert.match(fn, /hX=hx\+u\(\(east\?1:-1\)\*\(BH\.ridgeR-2\.6\)\),hY=hy\+u\(BH\.ridge-1\.7\)/);
+  assert.match(fn, /data-species="red-tailed-hawk"/);
+  assert.match(html, /@keyframes pnLook\{/);
+  // the does are drawn as deer (Josh, October 25 2026: "the deer need some refinement"): smaller, finer ink,
+  // the tail down at rest and a hind leg bent at the hock
+  assert.match(html, /function pnDoeParts\(graze=false\)\{/);
+  assert.match(fn, /const dS=\.38,dY=Y\(155\.5\)/);
+  assert.match(fn, /line:1\.1,heavy:\.55,shade:1\.6,lit:1\.2,light:lightAt\(x,dY-6\)/);
+  assert.doesNotMatch(html.slice(html.indexOf("function pnDoeParts("), html.indexOf("function propPnDoe(")), /flag, up/);
   assert.match(fn, /sheet\("sceneRipple"\)\.innerHTML=pondMoving;/);
   for (const name of ["sceneNear", "sceneFront", "sceneWater", "sceneTop"]) {
     const from = fn.slice(fn.indexOf(`sheet("${name}").innerHTML=`)), body = from.slice(0, from.indexOf(";\n"));

@@ -157,10 +157,15 @@ const CASES = [
     note: "an hour after midnight the night after the full moon, the moon high over the roof: the strands and the fire off, the jack-o-lanterns lit, the witch leaving the moon alone and passing well clear of it",
     o: { baseTemp: 60, nowTemp: 58, feels: 58, rh: 78, isDay: 0, code: 0, cloud: 4, nowWind: 4, nowDir: 30, nowGust: 7, nowUv: 0, uvMax: 4, windAmp: 3, gustAmp: 5,
       sunrise: "07:28", sunset: "18:22", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
-  { name: "45-house-carved-week-morning", loc: "mb", fire: false, when: "2026-10-27T08:40:00", decor: ["ghostface", "jack-o-lantern", "light-tree", "pumpkin-lights"], candles: 0,
+  { name: "45-house-carved-week-morning", loc: "mb", fire: false, hawk: false, when: "2026-10-27T08:40:00", decor: ["ghostface", "jack-o-lantern", "light-tree", "pumpkin-lights"], candles: 0,
     note: "a cold morning in the carved week: the jack-o-lanterns out and dark, no candle by day",
     o: { baseTemp: 50, nowTemp: 45, feels: 41, rh: 70, isDay: 1, code: 1, cloud: 22, nowWind: 12, nowDir: 350, nowGust: 20, nowUv: 1.2, uvMax: 4, windAmp: 8, gustAmp: 12,
       sunrise: "07:28", sunset: "18:23", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
+  // the red-tailed hawk's morning: the day's draw puts it on the west end of the ridge on October 28 (pnHawkOut)
+  { name: "51-house-hawk-morning", loc: "mb", fire: false, hawk: true, when: "2026-10-28T09:30:00", decor: ["ghostface", "jack-o-lantern", "light-tree", "pumpkin-lights"], candles: 0,
+    note: "a clear breezy morning in the carved week: the red-tailed hawk on the west end of the ridge, facing into the wind, its head dipping now and then",
+    o: { baseTemp: 64, nowTemp: 56, feels: 56, rh: 70, isDay: 1, code: 0, cloud: 6, nowWind: 9, nowDir: 330, nowGust: 18, nowUv: 2.4, uvMax: 4, windAmp: 5, gustAmp: 8,
+      sunrise: "07:29", sunset: "18:21", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
   // October dusk, the sun a few degrees under: the bats are coming out, a couple at first and more as it
   // darkens, and the witch is not up yet, because she waits for the dark
   { name: "40-house-october-dusk", loc: "mb", when: "2026-10-10T19:02:00", decor: ["ghostface", "light-tree", "pumpkin", "pumpkin-lights", "white-pumpkin", "bat"], candles: 0, bats: 7,
@@ -756,11 +761,29 @@ for (const cs of cases) {
     }
 
     // ── the fire table at the house: lit only while the strands are on, from evening golden hour until 10:00, between 45° and 68°, dry, with
-    // gusts under 20 (fireOn). A case that says what the fire is doing is held to it ──
+    // gusts under 33 (fireOn). A case that says what the fire is doing is held to it ──
     if (cs.fire !== undefined) {
       const lit = await page.evaluate(() => document.querySelector('.scene [data-prop="fire-table"]')?.getAttribute("data-lit") ?? null);
       if (lit === null) problems.push(`${cs.name}: no fire table drawn`);
       else if ((lit === "1") !== cs.fire) problems.push(`${cs.name}: the fire is ${lit === "1" ? "lit" : "out"}, expected ${cs.fire ? "lit" : "out"}`);
+    }
+
+    // ── the red-tailed hawk on a corner of the roof (pnHawkOut): a case that says whether it is out is held to
+    // it, and one that is out has its feet on the ridge cap, inside the frame, its one animation the head's dip ──
+    if (cs.hawk !== undefined) {
+      const hk = await page.evaluate(() => {
+        const el = document.querySelector('.scene [data-species="red-tailed-hawk"]');
+        if (!el) return null;
+        const b = el.getBoundingClientRect(), f = document.getElementById("sceneSvg").getBoundingClientRect();
+        return { perch: el.dataset.perch, inside: b.left >= f.left && b.right <= f.right && b.top >= f.top,
+          anims: document.getAnimations().filter((a) => el.contains(a.effect?.target)).map((a) => a.animationName) };
+      });
+      if (!!hk !== cs.hawk) problems.push(`${cs.name}: the hawk is ${hk ? "out" : "in"}, expected ${cs.hawk ? "out" : "in"}`);
+      if (hk) {
+        console.log(`    hawk: on the ${hk.perch === "am" ? "west" : "east"} end of the ridge, ${hk.anims.join(", ") || "still"}`);
+        if (!hk.inside) problems.push(`${cs.name}: the hawk runs off the frame`);
+        if (hk.anims.some((n) => n !== "pnLook")) problems.push(`${cs.name}: the hawk runs ${hk.anims.join(", ")}`);
+      }
     }
 
     // ── Halloween's cobweb, on the glass over the header, clear of every word ──
