@@ -67,8 +67,12 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
    so it closes every counter and the time becomes a blob. */
 .suntime{paint-order:stroke;stroke:var(--off-sky,#F7F4EA);stroke-width:1.3px;
   stroke-linejoin:round;stroke-opacity:.9}
+/* the sides keep clear of a status bar that stands down the edge: folded, the iPhone Duo's cover screen
+   puts it in a column on the camera's side, reported as a side inset and not a top one, and the strip,
+   the stamp and the cobweb ran under it (Josh, October 25 2026, his everyday phone). Everywhere else
+   the side insets are 0 and this is the 20px it always was. The picture still runs edge to edge */
 .sky{position:relative;overflow:hidden;color:var(--on-sky);isolation:isolate;
-  padding:calc(18px + env(safe-area-inset-top)) 20px 0;
+  padding:calc(18px + env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) 0 max(20px,env(safe-area-inset-left));
   background:linear-gradient(180deg,var(--sky1) 0%,var(--sky2) 46%,var(--sky3) 100%);
   transition:background 1.2s var(--ease),color .8s var(--ease)}
 .sky::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
@@ -600,7 +604,7 @@ html[data-theme=dark] .alert-strip{background:#9A3317;box-shadow:0 6px 22px -8px
    transform, the identity (translate3d(0,0,0)), and is its own layer (will-change): starting from none, the
    first move under a finger cost WebKit a frame of 60 to 70ms on the house and on Beaufort, four frames in,
    and carrying it from the start, no frame of a swipe is over 34ms (tools/webkit.mjs swipe) */
-.scene-frame{margin:14px -20px 0;position:relative;z-index:2;transform:translate3d(0,0,0);will-change:transform;touch-action:pan-y;touch-action:pan-y pinch-zoom;
+.scene-frame{margin:14px calc(-1 * max(20px,env(safe-area-inset-right))) 0 calc(-1 * max(20px,env(safe-area-inset-left)));position:relative;z-index:2;transform:translate3d(0,0,0);will-change:transform;touch-action:pan-y;touch-action:pan-y pinch-zoom;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 .scene{position:relative}
 .scene-frame.scene-glide{transition:transform .34s var(--ease)}
@@ -16719,7 +16723,13 @@ function paintCobweb(){
   const boxes=[...typeBoxes(".masthead,.now,#verdict,#chips,#nowcast"),
     ...[...document.querySelectorAll("#chips .chip,#nowcast.on,#alertStrip.on")].map(e=>e.getBoundingClientRect())]
     .filter(b=>b.width&&b.height).map(rel);
-  const W=S.width,plan=webPlan(boxes,{W,top:Math.max(0,...mast.map(b=>b.b)),Rmax:clamp(W*.27,72,128)});
+  /* a status bar standing down the right edge (the iPhone Duo's cover screen) is glass the web cannot be
+     strung across: its corner is the rail's inner edge, which the sky's own padding already keeps */
+  const pr=parseFloat(getComputedStyle(document.getElementById("sky")).paddingRight)||20,rail=pr>20.5?pr:0;
+  el.style.right=rail?rail+"px":"";
+  /* beside the rail the stamp's words end at the corner, with no gutter, so the corner hangs a point under
+     their margin rather than on its very edge */
+  const W=S.width-rail,plan=webPlan(boxes,{W,top:Math.max(0,...mast.map(b=>b.b))+(rail?1:0),Rmax:clamp(W*.27,72,128)});
   if(!plan)return off();
   /* the silk is the sky's own two inks: on a bright sky a pale thread with the sky's dark ink along
      its shadow side, the inked line; on a dark one (night, and a dusk or a dawn dark enough for the

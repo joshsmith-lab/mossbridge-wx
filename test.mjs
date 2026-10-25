@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v140/);
+  assert.match(worker, /mbwx-shell-v141/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -1436,7 +1436,12 @@ test("Denver is a parked travel scene: kept as the template, out of the rotation
   assert.match(html, /drag\.lock=Math\.abs\(dx\)>Math\.abs\(dy\)\?"x":"y"/);
   assert.match(html, /if\(PRM\)\{rest\(\);setLoc\(id\);return\}/);
   assert.doesNotMatch(html, /sceneDots|scene-dots/);
-  assert.match(html, /\.scene-frame\{margin:14px -20px 0;position:relative;z-index:2;transform:translate3d\(0,0,0\);will-change:transform;touch-action:pan-y;/);
+  assert.match(html, /\.scene-frame\{margin:14px calc\(-1 \* max\(20px,env\(safe-area-inset-right\)\)\) 0 calc\(-1 \* max\(20px,env\(safe-area-inset-left\)\)\);position:relative;z-index:2;transform:translate3d\(0,0,0\);will-change:transform;touch-action:pan-y;/);
+  // the sides keep clear of a status bar standing down the edge, the iPhone Duo's cover screen (Josh,
+  // October 25 2026): the header's sides are the larger of 20px and the side inset, the picture still bleeds,
+  // and the cobweb hangs from the rail's edge
+  assert.match(html, /padding:calc\(18px \+ env\(safe-area-inset-top\)\) max\(20px,env\(safe-area-inset-right\)\) 0 max\(20px,env\(safe-area-inset-left\)\);/);
+  assert.match(html, /rail=pr>20\.5\?pr:0;\n  el\.style\.right=rail\?rail\+"px":"";/);
   // the swipe is smooth in WebKit (Josh, October 23 2026: "smooth af"): the frame carries its identity transform
   // and its own layer from the start, the new place is painted while the picture waits off the screen and is drawn
   // in place, all but invisible, before it slides in, the charts' pens wait, and the live forecast is asked for
