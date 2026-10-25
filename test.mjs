@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v138/);
+  assert.match(worker, /mbwx-shell-v139/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -3268,12 +3268,14 @@ test("the page reads top down: now, today, the week, and nothing it has already 
   assert.equal(tell({ time: "2026-08-02T23:10", temperature_2m: 78, weather_code: 2 }), "Warm tonight. Dry through the night.");
   assert.equal(tell({ time: "2026-08-02T19:15", temperature_2m: 35, weather_code: 1 }), "Cold this evening. Dry through the night.");
   assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 88, weather_code: 1, relative_humidity_2m: 80 }), "Warm and soupy with some sun this afternoon.");
-  // a live gust in hour 0 is a windy headline; one later in the day is named by its hour
-  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 3 }, { gust: (i) => (i ? 12 : 30) }), "Windy now.");
-  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 3 }, { gust: (i) => (i === 3 ? 31 : 12) }), "Windy by 4 p.m.");
+  // a live gust in hour 0 is a windy headline; one later in the day is named by its hour. Wind is not the
+  // sky, so the day's own sky is said first (Josh, October 25 2026: "Windy by 9 a.m. --- again - not it.
+  // what's the sun doing?")
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 3 }, { gust: (i) => (i ? 12 : 30) }), "Clouds and sun this afternoon. Windy now.");
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 3 }, { gust: (i) => (i === 3 ? 31 : 12) }), "Clouds and sun this afternoon. Windy by 4 p.m.");
   // it names the first windy hour, not the windiest: gusts of 30 now are windy now, whatever comes at 4
-  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 3 }, { gust: (i) => (i === 0 ? 30 : i === 3 ? 34 : 12) }), "Windy now.");
-  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 3 }, { gust: (i) => (i === 1 ? 29 : i === 4 ? 33 : 12) }), "Windy by 2 p.m.");
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 3 }, { gust: (i) => (i === 0 ? 30 : i === 3 ? 34 : 12) }), "Clouds and sun this afternoon. Windy now.");
+  assert.equal(tell({ time: "2026-08-02T13:00", temperature_2m: 80, weather_code: 3 }, { gust: (i) => (i === 1 ? 29 : i === 4 ? 33 : 12) }), "Clouds and sun this afternoon. Windy by 2 p.m.");
   // A hazard that only comes after dark leaves the day to be said first. October 23 2026 at 5:27 am, a
   // sunny day with the gusts reaching 30 at ten that night, read "Windy by 10 p.m." and nothing else
   // (Josh: "doesn't tell me about today").
@@ -3286,7 +3288,12 @@ test("the page reads top down: now, today, the week, and nothing it has already 
     assert.equal(tell(dawn, { ...sunny, code: (i) => (i === 15 ? 95 : 0) }, undefined, oct23(90)), "Warm and sunny today. Thunder possible around 8 p.m.");
     // a hazard inside the daylight already says the day; one the daylight's own gusts or showers would
     // spoil gets no sky; and from five the evening's own words stand
-    assert.equal(tell(dawn, { ...sunny, gust: (i) => (i >= 10 ? 30 : 16) }, undefined, oct23(90)), "Warm today. Windy by 3 p.m.");
+    assert.equal(tell(dawn, { ...sunny, gust: (i) => (i >= 10 ? 30 : 16) }, undefined, oct23(90)), "Warm and sunny today. Windy by 3 p.m.");
+    // October 25 2026 at 6:38 am: sunny all day, a high of 72, gusts of 31 from nine. A windy day is never nice
+    const oct25 = { time: ["2026-10-25", "2026-10-26"], temperature_2m_max: [72, 70], sunrise: ["2026-10-25T07:24", "2026-10-26T07:25"], sunset: ["2026-10-25T18:24", "2026-10-26T18:23"] };
+    assert.equal(tell({ time: "2026-10-25T06:38", temperature_2m: 56, weather_code: 0 }, { ...sunny, gust: (i) => (i >= 3 ? 31 : 26) }, undefined, oct25), "Sunny today. Windy by 9 a.m.");
+    // a windy day whose sky is not all known says only the wind
+    assert.equal(tell({ time: "2026-10-25T06:38", temperature_2m: 56, weather_code: 0 }, { code: (i) => (i === 6 ? NaN : 0), gust: (i) => (i >= 3 ? 31 : 26) }, undefined, oct25), "Windy by 9 a.m.");
     assert.equal(tell(dawn, { ...sunny, gust: (i) => (i === 8 ? 27 : i >= 17 ? 30 : 16), pop: (i) => (i === 16 ? 60 : i === 6 ? 30 : 5) }, undefined, oct23(90)), "Warm today. Showers possible around 9 p.m.");
     assert.equal(tell({ ...dawn, time: "2026-10-23T17:10", temperature_2m: 66 }, { ...sunny, gust: (i) => (i >= 5 ? 30 : 16) }, undefined, oct23(68)), "Cool this evening. Windy by 10 p.m.");
   }
