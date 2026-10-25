@@ -937,8 +937,24 @@ short arcs, never a bar across the pond. Rain falls in front of the house as wel
 near drops the ridge has, from one helper, `nearRainLayer`), rings the pond and breaks the reflection, a storm
 dims everything under the app's lightning, and fog softens the house and widens the halos.
 
-**Who is out.** Small whitetail does (`whitetail-doe`) on the lawn in front of the fence at dawn and dusk, at
-real size, with a dorsal stripe and a longer neck that nods, and the great blue heron (`great-blue-heron`). Josh, October 23 2026:
+**Who is out.** Small whitetail does (`whitetail-doe`) on the lawn in front of the fence at dawn and dusk, one
+alert and one grazing, the alert one's head nodding now and then. Josh, October 25 2026: "the deer need some
+refinement". They had been a flat body on four posts at its corners, drawn twice as tall as a deer beside that
+fence, in heavy ink, with the white tail flagged up, which is a deer's alarm. So they are drawn as deer now
+(`pnDoeParts`, shared by the still drawing and the nodding one): a deep chest over slim legs set under it, the hind
+leg bent back at the hock, a neck deep at the chest and narrowing to the jaw, a wedge of a head with big ears, the
+white throat patch, eye ring and muzzle band, a white line along the belly, and the tail down, brown over its white
+edge. They are a little smaller (`dS` .38, from .44), their backs about at the fence's top rail, in finer ink
+(line 1.1). A red-tailed hawk (`red-tailed-hawk`, `propPnHawk`) sits a corner of the roof sometimes (Josh, the same
+day: "I'd like a red tailed hawk to be on the corner of the roof sometimes"): on the end of the ridge cap, the west
+end in the morning, from just after sunrise until 11, and the east end late in the afternoon, from 4 until just
+before sunset, so the sun is never behind it and the gulls keep the middle of the day. Each sitting is the day's
+own draw from its date (`pnHawkOut`, pure), about half of them, so a refresh never moves it, and it stays in in
+rain, fog, a storm or thunder, or when the sun or the moon is on its corner. It faces into the wind, the way a hawk
+sits, and outward in a calm, and once in 31 seconds it dips its head to look over the lawn (`pnLook`), its one
+animation, still under reduced motion. What reads at phone size is the upright shape, the cream breast with the
+dark belly band and the brick-red tail hanging below the cap; it is drawn at the heron's licence, about twelve
+units tall, half the heron as a real one is. And the great blue heron (`great-blue-heron`). Josh, October 23 2026:
 "we had a great heron so bring it back", so it is the marsh's own bird and its whole 150-second life (`rigHeron`): two steps, a
 long stand, a look round on its own 97-second clock and one spear, facing into the pond. It first waded the open east water, and
 Josh sent it back the same day: "too deep - it wouldn't be that far out ... need to be believable so closer to shore". So it wades
@@ -990,7 +1006,7 @@ the low sun's glow in the sky; `#sceneSky` the clouds and the gulls (when a gull
 or the glow, those ride over it here, so the stacking stays exact); `#sceneNear` the house, the patio, the
 chairs, the tub, the tree, the surfboard rack and the strands; `#sceneLift` the palms and the two bands of fountain grass as boxes
 the compositor sways (liftKit, shared with Beaufort); `#sceneFront` the fence, the pillars, the pumpkin lights
-and the kid; `#sceneFx` the fire's flame, a pumpkin while its candle flickers, the bats, the
+and the kid; `#sceneFx` the fire's flame, a pumpkin while its candle flickers, the hawk on the ridge, the bats, the
 witch and the near rain with its own mask; `#sceneWater` the low sun's wash, the does, the land fog and the pond; `#sceneRefl` the reflection, its
 fade a CSS mask the compositor applies (an SVG mask there was 81ms of every repaint); `#sceneRipple` the
 short ripples on the water, the rain rings, the sand line and the fountain in front of it; `#sceneTop` the low sun on the water, the heron,

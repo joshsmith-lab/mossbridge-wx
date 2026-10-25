@@ -191,9 +191,12 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
 @keyframes pnDrift{from{transform:translateX(calc(var(--dx,1px) * -1))}to{transform:translateX(var(--dx,1px))}}
 :is(#sceneSvg,.scene-layer) .heron-still *{animation:none!important}
 /* the house animals: a look, a turtle dipping. Transforms and opacity only. */
-:is(#sceneSvg,.scene-layer) :is(.pn-nod,.pn-dip){transform-box:view-box;transform-origin:0 0}
+:is(#sceneSvg,.scene-layer) :is(.pn-nod,.pn-dip,.pn-look){transform-box:view-box;transform-origin:0 0}
 :is(#sceneSvg,.scene-layer) .pn-nod{animation:pnNod 8.5s ease-in-out infinite}
 @keyframes pnNod{0%,72%,100%{transform:rotate(0)}80%{transform:rotate(7deg)}88%{transform:rotate(-2deg)}}
+/* the hawk on the ridge dips its head to look over the lawn, holds, and comes back up: once in 31 seconds */
+:is(#sceneSvg,.scene-layer) .pn-look{animation:pnLook 31s ease-in-out infinite}
+@keyframes pnLook{0%,58%,100%{transform:rotate(0)}62%,75%{transform:rotate(17deg)}79%{transform:rotate(-4deg)}83%{transform:rotate(0)}}
 :is(#sceneSvg,.scene-layer) .pn-dip{animation:pnDip 12s ease-in-out infinite}
 @keyframes pnDip{0%,68%,100%{transform:translateY(0);opacity:1}74%{transform:translateY(2.6px);opacity:.15}80%{transform:translateY(0);opacity:1}}
 @keyframes pnSpray{from{transform:skewX(calc(var(--sk,1deg) * -.4))}to{transform:skewX(var(--sk,1deg))}}
@@ -8420,37 +8423,104 @@ function propPnDial({r=10,letters=false,cx=0,cy=0}={}){
 BFT["pn-dial"]={pal:INK.pnDial,box:[-12,-12,24,24],s:1,dist:.03,o:{line:.6,heavy:.2,shade:.6,lit:.4},ground:false,
   states:{close:{r:10,letters:true},porch:{r:3.4}},draw:st=>propPnDial(st)};
 
-/* A whitetail doe, side on and facing +x: fine-boned, no antlers, slim legs with the hock bent back, a
-   long neck, big ears and the white flag of a tail. About 30 long and 46 tall at the ears; the scene draws
-   her small. `graze` puts her head down to the grass */
-INK.pnDoe={body:"#A9764B",far:"#80583A",belly:"#E9DCC6",white:"#F7F1E6",ear:"#9A6B45",earIn:"#E5CDB2",nose:"#1E161E",eye:"#16111A",hoof:"#2A1B33",
-  ink:"#2A1B33",shade:"#3A2350",lit:"#FFE2A8",shadeOp:.32,litOp:.55};
-function propPnDoe({graze=false}={}){
-  const far=[pTaper([[9,-21,2.4],[9.6,-11,1.25],[9.4,-4,1],[9.8,-.4,1.15]],"far"),pTaper([[-11,-24,3.4],[-13.6,-14,1.6],[-12.4,-5,1],[-12.2,-.4,1.15]],"far")];
-  const hx=graze?20:17,hy=graze?-8:-43;
-  const neck=graze?[[9,-27,5.6],[14,-20,3.6],[18,-11,2.8]]:[[9,-27,5.6],[12.4,-35,3.8],[15.4,-40.5,3]];
-  const head=graze?[[hx-2.4,hy-2.2],[hx+3.6,hy+2.6],[hx+5,hy+4.4],[hx+3.4,hy+5],[hx-1.8,hy+2.4],[hx-3,hy]]:[[hx-2.6,hy-1.6],[hx+1.6,hy-1.4],[hx+6.6,hy+1.4],[hx+6.8,hy+2.6],[hx+5.4,hy+3.2],[hx,hy+2.2],[hx-2.4,hy+1.4]];
-  const ears=graze?[[hx-2.6,hy-1],[hx-6.2,hy-4.6]]:[[hx-1.6,hy-1.8],[hx-3.6,hy-7.4]];
+/* A whitetail doe, side on and facing +x: fine-boned, no antlers, a deep chest over slim legs set under
+   it, the hind leg bent back at the hock, a neck that thickens to the shoulder, a wedge of a head with big
+   ears, the white throat patch, eye ring and muzzle band, a white line along the belly, and the tail down
+   at rest, brown over its white edge (a raised white flag is a deer's alarm, not a doe on a lawn). Josh,
+   October 25 2026: "the deer need some refinement". They had been a flat body on four posts at its
+   corners, the tail flagged. About 34 long and 51 tall at the ears; the scene draws her small. `graze`
+   puts her head down to the grass. The parts are shared by the still drawing and the nodding one */
+INK.pnDoe={body:"#A9764B",far:"#7C5538",belly:"#E9DCC6",white:"#F7F1E6",ear:"#9A6B45",earIn:"#E5CDB2",nose:"#1E161E",eye:"#16111A",hoof:"#2A1B33",
+  tailTop:"#8A5E3C",ink:"#2A1B33",shade:"#3A2350",lit:"#FFE2A8",shadeOp:.32,litOp:.55};
+function pnDoeParts(graze=false){
+  /* the legs: a front leg straight from the elbow, its knee a little forward, and a hind leg from the
+     thigh down the gaskin, back to the hock and forward to the hoof */
+  const front=(x,dx=0)=>[[x+dx,-20,2.3],[x+.4+dx,-10.6,1.15],[x+.5+dx,-2.6,.82],[x+1.1+dx,-.2,.95]];
+  const hind=(x,dx=0)=>[[x+dx,-25,4.2],[x+.6+dx,-17.4,2.2],[x-2.4+dx,-9.8,1.15],[x-1.4+dx,-2.6,.82],[x-.7+dx,-.2,.95]];
+  const far=[pTaper(front(6.2,-1.6),"far"),pTaper(hind(-10.4,2.2),"far")];
   const body=[
-    pBlob([[-14.4,-28.4],[-10,-31.6],[2,-31.4],[9.6,-30.6],[12,-26.2],[10.4,-21.4],[4,-20],[-6,-20.4],[-12.4,-21.6],[-15.2,-24.6]],"body"),
+    pBlob([[-15.6,-26.6],[-14.2,-30.4],[-8.6,-31.6],[-.4,-31],[5.6,-32.4],[9.8,-30.8],[11.8,-26.8],[11.2,-21.6],[8.6,-18.4],[3.8,-18.6],
+      [-2.4,-19.8],[-7.2,-20],[-11.8,-18.4],[-14.8,-21.6]],"body"),
+    pTaper([[-6,-19.4,.9],[1.4,-18.9,1.1],[7,-18.8,.8]],"belly",{},{noSil:true}),
+    pTaper(front(7.6),"body"),
+    pTaper(hind(-9.6),"body"),
+    pTaper([[8.1,-1.5,.95],[8.7,-.2,1.05]],"hoof",{capStart:false}),pTaper([[-11,-1.5,.95],[-10.3,-.2,1.05]],"hoof",{capStart:false}),
+    /* the tail, down: brown over a white edge */
+    pTaper([[-14.6,-29.8,2.2],[-15.9,-27.4,1.7],[-15.8,-25,1]],"white"),
+    pTaper([[-14.4,-30,1.7],[-15.4,-27.6,1.2],[-15.3,-25.8,.5]],"tailTop",{},{noSil:true}),
+  ];
+  const hx=graze?21:15.2,hy=graze?-5:-42;
+  /* a neck that is deep where it leaves the chest and narrows to the jaw */
+  const neck=graze?[[8,-24.6,8.4],[12.8,-19,5.6],[17,-12,3.9],[19.6,-7.2,3.1]]:[[8.4,-24.8,8.6],[11.2,-31.6,5.4],[13.6,-38,3.7]];
+  /* the head, a wedge from the crown to the muzzle, nose down when she grazes */
+  const head=graze?[[hx-3,hy-1.8],[hx-.6,hy-2.6],[hx+2.6,hy+.2],[hx+4.4,hy+3.4],[hx+4.2,hy+4.6],[hx+2.6,hy+4.4],[hx-.8,hy+1.8],[hx-2.8,hy+.6]]
+    :[[hx-2.8,hy-1.6],[hx-.4,hy-2.6],[hx+3,hy-1.4],[hx+6.6,hy+.6],[hx+7.2,hy+1.8],[hx+6.4,hy+2.6],[hx+2.8,hy+2.6],[hx-.4,hy+2.4],[hx-2.6,hy+1.2]];
+  const ear=(bx,by,tx,ty,w=1.9)=>{const nx=-(ty-by),ny=tx-bx,L=Math.hypot(nx,ny),ux=nx/L*w,uy=ny/L*w;
+    return[[bx-ux*.5,by-uy*.5],[(bx+tx)/2-ux,(by+ty)/2-uy],[tx,ty],[(bx+tx)/2+ux,(by+ty)/2+uy],[bx+ux*.5,by+uy*.5]]};
+  const earN=graze?ear(hx-1.6,hy-1.6,hx-6.4,hy-5.2):ear(hx-1.2,hy-2,hx-4.6,hy-8.6),earF=graze?ear(hx-.6,hy-2,hx-4,hy-6.4,1.6):ear(hx+.2,hy-2.4,hx-1.4,hy-8.8,1.6);
+  const inner=e=>[e[0].map((v,i)=>v*.7+e[2][i]*.3),e[1].map((v,i)=>v*.55+e[2][i]*.45),e[2].map((v,i)=>v*.92+e[0][i]*.08),e[3].map((v,i)=>v*.55+e[2][i]*.45)];
+  const look=[
+    pBlob(earF,"far"),
     pTaper(neck,"body"),
     pBlob(head,"body"),
-    pBlob([[ears[0][0],ears[0][1]],[ears[1][0]-1.8,ears[1][1]+1.2],[ears[1][0],ears[1][1]],[ears[1][0]+1.6,ears[1][1]+1.8],[ears[0][0]+1.6,ears[0][1]+.2]],"ear"),
-    pBlob([[ears[0][0]+.3,ears[0][1]-.3],[ears[1][0]-.7,ears[1][1]+1.6],[ears[1][0]+.2,ears[1][1]+1.1],[ears[0][0]+1.1,ears[0][1]-.2]],"earIn",{noSil:true}),
-    pBlob([[-6,-20.6],[4,-20.2],[2,-22.4],[-5,-22.6]],"belly",{noSil:true,op:.85}),
-    pTaper([[8,-21.6,2],[8.4,-11,1.15],[8.2,-4,.95],[8.6,-.4,1.1]],"body"),
-    pTaper([[-9.6,-24,3.4],[-12.4,-13.6,1.55],[-11,-5,.95],[-10.8,-.4,1.1]],"body"),
-    pTaper([[8.2,-1.6,1],[8.6,-.3,1.1]],"hoof",{capStart:false}),pTaper([[-10.9,-1.6,1],[-10.8,-.3,1.1]],"hoof",{capStart:false}),
-    /* the white flag, up */
-    pBlob([[-14.4,-29.2],[-16.6,-33.6],[-15.6,-35.4],[-13.8,-33.4],[-13.4,-30]],"white"),
-    pDot(graze?hx+4.6:hx+6.4,graze?hy+4.6:hy+1.9,.7,"nose",{noSil:true}),
-    pDot(graze?hx+.4:hx+1.8,graze?hy+.6:hy,.55,"eye",{noSil:true}),
-    pBlob(graze?[[hx+3,hy+4.6],[hx+4.4,hy+5],[hx+2,hy+3.6]]:[[hx+3.6,hy+2.6],[hx+5.8,hy+3.1],[hx+3.4,hy+3.4]],"white",{noSil:true}),
+    pBlob(earN,"ear"),
+    pBlob(inner(earN),"earIn",{noSil:true}),
+    /* the white throat patch, the eye ring and the band behind the nose */
+    graze?pBlob([[hx-2.6,hy-.2],[hx-.8,hy+.6],[hx-1.2,hy+2],[hx-2.8,hy+1.2]],"white",{noSil:true})
+      :pBlob([[hx-.6,hy+2.4],[hx+2.4,hy+2.6],[hx+1.6,hy+4],[hx-.4,hy+4.2]],"white",{noSil:true}),
+    pDot(graze?hx+.4:hx+1.4,graze?hy-.4:hy-.4,.72,"white",{noSil:true}),
+    pDot(graze?hx+.5:hx+1.5,graze?hy-.35:hy-.35,.46,"eye",{noSil:true}),
+    graze?pTaper([[hx+2.4,hy+2.6,.7],[hx+3.6,hy+3.2,.6]],"white",{},{noSil:true}):pTaper([[hx+4.6,hy+.6,.8],[hx+5,hy+2.4,.7]],"white",{},{noSil:true}),
+    pDot(graze?hx+4:hx+6.8,graze?hy+4.1:hy+1.3,.62,"nose",{noSil:true}),
   ];
-  return[{parts:far},{parts:body}];
+  return{far,body,look,neck:[7.4,-27.4]};
 }
-BFT["pn-doe"]={pal:INK.pnDoe,box:[-18,-52,44,54],s:.18,dist:.1,o:{line:1.4,heavy:.7,shade:1.6,lit:1.2},
+function propPnDoe({graze=false}={}){const P=pnDoeParts(graze);return[{parts:P.far},{parts:[...P.body,...P.look]}]}
+BFT["pn-doe"]={pal:INK.pnDoe,box:[-18,-54,44,56],s:.18,dist:.1,o:{line:1.1,heavy:.55,shade:1.6,lit:1.2},
   states:{alert:{},graze:{graze:true}},draw:st=>propPnDoe(st)};
+
+/* A red-tailed hawk perched, side on and facing +x, its feet on the perch at the origin: upright, the brick-red
+   tail hanging below the perch, dark brown back and folded wing with pale mottling on the shoulder, a cream
+   breast crossed by the dark belly band, a pale throat, a dark head, a hooked grey beak with its yellow cere,
+   and yellow feet. At phone size what has to read is the upright shape, the pale breast and the red tail.
+   About 31 tall from the tail's tip to the crown. The head turns at the neck (`look`, the joint's open tag) */
+INK.pnHawk={back:"#5C3B26",wing:"#4E3220",head:"#4A2F1F",breast:"#F0E3C8",band:"#5A3A26",spot:"#D9C4A0",tail:"#B4512B",tailBand:"#3E2618",
+  tip:"#EAD9BC",throat:"#F7F1E6",beak:"#3A3436",cere:"#E8C35A",foot:"#E2B840",eye:"#1E140E",ink:"#2A1B33",shade:"#3A2350",lit:"#FFE2A8",shadeOp:.32,litOp:.5};
+function propPnHawk({look=""}={}){
+  const back=[
+    pBlob([[-1.4,-5.2],[-3.4,-5],[-4.5,1.6],[-4.3,7.2],[-2.5,7.7],[-1.2,2.2]],"tail"),
+    pTaper([[-4.4,5.6,.7],[-1.6,5.8,.7]],"tailBand",{},{noSil:true}),
+    pTaper([[-4.3,7,.55],[-2.5,7.4,.5]],"tip",{},{noSil:true}),
+    pTaper([[.5,-3,1.05],[.9,-.8,.75],[1.9,0,.5]],"foot"),
+    pTaper([[-.8,-2.8,.95],[-.6,-.6,.65],[.4,0,.45]],"foot"),
+    pBlob([[-3.4,-6.4],[-4.1,-11.4],[-3.1,-16.6],[-.6,-19.1],[2.4,-18.7],[4.4,-15.7],[4.7,-10.4],[3.5,-5.4],[.9,-2.5],[-1.9,-3]],"back"),
+    pBlob([[-.1,-18.2],[2.6,-17.8],[4.3,-15],[4.6,-10.2],[3.3,-5.4],[.7,-2.9],[-.5,-6.2],[-.3,-12.2]],"breast",{noSil:true}),
+    /* the belly band: a row of short dark streaks across the lower breast, and a few above it */
+    ...[[.3,-9.4],[1.3,-8.6],[2.3,-9.2],[3.2,-8.4],[4,-9]].map(([x,y])=>pTaper([[x,y-.8,.55],[x+.25,y+.7,.38]],"band",{},{noSil:true})),
+    pDot(1.6,-12.4,.3,"band",{noSil:true}),pDot(3,-12.9,.28,"band",{noSil:true}),
+    pBlob([[.7,-17.1],[-2.4,-16.8],[-3.9,-11.1],[-3.5,-5.1],[-2.6,-2.3],[-1.1,-4],[.4,-9.1],[1.2,-14.1]],"wing"),
+    pDot(-1.1,-14.4,.55,"spot",{noSil:true}),pDot(-.2,-12.6,.45,"spot",{noSil:true}),pDot(-2,-11.8,.42,"spot",{noSil:true}),
+  ];
+  const head=[
+    pBlob([[-1.3,-19.3],[-.9,-22.7],[1.6,-24.1],[4,-23.3],[5,-21.3],[4.4,-19.1],[2,-18.2]],"head"),
+    pBlob([[2.7,-19.8],[4.5,-19.6],[4.1,-18.5],[2.5,-18.7]],"throat",{noSil:true}),
+    pBlob([[4.6,-22.3],[6.2,-21.9],[6.7,-20.6],[6.1,-20.1],[5.8,-20.8],[4.8,-20.6]],"beak"),
+    pTaper([[4.65,-22.15,.42],[5.25,-21.85,.34]],"cere",{},{noSil:true}),
+    pDot(3.3,-21.7,.5,"eye",{noSil:true}),
+  ];
+  return[{parts:back},{open:`<g class="pn-look" style="${look}">`,pivot:[1,-18.6],layers:[{parts:head}]}];
+}
+BFT["pn-hawk"]={pal:INK.pnHawk,box:[-6,-26,14,35],s:.3,dist:.04,o:{line:.9,heavy:.45,shade:1.4,lit:1.1},ground:false,
+  states:{perch:{}},draw:st=>propPnHawk(st)};
+/* Whether the hawk sits the ridge this hour, and where: "am" from just after sunrise until 11, "pm" from 4
+   until just before sunset, each the day's own draw from its date, about half of them. Pure */
+function pnHawkOut(day,hour,sunAlt){
+  if(!(sunAlt>=2)||!day)return null;
+  const sit=hour<11?"am":hour>=16?"pm":null;if(!sit)return null;
+  const r=mulberry((+String(day).replace(/-/g,""))^0x4A3B);
+  const am=r()<.5,pm=r()<.5;
+  return sit==="am"&&am||sit==="pm"&&pm?sit:null;
+}
 
 /* The hot tub on the east end of the patio, as Josh's photo has it: a low squarish spa against the house
    wall, a taupe hard cover a little domed with its fold across the middle, panelled sides and a small step.
@@ -10784,31 +10854,8 @@ function pnTurtlesPlan({sunAlt,wet,storm,temp,snowing}){
 }
 /* The house doe: a longer neck on its own joint, a dorsal stripe and a larger throat. */
 function propPnDoeLook({graze=false,phase=""}={}){
-  const nod=`<g class="pn-nod" style="${phase}">`;
-  const far=[pTaper([[9,-21,2.4],[9.6,-11,1.25],[9.4,-4,1],[9.8,-.4,1.15]],"far"),pTaper([[-11,-24,3.4],[-13.6,-14,1.6],[-12.4,-5,1],[-12.2,-.4,1.15]],"far")];
-  const hx=graze?22:18,hy=graze?-7:-48;
-  const neck=graze?[[9,-27,5.2],[15,-18,3.4],[20,-10,2.6]]:[[9,-27,5.2],[13,-38,3.6],[16.2,-46,2.8]];
-  const head=graze?[[hx-2.2,hy-2],[hx+3.8,hy+2.4],[hx+5.2,hy+4.2],[hx+3.2,hy+4.8],[hx-2,hy+2.2],[hx-3.2,hy-.2]]:[[hx-2.4,hy-1.8],[hx+1.8,hy-1.6],[hx+7,hy+1.2],[hx+7.2,hy+2.4],[hx+5.6,hy+3],[hx,hy+2],[hx-2.6,hy+1.2]];
-  const ears=graze?[[hx-2.4,hy-.8],[hx-6.4,hy-4.8]]:[[hx-1.4,hy-2],[hx-3.8,hy-8]];
-  const body=[
-    pBlob([[-14.4,-28.4],[-10,-31.6],[2,-31.4],[9.6,-30.6],[12,-26.2],[10.4,-21.4],[4,-20],[-6,-20.4],[-12.4,-21.6],[-15.2,-24.6]],"body"),
-    pBlob([[-6,-20.6],[4,-20.2],[2,-22.4],[-5,-22.6]],"belly",{noSil:true,op:.85}),
-    pTaper([[8,-21.6,2],[8.4,-11,1.15],[8.2,-4,.95],[8.6,-.4,1.1]],"body"),
-    pTaper([[-9.6,-24,3.4],[-12.4,-13.6,1.55],[-11,-5,.95],[-10.8,-.4,1.1]],"body"),
-    pTaper([[8.2,-1.6,1],[8.6,-.3,1.1]],"hoof",{capStart:false}),pTaper([[-10.9,-1.6,1],[-10.8,-.3,1.1]],"hoof",{capStart:false}),
-    pBlob([[-14.4,-29.2],[-16.6,-33.6],[-15.6,-35.4],[-13.8,-33.4],[-13.4,-30]],"white"),
-    pTaper([[-8,-30.6,.55],[2,-31.2,.8],[10,-29.2,.4]],"white",{},{noSil:true}),
-  ];
-  const look=[
-    pTaper(neck,"body"),
-    pBlob(head,"body"),
-    pBlob([[ears[0][0],ears[0][1]],[ears[1][0]-1.8,ears[1][1]+1.2],[ears[1][0],ears[1][1]],[ears[1][0]+1.6,ears[1][1]+1.8],[ears[0][0]+1.6,ears[0][1]+.2]],"ear"),
-    pBlob([[ears[0][0]+.3,ears[0][1]-.3],[ears[1][0]-.7,ears[1][1]+1.6],[ears[1][0]+.2,ears[1][1]+1.1],[ears[0][0]+1.1,ears[0][1]-.2]],"earIn",{noSil:true}),
-    pDot(graze?hx+4.8:hx+6.6,graze?hy+4.4:hy+1.8,.7,"nose",{noSil:true}),
-    pDot(graze?hx+.6:hx+2,graze?hy+.5:hy-.1,.55,"eye",{noSil:true}),
-    pBlob(graze?[[hx+2.4,hy+3.8],[hx+5.2,hy+4.8],[hx+2.2,hy+2.6]]:[[hx+2.4,hy+1.6],[hx+6.4,hy+2.8],[hx+2.8,hy+3.6]],"white",{noSil:true}),
-  ];
-  return[{parts:far},{parts:body},{open:nod,pivot:[9,-27],layers:[{parts:look}]}];
+  const P=pnDoeParts(graze);
+  return[{parts:P.far},{parts:P.body},{open:`<g class="pn-nod" style="${phase}">`,pivot:P.neck,layers:[{parts:P.look}]}];
 }
 /* A small slider. In the water only the head is drawn. On the bank the shell, the head and the
    tucked legs stay in proportion, and the whole turtle is placed well under the heron. */
@@ -11152,11 +11199,31 @@ function pnPondScene(c){
   const lawn=`<rect x="${f1(-12)}" y="${f1(farY-.4)}" width="${W+24}" height="${f1(sandY-farY+.4)}" fill="url(#pnLawn)"/>`
     +(tex?`<rect x="${f1(-12)}" y="${f1(farY)}" width="${W+24}" height="${f1(sandY-farY)}" fill="${tex}" opacity="${(.6*paperK).toFixed(2)}"/>`:"")
     +`<path d="M ${f1(-12)} ${f1(sandY)} Q ${f1(X(90))} ${f1(sandY-.7)} ${f1(X(180))} ${f1(sandY-.2)} T ${f1(W+12)} ${f1(sandY-.4)} L ${f1(W+12)} ${f1(pondY+.3)} L ${f1(-12)} ${f1(pondY+.3)} Z" fill="${air("#D2C19C",.03)}"/>`;
+  /* ── a red-tailed hawk on a corner of the roof, sometimes. Josh, October 25 2026: "I'd like a red tailed hawk
+     to be on the corner of the roof sometimes". It hunts the lawn from the end of the ridge cap in the morning
+     and again late in the afternoon (the gulls have the middle of the day): the west end in the morning and the
+     east end in the afternoon, so the sun is never behind it. Whether it is out is the day's own draw for each
+     sitting, about half of them (pnHawkOut), so a refresh never moves it, and it stays in in rain, fog, a storm
+     or thunder. It faces into the wind, the way a hawk sits, and outward in a calm, and now and then it dips its
+     head to look over the lawn (pnLook), the one animation it adds, still under reduced motion. It is drawn at
+     the storybook's licence the heron has, about twelve units tall, half the heron's height as a real one is,
+     on the moving sheet over the roof */
+  let hawk="";
+  {const sit=pnHawkOut(locToday(),localHour,sunAltDeg);
+    if(sit&&!wet&&!storm&&!fog&&!THUNDER){
+      const east=sit==="pm",hS=.4,hX=hx+u((east?1:-1)*(BH.ridgeR-2.6)),hY=hy+u(BH.ridge-1.7);
+      const near=(p,r)=>p&&Math.hypot(p[0]-hX,p[1]-(hY-5))<r;
+      if(!near(sunXY,30)&&!near(moonXY,moonR+10)){
+        const flip=gust<6?(east?1:-1):-dw;
+        hawk=`<g class="wildlife hawk-perch" data-species="red-tailed-hawk" data-perch="${sit}">${inkAt(hX,hY,hS,flip,inkRig(propPnHawk({look:phase(31)}),palAt(INK.pnHawk,.04),{s:hS,flip,line:.9,heavy:.45,shade:1.4,lit:1.1,light:lightAt(hX,hY-5)}))}</g>`;
+      }
+    }
+  }
   let deer="",deerMove="";
   if(sunAltDeg> -6&&sunAltDeg<10&&!wet&&!storm){
-    const dS=.44,dY=Y(155.5),dPal=palAt(INK.pnDoe,.04);
+    const dS=.38,dY=Y(155.5),dPal=palAt(INK.pnDoe,.04);
     const doe=(x,graze,flip,rig)=>castShadow(flatParts(rig),x,dY,dS,flip)
-      +`<g class="wildlife doe" data-species="whitetail-doe">${inkAt(x,dY,dS,flip,inkRig(rig,dPal,{s:dS,flip,line:1.4,heavy:.7,shade:1.6,lit:1.2,light:lightAt(x,dY-6)}))}</g>`;
+      +`<g class="wildlife doe" data-species="whitetail-doe">${inkAt(x,dY,dS,flip,inkRig(rig,dPal,{s:dS,flip,line:1.1,heavy:.55,shade:1.6,lit:1.2,light:lightAt(x,dY-6)}))}</g>`;
     const ph=phase(8.5);
     deerMove=doe(X(108),false,1,propPnDoeLook({phase:ph}))+doe(X(216),true,-1,propPnDoeLook({graze:true,phase:ph}));
   }
@@ -11411,7 +11478,7 @@ function pnPondScene(c){
   const landPaint=()=>{sheet("sceneNear").innerHTML=`${lawn}${farWood}${house}${sunGlint}${patio}${sunGround}${boards}${fireLight}${chairsBack}${fireStill}${chairs}${tub}${tree}${swagMid}${peek}`;
   document.getElementById("sceneLift").innerHTML=grassLift+PALMS.map(palmLift).join("");
   sheet("sceneFront").innerHTML=fence+(guttering?"":pumpkins)+gateKid+(guttering?"":gateLanterns);
-  sheet("sceneFx").innerHTML=fireWash+fireFlame+(guttering?pumpkins+gateLanterns:"")+bats+witchFly(witch)+(nearRainL?`<defs>${nearRainL.defs}</defs>${nearRainL.drops}`:"")+tubFx};
+  sheet("sceneFx").innerHTML=fireWash+fireFlame+(guttering?pumpkins+gateLanterns:"")+hawk+bats+witchFly(witch)+(nearRainL?`<defs>${nearRainL.defs}</defs>${nearRainL.drops}`:"")+tubFx};
   const waterPaint=()=>{sheet("sceneWater").innerHTML=`
       ${glowK>.02?`<g data-light="side-wash" mask="url(#pnFadeIn)"><rect x="${f1(-12)}" y="${f1(Y(14))}" width="${W+24}" height="${f1(sandY-Y(14))}" fill="url(#pnSideWash)" opacity="${(.3*glowK).toFixed(2)}"/>`
         +`<rect x="${f1(-12)}" y="${f1(Y(14))}" width="${W+24}" height="${f1(hy-Y(14)+1)}" fill="url(#pnSideWash)" clip-path="url(#pnHouseClip)" opacity="${(.32*glowK).toFixed(2)}"/></g>`:""}
