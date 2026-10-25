@@ -2440,6 +2440,16 @@ The fuller scene earns its playfulness from the existing drawings and their beha
     (`codeAt`), so a cloudy reading never sits beside `Nice and sunny this afternoon.` And a wet
     sky at an hour with odds under 25, every reading known, is `Maybe a stray shower.` (`lowWet`,
     `stray`), never `Forecast details unavailable.`, which is for real gaps.
+- **The sides keep clear of a status bar that stands down the edge (October 25 2026).** Folded, the iPhone Duo's
+  cover screen (466 by 678 points, Josh's everyday phone) puts the status bar in a column on the camera's side,
+  and a web page is told about it as a side safe-area inset (about 84 points), not a top one. The page only kept
+  the top and bottom insets, so the warning strip, the live stamp and the cobweb ran under the column. The
+  header's sides are now the larger of 20px and the side inset (`.sky`), and the picture still runs edge to edge
+  (`.scene-frame`'s margins take the same sum back). The cobweb's corner is the rail's inner edge
+  (`paintCobweb`'s `rail`, read off the sky's own padding), a point under the stamp's margin there, because
+  beside the rail the stamp's words end at the corner with no gutter. Everywhere else the side insets are 0 and
+  the page is what it was. There is no Duo to test on here: Chrome's `Emulation.setSafeAreaInsetsOverride` at
+  466 by 678 with a right inset of 84 is how it was checked.
 - **The paper is worked out, never read back (October 21 2026).** `render()` read the paper (`--paper`,
   `--wash`, `--line`) back with `getComputedStyle` just after setting the sky's colours, which made the browser
   restyle the whole page to answer, Beaufort's five to six thousand picture nodes with it. On a cached open,
