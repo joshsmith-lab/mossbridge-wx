@@ -10898,7 +10898,9 @@ function pnPondScene(c){
     return Object.assign(o,{ink:inkAir(d),shade:shadeC,lit:litC,litOp:(pal.litOp??.5)*litK,shadeOp:(pal.shadeOp??.32)*shadeK})};
   const lit=pnHouseLights(sunAltDeg,localHour,localMin,rising);
   const lightsOn=lit.windows,strandsOn=lit.strands,pumpOn=lit.pumpkins,fnLit=lit.fountain;
-  const fireOn=strandsOn&&localHour>=15&&temp>=45&&temp<68&&!wet&&!storm&&!fog&&gust<20&&!THUNDER;
+  /* it is a gas fire table, so it holds in a breeze: Josh, October 24 2026, out at it on a night gusting 31,
+     "bump the gusts to 33... it's a gas pit and we were out there tonight". It had gone out at 20 */
+  const fireOn=strandsOn&&localHour>=15&&temp>=45&&temp<68&&!wet&&!storm&&!fog&&gust<33&&!THUNDER;
   /* the cover stays on until the fire is lit, and only in season, October 20 through April 15.
      Open, it steams, and one wash crosses the water, lagoon then moon blue */
   const tubSeason=pnTubSeason(locToday());
