@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v141/);
+  assert.match(worker, /mbwx-shell-v142/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -6562,6 +6562,13 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.doesNotMatch(html, /propPnFarmhouse|INK\.pnFarmhouse/);
   // a sabal, a windmill palm and a sabal at each end, the windmill between the sabals, the strands a V from the door to the inner sabals
   assert.match(fn, /const PALMS=\[\[26,"s",7,47,-\.04\],\[39,"w",2,20\],\[52,"s",8,51,\.03\],\[266,"s",9,50,-\.03\],\[282,"w",1,20\],\[298,"s",10,46,\.05\]\]/);
+  // the house's four sabals wear the woven jacket of Josh's own (November 2 2026), a stouter trunk under crossed
+  // straps most of the way down; Beaufort's palmettos never ask for it, so theirs are drawn as they were
+  assert.match(fn, /rigBftPalmetto\(seed,\{h:th,lean,boots:\.74,woven:true,wind:pw\}\)/);
+  assert.match(html, /function bftPalmTrunk\(h,lean,boots,r,young,woven=false\)\{/);
+  assert.match(html, /const stout=woven\?1\.32:1,/);
+  assert.match(html, /if\(!woven\)for\(let y=tb\*h\+\(young\?2\.2:2\.8\);y<h-2\.6;row\+\+\)\{/);
+  assert.equal((html.match(/woven:true/g) || []).length, 1, "only the house's sabals are woven");
   // the palms are planted in the bed behind the fence, not on the lawn in front of it (Josh, October 23 2026),
   // and their trunks are that much shorter, so the crowns stand where they stood
   assert.match(fn, /const pw=bftPalmWind\(gust,downwind\),ps=\.9,PALM_BACK=3;/);

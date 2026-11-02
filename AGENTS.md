@@ -868,7 +868,10 @@ its two white pillars ("the white stanchions should mark the limit of the fence"
 straight down from the back door, fountain grass along the inside of the fence up to the gate (the palms are
 planted in that bed, their feet three units behind the fence's foot so their trunks go down behind its bottom
 rail: Josh, October 23 2026, "the tree bases are a bit off? perhaps outside the fence?", and they had stood a
-unit out on the front lawn; the trunks are three units shorter, so the crowns did not move), the lawn,
+unit out on the front lawn; the trunks are three units shorter, so the crowns did not move, and the four sabals
+wear the crossed boots of Josh's own: November 2 2026, with a photo, "a bit more detail in the main four palms
+trunks", so they are a third stouter and booted about three quarters of the way down, pale straps crossing over
+dark diamonds, `woven`, which Beaufort's palmettos do not ask for and the windmill palms do not wear), the lawn,
 the sand, and the pond with its aerating fountain on the door's line ("directly center on the house/door").
 The frame is mostly house with a little room each side: the neighbours are close, so none are drawn ("drop
 reference to other houses around it because the fact is they are very close"). It is laid out in a 320 by
@@ -2449,7 +2452,14 @@ The fuller scene earns its playfulness from the existing drawings and their beha
   (`paintCobweb`'s `rail`, read off the sky's own padding), a point under the stamp's margin there, because
   beside the rail the stamp's words end at the corner with no gutter. Everywhere else the side insets are 0 and
   the page is what it was. There is no Duo to test on here: Chrome's `Emulation.setSafeAreaInsetsOverride` at
-  466 by 678 with a right inset of 84 is how it was checked.
+  466 by 678 with a right inset of 84 is how it was checked. On November 2 2026 Josh sent the other way the phone
+  does it: the page laid out 382 points wide with no inset at all, and the 84 beside it a solid band in the page's
+  background colour, the status bar on it. Apple's Duo guidance says a closed-up app uses the space to the left of
+  the status bar and camera, and only an app built with Xcode for iOS 27.1 reaches the screen's edge, and a web
+  page has no such setting (`viewport-fit=cover` is already on). The band takes one flat colour, so the paper is
+  what it stays, which matches everything under the sky. A strip painted out past the viewport was not tried,
+  since a page that pans sideways or zooms out on Josh's phone could not be checked from here. At 382 the page
+  itself is right: it is an ordinary phone width, and the picture scales to fit it.
 - **The paper is worked out, never read back (October 21 2026).** `render()` read the paper (`--paper`,
   `--wash`, `--line`) back with `getComputedStyle` just after setting the sky's colours, which made the browser
   restyle the whole page to answer, Beaufort's five to six thousand picture nodes with it. On a cached open,
