@@ -28,7 +28,17 @@ const SEP = { sunrise: "07:03", sunset: "19:10", popCurve: () => 4, dailyPop: (p
 const OCT = { sunrise: "07:27", sunset: "18:23", popCurve: () => 4, dailyPop: (p) => p.fill(8), uvMax: 4 };
 const HAL = { sunrise: "07:32", sunset: "18:16", popCurve: () => 4, dailyPop: (p) => p.fill(8), uvMax: 4 };
 const calm = { windAmp: 2, gustAmp: 1 };
+/* November at the house, the Christmas tree up in the panel beside the screen door */
+const NOV = { sunrise: "06:35", sunset: "17:13", popCurve: () => 4, dailyPop: (p) => p.fill(8), uvMax: 3 };
 const TIMES = [
+  /* the night Josh asked for it: 7 pm, 71 and cloudy, the bulbs lit with the windows */
+  { name: "xmas-night", main: true, when: "2026-11-06T19:00:00",
+    o: { ...NOV, baseTemp: 72, nowTemp: 71, feels: 75, rh: 84, isDay: 0, code: 3, cloud: 100, nowWind: 8, nowDir: 120, nowGust: 17, nowUv: 0, ...calm } },
+  { name: "xmas-day", when: "2026-11-07T13:00:00",
+    o: { ...NOV, baseTemp: 64, nowTemp: 63, feels: 63, rh: 50, isDay: 1, code: 1, cloud: 18, nowWind: 6, nowDir: 330, nowGust: 11, nowUv: 3, ...calm } },
+  /* after 10:30 the windows and the tree are out */
+  { name: "xmas-late", when: "2026-11-06T23:00:00",
+    o: { ...NOV, baseTemp: 66, nowTemp: 64, feels: 64, rh: 86, isDay: 0, code: 3, cloud: 100, nowWind: 6, nowDir: 120, nowGust: 12, nowUv: 0, ...calm } },
   { name: "sep-noon", main: true, when: "2026-09-23T13:10:00",
     o: { ...SEP, baseTemp: 78, nowTemp: 82, feels: 84, rh: 58, isDay: 1, code: 1, cloud: 22, nowWind: 7, nowDir: 200, nowGust: 12, nowUv: 6.1, windAmp: 4, gustAmp: 5 } },
   { name: "sep-dusk", main: true, when: "2026-09-23T19:26:00",
