@@ -1006,7 +1006,10 @@ from November 6 the family's tree stands inside that panel (`pnXmasTree`, `data-
 presses it into the reflection with the house): a big tree that fills the window, five tiers and a star, the star
 just under the head of the glass and the lowest boughs past both edges of the pane and down to the sill (Josh, the
 same evening: "it's larger and fills the window more"), clipped to the glass and seen through the porch screen the
-way the panel is, and some seventy soft white bulbs, seeded, never on top of one another. At a few pixels it reads as a tree of lights. The bulbs keep the windows' hours (`pnHouseLights`):
+way the panel is. The glass ends at the top of the porch's white rail (-4.8 in the house's units; the panel is
+drawn on to -4.2 behind the rail), so the tree is cut there and the rail stands in front of its foot: drawn after the
+house and cut at -4.2, its lowest boughs and the screen's veil lay over the rail, and Josh, the next morning: "the
+bottom edge seems to be overhanging the outside ledge. the tree is inside". It has some seventy soft white bulbs, seeded, never on top of one another. At a few pixels it reads as a tree of lights. The bulbs keep the windows' hours (`pnHouseLights`):
 lit with a soft white halo from sunset to 10:30, on and quieter by day, and out after 10:30 with the windows, when
 the tree is a dark shape in a dark pane. It adds no animation. It is a row in `HOLIDAYS`, `christmas`, from
 November 6 to January 6 (when it comes down is Josh's to say; January 6 is a stand-in until he does), and it is

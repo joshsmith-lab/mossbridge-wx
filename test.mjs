@@ -1505,7 +1505,9 @@ test("the scenes dress for the holidays and take it all down when they pass", as
   assert.match(html, /const christmas=hol\?\.id==="christmas";/);
   // it is inside, in the tall panel beside the screen door, its bulbs on the windows' hours
   assert.match(html, /function pnXmasTree\(hx,hy,S,B,/);
-  assert.match(html, /const\[a0,a1\]=B\.panel,top=B\.porchEave\+1\.4\+2\.2,bot=-4\.2/);
+  // the glass ends at the top of the porch rail, and the tree stays behind it (Josh, November 7 2026)
+  assert.match(html, /const\[a0,a1\]=B\.panel,top=B\.porchEave\+1\.4\+2\.2,bot=-4\.8/);
+  assert.match(html, /pnRect\(p0,-4\.8,d0,-3\.6,"post"\)/);
   assert.match(html, /const xmas=christmas\?pnXmasTree\(hx,hy,S,BH,\{lit:lightsOn,night:houseNight,/);
   assert.match(html, /data-decor="christmas-tree"/);
   assert.equal((html.match(/\$\{house\}\$\{xmas\}/g) || []).length, 2);

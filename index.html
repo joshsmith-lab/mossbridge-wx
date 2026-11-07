@@ -10881,9 +10881,12 @@ function pnPeekGhost(hx,hy,S,B){
    star and its bulbs, clipped to the glass and seen through the porch's screen like the panel itself.
    The bulbs keep the windows' hours: lit soft white from sunset to 10:30, quieter by day, out after. */
 function pnXmasTree(hx,hy,S,B,{lit=false,night=false,tone=c=>c,screen="#4C525A"}={}){
-  const[a0,a1]=B.panel,top=B.porchEave+1.4+2.2,bot=-4.2,cx=(a0+a1)/2;
+  /* the glass ends at the top of the porch's white rail (-4.8): the panel is drawn on to -4.2 behind it, and
+     the tree is inside, so nothing of it may cross the rail (Josh, November 7 2026: the bottom "seems to be
+     overhanging the outside ledge. the tree is inside") */
+  const[a0,a1]=B.panel,top=B.porchEave+1.4+2.2,bot=-4.8,cx=(a0+a1)/2;
   /* the real one is big and fills the window (Josh: "it's larger and fills the window more"): its star
-     just under the head of the glass, its lowest boughs past both edges of the pane and down to the sill */
+     just under the head of the glass, its lowest boughs past both edges of the pane and down behind the rail */
   const tip=top+.9,base=bot+.2,Ht=base-tip,hw=(a1-a0)/2+.7;
   /* a full tree, broad through the middle rather than a straight cone */
   const wAt=y=>hw*Math.pow(Math.max(0,(y-tip)/Ht),.68),n=v=>v.toFixed(2);
