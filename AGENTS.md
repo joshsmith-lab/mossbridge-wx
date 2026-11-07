@@ -499,7 +499,8 @@ drawing to both views.
 ## Holidays
 
 In September 2026 Josh asked for the scenes to be decorated for the holidays, with the
-decorations coming down once each holiday passes. Halloween is the first.
+decorations coming down once each holiday passes. Halloween is the first. Christmas is the second: the tree inside the house
+at Porters Neck from November 6 (see Christmas, under Porters Neck).
 
 Since October 21 2026 Porters Neck's scene is the house across the pond. The coast's notes below (the dock's
 pumpkins, Ghostface in the oak, the cat on the dock, the eyes in the spartina, the marsh lights, the kid on the
@@ -997,6 +998,20 @@ from the carving day by the candle rules (`pumpkin`, `white-pumpkin`, then `jack
 at the gate, Ghostface a dim layer clipped inside the glass of the rightmost east window, which is drawn with the same sash as the other three (the same frame, the same meeting rail, the same glass and the same light at every hour), clear of those bars, with no extra window parts and no vertical bar (he lived in the marsh's oak, October only, and he stays after the lamps go out at 10:30), and on Halloween
 night the trick-or-treater at the gate, on its own rules. With nobody's cormorant on a dock, the kid is out
 from sunset (the marsh's raw-dusk case kept the kid off the dock; the house's, case 48, has it at the gate).
+
+**Christmas.** Josh, November 6 2026, with a screenshot and the tall panel beside the screen door circled: "add a
+christmas tree (it's inside) in the window circled. glows soft white with many bulbs. it's up, so add it now." So
+from November 6 the family's tree stands inside that panel (`pnXmasTree`, `data-decor="christmas-tree"`, on
+`#sceneNear` right after the house, so the surfboards, the chairs and the strands stand in front of it and the pond
+presses it into the reflection with the house): a big tree that fills the window, five tiers and a star, the star
+just under the head of the glass and the lowest boughs past both edges of the pane and down to the sill (Josh, the
+same evening: "it's larger and fills the window more"), clipped to the glass and seen through the porch screen the
+way the panel is, and some seventy soft white bulbs, seeded, never on top of one another. At a few pixels it reads as a tree of lights. The bulbs keep the windows' hours (`pnHouseLights`):
+lit with a soft white halo from sunset to 10:30, on and quieter by day, and out after 10:30 with the windows, when
+the tree is a dark shape in a dark pane. It adds no animation. It is a row in `HOLIDAYS`, `christmas`, from
+November 6 to January 6 (when it comes down is Josh's to say; January 6 is a stand-in until he does), and it is
+the house's alone. `tools/pond.mjs` shoots it the night he asked (`xmas-night`, 7 pm, 71 and cloudy), by day and
+after 10:30.
 
 **Left out, and why.** The golf cart (`pnCart` is kept, placed nowhere): at this crop both edges are palms and
 there is no honest place to park it. The neighbours' houses and the pines, which made the house read as

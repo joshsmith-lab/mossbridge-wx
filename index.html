@@ -1359,7 +1359,8 @@ const inSeason=(d,r)=>{if(!r)return false;const md=mdOf(d);return r[0]<=r[1]?md>
    lamps and the candles are lit (the small hours before dawn on the 31st are the 30th's night, so
    the place's own clock has to be past noon), and stays in when it rains: a drizzle does not keep a kid in,
    rain and anything heavier does, and so do snow, ice and a storm. */
-const HOLIDAYS=[{id:"halloween",window:["10-01","10-31"],carved:"10-24",trickOrTreat:"10-31"}];
+/* Christmas: the tree went up at the house on November 6 2026 (Josh: "it's up, so add it now") */
+const HOLIDAYS=[{id:"halloween",window:["10-01","10-31"],carved:"10-24",trickOrTreat:"10-31"},{id:"christmas",window:["11-06","01-06"]}];
 const holidayOn=d=>HOLIDAYS.find(h=>inSeason(d,h.window))||null;
 const trickOrTreating=(hol,d,sunAlt,code,hour)=>!!hol?.trickOrTreat&&mdOf(d)===hol.trickOrTreat&&hour>=12&&sunAlt< -.83&&(!isWet(code)||[51,53,55].includes(code));
 /* Halloween's moon, Josh's pick (October 3 2026: "a creepy blood moon ... or harvest moon"). For
@@ -9364,6 +9365,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
      in 2026 is Halloween night into November 1 */
   const today=locToday(),hol=holidayOn(today),halloween=hol?.id==="halloween";
   const carved=halloween&&mdOf(today)>=hol.carved;
+  const christmas=hol?.id==="christmas";
   const candles=carved&&sunAltDeg< -.83&&!wet&&!storm;
   const trickOrTreat=trickOrTreating(hol,today,sunAltDeg,code,localHour);
   const decorPal=(p,d,lit=false)=>{const o={};for(const[k,v]of Object.entries(p))o[k]=typeof v==="string"&&v[0]==="#"?air(v,d):v;
@@ -10376,7 +10378,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
       skyS,goldK,rising,nightK,gloom,tone,hazeC,air,lineC,inkAir,shadeC,texOn,paperK,arc,goldArc,sunBody,moonBody,sunTimes,houseSun,
       glintX,glintCol,glintOp,sunXY,moonXY,moonR,veil,lightAt,litC,litK,shadeK,inkPal,castShadow,flatParts,phase,
       chopK,wDur,windFrom,downwind,BANDS,bandAmp,waveDelay,bandOf,specular,rainK,cloudShadows,ringAt,flightBird,showFlies,flyCount,crabAt,thunder:THUNDER,
-      halloween,carved,candles,trickOrTreat,nightEyes,batN,batColony,batKeep,witchPlan,witchFly,pumpkinAt,catAt,kidAt,darkEyes,hallowDefs,candleDefs,moonR,deerAt,carved,candles,warned});
+      halloween,carved,candles,trickOrTreat,nightEyes,batN,batColony,batKeep,witchPlan,witchFly,pumpkinAt,catAt,kidAt,darkEyes,hallowDefs,candleDefs,moonR,deerAt,carved,candles,warned,christmas});
     andThen(commit({sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05}));return;
   }
   if(LOC.scene==="lowcountry"){
@@ -10873,6 +10875,48 @@ function pnPeekGhost(hx,hy,S,B){
      ahead of it has an empty box that reads as off the frame */
   return `<g class="decor" data-decor="ghostface" data-peek="window" data-win="${f1(X(w0-1.4))} ${f1(Y(t-2.2))} ${f1(X(w1+1.4))} ${f1(Y(b+1.3))}" data-pane="${f1(x0)} ${f1(yT)} ${f1(x1)} ${f1(yB)}"><g clip-path="url(#${id})"><g opacity=".46">${inkAt(hx+cx*S,hy+sy*S,S*gs,1,fig)}</g></g><defs><clipPath id="${id}">${clip(t+shade,m-rail)}${clip(m+rail,b-inset)}</clipPath></defs></g>`;
 }
+/* The family's Christmas tree, inside, in the tall panel beside the screen door (Josh, November 6 2026:
+   "add a christmas tree (it's inside) in the window circled. glows soft white with many bulbs. it's up,
+   so add it now"). The panel is about seven pixels wide on a phone, so the tree is a tiered cone and a
+   star and its bulbs, clipped to the glass and seen through the porch's screen like the panel itself.
+   The bulbs keep the windows' hours: lit soft white from sunset to 10:30, quieter by day, out after. */
+function pnXmasTree(hx,hy,S,B,{lit=false,night=false,tone=c=>c,screen="#4C525A"}={}){
+  const[a0,a1]=B.panel,top=B.porchEave+1.4+2.2,bot=-4.2,cx=(a0+a1)/2;
+  /* the real one is big and fills the window (Josh: "it's larger and fills the window more"): its star
+     just under the head of the glass, its lowest boughs past both edges of the pane and down to the sill */
+  const tip=top+.9,base=bot+.2,Ht=base-tip,hw=(a1-a0)/2+.7;
+  /* a full tree, broad through the middle rather than a straight cone */
+  const wAt=y=>hw*Math.pow(Math.max(0,(y-tip)/Ht),.68),n=v=>v.toFixed(2);
+  /* five tiers, each skirt flaring out and stepping back in under the next */
+  const tiers=[.2,.4,.6,.8,1].map(f=>tip+f*Ht);
+  /* each side from the tip down; the shaded west half and the lit east half are filled apart */
+  const side=s=>{let p=`M ${n(cx)} ${n(tip)}`;
+    tiers.forEach((y,i)=>{const w=wAt(y)*s,y0=i?tiers[i-1]:tip;
+      p+=` Q ${n(cx+w*.82)} ${n((y0+y)/2+.6)} ${n(cx+w)} ${n(y)}`+(i===tiers.length-1?"":` L ${n(cx+w*.6)} ${n(y-.25)}`)});
+    return p};
+  const L=side(-1),rp=side(1);
+  const fir=tone(lit?"#1F3A2A":"#3A6448"),firDk=tone(lit?"#14281D":"#2A4C36"),inkC=tone("#14201A");
+  const green=`<path d="${L} L ${n(cx)} ${n(base)} Z" fill="${firDk}"/><path d="${rp} L ${n(cx)} ${n(base)} Z" fill="${fir}"/>`
+    +`<path d="${L} L ${n(cx+wAt(base))} ${n(base)}" fill="none" stroke="${inkC}" stroke-width=".22" stroke-linejoin="round" opacity=".7"/>`
+    +`<path d="${rp}" fill="none" stroke="${inkC}" stroke-width=".22" stroke-linejoin="round" opacity=".7"/>`
+    +``;
+  /* many bulbs, scattered through the cone and never on top of one another; every draw is seeded */
+  const rr=mulberry(1225),bulbs=[];
+  for(let k=0;k<800&&bulbs.length<70;k++){const y=tip+1+rr()*(Ht-1.6),w=Math.min(wAt(y)-.3,(a1-a0)/2-.2),x=cx+(rr()*2-1)*w;
+    if(w>0&&bulbs.every(([bx,by])=>Math.hypot(bx-x,by-y)>.58))bulbs.push([x,y])}
+  const on=lit||!night,op=lit?1:.55;
+  const halo=lit?`<ellipse cx="${n(cx)}" cy="${n((tip+base)/2+1)}" rx="${n(hw+.9)}" ry="${n(Ht/2+1.2)}" fill="#FFF6E2" opacity=".2"/>`
+    +bulbs.map(([x,y])=>`<circle cx="${n(x)}" cy="${n(y)}" r=".62" fill="#FFF4D8" opacity=".32"/>`).join(""):"";
+  const dots=on?bulbs.map(([x,y])=>`<circle cx="${n(x)}" cy="${n(y)}" r=".24" fill="${lit?"#FFFBEF":"#FFF1CE"}" opacity="${op}"/>`).join(""):"";
+  /* a small star at the top, soft white like the bulbs */
+  const st=[];for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?.32:.78;st.push(`${n(cx+Math.cos(a)*r)} ${n(tip-.15+Math.sin(a)*r)}`)}
+  const star=`<path d="M ${st.join(" L ")} Z" fill="${on?(lit?"#FFF6DA":"#F4E2B0"):tone("#9A8A60")}" stroke="${inkC}" stroke-width=".12" opacity="${on?1:.8}"/>`;
+  const id="pnXmasClip";
+  /* the clipped tree is the first child, for the scene harness's measure, as the ghost's is */
+  return `<g class="decor" data-decor="christmas-tree" data-lit="${lit?1:0}"><g clip-path="url(#${id})"><g transform="translate(${f1(hx)} ${f1(hy)}) scale(${S})">${halo}${green}${dots}${star}`
+    +`<rect x="${n(a0)}" y="${n(top)}" width="${n(a1-a0)}" height="${n(bot-top)}" fill="${screen}" opacity="${lit?.12:.22}"/></g></g>`
+    +`<defs><clipPath id="${id}"><rect x="${f1(hx+a0*S)}" y="${f1(hy+top*S)}" width="${f1((a1-a0)*S)}" height="${f1((bot-top)*S)}"/></clipPath></defs></g>`;
+}
 /* Shoulder line at the meeting rail, hood top just inside the top of the glass, head tipped the
    way he cocks it. y=0 is the shoulder. The robe is left unrotated so it hangs straight. */
 function pnWindowGhost(){
@@ -10979,7 +11023,7 @@ function pnPondScene(c){
   const{W,H,GY,sunAltDeg,localHour,localMin,month,cloud,wind,gust,code,wet,snowing,storm,fog,temp,dark,
     skyS,goldK,rising,nightK,gloom,tone,air,lineC,inkAir,shadeC,texOn,paperK,arc,goldArc,sunBody,moonBody,sunTimes,houseSun="",
     sunXY,moonXY,veil,lightAt,litC,litK,shadeK,inkPal,castShadow,flatParts,phase,chopK,windFrom,downwind,rainK,
-    halloween,carved,candles,trickOrTreat,batN,batColony,batKeep,witchPlan,witchFly,pumpkinAt,hallowDefs,candleDefs,moonR,warned=false}=c;
+    halloween,carved,candles,trickOrTreat,batN,batColony,batKeep,witchPlan,witchFly,pumpkinAt,hallowDefs,candleDefs,moonR,warned=false,christmas=false}=c;
   let turtleBits="";
   const ox=(W-320)/2,oy=H-194,X=x=>x+ox,Y=y=>y+oy;
   /* the house's scale: about three fifths of the frame's width at 390 */
@@ -11049,6 +11093,8 @@ function pnPondScene(c){
   /* in October Ghostface is a dim layer inside the rightmost east window's own glass, and he
      stays after the lamps go out: he is a decoration, not a light, and he adds no window parts */
   const peek=halloween?pnPeekGhost(hx,hy,S,BH):"";
+  /* from November 6 the family's Christmas tree stands inside the tall panel beside the screen door */
+  const xmas=christmas?pnXmasTree(hx,hy,S,BH,{lit:lightsOn,night:houseNight,tone,screen:hPal.screen}):"";
 
   /* ── the palms at the fence. Each end of the house is the same group: a sabal, a windmill palm low
      between them, and a sabal, the west group mirroring the east. Each sways from its foot with the gusts.
@@ -11279,7 +11325,7 @@ function pnPondScene(c){
 
   /* ── the land, back to front; the reflection is the same picture turned over at the water and pressed
      shorter (k), the storybook's licence, so the porch's lights are doubled inside the frame */
-  const standing=`${farWood}${house}${patio}${boards}${fireLight}${chairsBack}${fire}${chairs}${tub}${tree}${swagMid}${peek}`
+  const standing=`${farWood}${house}${xmas}${patio}${boards}${fireLight}${chairsBack}${fire}${chairs}${tub}${tree}${swagMid}${peek}`
     +grasses+PALMS.map((P,i)=>palmSvg(P,i===2?swagL:i===3?swagR:"")).join("")+`${fence}${pumpkins}`;
   /* the copy holds still (its animations come off) and its light on the water is the flame's orange */
   /* a still picture: no style that moves it, no class (so no candle flickers in the water), no data name
@@ -11524,7 +11570,7 @@ function pnPondScene(c){
     </defs>
     ${houseSun}${skyOver?"":sunBody+moonShown+sideSky}`;
   sheet("sceneSky").innerHTML=gulls+(skyOver?sunBody+moonShown+sideSky:"")+sceneClouds};
-  const landPaint=()=>{sheet("sceneNear").innerHTML=`${lawn}${farWood}${house}${sunGlint}${patio}${sunGround}${boards}${fireLight}${chairsBack}${fireStill}${chairs}${tub}${tree}${swagMid}${peek}`;
+  const landPaint=()=>{sheet("sceneNear").innerHTML=`${lawn}${farWood}${house}${xmas}${sunGlint}${patio}${sunGround}${boards}${fireLight}${chairsBack}${fireStill}${chairs}${tub}${tree}${swagMid}${peek}`;
   document.getElementById("sceneLift").innerHTML=grassLift+PALMS.map(palmLift).join("");
   sheet("sceneFront").innerHTML=fence+(guttering?"":pumpkins)+gateKid+(guttering?"":gateLanterns);
   sheet("sceneFx").innerHTML=fireWash+fireFlame+(guttering?pumpkins+gateLanterns:"")+hawk+bats+witchFly(witch)+(nearRainL?`<defs>${nearRainL.defs}</defs>${nearRainL.drops}`:"")+tubFx};

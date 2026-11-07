@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v142/);
+  assert.match(worker, /mbwx-shell-v143/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -1496,6 +1496,19 @@ test("the scenes dress for the holidays and take it all down when they pass", as
   assert.match(html, /const carved=halloween&&mdOf\(today\)>=hol\.carved/);
   assert.equal(ctx.holidayOn("2026-10-31")?.id, "halloween");
   assert.equal(ctx.holidayOn("2026-11-01"), null);
+  // the tree went up at the house on November 6 2026 and stays through Twelfth Night, across the new year
+  assert.equal(ctx.holidayOn("2026-11-05"), null);
+  assert.equal(ctx.holidayOn("2026-11-06")?.id, "christmas");
+  assert.equal(ctx.holidayOn("2026-12-25")?.id, "christmas");
+  assert.equal(ctx.holidayOn("2027-01-06")?.id, "christmas");
+  assert.equal(ctx.holidayOn("2027-01-07"), null);
+  assert.match(html, /const christmas=hol\?\.id==="christmas";/);
+  // it is inside, in the tall panel beside the screen door, its bulbs on the windows' hours
+  assert.match(html, /function pnXmasTree\(hx,hy,S,B,/);
+  assert.match(html, /const\[a0,a1\]=B\.panel,top=B\.porchEave\+1\.4\+2\.2,bot=-4\.2/);
+  assert.match(html, /const xmas=christmas\?pnXmasTree\(hx,hy,S,BH,\{lit:lightsOn,night:houseNight,/);
+  assert.match(html, /data-decor="christmas-tree"/);
+  assert.equal((html.match(/\$\{house\}\$\{xmas\}/g) || []).length, 2);
   // the candle is lit with the barn lamps, and not in the rain
   assert.match(html, /const candles=carved&&sunAltDeg< -\.83&&!wet&&!storm/);
   // it gutters as hard as the gusts say, and in a calm or under reduced motion not at all
