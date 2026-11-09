@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v143/);
+  assert.match(worker, /mbwx-shell-v144/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -1188,7 +1188,10 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /@media \(max-width:359px\)\{\.wk\.wk8 \.wk-name\{letter-spacing:\.02em\}\}/);
   assert.match(html, /wrap\.classList\.toggle\("wk8",n>7\);/);
   // and the chart, the briefs and the note all read the same days, cut once
-  assert.match(html, /const \{wk,we\}=weekSpan\(dy\);\n\s*renderWeek\(wk,css,we\);\n\s*document\.getElementById\("weekNote"\)\.textContent=weekendNote\(wk,we\);/);
+  assert.match(html, /const \{wk,we\}=weekSpan\(dy\),sky0=todaySky\(c,dy,full,now\);\n\s*if\(sky0!=null\)wk\.weather_code\[0\]=sky0;[^\n]*\n\s*renderWeek\(wk,css,we\);\n\s*document\.getElementById\("weekNote"\)\.textContent=weekendNote\(wk,we\);/);
+  // by day a moon within a day or so of new is not drawn beside the sun (November 9 2026)
+  assert.match(html, /const DAY_MOON_MIN=\.05;/);
+  assert.match(html, /if\(mp\.alt>-\.05&&\(!up\|\|mp\.alt>\.21&&mph\.fraction>=DAY_MOON_MIN\)\)\{/);
   // the rain odds stay a number per day: a line through seven daily chances invents the nights between
   assert.match(html, /They are deliberately not a third line/);
   // and the week says only what the picture does not: no dates and no chevrons; the odds are
@@ -1232,9 +1235,40 @@ test("the weekend is always in the week, and it is the one coming", async () => 
     lift(/const SNOW=\[[\s\S]*?const isWet=w=>WETC\.includes\(w\);/),
     lift(/const dayName=s=>[^\n]*;/),
     lift(/const WEEK_H=146,WEEK_WET=35;/),
-    html.slice(html.indexOf("function weekSpan("), html.indexOf("function renderWeek(")),
-    "globalThis.weekSpan=weekSpan;globalThis.weekendNote=weekendNote;",
+    html.slice(html.indexOf("function todaySky("), html.indexOf("function renderWeek(")),
+    "globalThis.weekSpan=weekSpan;globalThis.weekendNote=weekendNote;globalThis.todaySky=todaySky;",
   ].join("\n"), ctx);
+  // TODAY's sky is the sky still to come today, the headline's own reading (November 9 2026: a cloud
+  // under TODAY at the farm beside "Sunny" and "Cool and sunny this afternoon.")
+  {
+    const dy0 = (code) => ({ time: ["2026-11-09", "2026-11-10"], weather_code: [code, 1],
+      sunrise: ["2026-11-09T06:58", "2026-11-10T06:59"], sunset: ["2026-11-09T17:17", "2026-11-10T17:16"] });
+    const run = (from, codes) => ({ time: codes.map((_, i) => `2026-11-09T${String(from + i).padStart(2, "0")}:00`), code: codes });
+    const at = (hh, mm = "00") => new Date(`2026-11-09T${String(hh).padStart(2, "0")}:${mm}`);
+    const cur = (hh, code) => ({ time: `2026-11-09T${String(hh).padStart(2, "0")}:45`, weather_code: code });
+    // the farm that afternoon: the day's code cloudy, the hours left sunny
+    assert.equal(ctx.todaySky(cur(15, 0), dy0(3), run(15, [0, 1, 0, 3, 3, 3]), at(15, 45)), 0);
+    // the observed sky is the hour now is in, so a cloudy now is never drawn sunny
+    assert.equal(ctx.todaySky(cur(15, 3), dy0(3), run(15, [0, 0, 0]), at(15, 45)), 2);
+    // a stale reading leaves the hour to the run
+    assert.equal(ctx.todaySky({ time: "2026-11-09T12:10", weather_code: 3 }, dy0(3), run(15, [0, 0, 0]), at(15, 45)), 0);
+    // seven hours in ten overcast is the cloud, anything between the sun behind a cloud
+    assert.equal(ctx.todaySky(null, dy0(1), run(7, [3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0]), at(7)), 3);
+    assert.equal(ctx.todaySky(null, dy0(1), run(7, [3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 2]), at(7)), 2);
+    // before sunrise it reads the whole daylight, from the first hour after it
+    assert.equal(ctx.todaySky(null, dy0(3), run(5, [3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3]), at(5)), 0);
+    // rain, snow, fog or thunder, in the day's code or in an hour still to come, keeps the day's code
+    assert.equal(ctx.todaySky(cur(15, 0), dy0(61), run(15, [0, 0, 0]), at(15, 45)), null);
+    assert.equal(ctx.todaySky(cur(15, 0), dy0(45), run(15, [0, 0, 0]), at(15, 45)), null);
+    assert.equal(ctx.todaySky(cur(15, 0), dy0(3), run(15, [0, 61, 0]), at(15, 45)), null);
+    // a gap in the hours, no daylight left, a missing sunset or a day that is not the first column: the same
+    assert.equal(ctx.todaySky(cur(15, 0), dy0(3), run(16, [0, 0]), at(15, 45)), null);
+    assert.equal(ctx.todaySky(cur(15, 0), dy0(3), run(15, [0, null, 0]), at(15, 45)), null);
+    assert.equal(ctx.todaySky(null, dy0(3), run(18, [0, 0, 0]), at(18, 30)), null);
+    assert.equal(ctx.todaySky(null, { ...dy0(3), sunset: [] }, run(15, [0, 0, 0]), at(15)), null);
+    assert.equal(ctx.todaySky(null, dy0(3), run(15, [0, 0, 0]), new Date("2026-11-10T10:00")), null);
+    assert.equal(ctx.todaySky(null, dy0(null), run(15, [0, 0, 0]), at(15)), null);
+  }
   const daily = (start, n = 8, o = {}) => {
     const time = [], d = new Date(start + "T12:00");
     for (let i = 0; i < n; i++) { time.push(d.toLocaleDateString("en-CA")); d.setDate(d.getDate() + 1); }

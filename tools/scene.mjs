@@ -87,7 +87,7 @@ const CASES = [
     note: "code 82: dense, fast, hard angle, the reflection broken. Must not look like the drizzle beside it",
     o: { baseTemp: 76, nowTemp: 75, feels: 79, rh: 94, isDay: 1, code: 82, cloud: 98, nowWind: 21, nowDir: 240, nowGust: 33, nowUv: 1.1, uvMax: 6, windAmp: 14, gustAmp: 24,
       popCurve: () => 90, dailyPop: (p) => p.fill(90) } },
-  { name: "49-house-october-downpour-midday", loc: "mb", when: "2026-10-09T12:30:00", tidePhase: 0, decor: ["ghostface", "light-tree", "pumpkin", "pumpkin-lights", "white-pumpkin", "blood-moon"], candles: 0,
+  { name: "49-house-october-downpour-midday", loc: "mb", when: "2026-10-09T12:30:00", tidePhase: 0, decor: ["ghostface", "light-tree", "pumpkin", "pumpkin-lights", "white-pumpkin"], candles: 0,
     note: "code 82 in October: the pumpkin lights still on in the rain by day, and the cobweb's spider out",
     o: { baseTemp: 76, nowTemp: 75, feels: 79, rh: 94, isDay: 1, code: 82, cloud: 98, nowWind: 21, nowDir: 240, nowGust: 33, nowUv: 1.1, uvMax: 6, windAmp: 14, gustAmp: 24,
       popCurve: () => 90, dailyPop: (p) => p.fill(90) } },
@@ -115,7 +115,7 @@ const CASES = [
   // `decor` is what has to be set out (and nothing else), `candles` how many are lit. Each one
   // with decorations out also writes a close-up of them, because a pumpkin is a few pixels
   // across on a phone and has to hold up at both sizes.
-  { name: "26-house-october-afternoon", loc: "mb", when: "2026-10-10T15:30:00", decor: ["ghostface", "light-tree", "pumpkin", "pumpkin-lights", "white-pumpkin", "blood-moon"], candles: 0,
+  { name: "26-house-october-afternoon", loc: "mb", when: "2026-10-10T15:30:00", decor: ["ghostface", "light-tree", "pumpkin", "pumpkin-lights", "white-pumpkin"], candles: 0,
     note: "Halloween is up: an orange and a white pumpkin on each pillar, nothing carved yet, the pumpkin lights on by day, Ghostface in the rightmost east window",
     o: { baseTemp: 71, nowTemp: 75, feels: 75, rh: 55, isDay: 1, code: 1, cloud: 18, nowWind: 9, nowDir: 40, nowGust: 15, nowUv: 3.4, uvMax: 5, windAmp: 6, gustAmp: 10,
       sunrise: "07:13", sunset: "18:44", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
@@ -205,7 +205,7 @@ const CASES = [
     o: { baseTemp: 64, nowTemp: 64, feels: 63, rh: 91, isDay: 1, code: 61, cloud: 90, nowWind: 8, nowDir: 245, nowGust: 14, nowUv: 1.4, uvMax: 5,
       windAmp: 7, gustAmp: 12, sunrise: "06:14", sunset: "20:26",
       popCurve: () => 72, dailyPop: (p) => p.fill(70) } },
-  { name: "30-ridge-october-afternoon", loc: "sp", when: "2026-10-10T13:30:00", decor: ["corn-shock", "straw-bale", "pumpkin", "white-pumpkin", "michael-myers", "blood-moon", "scarecrow", "sheet-ghost", "black-cat"], candles: 0,
+  { name: "30-ridge-october-afternoon", loc: "sp", when: "2026-10-10T13:30:00", decor: ["corn-shock", "straw-bale", "pumpkin", "white-pumpkin", "michael-myers", "scarecrow", "sheet-ghost", "black-cat"], candles: 0,
     note: "Halloween at the barn door: corn shock, bale, pumpkins, the hens working the yard beside it, the black cat on the rail, the scarecrow with its crow and the cheesecloth ghost in the hardwood",
     o: { baseTemp: 55, nowTemp: 57, feels: 57, rh: 60, isDay: 1, code: 1, cloud: 20, nowWind: 7, nowDir: 280, nowGust: 13, nowUv: 3.1, uvMax: 4, windAmp: 6, gustAmp: 10,
       sunrise: "07:25", sunset: "18:55", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },

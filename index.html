@@ -9186,7 +9186,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
       <ellipse ${cc} rx="${(13*sunS).toFixed(2)}" ry="${(13*squash*sunS).toFixed(2)}" fill="none" stroke="${lineC}" stroke-width="1.1" opacity="${(Math.max(.15,1-veil)*sdim*.8).toFixed(2)}"/>
       <path d="M ${(x-7.2*sunS).toFixed(1)} ${(y-4.6*squash*sunS).toFixed(1)} A ${(9*sunS).toFixed(1)} ${(9*squash*sunS).toFixed(1)} 0 0 1 ${(x+1.3*sunS).toFixed(1)} ${(y-9.4*squash*sunS).toFixed(1)}" fill="none" stroke="#FFF8E6" stroke-width="1.6" stroke-linecap="round" opacity="${(Math.max(.1,1-veil)*sdim*.8).toFixed(2)}"/>`;
   }
-  if(mp.alt>-.05&&(!up||mp.alt>.21)){        /* daytime moon only when it's genuinely up there */
+  /* by day a moon within a day or so of new cannot be seen beside the sun, so it is not drawn: on
+     November 9 2026 a new moon stood as a pale ghost disc in the afternoon sky over the house */
+  if(mp.alt>-.05&&(!up||mp.alt>.21&&mph.fraction>=DAY_MOON_MIN)){        /* daytime moon only when it's genuinely up there */
     /* moon by true altitude / azimuth, mapped east→west across the arc */
     const az=(mp.az*180/Math.PI+180+360)%360;           /* 0=N, 90=E */
     const f=clamp((az-60)/240,.02,.98);
@@ -15285,6 +15287,33 @@ const WEEK_H=146,WEEK_WET=35;
    so the chart, the tapped briefs and the note can never name a day the others do not. A
    seven-day cache on a Sunday marks the Saturday it has and leaves the Sunday out, never
    invents it. */
+const DAY_MOON_MIN=.05;
+/* TODAY's sky in the week is the sky still to come today, the one the headline and the label beside
+   the number speak for. The daily code is the day's worst sky, so on November 9 2026 a cloud stood
+   under TODAY at the farm beside "Sunny" and "Cool and sunny this afternoon." It is read only when
+   the day's own code is dry and plain (0 to 3) and every daylight hour still to come is known and
+   plain too: rain, snow, fog and thunder keep the day's code, and so does a gap or an evening with
+   no daylight left. Sunny is every hour clear or mostly clear, the headline's own rule, cloudy is
+   seven hours in ten overcast, and anything between is the sun behind a cloud. Pure. */
+function todaySky(c,dy,h,now){
+  const has=v=>v!=null&&v!==""&&Number.isFinite(+v),nd=new Date(now),t0=new Date(nd).setMinutes(0,0,0);
+  const p=v=>String(v).padStart(2,"0"),today=nd.getFullYear()+"-"+p(nd.getMonth()+1)+"-"+p(nd.getDate());
+  const k=(dy?.time||[]).indexOf(today),day=dy?.weather_code?.[k];
+  if(k!==0||!has(day)||+day<0||+day>3)return null;
+  const rise=dy.sunrise?.[k],set=dy.sunset?.[k];
+  if(!rise||!set)return null;
+  const a=Math.max(t0,Math.ceil(new Date(rise).getTime()/36e5)*36e5),b=Math.floor((new Date(set).getTime()-1)/36e5)*36e5;
+  if(!(b>=a))return null;
+  const times=(h?.time||[]).map(t=>new Date(t).getTime()),nowI=times.indexOf(t0);
+  const fresh=!!c&&new Date(c.time).setMinutes(0,0,0)===t0,codes=[];
+  for(let t=a;t<=b;t+=36e5){
+    const i=times.indexOf(t);if(i<0)return null;
+    const v=fresh&&i===nowI&&has(c.weather_code)?+c.weather_code:has(h.code?.[i])?+h.code[i]:NaN;
+    if(!(v>=0&&v<=3))return null;
+    codes.push(v)}
+  if(codes.every(v=>v<=1))return 0;
+  return codes.filter(v=>v===3).length/codes.length>=.7?3:2;
+}
 function weekSpan(dy){
   const T=dy.time,dow=t=>new Date(t+"T12:00").getDay();
   const sun=T.findIndex((t,i)=>i>0&&dow(t)===0),sat=T.findIndex((t,i)=>i>0&&dow(t)===6);
@@ -16574,7 +16603,8 @@ function render(d,live,savedAt=0){
 
   paintAfter(gen,()=>{
   /* week: drawn before the tide because it sits above it, so its entrance is armed first */
-  const {wk,we}=weekSpan(dy);
+  const {wk,we}=weekSpan(dy),sky0=todaySky(c,dy,full,now);
+  if(sky0!=null)wk.weather_code[0]=sky0;      /* wk's series are its own slices */
   renderWeek(wk,css,we);
   document.getElementById("weekNote").textContent=weekendNote(wk,we);
 

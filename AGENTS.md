@@ -490,7 +490,9 @@ drawing to both views.
   frames ran at 59 to 60, and the baked sky matches the filter's to 3 levels in 255. Chrome never
   showed it, because Chrome composites SVG animations and WebKit repaints them (`tools/webkit.mjs`).
 - **The picture still does not make claims.** Clouds are drawn in the scene only when there
-  are clouds (10 to 85 per cent, dry, no fog) and drift with the wind. The barn lamps come on
+  are clouds (10 to 85 per cent, dry, no fog) and drift with the wind. By day a moon within a day or so of
+  new (under 5% lit, `DAY_MOON_MIN`) is not drawn, because nobody can see it beside the sun: on November 9 2026
+  a new moon stood as a pale ghost disc in the afternoon sky over the house. After dark it is drawn as before. The barn lamps come on
   after sunset. The oyster rake is part of the creek and is drawn in every weather, whether or
   not the oystercatcher is on it; it is not a statement about the tide.
 - **To change an animal, look at it.** `node tools/rig.mjs deer ".deer-head=rotate(100deg)"`
@@ -2528,7 +2530,12 @@ The fuller scene earns its playfulness from the existing drawings and their beha
   reading per day, and a line through seven of them invents odds for the nights between. Every day
   but today is a button that opens its `dailyBrief`; the open day is washed under the hairline only,
   because a wash behind the chart boxed every label it crossed. Check it at 320 with a three-digit
-  high and 100% odds.
+  high and 100% odds. TODAY's sky is the sky still to come today (`todaySky`, pure and tested), the one the
+  headline and the label beside the number speak for: the daily code is the day's worst sky, and on November 9
+  2026 a cloud stood under TODAY at the farm beside "Sunny" and "Cool and sunny this afternoon." It is read only
+  when the day's own code is dry and plain (0 to 3) and every daylight hour still to come is known and plain too,
+  the hour now is in taking the observed sky. Rain, snow, fog and thunder keep the day's code, and so does a gap
+  in the hours or an evening with no daylight left. Every other day keeps its daily code.
 
 - **A tapped day uses the family's words.** Josh's October 2026 wording pass replaced the
   temperature-and-sky fragments with connected sentences: `Warm and sunny.`, `Cool and cloudy.`,
