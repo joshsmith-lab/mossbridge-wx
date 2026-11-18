@@ -30,7 +30,16 @@ const HAL = { sunrise: "07:32", sunset: "18:16", popCurve: () => 4, dailyPop: (p
 const calm = { windAmp: 2, gustAmp: 1 };
 /* November at the house, the Christmas tree up in the panel beside the screen door */
 const NOV = { sunrise: "06:35", sunset: "17:13", popCurve: () => 4, dailyPop: (p) => p.fill(8), uvMax: 3 };
+/* December at the house: the Griswolds' lights and the fence's garland, from November 18 */
+const DEC = { sunrise: "07:11", sunset: "17:04", popCurve: () => 4, dailyPop: (p) => p.fill(8), uvMax: 2 };
 const TIMES = [
+  /* a clear cold December night: every bulb on, the bloom over the house */
+  { name: "gris-night", main: true, when: "2026-12-12T20:30:00",
+    o: { ...DEC, baseTemp: 44, nowTemp: 41, feels: 37, rh: 70, isDay: 0, code: 0, cloud: 5, nowWind: 5, nowDir: 330, nowGust: 9, nowUv: 0, ...calm } },
+  { name: "gris-day", main: true, when: "2026-12-12T12:30:00",
+    o: { ...DEC, baseTemp: 54, nowTemp: 55, feels: 55, rh: 48, isDay: 1, code: 1, cloud: 15, nowWind: 6, nowDir: 330, nowGust: 11, nowUv: 2, ...calm } },
+  { name: "gris-fog", when: "2026-12-14T06:20:00",
+    o: { ...DEC, baseTemp: 50, nowTemp: 49, feels: 49, rh: 98, isDay: 0, code: 45, cloud: 100, nowWind: 2, nowDir: 90, nowGust: 4, nowUv: 0, ...calm } },
   /* the night Josh asked for it: 7 pm, 71 and cloudy, the bulbs lit with the windows */
   { name: "xmas-night", main: true, when: "2026-11-06T19:00:00",
     o: { ...NOV, baseTemp: 72, nowTemp: 71, feels: 75, rh: 84, isDay: 0, code: 3, cloud: 100, nowWind: 8, nowDir: 120, nowGust: 17, nowUv: 0, ...calm } },

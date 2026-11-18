@@ -88,6 +88,11 @@ const PROPS = {
      toward the night's blue the way the scene's tone() does after dark */
   "trick-or-treater": ["trickOrTreater", (c) => c.propTrickOrTreater(), {}, [140, 132, 60, 124], { phone: 0.1, o: { line: 0.7, heavy: 0.3, shade: 0.9, lit: 0.5 },
     night: { ink: "#0A1020", shade: "#050A18", lit: "#B9CCEE", litOp: 0.3, dark: ["#15223D", 0.62] } }],
+  /* Christmas at the farm: Hermey (Herbie) with his dentist's mirror, drawn at ten units to the pixel like the
+     trick-or-treater, and the little tree at the barn's corner, at its own units */
+  hermey: ["hermey", (c) => c.propHermey(), {}, [140, 132, 60, 124], { phone: 0.1, o: { line: 0.7, heavy: 0.3, shade: 0.9, lit: 0.5 },
+    night: { ink: "#0A1020", shade: "#050A18", lit: "#B9CCEE", litOp: 0.3, dark: ["#15223D", 0.62] } }],
+  "farm-tree": ["farmTree", (c) => c.propFarmTree()],
   /* More Halloween. The black cat, the cheesecloth ghost and the scarecrow are drawn at ten units to
      the unit the scene places them in, so each phone panel draws them at the scale the scene does,
      with its lines. The cat's night panel is the eyeshine it has from sunset, the ghost's is the

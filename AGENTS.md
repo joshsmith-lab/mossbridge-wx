@@ -502,7 +502,9 @@ drawing to both views.
 
 In September 2026 Josh asked for the scenes to be decorated for the holidays, with the
 decorations coming down once each holiday passes. Halloween is the first. Christmas is the second: the tree inside the house
-at Porters Neck from November 6 (see Christmas, under Porters Neck).
+at Porters Neck from November 6, and outside at every place from November 18 (`outside` on its row in `HOLIDAYS`,
+`xmasOut`): the Griswolds' house, the farm's tree and Hermey, Beaufort's dock and boat (see Christmas, under Porters
+Neck, and Christmas at the farm and at Beaufort below it).
 
 Since October 21 2026 Porters Neck's scene is the house across the pond. The coast's notes below (the dock's
 pumpkins, Ghostface in the oak, the cat on the dock, the eyes in the spartina, the marsh lights, the kid on the
@@ -1018,6 +1020,55 @@ November 6 to January 6 (when it comes down is Josh's to say; January 6 is a sta
 the house's alone. `tools/pond.mjs` shoots it the night he asked (`xmas-night`, 7 pm, 71 and cloudy), by day and
 after 10:30.
 
+**The Griswolds' house, from November 18.** Josh, November 18 2026: "For the house specifically though, I really want
+it to look like the Griswold house from Christmas Vacation. I'm not doing that in real life, but the app's an opportunity
+to go completely over the top and have some fun, and so it should be outlandish ... At night it should glow like it's
+taking all of the power in Wilmington away, just for fun." He sent the film's still the same afternoon ("my house more
+like this"), and that set it: one warm white, in two tones (`GRIS_WARM`), and no surface left. `pnGriswoldBulbs` lays the
+bulbs in the house's own units: rows across the whole roof down to where the gables and the porch's lip stand in front
+of it (`roofFoot`), the ridge and both rakes, each gable's rakes, frieze and corners, rows filling each gable's peak,
+strands hanging down every wall between the windows (`inWin` keeps them off the glass), every window ringed, the porch's
+eave and its lip between the gables, and the four porch posts wrapped. The four sabals' trunks are wrapped in a spiral
+(`palmWrap`, the trunk's own centreline and width from `bftPalmTrunk`'s geometry, the back of each turn hidden), the two
+windmill palms are the film's shrubs, buried in bulbs, and two light-up wire reindeer stand on the lawn either side of
+the gate (`GRIS_DEER`), clear of the does' ground and the heron. By day they are the bulbs on their wires, unlit. From
+sunset to sunrise, all night (`pnHouseLights`'s `griswold`), every bulb burns in a halo, the house's face is washed gold
+(`pnGrisWall`, clipped to the house), a dome of light rises over the roof from gold through rose to violet and outshines
+the stars round it (`pnGrisSky`, on the sky's sheet), and the lawn takes a pool of it. About a thousand bulbs are a few
+paths of dots, one per tone and brightness, so the still sheet holds a handful of nodes, and none of it moves: the house adds no
+animation, and the pond presses all of it into the water.
+
+Josh the same evening: "the nighttime lights on my house at night need to look a bit more chaotic vs a grid. like a
+person did them. windows shouldn't glow the exact same either." So every run is hung, not ruled (`hang`): clipped up
+every few feet and sagging between the clips, each roof row a little crooked and its own length, the bulbs not quite
+evenly spaced, the drops down the walls each their own length and a little off plumb, now and then a loose end hanging
+off a rake, about one bulb in twelve burning dim and one in thirty out, every draw seeded off one hand
+(`mulberry(1225)`). And each lit window is its own room (`glassOf` in `pnBackHouse`): a lamp low in a corner, curtains
+half drawn, the cool wash of a television, a lamp, a blind half down, and a hall's light through a door left open. The
+gold wash is cut round the glass (evenodd), so it never evens them out.
+
+**The fence's Christmas**, from November 18, is Josh's real one: "I've draped garland across the fence as I had done with
+the pumpkin lights. That green garland lights up at night in a soft white ... Put red bows on the garland on the fence.
+Put a wreath on the fence gate." The garland hangs in the pumpkin lights' own swags (`garSwag`): a fir rope with its
+needles, a soft white mini light every few inches, lit from sunset to sunrise and pale beads by day, and a red bow where
+each swag is tied up at the posts. The wreath hangs on the gate, ringed in the same lights, its bow at the foot; the
+fountain's fan stands in front of it, and it shows through the spray.
+
+**Christmas at the farm.** Josh: "For West Virginia specifically, I know I'd like a little Christmas tree decorated
+somewhere. And my mom's always loved Herbie the Elf from the original Rudolph." So from November 18 the barn door has a
+little fir at its corner where the corn shock stands in October (`propFarmTree`, tinsel, a star and coloured bulbs,
+`FARM_TREE_BULBS`, lit from sunset), a wreath on the gable over the door, and Hermey on the doorstep where the
+trick-or-treater stood, facing the tree with his dentist's mirror up (`propHermey`, `data-decor="herbie"`). Hermey is
+the 1964 special's elf who would rather be a dentist; he was Herbie in its early scripts, which is the name the family
+knows. He is drawn the storybook way, not traced from the film: the big blond swoop, pointed ears, a white collar over a
+blue tunic and the mirror are what survive on a phone. `node tools/rig.mjs hermey` shows him close up.
+
+**Christmas at Beaufort, dealer's choice.** The dock house's eave, hips and ridge strung in warm white, a string along the
+walkway's top rail dipping between its posts, and a wreath on the dock house's landward corner piling (`bftDockXmas`).
+The family's boat is the nod to Beaufort's Lighted Boat Parade on the river every December: coloured lights along its
+gunwale, round its T-top and down from the T-top to the bow and the stern, so the boat wears a Christmas tree with a star
+on top (`bftBoatXmas`, inside the boat's box, so it rocks with it). Lit with the dock's lamp from sunset.
+
 **Left out, and why.** The golf cart (`pnCart` is kept, placed nowhere): at this crop both edges are palms and
 there is no honest place to park it. The neighbours' houses and the pines, which made the house read as
 standing alone in open land. The grill, the patio table and the flags, clutter at phone size. The
@@ -1496,8 +1547,9 @@ Since October 21 2026 the coast's twenty-seven cases in `tools/scene.mjs` are th
 Porters Neck), and `tools/egrets.mjs` went with the marsh; the marsh-only checks described below are in git
 history. `TZ=America/New_York node tools/pond.mjs` shoots the house in every moment.
 
-`tools/scene.mjs` is for anything that moves. Forty-five scenes force the light
-and weather that are hard to wait for. Thirteen are the house across the pond: calm noon, a blow
+`tools/scene.mjs` is for anything that moves. Forty-nine scenes force the light
+and weather that are hard to wait for. Four are Christmas (the Griswolds' house by night and by day, and
+the farm's tree and Hermey by day and by night). Thirteen are the house across the pond: calm noon, a blow
 from the west and one from the east, the evening and the morning golden hours, a warm clear night
 after the strands are off, a storm, a fog morning, drizzle against a downpour, freezing rain, a
 night of rain and thunder nearby. Seven are the ridge: by day, at golden hour, by evening with the

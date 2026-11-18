@@ -1360,7 +1360,7 @@ const inSeason=(d,r)=>{if(!r)return false;const md=mdOf(d);return r[0]<=r[1]?md>
    the place's own clock has to be past noon), and stays in when it rains: a drizzle does not keep a kid in,
    rain and anything heavier does, and so do snow, ice and a storm. */
 /* Christmas: the tree went up at the house on November 6 2026 (Josh: "it's up, so add it now") */
-const HOLIDAYS=[{id:"halloween",window:["10-01","10-31"],carved:"10-24",trickOrTreat:"10-31"},{id:"christmas",window:["11-06","01-06"]}];
+const HOLIDAYS=[{id:"halloween",window:["10-01","10-31"],carved:"10-24",trickOrTreat:"10-31"},{id:"christmas",window:["11-06","01-06"],outside:"11-18"}];
 const holidayOn=d=>HOLIDAYS.find(h=>inSeason(d,h.window))||null;
 const trickOrTreating=(hol,d,sunAlt,code,hour)=>!!hol?.trickOrTreat&&mdOf(d)===hol.trickOrTreat&&hour>=12&&sunAlt< -.83&&(!isWet(code)||[51,53,55].includes(code));
 /* Halloween's moon, Josh's pick (October 3 2026: "a creepy blood moon ... or harvest moon"). For
@@ -2296,6 +2296,44 @@ const propBarn=(l=LOFT)=>[
   part("M 15.4 -30 L 15.4 -34.6 L 20.6 -34.6 L 20.6 -30 Z","wall"),part("M 14.2 -34.2 L 18 -37.4 L 21.8 -34.2 Z","roof"),
   part("M 12.4 0 L 12.4 -11.6 L 23.6 -11.6 L 23.6 0 Z","door"),part(`M ${f1(l[0])} ${f1(l[1]+l[3])} L ${f1(l[0])} ${f1(l[1])} L ${f1(l[0]+l[2])} ${f1(l[1])} L ${f1(l[0]+l[2])} ${f1(l[1]+l[3])} Z`,"loft"),
   part("M 5 -3.6 L 9 -3.6 L 9 -8.4 L 5 -8.4 Z M 27 -3.6 L 31 -3.6 L 31 -8.4 L 27 -8.4 Z","window")];
+/* ── Christmas at the farm (Josh, November 18 2026: "For West Virginia specifically, I know I'd like a little
+   Christmas tree decorated somewhere. And my mom's always loved Herbie the Elf from the original Rudolph").
+   A little fir at the barn's corner, where the corn shock stands in October, sits on y=0 at x=0 about twenty
+   units tall: a short trunk, three tiers of boughs each a shade lighter on its lit side, a gold tinsel swag
+   across each tier and a star. Its bulbs are painted over it by the scene (farmTreeBulbs), lit after sunset. */
+const propFarmTree=()=>{const noSil={noSil:true};
+  const tier=(y0,y1,w)=>pBlob([[-w,y0],[-w*.72,y0-1.1],[-w*.42,y0-.4],[-w*.48,(y0+y1)/2+.4],[0,y1],[w*.48,(y0+y1)/2+.4],[w*.42,y0-.4],[w*.72,y0-1.1],[w,y0],[w*.5,y0+.7],[0,y0+.45],[-w*.5,y0+.7]],"fir");
+  const swag=(y,w)=>pTaper([[-w*.82,y-1.6,.28],[-w*.2,y-.6,.4],[w*.3,y-1.9,.4],[w*.62,y-3.1,.28]],"tinsel",{},noSil);
+  const star=[];for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?.8:1.9;star.push([Math.cos(a)*r,-21.4+Math.sin(a)*r])}
+  return[pTaper([[0,.4,1.7],[0,-3.4,1.4]],"trunk",{capStart:false}),tier(-2.6,-10.2,7.4),tier(-7.4,-15,5.6),tier(-12,-19.4,3.9),
+    pTaper([[1.2,-3.2,1.2],[5.6,-3.4,.6]],"firLt",{},noSil),pTaper([[1,-8.4,1],[4.4,-8.6,.5]],"firLt",{},noSil),pTaper([[.8,-13.2,.8],[3,-13.4,.4]],"firLt",{},noSil),
+    swag(-3.4,7),swag(-8.4,5.3),swag(-13.2,3.6),pBlob(star,"star")]};
+/* where the bulbs hang on it, in its own units: down each tier's skirt, the colours in turn */
+const FARM_TREE_BULBS=[[-5.6,-3.6],[-2.2,-4.4],[1.6,-3.9],[5.2,-3.2],[-3.8,-6.8],[.4,-7],[3.4,-6.2],
+  [-4,-8.4],[-.8,-9.1],[2.6,-8.8],[-2.6,-11.4],[1.2,-11.8],[-2.5,-13.4],[.2,-14.2],[2.2,-13.1],[-1,-16.6],[1,-17.2]];
+/* Hermey, the elf who would rather be a dentist (the original Rudolph of 1964, where he was Herbie first, and
+   Josh's mum's favourite), drawn the storybook way and not traced from the film: what has to survive on a phone
+   is a little elf with a big swoop of blond hair, pointed ears, a white collar over a blue tunic, holding up his
+   dentist's mirror. He stands on y=0 facing +x, about a hundred and fifteen units tall, drawn at ten units to the
+   pixel as the kid in the sheet is. side flips him. */
+const propHermey=(side=1)=>{
+  const X=([x,y])=>[x*side,y],B=(pts,role,x)=>pBlob(pts.map(X),role,x),S=(pts,role,x)=>pTaper(pts.map(([a,b,w])=>[...X([a,b]),w]),role,{},x);
+  const oval=(cx,cy,rx,ry,n=12)=>Array.from({length:n},(_,i)=>{const a=i/n*Math.PI*2;return[cx+Math.cos(a)*rx,cy+Math.sin(a)*ry]});
+  const noSil={noSil:true};
+  const legs=[S([[-6,-4,6.2],[-6.4,-27,6.8]],"leg"),S([[6,-4,6.2],[6.4,-27,6.8]],"leg"),
+    B([[-13,-1],[-12.6,-5],[-8,-6.8],[-2.6,-5.6],[-2,-1],[-7,.2]],"shoe"),B([[2,-1],[2.6,-5.6],[8,-6.8],[13,-6.2],[17.5,-9.2],[16.4,-4],[13,-.6],[7,.2]],"shoe")];
+  const body=[S([[-12,-55,5.4],[-16.6,-45,4.8],[-15.6,-35,4.4]],"tunic"),
+    B([[-18,-23],[-15.8,-38],[-13.6,-52],[-8.6,-59.5],[8.6,-59.5],[13.6,-52],[15.8,-38],[18.4,-23],[13,-20.4],[7.5,-23.4],[1.5,-20.4],[-4.5,-23.4],[-10.6,-20.4]],"tunic"),
+    S([[-15.6,-33,3],[15.8,-33,3]],"belt",noSil),B(oval(-16,-32.4,3,3.2),"skin"),
+    S([[12,-55,5.4],[19.5,-49,4.8],[24,-57,4.2]],"tunic"),S([[25.4,-62,1.4],[27.6,-73,1.2]],"handle"),B(oval(25,-60.4,3.1,3.2),"skin"),
+    B(oval(28.4,-76.2,3.6,3.4),"mirror"),S([[26.8,-77.6,.7],[28.2,-78.6,.9],[29.6,-78,.5]],"detail",noSil)];
+  const head=[B([[-8.6,-77],[-22.5,-88.5],[-9.4,-70]],"skin"),B([[8.6,-77],[22.5,-88.5],[9.4,-70]],"skin"),
+    B(oval(0,-62.6,12.4,4.8),"collar"),B(oval(0,-75.4,10.6,11.6,14),"skin"),
+    B([[-11,-77],[-11.8,-85],[-8.4,-91.6],[-1.4,-94.6],[4.6,-97.6],[8.6,-103.4],[14.8,-106],[19.6,-103],[18.4,-98.6],[14,-97.2],[12.6,-92],[11.6,-84],[10.6,-78.4],[7.4,-83.6],[1.4,-85.6],[-5.4,-83.6]],"hair"),
+    S([[-6,-88.6,.8],[2,-92.4,1.2],[9,-97.2,1],[14.6,-101.8,.6]],"hairDk",noSil),S([[-8.4,-84.6,.6],[-2,-88.2,1],[5,-90.4,.6]],"hairDk",noSil),
+    B(oval(-3.6,-75.6,1.3,1.8,8),"eye"),B(oval(4.2,-75.6,1.3,1.8,8),"eye"),B(oval(1,-71.8,1.7,1.3,8),"nose"),
+    S([[-2.6,-67.6,.6],[.8,-66.2,1.1],[4.4,-67.8,.6]],"mark",noSil)];
+  return[{parts:legs},{parts:body},{parts:head}]};
 /* ── the holidays' props ─────────────────────────────────────────────────────────
    Decorations are scenery like the dock and the barn: parts with roles, lit by the same sky.
    A pumpkin sits on y=0, centred on x=0, in a box w wide and h tall, and its stem stands up out
@@ -3506,6 +3544,8 @@ const INK={
   /* the trick-or-treater: a cotton sheet a touch warm of white, its eye holes the dark inside it,
      dark sneakers, and a pail in the bright orange of the plastic ones, a shade hotter than the
      pumpkins so the two never read as one */
+  farmTree:{fir:"#2F5E3C",firLt:"#4F8A55",trunk:"#5E4232",tinsel:"#E6C25A",star:"#F2C440"},
+  hermey:{leg:"#3E5C8C",shoe:"#7A4A2E",tunic:"#7DB2DE",belt:"#2E3F66",skin:"#F1C7A3",collar:"#F6F2E8",handle:"#8E98A4",mirror:"#DCE4EC",detail:"#FFFFFF",hair:"#F3D35C",hairDk:"#C9A232",eye:"#1C1612",nose:"#E9A994",mark:"#7A3A2E"},
   trickOrTreater:{sheet:"#F3F0E8",fold:"#D6D0C4",eye:"#120D16",shoe:"#3B3247",sole:"#E6E0D4",skin:"#E8B48C",pail:"#F57A18",rib:"#C65A12",mark:"#2A160E",
     rim:"#6E3010",handle:"#2A2430",candy:"#D8344E",ink:"#2A1B33",shade:"#3A2350",lit:"#FFE6B0",litOp:0.5},
   /* the black cat: a soft black, the far leg and the inner ears a shade deeper, amber eyes with a
@@ -5498,6 +5538,41 @@ function bftDockPile(x,top,w,D,seed,{cap=true}={}){
  *           landward pilings stand on the bank instead of running down to the river's level
  * Returns layers for inkRig, back to front.
  */
+/* ── Christmas at Beaufort, dealer's choice (Josh, November 18 2026: "I don't want to leave Beaufort out, but
+   dealer's choice there"). The dock is dressed the way docks on the Beaufort River are: the dock house's eave,
+   hips and ridge strung in warm white, a string along the walkway's top rail dipping between its posts, and a
+   wreath on the dock house's landward corner piling. And the family's boat is a nod to Beaufort's Lighted Boat
+   Parade on the river every December: coloured lights along its gunwale, round its T-top, and down from the
+   T-top to the bow and the stern so the boat wears a Christmas tree. All of it is lit with the dock's lamp, from
+   sunset, and unlit bulbs by day. The dock's lights are in dock units at the dock's foot; the boat's in the
+   boat's own units, inside its box, so they rock with it */
+const bftBulbs=(pts,{on,fog,tone,cols,r=.5})=>{const f=v=>v.toFixed(2),dots=(l,rr)=>l.map(([x,y])=>`M ${f(x-rr)} ${f(y)} a ${f(rr)} ${f(rr)} 0 1 0 ${f(2*rr)} 0 a ${f(rr)} ${f(rr)} 0 1 0 ${f(-2*rr)} 0`).join(" ");
+  let out="";cols.forEach((c,i)=>{const q=pts.filter((_,j)=>j%cols.length===i);if(!q.length)return;
+    out+=on?`<path d="${dots(q,fog?r*4:r*3.1)}" fill="${c}" opacity=".36"/><path d="${dots(q,r)}" fill="${c}"/><path d="${dots(q,r*.45)}" fill="#FFFFFF" opacity=".85"/>`
+      :`<path d="${dots(q,r*.8)}" fill="${tone(c)}" opacity=".8"/>`});return out};
+const bftLine=(a,b,step)=>{const l=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.round(l/step)),o=[];for(let i=0;i<=n;i++)o.push([a[0]+(b[0]-a[0])*i/n,a[1]+(b[1]-a[1])*i/n]);return o};
+function bftDockXmas(len,{on,fog,tone,at:[x0,y0]}){
+  const e0=-2.6,e1=28.6,ey=-9.7,r0=7.6,r1=18.4,ry=-14.6,pts=[];
+  pts.push(...bftLine([e0-.3,ey+.3],[e1+.3,ey+.3],1.3),...bftLine([e0-.1,ey-.3],[r0-.2,ry-.5],1.3),...bftLine([r0,ry-.6],[r1,ry-.6],1.3),...bftLine([r1+.2,ry-.5],[e1+.1,ey-.3],1.3));
+  /* the walkway rail, a little swag between each pair of posts */
+  const xs=[24.6,...bftDockWalkPosts(len).map(p=>p.x)].filter(x=>x<len);
+  for(let i=1;i<xs.length;i++){const a=xs[i-1],b=xs[i],n=Math.max(2,Math.round((b-a)/1.5));
+    for(let k=i>1?1:0;k<=n;k++){const t=k/n;pts.push([a+(b-a)*t,-5.3+1.3*4*t*(1-t)])}}
+  const wx=24.6,wy=-6.9,wr=1.55,warm=["#FFF3D2","#FFD27A"];
+  const wreath=`<g data-decor="dock-wreath" class="decor"><circle cx="${wx}" cy="${wy}" r="${wr}" fill="none" stroke="#1A2A20" stroke-width="1.35"/><circle cx="${wx}" cy="${wy}" r="${wr}" fill="none" stroke="${tone("#2F5D3A")}" stroke-width="1"/>`
+    +`<path d="M ${wx} ${wy+wr} l -1.1 -.7 l -.15 1 Z M ${wx} ${wy+wr} l 1.1 -.7 l .15 1 Z" fill="${tone("#C8202A")}" stroke="${tone("#C8202A")}" stroke-width=".3"/></g>`;
+  return `<g class="decor" data-decor="dock-lights" data-lit="${on?1:0}" transform="translate(${f1(x0)} ${f1(y0)})">${bftBulbs(pts,{on,fog,tone,cols:warm,r:.42})}</g>`
+    +`<g transform="translate(${f1(x0)} ${f1(y0)})">${wreath}</g>`;
+}
+function bftBoatXmas({on,fog,tone}){
+  const sh=bftBoatSheer,pts=[];
+  for(let x=-12.2;x<=10.2;x+=1.25)pts.push([x,sh(x)-.15]);
+  pts.push(...bftLine([-4.4,-12.9],[6.2,-12.9],1.2));
+  /* the tree: from the T-top's middle down to the bow's rail and to the stern */
+  pts.push(...bftLine([.9,-13.4],[-12.3,sh(-12.3)-1.1],1.25).slice(1),...bftLine([.9,-13.4],[10,sh(10)-.4],1.25).slice(1));
+  const star=on?`<circle cx=".9" cy="-14.4" r="${fog?3.2:2.4}" fill="#FFE07A" opacity=".42"/>`:"";
+  return `<g class="decor" data-decor="boat-lights" data-lit="${on?1:0}">${star}${bftBulbs(pts,{on,fog,tone,cols:["#FF3B2F","#2ED158","#2F80FF","#FFB020","#FFF1D6"],r:.38})}<path d="M .9 -15.9 l .45 1 l 1.05 .1 l -.8 .7 l .25 1.05 l -.95 -.55 l -.95 .55 l .25 -1.05 l -.8 -.7 l 1.05 -.1 Z" fill="${on?"#FFE48A":tone("#E6C25A")}"/></g>`;
+}
 function propBftDock(tide=.5,o={}){
   o=o||{};
   const len=o.len??95,geo=bftDockGeo(tide,o),{water,hw,lw,G}=geo,fy=geo.fy;
@@ -8654,7 +8729,7 @@ INK.pnBackHouse={
   wall:"#F2F0EA",wallShade:"#C6CBD2",siding:"#DDDAD2",shake:"#E4E0D6",shakeDk:"#B9B4AA",end:"#CDD2D8",roof:"#B4C2CC",roofDk:"#8F9DA8",seam:"#8A98A4",seamLit:"#E6EEF3",
   trim:"#FBFAF6",cast:"#5B6170",glass:"#34434E",glassUp:"#7F98A8",frame:"#FBFAF6",porchWall:"#E7E4DC",shiplap:"#CBC6BC",screen:"#4C525A",panel:"#8A8070",post:"#FBFAF6",
   iron:"#22304A",found:"#A39D94",flue:"#C9CED3",flueDk:"#8E959C",
-  glassOn:"rgb(255,206,132)",glassDim:"rgb(232,170,104)",glassHot:"rgb(255,236,190)",porchOn:"rgb(250,186,112)",panelOn:"rgb(255,240,200)",glow:"rgb(255,186,100)",room:"#100E14",
+  glassOn:"rgb(255,206,132)",glassDim:"rgb(232,170,104)",glassHot:"rgb(255,236,190)",glassTv:"rgb(176,186,214)",glassTvHot:"rgb(206,226,255)",glassLow:"rgb(196,138,86)",curtain:"rgb(206,120,84)",porchOn:"rgb(250,186,112)",panelOn:"rgb(255,240,200)",glow:"rgb(255,186,100)",room:"#100E14",
   ink:"#2A1B33",shade:"#3A2350",lit:"#FFF6E2",shadeOp:.32,litOp:.5};
 /* the house's outline for the paper grain laid over it: the big roof, the walls, the gables */
 function pnBackHouseSil(B=PN_HA){
@@ -8747,13 +8822,21 @@ function pnBackHouse({night=false,lit=null,shadowOp=1,B=PN_HA}={}){
     pnRect(x0-.3,ge+1.2,x0+1.3,0,"trim"),pnRect(x1-1.3,ge+1.2,x1+.3,0,"trim")];
   /* a window: tall double-hung, one meeting rail; by day the upper sash holds the sky and the lower is dark,
      under the head's shadow; at night it is lit, one dimmer, one with a lamp, one with a blind drawn */
-  const glassOf=(i)=>lamps?(i===1?"glassDim":"glassOn"):"glass";
+  /* Josh, November 18 2026: "windows shouldn't glow the exact same either", so each lit window is its own room:
+     a lamp low in the corner of the first, the second dimmer with its curtains half drawn, the third the cool
+     wash of a television, the fourth a lamp, the fifth a blind half down, and the last only a hall's light
+     through a door left open */
+  const glassOf=(i)=>lamps?(i===1||i===4?"glassDim":i===2?"glassTv":i===5?"glassLow":"glassOn"):"glass";
   /* every window, the rightmost east one included, is this same sash: one meeting rail, the
      upper light by day, the night lamp and the blind only on the windows that already had them */
   const sashes=(w0,w1,i)=>{const t=B.winT,b=B.winB,m=(t+b)/2,P=[];
     P.push(pnRect(w0,t,w1,b,glassOf(i),{noSil:true}));
     if(!night)P.push(pnRect(w0,t,w1,m,"glassUp",{noSil:true,op:.6}));
     if(lamps&&i===3)for(let k=0;k<3;k++)P.push(pnHEll(w0+(w1-w0)*.65,b-4.6,3.4-k,3.4-k,"glassHot",{noSil:true,op:.35}));
+    if(lamps&&i===0)for(let k=0;k<3;k++)P.push(pnHEll(w0+(w1-w0)*.28,b-3.2,4.2-k*1.2,3.6-k,"glassHot",{noSil:true,op:.28}));
+    if(lamps&&i===1){const cw=(w1-w0)*.28;P.push(pnPoly([[w0,t],[w0+cw,t],[w0+cw*.7,b],[w0,b]],"curtain",{noSil:true,op:.85}),pnPoly([[w1-cw,t],[w1,t],[w1,b],[w1-cw*.7,b]],"curtain",{noSil:true,op:.85}))}
+    if(lamps&&i===2)for(let k=0;k<3;k++)P.push(pnHEll((w0+w1)/2+.6,b-6.4,3.2-k*.9,2.6-k*.7,"glassTvHot",{noSil:true,op:.3}));
+    if(lamps&&i===5)P.push(pnRect(w0+(w1-w0)*.55,t+2,w1,b,"glassOn",{noSil:true,op:.45}));
     if(lamps&&i===4)P.push(pnRect(w0,t,w1,t+5.6,"glassDim",{noSil:true,op:.9}),pnRect(w0,t+5.4,w1,t+5.9,"frame",{noSil:true,op:.8}));
     P.push(pnRect(w0,m-.32,w1,m+.32,"frame",{noSil:true}),cast([[w0,t],[w1,t],[w1,t+2.1],[w0,t+1.6]],night?.12:.38));
     return P};
@@ -9368,6 +9451,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
   const today=locToday(),hol=holidayOn(today),halloween=hol?.id==="halloween";
   const carved=halloween&&mdOf(today)>=hol.carved;
   const christmas=hol?.id==="christmas";
+  /* the tree inside went up on November 6, and the outside went up on November 18 (Josh: "It's time to start
+     decorating for Christmas"): from then to the day it all comes down */
+  const xmasOut=christmas&&inSeason(today,[hol.outside,hol.window[1]]);
   const candles=carved&&sunAltDeg< -.83&&!wet&&!storm;
   const trickOrTreat=trickOrTreating(hol,today,sunAltDeg,code,localHour);
   const decorPal=(p,d,lit=false)=>{const o={};for(const[k,v]of Object.entries(p))o[k]=typeof v==="string"&&v[0]==="#"?air(v,d):v;
@@ -10174,6 +10260,25 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
           {...bale,face:true,roles:["end"]},
           {...shock,face:true,edge:1,k:.85,shade:[bale,whiteOne]},doorstep]})
         +pumpkinAt(lanR,barnFoot,bigR.s,{w:bigR.w,h:bigR.h,carved,seed:6,lights:[...kidLit,doorstep]});
+    }else if(xmasOut){
+      /* Christmas at the barn, from November 18: the little tree at the corner where the corn shock stands in
+         October, its bulbs lit from sunset, Hermey on the doorstep where the trick-or-treater stood, facing the
+         tree with his mirror up, and a wreath on the gable over the door. The grass leaves the doorstep to them */
+      const tr={parts:propFarmTree(),x:barnX-21.2,y:barnFoot,s:.74},on=sunAltDeg< -.83;
+      const[tx0]=pathBox(silOf(tr.parts).map(p=>p.d));
+      keepClear=[[tr.x+tx0*tr.s-.4,barnX+4.2]];
+      const cols=GRISWOLD_C,bulbs=FARM_TREE_BULBS.map(([x,y],i)=>{const c=cols[i%5];
+        return (on?`<circle cx="${x}" cy="${y}" r="${fog?2.4:1.8}" fill="${c}" opacity=".38"/>`:"")+`<circle cx="${x}" cy="${y}" r="${on?.62:.5}" fill="${on?c:tone(c)}"/>`+(on?`<circle cx="${x}" cy="${y}" r=".28" fill="#FFFFFF" opacity=".8"/>`:"")}).join("");
+      const starGlow=on?`<circle cx="0" cy="-21.4" r="${fog?6:4.6}" fill="#FFE07A" opacity=".32"/>`:"";
+      const hp=decorPal(INK.hermey,.04),hx_=barnX+.6,hy_=barnFoot+.4,hs=.1;
+      /* the wreath on the gable, over the door: a ring of fir, berries and a red bow (barn units 18, -18.8) */
+      const wx=barnX-21+1.18*18,wy=base-31+1.18*(27-18.8),wr=2.3,wR=mulberry(1225);
+      let berries="";for(let i=0;i<6;i++){const a=wR()*Math.PI*2,rr=wr+(wR()-.5)*.7;berries+=`<circle cx="${f1(wx+Math.cos(a)*rr)}" cy="${f1(wy+Math.sin(a)*rr)}" r=".3"/>`}
+      const wreathC=air("#2F5D3A",.04),bowC=air("#C8202A",.03);
+      barnDecor=`<g class="decor" data-decor="farm-tree" data-lit="${on?1:0}">${inkAt(tr.x,tr.y,tr.s,1,starGlow+inkUnit(tr.parts,decorPal(INK.farmTree,.04),{s:tr.s,light:lightAt(tr.x,tr.y-10)})+bulbs)}</g>`
+        +`<g class="decor" data-decor="barn-wreath"><circle cx="${f1(wx)}" cy="${f1(wy)}" r="${wr}" fill="none" stroke="${lineC}" stroke-width="1.9"/><circle cx="${f1(wx)}" cy="${f1(wy)}" r="${wr}" fill="none" stroke="${wreathC}" stroke-width="1.4"/><g fill="${bowC}">${berries}</g>`
+        +`<path d="M ${f1(wx)} ${f1(wy+wr)} l -1.5 -1 l -.2 1.4 Z M ${f1(wx)} ${f1(wy+wr)} l 1.5 -1 l .2 1.4 Z M ${f1(wx-.2)} ${f1(wy+wr)} l -.7 1.8 M ${f1(wx+.2)} ${f1(wy+wr)} l .7 1.8" fill="${bowC}" stroke="${bowC}" stroke-width=".45" stroke-linejoin="round"/></g>`
+        +`<g class="decor" data-decor="herbie">${inkAt(hx_,hy_,hs,1,inkRig(propHermey(-1),hp,{s:hs,line:.7,heavy:.3,shade:.9,lit:.5,light:lightAt(hx_,hy_-6)}))}</g>`;
     }
     /* split rails: inked, then the weathered wood laid over the ink */
     const fence=`<path d="${fp}${fr}" stroke="${lineC}" stroke-width="2.1" fill="none" stroke-linecap="round" opacity=".85"/><path d="${fp}${fr}" stroke="${air("#B99A76",.04)}" stroke-width="1.05" fill="none" stroke-linecap="round"/>`;
@@ -10380,7 +10485,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
       skyS,goldK,rising,nightK,gloom,tone,hazeC,air,lineC,inkAir,shadeC,texOn,paperK,arc,goldArc,sunBody,moonBody,sunTimes,houseSun,
       glintX,glintCol,glintOp,sunXY,moonXY,moonR,veil,lightAt,litC,litK,shadeK,inkPal,castShadow,flatParts,phase,
       chopK,wDur,windFrom,downwind,BANDS,bandAmp,waveDelay,bandOf,specular,rainK,cloudShadows,ringAt,flightBird,showFlies,flyCount,crabAt,thunder:THUNDER,
-      halloween,carved,candles,trickOrTreat,nightEyes,batN,batColony,batKeep,witchPlan,witchFly,pumpkinAt,catAt,kidAt,darkEyes,hallowDefs,candleDefs,moonR,deerAt,carved,candles,warned,christmas});
+      halloween,carved,candles,trickOrTreat,nightEyes,batN,batColony,batKeep,witchPlan,witchFly,pumpkinAt,catAt,kidAt,darkEyes,hallowDefs,candleDefs,moonR,deerAt,carved,candles,warned,christmas,xmasOut});
     andThen(commit({sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05}));return;
   }
   if(LOC.scene==="lowcountry"){
@@ -10388,7 +10493,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
       skyS,goldK,rising,nightK,gloom,tone,hazeC,air,lineC,inkAir,shadeC,texOn,paperK,arc,goldArc,sunBody,moonBody,sunTimes,
       glintX,glintCol,glintOp,sunXY,moonXY,moonR,veil,lightAt,litC,litK,shadeK,inkPal,castShadow,flatParts,phase,
       chopK,wDur,windFrom,downwind,BANDS,bandAmp,waveDelay,bandOf,specular,rainK,cloudShadows,ringAt,flightBird,showFlies,flyCount,crabAt,thunder:THUNDER,
-      halloween,carved,candles,trickOrTreat,nightEyes,batN,batColony,batKeep,witchPlan,witchFly,pumpkinAt,catAt,kidAt,darkEyes,hallowDefs,candleDefs,moonR});
+      halloween,carved,candles,trickOrTreat,nightEyes,batN,batColony,batKeep,witchPlan,witchFly,pumpkinAt,catAt,kidAt,darkEyes,hallowDefs,candleDefs,moonR,xmasOut});
     andThen(commit({sunAlt:sp.alt*180/Math.PI,moon:mph,moonUp:mp.alt>-.05}));return;
   }
 
@@ -10848,7 +10953,7 @@ function pnHouseLights(sunAlt,hour,minute,rising){
   const dark=sunAlt<-.83,mins=hour*60+(minute||0);
   const windows=dark&&mins>=12*60&&mins<PN_LIGHTS_OUT;
   const strands=sunAlt<=6&&!rising&&mins>=12*60&&mins<PN_STRANDS_OUT;
-  return{windows,strands,pumpkins:true,fountain:dark};
+  return{windows,strands,pumpkins:true,fountain:dark,griswold:dark};
 }
 /* The hot tub is in use from late October through April 15, on the place's own calendar,
    and the window wraps the year the way a season does. Steam shows the whole of that season,
@@ -10921,6 +11026,101 @@ function pnXmasTree(hx,hy,S,B,{lit=false,night=false,tone=c=>c,screen="#4C525A"}
   return `<g class="decor" data-decor="christmas-tree" data-lit="${lit?1:0}"><g clip-path="url(#${id})"><g transform="translate(${f1(hx)} ${f1(hy)}) scale(${S})">${halo}${green}${dots}${star}`
     +`<rect x="${n(a0)}" y="${n(top)}" width="${n(a1-a0)}" height="${n(bot-top)}" fill="${screen}" opacity="${lit?.12:.22}"/></g></g>`
     +`<defs><clipPath id="${id}"><rect x="${f1(hx+a0*S)}" y="${f1(hy+top*S)}" width="${f1((a1-a0)*S)}" height="${f1((bot-top)*S)}"/></clipPath></defs></g>`;
+}
+/* ── Christmas at the house: the Griswolds' (Josh, November 18 2026: "I really want it to look like the Griswold
+   house from Christmas Vacation. I'm not doing that in real life, but the app's an opportunity to go completely
+   over the top ... At night it should glow like it's taking all of the power in Wilmington away, just for fun").
+   So every line of the house carries a string of big old C9 bulbs: a warm white one down every seam of the
+   standing-seam roof (the Griswolds' roof, where the shingles were), and the coloured ones, red, green, blue,
+   amber and white in turn, along the ridge, both rakes, the gables' rakes and friezes, the corners, round every
+   window and along the porch's eave, with the porch posts wrapped red and white like candy canes. By day they
+   are the bulbs on their wires, unlit. From sunset to sunrise, all night, they burn, each in a halo, and the
+   whole house throws a bloom into the sky, a wash over its own walls and a pool on the lawn (pnGriswoldGlow).
+   Every bulb is a dot in one path per colour (dotsPath), so seven hundred of them are a dozen nodes, and none
+   of it moves: it is on the still sheet with the house, and the pond presses it into the water with the house.
+   Points are in the house's own units (PN_HA), turned to the frame's at the end. Pure. */
+const GRISWOLD_C=["#FF3B2F","#2ED158","#2F80FF","#FFB020","#FFF1D6"];
+/* Josh sent the still from the film the same afternoon ("my house more like this"): it is all one warm white,
+   and there is no surface left. So the bulbs are warm white in two tones, a pale one and a deeper gold in turn,
+   and they are everywhere: rows across the whole roof the way the film's run along its shingles, every edge
+   outlined, strands hanging down every wall between the windows, rows filling the gables' peaks, every window
+   ringed and the porch posts wrapped. [x, y, tone 0 or 1, size] */
+function pnGriswoldBulbs(B=PN_HA){
+  /* Josh, the same evening: "the nighttime lights on my house at night need to look a bit more chaotic vs a grid.
+     like a person did them." So every run is hung, not ruled: clipped up every few feet and sagging between the
+     clips, each row a little crooked and its own length, the bulbs not quite evenly spaced on the wire, the drops
+     down the walls each their own length and a little off plumb, now and then a loose end hanging, a bulb that
+     burns dim and one that is out. Every draw is seeded, so it is the same hand every time.
+     [x, y, tone 0 or 1, size, 0 lit, 1 dim, 2 out] */
+  const r=mulberry(1225),J=(a)=>(r()-.5)*2*a,out=[];
+  const bulb=(x,y,size=1)=>{const q=r();out.push([x+J(.18),y+J(.18),r()<.5?0:1,size*(.82+r()*.3),q<.035?2:q<.12?1:0])};
+  /* a run hung from clips: the wire sags between clips, the bulbs ride it roughly every `step` */
+  const hang=(a,b,step,{size=1,sag=.55,clip=7}={})=>{const L=Math.hypot(b[0]-a[0],b[1]-a[1]);if(L<.5)return;
+    const ux=(b[0]-a[0])/L,uy=(b[1]-a[1])/L,nx=-uy,ny=ux,down=ny>0?1:-1;
+    const clips=[0];for(let d=clip*(.7+r()*.6);d<L-1;d+=clip*(.7+r()*.6))clips.push(d);clips.push(L);
+    const sagAt=d=>{let i=0;while(i<clips.length-2&&d>clips[i+1])i++;const c0=clips[i],c1=clips[i+1],t=(d-c0)/((c1-c0)||1);return 4*t*(1-t)*sag*(.6+.8*((i*7919)%10)/10)};
+    for(let d=J(.3)+.2;d<=L;d+=step*(.82+r()*.36)){const s=sagAt(d)*down;bulb(a[0]+ux*d+nx*s,a[1]+uy*d+ny*s,size)}};
+  const yG=B.geave,[pxL,pyP]=B.peakL,halfG=(B.gl[1]-B.gl[0])/2;
+  const roofFoot=x=>{const ax=Math.abs(x);if(ax>=B.gr[0]&&ax<=B.gr[1])return pyP+(yG-pyP)*Math.abs(ax-Math.abs(pxL))/halfG;return B.eave};
+  const inWin=(x,y,m=1.7)=>[...B.winL,...B.winR].some(([a,b])=>x>a-m&&x<b+m&&y>B.winT-m&&y<B.winB+m);
+  const keep=(x,y)=>!(y>roofFoot(x)-1.3)&&!(Math.abs(x)<2.4&&y>-46);
+  /* the roof: rows across it, each its own: a little crooked, started and stopped short by its own amount, sagging
+     between its clips, and now and then a loose end hanging off a rake */
+  for(let y=B.ridge+2.2;y<B.eave-.6;y+=2.6+r()*.9){const t=(y-B.ridge)/(B.eave-B.ridge),xl=B.ridgeL+(B.roofL-B.ridgeL)*t+1.4,xr=-xl,tilt=J(.9);
+    const n0=out.length;hang([xl+r()*3.2,y-tilt],[xr-r()*3.2,y+tilt],1.7,{size:.82,sag:.5+r()*.5,clip:5+r()*4});
+    for(let i=out.length-1;i>=n0;i--)if(!keep(out[i][0],out[i][1]))out.splice(i,1);
+    if(r()<.22){const sx=r()<.5?xl+.5:xr-.5;for(let k=1;k<=2+Math.floor(r()*2);k++)if(keep(sx,y+k*1.4))bulb(sx+J(.3),y+k*1.4,.82)}}
+  /* the ridge and the rakes, and each gable's rakes, frieze, corners and its peak's rows */
+  hang([B.roofL-1.1,B.eave+.2],[B.ridgeL-.7,B.ridge-1.1],1.55,{sag:.25,clip:6});
+  hang([B.ridgeL-.7,B.ridge-1.1],[B.ridgeR+.7,B.ridge-1.1],1.55,{sag:.7,clip:8});
+  hang([B.ridgeR+.7,B.ridge-1.1],[B.roofR+1.1,B.eave+.2],1.55,{sag:.25,clip:6});
+  for(const[g0,g1,pk]of[[B.gl[0],B.gl[1],B.peakL],[B.gr[0],B.gr[1],B.peakR]]){
+    hang([g0-.9,yG+.4],[pk[0],pk[1]-1.2],1.5,{sag:.3,clip:5});hang([pk[0],pk[1]-1.2],[g1+.9,yG+.4],1.5,{sag:.3,clip:5});
+    hang([g0+1.4,yG-1.2],[g1-1.4,yG-1.2],1.6,{sag:.8,clip:6+r()*3});
+    hang([g0-.7,yG+2.2],[g0-.7+J(.4),-1.2-r()*1.5],1.6,{sag:.15});hang([g1+.7,yG+2.2],[g1+.7+J(.4),-1.2-r()*1.5],1.6,{sag:.15});
+    for(let y=yG-3.4;y>pk[1]+2.6;y-=2.2+r()*.6){const half=(g1-g0)/2*(y-pk[1])/(yG-pk[1])-2.2;if(half<1)break;
+      hang([pk[0]-half+r()*1.2,y+J(.4)],[pk[0]+half-r()*1.2,y+J(.4)],1.75,{size:.8,sag:.6,clip:4+r()*3})}
+    /* strands down the wall: hung by hand, each its own length and a little off plumb, and not evenly apart */
+    for(let x=g0+2.2+r();x<g1-1.6;x+=2.5+r()*1.5){const y0=yG+2.2+r()*1.2,y1=-1-r()*4.5,lean=J(.6),n0=out.length;
+      hang([x,y0],[x+lean,y1],1.7+r()*.3,{size:.8,sag:.12,clip:20});
+      for(let i=out.length-1;i>=n0;i--)if(inWin(out[i][0],out[i][1]))out.splice(i,1)}}
+  for(const[a,b]of[...B.winL,...B.winR]){const t=B.winT-1.3+J(.3),bb=B.winB+1.1;
+    hang([a-1.3,bb],[a-1.3+J(.3),t],1.55,{sag:.1});hang([a-1.3,t],[b+1.3,t+J(.4)],1.55,{sag:.45,clip:5});hang([b+1.3+J(.3),t],[b+1.3,bb],1.55,{sag:.1})}
+  const[p0,p1]=B.porch;hang([p0+.6,B.porchEave+.2],[p1-.6,B.porchEave+.2],1.5,{sag:.7,clip:6});
+  hang([B.gl[1]+1,B.eave-.6],[B.gr[0]-1,B.eave-.6],1.6,{size:.8,sag:.5});
+  /* the porch posts, wrapped round and round, the turns not even */
+  for(const x of[p0+.8,-9.8,9.8,p1-.8])for(let y=B.porchEave+2.4;y<-1;y+=1.25+r()*.5)bulb(x+J(.35),y,.82);
+  return out;
+}
+const GRIS_WARM=["#FFF3D2","#FFD27A"],GRIS_HALO=["#FFE7A8","#FFC560"];
+function pnGriswold(hx,hy,S,{on=false,fog=false,tone=c=>c}={}){
+  const pts=pnGriswoldBulbs(),f=v=>v.toFixed(2),dots=list=>list.map(([x,y,r])=>`M ${f(x-r)} ${f(y)} a ${f(r)} ${f(r)} 0 1 0 ${f(2*r)} 0 a ${f(r)} ${f(r)} 0 1 0 ${f(-2*r)} 0`).join(" ");
+  let halo="",core="";
+  for(const k of[0,1])for(const b of[0,1,2]){const at=pts.filter(p=>p[2]===k&&p[4]===b).map(([x,y,,sz])=>[hx+x*S,hy+y*S,sz]);if(!at.length)continue;
+    if(!on){core+=`<path d="${dots(at.map(([x,y,sz])=>[x,y,.42*sz]))}" fill="${tone(k?"#D8C48E":"#E6E0CC")}" opacity="${b===2?.5:.7}"/>`;continue}
+    /* a bulb that is out is a dark glass bead in the light of the rest; a dim one burns at half */
+    if(b===2){core+=`<path d="${dots(at.map(([x,y,sz])=>[x,y,.5*sz]))}" fill="#6B5A3E" opacity=".8"/>`;continue}
+    const dim=b===1?.5:1;
+    halo+=`<path d="${dots(at.map(([x,y,sz])=>[x,y,(fog?3.6:2.9)*sz]))}" fill="${GRIS_HALO[k]}" opacity="${(.2*dim).toFixed(2)}"/><path d="${dots(at.map(([x,y,sz])=>[x,y,(fog?2:1.55)*sz]))}" fill="${GRIS_HALO[k]}" opacity="${(.42*dim).toFixed(2)}"/>`;
+    core+=`<path d="${dots(at.map(([x,y,sz])=>[x,y,.62*sz]))}" fill="${b===1?"#E8B860":GRIS_WARM[k]}"/>`+(b===1?"":`<path d="${dots(at.map(([x,y,sz])=>[x,y,.28*sz]))}" fill="#FFFFFF" opacity=".9"/>`)}
+  return `<g class="decor" data-decor="griswold-lights" data-lit="${on?1:0}">${halo}${core}</g>`;
+}
+/* a light-up wire reindeer on the lawn, the film's yard herd: its outline in the same warm bulbs, standing on
+   y=0 facing +x, about fifteen units long. dir flips it */
+const GRIS_DEER=[[[-6,0],[-5.4,-5.6]],[[-3.6,0],[-3.4,-5.4]],[[3.2,0],[3.4,-5.4]],[[5.4,0],[5,-5.6]],
+  [[-6.4,-5.4],[-6.6,-8.6],[-3,-9.6],[3,-9.6],[5.6,-9.2],[6.6,-12.4],[7.4,-15.6],[9.6,-16.2],[10.6,-15],[8.6,-13.8],[7.8,-11],[6.2,-6],[5.4,-5.4],[-6.4,-5.4]],
+  [[-6.6,-8],[-8.4,-9.6]],[[7.4,-15.8],[6.6,-19],[5,-20.6]],[[6.8,-18.2],[8.6,-20.2]],[[8,-16],[9,-19.4],[10.6,-20.8]],[[9.2,-18.4],[11.4,-18.8]]];
+/* the bloom the house throws when it is lit: into the sky behind it (on the sky's sheet), over its own walls,
+   and on the lawn in front. Fills only, no filter */
+function pnGriswoldGlow(hx,hy,S,{fog=false}={}){
+  /* a dome of light over the house, gold at its heart and running out through rose to violet, the way a whole
+     neighbourhood's worth of bulbs lights a low sky; it outshines the stars round the roof */
+  const g=`<defs><radialGradient id="pnGrisSky"><stop offset="0" stop-color="#FFF0C4" stop-opacity="1"/><stop offset=".22" stop-color="#FFD27E" stop-opacity=".82"/><stop offset=".48" stop-color="#FFA36E" stop-opacity=".42"/><stop offset=".74" stop-color="#E58AB8" stop-opacity=".16"/><stop offset="1" stop-color="#B28AF0" stop-opacity="0"/></radialGradient>
+    <linearGradient id="pnGrisWall" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="-68"><stop offset="0" stop-color="#FFD98E" stop-opacity=".82"/><stop offset=".6" stop-color="#FFCC78" stop-opacity=".66"/><stop offset="1" stop-color="#FFEFC4" stop-opacity=".72"/></linearGradient></defs>`;
+  return{sky:g+`<ellipse data-light="griswold-sky" cx="${f1(hx)}" cy="${f1(hy-S*42)}" rx="${f1(S*(fog?150:132))}" ry="${f1(S*(fog?92:80))}" fill="url(#pnGrisSky)"/>`,
+    /* the gold is on the walls and the roof, never on the glass, so each window keeps its own room's light */
+    house:`<path data-light="griswold-walls" transform="translate(${f1(hx)} ${f1(hy)}) scale(${S})" fill-rule="evenodd" fill="url(#pnGrisWall)" d="${pnBackHouseSil(PN_HA)[0]} ${[...PN_HA.winL,...PN_HA.winR].map(([a,b])=>`M ${a} ${PN_HA.winT} L ${b} ${PN_HA.winT} L ${b} ${PN_HA.winB} L ${a} ${PN_HA.winB} Z`).join(" ")}"/>`,
+    lawn:`<ellipse data-light="griswold-lawn" cx="${f1(hx)}" cy="${f1(hy+S*7)}" rx="${f1(S*104)}" ry="${f1(S*15)}" fill="url(#pnGrisSky)" opacity=".9"/>`};
 }
 /* Shoulder line at the meeting rail, hood top just inside the top of the glass, head tipped the
    way he cocks it. y=0 is the shoulder. The robe is left unrotated so it hangs straight. */
@@ -11028,7 +11228,7 @@ function pnPondScene(c){
   const{W,H,GY,sunAltDeg,localHour,localMin,month,cloud,wind,gust,code,wet,snowing,storm,fog,temp,dark,
     skyS,goldK,rising,nightK,gloom,tone,air,lineC,inkAir,shadeC,texOn,paperK,arc,goldArc,sunBody,moonBody,sunTimes,houseSun="",
     sunXY,moonXY,veil,lightAt,litC,litK,shadeK,inkPal,castShadow,flatParts,phase,chopK,windFrom,downwind,rainK,
-    halloween,carved,candles,trickOrTreat,batN,batColony,batKeep,witchPlan,witchFly,pumpkinAt,hallowDefs,candleDefs,moonR,warned=false,christmas=false}=c;
+    halloween,carved,candles,trickOrTreat,batN,batColony,batKeep,witchPlan,witchFly,pumpkinAt,hallowDefs,candleDefs,moonR,warned=false,christmas=false,xmasOut=false}=c;
   let turtleBits="";
   const ox=(W-320)/2,oy=H-194,X=x=>x+ox,Y=y=>y+oy;
   /* the house's scale: about three fifths of the frame's width at 390 */
@@ -11100,6 +11300,9 @@ function pnPondScene(c){
   const peek=halloween?pnPeekGhost(hx,hy,S,BH):"";
   /* from November 6 the family's Christmas tree stands inside the tall panel beside the screen door */
   const xmas=christmas?pnXmasTree(hx,hy,S,BH,{lit:lightsOn,night:houseNight,tone,screen:hPal.screen}):"";
+  /* the Griswolds' lights, from November 18 (pnGriswold): lit from sunset to sunrise, all night */
+  const grisOn=xmasOut&&lit.griswold,grisGlow=grisOn?pnGriswoldGlow(hx,hy,S,{fog}):null;
+  const gris=xmasOut?(grisGlow?grisGlow.house:"")+pnGriswold(hx,hy,S,{on:grisOn,fog,tone}):"";
 
   /* ── the palms at the fence. Each end of the house is the same group: a sabal, a windmill palm low
      between them, and a sabal, the west group mirroring the east. Each sways from its foot with the gusts.
@@ -11113,11 +11316,38 @@ function pnPondScene(c){
     const px=X(x),foot=fenceB-PALM_BACK,th=h-PALM_BACK/ps;
     const Lr=kind==="s"?rigBftPalmetto(seed,{h:th,lean,boots:.74,woven:true,wind:pw}):rigPnWindmill(seed,{h:th,wind:pw,n:8,dead:1,size:.95});
     const[bx,by,bw,bh]=pathBox(flatParts(Lr).map(p=>p.d));top(px+bx*ps-4,px+(bx+bw)*ps+4,foot+by*ps-4);
-    return{x:px,foot,kind,Lr,crownY:foot+by*ps+(bh*ps+PALM_BACK)*(kind==="s"?.32:.36),i,amt:swayAmt*[.9,.72,1,1.1,.65,.85][i],dur:swayDur*[1.04,.9,1,.94,.86,1.08][i]}});
+    return{x:px,foot,kind,Lr,seed,lean,th,crownY:foot+by*ps+(bh*ps+PALM_BACK)*(kind==="s"?.32:.36),i,amt:swayAmt*[.9,.72,1,1.1,.65,.85][i],dur:swayDur*[1.04,.9,1,.94,.86,1.08][i]}});
   const palmSvg=(P,extra="",boxed=false)=>{const st=PRM||boxed?"":` style="transform-box:view-box;transform-origin:${f1(P.x)}px ${f1(P.foot)}px;${leanTo(P.amt,.4)};animation:swayTree ${P.dur.toFixed(1)}s ease-in-out infinite alternate;${wallClock(2*P.dur,P.i*1.9)}"`;
     const pal=P.kind==="s"?palAt({...INK.bftPalm,boot:"#C9B48E",bootLt:"#DDCCA8"},.04):palAt({...INK.pnWindmill,wmFrond:"#7FA160",wmFrondLt:"#97B872",wmFrondFar:"#5E8050",fibre:"#7A5E46"},.04);
     const up=lightsOn&&P.kind==="s"?`<ellipse data-light="uplight" cx="${f1(P.x)}" cy="${f1(P.foot-16)}" rx="5" ry="18" fill="url(#pnUplight)"/>`:"";
-    return `<g class="pn-palm" data-prop="${P.kind==="s"?"sabal":"windmill-palm"}"${st}>${inkAt(P.x,P.foot,ps,1,inkRig(P.Lr,pal,{s:ps,light:lightAt(P.x,fenceB-40),...BFT_PALM_O}))}${up}${extra}</g>`};
+    return `<g class="pn-palm" data-prop="${P.kind==="s"?"sabal":"windmill-palm"}"${st}>${inkAt(P.x,P.foot,ps,1,inkRig(P.Lr,pal,{s:ps,light:lightAt(P.x,fenceB-40),...BFT_PALM_O}))}${up}${palmWrap(P)}${extra}</g>`};
+  /* at Christmas the four sabals' trunks are wrapped in a spiral of the Griswolds' bulbs, the way a Southern
+     yard lights its palms: the trunk's own centreline and width (bftPalmTrunk's, its one sweep drawn off the
+     same seed), the front of each turn bright and the back of it lost behind the trunk, up to the boots'
+     top under the crown. Lit with the house, all night */
+  function palmWrap(P){
+    if(!xmasOut)return"";
+    const on=lit.griswold,pts=[];let k=0;
+    if(P.kind==="s"){
+      const h=P.th,sweep=(mulberry(P.seed*104729+7)()-.5)*.05,f=t=>1.625*t-.625*t**3;
+      const W=[3,2.8,2.62,2.5,2.42,2.36].map(v=>v*1.32),ts=[0,.06,.25,.5,.75,1];
+      const wT=t=>{for(let i=0;i<ts.length-1;i++)if(t<=ts[i+1])return W[i]+(W[i+1]-W[i])*(t-ts[i])/(ts[i+1]-ts[i]);return W[W.length-1]};
+      for(let t=.05;t<.9;t+=.01){const a=t*h/4.4*Math.PI*2+P.seed,c=Math.cos(a);if(c<.05)continue;
+        const x=P.lean*h*f(t)+sweep*h*Math.sin(Math.PI*t)+Math.sin(a)*wT(t)*.52,y=-h*t;
+        if(pts.length&&Math.hypot(x-pts[pts.length-1][0],y-pts[pts.length-1][1])<1.05)continue;
+        pts.push([x,y,(k++)%2])}
+    }else{
+      /* the little windmill palms are the film's shrubs, buried in lights: bulbs strewn over the crown */
+      const[bx,by,bw,bh]=pathBox(flatParts(P.Lr).map(p=>p.d)),r=mulberry(P.seed*313+9),cx=bx+bw/2,cy=by+bh*.42;
+      for(let i=0;i<38;i++){const a=r()*Math.PI*2,d=Math.sqrt(r());pts.push([cx+Math.cos(a)*d*bw*.44,cy+Math.sin(a)*d*bh*.36,i%2])}
+    }
+    const sx=x=>P.x+x*ps,sy=y=>P.foot+y*ps;
+    let out="";
+    for(const ci of[0,1]){const q=pts.filter(p=>p[2]===ci).map(([x,y])=>[sx(x),sy(y)]);if(!q.length)continue;
+      const d=r=>q.map(([x,y])=>`M ${f1(x-r)} ${f1(y)} a ${r} ${r} 0 1 0 ${2*r} 0 a ${r} ${r} 0 1 0 ${-2*r} 0`).join(" ");
+      out+=on?`<path d="${d(fog?2.4:1.9)}" fill="${GRIS_HALO[ci]}" opacity=".36"/><path d="${d(.55)}" fill="${GRIS_WARM[ci]}"/><path d="${d(.25)}" fill="#FFFFFF" opacity=".85"/>`
+        :`<path d="${d(.42)}" fill="${tone(ci?"#D8C48E":"#E6E0CC")}" opacity=".75"/>`}
+    return `<g data-xmas="palm-wrap">${out}</g>`}
   /* on the page each palm is a box of its own (liftKit) that the compositor sways about its foot: the same
      drawing, still, and the same sway on the box, so WebKit repaints nothing while the palms move */
   const{liftSvg,liftAt}=liftKit(W,H);
@@ -11251,6 +11481,48 @@ function pnPondScene(c){
         bulbs+=glow+`<ellipse cx="${f1(x)}" cy="${f1(y)}" rx="1.05" ry=".86" fill="${pumpOn?"#FF8A2A":air("#8A5A32",.2)}"/><ellipse cx="${f1(x-.16)}" cy="${f1(y-.1)}" rx=".4" ry=".32" fill="${pumpOn?"#FFD08A":air("#C4A07A",.25)}"/>`}}
     return `<g><path d="${wire}" fill="none" stroke="${mix(lineC,"#3A2A22",.45)}" stroke-width=".32"/>${bulbs}</g>`};
   const pumpLights=PN_PUMPKIN_LIGHTS&&halloween?`<g class="decor" data-decor="pumpkin-lights" data-lit="${pumpOn?1:0}">${pumpSwag(fx0+pillarW/2+1.2,gx0-1.4,4646)}${pumpSwag(gx1+1.4,fx1-pillarW/2-1.2,4747)}</g>`:"";
+  /* ── Christmas on the fence, from November 18: Josh, "I've draped garland across the fence as I had done
+     with the pumpkin lights. That green garland lights up at night in a soft white ... Put red bows on the
+     garland on the fence. Put a wreath on the fence gate." The garland hangs in the pumpkin lights' own swags,
+     a rope of fir with its needles, a soft white mini light every few inches that glows from sunset to sunrise
+     and is a pale bead by day, and a red bow where each swag is tied up, at the posts. The wreath hangs on the
+     gate, ringed in the same lights, with its own bow at the foot. All of it is still. */
+  const garOn=xmasOut&&lit.griswold,gDots=pts=>pts.map(([x,y,r])=>`M ${f1(x-r)} ${f1(y)} a ${f1(r)} ${f1(r)} 0 1 0 ${f1(2*r)} 0 a ${f1(r)} ${f1(r)} 0 1 0 ${f1(-2*r)} 0`).join(" ");
+  const garC=air("#2F5D3A",.03),garLt=air("#4F8457",.03),garDk=air("#1C3A25",.03),bowC=air("#C8202A",.02),bowDk=air("#8A1218",.02);
+  const bow=(x,y,k=1)=>{const w=1.9*k,h=1.15*k;
+    return `<path d="M ${f1(x)} ${f1(y)} C ${f1(x-w*.5)} ${f1(y-h*1.1)} ${f1(x-w*1.15)} ${f1(y-h*.6)} ${f1(x-w)} ${f1(y+h*.15)} C ${f1(x-w*.7)} ${f1(y+h*.55)} ${f1(x-w*.3)} ${f1(y+h*.35)} ${f1(x)} ${f1(y)} Z M ${f1(x)} ${f1(y)} C ${f1(x+w*.5)} ${f1(y-h*1.1)} ${f1(x+w*1.15)} ${f1(y-h*.6)} ${f1(x+w)} ${f1(y+h*.15)} C ${f1(x+w*.7)} ${f1(y+h*.55)} ${f1(x+w*.3)} ${f1(y+h*.35)} ${f1(x)} ${f1(y)} Z`
+      +` M ${f1(x-.25*k)} ${f1(y+.2*k)} L ${f1(x-.95*k)} ${f1(y+2.2*k)} L ${f1(x-.45*k)} ${f1(y+2.05*k)} L ${f1(x+.05*k)} ${f1(y+.35*k)} Z M ${f1(x+.25*k)} ${f1(y+.2*k)} L ${f1(x+.95*k)} ${f1(y+2.25*k)} L ${f1(x+.45*k)} ${f1(y+2.1*k)} L ${f1(x-.05*k)} ${f1(y+.35*k)} Z"`
+      +` fill="${bowC}" stroke="${bowDk}" stroke-width=".22" stroke-linejoin="round"/><circle cx="${f1(x)}" cy="${f1(y+.05)}" r="${f1(.42*k)}" fill="${bowDk}"/>`};
+  const miniGlow=(pts,r)=>garOn?`<path d="${gDots(pts.map(([x,y])=>[x,y,fog?r*1.5:r]))}" fill="#FFF3D6" opacity="${dark?.42:.3}"/><path d="${gDots(pts.map(([x,y])=>[x,y,.38]))}" fill="#FFFCF2"/>`
+    :`<path d="${gDots(pts.map(([x,y])=>[x,y,.3]))}" fill="${air("#F4F0E2",.04)}" opacity=".8"/>`;
+  const garSwag=(x0,x1,seed)=>{const r=mulberry(seed),span=x1-x0,bays=Math.max(1,Math.round(span/40));
+    let rope="",ties=[],minis=[];
+    for(let i=0;i<bays;i++){const a=x0+span*i/bays,b=x0+span*(i+1)/bays,yH=fenceT+.35,sag=3.2+r()*.35;
+      const at=t=>[a+(b-a)*t,yH+sag*4*t*(1-t)],m=at(.5),cq=[2*m[0]-(a+b)/2,2*m[1]-yH];
+      rope+=`M ${f1(a)} ${f1(yH)} Q ${f1(cq[0])} ${f1(cq[1])} ${f1(b)} ${f1(yH)} `;
+      if(!i)ties.push([a,yH]);ties.push([b,yH]);
+      const n=Math.round((b-a)/3.2);for(let k=1;k<n;k++){const[x,y]=at(k/n);minis.push([x+(r()-.5)*.5,y+(r()-.5)*.9])}}
+    return `<path d="${rope}" fill="none" stroke="${garDk}" stroke-width="2.1" stroke-linecap="round"/><path d="${rope}" fill="none" stroke="${garC}" stroke-width="1.6" stroke-linecap="round"/>`
+      +`<path d="${rope}" fill="none" stroke="${garLt}" stroke-width="1.2" stroke-dasharray=".35 .55" stroke-linecap="round" opacity=".9"/>`
+      +miniGlow(minis,1.5)+ties.map(([x,y])=>bow(x,y-.3,.9)).join("")};
+  const wreath=(()=>{if(!xmasOut)return"";const cx=doorX,cy=fenceT+3.3,R=2.35,r=mulberry(1224),berries=[],minis=[];
+    for(let i=0;i<14;i++){const a=i/14*Math.PI*2;minis.push([cx+Math.cos(a)*R,cy+Math.sin(a)*R])}
+    for(let i=0;i<7;i++){const a=r()*Math.PI*2,rr=R+(r()-.5)*.8;berries.push([cx+Math.cos(a)*rr,cy+Math.sin(a)*rr,.3])}
+    return `<g class="decor" data-decor="wreath"><circle cx="${f1(cx)}" cy="${f1(cy)}" r="${R}" fill="none" stroke="${garDk}" stroke-width="1.9"/><circle cx="${f1(cx)}" cy="${f1(cy)}" r="${R}" fill="none" stroke="${garC}" stroke-width="1.45"/>`
+      +`<circle cx="${f1(cx)}" cy="${f1(cy)}" r="${R}" fill="none" stroke="${garLt}" stroke-width="1" stroke-dasharray=".3 .5" opacity=".9"/><path d="${gDots(berries)}" fill="${bowC}"/>`
+      +miniGlow(minis,1.2)+bow(cx,cy+R-.2,.8)+`</g>`})();
+  /* two light-up wire reindeer on the lawn, the film's yard herd, either side of the gate and clear of the does'
+     ground: the wire white by day with its bulbs unlit, and at night only the light */
+  const reindeer=xmasOut?[[X(66),1],[X(236),-1]].map(([x0,dir])=>{const y0=fenceB+5.6,k=.74,pts=[];let n=0;
+      for(const ln of GRIS_DEER)for(let i=1;i<ln.length;i++){const[a,b]=[ln[i-1],ln[i]],L=Math.hypot(b[0]-a[0],b[1]-a[1]),m=Math.max(1,Math.round(L/1.15));
+        for(let j=i>1?1:0;j<=m;j++){const t=j/m;pts.push([x0+dir*k*(a[0]+(b[0]-a[0])*t),y0+k*(a[1]+(b[1]-a[1])*t),(n++)%2])}}
+      const wire=GRIS_DEER.map(ln=>"M "+ln.map(([x,y])=>`${f1(x0+dir*k*x)} ${f1(y0+k*y)}`).join(" L ")).join(" ");
+      let out=`<path d="${wire}" fill="none" stroke="${garOn?"#FFE6A8":air("#EDEBE4",.04)}" stroke-width=".32" stroke-linejoin="round" opacity="${garOn?.5:.85}"/>`;
+      for(const ci of[0,1]){const q=pts.filter(p=>p[2]===ci);
+        out+=garOn?`<path d="${gDots(q.map(([x,y])=>[x,y,fog?2:1.5]))}" fill="${GRIS_HALO[ci]}" opacity=".38"/><path d="${gDots(q.map(([x,y])=>[x,y,.42]))}" fill="${GRIS_WARM[ci]}"/>`
+          :`<path d="${gDots(q.map(([x,y])=>[x,y,.3]))}" fill="${air(ci?"#D8C48E":"#E6E0CC",.04)}"/>`}
+      return `<g class="decor" data-decor="light-up-reindeer" data-lit="${garOn?1:0}">${out}</g>`}).join(""):"";
+  const garland=xmasOut?`<g class="decor" data-decor="garland" data-lit="${garOn?1:0}">${garSwag(fx0+pillarW/2+1.2,gx0-1.4,4646)}${garSwag(gx1+1.4,fx1-pillarW/2-1.2,4747)}</g>`+wreath:"";
   const fence=`<g data-prop="fence"><path d="M ${f1(fx0)} ${f1(fenceT+.9)} L ${f1(gx0)} ${f1(fenceT+.9)} M ${f1(gx1)} ${f1(fenceT+.9)} L ${f1(fx1)} ${f1(fenceT+.9)} M ${f1(fx0)} ${f1(fenceB-1.5)} L ${f1(gx0)} ${f1(fenceB-1.5)} M ${f1(gx1)} ${f1(fenceB-1.5)} L ${f1(fx1)} ${f1(fenceB-1.5)}" stroke="${fenceC}" stroke-width=".8"/><path d="${ticks}" stroke="${fenceC}" stroke-width=".5" opacity=".85"/>${gateSvg}${pillar(fx0)}${pillar(fx1)}</g>${pumpLights}`;
   /* Josh: "one orange and one white pumpkin on both fence stantions - then carve them on time" */
   const capY=fenceB-pillarH-1.5;
@@ -11330,8 +11602,8 @@ function pnPondScene(c){
 
   /* ── the land, back to front; the reflection is the same picture turned over at the water and pressed
      shorter (k), the storybook's licence, so the porch's lights are doubled inside the frame */
-  const standing=`${farWood}${house}${xmas}${patio}${boards}${fireLight}${chairsBack}${fire}${chairs}${tub}${tree}${swagMid}${peek}`
-    +grasses+PALMS.map((P,i)=>palmSvg(P,i===2?swagL:i===3?swagR:"")).join("")+`${fence}${pumpkins}`;
+  const standing=`${farWood}${house}${xmas}${gris}${patio}${boards}${fireLight}${chairsBack}${fire}${chairs}${tub}${tree}${swagMid}${peek}`
+    +grasses+PALMS.map((P,i)=>palmSvg(P,i===2?swagL:i===3?swagR:"")).join("")+`${fence}${garland}${reindeer}${pumpkins}`;
   /* the copy holds still (its animations come off) and its light on the water is the flame's orange */
   /* a still picture: no style that moves it, no class (so no candle flickers in the water), no data name
      (so nothing in the water is taken for the thing itself) */
@@ -11573,11 +11845,11 @@ function pnPondScene(c){
       ${candleDefs||""}${hallowDefs||""}
       ${tex?`<pattern id="paper" width="160" height="160" patternUnits="userSpaceOnUse"><image href="${paperTex()}" width="160" height="160"/></pattern>`:""}
     </defs>
-    ${houseSun}${skyOver?"":sunBody+moonShown+sideSky}`;
+    ${grisGlow?grisGlow.sky:""}${houseSun}${skyOver?"":sunBody+moonShown+sideSky}`;
   sheet("sceneSky").innerHTML=gulls+(skyOver?sunBody+moonShown+sideSky:"")+sceneClouds};
-  const landPaint=()=>{sheet("sceneNear").innerHTML=`${lawn}${farWood}${house}${xmas}${sunGlint}${patio}${sunGround}${boards}${fireLight}${chairsBack}${fireStill}${chairs}${tub}${tree}${swagMid}${peek}`;
+  const landPaint=()=>{sheet("sceneNear").innerHTML=`${lawn}${grisGlow?grisGlow.lawn:""}${farWood}${house}${xmas}${gris}${sunGlint}${patio}${sunGround}${boards}${fireLight}${chairsBack}${fireStill}${chairs}${tub}${tree}${swagMid}${peek}`;
   document.getElementById("sceneLift").innerHTML=grassLift+PALMS.map(palmLift).join("");
-  sheet("sceneFront").innerHTML=fence+(guttering?"":pumpkins)+gateKid+(guttering?"":gateLanterns);
+  sheet("sceneFront").innerHTML=fence+garland+reindeer+(guttering?"":pumpkins)+gateKid+(guttering?"":gateLanterns);
   sheet("sceneFx").innerHTML=fireWash+fireFlame+(guttering?pumpkins+gateLanterns:"")+hawk+bats+witchFly(witch)+(nearRainL?`<defs>${nearRainL.defs}</defs>${nearRainL.drops}`:"")+tubFx};
   const waterPaint=()=>{sheet("sceneWater").innerHTML=`
       ${glowK>.02?`<g data-light="side-wash" mask="url(#pnFadeIn)"><rect x="${f1(-12)}" y="${f1(Y(14))}" width="${W+24}" height="${f1(sandY-Y(14))}" fill="url(#pnSideWash)" opacity="${(.3*glowK).toFixed(2)}"/>`
@@ -11928,7 +12200,8 @@ function lowcountryScene(c){
   /* the dock house's light is on after sunset, as the bridge's are */
   const dockLamp=sunAltDeg< -.83;
   const dock=`<g data-prop="dock">${inkAt(dockX,deckY,1,1,inkRig(propBftDock(tide,{len:W-dockX+8,poles:true,lamp:dockLamp}),dockPal,{s:k,light:lightAt(dockX,deckY-10),...BFT_DOCK_O}))}</g>`
-    +(dockLamp?`<circle cx="${f1(dockX+BFT_DOCK_POLES.lamp.x)}" cy="${f1(deckY+BFT_DOCK_POLES.lamp.y)}" r="${BFT_DOCK_POLES.lamp.glow}" fill="url(#lclamp)" opacity="${fog?.6:.9}"/>`:"");
+    +(dockLamp?`<circle cx="${f1(dockX+BFT_DOCK_POLES.lamp.x)}" cy="${f1(deckY+BFT_DOCK_POLES.lamp.y)}" r="${BFT_DOCK_POLES.lamp.glow}" fill="url(#lclamp)" opacity="${fog?.6:.9}"/>`:"")
+    +(c.xmasOut?bftDockXmas(W-dockX+8,{on:dockLamp,fog,tone,at:[dockX,deckY]}):"");
   const boatAt=BFT_DOCK_BOAT(tide),rock=clamp(.5+chopK*2.6+(gust-wind)*.04,.5,3.4);
   const boatRig=rigBftBoat();
   const boatSvg=inkRig(boatRig,palAt(INK.bftBoat,.04),{s:k,light:lightAt(dockX+boatAt.x,deckY+boatAt.y-8),...BFT_BOAT_O});
@@ -11941,7 +12214,8 @@ function lowcountryScene(c){
   const boatXY=[+f1(dockX+boatAt.x),+f1(deckY+boatAt.y)];
   const bonesBox=c.halloween?(()=>{const A=BFT_BONES_AT,[bx,by,bw,bh]=pathBox(partsOf(rigBftBones({k})).map(p=>p.d));return[A.x+bx*A.s,A.y+by*A.s,bw*A.s,bh*A.s]})():null;
   const boatBox=boxOf(boatRig,boatXY[0],boatXY[1],bonesBox?5:3,bonesBox);
-  const boat=liftAt(boatBox,liftSvg(boatBox,`<g data-prop="boat" transform="translate(${f1(dockX+boatAt.x)} ${f1(deckY+boatAt.y)})">${boatSvg.replace(/<\/g><\/g><\/g>$/,bones+"</g></g></g>")}</g>`),boatXY,
+  const boatXmas=c.xmasOut?bftBoatXmas({on:dockLamp,fog,tone}):"";
+  const boat=liftAt(boatBox,liftSvg(boatBox,`<g data-prop="boat" transform="translate(${f1(dockX+boatAt.x)} ${f1(deckY+boatAt.y)})">${boatSvg.replace(/<\/g><\/g><\/g>$/,bones+boatXmas+"</g></g></g>")}</g>`),boatXY,
     PRM?"":`--rk:${rock.toFixed(2)}deg;--rty:${pct(.25/boatBox[3])};animation:bftRockLift ${clamp(5.6-chopK*2.6,2.8,5.6).toFixed(1)}s ease-in-out -${(Date.now()/1000%5).toFixed(1)}s infinite alternate`);
   const kt=gust*.869,dirX=downwind;
   const PO=BFT_DOCK_POLES,flagPal=palAt(INK.bftFlags,.04);
