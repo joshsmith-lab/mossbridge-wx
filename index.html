@@ -5546,9 +5546,9 @@ function bftDockPile(x,top,w,D,seed,{cap=true}={}){
    T-top to the bow and the stern so the boat wears a Christmas tree. All of it is lit with the dock's lamp, from
    sunset, and unlit bulbs by day. The dock's lights are in dock units at the dock's foot; the boat's in the
    boat's own units, inside its box, so they rock with it */
-const bftBulbs=(pts,{on,fog,tone,cols,r=.5})=>{const f=v=>v.toFixed(2),dots=(l,rr)=>l.map(([x,y])=>`M ${f(x-rr)} ${f(y)} a ${f(rr)} ${f(rr)} 0 1 0 ${f(2*rr)} 0 a ${f(rr)} ${f(rr)} 0 1 0 ${f(-2*rr)} 0`).join(" ");
+const bftBulbs=(pts,{on,fog,tone,cols,r=.5,halo=3.1})=>{const f=v=>v.toFixed(2),dots=(l,rr)=>l.map(([x,y])=>`M ${f(x-rr)} ${f(y)} a ${f(rr)} ${f(rr)} 0 1 0 ${f(2*rr)} 0 a ${f(rr)} ${f(rr)} 0 1 0 ${f(-2*rr)} 0`).join(" ");
   let out="";cols.forEach((c,i)=>{const q=pts.filter((_,j)=>j%cols.length===i);if(!q.length)return;
-    out+=on?`<path d="${dots(q,fog?r*4:r*3.1)}" fill="${c}" opacity=".36"/><path d="${dots(q,r)}" fill="${c}"/><path d="${dots(q,r*.45)}" fill="#FFFFFF" opacity=".85"/>`
+    out+=on?`<path d="${dots(q,fog?r*halo*1.3:r*halo)}" fill="${c}" opacity=".36"/><path d="${dots(q,r)}" fill="${c}"/><path d="${dots(q,r*.45)}" fill="#FFFFFF" opacity=".85"/>`
       :`<path d="${dots(q,r*.8)}" fill="${tone(c)}" opacity=".8"/>`});return out};
 const bftLine=(a,b,step)=>{const l=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.round(l/step)),o=[];for(let i=0;i<=n;i++)o.push([a[0]+(b[0]-a[0])*i/n,a[1]+(b[1]-a[1])*i/n]);return o};
 function bftDockXmas(len,{on,fog,tone,at:[x0,y0]}){
@@ -5560,6 +5560,7 @@ function bftDockXmas(len,{on,fog,tone,at:[x0,y0]}){
     for(let k=i>1?1:0;k<=n;k++){const t=k/n;pts.push([a+(b-a)*t,-5.3+1.3*4*t*(1-t)])}}
   const wx=24.6,wy=-6.9,wr=1.55,warm=["#FFF3D2","#FFD27A"];
   const wreath=`<g data-decor="dock-wreath" class="decor"><circle cx="${wx}" cy="${wy}" r="${wr}" fill="none" stroke="#1A2A20" stroke-width="1.35"/><circle cx="${wx}" cy="${wy}" r="${wr}" fill="none" stroke="${tone("#2F5D3A")}" stroke-width="1"/>`
+    +(on?bftBulbs(Array.from({length:8},(_,i)=>{const a=(i+.5)/8*Math.PI*2;return[wx+Math.cos(a)*wr,wy+Math.sin(a)*wr]}),{on,fog,tone,cols:warm,r:.2,halo:2.6}):"")
     +`<path d="M ${wx} ${wy+wr} l -1.1 -.7 l -.15 1 Z M ${wx} ${wy+wr} l 1.1 -.7 l .15 1 Z" fill="${tone("#C8202A")}" stroke="${tone("#C8202A")}" stroke-width=".3"/></g>`;
   return `<g class="decor" data-decor="dock-lights" data-lit="${on?1:0}" transform="translate(${f1(x0)} ${f1(y0)})">${bftBulbs(pts,{on,fog,tone,cols:warm,r:.42})}</g>`
     +`<g transform="translate(${f1(x0)} ${f1(y0)})">${wreath}</g>`;
@@ -5570,8 +5571,10 @@ function bftBoatXmas({on,fog,tone}){
   pts.push(...bftLine([-4.4,-12.9],[6.2,-12.9],1.2));
   /* the tree: from the T-top's middle down to the bow's rail and to the stern */
   pts.push(...bftLine([.9,-13.4],[-12.3,sh(-12.3)-1.1],1.25).slice(1),...bftLine([.9,-13.4],[10,sh(10)-.4],1.25).slice(1));
-  const star=on?`<circle cx=".9" cy="-14.4" r="${fog?3.2:2.4}" fill="#FFE07A" opacity=".42"/>`:"";
-  return `<g class="decor" data-decor="boat-lights" data-lit="${on?1:0}">${star}${bftBulbs(pts,{on,fog,tone,cols:["#FF3B2F","#2ED158","#2F80FF","#FFB020","#FFF1D6"],r:.38})}<path d="M .9 -15.9 l .45 1 l 1.05 .1 l -.8 .7 l .25 1.05 l -.95 -.55 l -.95 .55 l .25 -1.05 l -.8 -.7 l 1.05 -.1 Z" fill="${on?"#FFE48A":tone("#E6C25A")}"/></g>`;
+  /* lit, the halos stay a little wider than the bulb, because at the dock's three times the strands ran together on a
+     phone into thick fuzzy ropes, and the star glows softly rather than standing on a flat disc */
+  const star=on?`<circle cx=".9" cy="-14.4" r="${fog?2.8:2.2}" fill="#FFE07A" opacity=".14"/><circle cx=".9" cy="-14.4" r="${fog?1.8:1.4}" fill="#FFE07A" opacity=".26"/>`:"";
+  return `<g class="decor" data-decor="boat-lights" data-lit="${on?1:0}">${star}${bftBulbs(pts,{on,fog,tone,cols:["#FF3B2F","#2ED158","#2F80FF","#FFB020","#FFF1D6"],r:.38,halo:2.1})}<path d="M .9 -15.9 l .45 1 l 1.05 .1 l -.8 .7 l .25 1.05 l -.95 -.55 l -.95 .55 l .25 -1.05 l -.8 -.7 l 1.05 -.1 Z" fill="${on?"#FFE48A":tone("#E6C25A")}"/></g>`;
 }
 function propBftDock(tide=.5,o={}){
   o=o||{};
@@ -9325,17 +9328,23 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
       <path d="${arcAt(r,th+Math.PI-1.15,th+Math.PI+1.15)}" fill="none" stroke="${lineC}" stroke-width="1.9" stroke-linecap="round" opacity=".7"/>`}
       ${!up&&!storm?`<circle ${cc} r="${(r+3*Math.sqrt(s)).toFixed(2)}" fill="none" stroke="${hm.ring}" stroke-width=".8" stroke-dasharray="1 3.2" opacity=".45"/>`:""}
     </g>`;
-    }else moonBody=`<g data-moon="ordinary" data-disc="${x.toFixed(1)} ${y.toFixed(1)} ${r}" opacity="${mOp.toFixed(2)}">
-      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="26" fill="url(#moonglow)"/>
-      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="${dark?'rgba(255,255,255,.10)':'rgba(255,255,255,.28)'}"/>
+    }else{
+      /* by day the sky shows through the moon's dark side, so only the lit part is drawn, its craters inside it, and
+         its glow is as much as it has lit: on December 12 2026, three days past new, a whole pale disc with its
+         craters stood beside a crescent a few pixels wide */
+      const mId=`mo${++inkUid}`,dayClip=up?` clip-path="url(#${mId})"`:"";
+      moonBody=`<g data-moon="ordinary" data-disc="${x.toFixed(1)} ${y.toFixed(1)} ${r}" opacity="${mOp.toFixed(2)}">
+      ${up?`<defs><clipPath id="${mId}"><path d="${term}"/></clipPath></defs>`:""}
+      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="26" fill="url(#moonglow)"${up?` opacity="${(.25+.75*ill).toFixed(2)}"`:""}/>
+      ${up?"":`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="${dark?'rgba(255,255,255,.10)':'rgba(255,255,255,.28)'}"/>`}
       ${!up&&ill<.5?`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="#CBDCE8" opacity="${(.02+(1-ill/.5)*.045).toFixed(3)}"/>`:""}
       <path d="${term}" fill="#F6F1DE"/>
-      <circle cx="${(x-3).toFixed(1)}" cy="${(y-3).toFixed(1)}" r="2.1" fill="rgba(20,49,63,.13)"/>
+      <g${dayClip}><circle cx="${(x-3).toFixed(1)}" cy="${(y-3).toFixed(1)}" r="2.1" fill="rgba(20,49,63,.13)"/>
       <circle cx="${(x+3.4).toFixed(1)}" cy="${(y+2.6).toFixed(1)}" r="1.5" fill="rgba(20,49,63,.11)"/>
-      <circle cx="${(x-1).toFixed(1)}" cy="${(y+4.4).toFixed(1)}" r="1.1" fill="rgba(20,49,63,.10)"/>
+      <circle cx="${(x-1).toFixed(1)}" cy="${(y+4.4).toFixed(1)}" r="1.1" fill="rgba(20,49,63,.10)"/></g>
       ${up?"":`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="none" stroke="${lineC}" stroke-width="1" opacity=".7"/>`}
       ${!up&&!storm?`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r+3}" fill="none" stroke="#DDE8FF" stroke-width=".8" stroke-dasharray="1 3.2" opacity=".45"/>`:""}
-    </g>`;
+    </g>`}
   }
   const sunBody=body;body+=moonBody;
   /* the light comes from wherever the sun is, or the moon once the sun is down, or the sky
@@ -10262,23 +10271,41 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
         +pumpkinAt(lanR,barnFoot,bigR.s,{w:bigR.w,h:bigR.h,carved,seed:6,lights:[...kidLit,doorstep]});
     }else if(xmasOut){
       /* Christmas at the barn, from November 18: the little tree at the corner where the corn shock stands in
-         October, its bulbs lit from sunset, Hermey on the doorstep where the trick-or-treater stood, facing the
-         tree with his mirror up, and a wreath on the gable over the door. The grass leaves the doorstep to them */
+         October, its bulbs lit from sunset, Hermey beside it, facing it with his mirror up, and a wreath on the gable
+         over the door. Hermey stood at the door at first, where the trick-or-treater stood, and on a phone the door's
+         white cross braces forked out of his collar like wings and he was a long way from the tree he was holding his
+         mirror up to; beside the tree he stands against the red wall, a step in front of it. The grass leaves the
+         doorstep to them */
       const tr={parts:propFarmTree(),x:barnX-21.2,y:barnFoot,s:.74},on=sunAltDeg< -.83;
       const[tx0]=pathBox(silOf(tr.parts).map(p=>p.d));
       keepClear=[[tr.x+tx0*tr.s-.4,barnX+4.2]];
       const cols=GRISWOLD_C,bulbs=FARM_TREE_BULBS.map(([x,y],i)=>{const c=cols[i%5];
-        return (on?`<circle cx="${x}" cy="${y}" r="${fog?2.4:1.8}" fill="${c}" opacity=".38"/>`:"")+`<circle cx="${x}" cy="${y}" r="${on?.62:.5}" fill="${on?c:tone(c)}"/>`+(on?`<circle cx="${x}" cy="${y}" r=".28" fill="#FFFFFF" opacity=".8"/>`:"")}).join("");
-      const starGlow=on?`<circle cx="0" cy="-21.4" r="${fog?6:4.6}" fill="#FFE07A" opacity=".32"/>`:"";
-      const hp=decorPal(INK.hermey,.04),hx_=barnX+.6,hy_=barnFoot+.4,hs=.1;
+        return (on?`<circle cx="${x}" cy="${y}" r="${fog?1.6:1.15}" fill="${c}" opacity=".4"/>`:"")+`<circle cx="${x}" cy="${y}" r="${on?.62:.5}" fill="${on?c:tone(c)}"/>`+(on?`<circle cx="${x}" cy="${y}" r=".28" fill="#FFFFFF" opacity=".8"/>`:"")}).join("");
+      /* lit, the bulbs' halos are kept inside a bough's width, because a halo as wide as the tier turned the little
+         tree into a heap of coloured balls on a phone, and the star is lit itself, a gold star in a soft glow, where
+         it had been the day's star gone dark in front of a flat yellow disc */
+      const starPts=Array.from({length:10},(_,i)=>{const a=-Math.PI/2+i*Math.PI/5,r=i%2?.8:1.9;return`${f1(Math.cos(a)*r)} ${f1(-21.4+Math.sin(a)*r)}`}).join(" L ");
+      const starGlow=on?`<circle cx="0" cy="-21.4" r="${fog?5.6:4.2}" fill="#FFE07A" opacity=".14"/><circle cx="0" cy="-21.4" r="${fog?3.4:2.7}" fill="#FFE07A" opacity=".26"/>`:"";
+      const starLit=on?`<path d="M ${starPts} Z" fill="#FFD95A" stroke="#C89422" stroke-width=".3" stroke-linejoin="round"/><circle cx="0" cy="-21.4" r=".55" fill="#FFFBEA"/>`:"";
+      /* the tree's light falls on the wall and the doorstep round it, and on Hermey's side toward it */
+      const treePool=on?`<ellipse cx="${f1(tr.x+1)}" cy="${f1(barnFoot-5)}" rx="${fog?13:10.5}" ry="8" fill="url(#farmTreePool)"/>`:"";
+      const poolDefs=on?`<defs><radialGradient id="farmTreePool"><stop offset="0" stop-color="#FFD58A" stop-opacity=".42"/><stop offset=".55" stop-color="#FFB46E" stop-opacity=".18"/><stop offset="1" stop-color="#FFB46E" stop-opacity="0"/></radialGradient></defs>`:"";
+      const hp=decorPal(INK.hermey,.04),hx_=barnX-12.6,hy_=barnFoot+.4,hs=.1;
       /* the wreath on the gable, over the door: a ring of fir, berries and a red bow (barn units 18, -18.8) */
       const wx=barnX-21+1.18*18,wy=base-31+1.18*(27-18.8),wr=2.3,wR=mulberry(1225);
       let berries="";for(let i=0;i<6;i++){const a=wR()*Math.PI*2,rr=wr+(wR()-.5)*.7;berries+=`<circle cx="${f1(wx+Math.cos(a)*rr)}" cy="${f1(wy+Math.sin(a)*rr)}" r=".3"/>`}
       const wreathC=air("#2F5D3A",.04),bowC=air("#C8202A",.03);
-      barnDecor=`<g class="decor" data-decor="farm-tree" data-lit="${on?1:0}">${inkAt(tr.x,tr.y,tr.s,1,starGlow+inkUnit(tr.parts,decorPal(INK.farmTree,.04),{s:tr.s,light:lightAt(tr.x,tr.y-10)})+bulbs)}</g>`
-        +`<g class="decor" data-decor="barn-wreath"><circle cx="${f1(wx)}" cy="${f1(wy)}" r="${wr}" fill="none" stroke="${lineC}" stroke-width="1.9"/><circle cx="${f1(wx)}" cy="${f1(wy)}" r="${wr}" fill="none" stroke="${wreathC}" stroke-width="1.4"/><g fill="${bowC}">${berries}</g>`
+      /* lit with the tree, a ring of small warm lights, so at night the wreath is still a wreath under the loft lamp
+         and not a dark ring */
+      const wreathLit=on?(()=>{let h="",c="";for(let i=0;i<10;i++){const a=(i+.5)/10*Math.PI*2,x=wx+Math.cos(a)*wr,y=wy+Math.sin(a)*wr;
+        h+=`<circle cx="${f1(x)}" cy="${f1(y)}" r="${fog?1:.75}"/>`;c+=`<circle cx="${f1(x)}" cy="${f1(y)}" r=".26"/>`}
+        return `<g fill="#FFDFA0" opacity=".38">${h}</g><g fill="#FFF8E4">${c}</g>`})():"";
+      const hLayers=propHermey(-1),hSil=on?silOf(hLayers.flatMap(L=>L.parts)).map(p=>`<path d="${p.d}"/>`).join(""):"",hId=`hl${++inkUid}`;
+      const hLit=on?`<clipPath id="${hId}">${hSil}</clipPath><linearGradient id="${hId}g" gradientUnits="userSpaceOnUse" x1="-34" y1="0" x2="22" y2="0"><stop offset="0" stop-color="#FFD27E" stop-opacity=".8"/><stop offset="1" stop-color="#FFD27E" stop-opacity="0"/></linearGradient><rect clip-path="url(#${hId})" x="-40" y="-120" width="80" height="125" fill="url(#${hId}g)"/>`:"";
+      barnDecor=poolDefs+treePool+`<g class="decor" data-decor="farm-tree" data-lit="${on?1:0}">${inkAt(tr.x,tr.y,tr.s,1,starGlow+inkUnit(tr.parts,decorPal(INK.farmTree,.04),{s:tr.s,light:lightAt(tr.x,tr.y-10)})+bulbs+starLit)}</g>`
+        +`<g class="decor" data-decor="barn-wreath"><circle cx="${f1(wx)}" cy="${f1(wy)}" r="${wr}" fill="none" stroke="${lineC}" stroke-width="1.9"/><circle cx="${f1(wx)}" cy="${f1(wy)}" r="${wr}" fill="none" stroke="${wreathC}" stroke-width="1.4"/><g fill="${bowC}">${berries}</g>${wreathLit}`
         +`<path d="M ${f1(wx)} ${f1(wy+wr)} l -1.5 -1 l -.2 1.4 Z M ${f1(wx)} ${f1(wy+wr)} l 1.5 -1 l .2 1.4 Z M ${f1(wx-.2)} ${f1(wy+wr)} l -.7 1.8 M ${f1(wx+.2)} ${f1(wy+wr)} l .7 1.8" fill="${bowC}" stroke="${bowC}" stroke-width=".45" stroke-linejoin="round"/></g>`
-        +`<g class="decor" data-decor="herbie">${inkAt(hx_,hy_,hs,1,inkRig(propHermey(-1),hp,{s:hs,line:.7,heavy:.3,shade:.9,lit:.5,light:lightAt(hx_,hy_-6)}))}</g>`;
+        +`<g class="decor" data-decor="herbie">${inkAt(hx_,hy_,hs,1,inkRig(hLayers,hp,{s:hs,line:.7,heavy:.3,shade:.9,lit:.5,light:lightAt(hx_,hy_-6)})+hLit)}</g>`;
     }
     /* split rails: inked, then the weathered wood laid over the ink */
     const fence=`<path d="${fp}${fr}" stroke="${lineC}" stroke-width="2.1" fill="none" stroke-linecap="round" opacity=".85"/><path d="${fp}${fr}" stroke="${air("#B99A76",.04)}" stroke-width="1.05" fill="none" stroke-linecap="round"/>`;
@@ -11099,7 +11126,7 @@ function pnGriswold(hx,hy,S,{on=false,fog=false,tone=c=>c}={}){
   for(const k of[0,1])for(const b of[0,1,2]){const at=pts.filter(p=>p[2]===k&&p[4]===b).map(([x,y,,sz])=>[hx+x*S,hy+y*S,sz]);if(!at.length)continue;
     if(!on){core+=`<path d="${dots(at.map(([x,y,sz])=>[x,y,.42*sz]))}" fill="${tone(k?"#D8C48E":"#E6E0CC")}" opacity="${b===2?.5:.7}"/>`;continue}
     /* a bulb that is out is a dark glass bead in the light of the rest; a dim one burns at half */
-    if(b===2){core+=`<path d="${dots(at.map(([x,y,sz])=>[x,y,.5*sz]))}" fill="#6B5A3E" opacity=".8"/>`;continue}
+    if(b===2){core+=`<path d="${dots(at.map(([x,y,sz])=>[x,y,.5*sz]))}" fill="#9A8156" opacity=".55"/>`;continue}
     const dim=b===1?.5:1;
     halo+=`<path d="${dots(at.map(([x,y,sz])=>[x,y,(fog?3.6:2.9)*sz]))}" fill="${GRIS_HALO[k]}" opacity="${(.2*dim).toFixed(2)}"/><path d="${dots(at.map(([x,y,sz])=>[x,y,(fog?2:1.55)*sz]))}" fill="${GRIS_HALO[k]}" opacity="${(.42*dim).toFixed(2)}"/>`;
     core+=`<path d="${dots(at.map(([x,y,sz])=>[x,y,.62*sz]))}" fill="${b===1?"#E8B860":GRIS_WARM[k]}"/>`+(b===1?"":`<path d="${dots(at.map(([x,y,sz])=>[x,y,.28*sz]))}" fill="#FFFFFF" opacity=".9"/>`)}
@@ -11116,10 +11143,10 @@ function pnGriswoldGlow(hx,hy,S,{fog=false}={}){
   /* a dome of light over the house, gold at its heart and running out through rose to violet, the way a whole
      neighbourhood's worth of bulbs lights a low sky; it outshines the stars round the roof */
   const g=`<defs><radialGradient id="pnGrisSky"><stop offset="0" stop-color="#FFF0C4" stop-opacity="1"/><stop offset=".22" stop-color="#FFD27E" stop-opacity=".82"/><stop offset=".48" stop-color="#FFA36E" stop-opacity=".42"/><stop offset=".74" stop-color="#E58AB8" stop-opacity=".16"/><stop offset="1" stop-color="#B28AF0" stop-opacity="0"/></radialGradient>
-    <linearGradient id="pnGrisWall" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="-68"><stop offset="0" stop-color="#FFD98E" stop-opacity=".82"/><stop offset=".6" stop-color="#FFCC78" stop-opacity=".66"/><stop offset="1" stop-color="#FFEFC4" stop-opacity=".72"/></linearGradient></defs>`;
+    <linearGradient id="pnGrisWall" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="-68"><stop offset="0" stop-color="#FFD98E" stop-opacity=".64"/><stop offset=".6" stop-color="#FFCC78" stop-opacity=".5"/><stop offset="1" stop-color="#FFEFC4" stop-opacity=".56"/></linearGradient></defs>`;
   return{sky:g+`<ellipse data-light="griswold-sky" cx="${f1(hx)}" cy="${f1(hy-S*42)}" rx="${f1(S*(fog?150:132))}" ry="${f1(S*(fog?92:80))}" fill="url(#pnGrisSky)"/>`,
     /* the gold is on the walls and the roof, never on the glass, so each window keeps its own room's light */
-    house:`<path data-light="griswold-walls" transform="translate(${f1(hx)} ${f1(hy)}) scale(${S})" fill-rule="evenodd" fill="url(#pnGrisWall)" d="${pnBackHouseSil(PN_HA)[0]} ${[...PN_HA.winL,...PN_HA.winR].map(([a,b])=>`M ${a} ${PN_HA.winT} L ${b} ${PN_HA.winT} L ${b} ${PN_HA.winB} L ${a} ${PN_HA.winB} Z`).join(" ")}"/>`,
+    house:`<path data-light="griswold-walls" transform="translate(${f1(hx)} ${f1(hy)}) scale(${S})" fill-rule="evenodd" fill="url(#pnGrisWall)" d="${pnBackHouseSil(PN_HA)[0]} ${[...PN_HA.winL,...PN_HA.winR].map(([a,b])=>`M ${a} ${PN_HA.winT} L ${b} ${PN_HA.winT} L ${b} ${PN_HA.winB} L ${a} ${PN_HA.winB} Z`).join(" ")} M ${PN_HA.panel[0]} ${PN_HA.porchEave+3.6} L ${PN_HA.panel[1]} ${PN_HA.porchEave+3.6} L ${PN_HA.panel[1]} -4.8 L ${PN_HA.panel[0]} -4.8 Z"/>`,
     lawn:`<ellipse data-light="griswold-lawn" cx="${f1(hx)}" cy="${f1(hy+S*7)}" rx="${f1(S*104)}" ry="${f1(S*15)}" fill="url(#pnGrisSky)" opacity=".9"/>`};
 }
 /* Shoulder line at the meeting rail, hood top just inside the top of the glass, head tipped the
@@ -11493,7 +11520,9 @@ function pnPondScene(c){
     return `<path d="M ${f1(x)} ${f1(y)} C ${f1(x-w*.5)} ${f1(y-h*1.1)} ${f1(x-w*1.15)} ${f1(y-h*.6)} ${f1(x-w)} ${f1(y+h*.15)} C ${f1(x-w*.7)} ${f1(y+h*.55)} ${f1(x-w*.3)} ${f1(y+h*.35)} ${f1(x)} ${f1(y)} Z M ${f1(x)} ${f1(y)} C ${f1(x+w*.5)} ${f1(y-h*1.1)} ${f1(x+w*1.15)} ${f1(y-h*.6)} ${f1(x+w)} ${f1(y+h*.15)} C ${f1(x+w*.7)} ${f1(y+h*.55)} ${f1(x+w*.3)} ${f1(y+h*.35)} ${f1(x)} ${f1(y)} Z`
       +` M ${f1(x-.25*k)} ${f1(y+.2*k)} L ${f1(x-.95*k)} ${f1(y+2.2*k)} L ${f1(x-.45*k)} ${f1(y+2.05*k)} L ${f1(x+.05*k)} ${f1(y+.35*k)} Z M ${f1(x+.25*k)} ${f1(y+.2*k)} L ${f1(x+.95*k)} ${f1(y+2.25*k)} L ${f1(x+.45*k)} ${f1(y+2.1*k)} L ${f1(x-.05*k)} ${f1(y+.35*k)} Z"`
       +` fill="${bowC}" stroke="${bowDk}" stroke-width=".22" stroke-linejoin="round"/><circle cx="${f1(x)}" cy="${f1(y+.05)}" r="${f1(.42*k)}" fill="${bowDk}"/>`};
-  const miniGlow=(pts,r)=>garOn?`<path d="${gDots(pts.map(([x,y])=>[x,y,fog?r*1.5:r]))}" fill="#FFF3D6" opacity="${dark?.42:.3}"/><path d="${gDots(pts.map(([x,y])=>[x,y,.38]))}" fill="#FFFCF2"/>`
+  /* lit, each mini light is a point with a small soft halo: a halo as wide as the rope, laid edge to edge, read
+     at phone size as a string of pale beads hiding the fir */
+  const miniGlow=(pts,r)=>garOn?`<path d="${gDots(pts.map(([x,y])=>[x,y,fog?r*1.4:r]))}" fill="#FFE2A4" opacity="${dark?.36:.28}"/><path d="${gDots(pts.map(([x,y])=>[x,y,.26]))}" fill="#FFFAEC"/>`
     :`<path d="${gDots(pts.map(([x,y])=>[x,y,.3]))}" fill="${air("#F4F0E2",.04)}" opacity=".8"/>`;
   const garSwag=(x0,x1,seed)=>{const r=mulberry(seed),span=x1-x0,bays=Math.max(1,Math.round(span/40));
     let rope="",ties=[],minis=[];
@@ -11501,16 +11530,17 @@ function pnPondScene(c){
       const at=t=>[a+(b-a)*t,yH+sag*4*t*(1-t)],m=at(.5),cq=[2*m[0]-(a+b)/2,2*m[1]-yH];
       rope+=`M ${f1(a)} ${f1(yH)} Q ${f1(cq[0])} ${f1(cq[1])} ${f1(b)} ${f1(yH)} `;
       if(!i)ties.push([a,yH]);ties.push([b,yH]);
-      const n=Math.round((b-a)/3.2);for(let k=1;k<n;k++){const[x,y]=at(k/n);minis.push([x+(r()-.5)*.5,y+(r()-.5)*.9])}}
+      const n=Math.round((b-a)/2.3);for(let k=1;k<n;k++){const[x,y]=at(k/n);minis.push([x+(r()-.5)*.5,y+(r()-.5)*.9])}}
     return `<path d="${rope}" fill="none" stroke="${garDk}" stroke-width="2.1" stroke-linecap="round"/><path d="${rope}" fill="none" stroke="${garC}" stroke-width="1.6" stroke-linecap="round"/>`
       +`<path d="${rope}" fill="none" stroke="${garLt}" stroke-width="1.2" stroke-dasharray=".35 .55" stroke-linecap="round" opacity=".9"/>`
-      +miniGlow(minis,1.5)+ties.map(([x,y])=>bow(x,y-.3,.9)).join("")};
+      +(garOn?`<path d="${rope}" fill="none" stroke="#FFE7B4" stroke-width="${fog?4.2:3.2}" stroke-linecap="round" opacity="${dark?.13:.09}"/>`:"")
+      +miniGlow(minis,.62)+ties.map(([x,y])=>bow(x,y-.3,.9)).join("")};
   const wreath=(()=>{if(!xmasOut)return"";const cx=doorX,cy=fenceT+3.3,R=2.35,r=mulberry(1224),berries=[],minis=[];
     for(let i=0;i<14;i++){const a=i/14*Math.PI*2;minis.push([cx+Math.cos(a)*R,cy+Math.sin(a)*R])}
     for(let i=0;i<7;i++){const a=r()*Math.PI*2,rr=R+(r()-.5)*.8;berries.push([cx+Math.cos(a)*rr,cy+Math.sin(a)*rr,.3])}
     return `<g class="decor" data-decor="wreath"><circle cx="${f1(cx)}" cy="${f1(cy)}" r="${R}" fill="none" stroke="${garDk}" stroke-width="1.9"/><circle cx="${f1(cx)}" cy="${f1(cy)}" r="${R}" fill="none" stroke="${garC}" stroke-width="1.45"/>`
       +`<circle cx="${f1(cx)}" cy="${f1(cy)}" r="${R}" fill="none" stroke="${garLt}" stroke-width="1" stroke-dasharray=".3 .5" opacity=".9"/><path d="${gDots(berries)}" fill="${bowC}"/>`
-      +miniGlow(minis,1.2)+bow(cx,cy+R-.2,.8)+`</g>`})();
+      +miniGlow(minis,.6)+bow(cx,cy+R-.2,.8)+`</g>`})();
   /* two light-up wire reindeer on the lawn, the film's yard herd, either side of the gate and clear of the does'
      ground: the wire white by day with its bulbs unlit, and at night only the light */
   const reindeer=xmasOut?[[X(66),1],[X(236),-1]].map(([x0,dir])=>{const y0=fenceB+5.6,k=.74,pts=[];let n=0;

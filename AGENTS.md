@@ -492,7 +492,10 @@ drawing to both views.
 - **The picture still does not make claims.** Clouds are drawn in the scene only when there
   are clouds (10 to 85 per cent, dry, no fog) and drift with the wind. By day a moon within a day or so of
   new (under 5% lit, `DAY_MOON_MIN`) is not drawn, because nobody can see it beside the sun: on November 9 2026
-  a new moon stood as a pale ghost disc in the afternoon sky over the house. After dark it is drawn as before. The barn lamps come on
+  a new moon stood as a pale ghost disc in the afternoon sky over the house. One that is drawn by day is its lit part
+  alone, its craters inside it and its glow as much as it has lit, because the sky shows through the dark side: three
+  days past new, December 12 2026, a whole pale disc with its craters stood beside a crescent a few pixels wide. After
+  dark it is drawn as before. The barn lamps come on
   after sunset. The oyster rake is part of the creek and is drawn in every weather, whether or
   not the oystercatcher is on it; it is not a statement about the tide.
 - **To change an animal, look at it.** `node tools/rig.mjs deer ".deer-head=rotate(100deg)"`
@@ -1047,18 +1050,32 @@ off a rake, about one bulb in twelve burning dim and one in thirty out, every dr
 half drawn, the cool wash of a television, a lamp, a blind half down, and a hall's light through a door left open. The
 gold wash is cut round the glass (evenodd), so it never evens them out.
 
+A refinement pass the same evening, looked at on a phone at 3x (Josh: "details matter"). The gold wash is about a
+quarter lighter (`pnGrisWall`, .64 to .5), because at full strength the house went to one gold blob in which the roof's
+seams, the siding and the gables' edges were lost and the bulbs had nothing to stand out from; now the house's own
+drawing shows through and the bulbs read as bulbs. The wash also keeps off the porch pane the indoor tree stands in,
+so the tree is a lit tree in a dark pane rather than gone in the gold. A bulb that is out is unlit glass, a pale amber
+bead, because a dark one read as a speck of dirt on the roof.
+
 **The fence's Christmas**, from November 18, is Josh's real one: "I've draped garland across the fence as I had done with
 the pumpkin lights. That green garland lights up at night in a soft white ... Put red bows on the garland on the fence.
 Put a wreath on the fence gate." The garland hangs in the pumpkin lights' own swags (`garSwag`): a fir rope with its
 needles, a soft white mini light every few inches, lit from sunset to sunrise and pale beads by day, and a red bow where
-each swag is tied up at the posts. The wreath hangs on the gate, ringed in the same lights, its bow at the foot; the
+each swag is tied up at the posts. Lit, each mini is a point with a halo inside the rope's width and a faint glow along
+the rope (`miniGlow`): the first build gave each a halo as wide as the rope, and on a phone the garland was a string of
+pale beads hiding the fir. The wreath hangs on the gate, ringed in the same lights, its bow at the foot; the
 fountain's fan stands in front of it, and it shows through the spray.
 
 **Christmas at the farm.** Josh: "For West Virginia specifically, I know I'd like a little Christmas tree decorated
 somewhere. And my mom's always loved Herbie the Elf from the original Rudolph." So from November 18 the barn door has a
 little fir at its corner where the corn shock stands in October (`propFarmTree`, tinsel, a star and coloured bulbs,
-`FARM_TREE_BULBS`, lit from sunset), a wreath on the gable over the door, and Hermey on the doorstep where the
-trick-or-treater stood, facing the tree with his dentist's mirror up (`propHermey`, `data-decor="herbie"`). Hermey is
+`FARM_TREE_BULBS`, lit from sunset), a wreath on the gable over the door, and Hermey beside the tree, facing it with
+his dentist's mirror up (`propHermey`, `data-decor="herbie"`). He stood on the doorstep at first, where the
+trick-or-treater stood, and on a phone the door's white cross braces forked out of his collar like wings, with the tree
+a long way off; beside it he stands against the red wall. Lit, the tree's halos stay inside a bough's width (a halo as
+wide as the tier made it a heap of coloured balls), its star is lit gold in a soft glow (it had been the day's star gone
+dark in front of a flat yellow disc), its light falls in a pool on the wall and the doorstep and on Hermey's side toward
+it, and the wreath is ringed in small warm lights, so at night it is still a wreath under the loft lamp. Hermey is
 the 1964 special's elf who would rather be a dentist; he was Herbie in its early scripts, which is the name the family
 knows. He is drawn the storybook way, not traced from the film: the big blond swoop, pointed ears, a white collar over a
 blue tunic and the mirror are what survive on a phone. `node tools/rig.mjs hermey` shows him close up.
@@ -1067,7 +1084,10 @@ blue tunic and the mirror are what survive on a phone. `node tools/rig.mjs herme
 walkway's top rail dipping between its posts, and a wreath on the dock house's landward corner piling (`bftDockXmas`).
 The family's boat is the nod to Beaufort's Lighted Boat Parade on the river every December: coloured lights along its
 gunwale, round its T-top and down from the T-top to the bow and the stern, so the boat wears a Christmas tree with a star
-on top (`bftBoatXmas`, inside the boat's box, so it rocks with it). Lit with the dock's lamp from sunset.
+on top (`bftBoatXmas`, inside the boat's box, so it rocks with it). Lit with the dock's lamp from sunset. The boat's halos are kept a
+little wider than its bulbs (`bftBulbs`' `halo`), because at the dock's width the strands ran together on a phone into
+thick fuzzy ropes, its star glows softly rather than standing on a flat disc, and the wreath is ringed in small warm
+lights with the dock.
 
 **Left out, and why.** The golf cart (`pnCart` is kept, placed nowhere): at this crop both edges are palms and
 there is no honest place to park it. The neighbours' houses and the pines, which made the house read as
