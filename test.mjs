@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v144/);
+  assert.match(worker, /mbwx-shell-v145/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -1544,6 +1544,20 @@ test("the scenes dress for the holidays and take it all down when they pass", as
   assert.match(html, /pnRect\(p0,-4\.8,d0,-3\.6,"post"\)/);
   assert.match(html, /const xmas=christmas\?pnXmasTree\(hx,hy,S,BH,\{lit:lightsOn,night:houseNight,/);
   assert.match(html, /data-decor="christmas-tree"/);
+  // outside, from November 18 (Josh: "It's time to start decorating for Christmas"), on every place
+  assert.match(html, /\{id:"christmas",window:\["11-06","01-06"\],outside:"11-18"\}/);
+  assert.match(html, /const xmasOut=christmas&&inSeason\(today,\[hol\.outside,hol\.window\[1\]\]\);/);
+  // the Griswolds' house: warm white, everywhere, lit all night, and it adds no animation
+  assert.match(html, /const GRIS_WARM=\["#FFF3D2","#FFD27A"\]/);
+  assert.match(html, /return\{windows,strands,pumpkins:true,fountain:dark,griswold:dark\};/);
+  assert.match(html, /data-decor="griswold-lights"/);
+  assert.match(html, /data-decor="garland"/);
+  assert.match(html, /data-decor="light-up-reindeer"/);
+  // the farm's tree and Hermey, and Beaufort's dock and its boat parade
+  assert.match(html, /data-decor="farm-tree"/);
+  assert.match(html, /data-decor="herbie"/);
+  assert.match(html, /function bftDockXmas\(/);
+  assert.match(html, /data-decor="boat-lights"/);
   assert.equal((html.match(/\$\{house\}\$\{xmas\}/g) || []).length, 2);
   // the candle is lit with the barn lamps, and not in the rain
   assert.match(html, /const candles=carved&&sunAltDeg< -\.83&&!wet&&!storm/);
@@ -6464,6 +6478,11 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
     same(on(dark, 22, 30), false, false, true, "windows off at 10:30, the pumpkin lights stay on");
     same(on(dark, 22, 40), false, false, true, "pumpkin string still on at 10:40");
     same(on(dark, 23, 10), false, false, true);
+    // the Griswolds' lights burn from sunset to sunrise, all night, past the windows and the strands
+    assert.equal(on(dark, 23, 10).griswold, true);
+    assert.equal(on(dark, 4, 30).griswold, true);
+    assert.equal(on(day, 15, 0).griswold, false);
+    assert.equal(on(-.5, 17, 10).griswold, false, "not until the sun is down");
     same(on(dark, 0, 30, false), false, false, true, "on after midnight");
     same(on(dark, 2, 15), false, false, true, "on all night");
     same(on(dark, 5, 21), false, false, true, "and at 5:21 am");

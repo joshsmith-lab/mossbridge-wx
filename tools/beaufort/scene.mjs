@@ -175,6 +175,12 @@ CASES.push(C("october-moon", "2026-10-24T21:30:00", .5, "the carved week under a
   { baseTemp: 66, nowTemp: 64, feels: 64, rh: 75, isDay: 0, code: 0, cloud: 6, nowWind: 6, nowDir: 30, nowGust: 10, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8, sunrise: "07:35", sunset: "18:36", popCurve: () => 5, dailyPop: (p) => p.fill(8) }));
 CASES.push(C("halloween-night", "2026-10-31T20:40:00", .4, "Halloween night: the trick-or-treater on the walkway",
   { baseTemp: 65, nowTemp: 63, feels: 63, rh: 80, isDay: 0, code: 0, cloud: 8, nowWind: 7, nowDir: 30, nowGust: 12, nowUv: 0, uvMax: 4, windAmp: 5, gustAmp: 8, sunrise: "07:40", sunset: "18:29", popCurve: () => 5, dailyPop: (p) => p.fill(8) }));
+/* Christmas at Beaufort, from November 18: the dock house strung in warm white, the walkway's rail, the wreath on
+   its corner piling, and the boat dressed for the Lighted Boat Parade */
+CASES.push(C("christmas-night", "2026-12-12T19:30:00", .6, "a December night: the dock lit, the boat in its parade lights with the star on the T-top",
+  { baseTemp: 52, nowTemp: 49, feels: 47, rh: 72, isDay: 0, code: 0, cloud: 8, nowWind: 6, nowDir: 330, nowGust: 10, nowUv: 0, uvMax: 3, windAmp: 5, gustAmp: 8, sunrise: "07:16", sunset: "17:17", popCurve: () => 5, dailyPop: (p) => p.fill(8) }));
+CASES.push(C("christmas-day", "2026-12-12T12:30:00", .4, "a December noon: the dock's and the boat's bulbs unlit on their wires, the wreath",
+  { baseTemp: 60, nowTemp: 61, feels: 61, rh: 55, isDay: 1, code: 1, cloud: 15, nowWind: 7, nowDir: 330, nowGust: 12, nowUv: 2.6, uvMax: 3, windAmp: 5, gustAmp: 8, sunrise: "07:16", sunset: "17:17", popCurve: () => 5, dailyPop: (p) => p.fill(8) }));
 CASES.push(C("november-morning", "2026-11-01T09:30:00", .5, "the morning of November 1: every decoration down",
   { baseTemp: 64, nowTemp: 60, feels: 60, rh: 70, isDay: 1, code: 1, cloud: 18, nowWind: 6, nowDir: 30, nowGust: 10, nowUv: 2, uvMax: 4, windAmp: 5, gustAmp: 8, sunrise: "06:41", sunset: "17:28", popCurve: () => 5, dailyPop: (p) => p.fill(8) }));
 
