@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v145/);
+  assert.match(worker, /mbwx-shell-v146/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -1556,6 +1556,16 @@ test("the scenes dress for the holidays and take it all down when they pass", as
   // the farm's tree and Hermey, and Beaufort's dock and its boat parade
   assert.match(html, /data-decor="farm-tree"/);
   assert.match(html, /data-decor="herbie"/);
+  // refined on November 18 2026: Hermey stands beside the tree, clear of the door's white braces, the tree's
+  // halos stay inside a bough's width and its star is lit, the garland's minis are points with a small halo,
+  // the gold wash keeps off the pane the indoor tree stands in, and the wreath at the barn is lit with the tree
+  assert.match(html, /hx_=barnX-12\.6,hy_=barnFoot\+\.4,hs=\.1;/);
+  assert.match(html, /r="\$\{fog\?1\.6:1\.15\}" fill="\$\{c\}" opacity="\.4"/);
+  assert.match(html, /const starLit=on\?/);
+  assert.match(html, /\+miniGlow\(minis,\.62\)\+ties\.map/);
+  assert.match(html, / M \$\{PN_HA\.panel\[0\]\} \$\{PN_HA\.porchEave\+3\.6\}/);
+  assert.match(html, /const wreathLit=on\?/);
+  assert.match(html, /cols:\["#FF3B2F","#2ED158","#2F80FF","#FFB020","#FFF1D6"\],r:\.38,halo:2\.1\}/);
   assert.match(html, /function bftDockXmas\(/);
   assert.match(html, /data-decor="boat-lights"/);
   assert.equal((html.match(/\$\{house\}\$\{xmas\}/g) || []).length, 2);
@@ -1923,8 +1933,11 @@ test("Halloween's moon keeps its place and its phase, and only changes colour", 
   for (const name of ["38-house-october-moon", "39-ridge-october-moon"]) assert.match(scene, new RegExp(`name: "${name}"[^\\n]*"blood-moon"[^\\n]*moon: true`));
   assert.match(scene, /const want = cs\.when\.slice\(5, 7\) === "10" && moon\.pick \? moon\.pick : "ordinary";/);
   // and it adds no motion
-  const body = html.slice(html.indexOf("if(hm){"), html.indexOf("}else moonBody="));
+  const body = html.slice(html.indexOf("if(hm){"), html.indexOf("const mId=`mo"));
   assert.doesNotMatch(body, /animation|class="/);
+  // by day the sky shows through the moon's dark side: only the lit part and the craters inside it are drawn
+  assert.match(html, /\$\{up\?"":`<circle cx="\$\{x\.toFixed\(1\)\}" cy="\$\{y\.toFixed\(1\)\}" r="\$\{r\}" fill="\$\{dark\?'rgba\(255,255,255,\.10\)'/);
+  assert.match(html, /<g\$\{dayClip\}><circle/);
 });
 
 test("Ghostface peeks out of the live oak for October, and never moves", async () => {
