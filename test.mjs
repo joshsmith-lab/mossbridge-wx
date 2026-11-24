@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v148/);
+  assert.match(worker, /mbwx-shell-v149/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -505,7 +505,17 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /path d="\$\{tl\}" fill="\$\{farC\}"/);
   // residents stay intact; the landscape gives each silhouette a quiet natural pocket
   assert.match(html, /Math\.abs\(x-residentX\)<26\)ht\*=\.28/);
-  assert.match(html, /const animalLeft=barnX-48,animalRight=barnX\+48,rightTreeX=W\*\.955/);
+  assert.match(html, /const animalLeft=barnX-48,animalRight=barnX\+48;/);
+  assert.match(html, /const houseX=W\*FA\.hx,houseR=houseX\+FARM_HOUSE\.w\*FA\.hs,rightTreeX=W\*\.955;/);
+  // the pond runs on past the oak (Josh: "the pond should also extend a bit further to the right than the oak tree")
+  assert.match(html, /const pL0=W\*\(FA\.pc-FA\.pr\),pR0=Math\.max\(W\*\(FA\.pc\+FA\.pr\),oakX\+22\);/);
+  // the chicken coop between the barn and the house, and the hand pump in its stone bed in the field
+  assert.match(html, /const coopX=houseX-8\.5,coopS=1\.18;/);
+  assert.match(html, /data-scene-anchor="chicken-coop"/);
+  assert.match(html, /data-prop="well-pump"/);
+  assert.match(html, /pumpSeason=month>=4&&month<=8\?"bloom":month===11\|\|month<=2\?"winter":"leaf"/);
+  // the fence is the Appalachian zigzag split rail: four rails a panel, crossed stakes and a rider at each corner
+  assert.match(html, /for\(const h of\[1\.8,3\.6,5\.4,7\.2\]\)fr\+=/);
   assert.match(html, /const yard=x>animalLeft-18&&x<animalRight\+22/);
   assert.match(html, /class="barn" data-scene-anchor="barn"/);
   // the buck stands in the field right of the pond, far enough out to be deer-sized and never in the water
@@ -1760,7 +1770,7 @@ const moreHalloween = async () => {
   vm.runInContext(`${html.match(/function mulberry\(a\)\{[\s\S]*?\}\}/)[0]}\n${kit}\nglobalThis.cat=propBlackCat;globalThis.ghost=propCheeseclothGhost;globalThis.scarecrow=propScarecrow;globalThis.box=pathBox;globalThis.INK=INK;globalThis.INNER=INK_INNER;`, ctx);
   const sil = (parts) => parts.filter((p) => !p.noSil && !ctx.INNER.has(p.role)).map((p) => p.d);
   const decorOf = (name) => { const m = scene.match(new RegExp(`name: "${name}"[^\\n]*decor: \\[([^\\]]*)\\]`)); assert.ok(m, name); return m[1]; };
-  const farm = html.slice(html.indexOf("const pcx=W*FA.pc"), html.indexOf("/* marsh: hazy maritime treeline"));
+  const farm = html.slice(html.indexOf("const FA=FARM_AT,lift=FA.lift;"), html.indexOf("/* marsh: hazy maritime treeline"));
   const coast = html.slice(html.indexOf("/* marsh: hazy maritime treeline"), html.indexOf("/* ── smooth path through points"));
   const keyframes = (k) => { const body = html.match(new RegExp(`@keyframes ${k}\\{([\\s\\S]*?)\\}\\}`))[1]; return [...new Set(body.match(/[a-z-]+(?=:)/g))]; };
   return { html, scene, rig, agents, ctx, sil, decorOf, farm, coast, keyframes };
@@ -1831,7 +1841,7 @@ test("eyes open in the dark at both places on October nights, blink once and go"
 test("a scarecrow stands in the farm's field in October with a crow on its arm by day, and never moves", async () => {
   const { html, scene, rig, agents, ctx, decorOf, farm, coast } = await moreHalloween();
   // the farm only, in the field between the barn and the house, a step in front of them
-  assert.ok(farm.includes("const scX=(barnX+23+houseX)/2,scY=base-lift+3.5,scS=.076,crow=!dark&&!wet&&!storm;"), "the crow is gone at night and in the rain");
+  assert.ok(farm.includes("const scX=(barnX+23+coopX-7)/2,scY=base-lift+3.5,scS=.076,crow=!dark&&!wet&&!storm;"), "the crow is gone at night and in the rain");
   assert.ok(farm.includes("${scarecrow}") && !coast.includes("scarecrow"), "the farm only");
   // nothing of it moves: no class, style or animation but the decoration's own tag
   const line = farm.slice(farm.indexOf("const scarecrow=halloween?"), farm.indexOf("/* The black cat sits on the top rail"));
