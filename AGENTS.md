@@ -681,7 +681,7 @@ Each is a transform or nothing, and each holds perfectly still under reduced mot
   decoration (`decorCheck`, `MORE`), at 320, 390, 430 and 760.
 - **A black cat sits out in October.** On the coast on the dock's planks, between the middle piling
   and the lit end, facing the land with its tail down over the edge; at the farm on the top rail
-  just right of the barn, set inside a span the rail runs along (`propBlackCat`, `catAt`). It sits
+  just right of the house, where the fence picks up past the garage, set inside a span the rail runs along (`propBlackCat`, `catAt`). It sits
   with its head turned to us: amber eyes with a slit by day, and from sunset, the barn lamps' hour,
   the green eyeshine and a soft glow round it (`eyeNight`, never toned by the sky, because it is the
   sky's own light coming back). Now and then its tail flicks (`catTail`, a 23-second cycle phased
@@ -696,11 +696,11 @@ Each is a transform or nothing, and each holds perfectly still under reduced mot
   Each fades in, looks, blinks once and fades out on its own clock off the wall clock (`darkEyes`,
   23 to 34 seconds), so they are never both open on the same beat. They are light, so the sky does
   not tone them. On the coast the gold pair is at the far left of the bank and the green one in the
-  grass short of the dock; at the farm the gold pair is on the far bank behind the pond, left of the
-  scarecrow, and the green one up the wooded fold between the cat and the right hardwood, over the
-  fox and short of the owl.
-- **A scarecrow stands across the pond at the farm.** In the field on the far bank, a little right
-  of the pond's middle (`propScarecrow`): bib overalls with a patch over a red flannel shirt, arms out
+  grass short of the dock; at the farm the gold pair is up the fold between the barn and the house,
+  over the scarecrow, and the green one at the woods' edge right of the garage, past the cat on the rail
+  and short of the owl.
+- **A scarecrow stands in the field at the farm.** Out in the field between the barn and the house, a step in
+  front of them (`propScarecrow`; it stood across the pond until the house came, and that is the house's lawn now): bib overalls with a patch over a red flannel shirt, arms out
   along the crossbar with straw at the cuffs and the ankles, a burlap sack of a head with a stitched
   grin, a floppy straw hat. A crow sits on its arm by day, because a scarecrow with a crow on it is
   the joke, and it is gone at night and in the rain. The scarecrow never moves. The farm only: the
@@ -852,6 +852,32 @@ Each is a transform or nothing, and each holds perfectly still under reduced mot
   and the harvest moon is kept drawn and tested beside it, a one-word change away. In the scene it
   is a decoration (`data-decor`, `blood-moon` or `harvest-moon`), and its disc (`data-disc`, with
   `moonR`) is what the bats keep off and the witch crosses.
+
+## The farm: the house, the barn and the pond
+
+Josh, November 24 2026, with four photographs of his parents' house: "I'd like to put my parents actual house in the
+WV scene. barn would then be to the left of the house... but the pond is in front of both across a field, in the
+center. play around with that....". Two layouts were drawn into the real page, a bigger house (C) and one a little
+smaller with more field between it and the pond (D), and he picked D, "more field".
+
+**The house** (`propFarmHouse`, `FARM_HOUSE`, `INK.farmHouse`) is a white Cape Cod seen from the front, drawn in the
+barn's units and with the kit: a full-width front porch under the main roof's sweep and its white posts, the wall
+under the porch a shade darker so the posts read, four first-floor windows in black shutters either side of a black
+door with an oval of glass and a lantern each side, three gabled dormers on the charcoal roof with a white fascia
+down each rake (the middle one taller, with an arched window), the attached two-car garage on the right under its
+own lower roof, and ten round boxwoods along the porch with a gap at the walk. The shutters are black, from the recent
+photographs (an older one has burgundy). The roof goes white in the snow with the barn's. Its windows keep the house at
+Porters Neck's hours (`pnHouseLights`): lit from sunset to 10:30, the dormers a softer lamp than the rooms downstairs,
+and the porch lanterns with them. `node tools/rig.mjs farm-house` shows it close up and at phone size.
+
+**The layout** is `FARM_AT`, fractions of the frame: the pond's centre (.52) and half-width (.27) in the middle of the
+foreground, the barn at .2 and the house's left corner at .38 at 1.3 of its units, and the two stand 13 units back up
+the field (`lift`): a band of meadow is laid over the near fold's foot (`farmField`) and the barn, the house, the fence
+and the barn's decorations are one group raised onto it. The fence leaves the house's front to the lawn, running in the
+pasture left of the barn and again past the garage. The chickens, the fox and the buck work the field right of the
+pond, the cardinal and the owl keep the right hardwood, and the frog the pond's edge. In October the cat sits on the
+rail past the garage, the scarecrow stands in the field between the barn and the house, and the eyes open over the
+scarecrow and right of the garage. The tree and Hermey are still at the barn door at Christmas.
 
 ## Porters Neck: the house across the pond
 
