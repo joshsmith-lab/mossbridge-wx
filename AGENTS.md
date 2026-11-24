@@ -913,7 +913,8 @@ oak tree too".
 - **The fence** is the old Appalachian zigzag split rail, a worm fence: no posts in the ground, four split rails a panel
   laid over the next panel's at every corner, each panel slanting a little the other way from the last as the fence
   zigs toward us and away, and at each corner two stakes crossed in an X with a rider rail along the top. It no longer
-  stops at the pond, which is in front of it now, and still leaves the house's front to the lawn. The top rail is where
+  stops at the pond, which is in front of it now. It runs in the pasture left of the barn and on past the garage,
+  never across the barn's front (Josh: "the fence shouldn't come in front of the barn though") or the house's. The top rail is where
   it was, so the October cat still sits on it.
 
 `node tools/rig.mjs chicken-coop` and `well-pump` show them close up.

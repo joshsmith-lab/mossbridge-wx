@@ -516,6 +516,8 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /pumpSeason=month>=4&&month<=8\?"bloom":month===11\|\|month<=2\?"winter":"leaf"/);
   // the fence is the Appalachian zigzag split rail: four rails a panel, crossed stakes and a rider at each corner
   assert.match(html, /for\(const h of\[1\.8,3\.6,5\.4,7\.2\]\)fr\+=/);
+  // and it never runs across the front of the barn or the house (Josh: "the fence shouldn't come in front of the barn")
+  assert.match(html, /if\(x>barnX-27&&x<houseR\+6\)continue;/);
   assert.match(html, /const yard=x>animalLeft-18&&x<animalRight\+22/);
   assert.match(html, /class="barn" data-scene-anchor="barn"/);
   // the buck stands in the field right of the pond, far enough out to be deer-sized and never in the water

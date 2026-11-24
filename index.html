@@ -10345,7 +10345,8 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
         <circle cx="0" cy="0" r=".72" fill="${barnMark}" stroke="${lineC}" stroke-width=".45"/></g></g></g></g>`;
     let fp="",fr="";const fpts=[];
     for(let x=-4;x<W+8;x+=24+g()*12){
-      if(x>barnX+20&&x<houseR+6)continue;            /* the fence leaves the house's front to the lawn */
+      if(x>barnX-27&&x<houseR+6)continue;            /* the fence runs in the pasture beside the barn and on past the
+                                                       garage, never across the barn's front or the house's */
       fpts.push([x,base+2-g()*2.5]);
     }
     /* The scarecrow stands out in the field between the barn and the chicken coop, a step in front of them, with a
