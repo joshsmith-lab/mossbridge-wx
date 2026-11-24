@@ -94,6 +94,11 @@ const PROPS = {
     night: { ink: "#0A1020", shade: "#050A18", lit: "#B9CCEE", litOp: 0.3, dark: ["#15223D", 0.62] } }],
   "farm-tree": ["farmTree", (c) => c.propFarmTree()],
   /* the house at the farm, in the barn's units, drawn on the phone at the barn's 1.18 scene units to the unit */
+  /* the big oak on the farm pond's near bank, leafy and bare, at the scene's scale for it */
+  "pond-oak": ["pondOak", (c) => c.propPondOak(7, false), {}, [50, 46, 25, 44], { phone: 1.1 }],
+  "pond-oak-bare": ["pondOak", (c) => c.propPondOak(7, true), {}, [50, 46, 25, 44], { phone: 1.1 }],
+  rowboat: ["rowboat", (c) => c.propRowboat(), {}, [26, 10, 9, 8], { phone: 1.1 }],
+  "oak-bench": ["oakBench", (c) => c.propOakBench(), {}, [10, 6, 5, 5], { phone: 1.1 }],
   "farm-house": ["farmHouse", (c) => c.propFarmHouse(), {}, [90, 36, 4, 34], { phone: 1.44 }],
   /* More Halloween. The black cat, the cheesecloth ghost and the scarecrow are drawn at ten units to
      the unit the scene places them in, so each phone panel draws them at the scale the scene does,

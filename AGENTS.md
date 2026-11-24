@@ -879,6 +879,21 @@ pond, the cardinal and the owl keep the right hardwood, and the frog the pond's 
 rail past the garage, the scarecrow stands in the field between the barn and the house, and the eyes open over the
 scarecrow and right of the garage. The tree and Hermey are still at the barn door at Christmas.
 
+**The pond oak.** Josh, the same day, with a photograph of the big oak on the pond's bank, its bench under it and a
+little white rowboat upturned beside it: "There's a large oak tree in the middle of the pond side, which I think can go
+just to the right of the house, but it's clearly closer to the pond and on the closer side of the field. You can keep
+the other tree", then "keep the bench, and there's even a little rowboat there, so keep the rowboat with little oars as
+well. In the photo it's upside down, but you can make it right side up." So a pasture oak (`propPondOak`, not the
+field's round `propHardwood`) stands on the pond's near bank, a field nearer than the house: a stout trunk forking low
+into three limbs under a crown wider than it is tall, bare and spreading wide in winter. It is placed off the garage,
+not the frame (`oakX`, a quarter of the way from the garage to the right hardwood and never nearer the garage than its
+own crown), because a fixed fraction put its crown over the garage on a 390 phone. It sways from its foot with the
+other trees. The bench (`propOakBench`) stands under it to the right of the trunk, and the rowboat (`propRowboat`, about
+fourteen long, white, a grey inside and a blue stripe, its two oars across it with their blades out over the stern) is
+pulled up on the bank to its left, right side up; neither moves. The buck keeps clear of the trunk and the boat
+(`deerX` is measured off the oak too). `node tools/rig.mjs pond-oak` (and `pond-oak-bare`, `rowboat`, `oak-bench`)
+shows each close up.
+
 ## Porters Neck: the house across the pond
 
 On October 21 2026 Josh asked whether to redo his own scene, now that Beaufort had shown what a place drawn

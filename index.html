@@ -2276,6 +2276,40 @@ const propHardwood=(seed,bare)=>{
     pTaper([[-4,-13,.6],[-9,-17,.3]],"wood"),pTaper([[4,-15,.6],[9.4,-18.6,.3]],"wood"));
   else P.push(part(scallop(0,-21,11,9.6,11,seed*17,{flat:.2}),"leaf"),part(scallop(-6,-16,6.4,4.6,7,seed*19,{flat:.3}),"leaf"),part(scallop(6.4,-16.6,6,4.4,7,seed*23,{flat:.3}),"leaf"));
   return P};
+/* the big oak on the pond's near bank at the farm (Josh, November 24 2026, with a photograph of it: "There's a
+   large oak tree in the middle of the pond side, which I think can go just to the right of the house, but it's
+   clearly closer to the pond and on the closer side of the field"). A pasture oak, not the field's round hardwood:
+   a stout trunk that forks low into three limbs, and a broad crown wider than it is tall, lifted clear of the
+   ground so the trunk and the fork show under it. Ground at y=0, about forty wide and forty-four tall. Bare in
+   winter, its limbs spreading wide. */
+const propPondOak=(seed,bare)=>{
+  const P=[pTaper([[0,1.4,4.6],[.3,-6,3.6],[0,-12.5,3]],"wood"),
+    pTaper([[-.4,-11.5,2.2],[-4.6,-17,1.6],[-10,-21.5,1]],"wood"),pTaper([[.4,-11,2.2],[4.8,-17.4,1.6],[10.6,-22.4,1]],"wood"),
+    pTaper([[0,-12,1.8],[.8,-20,1.3],[1.4,-28,.8]],"wood")];
+  if(bare)P.push(pTaper([[-10,-21.5,1],[-15.5,-24,.6],[-19,-23,.3]],"wood"),pTaper([[-6.4,-19,.9],[-8,-27,.6],[-9.6,-33,.3]],"wood"),
+    pTaper([[10.6,-22.4,1],[16,-25.4,.6],[19.4,-24.6,.3]],"wood"),pTaper([[6.6,-19.4,.9],[8.4,-28,.6],[10,-34,.3]],"wood"),
+    pTaper([[1.4,-28,.8],[-2,-35,.5],[-4,-40,.25]],"wood"),pTaper([[1.2,-26,.7],[4.4,-34,.45],[5.6,-39.6,.25]],"wood"),
+    pTaper([[-14,-23.4,.5],[-17.4,-29,.3]],"wood"),pTaper([[15,-25,.5],[18,-30.4,.3]],"wood"),
+    pTaper([[-7.6,-25,.5],[-12.4,-30,.3],[-14,-33.6,.18]],"wood"),pTaper([[7.8,-26,.5],[12.6,-31,.3],[14.4,-34.6,.18]],"wood"),
+    pTaper([[-3.4,-17,.6],[-6.6,-22,.35],[-7.4,-26.4,.2]],"wood"),pTaper([[3.4,-17.4,.6],[6.6,-23,.35],[7.4,-27,.2]],"wood"),
+    pTaper([[-.6,-33,.45],[-6.2,-37.4,.25],[-8,-39,.15]],"wood"),pTaper([[3,-31,.45],[8.2,-36.6,.25],[9.6,-38,.15]],"wood"),
+    pTaper([[-18,-23.6,.3],[-21,-22.4,.15]],"wood"),pTaper([[18.6,-25,.3],[21.4,-23.6,.15]],"wood"));
+  else P.push(part(scallop(0,-29,19.5,11,15,seed*17,{flat:.42}),"leaf"),part(scallop(-12.6,-22.6,8.6,6.2,8,seed*19,{flat:.4}),"leaf"),
+    part(scallop(12.8,-23.4,8.4,6.4,8,seed*23,{flat:.4}),"leaf"),part(scallop(1.6,-37.4,11,6.4,9,seed*29,{flat:.3}),"leaf"));
+  return P};
+/* the little rowboat pulled up on the bank under the oak, a small white flat-bottomed boat of the kind that sits by a
+   farm pond, drawn right side up (it lies upturned in Josh's photograph) with its two oars across it and their blades
+   out over the stern. Ground at y=0, about fourteen long, bow to the left */
+const propRowboat=()=>[pBlob([[-7.2,-3.4],[-4,-3.05],[2,-2.95],[6.6,-3.2],[6.5,-1.2],[5.6,0],[-3.6,0],[-6,-1],[-7.4,-2.6]],"hull"),
+  pTaper([[-7,-3.35,.55],[-2,-3.05,.6],[3,-3,.6],[6.5,-3.15,.55]],"inside",{},{noSil:true}),
+  pTaper([[-7.3,-3.5,.32],[0,-3.15,.36],[6.7,-3.32,.32]],"rail",{},{noSil:true}),
+  pTaper([[-6.6,-1.6,.18],[6.2,-1.4,.18]],"stripe",{},{noSil:true}),
+  pTaper([[-3.6,-4.2,.32],[4.4,-3.3,.32],[8.6,-2.9,.3]],"oar"),pBlob([[8.2,-2.5],[10.6,-2.6],[11.2,-3],[10.6,-3.4],[8.2,-3.3]],"oar"),
+  pTaper([[-2.4,-4.8,.32],[4.8,-3.6,.32],[8.4,-4,.3]],"oar"),pBlob([[8,-3.65],[10.4,-4.2],[11,-4.7],[10.4,-4.95],[8,-4.45]],"oar")];
+/* the bench under the oak, a plank seat on four legs with a back rail, ground at y=0 */
+const propOakBench=()=>[pTaper([[-2.4,0,.34],[-2.4,-1.7,.34]],"wood"),pTaper([[2.4,0,.34],[2.4,-1.7,.34]],"wood"),
+  part("M -3 -1.6 L 3 -1.6 L 3 -2.3 L -3 -2.3 Z","wood"),pTaper([[-2.6,-2.2,.3],[-2.7,-3.9,.3]],"wood"),pTaper([[2.6,-2.2,.3],[2.7,-3.9,.3]],"wood"),
+  part("M -2.9 -3.4 L 2.9 -3.4 L 2.9 -4.2 L -2.9 -4.2 Z","wood")];
 /* the dock: deck at y=0, three pilings running down into the water */
 const propDock=()=>[...[[-25,-3.8,17],[-6,-4.8,18.5],[14,-3.8,20]].map(([x,t,b])=>part(`M ${x-1.5} ${b} L ${x-1.5} ${t+1.2} Q ${x} ${t-.6} ${x+1.5} ${t+1.2} L ${x+1.5} ${b} Z`,"piling")),
   part("M -32 -1.4 L 22 -1.4 L 22 1.4 L -32 1.4 Z","wood"),part("M -32 3.4 L 22 3.4 L 22 4.6 L -32 4.6 Z","wood",{op:.8})];
@@ -3587,6 +3621,9 @@ const INK={
   /* the trick-or-treater: a cotton sheet a touch warm of white, its eye holes the dark inside it,
      dark sneakers, and a pail in the bright orange of the plastic ones, a shade hotter than the
      pumpkins so the two never read as one */
+  pondOak:{wood:"#4A372C",leaf:"#557D3C"},
+  rowboat:{hull:"#E9ECEA",inside:"#8E9C9F",rail:"#5F6B6E",stripe:"#4F6E7E",oar:"#B4884E"},
+  oakBench:{wood:"#7A5636"},
   farmHouse:{wall:"#F1F0EA",porchWall:"#D9D7CE",sash:"#F4F3EE",roof:"#3E4149",trim:"#FBFAF5",glass:"#5B6F7C",glassUp:"#5B6F7C",shutter:"#23272C",door:"#1F2328",lantern:"#1B1E22",deck:"#C9C6BC",garage:"#F7F6F1",shrub:"#4E6B3A",detail:"#9AA3A8"},
   farmTree:{fir:"#2F5E3C",firLt:"#4F8A55",trunk:"#5E4232",tinsel:"#E6C25A",star:"#F2C440"},
   hermey:{leg:"#3E5C8C",shoe:"#7A4A2E",tunic:"#7DB2DE",belt:"#2E3F66",skin:"#F1C7A3",collar:"#F6F2E8",handle:"#8E98A4",mirror:"#DCE4EC",detail:"#FFFFFF",hair:"#F3D35C",hairDk:"#C9A232",eye:"#1C1612",nose:"#E9A994",mark:"#7A3A2E"},
@@ -10227,6 +10264,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     const barnX=W*FA.bx,barnMark=dark?"#91A5A4":"#D9D5BE";
     const houseX=W*FA.hx,houseR=houseX+FARM_HOUSE.w*FA.hs;
     const animalLeft=barnX-48,animalRight=barnX+48,rightTreeX=W*.955;
+    /* the pond oak is placed off the garage, not the frame, so its crown never covers the house at any width: a
+       quarter of the way from the garage to the right hardwood, and never nearer the garage than its own crown */
+    const oakX=houseR+Math.max(22,(rightTreeX-houseR)*.25);
     /* A real barn reads from its roof before any detail: broad eaves, a broken gambrel
        pitch, a tall central door and a small loft opening. Red, because in these hills it
        is, with the lamps lit once the sun is down. The yard stays quiet around it so the
@@ -10440,8 +10480,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
 
     /* a frog is out in warm rain, not in snow: below about 45 it is underground */
     const rainyFrog=(wet||storm)&&temp>=45?frogAt(pondR-30,base+8.4,1,1):"";
-    /* the buck stands out in the field right of the pond, measured off the pond so he never wades it */
-    const deerX=Math.min(pondR+20,W-30),deerS=.62;
+    /* the buck stands out in the field right of the pond, measured off the pond so he never wades it, and off the
+       pond oak so he never stands across its trunk and the boat */
+    const deerX=Math.min(Math.max(pondR+20,oakX+30),W-22),deerS=.62;
     const deer=!wet&&!storm&&!dark&&(fog||localHour<11||localHour>=16||sunAltDeg<7)
       ?castShadow(flatParts(rigDeer(phase)),deerX,base+13,deerS,-1)+deerAt(deerX,base+13,deerS,-1,1):"";
 
@@ -10495,6 +10536,13 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     if(lowSun&&goldK>.25){const mr2=mulberry(9);for(let i=0;i<10;i++)motes+=`<circle cx="${(W*.5+mr2()*W*.45).toFixed(1)}" cy="${(base-70+mr2()*60).toFixed(1)}" r="${(.4+mr2()*.7).toFixed(2)}" fill="#FFF6D8" opacity="${(.3+mr2()*.5).toFixed(2)}"/>`}
     const waterTop=mix(mix(skyS[2],skyS[1],.3),"#7F9CAE",.18),waterBot=mix(mix(mix(skyS[1],skyS[0],.5),"#1F3F52",.22),"#4E7288",.3);
     const bladeC=SEASON_BLADE[month].map(c=>air(c,.04)),grassLine=mix(lineC,bladeC[2],.25);
+    /* the big oak on the pond's near bank, right of the house and a field nearer than it, with the bench under it
+       and the little rowboat pulled up on the bank to its left, right side up with its oars across it (Josh's
+       photograph has it upturned). The oak sways from its foot with the other trees; the bench and the boat do not */
+    const oakY=base+3.4,oakS=1;
+    const pondOak=`<g data-scene-anchor="pond-oak"${treeAt(oakX)}>${propAt(propPondOak(7,winter),INK.pondOak,oakX,oakY,oakS,.03)}</g>`
+      +`<g data-prop="oak-bench">${propAt(propOakBench(),INK.oakBench,oakX+6.4,oakY-.2,1,.03)}</g>`
+      +`<g data-prop="rowboat">${propAt(propRowboat(),INK.rowboat,oakX-16,base+5.4,1,.03)}</g>`;
     let farmHouse="",farmField="";
     /* The house keeps the family's hours, the windows lit from sunset until 10:30 the way the house at Porters Neck
        does (pnHouseLights), the dormers upstairs a softer lamp than the rooms downstairs, and the two porch lanterns
@@ -10557,6 +10605,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
       ${nearRain}
       ${tufts.map((d,i)=>d?`<g${bandAt(i)}><path d="${d}" fill="${grassLine}" stroke="${grassLine}" stroke-width=".8" stroke-linejoin="round"/><path d="${d}" fill="url(#blade)"/></g>`:"").join("")}
       ${catsL}${catsR}
+      ${pondOak}
       ${tree(W*.055,1.3,.08,3,farmGhost)}${tree(W*.105,.72,.16,8)}${(owl||temp<48)?tree(rightTreeX,1.4,.04,5):""}
       ${ridgeResident}
       ${deer}
