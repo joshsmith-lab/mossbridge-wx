@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v146/);
+  assert.match(worker, /mbwx-shell-v147/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -508,8 +508,15 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /const animalLeft=barnX-48,animalRight=barnX\+48,rightTreeX=W\*\.955/);
   assert.match(html, /const yard=x>animalLeft-18&&x<animalRight\+22/);
   assert.match(html, /class="barn" data-scene-anchor="barn"/);
-  // the buck is placed off the barn, far enough into the field to be deer-sized
-  assert.match(html, /const deerX=Math\.min\(animalRight\+40,W-30\),deerS=\.62/);
+  // the buck stands in the field right of the pond, far enough out to be deer-sized and never in the water
+  assert.match(html, /const deerX=Math\.min\(pondR\+20,W-30\),deerS=\.62/);
+  // the house at the farm (Josh, November 24 2026): the parents' Cape, the barn to its left, the pond in front of
+  // both across a field, the layout he picked (D, "more field")
+  assert.match(html, /const FARM_AT=\{pc:\.52,pr:\.27,bx:\.2,hx:\.38,hs:1\.3,lift:13\};/);
+  assert.match(html, /const propFarmHouse=\(\)=>\{/);
+  assert.match(html, /data-scene-anchor="farm-house"/);
+  assert.match(html, /on=pnHouseLights\(sunAltDeg,localHour,localMin,rising\)\.windows/);
+  assert.match(html, /<g transform="translate\(0 \$\{-lift\}\)">/);
   assert.match(html, /deerAt\(deerX,base\+13,deerS,-1,1\)/);
   // Storybook Ink: every moving joint pivots on its real joint. joint() wraps the group so its
   // own origin is the joint, and the scene CSS gives those classes view-box and 0 0. Lose either
@@ -543,8 +550,9 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /const lamps=sunAltDeg< -\.83/);
   // the body has a waist: haunch, stifle, the flank tucking up, then the belly — not a bean
   assert.match(html, /\[-18\.6,-24\.2\],\[-15\.8,-23\.6\],\[-12\.6,-25\.4\],\[-8,-24\.8\]/);
-  // the fox crosses the yard clear of the barn, measured off it
-  assert.match(html, /deer\?"":dark\?fox\(animalRight\+6,base\+17\.5,\.95,1\)/);
+  // the fox crosses the field right of the pond, clear of the water, measured off it, and the hens scratch there by day
+  assert.match(html, /deer\?"":dark\?fox\(pondR\+10,base\+17\.5,\.95,1\)/);
+  assert.match(html, /chickens\(pondR-6,rightTreeX,base\)/);
   // the small shorebird's bill sits against open water, not the dark bank
   assert.match(html, /oysterCatcher\(residentX,base\+14\.6,\.92,1\)/);
   // Shady Spring gets asymmetric Appalachian folds, a real gambrel barn, and bare winter trees
@@ -567,7 +575,7 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /barnX\+yard\*\.30,base\+18,\.42,"scratch",19,-1/);
   assert.match(html, /barnX\+yard\*\.56,base\+17,\.46,"peck",15/);
   assert.match(html, /barnX\+yard\*\.82,base\+17\.6,\.43,"look",23/);
-  assert.match(html, /:\(!wet&&!storm\)\?chickens\(barnX,rightTreeX,base\)/);
+  assert.match(html, /:\(!wet&&!storm\)\?chickens\(pondR-6,rightTreeX,base\)/);
 
   // light: the sun flattens near the horizon, the meteor waits for a clear night
   assert.match(html, /const squash=clamp\(\.9\+Math\.max\(0,sunAltDeg\)\/8\*\.1,\.9,1\)/);
@@ -1747,7 +1755,7 @@ const moreHalloween = async () => {
   vm.runInContext(`${html.match(/function mulberry\(a\)\{[\s\S]*?\}\}/)[0]}\n${kit}\nglobalThis.cat=propBlackCat;globalThis.ghost=propCheeseclothGhost;globalThis.scarecrow=propScarecrow;globalThis.box=pathBox;globalThis.INK=INK;globalThis.INNER=INK_INNER;`, ctx);
   const sil = (parts) => parts.filter((p) => !p.noSil && !ctx.INNER.has(p.role)).map((p) => p.d);
   const decorOf = (name) => { const m = scene.match(new RegExp(`name: "${name}"[^\\n]*decor: \\[([^\\]]*)\\]`)); assert.ok(m, name); return m[1]; };
-  const farm = html.slice(html.indexOf("const pcx=W*.335"), html.indexOf("/* marsh: hazy maritime treeline"));
+  const farm = html.slice(html.indexOf("const pcx=W*FA.pc"), html.indexOf("/* marsh: hazy maritime treeline"));
   const coast = html.slice(html.indexOf("/* marsh: hazy maritime treeline"), html.indexOf("/* ── smooth path through points"));
   const keyframes = (k) => { const body = html.match(new RegExp(`@keyframes ${k}\\{([\\s\\S]*?)\\}\\}`))[1]; return [...new Set(body.match(/[a-z-]+(?=:)/g))]; };
   return { html, scene, rig, agents, ctx, sil, decorOf, farm, coast, keyframes };
@@ -1758,7 +1766,7 @@ test("a black cat sits on the dock and on the farm's top rail in October, and go
   // both places, October only, in when it rains, and on a cold morning it gives the dock to the
   // cormorant, who has the middle piling
   assert.ok(coast.includes("const dockCat=halloween&&!wet&&!storm&&!(temp<48&&!dark)?catAt(dx+2.5,deckY+.25):null;"));
-  assert.ok(farm.includes("if(halloween&&!wet&&!storm){\n      const want=barnX+27.5,"), "on the top rail, measured off the barn");
+  assert.ok(farm.includes("if(halloween&&!wet&&!storm){\n      const want=houseR+12,"), "on the top rail, measured off the house");
   assert.ok(farm.includes("fenceCat=catAt(cx,qy+(ry-qy)*t-7.2-.75).svg"), "sitting on the top rail");
   // amber slit eyes by day, the green eyeshine from sunset (the barn lamps' hour), never toned by the sky
   assert.match(html, /const eyeshine=sunAltDeg< -\.83;/);
@@ -1815,10 +1823,10 @@ test("eyes open in the dark at both places on October nights, blink once and go"
   assert.match(agents, /\*\*Eyes in the dark\.\*\*/);
 });
 
-test("a scarecrow stands across the farm pond in October with a crow on its arm by day, and never moves", async () => {
+test("a scarecrow stands in the farm's field in October with a crow on its arm by day, and never moves", async () => {
   const { html, scene, rig, agents, ctx, decorOf, farm, coast } = await moreHalloween();
-  // the farm only, in the field across the pond, a little right of its middle
-  assert.ok(farm.includes("const scX=pcx+prx*.05,scS=.076,crow=!dark&&!wet&&!storm;"), "the crow is gone at night and in the rain");
+  // the farm only, in the field between the barn and the house, a step in front of them
+  assert.ok(farm.includes("const scX=(barnX+23+houseX)/2,scY=base-lift+3.5,scS=.076,crow=!dark&&!wet&&!storm;"), "the crow is gone at night and in the rain");
   assert.ok(farm.includes("${scarecrow}") && !coast.includes("scarecrow"), "the farm only");
   // nothing of it moves: no class, style or animation but the decoration's own tag
   const line = farm.slice(farm.indexOf("const scarecrow=halloween?"), farm.indexOf("/* The black cat sits on the top rail"));
@@ -1835,7 +1843,7 @@ test("a scarecrow stands across the farm pond in October with a crow on its arm 
   for (const n of ["30-ridge-october-afternoon", "31-ridge-halloween-night", "34-ridge-halloween-rain-night", "47-ridge-halloween-rain-night", "41-ridge-october-dusk"])
     assert.match(decorOf(n), /"scarecrow"/, n);
   for (const n of ["26-house-october-afternoon", "27-house-halloween-night", "32-ridge-november-morning"]) assert.doesNotMatch(decorOf(n), /"scarecrow"/, n);
-  assert.match(agents, /\*\*A scarecrow stands across the pond at the farm\.\*\*/);
+  assert.match(agents, /\*\*A scarecrow stands in the field at the farm\.\*\*/);
 });
 
 test("a cheesecloth ghost hangs in the farm's big hardwood and swings with the gusts inside its sway", async () => {

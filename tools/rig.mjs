@@ -93,6 +93,8 @@ const PROPS = {
   hermey: ["hermey", (c) => c.propHermey(), {}, [140, 132, 60, 124], { phone: 0.1, o: { line: 0.7, heavy: 0.3, shade: 0.9, lit: 0.5 },
     night: { ink: "#0A1020", shade: "#050A18", lit: "#B9CCEE", litOp: 0.3, dark: ["#15223D", 0.62] } }],
   "farm-tree": ["farmTree", (c) => c.propFarmTree()],
+  /* the house at the farm, in the barn's units, drawn on the phone at the barn's 1.18 scene units to the unit */
+  "farm-house": ["farmHouse", (c) => c.propFarmHouse(), {}, [90, 36, 4, 34], { phone: 1.44 }],
   /* More Halloween. The black cat, the cheesecloth ghost and the scarecrow are drawn at ten units to
      the unit the scene places them in, so each phone panel draws them at the scale the scene does,
      with its lines. The cat's night panel is the eyeshine it has from sunset, the ghost's is the

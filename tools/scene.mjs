@@ -210,7 +210,7 @@ const CASES = [
     o: { baseTemp: 55, nowTemp: 57, feels: 57, rh: 60, isDay: 1, code: 1, cloud: 20, nowWind: 7, nowDir: 280, nowGust: 13, nowUv: 3.1, uvMax: 4, windAmp: 6, gustAmp: 10,
       sunrise: "07:25", sunset: "18:55", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
   { name: "31-ridge-halloween-night", loc: "sp", when: "2026-10-31T20:15:00", decor: ["corn-shock", "straw-bale", "jack-o-lantern", "white-pumpkin", "michael-myers", "trick-or-treater", "bat", "witch", "scarecrow", "sheet-ghost", "black-cat", "eyes"], candles: 2, bats: 4, witch: true,
-    note: "Halloween night at the farm: both carved pumpkins lit beside the barn lamps, a trick-or-treater at the door between them, the fox out and the owl up, the cat on the rail with its eyeshine, eyes at the woods' edge, the scarecrow across the pond with its crow gone and the ghost in the hardwood",
+    note: "Halloween night at the farm: both carved pumpkins lit beside the barn lamps, a trick-or-treater at the door between them, the fox out and the owl up, the cat on the rail with its eyeshine, eyes at the woods' edge, the scarecrow in the field with its crow gone and the ghost in the hardwood",
     o: { baseTemp: 48, nowTemp: 44, feels: 39, rh: 72, isDay: 0, code: 1, cloud: 15, nowWind: 10, nowDir: 300, nowGust: 18, nowUv: 0, uvMax: 3, windAmp: 7, gustAmp: 12,
       sunrise: "07:47", sunset: "18:27", popCurve: () => 5, dailyPop: (p) => p.fill(8) } },
   { name: "33-ridge-october-night", loc: "sp", when: "2026-10-12T21:00:00", decor: ["corn-shock", "straw-bale", "pumpkin", "white-pumpkin", "michael-myers", "bat", "witch", "scarecrow", "sheet-ghost", "black-cat", "eyes"], candles: 0, bats: 6, witch: true,

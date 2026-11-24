@@ -2296,6 +2296,49 @@ const propBarn=(l=LOFT)=>[
   part("M 15.4 -30 L 15.4 -34.6 L 20.6 -34.6 L 20.6 -30 Z","wall"),part("M 14.2 -34.2 L 18 -37.4 L 21.8 -34.2 Z","roof"),
   part("M 12.4 0 L 12.4 -11.6 L 23.6 -11.6 L 23.6 0 Z","door"),part(`M ${f1(l[0])} ${f1(l[1]+l[3])} L ${f1(l[0])} ${f1(l[1])} L ${f1(l[0]+l[2])} ${f1(l[1])} L ${f1(l[0]+l[2])} ${f1(l[1]+l[3])} Z`,"loft"),
   part("M 5 -3.6 L 9 -3.6 L 9 -8.4 L 5 -8.4 Z M 27 -3.6 L 31 -3.6 L 31 -8.4 L 27 -8.4 Z","window")];
+/* ── the house at the farm (Josh, November 24 2026, with four photographs: "I'd like to put my parents actual
+   house in the WV scene. barn would then be to the left of the house... but the pond is in front of both across a
+   field, in the center"). A white Cape Cod seen from the front, standing on y=0 from x=0 at its left corner, in the
+   barn's units: a full-width front porch under the main roof's sweep, white posts, the first floor's windows in
+   black shutters either side of a black door with its two lanterns, three gabled dormers on the charcoal roof (the
+   middle one taller with an arched window), the attached two-car garage on the right under its own lower roof, and
+   round boxwoods along the porch. About eighty units wide, the main roof's ridge thirty up, so the house stands
+   twice the barn's width and a little lower, as the real ones do. */
+const R4=(x0,y0,x1,y1)=>`M ${f1(x0)} ${f1(y0)} L ${f1(x1)} ${f1(y0)} L ${f1(x1)} ${f1(y1)} L ${f1(x0)} ${f1(y1)} Z`;
+const FARM_HOUSE={w:80,ridge:-30,eave:-12.2,posts:[.6,12,22.8,30.2,41,53.4],door:[24.5,28.5],
+  win:[[4,8.4],[14,18.4],[33,37.4],[44.5,48.9]],winT:-8.8,winB:-3.4,dorm:[[13,7.6,0],[27,8.8,1],[41,7.6,0]],garage:[54,79.4]};
+/* where the homestead stands in the farm's frame: the pond's centre and half-width, the barn's and the house's
+   left edges as fractions of the frame, the house's scale, and how far back up the field the two stand */
+const FARM_AT={pc:.52,pr:.27,bx:.2,hx:.38,hs:1.3,lift:13};
+const propFarmHouse=()=>{const F=FARM_HOUSE,noSil={noSil:true},P=[];
+  const[g0,g1]=F.garage;
+  /* the garage wing first, behind the main block: its wall, its lower roof and two white doors */
+  P.push(part(R4(g0,0,g1,-11.4),"wall"),part(`M ${f1(g0-2)} -11 L ${f1(g1+1.6)} -11 L ${f1(g1-2.4)} -21.6 L ${f1(g0+1)} -21.6 Z`,"roof"));
+  for(const[a,b]of[[g0+2.4,g0+11.6],[g0+14,g1-2]]){P.push(part(R4(a,0,b,-8.4),"garage"));
+    for(const y of[-2.1,-4.2,-6.3])P.push(part(R4(a+.5,y+.18,b-.5,y-.18),"detail",noSil))}
+  /* the main roof, ridge to the porch's eave, and the wall under the porch */
+  P.push(part(`M -2.2 ${F.eave} L ${f1(g0+2.2)} ${F.eave} L ${f1(g0-3)} ${F.ridge} L 3 ${F.ridge} Z`,"roof"));
+  P.push(part(R4(.8,-1.2,g0-.8,F.eave+.6),"porchWall"));
+  /* the first floor: four windows in black shutters, the black door with its oval of glass and two lanterns */
+  for(const[a,b]of F.win){P.push(part(R4(a-1.3,F.winB,a-.25,F.winT),"shutter"),part(R4(b+.25,F.winB,b+1.3,F.winT),"shutter"),part(R4(a,F.winB,b,F.winT),"glass"));
+    P.push(part(R4((a+b)/2-.16,F.winB,(a+b)/2+.16,F.winT),"sash",noSil),part(R4(a,(F.winT+F.winB)/2-.18,b,(F.winT+F.winB)/2+.18),"sash",noSil))}
+  const[d0,d1]=F.door;P.push(part(R4(d0,-1.2,d1,-9.4),"door"),pBlob([[(d0+d1)/2,-8.2],[d1-.9,-6.9],[(d0+d1)/2,-5],[d0+.9,-6.9]],"glass"));
+  for(const x of[d0-1.3,d1+1.3])P.push(part(R4(x-.45,-7.4,x+.45,-8.9),"lantern"));
+  /* the porch: its deck, the fascia under the roof's edge, and the posts */
+  P.push(part(R4(-1.4,0,g0+.6,-1.3),"deck"),part(R4(-2.2,F.eave+.1,g0+2.2,F.eave+1.3),"trim"));
+  for(const x of F.posts)P.push(part(R4(x-.55,-1.2,x+.55,F.eave+1.2),"trim"));
+  /* the dormers: a white face and its gable, a charcoal cap along each rake, and the window, the middle one tall
+     under an arch */
+  for(const[cx,w,mid]of F.dorm){const h=mid?-24.6:-23.4,pk=mid?-28.6:-27.4,y0=-15.4,x0=cx-w/2,x1=cx+w/2;
+    P.push(part(`M ${f1(x0)} ${y0} L ${f1(x0)} ${h} L ${f1(cx)} ${pk} L ${f1(x1)} ${h} L ${f1(x1)} ${y0} Z`,"wall"));
+    P.push(part(`M ${f1(x0-1.5)} ${f1(h+.7)} L ${f1(cx)} ${f1(pk-1.3)} L ${f1(x1+1.5)} ${f1(h+.7)} L ${f1(x1+.6)} ${f1(h+1)} L ${f1(cx)} ${f1(pk-.1)} L ${f1(x0-.6)} ${f1(h+1)} Z`,"roof"));
+    P.push(part(`M ${f1(x0-.6)} ${f1(h+1)} L ${f1(cx)} ${f1(pk-.1)} L ${f1(x1+.6)} ${f1(h+1)} L ${f1(x1+.1)} ${f1(h+1.5)} L ${f1(cx)} ${f1(pk+.6)} L ${f1(x0-.1)} ${f1(h+1.5)} Z`,"trim",noSil));
+    if(mid)P.push(part(`M ${f1(cx-2.1)} -16.6 L ${f1(cx-2.1)} -21.6 A 2.1 2.1 0 0 1 ${f1(cx+2.1)} -21.6 L ${f1(cx+2.1)} -16.6 Z`,"glassUp"),
+      part(R4(cx-.86,-16.6,cx-.54,-21.4),"sash",noSil),part(R4(cx+.54,-16.6,cx+.86,-21.4),"sash",noSil));
+    else P.push(part(R4(cx-1.8,-17,cx+1.8,-21.6),"glassUp"),part(R4(cx-1.8,-19.12,cx+1.8,-19.48),"sash",noSil))}
+  /* boxwoods along the porch, a gap at the walk to the door */
+  for(const x of[2.6,7.4,12.2,17,21.4,31.8,36.4,41.2,46,50.8])P.push(pBlob([[x-1.9,.3],[x-2,-1.3],[x-1.1,-2.6],[x,-2.9],[x+1.1,-2.6],[x+2,-1.3],[x+1.9,.3]],"shrub"));
+  return P};
 /* ── Christmas at the farm (Josh, November 18 2026: "For West Virginia specifically, I know I'd like a little
    Christmas tree decorated somewhere. And my mom's always loved Herbie the Elf from the original Rudolph").
    A little fir at the barn's corner, where the corn shock stands in October, sits on y=0 at x=0 about twenty
@@ -3544,6 +3587,7 @@ const INK={
   /* the trick-or-treater: a cotton sheet a touch warm of white, its eye holes the dark inside it,
      dark sneakers, and a pail in the bright orange of the plastic ones, a shade hotter than the
      pumpkins so the two never read as one */
+  farmHouse:{wall:"#F1F0EA",porchWall:"#D9D7CE",sash:"#F4F3EE",roof:"#3E4149",trim:"#FBFAF5",glass:"#5B6F7C",glassUp:"#5B6F7C",shutter:"#23272C",door:"#1F2328",lantern:"#1B1E22",deck:"#C9C6BC",garage:"#F7F6F1",shrub:"#4E6B3A",detail:"#9AA3A8"},
   farmTree:{fir:"#2F5E3C",firLt:"#4F8A55",trunk:"#5E4232",tinsel:"#E6C25A",star:"#F2C440"},
   hermey:{leg:"#3E5C8C",shoe:"#7A4A2E",tunic:"#7DB2DE",belt:"#2E3F66",skin:"#F1C7A3",collar:"#F6F2E8",handle:"#8E98A4",mirror:"#DCE4EC",detail:"#FFFFFF",hair:"#F3D35C",hairDk:"#C9A232",eye:"#1C1612",nose:"#E9A994",mark:"#7A3A2E"},
   trickOrTreater:{sheet:"#F3F0E8",fold:"#D6D0C4",eye:"#120D16",shoe:"#3B3247",sole:"#E6E0D4",skin:"#E8B48C",pail:"#F57A18",rib:"#C65A12",mark:"#2A160E",
@@ -10166,7 +10210,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     const farmGhost=halloween?inkAt(W*.055,base+2,1.3,1,ghostIn(-6.6,-12.6,.6,1.3,.08,W*.055-8.6,base-12)):"";
 
     /* the pond sits left of the barn; the barn and everything grounded stand right of it */
-    const pcx=W*.335,prx=W*.235,pry=H-base+2;
+    /* the homestead stands back on the field (FARM_AT): the barn on the left, the house beside it, and the pond
+       in the middle of the foreground in front of both */
+    const FA=FARM_AT,lift=FA.lift;
+    const pcx=W*FA.pc,prx=W*FA.pr,pry=H-base+2;
     const pondL=pcx-prx,pondR=pcx+prx;
     const ptop=`M ${pondL.toFixed(1)} ${base+6} Q ${(pondL+prx*.5).toFixed(1)} ${base+2.5} ${pcx.toFixed(1)} ${base+5} Q ${(pcx+prx*.5).toFixed(1)} ${base+7.5} ${pondR.toFixed(1)} ${base+6}`;
     const MEADOW=snowing?["#F4F7F9","#DDE6EC"]:winter?["#A89E74","#7E7552"]:month>=9?["#9AA05A","#6E7440"]:["#8CA65A","#5F7A43"];
@@ -10177,7 +10224,8 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
       <path d="${ptop} A ${prx.toFixed(1)} ${pry} 0 0 1 ${pondL.toFixed(1)} ${base+6} Z" fill="url(#waterband)"/>
       <path d="${ptop}" fill="none" stroke="${lineC}" stroke-width="1.1" opacity=".75"/>`;
 
-    const barnX=W*.66,barnMark=dark?"#91A5A4":"#D9D5BE";
+    const barnX=W*FA.bx,barnMark=dark?"#91A5A4":"#D9D5BE";
+    const houseX=W*FA.hx,houseR=houseX+FARM_HOUSE.w*FA.hs;
     const animalLeft=barnX-48,animalRight=barnX+48,rightTreeX=W*.955;
     /* A real barn reads from its roof before any detail: broad eaves, a broken gambrel
        pitch, a tall central door and a small loft opening. Red, because in these hills it
@@ -10214,18 +10262,20 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     let fp="",fr="";const fpts=[];
     for(let x=-4;x<W+8;x+=24+g()*12){
       if(x>pondL+6&&x<pondR-6)continue;              /* fence stops at the pond */
+      if(x>barnX+20&&x<houseR+6)continue;            /* and leaves the house's front to the lawn */
       fpts.push([x,base+2-g()*2.5]);
     }
-    /* The scarecrow stands in the field across the pond, a little right of its middle, with a crow on
-       its arm by day when it is dry. It never moves */
-    const scX=pcx+prx*.05,scS=.076,crow=!dark&&!wet&&!storm;
-    const scarecrow=halloween?`<g class="decor" data-decor="scarecrow">${inkAt(scX,base+1.2,scS,1,inkRig(propScarecrow(crow),decorPal(INK.scarecrow,.1),
-      {s:scS,line:.6,heavy:.3,shade:.8,lit:.5,light:lightAt(scX,base-16)}))}</g>`:"";
-    /* The black cat sits on the top rail just right of the barn, measured off the barn and set inside
-       a span the rail runs along. It is in when it rains */
+    /* The scarecrow stands out in the field between the barn and the house, a step in front of them, with a crow
+       on its arm by day when it is dry. It never moves. (Until the house came it stood across the pond, which is
+       the house's lawn now.) */
+    const scX=(barnX+23+houseX)/2,scY=base-lift+3.5,scS=.076,crow=!dark&&!wet&&!storm;
+    const scarecrow=halloween?`<g class="decor" data-decor="scarecrow">${inkAt(scX,scY,scS,1,inkRig(propScarecrow(crow),decorPal(INK.scarecrow,.1),
+      {s:scS,line:.6,heavy:.3,shade:.8,lit:.5,light:lightAt(scX,scY-16)}))}</g>`:"";
+    /* The black cat sits on the top rail just right of the house, where the fence picks up again past the
+       garage, measured off the house and set inside a span the rail runs along. It is in when it rains */
     let fenceCat="";
     if(halloween&&!wet&&!storm){
-      const want=barnX+27.5,i=fpts.findIndex(([x],j)=>j&&x>=want&&x-fpts[j-1][0]<48);
+      const want=houseR+12,i=fpts.findIndex(([x],j)=>j&&x>=want&&x-fpts[j-1][0]<48);
       if(i>0){const[qx,qy]=fpts[i-1],[rx,ry]=fpts[i],cx=clamp(want,qx+4,rx-5),t=(cx-qx)/(rx-qx);
         fenceCat=catAt(cx,qy+(ry-qy)*t-7.2-.75).svg}}
     for(let i=0;i<fpts.length;i++){
@@ -10390,8 +10440,8 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
 
     /* a frog is out in warm rain, not in snow: below about 45 it is underground */
     const rainyFrog=(wet||storm)&&temp>=45?frogAt(pondR-30,base+8.4,1,1):"";
-    /* the buck stands out in the field, measured off the barn so the two never meet */
-    const deerX=Math.min(animalRight+40,W-30),deerS=.62;
+    /* the buck stands out in the field right of the pond, measured off the pond so he never wades it */
+    const deerX=Math.min(pondR+20,W-30),deerS=.62;
     const deer=!wet&&!storm&&!dark&&(fog||localHour<11||localHour>=16||sunAltDeg<7)
       ?castShadow(flatParts(rigDeer(phase)),deerX,base+13,deerS,-1)+deerAt(deerX,base+13,deerS,-1,1):"";
 
@@ -10408,10 +10458,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     const witch=witchPlan(17,base-rTop-11,(x,y)=>y<crestY(0,x)-13);
     const bats=batColony(8,(x0,x1)=>{let m=1e9;for(let x=x0;x<=x1+3;x+=6)m=Math.min(m,crestY(0,Math.min(x,x1)));return m-4},batKeep(witch));
     const owl=!wet&&!storm&&dark&&!showFlies?owlAt(rightTreeX-15,base-16,.74,1):"";
-    /* Eyes in the dark at the edge of the woods: a gold pair on the far bank behind the pond, left of
-       the scarecrow, and a green pair up the wooded fold between the cat on the rail and the right
-       hardwood, over the fox and short of the owl */
-    const farmEyes=nightEyes?darkEyes([[W*.2,base-6.5,"gold",2.6,27,4],[(barnX+29+rightTreeX-22)/2,base-17,"green",2.4,34,19]]):"";
+    /* Eyes in the dark at the edge of the woods behind the homestead: a gold pair up the fold between the barn
+       and the house, over the scarecrow, and a green pair at the woods' edge right of the garage, past the cat on
+       the rail and short of the owl */
+    const farmEyes=nightEyes?darkEyes([[scX,base-lift-27,"gold",2.6,27,4],[rightTreeX-34,base-lift-15,"green",2.4,34,19]]):"";
     /* The resident, same rule as the marsh: always there, almost never moves. The cardinal
        turns up when it is cold, which is exactly when it is the only red in the field
        besides the barn.
@@ -10419,9 +10469,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
        Every one of these is placed off the barn and the pond rather than off a fraction of
        the frame, because the pond runs from .10W to .57W and eyeballed fractions put a
        rabbit in it. Anything standing on the ground here has to sit right of pondR. */
-    const ridgeResident=deer?"":dark?fox(animalRight+6,base+17.5,.95,1)
+    const ridgeResident=deer?"":dark?fox(pondR+10,base+17.5,.95,1)
       :temp<48?cardinal(rightTreeX-9,base-18.3,.44)
-      :(!wet&&!storm)?chickens(barnX,rightTreeX,base):"";
+      :(!wet&&!storm)?chickens(pondR-6,rightTreeX,base):"";
     let flies="";
     if(showFlies){const fr2=mulberry(51926);
       for(let i=0;i<flyCount;i++){
@@ -10445,6 +10495,16 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     if(lowSun&&goldK>.25){const mr2=mulberry(9);for(let i=0;i<10;i++)motes+=`<circle cx="${(W*.5+mr2()*W*.45).toFixed(1)}" cy="${(base-70+mr2()*60).toFixed(1)}" r="${(.4+mr2()*.7).toFixed(2)}" fill="#FFF6D8" opacity="${(.3+mr2()*.5).toFixed(2)}"/>`}
     const waterTop=mix(mix(skyS[2],skyS[1],.3),"#7F9CAE",.18),waterBot=mix(mix(mix(skyS[1],skyS[0],.5),"#1F3F52",.22),"#4E7288",.3);
     const bladeC=SEASON_BLADE[month].map(c=>air(c,.04)),grassLine=mix(lineC,bladeC[2],.25);
+    let farmHouse="",farmField="";
+    /* The house keeps the family's hours, the windows lit from sunset until 10:30 the way the house at Porters Neck
+       does (pnHouseLights), the dormers upstairs a softer lamp than the rooms downstairs, and the two porch lanterns
+       by the door lit with them */
+    {const hs=FA.hs,hx0=houseX,hP=propFarmHouse(),hPal={},on=pnHouseLights(sunAltDeg,localHour,localMin,rising).windows;
+      for(const[k,v]of Object.entries(INK.farmHouse))hPal[k]=on&&k==="glass"?"#FFC766":on&&k==="glassUp"?"#EBAE55":on&&k==="lantern"?"#FFE3A0":air(snowing&&k==="roof"?"#EEF3F6":v,.04);
+      Object.assign(hPal,{ink:lineC,shade:shadeC,lit:litC,litOp:.5*litK,shadeOp:.3*shadeK});
+      const[d0,d1]=FARM_HOUSE.door,glow=on?[d0-1.3,d1+1.3].map(x=>`<circle cx="${f1(hx0+x*hs)}" cy="${f1(base-8.2*hs)}" r="${fog?6:4.2}" fill="url(#lampglow)"/>`).join(""):"";
+      farmHouse=castShadow(hP,hx0,base+.86,hs,1)+`<g data-scene-anchor="farm-house" data-lit="${on?1:0}">${inkAt(hx0,base,hs,1,inkUnit(hP,hPal,{s:hs,light:lightAt(hx0+40*hs,base-20)}))}${glow}</g>`;
+      {const L=lift;farmField=`<path d="M -2 ${f1(base-L-1.5)} Q ${f1(W*.3)} ${f1(base-L-3)} ${f1(W*.55)} ${f1(base-L-1)} T ${W+2} ${f1(base-L-2)} L ${W+2} ${base} L -2 ${base} Z" fill="url(#meadow)" stroke="${mix(lineC,groundTop,.3)}" stroke-width=".8"/>`}}
 
     document.getElementById("sceneSvg").setAttribute("viewBox",`0 0 ${W} ${H}`);
     document.getElementById("sceneSvg").innerHTML=`
@@ -10486,10 +10546,12 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
       ${witchFly(witch)}
       ${pond}
       ${farmEyes}
-      ${scarecrow}
+      ${farmField}
+      <g transform="translate(0 ${-lift})">
       ${castShadow(propBarn(halloween?LOFT_WIDE:LOFT),barnX-21,base+.86,1.18,1)}
-      ${barn}
-      ${fence}${barnDecor}${fenceCat}
+      ${barn}${farmHouse}
+      ${fence}${barnDecor}${fenceCat}</g>
+      ${scarecrow}
       ${cloudShadows(base-rTop*.85,rTop*.85+8)}
       ${sparkle}${glint}${pondFx}
       ${nearRain}
