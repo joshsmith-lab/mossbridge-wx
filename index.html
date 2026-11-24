@@ -79,7 +79,7 @@ html[data-theme=dark] .grain{mix-blend-mode:overlay;opacity:.09}
   background:linear-gradient(180deg,var(--scrim,transparent) 0%,transparent 68%);
   transition:background 1.2s var(--ease)}
 .sky-fx{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
-.sky-fx svg{position:absolute;inset:0;width:100%;height:100%}
+.sky-fx svg,.sky-fx canvas.milky{position:absolute;inset:0;width:100%;height:100%}
 .sky>*:not(.sky-fx):not(.flash):not(.rainfx):not(.cobweb){position:relative;z-index:2}
 /* Halloween's cobweb is on the glass, so it is over everything in the sky, the rain included, and
    it is out of the flow and takes no tap: nothing under it moves and every tap goes through it */
@@ -1706,6 +1706,7 @@ const CLOUD_RO="ResizeObserver" in window?new ResizeObserver(es=>{
   if(!CLOUD_DUE&&SKY_FX&&SKY_FX[0]===r.width&&SKY_FX[1]===r.height)return;
   const tall=!CLOUD_DUE&&SKY_FX&&SKY_FX[0]===r.width;
   CLOUD_DUE=false;SKY_FX=[r.width,r.height];clearTimeout(CLOUD_LATER);
+  bakeMilky();
   if(!tall){bakeClouds();return}
   CLOUD_LATER=setTimeout(function later(){
     if(Object.values(REVEAL).some(v=>v.state==="running")){CLOUD_LATER=setTimeout(later,400);return}
@@ -1715,12 +1716,88 @@ const CLOUD_RO="ResizeObserver" in window?new ResizeObserver(es=>{
 if(CLOUD_RO)CLOUD_RO.observe(document.getElementById("skyFx"));
 /* warm the canvas and getImageData path while the loading shell waits on the network */
 requestAnimationFrame(()=>setTimeout(()=>{if(!CLOUD_MEMO.size)cloudLayer({fill:"#FFFFFF",puffs:[[50,40,30,12]]},64,48)}));
-function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd,code){
+/* ── the Milky Way over the farm ───────────────────────────────────────────────────────
+   Josh, November 24 2026: "the wv scene should have the milky way streaking over the farm. there's no light
+   pollution so a regular stary sky just doesnt cut it." It is the real one, where it is: the galactic plane is turned
+   into the sky over Shady Spring for this instant (milkyAt: galactic to equatorial, then the app's own pos() into
+   altitude and azimuth), and laid over the sky the way the scene lays the moon, azimuth across, altitude up from the
+   ridges. So on a summer evening the bright core stands up out of the south over the barn, and on a winter night the
+   faint band of the anticentre runs high across the sky. It is brightest toward the core and the Cygnus clouds,
+   split by the Great Rift's dark lane between them, and dusted with the faint stars a dark sky has. It shows only when
+   it can be seen: the sun 12° under and full from 18° (astronomical night), less than half cloud and fading toward
+   it, no rain, snow, storm or fog, and washed out by a moon that is up as far as the moon is lit. It is painted once a
+   render into a still canvas in the sky's own layer, behind the stars and the clouds (bakeMilky, beside bakeClouds),
+   so it costs no frame, and the ridges in the scene stand in front of its foot. The farm only: the coast and Beaufort
+   have a town's glow on their horizon. */
+let MILKY=null;
+const GAL={ra:192.85948*RD,dec:27.12825*RD,l:122.93192*RD};
+function milkyAt(lDeg,bDeg,t){
+  const l=lDeg*RD,b=bDeg*RD,d=GAL.l-l;
+  const dec=Math.asin(Math.sin(b)*Math.sin(GAL.dec)+Math.cos(b)*Math.cos(GAL.dec)*Math.cos(d));
+  const ra=GAL.ra+Math.atan2(Math.cos(b)*Math.sin(d),Math.sin(b)*Math.cos(GAL.dec)-Math.cos(b)*Math.sin(GAL.dec)*Math.cos(d));
+  const p=pos({ra,dec},t,LAT,LON);
+  return{az:(p.az/RD+180+360)%360,alt:p.alt/RD}}
+/* how much of it a person standing in the field could see, 0 to 1 */
+function milkyK(sunAlt,cloud,code,wet,storm,moonAlt,moonFrac){
+  if(wet||storm||code===45||code===48||isSnow(code))return 0;
+  const dark=clamp((-sunAlt-12)/6,0,1),clear=clamp(1-(Number(cloud)||0)/50,0,1);
+  const moon=moonAlt>0?clamp(1-1.15*moonFrac*clamp((moonAlt+2)/14,0,1),0,1):1;
+  return dark*clear*moon}
+let MILKY_DOT=null;
+function bakeMilky(){
+  const fx=document.getElementById("skyFx"),cv=fx&&fx.querySelector("canvas.milky");
+  if(!cv||!MILKY)return;
+  const F=fx.getBoundingClientRect(),sc=document.querySelector(".scene");if(!(F.width>0&&F.height>0)||!sc)return;
+  const S=sc.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,3),W=F.width,Hh=S.top-F.top+S.height*.62;
+  cv.width=Math.round(W*dpr);cv.height=Math.round(F.height*dpr);
+  const g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,F.height);
+  /* the sky as a dome seen facing south, the way the scene's sun and moon are laid out (east on the left): an
+     equidistant projection about a point 40° up in the south, so the horizon sits on the ridges, the zenith a little under
+     the top of the sky and a band that runs overhead stays one band across the top rather than two arms down the edges */
+  const T=40*RD,ky=Hh/104,kx=W/2/100,cy=Hh-40*ky;
+  const at=(l,b)=>{const p=milkyAt(l,b,MILKY.t);if(p.alt<-3)return null;
+    const A=p.alt*RD,Z=p.az*RD,E=Math.cos(A)*Math.sin(Z),N=Math.cos(A)*Math.cos(Z),U=Math.sin(A);
+    const fw=-N*Math.cos(T)+U*Math.sin(T),rx=-E,uy=N*Math.sin(T)+U*Math.cos(T),phi=Math.acos(clamp(fw,-1,1));
+    if(phi>118*RD)return null;const n=Math.hypot(rx,uy)||1,d=phi/RD;
+    return[W/2+rx/n*d*kx,cy-uy/n*d*ky,p.alt]};
+  if(!MILKY_DOT){MILKY_DOT=["240,236,255","255,232,204"].map(c=>{const d=document.createElement("canvas");d.width=d.height=64;
+    const x=d.getContext("2d"),gr=x.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,`rgba(${c},1)`);gr.addColorStop(.5,`rgba(${c},.5)`);gr.addColorStop(1,`rgba(${c},0)`);
+    x.fillStyle=gr;x.fillRect(0,0,64,64);return d})}
+  const k=MILKY.k,px=Hh/90,low=a=>clamp((a+2)/22,.2,1),cosl=l=>.5+.5*Math.cos(l*RD),near=(l,c)=>{const d=((l-c+540)%360)-180;return d};
+  const I=l=>.32+.68*Math.pow(cosl(l),2.4)+.32*Math.exp(-((near(l,78)/16)**2)),wid=l=>7+11*Math.pow(cosl(l),2);
+  const r=mulberry(4242);
+  g.globalCompositeOperation="lighter";
+  /* the band: a broad soft glow laid along the plane, wider and warmer toward the core, then clumps of star cloud
+     scattered off its middle so it is mottled and never a ruled stripe, all of it fainter toward the horizon, where
+     the light comes through the most air */
+  g.globalCompositeOperation="screen";
+  for(let l=0;l<360;l+=1.5){const w=wid(l),dot=MILKY_DOT[Math.abs(near(l,0))<30?1:0],p=at(l,0);if(!p)continue;
+    const rad=.95*w*px;g.globalAlpha=Math.min(1,I(l)*.05*k*low(p[2]));g.drawImage(dot,p[0]-rad,p[1]-rad,rad*2,rad*2)}
+  for(let i=0;i<1400;i++){const l=r()*360,w=wid(l),b=(r()+r()-1)*w*.55,p=at(l,b);if(!p)continue;
+    const rad=(.12+r()*.32)*w*px,dot=MILKY_DOT[Math.abs(near(l,0))<30?1:0];
+    g.globalAlpha=Math.min(1,I(l)*(.03+r()*.05)*k*low(p[2]));g.drawImage(dot,p[0]-rad,p[1]-rad,rad*2,rad*2)}
+  /* the Great Rift, the dark lane of dust from Cygnus down to the core, cut a little north of the plane */
+  g.globalCompositeOperation="destination-out";
+  for(let l=-8;l<84;l+=.8){const p=at(l,1.2+Math.sin(l*.11)*1.1);if(!p)continue;const s=Math.sin(clamp((l+8)/92,0,1)*Math.PI),rad=(2.4+3*s)*px;
+    g.globalAlpha=.32*s;g.drawImage(MILKY_DOT[0],p[0]-rad,p[1]-rad,rad*2,rad*2)}
+  /* and the stars a dark sky has: thick along the band, scattered everywhere else, kept off the type in the header */
+  g.globalCompositeOperation="source-over";
+  const lines=typeBoxes(".masthead,.now,#verdict,#chips").map(b=>[b.left-F.left-4,b.right-F.left+4,b.top-F.top-3,b.bottom-F.top+3]);
+  const clearOf=(x,y)=>!lines.some(([a,b,c,d])=>x>a&&x<b&&y>c&&y<d);
+  const star=(x,y,rad,a)=>{if(!clearOf(x,y))return;g.globalAlpha=a;g.fillStyle="#FFF8EC";g.beginPath();g.arc(x,y,rad,0,Math.PI*2);g.fill()};
+  for(let i=0;i<1100;i++){const l=r()*360,b=(r()+r()+r()-1.5)*wid(l)*.5,p=at(l,b),a=(.16+r()*.48)*k*(.35+.65*Math.min(1,I(l))),rad=.3+r()*.5;if(p)star(p[0],p[1],rad,a*low(p[2]))}
+  for(let i=0;i<420;i++){const x=r()*W,y=r()*Hh,a=(.12+r()*.38)*k,rad=.3+r()*.45;star(x,y,rad,a)}
+  g.globalAlpha=1;
+}
+function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd,code,now){
   /* a place whose scene looks north (LOCS.*.faces) has east on its right: the wind's bearing is mirrored east
      for west there, and the rain leans and the clouds drift the way the scene's palms stream */
   if(LOC.faces==="north")windDir=(360-windDir)%360;
   const night=clamp((-altDeg-2)/8,0,1);
   const st=starField();
+  MILKY=null;
+  if(LOC.scene==="ridge"&&now){const mp=moonPos(now),k=milkyK(altDeg,cloud,code,wet,storm,mp.alt/RD,moonPhase(now).fraction);
+    if(k>.02)MILKY={k,t:trueTime(now)}}
   /* Only the low third of the sky scintillates. That is where you are looking through the
      most air, so it is what actually happens, and a sky where all 110 stars twinkle in
      step reads as decoration. It also takes the night scene from 110 running animations
@@ -1774,14 +1851,14 @@ function renderSkyFx(altDeg,cloud,windDir,wet,storm,windSpd,code){
   /* back to front as one picture: the glow and the stars, the clouds over them, the bolts over
      everything. The bolts have an SVG of their own only because the clouds are not SVG now */
   document.getElementById("skyFx").innerHTML=
-    `<svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    `${MILKY?`<canvas class="milky" aria-hidden="true"></canvas>`:""}<svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <radialGradient id="hglow"><stop offset="0" stop-color="#FFD79A" stop-opacity="${golden?.64:.5}"/><stop offset="1" stop-color="#FFD79A" stop-opacity="0"/></radialGradient>
         <linearGradient id="streak" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF6E2" stop-opacity="0"/><stop offset="1" stop-color="#FFF6E2" stop-opacity=".95"/></linearGradient>
       </defs>${glow}${stars}${meteor}</svg>${clouds}<svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><g id="boltLayer"></g></svg>`;
   CLOUDS=layers.length?layers:null;
   if(CLOUD_RO){CLOUD_DUE=true;clearTimeout(CLOUD_LATER);const fx=document.getElementById("skyFx");CLOUD_RO.unobserve(fx);CLOUD_RO.observe(fx)}
-  else bakeClouds();
+  else{bakeMilky();bakeClouds()}
 
   const rf=document.getElementById("rainFx"),snowing=isSnow(code);
   const held=rf.classList.contains("held");
@@ -16801,7 +16878,7 @@ function render(d,live,savedAt=0){
   const dayRead=stormDay?stormStory(sm,now,TZSHIFT,stormsOverhead(c,now)):((r)=>sm.tier&&stormGust(sm)!=null?{...r,told:[...r.told,{kind:"Windy"}]}:r)(dayStory(c,dy,full,now));
   const farm=LOC.kind==="farm"?farmCard(LOC,h,c,dy,warning,storm,now,dayRead.told):null;
   const allowedFishWins=LOC.fish&&farm?.fish?fishWindows(h,now):[];
-  renderSkyFx(altDeg,c.cloud_cover,c.wind_direction_10m,wet,storm,c.wind_speed_10m,c.weather_code);
+  renderSkyFx(altDeg,c.cloud_cover,c.wind_direction_10m,wet,storm,c.wind_speed_10m,c.weather_code,now);
   /* The picture lands on its own frame. The header follows in that same frame, then the
      hourly chart, its pen, the week and its pen, then everything below. */
   SCENE_TIDE=LOC.scene==="lowcountry"&&LOC.tide?tideLevel(d.tides,now.getTime()):null;

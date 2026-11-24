@@ -919,6 +919,22 @@ oak tree too".
 
 `node tools/rig.mjs chicken-coop` and `well-pump` show them close up.
 
+**The Milky Way.** Josh, the same night: "the wv scene should have the milky way streaking over the farm. there's no
+light pollution so a regular stary sky just doesnt cut it." It is the real one for the instant shown: points along the
+galactic plane are turned into the sky over Shady Spring (`milkyAt`, galactic to equatorial with the IAU pole, then the
+app's own `pos()`), and laid out as a dome seen facing south, an equidistant projection about a point 40° up, so the
+horizon sits on the ridges, east is on the left as the sun and moon are, the zenith is just under the top of the sky,
+and a band running overhead stays one band. So on a summer evening the bright core stands up out of the south over the
+barn and the house with the Great Rift's dark lane splitting it, and on a December night the faint winter band crosses
+high from the east. It is a broad soft glow along the plane, mottled with star clouds, warmer toward the core, brighter
+there and in Cygnus, fainter toward the horizon, and dusted with some 1,500 faint stars (thick along the band, kept off
+the type in the header). It shows only when it can be seen (`milkyK`): the sun 12° under and full from 18°, less than
+half cloud and fading toward it, no rain, snow, storm or fog, and a moon that is up washes it out as far as the moon is
+lit, so in a week with a bright evening moon it comes out only after the moon sets. It is the farm's alone: the coast and
+Beaufort have a town's glow on their horizons. It is painted once a render into a still canvas behind the stars and the
+clouds in the sky's layer (`bakeMilky`, run with `bakeClouds`), about 3ms in Chrome on the Mac, and adds no animation;
+the ridges in the scene stand in front of its foot.
+
 ## Porters Neck: the house across the pond
 
 On October 21 2026 Josh asked whether to redo his own scene, now that Beaufort had shown what a place drawn

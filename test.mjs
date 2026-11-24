@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v149/);
+  assert.match(worker, /mbwx-shell-v150/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -518,6 +518,14 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /for\(const h of\[1\.8,3\.6,5\.4,7\.2\]\)fr\+=/);
   // and it never runs across the front of the barn or the house (Josh: "the fence shouldn't come in front of the barn")
   assert.match(html, /if\(x>barnX-27&&x<houseR\+6\)continue;/);
+  // the Milky Way over the farm (Josh, November 24 2026): the real galactic plane for this instant, only where it can
+  // be seen (astronomical night, under half cloud, no weather, a bright moon up washes it out), the farm only, baked
+  // once into a still canvas in the sky's layer
+  assert.match(html, /const GAL=\{ra:192\.85948\*RD,dec:27\.12825\*RD,l:122\.93192\*RD\};/);
+  assert.match(html, /const dark=clamp\(\(-sunAlt-12\)\/6,0,1\),clear=clamp\(1-\(Number\(cloud\)\|\|0\)\/50,0,1\);/);
+  assert.match(html, /if\(LOC\.scene==="ridge"&&now\)\{const mp=moonPos\(now\)/);
+  assert.match(html, /<canvas class="milky" aria-hidden="true"><\/canvas>/);
+  assert.doesNotMatch(html.slice(html.indexOf("function bakeMilky(){"), html.indexOf("function renderSkyFx(")), /animation|requestAnimationFrame|filter/);
   assert.match(html, /const yard=x>animalLeft-18&&x<animalRight\+22/);
   assert.match(html, /class="barn" data-scene-anchor="barn"/);
   // the buck stands in the field right of the pond, far enough out to be deer-sized and never in the water
@@ -555,7 +563,7 @@ test("every motion is driven by a reading, not by decoration", async () => {
   // one bake per render at the size shown: renderSkyFx re-observes instead of baking the loading
   // shell's sky, the canvases are placed in the sky's percentages, and a header that only grows
   // taller waits for the pens before it bakes again
-  assert.match(skyFx, /if\(CLOUD_RO\)\{CLOUD_DUE=true;clearTimeout\(CLOUD_LATER\);const fx=document\.getElementById\("skyFx"\);CLOUD_RO\.unobserve\(fx\);CLOUD_RO\.observe\(fx\)\}\n  else bakeClouds\(\);/);
+  assert.match(skyFx, /if\(CLOUD_RO\)\{CLOUD_DUE=true;clearTimeout\(CLOUD_LATER\);const fx=document\.getElementById\("skyFx"\);CLOUD_RO\.unobserve\(fx\);CLOUD_RO\.observe\(fx\)\}\n  else\{bakeMilky\(\);bakeClouds\(\)\}/);
   assert.match(html, /left:pc\(b\.ax,W\),top:pc\(b\.ay,H\),width:pc\(b\.bx-b\.ax,W\),height:pc\(b\.by-b\.ay,H\)/);
   assert.match(html, /if\(Object\.values\(REVEAL\)\.some\(v=>v\.state==="running"\)\)\{CLOUD_LATER=setTimeout\(later,400\);return\}/);
   assert.match(html, /const CLOUD_BLUR=9,CLOUD_BOX=5,CLOUD_PX=2\*CLOUD_BLUR\/CLOUD_BOX,/);
@@ -2425,7 +2433,7 @@ test("light, motion and alerts stay tuned", async () => {
   assert.match(html, /id="goldenband"/);
   // motion scales with the wind that is actually blowing
   assert.match(html, /const rush=clamp\(1\+\(Number\(windSpd\)\|\|0\)\/11,1,4\.2\)/);
-  assert.match(html, /renderSkyFx\(altDeg,c\.cloud_cover,c\.wind_direction_10m,wet,storm,c\.wind_speed_10m,c\.weather_code\)/);
+  assert.match(html, /renderSkyFx\(altDeg,c\.cloud_cover,c\.wind_direction_10m,wet,storm,c\.wind_speed_10m,c\.weather_code,now\)/);
   // rain is drawn from the code, not from one "it is wet" flag: a drizzle is not a downpour
   assert.match(html, /const RAIN=\{51:\[16,1\.55,\.55\]/);
   assert.match(html, /const \[count,fallSec,weight\]=snowing\?\(SNOWFALL\[code\]\|\|SNOWFALL\[73\]\):\(RAIN\[code\]\|\|RAIN\[63\]\)/);
