@@ -928,9 +928,12 @@ and a band running overhead stays one band. So on a summer evening the bright co
 barn and the house with the Great Rift's dark lane splitting it, and on a December night the faint winter band crosses
 high from the east. It is a broad soft glow along the plane, mottled with star clouds, warmer toward the core, brighter
 there and in Cygnus, fainter toward the horizon, and dusted with some 1,500 faint stars (thick along the band, kept off
-the type in the header). It shows only when it can be seen (`milkyK`): the sun 12° under and full from 18°, less than
-half cloud and fading toward it, no rain, snow, storm or fog, and a moon that is up washes it out as far as the moon is
-lit, so in a week with a bright evening moon it comes out only after the moon sets. It is the farm's alone: the coast and
+the type in the header). It shows whenever it is dark and clear (`milkyK`): from the end of dusk (the sun 6° under) and
+full from 10°, less than half cloud and fading toward it, no rain, snow, storm or fog, and a moon that is up dims it by
+up to under a third as far as the moon is lit, never puts it out. The first build waited for astronomical night
+and let a bright moon wash it out, which is true to the sky and hid it on most evenings; Josh: "no one's going to look
+at the app after 10:30 PM. So when it's dark, I'd like some Milky Way action, please." So, like Halloween's red moon, it
+is a storybook licence he asked for, and the band is still where the real one is. It is the farm's alone: the coast and
 Beaufort have a town's glow on their horizons. It is painted once a render into a still canvas behind the stars and the
 clouds in the sky's layer (`bakeMilky`, run with `bakeClouds`), about 3ms in Chrome on the Mac, and adds no animation;
 the ridges in the scene stand in front of its foot.

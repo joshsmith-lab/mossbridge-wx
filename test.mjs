@@ -518,11 +518,13 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /for\(const h of\[1\.8,3\.6,5\.4,7\.2\]\)fr\+=/);
   // and it never runs across the front of the barn or the house (Josh: "the fence shouldn't come in front of the barn")
   assert.match(html, /if\(x>barnX-27&&x<houseR\+6\)continue;/);
-  // the Milky Way over the farm (Josh, November 24 2026): the real galactic plane for this instant, only where it can
-  // be seen (astronomical night, under half cloud, no weather, a bright moon up washes it out), the farm only, baked
+  // the Milky Way over the farm (Josh, November 24 2026): the real galactic plane for this instant, only on a dark clear
+  // night (from the end of dusk, under half cloud, no weather, a moon dims it), the farm only, baked
   // once into a still canvas in the sky's layer
   assert.match(html, /const GAL=\{ra:192\.85948\*RD,dec:27\.12825\*RD,l:122\.93192\*RD\};/);
-  assert.match(html, /const dark=clamp\(\(-sunAlt-12\)\/6,0,1\),clear=clamp\(1-\(Number\(cloud\)\|\|0\)\/50,0,1\);/);
+  // from the end of dusk, because "no one's going to look at the app after 10:30 PM", and a moon only dims it
+  assert.match(html, /const dark=clamp\(\(-sunAlt-6\)\/4,0,1\),clear=clamp\(1-\(Number\(cloud\)\|\|0\)\/50,0,1\);/);
+  assert.match(html, /const moon=moonAlt>0\?1-\.3\*moonFrac\*clamp\(\(moonAlt\+2\)\/14,0,1\):1;/);
   assert.match(html, /if\(LOC\.scene==="ridge"&&now\)\{const mp=moonPos\(now\)/);
   assert.match(html, /<canvas class="milky" aria-hidden="true"><\/canvas>/);
   assert.doesNotMatch(html.slice(html.indexOf("function bakeMilky(){"), html.indexOf("function renderSkyFx(")), /animation|requestAnimationFrame|filter/);
