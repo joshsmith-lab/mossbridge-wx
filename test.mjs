@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v147/);
+  assert.match(worker, /mbwx-shell-v148/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -509,7 +509,12 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /const yard=x>animalLeft-18&&x<animalRight\+22/);
   assert.match(html, /class="barn" data-scene-anchor="barn"/);
   // the buck stands in the field right of the pond, far enough out to be deer-sized and never in the water
-  assert.match(html, /const deerX=Math\.min\(pondR\+20,W-30\),deerS=\.62/);
+  assert.match(html, /const deerX=Math\.min\(Math\.max\(pondR\+20,oakX\+30\),W-22\),deerS=\.62/);
+  // the big oak on the pond's near bank (Josh, November 24 2026), placed off the garage, with its bench and the rowboat
+  assert.match(html, /const oakX=houseR\+Math\.max\(22,\(rightTreeX-houseR\)\*\.25\);/);
+  assert.match(html, /data-scene-anchor="pond-oak"/);
+  assert.match(html, /data-prop="oak-bench"/);
+  assert.match(html, /data-prop="rowboat"/);
   // the house at the farm (Josh, November 24 2026): the parents' Cape, the barn to its left, the pond in front of
   // both across a field, the layout he picked (D, "more field")
   assert.match(html, /const FARM_AT=\{pc:\.52,pr:\.27,bx:\.2,hx:\.38,hs:1\.3,lift:13\};/);
