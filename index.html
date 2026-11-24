@@ -2297,6 +2297,45 @@ const propPondOak=(seed,bare)=>{
   else P.push(part(scallop(0,-29,19.5,11,15,seed*17,{flat:.42}),"leaf"),part(scallop(-12.6,-22.6,8.6,6.2,8,seed*19,{flat:.4}),"leaf"),
     part(scallop(12.8,-23.4,8.4,6.4,8,seed*23,{flat:.4}),"leaf"),part(scallop(1.6,-37.4,11,6.4,9,seed*29,{flat:.3}),"leaf"));
   return P};
+/* the chicken coop between the barn and the house (Josh, November 24 2026, with a photograph: "need to put this small
+   chicken coup between the house and the barn"). Its gable end and door face us: weathered vertical boards, a header
+   board over the door, black strap hinges and the black rooster on the door, a grey-green roof with a deep overhang,
+   the nesting box leaning off its left side under its own lid, and the whole of it up on two blocks. Ground at y=0,
+   centred on x=0, in the barn's units: about eight wide and eleven to the peak. */
+const propChickenCoop=()=>{const noSil={noSil:true},P=[];
+  P.push(part(R4(-3.3,0,-2,-.9),"block"),part(R4(2,0,3.3,-.9),"block"));
+  /* the nesting box first, behind the coop's corner, and its sloped lid */
+  P.push(part(R4(-5.9,-2.2,-3.4,-5),"wood"),part("M -6.3 -4.8 L -3.4 -4.8 L -3.4 -6.4 Z","roof"));
+  P.push(part("M -3.6 -.8 L 3.6 -.8 L 3.6 -8.3 L 0 -11 L -3.6 -8.3 Z","wood"));
+  for(const x of[-2.4,-1.2,1.2,2.4])P.push(part(R4(x-.07,-.9,x+.07,-8.2),"seam",noSil));
+  P.push(part(R4(-2.5,-1.1,2.5,-7.3),"door"),part(R4(-2.9,-7.4,2.9,-8.2),"header"));
+  for(const x of[-1.25,0,1.25])P.push(part(R4(x-.06,-1.2,x+.06,-7.2),"seam",noSil));
+  P.push(part("M -2.5 -6.6 L .4 -6.75 L -2.5 -6.95 Z M -2.5 -2.2 L .4 -2.35 L -2.5 -2.55 Z","iron",noSil));
+  /* the rooster: tail feathers up behind, a full breast, comb and wattle, standing on its legs */
+  P.push(pBlob([[-1.6,-4.9],[-1.9,-5.9],[-1.3,-5.6],[-.8,-5.1],[-.2,-5.2],[.4,-5.7],[.6,-6.2],[1,-6.3],[1.2,-6],[1.3,-5.6],[1.1,-5.1],[.9,-4.5],[.3,-4],[-.6,-3.9],[-1.3,-4.2]],"iron",noSil),
+    pBlob([[.75,-6.25],[.85,-6.75],[1.05,-6.5],[1.25,-6.8],[1.35,-6.35],[1.2,-6.05]],"comb",noSil),pBlob([[1.35,-5.85],[1.7,-5.7],[1.35,-5.55]],"iron",noSil),pTaper([[-.3,-3.95,.16],[-.35,-3.1,.12]],"iron",{},noSil),pTaper([[.3,-4,.16],[.35,-3.1,.12]],"iron",{},noSil));
+  /* the roof: a deep overhang down each rake, its fascia under it */
+  P.push(part("M -4.7 -7.8 L 0 -11.8 L 4.7 -7.8 L 4.4 -7.3 L 0 -11 L -4.4 -7.3 Z","roof"));
+  P.push(part("M -4.4 -7.3 L 0 -11 L 4.4 -7.3 L 4.05 -7.25 L 0 -10.5 L -4.05 -7.25 Z","fascia",noSil));
+  return P};
+/* the old hand pump in its stone bed out in the field between the pond and the house (Josh: "a small well pump in a
+   little stone setting with flowers in the field between the pond and the house"). A red cast-iron pitcher pump on a
+   stone curb in a ring of fieldstones round a bed of mulch, a shrub behind it, in flower from May into September,
+   leafy through the rest of the growing year and a low brown twiggy mound in winter. Ground at y=0, centred on the
+   pump, about nine wide and five tall. */
+const propWellPump=(season)=>{const noSil={noSil:true},P=[];
+  /* the shrub behind, to the right */
+  if(season==="winter")P.push(pBlob([[1,0],[1.4,-1.6],[2.6,-2.4],[4.2,-2.2],[5.2,-1.2],[5.4,0]],"twig"));
+  else P.push(pBlob([[.8,0],[.9,-1.8],[1.8,-3.2],[3.2,-3.8],[4.6,-3.3],[5.4,-2],[5.6,0]],"shrub"));
+  if(season==="bloom")for(const[x,y]of[[1.8,-2.6],[2.9,-3.3],[4.1,-3],[4.9,-2],[2.4,-1.5],[3.7,-1.9],[1.4,-1.2],[4.6,-.9]])P.push(pBlob([[x-.35,y],[x,y-.35],[x+.35,y],[x,y+.35]],"bloom",noSil));
+  /* the bed: mulch inside a ring of fieldstones */
+  P.push(pBlob([[-4.4,.2],[-4.1,-.7],[0,-1.1],[4.1,-.7],[4.4,.2],[0,.6]],"mulch"));
+  for(const[x,w]of[[-3.7,1.4],[-2.2,1.3],[-.8,1.2],[.6,1.3],[2,1.2],[3.4,1.3]])P.push(pBlob([[x-w/2,.3],[x-w/2+.1,-.35],[x,-.55],[x+w/2-.1,-.35],[x+w/2,.3]],"stone"));
+  /* the curb stone the pump stands on, then the pump: its barrel, the spout to the left, the cap and the handle */
+  P.push(part(R4(-.9,-.3,.9,-1.2),"stone"));
+  P.push(pTaper([[0,-1.1,.9],[0,-2.6,.8],[0,-3.4,.85]],"pump"),pTaper([[-.3,-2.9,.42],[-1.4,-2.7,.34],[-1.6,-2.3,.3]],"pump"),
+    part(R4(-.55,-3.4,.55,-3.75),"pump"),pTaper([[.3,-3.6,.22],[1.4,-4.4,.2],[2.4,-4.5,.18]],"pump"));
+  return P};
 /* the little rowboat pulled up on the bank under the oak, a small white flat-bottomed boat of the kind that sits by a
    farm pond, drawn right side up (it lies upturned in Josh's photograph) with its two oars across it and their blades
    out over the stern. Ground at y=0, about fourteen long, bow to the left */
@@ -3622,6 +3661,8 @@ const INK={
      dark sneakers, and a pail in the bright orange of the plastic ones, a shade hotter than the
      pumpkins so the two never read as one */
   pondOak:{wood:"#4A372C",leaf:"#557D3C"},
+  chickenCoop:{comb:"#121212",wood:"#A98461",door:"#B08B67",header:"#C29E79",seam:"#7E5E42",iron:"#121212",roof:"#6F7B72",fascia:"#9A7A5A",block:"#9C9B95"},
+  wellPump:{pump:"#B3262A",stone:"#B7B1A4",mulch:"#7A4A34",shrub:"#56763F",twig:"#7C6A55",bloom:"#C67BC0"},
   rowboat:{hull:"#E9ECEA",inside:"#8E9C9F",rail:"#5F6B6E",stripe:"#4F6E7E",oar:"#B4884E"},
   oakBench:{wood:"#7A5636"},
   farmHouse:{wall:"#F1F0EA",porchWall:"#D9D7CE",sash:"#F4F3EE",roof:"#3E4149",trim:"#FBFAF5",glass:"#5B6F7C",glassUp:"#5B6F7C",shutter:"#23272C",door:"#1F2328",lantern:"#1B1E22",deck:"#C9C6BC",garage:"#F7F6F1",shrub:"#4E6B3A",detail:"#9AA3A8"},
@@ -10250,7 +10291,14 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     /* the homestead stands back on the field (FARM_AT): the barn on the left, the house beside it, and the pond
        in the middle of the foreground in front of both */
     const FA=FARM_AT,lift=FA.lift;
-    const pcx=W*FA.pc,prx=W*FA.pr,pry=H-base+2;
+    const houseX=W*FA.hx,houseR=houseX+FARM_HOUSE.w*FA.hs,rightTreeX=W*.955;
+    /* the pond oak is placed off the garage, not the frame, so its crown never covers the house at any width: a
+       quarter of the way from the garage to the right hardwood, and never nearer the garage than its own crown */
+    const oakX=houseR+Math.max(22,(rightTreeX-houseR)*.25);
+    /* the pond runs on past the oak on the right (Josh: "the pond should also extend a bit further to the right than
+       the oak tree too"), its left end where it was */
+    const pL0=W*(FA.pc-FA.pr),pR0=Math.max(W*(FA.pc+FA.pr),oakX+22);
+    const pcx=(pL0+pR0)/2,prx=(pR0-pL0)/2,pry=H-base+2;
     const pondL=pcx-prx,pondR=pcx+prx;
     const ptop=`M ${pondL.toFixed(1)} ${base+6} Q ${(pondL+prx*.5).toFixed(1)} ${base+2.5} ${pcx.toFixed(1)} ${base+5} Q ${(pcx+prx*.5).toFixed(1)} ${base+7.5} ${pondR.toFixed(1)} ${base+6}`;
     const MEADOW=snowing?["#F4F7F9","#DDE6EC"]:winter?["#A89E74","#7E7552"]:month>=9?["#9AA05A","#6E7440"]:["#8CA65A","#5F7A43"];
@@ -10262,11 +10310,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
       <path d="${ptop}" fill="none" stroke="${lineC}" stroke-width="1.1" opacity=".75"/>`;
 
     const barnX=W*FA.bx,barnMark=dark?"#91A5A4":"#D9D5BE";
-    const houseX=W*FA.hx,houseR=houseX+FARM_HOUSE.w*FA.hs;
-    const animalLeft=barnX-48,animalRight=barnX+48,rightTreeX=W*.955;
-    /* the pond oak is placed off the garage, not the frame, so its crown never covers the house at any width: a
-       quarter of the way from the garage to the right hardwood, and never nearer the garage than its own crown */
-    const oakX=houseR+Math.max(22,(rightTreeX-houseR)*.25);
+    const animalLeft=barnX-48,animalRight=barnX+48;
     /* A real barn reads from its roof before any detail: broad eaves, a broken gambrel
        pitch, a tall central door and a small loft opening. Red, because in these hills it
        is, with the lamps lit once the sun is down. The yard stays quiet around it so the
@@ -10301,14 +10345,15 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
         <circle cx="0" cy="0" r=".72" fill="${barnMark}" stroke="${lineC}" stroke-width=".45"/></g></g></g></g>`;
     let fp="",fr="";const fpts=[];
     for(let x=-4;x<W+8;x+=24+g()*12){
-      if(x>pondL+6&&x<pondR-6)continue;              /* fence stops at the pond */
-      if(x>barnX+20&&x<houseR+6)continue;            /* and leaves the house's front to the lawn */
+      if(x>barnX-27&&x<houseR+6)continue;            /* the fence runs in the pasture beside the barn and on past the
+                                                       garage, never across the barn's front or the house's */
       fpts.push([x,base+2-g()*2.5]);
     }
-    /* The scarecrow stands out in the field between the barn and the house, a step in front of them, with a crow
-       on its arm by day when it is dry. It never moves. (Until the house came it stood across the pond, which is
+    /* The scarecrow stands out in the field between the barn and the chicken coop, a step in front of them, with a
+       crow on its arm by day when it is dry. It never moves. (Until the house came it stood across the pond, which is
        the house's lawn now.) */
-    const scX=(barnX+23+houseX)/2,scY=base-lift+3.5,scS=.076,crow=!dark&&!wet&&!storm;
+    const coopX=houseX-8.5,coopS=1.18;
+    const scX=(barnX+23+coopX-7)/2,scY=base-lift+3.5,scS=.076,crow=!dark&&!wet&&!storm;
     const scarecrow=halloween?`<g class="decor" data-decor="scarecrow">${inkAt(scX,scY,scS,1,inkRig(propScarecrow(crow),decorPal(INK.scarecrow,.1),
       {s:scS,line:.6,heavy:.3,shade:.8,lit:.5,light:lightAt(scX,scY-16)}))}</g>`:"";
     /* The black cat sits on the top rail just right of the house, where the fence picks up again past the
@@ -10318,11 +10363,19 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
       const want=houseR+12,i=fpts.findIndex(([x],j)=>j&&x>=want&&x-fpts[j-1][0]<48);
       if(i>0){const[qx,qy]=fpts[i-1],[rx,ry]=fpts[i],cx=clamp(want,qx+4,rx-5),t=(cx-qx)/(rx-qx);
         fenceCat=catAt(cx,qy+(ry-qy)*t-7.2-.75).svg}}
+    /* The fence is the old Appalachian zigzag split rail (Josh, November 24 2026: "change the fence to that old school
+       cross rail design of the apalachias"), a worm fence: no posts in the ground, four split rails stacked in each
+       panel with their ends laid over the next panel's at every corner, the panels zigging toward us and away so each
+       slants a little the other way from the last, and at each corner two stakes crossed in an X with a rider rail laid
+       in the crotch along the top. The top rail stays at the height the cat sits on */
+    const F1=v=>v.toFixed(1);
     for(let i=0;i<fpts.length;i++){
       const [px_,py_]=fpts[i];
-      fp+=`M ${px_.toFixed(1)} ${py_.toFixed(1)} L ${px_.toFixed(1)} ${(py_-9).toFixed(1)} `;
+      fp+=`M ${F1(px_-2.3)} ${F1(py_+.4)} L ${F1(px_+1.5)} ${F1(py_-10.2)} M ${F1(px_+2.3)} ${F1(py_+.4)} L ${F1(px_-1.5)} ${F1(py_-10.2)} `;
       if(i){const [qx,qy]=fpts[i-1];
-        if(px_-qx<48)fr+=`M ${qx.toFixed(1)} ${(qy-7.2).toFixed(1)} L ${px_.toFixed(1)} ${(py_-7.2).toFixed(1)} M ${qx.toFixed(1)} ${(qy-3.6).toFixed(1)} L ${px_.toFixed(1)} ${(py_-3.6).toFixed(1)} `}
+        if(px_-qx<48){const z=i%2?.9:-.9;
+          for(const h of[1.8,3.6,5.4,7.2])fr+=`M ${F1(qx-1.4)} ${F1(qy-h+z)} L ${F1(px_+1.4)} ${F1(py_-h-z)} `;
+          fr+=`M ${F1(qx-.4)} ${F1(qy-8.9)} L ${F1(px_+.4)} ${F1(py_-8.9)} `}}
     }
     /* Halloween at the barn door, measured off the barn. A corn shock stands at the corner, a
        straw bale at its foot with the small white pumpkin on it, clear of the window, and a big
@@ -10397,8 +10450,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
         +`<path d="M ${f1(wx)} ${f1(wy+wr)} l -1.5 -1 l -.2 1.4 Z M ${f1(wx)} ${f1(wy+wr)} l 1.5 -1 l .2 1.4 Z M ${f1(wx-.2)} ${f1(wy+wr)} l -.7 1.8 M ${f1(wx+.2)} ${f1(wy+wr)} l .7 1.8" fill="${bowC}" stroke="${bowC}" stroke-width=".45" stroke-linejoin="round"/></g>`
         +`<g class="decor" data-decor="herbie">${inkAt(hx_,hy_,hs,1,inkRig(hLayers,hp,{s:hs,line:.7,heavy:.3,shade:.9,lit:.5,light:lightAt(hx_,hy_-6)})+hLit)}</g>`;
     }
-    /* split rails: inked, then the weathered wood laid over the ink */
-    const fence=`<path d="${fp}${fr}" stroke="${lineC}" stroke-width="2.1" fill="none" stroke-linecap="round" opacity=".85"/><path d="${fp}${fr}" stroke="${air("#B99A76",.04)}" stroke-width="1.05" fill="none" stroke-linecap="round"/>`;
+    /* split rails: inked, then the weathered wood laid over the ink, finer than a post-and-rail's because there are
+       four of them to a panel */
+    const fence=`<path d="${fp}${fr}" stroke="${lineC}" stroke-width="1.7" fill="none" stroke-linecap="round" opacity=".85"/><path d="${fp}${fr}" stroke="${air("#B99A76",.04)}" stroke-width=".85" fill="none" stroke-linecap="round"/>`;
 
     const blade=(bx,ht,lean)=>`M ${(bx-.7).toFixed(1)} ${base+1} Q ${(bx+lean*.3-.4).toFixed(1)} ${(base+1-ht*.6).toFixed(1)} ${(bx+lean).toFixed(1)} ${(base+1-ht).toFixed(1)} Q ${(bx+lean*.38+.5).toFixed(1)} ${(base+1-ht*.46).toFixed(1)} ${(bx+.7).toFixed(1)} ${base+1} Z `;
     const tufts=Array.from({length:BANDS},()=>"");
@@ -10543,6 +10597,14 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     const pondOak=`<g data-scene-anchor="pond-oak"${treeAt(oakX)}>${propAt(propPondOak(7,winter),INK.pondOak,oakX,oakY,oakS,.03)}</g>`
       +`<g data-prop="oak-bench">${propAt(propOakBench(),INK.oakBench,oakX+6.4,oakY-.2,1,.03)}</g>`
       +`<g data-prop="rowboat">${propAt(propRowboat(),INK.rowboat,oakX-16,base+5.4,1,.03)}</g>`;
+    /* the chicken coop stands between the barn and the house at their depth, its nesting box toward the barn; the
+       hand pump stands out in the field between the pond and the house, in front of the porch's right end, its shrub
+       in flower from May into September and a brown twiggy mound from December into March */
+    const coopPal={};for(const[k,v]of Object.entries(INK.chickenCoop))coopPal[k]=air(snowing&&k==="roof"?"#EEF3F6":v,.04);
+    Object.assign(coopPal,{ink:lineC,shade:shadeC,lit:litC,litOp:.5*litK,shadeOp:.3*shadeK});
+    const coopP=propChickenCoop(),farmCoop=castShadow(coopP,coopX,base+.86,coopS,1)+`<g data-scene-anchor="chicken-coop">${inkAt(coopX,base,coopS,1,inkUnit(coopP,coopPal,{s:coopS,light:lightAt(coopX,base-8)}))}</g>`;
+    const pumpX=houseX+FARM_HOUSE.w*FA.hs*.62,pumpY=base-4,pumpSeason=month>=4&&month<=8?"bloom":month===11||month<=2?"winter":"leaf";
+    const wellPump=`<g data-prop="well-pump">${propAt(propWellPump(pumpSeason),INK.wellPump,pumpX,pumpY,1.25,.03)}</g>`;
     let farmHouse="",farmField="";
     /* The house keeps the family's hours, the windows lit from sunset until 10:30 the way the house at Porters Neck
        does (pnHouseLights), the dormers upstairs a softer lamp than the rooms downstairs, and the two porch lanterns
@@ -10597,9 +10659,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
       ${farmField}
       <g transform="translate(0 ${-lift})">
       ${castShadow(propBarn(halloween?LOFT_WIDE:LOFT),barnX-21,base+.86,1.18,1)}
-      ${barn}${farmHouse}
+      ${barn}${farmCoop}${farmHouse}
       ${fence}${barnDecor}${fenceCat}</g>
-      ${scarecrow}
+      ${scarecrow}${wellPump}
       ${cloudShadows(base-rTop*.85,rTop*.85+8)}
       ${sparkle}${glint}${pondFx}
       ${nearRain}

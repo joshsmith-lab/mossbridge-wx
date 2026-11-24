@@ -699,8 +699,8 @@ Each is a transform or nothing, and each holds perfectly still under reduced mot
   grass short of the dock; at the farm the gold pair is up the fold between the barn and the house,
   over the scarecrow, and the green one at the woods' edge right of the garage, past the cat on the rail
   and short of the owl.
-- **A scarecrow stands in the field at the farm.** Out in the field between the barn and the house, a step in
-  front of them (`propScarecrow`; it stood across the pond until the house came, and that is the house's lawn now): bib overalls with a patch over a red flannel shirt, arms out
+- **A scarecrow stands in the field at the farm.** Out in the field between the barn and the chicken coop, a step
+  in front of them (`propScarecrow`; it stood across the pond until the house came, and that is the house's lawn now): bib overalls with a patch over a red flannel shirt, arms out
   along the crossbar with straw at the cuffs and the ankles, a burlap sack of a head with a stitched
   grin, a floppy straw hat. A crow sits on its arm by day, because a scarecrow with a crow on it is
   the joke, and it is gone at night and in the rain. The scarecrow never moves. The farm only: the
@@ -876,7 +876,7 @@ the field (`lift`): a band of meadow is laid over the near fold's foot (`farmFie
 and the barn's decorations are one group raised onto it. The fence leaves the house's front to the lawn, running in the
 pasture left of the barn and again past the garage. The chickens, the fox and the buck work the field right of the
 pond, the cardinal and the owl keep the right hardwood, and the frog the pond's edge. In October the cat sits on the
-rail past the garage, the scarecrow stands in the field between the barn and the house, and the eyes open over the
+rail past the garage, the scarecrow stands in the field between the barn and the chicken coop, and the eyes open over the
 scarecrow and right of the garage. The tree and Hermey are still at the barn door at Christmas.
 
 **The pond oak.** Josh, the same day, with a photograph of the big oak on the pond's bank, its bench under it and a
@@ -893,6 +893,31 @@ fourteen long, white, a grey inside and a blue stripe, its two oars across it wi
 pulled up on the bank to its left, right side up; neither moves. The buck keeps clear of the trunk and the boat
 (`deerX` is measured off the oak too). `node tools/rig.mjs pond-oak` (and `pond-oak-bare`, `rowboat`, `oak-bench`)
 shows each close up.
+
+**The coop, the pump, the pond and the fence.** Josh, the same evening, with two more photographs: "need to put this
+small chicken coup between the house and the barn. there is also a small well pump in a little stone setting with
+flours in the field between the pond and the house I'd like added (see photo). finally, change the fence to that old
+school cross rail design of the apalachias", and then "the pond should also extend a bit further to the right than the
+oak tree too".
+
+- **The chicken coop** (`propChickenCoop`, `coopX`) stands between the barn and the house at their depth, just left of
+  the house, its gable end and door facing us: weathered vertical boards, a header board, black strap hinges, the black
+  rooster on the door with its comb, a grey-green roof with a deep overhang (white in snow), the nesting box leaning off
+  its left side under its own lid, and the whole of it up on two blocks.
+- **The hand pump** (`propWellPump`) stands out in the field between the pond and the house, in front of the porch's
+  right end: a red cast-iron pitcher pump on a curb stone in a ring of fieldstones round a bed of mulch, a shrub behind
+  it in flower from May into September, leafy through the rest of the growing year and a brown twiggy mound from
+  December into March (`pumpSeason`).
+- **The pond** runs on past the oak on the right (`pR0`, at least 22 past the oak's trunk), its left end where it was,
+  so the oak stands on the bank with water in front of it as in his first photograph.
+- **The fence** is the old Appalachian zigzag split rail, a worm fence: no posts in the ground, four split rails a panel
+  laid over the next panel's at every corner, each panel slanting a little the other way from the last as the fence
+  zigs toward us and away, and at each corner two stakes crossed in an X with a rider rail along the top. It no longer
+  stops at the pond, which is in front of it now. It runs in the pasture left of the barn and on past the garage,
+  never across the barn's front (Josh: "the fence shouldn't come in front of the barn though") or the house's. The top rail is where
+  it was, so the October cat still sits on it.
+
+`node tools/rig.mjs chicken-coop` and `well-pump` show them close up.
 
 ## Porters Neck: the house across the pond
 
