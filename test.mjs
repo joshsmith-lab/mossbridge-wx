@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v150/);
+  assert.match(worker, /mbwx-shell-v151/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -101,7 +101,7 @@ test("loading, cached data and the hourly explorer tell the truth", async () => 
   // A fresh farm load never flashes the coast's tide chart or scene description.
   assert.match(html, /function paintLocationShell\(\)/);
   assert.match(html, /tideSection"\)\.style\.display=LOC\.tide\?"":"none"/);
-  assert.match(html, /Sun and moon over Appalachian ridgelines and the farm pond/);
+  assert.match(html, /Sun and moon over the Appalachian ridgelines, the farmhouse, the barn and the pond/);
   assert.match(html, /else paintLoadingState\(\);\s*refresh\(\);/);
 
   // A cached forecast says how old it is, and its live pulse stands still.
@@ -510,7 +510,7 @@ test("every motion is driven by a reading, not by decoration", async () => {
   // the pond runs on past the oak (Josh: "the pond should also extend a bit further to the right than the oak tree")
   assert.match(html, /const pL0=W\*\(FA\.pc-FA\.pr\),pR0=Math\.max\(W\*\(FA\.pc\+FA\.pr\),oakX\+22\);/);
   // the chicken coop between the barn and the house, and the hand pump in its stone bed in the field
-  assert.match(html, /const coopX=houseX-8\.5,coopS=1\.18;/);
+  assert.match(html, /const barnR=barnX\+23\.2,porchL=houseX\+FARM_HOUSE\.wrap\*FA\.hs,coopS=1\.18,coopX=\(barnR\+porchL\)\/2\+\.9;/);
   assert.match(html, /data-scene-anchor="chicken-coop"/);
   assert.match(html, /data-prop="well-pump"/);
   assert.match(html, /pumpSeason=month>=4&&month<=8\?"bloom":month===11\|\|month<=2\?"winter":"leaf"/);
@@ -539,10 +539,33 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /data-prop="rowboat"/);
   // the house at the farm (Josh, November 24 2026): the parents' Cape, the barn to its left, the pond in front of
   // both across a field, the layout he picked (D, "more field")
-  assert.match(html, /const FARM_AT=\{pc:\.52,pr:\.27,bx:\.2,hx:\.38,hs:1\.3,lift:13\};/);
+  assert.match(html, /const FARM_AT=\{pc:\.52,pr:\.27,bx:\.2,hx:\.395,hs:1\.24,lift:13\};/);
   assert.match(html, /const propFarmHouse=\(\)=>\{/);
   assert.match(html, /data-scene-anchor="farm-house"/);
-  assert.match(html, /on=pnHouseLights\(sunAltDeg,localHour,localMin,rising\)\.windows/);
+  assert.match(html, /lamps=sunAltDeg< -\.83,on=pnHouseLights\(sunAltDeg,localHour,localMin,rising\)\.windows/);
+  // the refinement of November 26 2026, off Josh's photographs: the porch wraps the left end, the roof flares over
+  // it, four lanterns (the front door's and the garage doors') burn from sunset to sunrise, each lit window is its
+  // own room, and the house is drawn in layers
+  assert.match(html, /wrap:-10\.6,posts:\[-9\.4,-\.1,18\.2,34\.8,53\.2\]/);
+  assert.match(html, /lamps:\[\[22\.3,-10\],\[30\.7,-10\],\[55\.3,-7\.8\],\[78\.2,-7\.8\]\]/);
+  assert.match(html, /const glow=lamps\?FARM_HOUSE\.lamps\.map\(/);
+  // the two garage lanterns also light the wall beside the doors (Josh, November 26 2026)
+  assert.match(html, /const glow=lamps\?FARM_HOUSE\.lamps\.map\(\(\[x,y\],j\)=>\{const g=j>1,/);
+  assert.match(html, /const ROOM=\{glass0:"#FFC766",glass1:"#FFD68C",glass2:"#FFE4AC",glass3:"#B7CCE6",glassDoor:"#EDB35F",glassUp0:"#E9AC55",glassUp1:"#BF9459"\};/);
+  assert.match(html, /return\[\{parts:garage\},\{parts:body\},\.\.\.dormers,\{parts:chairs\},\{parts:frame\},\{parts:walk\},\{parts:box\}\]\};/);
+  // the lawn is one piece: one gradient from the homestead to the foot of the frame and no line across the field
+  assert.match(html, /<linearGradient id="meadow" gradientUnits="userSpaceOnUse" x1="0" y1="\$\{f1\(base-lift-3\)\}" x2="0" y2="\$\{H\}">/);
+  assert.doesNotMatch(html, /<path d="M 0 \$\{base-2\} L \$\{W\} \$\{base-2\}" stroke=/);
+  // the leaves keep their own calendar at the farm: bare from early November to mid April, pale in spring, in colour
+  // through October. The right hardwood is always there, and no cattails stand in front of the bench under the oak
+  {
+    const leafSeason = new Function(html.match(/const leafSeason=\(month,day\)=>\{[^\n]*\};/)[0] + "return leafSeason;")();
+    assert.deepEqual([[10, 26], [9, 17], [10, 5], [6, 14], [4, 6], [3, 10], [3, 20], [0, 14], [9, 1]].map(([m, d]) => leafSeason(m, d)),
+      ["bare", "fall", "fall", "summer", "spring", "bare", "spring", "bare", "summer"]);
+  }
+  assert.match(html, /const leafS=leafSeason\(month,now\.getDate\(\)\),bare=leafS==="bare"\|\|snowing,/);
+  assert.match(html, /\$\{tree\(W\*\.055,1\.3,\.08,3,farmGhost\)\}\$\{tree\(W\*\.09,\.72,\.16,8,"",1\)\}\$\{tree\(rightTreeX,1\.4,\.04,5,"",2\)\}/);
+  assert.doesNotMatch(html, /catsR/);
   assert.match(html, /<g transform="translate\(0 \$\{-lift\}\)">/);
   assert.match(html, /deerAt\(deerX,base\+13,deerS,-1,1\)/);
   // Storybook Ink: every moving joint pivots on its real joint. joint() wraps the group so its
@@ -1223,7 +1246,7 @@ test("plain-language and living-scene refinements stay in place", async () => {
   assert.match(html, /@media \(max-width:359px\)\{\.wk\.wk8 \.wk-name\{letter-spacing:\.02em\}\}/);
   assert.match(html, /wrap\.classList\.toggle\("wk8",n>7\);/);
   // and the chart, the briefs and the note all read the same days, cut once
-  assert.match(html, /const \{wk,we\}=weekSpan\(dy\),sky0=todaySky\(c,dy,full,now\);\n\s*if\(sky0!=null\)wk\.weather_code\[0\]=sky0;[^\n]*\n\s*renderWeek\(wk,css,we\);\n\s*document\.getElementById\("weekNote"\)\.textContent=weekendNote\(wk,we\);/);
+  assert.match(html, /const \{wk,we\}=weekSpan\(dy\),rest0=todayRest\(c,dy,full,now\);\n\s*if\(rest0\.code!=null\)wk\.weather_code\[0\]=rest0\.code;[^\n]*\n\s*if\(rest0\.pop!=null\)wk\.precipitation_probability_max\[0\]=rest0\.pop;\n\s*renderWeek\(wk,css,we\);\n\s*document\.getElementById\("weekNote"\)\.textContent=weekendNote\(wk,we\);/);
   // by day a moon within a day or so of new is not drawn beside the sun (November 9 2026)
   assert.match(html, /const DAY_MOON_MIN=\.05;/);
   assert.match(html, /if\(mp\.alt>-\.05&&\(!up\|\|mp\.alt>\.21&&mph\.fraction>=DAY_MOON_MIN\)\)\{/);
@@ -1271,7 +1294,7 @@ test("the weekend is always in the week, and it is the one coming", async () => 
     lift(/const dayName=s=>[^\n]*;/),
     lift(/const WEEK_H=146,WEEK_WET=35;/),
     html.slice(html.indexOf("function todaySky("), html.indexOf("function renderWeek(")),
-    "globalThis.weekSpan=weekSpan;globalThis.weekendNote=weekendNote;globalThis.todaySky=todaySky;",
+    "globalThis.weekSpan=weekSpan;globalThis.weekendNote=weekendNote;globalThis.todaySky=todaySky;globalThis.todayRest=todayRest;",
   ].join("\n"), ctx);
   // TODAY's sky is the sky still to come today, the headline's own reading (November 9 2026: a cloud
   // under TODAY at the farm beside "Sunny" and "Cool and sunny this afternoon.")
@@ -1303,6 +1326,66 @@ test("the weekend is always in the week, and it is the one coming", async () => 
     assert.equal(ctx.todaySky(null, { ...dy0(3), sunset: [] }, run(15, [0, 0, 0]), at(15)), null);
     assert.equal(ctx.todaySky(null, dy0(3), run(15, [0, 0, 0]), new Date("2026-11-10T10:00")), null);
     assert.equal(ctx.todaySky(null, dy0(null), run(15, [0, 0, 0]), at(15)), null);
+  }
+  // TODAY's column is the rest of today, its odds too (November 26 2026 at Porters Neck: rain before dawn,
+  // then a heavy rain cloud and 89% under TODAY at 10:30 beside "Sunny, then cloudy.", every hour left at 0 to 4%)
+  {
+    const D = "2026-11-26";
+    const dy0 = (code) => ({ time: [D, "2026-11-27"], weather_code: [code, 1], precipitation_probability_max: [89, 10],
+      sunrise: [D + "T06:52", "2026-11-27T06:53"], sunset: [D + "T17:03", "2026-11-27T17:03"] });
+    const hh = (n) => String(n).padStart(2, "0");
+    // a run from an hour to 11 pm, each hour [code, odds], with the small hours of tomorrow after it
+    const run = (from, rows, o = {}) => {
+      const time = rows.map((_, i) => D + "T" + hh(from + i) + ":00").concat(o.cut ? [] : ["2026-11-27T00:00", "2026-11-27T01:00"]);
+      return { time, code: rows.map((r) => r[0]).concat(o.cut ? [] : [61, 61]), pop: rows.map((r) => r[1]).concat(o.cut ? [] : [90, 90]) };
+    };
+    const at = (h, m = "30") => new Date(D + "T" + hh(h) + ":" + m);
+    const cur = (h, code) => ({ time: D + "T" + hh(h) + ":15", weather_code: code });
+    const fill = (from, row) => Array.from({ length: 24 - from }, () => row);
+    const plain = (ctx_) => JSON.parse(JSON.stringify(ctx_));
+    const rest = (...a) => plain(ctx.todayRest(...a));
+    // that morning: sunny then cloudy to sunset, one drizzle-coded hour at 8 pm on 1% odds, nothing over 4%
+    const morning = run(10, [[1, 0], [1, 0], [0, 2], [2, 4], [3, 3], [3, 1], [3, 0], [3, 0], [3, 0], [3, 0], [51, 1], [3, 0], [3, 0], [3, 0]]);
+    assert.deepEqual(rest(cur(10, 1), dy0(65), morning, at(10)), { code: 2, pop: 4 });
+    // all sun from here, and seven hours in ten of cloud
+    assert.deepEqual(rest(cur(10, 0), dy0(65), run(10, fill(10, [0, 0])), at(10)), { code: 0, pop: 0 });
+    assert.deepEqual(rest(cur(10, 3), dy0(63), run(10, fill(10, [3, 5])), at(10)), { code: 3, pop: 5 });
+    // rain still to come keeps its cloud, with the odds still to come and the worst sky left, not the day's
+    const later = run(10, [[1, 0], [1, 0], [3, 20], [61, 55], [63, 70], [61, 40], ...fill(16, [3, 10])]);
+    assert.deepEqual(rest(cur(10, 1), dy0(65), later, at(10)), { code: 63, pop: 70 });
+    // a wet hour on poor odds is a cloud, not rain: the headline's own 25% line
+    const stray = run(10, [[1, 0], [1, 0], [61, 24], [61, 10], ...fill(14, [1, 0])]);
+    assert.deepEqual(rest(cur(10, 1), dy0(65), stray, at(10)), { code: 2, pop: 24 });
+    const maybe = run(10, [[1, 0], [1, 0], [61, 25], [61, 10], ...fill(14, [1, 0])]);
+    assert.deepEqual(rest(cur(10, 1), dy0(65), maybe, at(10)), { code: 61, pop: 25 });
+    // thunder is kept at any odds, and snow and freezing rain keep their names over rain
+    assert.deepEqual(rest(cur(10, 1), dy0(95), run(10, [[1, 0], [95, 12], ...fill(12, [1, 0])]), at(10)), { code: 95, pop: 12 });
+    assert.deepEqual(rest(cur(10, 3), dy0(75), run(10, [[3, 0], [61, 60], [73, 60], [66, 60], ...fill(14, [3, 20])]), at(10)), { code: 66, pop: 60 });
+    assert.deepEqual(rest(cur(10, 3), dy0(75), run(10, [[3, 0], [61, 60], [73, 60], ...fill(13, [3, 20])]), at(10)), { code: 73, pop: 60 });
+    // raining now, whatever the run thought: the cloud stays and the day's odds are left alone
+    assert.deepEqual(rest(cur(10, 61), dy0(65), run(10, fill(10, [1, 2])), at(10)), { code: 61, pop: null });
+    // a reading from an earlier hour is not now: the run's own hour is read
+    assert.deepEqual(rest(cur(8, 61), dy0(65), run(10, fill(10, [1, 2])), at(10)), { code: 0, pop: 2 });
+    // fog still to come keeps the fog, and fog that has burned off gives way to the sky
+    assert.deepEqual(rest(cur(7, 45), dy0(45), run(7, [[45, 0], [45, 0], [2, 0], ...fill(10, [1, 0])]), at(7)), { code: 45, pop: 0 });
+    assert.deepEqual(rest(cur(10, 1), dy0(45), run(10, fill(10, [1, 0])), at(10)), { code: 0, pop: 0 });
+    // after the last daylight hour the sky is the day's record, and only the odds are what is left
+    assert.deepEqual(rest(cur(19, 1), dy0(65), run(19, fill(19, [1, 3])), at(19)), { code: null, pop: 3 });
+    assert.deepEqual(rest(cur(19, 3), dy0(65), run(19, [[3, 10], [61, 80], ...fill(21, [3, 30])]), at(19)), { code: 61, pop: 80 });
+    // a plain day keeps todaySky's answer and takes the odds still to come
+    assert.deepEqual(rest(cur(10, 1), dy0(3), run(10, fill(10, [1, 6])), at(10)), { code: 0, pop: 6 });
+    assert.deepEqual(rest(cur(19, 1), dy0(3), run(19, fill(19, [1, 6])), at(19)), { code: null, pop: 6 });
+    // a gap keeps the day's own: an hour missing, a run that stops short of 11 pm, odds or a sky unknown, another day
+    const gap = run(10, fill(10, [1, 0])); gap.time.splice(3, 1); gap.code.splice(3, 1); gap.pop.splice(3, 1);
+    assert.deepEqual(rest(cur(10, 1), dy0(65), gap, at(10)), { code: null, pop: null });
+    assert.deepEqual(rest(cur(10, 1), dy0(65), run(10, fill(12, [1, 0]), { cut: true }), at(10)), { code: null, pop: null });
+    assert.deepEqual(rest(cur(10, 1), dy0(65), run(10, [[1, 0], [1, null], ...fill(12, [1, 0])]), at(10)), { code: null, pop: null });
+    assert.deepEqual(rest(cur(10, 1), dy0(65), run(10, [[1, 0], [null, 0], ...fill(12, [1, 0])]), at(10)), { code: null, pop: 0 });
+    assert.deepEqual(rest(cur(10, 1), dy0(65), run(12, fill(12, [1, 0])), at(10)), { code: null, pop: null });
+    assert.deepEqual(rest(null, dy0(65), run(10, fill(10, [1, 0])), new Date("2026-11-27T10:30")), { code: null, pop: null });
+    assert.deepEqual(rest(cur(10, 1), dy0(null), run(10, fill(10, [1, 0])), at(10)), { code: null, pop: 0 });
+    // no sunrise or sunset invents no daylight: the day's sky stays, the odds still read
+    assert.deepEqual(rest(cur(10, 1), { ...dy0(65), sunset: [] }, run(10, fill(10, [1, 0])), at(10)), { code: null, pop: 0 });
   }
   const daily = (start, n = 8, o = {}) => {
     const time = [], d = new Date(start + "T12:00");
@@ -1852,8 +1935,8 @@ test("eyes open in the dark at both places on October nights, blink once and go"
 
 test("a scarecrow stands in the farm's field in October with a crow on its arm by day, and never moves", async () => {
   const { html, scene, rig, agents, ctx, decorOf, farm, coast } = await moreHalloween();
-  // the farm only, in the field between the barn and the house, a step in front of them
-  assert.ok(farm.includes("const scX=(barnX+23+coopX-7)/2,scY=base-lift+3.5,scS=.076,crow=!dark&&!wet&&!storm;"), "the crow is gone at night and in the rain");
+  // the farm only, in the near field in front of the barn, left of the pond
+  assert.ok(farm.includes("const scX=Math.min(barnX-4,pondL-14),scY=base+11.5,scS=.08,crow=!dark&&!wet&&!storm;"), "the crow is gone at night and in the rain");
   assert.ok(farm.includes("${scarecrow}") && !coast.includes("scarecrow"), "the farm only");
   // nothing of it moves: no class, style or animation but the decoration's own tag
   const line = farm.slice(farm.indexOf("const scarecrow=halloween?"), farm.indexOf("/* The black cat sits on the top rail"));
@@ -1877,7 +1960,7 @@ test("a cheesecloth ghost hangs in the farm's big hardwood and swings with the g
   const { html, scene, rig, agents, ctx, decorOf, farm, coast, keyframes } = await moreHalloween();
   // from the big left hardwood, inside its sway group, at the farm only (the oak has Ghostface)
   assert.ok(farm.includes("${tree(W*.055,1.3,.08,3,farmGhost)}"));
-  assert.ok(html.includes("const tree=(x,s,d,seed,extra=\"\")=>`<g${treeAt(x)}>${propAt(propHardwood(seed,winter)"), "drawn inside the tree's own group");
+  assert.ok(html.includes("const tree=(x,s,d,seed,extra=\"\",ci=0)=>`<g${treeAt(x)}>${propAt(propHardwood(seed,bare)"), "drawn inside the tree's own group");
   assert.ok(!coast.includes("ghostIn("), "never at the coast");
   // it swings from its knot as far as the gusts say, in five mile an hour steps so the live paint
   // landing after the cache does not move it, and hangs still in a calm

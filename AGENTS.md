@@ -697,10 +697,10 @@ Each is a transform or nothing, and each holds perfectly still under reduced mot
   23 to 34 seconds), so they are never both open on the same beat. They are light, so the sky does
   not tone them. On the coast the gold pair is at the far left of the bank and the green one in the
   grass short of the dock; at the farm the gold pair is up the fold between the barn and the house,
-  over the scarecrow, and the green one at the woods' edge right of the garage, past the cat on the rail
+  over the chicken coop, and the green one at the woods' edge right of the garage, past the cat on the rail
   and short of the owl.
-- **A scarecrow stands in the field at the farm.** Out in the field between the barn and the chicken coop, a step
-  in front of them (`propScarecrow`; it stood across the pond until the house came, and that is the house's lawn now): bib overalls with a patch over a red flannel shirt, arms out
+- **A scarecrow stands in the field at the farm.** Out in the near field in front of the barn, left of the pond and a
+  field nearer than the barn door's pumpkins, its hat under their feet (`propScarecrow`, `scX`, `scY`; it stood across the pond until the house came, then between the barn and the coop until the porch wrapped round and took that room, and for a day at the barn's foot, where the harness found it standing on the pumpkins and the bale): bib overalls with a patch over a red flannel shirt, arms out
   along the crossbar with straw at the cuffs and the ankles, a burlap sack of a head with a stitched
   grin, a floppy straw hat. A crow sits on its arm by day, because a scarecrow with a crow on it is
   the joke, and it is gone at night and in the rain. The scarecrow never moves. The farm only: the
@@ -861,23 +861,39 @@ center. play around with that....". Two layouts were drawn into the real page, a
 smaller with more field between it and the pond (D), and he picked D, "more field".
 
 **The house** (`propFarmHouse`, `FARM_HOUSE`, `INK.farmHouse`) is a white Cape Cod seen from the front, drawn in the
-barn's units and with the kit: a full-width front porch under the main roof's sweep and its white posts, the wall
-under the porch a shade darker so the posts read, four first-floor windows in black shutters either side of a black
-door with an oval of glass and a lantern each side, three gabled dormers on the charcoal roof with a white fascia
-down each rake (the middle one taller, with an arched window), the attached two-car garage on the right under its
-own lower roof, and ten round boxwoods along the porch with a gap at the walk. The shutters are black, from the recent
-photographs (an older one has burgundy). The roof goes white in the snow with the barn's. Its windows keep the house at
-Porters Neck's hours (`pnHouseLights`): lit from sunset to 10:30, the dormers a softer lamp than the rooms downstairs,
-and the porch lanterns with them. `node tools/rig.mjs farm-house` shows it close up and at phone size.
+barn's units and with the kit. It was drawn again off two more photographs on November 26 2026 (Josh: "refinement pass
+please. whole app. take your time. spend some extra time in WV getting the scene and house right. notice there are
+lights on either side of the garage doors that should also be lit at night, etc."), and what the photographs show is
+what is drawn: the charcoal roof comes down and flares out over the porch, its lower plane a shade lighter
+(`roofLt`), so the porch reads as under the roof's own sweep; the porch wraps the left end of the house
+(`FARM_HOUSE.wrap`), on five white posts (`posts`) over a deck, a fascia and a step; the wall under it is a shade
+darker so the posts read; four first-floor windows in white trim and black shutters stand either side of a black door
+with an oval of glass, a lantern each side of the door and a small round wooden sign under the left one; a bench and
+two rockers sit on the porch; three gabled dormers with a white fascia down each rake, the middle one wider with an
+arched window; the attached two-car garage on the right under its own lower roof, with a lantern either side of its
+doors; a concrete walk from the step and a pad in front of the garage; and twelve round boxwoods along the porch,
+seven left of the step and five right. The shutters are black, from the recent photographs (an older one has
+burgundy). The roof and the walk go white in the snow with the barn's. It is drawn in layers (the garage, the body,
+each dormer, the furniture, the porch's frame, the walk, the boxwoods), each its own inked unit, because as one unit
+the kit inked only the outer silhouette and the porch was lost in the wall.
+
+Its lights keep two clocks. The four lanterns (`FARM_HOUSE.lamps`, two at the door and two at the garage) are
+outside lights: lit from sunset to sunrise, the barn lamps' rule, each in a small halo, with a little of their warmth
+on the porch wall, and the two at the garage lay a still wash of their light down the white wall beside the doors, as
+they do in his photograph at dusk. The windows keep the house at Porters Neck's hours (`pnHouseLights`), lit from sunset to 10:30,
+and each is its own room (`ROOM`, one colour a pane: a warm lamp, a brighter one, a pale one, the cool of a
+television, the door's oval, two dormers softer than the rooms downstairs, and the third dormer dark), because every
+pane in one amber read as a house with its lights painted on. After 10:30 the windows are dark and the lanterns are
+still on. `node tools/rig.mjs farm-house` shows it close up and at phone size.
 
 **The layout** is `FARM_AT`, fractions of the frame: the pond's centre (.52) and half-width (.27) in the middle of the
-foreground, the barn at .2 and the house's left corner at .38 at 1.3 of its units, and the two stand 13 units back up
+foreground, the barn at .2 and the house's left corner at .395 at 1.24 of its units (a little smaller than the first build's 1.3, to give the wrapped porch its room beside the coop), and the two stand 13 units back up
 the field (`lift`): a band of meadow is laid over the near fold's foot (`farmField`) and the barn, the house, the fence
 and the barn's decorations are one group raised onto it. The fence leaves the house's front to the lawn, running in the
 pasture left of the barn and again past the garage. The chickens, the fox and the buck work the field right of the
 pond, the cardinal and the owl keep the right hardwood, and the frog the pond's edge. In October the cat sits on the
-rail past the garage, the scarecrow stands in the field between the barn and the chicken coop, and the eyes open over the
-scarecrow and right of the garage. The tree and Hermey are still at the barn door at Christmas.
+rail past the garage, the scarecrow stands out in the near field in front of the barn, left of the pond, and the eyes open over the
+coop and right of the garage. The tree and Hermey are still at the barn door at Christmas.
 
 **The pond oak.** Josh, the same day, with a photograph of the big oak on the pond's bank, its bench under it and a
 little white rowboat upturned beside it: "There's a large oak tree in the middle of the pond side, which I think can go
@@ -900,8 +916,8 @@ flours in the field between the pond and the house I'd like added (see photo). f
 school cross rail design of the apalachias", and then "the pond should also extend a bit further to the right than the
 oak tree too".
 
-- **The chicken coop** (`propChickenCoop`, `coopX`) stands between the barn and the house at their depth, just left of
-  the house, its gable end and door facing us: weathered vertical boards, a header board, black strap hinges, the black
+- **The chicken coop** (`propChickenCoop`, `coopX`) stands between the barn and the house at their depth, midway
+  between the barn's wall and the porch's wrapped end (`barnR`, `porchL`), its gable end and door facing us: weathered vertical boards, a header board, black strap hinges, the black
   rooster on the door with its comb, a grey-green roof with a deep overhang (white in snow), the nesting box leaning off
   its left side under its own lid, and the whole of it up on two blocks.
 - **The hand pump** (`propWellPump`) stands out in the field between the pond and the house, in front of the porch's
@@ -918,6 +934,23 @@ oak tree too".
   it was, so the October cat still sits on it.
 
 `node tools/rig.mjs chicken-coop` and `well-pump` show them close up.
+
+**The refinement pass, November 26 2026.** Beside the house (above), what changed in the picture, and why:
+
+- **The leaves keep their own calendar** (`leafSeason`, pure and tested, and `LEAF`): bare from November 8 to April
+  17, a pale spring green to May 20, summer green to October 2, and in colour from October 3, each hardwood its own
+  (amber, gold and red, the pond oak a russet). The two near folds are hardwood forest and turn with them. Until then
+  the trees went bare by the month, so they stood in full summer green through October and beside the pumpkins. The
+  meadow keeps its own later calendar (`winter`): grass goes tan after the leaves come down.
+- **The right hardwood is always there.** It was drawn only when the owl was out or it was under 48°, a perch that
+  came and went, and the right of the frame was empty on a warm day. The small tree on the left moved in a little (to
+  .09 of the frame) so it clears the barn's corner and its October decorations.
+- **One lawn.** The field the homestead stands on and the near ground share one gradient (`meadow`), and the straight
+  line that ran the width of the frame at the pond's far bank is gone: it read as a seam between two pictures.
+- **The cattails are the left clump alone, and shorter** (19, 14.5 and 16.5 tall, from 24, 18 and 21, their blades with
+  them). The right clump stood in front of the oak's bench and is gone. The left one reached up over the chicken coop
+  behind it, half hiding it at 320.
+- **The scene's spoken label** names the farmhouse (`sceneLabel`, and the early script's copy).
 
 **The Milky Way.** Josh, the same night: "the wv scene should have the milky way streaking over the farm. there's no
 light pollution so a regular stary sky just doesnt cut it." It is the real one for the instant shown: points along the
@@ -1616,7 +1649,9 @@ off both flanks; a cold October morning at the farm, `Cold one. Bundle up for
 the morning rounds.` on the `Piddling` card over the moon; a gale through the day and night at the
 farm, where every fishing time goes for the wind, the pond is choppy and the note says `new moon ·
 too windy`; and a calm farm morning whose four fishing times each have their fish resting in a flat
-pond under the phase alone. Then the eight storm cases from `tools/storm-fixtures.mjs` and three made
+pond under the phase alone; and two November mornings at the coast after rain before dawn, one dry from there (TODAY
+in the week is `Partly cloudy` and 3%, never the dawn's heavy rain and 89%) and one with rain to come that afternoon
+(its cloud and its 70% stay), each with an expect on TODAY's column as the chart speaks it (`today`). Then the eight storm cases from `tools/storm-fixtures.mjs` and three made
 from Florence's (see The storm card): Florence at the coast, Debby on the beach, the 12 to 18 inch
 blizzard at the farm (titled by its headline), RLX's January 2025 warning at the farm (titled by its own
 sentence, its lane from noon), Isaias at the farm (the named line), and RLX's January 2026 warning at the
@@ -2687,12 +2722,19 @@ The fuller scene earns its playfulness from the existing drawings and their beha
   reading per day, and a line through seven of them invents odds for the nights between. Every day
   but today is a button that opens its `dailyBrief`; the open day is washed under the hairline only,
   because a wash behind the chart boxed every label it crossed. Check it at 320 with a three-digit
-  high and 100% odds. TODAY's sky is the sky still to come today (`todaySky`, pure and tested), the one the
-  headline and the label beside the number speak for: the daily code is the day's worst sky, and on November 9
-  2026 a cloud stood under TODAY at the farm beside "Sunny" and "Cool and sunny this afternoon." It is read only
-  when the day's own code is dry and plain (0 to 3) and every daylight hour still to come is known and plain too,
-  the hour now is in taking the observed sky. Rain, snow, fog and thunder keep the day's code, and so does a gap
-  in the hours or an evening with no daylight left. Every other day keeps its daily code.
+  high and 100% odds. TODAY's column is the rest of today, its sky and its odds (`todayRest`, pure and tested, over
+  `todaySky`), the day the headline and the label beside the number speak for. The daily code and the daily odds are
+  the whole day's worst: on November 9 2026 a cloud stood under TODAY at the farm beside "Sunny" and "Cool and sunny
+  this afternoon.", and on November 26 2026 at Porters Neck, after rain before dawn, a heavy rain cloud and 89% stood
+  under it at 10:30 beside "Sunny, then cloudy.", with every hour still to come at 0 to 4%. The hours read are the hour
+  now is in through 11 pm, the hour now is in taking the observed sky, and every one must be known: a gap keeps the
+  day's own code and odds. The odds are the highest still to come. A plain day's sky (0 to 3) is `todaySky`'s: the
+  daylight still to come, every hour known and plain. A day whose code is wet or fog shows the worst sky still to
+  come: thunder at any odds, rain, snow or ice from 25% (the headline's own line for naming rain) or falling now, fog
+  while any is left, and with none of those the daylight's plain sky, an hour wet on poorer odds counted as cloud.
+  After the last daylight hour the sky is the day's record and only the odds are what is left. Raining now keeps the
+  day's odds, because a run that missed the rain cannot lower them. The chart's spoken label and its pill read the
+  same column. Every other day keeps its daily code.
 
 - **A tapped day uses the family's words.** Josh's October 2026 wording pass replaced the
   temperature-and-sky fragments with connected sentences: `Warm and sunny.`, `Cool and cloudy.`,

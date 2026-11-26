@@ -1213,7 +1213,7 @@ html[data-theme=dark] .gold-key{color:#E8BC69}
   };
   var PLACES={
     mb:{full:"Moss Bridge Ct · Porters Neck",short:"Porters Neck",lat:34.2982,lon:-77.7896,scene:"marsh",view:"pond",tide:true,fish:false,year:"The year · Wilmington",airport:"Wilmington",label:"Sun and moon over the house from across the pond, its palms, string lights and fountain",snowy:false},
-    sp:{full:"Bob Plumley Rd · Shady Spring",short:"Shady Spring",lat:37.8215,lon:-80.9942,scene:"ridge",tide:false,fish:true,year:"The year · Shady Spring",airport:"Beckley",label:"Sun and moon over Appalachian ridgelines and the farm pond",snowy:true},
+    sp:{full:"Bob Plumley Rd · Shady Spring",short:"Shady Spring",lat:37.8215,lon:-80.9942,scene:"ridge",tide:false,fish:true,year:"The year · Shady Spring",airport:"Beckley",label:"Sun and moon over the Appalachian ridgelines, the farmhouse, the barn and the pond",snowy:true},
     bft:{full:"Coosaw Club Dr · Beaufort",short:"Beaufort",lat:32.4938,lon:-80.6151,scene:"lowcountry",tide:true,fish:false,year:"The year · Beaufort",airport:"Beaufort MCAS",water:"Beaufort River",label:"Sun and moon over the Beaufort River, the swing bridge and a live oak hung with moss",snowy:false,windRow:true,runsTall:[5]}
   };
   var id="mb";
@@ -1307,7 +1307,7 @@ const LOCS={
   sp:{id:"sp",addrFull:"Bob Plumley Rd · Shady Spring",addrShort:"Shady Spring",
       lat:37.8215,lon:-80.9942,scene:"ridge",kind:"farm",fish:true,
       tz:"America/New_York",tzLabel:"ET",
-      sceneLabel:"Sun and moon over Appalachian ridgelines and the farm pond"},
+      sceneLabel:"Sun and moon over the Appalachian ridgelines, the farmhouse, the barn and the pond"},
   den:{id:"den",addrFull:"Next up · Denver",addrShort:"Denver",
       lat:39.7392,lon:-104.9903,scene:"front-range",kind:"trip",
       tz:"America/Denver",tzLabel:"MT",
@@ -2349,6 +2349,12 @@ const propLoblolly=seed=>{const r=mulberry(seed);
     P.push(part(scallop(cx,cy,rx*(.92+r()*.16),ry,c,(seed*31+cx*5)|0,{flat:.3}),"leaf"));
   return P};
 /* Hardwood (Shady Spring): a sturdy trunk and a round, lobed crown; bare in winter */
+/* the hardwoods' year at 2,500 feet in southern West Virginia: bare from early November until the leaves come out in
+   the second half of April, the pale green of new leaves into May, summer's green, and October's colour. Until
+   November 26 2026 the trees were bare only from December to February, so the farm stood in full green leaf on
+   Thanksgiving and through an October that never turned */
+const leafSeason=(month,day)=>{const md=(month+1)*100+day;return md>=1108||md<418?"bare":md<521?"spring":md<1003?"summer":"fall"};
+const LEAF={spring:["#8FB257","#9DBB62","#86AA52"],summer:["#6E8F4A","#6E8F4A","#6E8F4A"],fall:["#D08A32","#D9AE3C","#BE5630"]};
 const propHardwood=(seed,bare)=>{
   const P=[pTaper([[0,2,3.2],[.2,-8,2.4],[0,-14,1.8]],"wood"),pTaper([[0,-9,1.2],[-4,-13,.7]],"wood"),pTaper([[0,-11,1.1],[4,-15,.6]],"wood")];
   if(bare)P.push(pTaper([[0,-13,1.4],[-1.2,-20,1],[-3,-26,.5]],"wood"),pTaper([[-.6,-18,.8],[-6,-23,.45]],"wood"),pTaper([[.2,-16,.8],[6.4,-22,.45]],"wood"),
@@ -2450,47 +2456,76 @@ const propBarn=(l=LOFT)=>[
   part("M 5 -3.6 L 9 -3.6 L 9 -8.4 L 5 -8.4 Z M 27 -3.6 L 31 -3.6 L 31 -8.4 L 27 -8.4 Z","window")];
 /* ── the house at the farm (Josh, November 24 2026, with four photographs: "I'd like to put my parents actual
    house in the WV scene. barn would then be to the left of the house... but the pond is in front of both across a
-   field, in the center"). A white Cape Cod seen from the front, standing on y=0 from x=0 at its left corner, in the
-   barn's units: a full-width front porch under the main roof's sweep, white posts, the first floor's windows in
-   black shutters either side of a black door with its two lanterns, three gabled dormers on the charcoal roof (the
-   middle one taller with an arched window), the attached two-car garage on the right under its own lower roof, and
-   round boxwoods along the porch. About eighty units wide, the main roof's ridge thirty up, so the house stands
-   twice the barn's width and a little lower, as the real ones do. */
+   field, in the center"; and November 26, with two more: "spend some extra time in WV getting the scene and house
+   right. notice there are lights on either side of the garage doors that should also be lit at night, etc.").
+   A white Cape Cod seen from the front, standing on y=0 with the left corner of its front wall at x=0, in the barn's
+   units, measured off the straight-on photograph. The charcoal roof comes down from the ridge and flares out over
+   the porch, which runs the whole front and wraps round the left end, an open bay past the wall's corner. Four
+   white posts stand across the front and one at the wrap's corner. Under the porch: two windows in black shutters
+   either side of a black door with an oval of glass, a lantern each side of the door, the round wooden sign under
+   the left one, the wooden bench under the left windows and the two rockers under the right ones. Three gabled
+   dormers, the middle one wider with a tall arched window between two side lights. The two-car garage is on the
+   right under its own lower roof, a lantern either side of its doors. Round boxwoods run along the porch with a gap
+   at the step, a concrete walk leads from the step to the pad in front of the garage. It is drawn in layers, each
+   its own inked unit, so the posts, the chairs and the boxwoods keep their own outlines. Each window is its own
+   role (glass0 to glass3, glassDoor, glassUp0 to glassUp2), so at night each is its own room. About ninety units
+   wide with the wrap, the ridge twenty-eight up. */
 const R4=(x0,y0,x1,y1)=>`M ${f1(x0)} ${f1(y0)} L ${f1(x1)} ${f1(y0)} L ${f1(x1)} ${f1(y1)} L ${f1(x0)} ${f1(y1)} Z`;
-const FARM_HOUSE={w:80,ridge:-30,eave:-12.2,posts:[.6,12,22.8,30.2,41,53.4],door:[24.5,28.5],
-  win:[[4,8.4],[14,18.4],[33,37.4],[44.5,48.9]],winT:-8.8,winB:-3.4,dorm:[[13,7.6,0],[27,8.8,1],[41,7.6,0]],garage:[54,79.4]};
+const FARM_HOUSE={w:80,ridge:-28.4,eave:-12.2,wrap:-10.6,posts:[-9.4,-.1,18.2,34.8,53.2],door:[24.3,28.7],
+  win:[[3.6,7.6],[11.4,15.4],[37.6,41.6],[45.4,49.4]],winT:-9.9,winB:-4.7,dorm:[[10.1,7.4,0],[26.5,10.4,1],[42.9,7.4,0]],garage:[54,79.4],
+  /* the four lanterns, x and the y of their middles: either side of the front door, either side of the garage doors */
+  lamps:[[22.3,-10],[30.7,-10],[55.3,-7.8],[78.2,-7.8]]};
 /* where the homestead stands in the farm's frame: the pond's centre and half-width, the barn's and the house's
    left edges as fractions of the frame, the house's scale, and how far back up the field the two stand */
-const FARM_AT={pc:.52,pr:.27,bx:.2,hx:.38,hs:1.3,lift:13};
-const propFarmHouse=()=>{const F=FARM_HOUSE,noSil={noSil:true},P=[];
-  const[g0,g1]=F.garage;
-  /* the garage wing first, behind the main block: its wall, its lower roof and two white doors */
-  P.push(part(R4(g0,0,g1,-11.4),"wall"),part(`M ${f1(g0-2)} -11 L ${f1(g1+1.6)} -11 L ${f1(g1-2.4)} -21.6 L ${f1(g0+1)} -21.6 Z`,"roof"));
-  for(const[a,b]of[[g0+2.4,g0+11.6],[g0+14,g1-2]]){P.push(part(R4(a,0,b,-8.4),"garage"));
-    for(const y of[-2.1,-4.2,-6.3])P.push(part(R4(a+.5,y+.18,b-.5,y-.18),"detail",noSil))}
-  /* the main roof, ridge to the porch's eave, and the wall under the porch */
-  P.push(part(`M -2.2 ${F.eave} L ${f1(g0+2.2)} ${F.eave} L ${f1(g0-3)} ${F.ridge} L 3 ${F.ridge} Z`,"roof"));
-  P.push(part(R4(.8,-1.2,g0-.8,F.eave+.6),"porchWall"));
-  /* the first floor: four windows in black shutters, the black door with its oval of glass and two lanterns */
-  for(const[a,b]of F.win){P.push(part(R4(a-1.3,F.winB,a-.25,F.winT),"shutter"),part(R4(b+.25,F.winB,b+1.3,F.winT),"shutter"),part(R4(a,F.winB,b,F.winT),"glass"));
-    P.push(part(R4((a+b)/2-.16,F.winB,(a+b)/2+.16,F.winT),"sash",noSil),part(R4(a,(F.winT+F.winB)/2-.18,b,(F.winT+F.winB)/2+.18),"sash",noSil))}
-  const[d0,d1]=F.door;P.push(part(R4(d0,-1.2,d1,-9.4),"door"),pBlob([[(d0+d1)/2,-8.2],[d1-.9,-6.9],[(d0+d1)/2,-5],[d0+.9,-6.9]],"glass"));
-  for(const x of[d0-1.3,d1+1.3])P.push(part(R4(x-.45,-7.4,x+.45,-8.9),"lantern"));
-  /* the porch: its deck, the fascia under the roof's edge, and the posts */
-  P.push(part(R4(-1.4,0,g0+.6,-1.3),"deck"),part(R4(-2.2,F.eave+.1,g0+2.2,F.eave+1.3),"trim"));
-  for(const x of F.posts)P.push(part(R4(x-.55,-1.2,x+.55,F.eave+1.2),"trim"));
-  /* the dormers: a white face and its gable, a charcoal cap along each rake, and the window, the middle one tall
-     under an arch */
-  for(const[cx,w,mid]of F.dorm){const h=mid?-24.6:-23.4,pk=mid?-28.6:-27.4,y0=-15.4,x0=cx-w/2,x1=cx+w/2;
-    P.push(part(`M ${f1(x0)} ${y0} L ${f1(x0)} ${h} L ${f1(cx)} ${pk} L ${f1(x1)} ${h} L ${f1(x1)} ${y0} Z`,"wall"));
-    P.push(part(`M ${f1(x0-1.5)} ${f1(h+.7)} L ${f1(cx)} ${f1(pk-1.3)} L ${f1(x1+1.5)} ${f1(h+.7)} L ${f1(x1+.6)} ${f1(h+1)} L ${f1(cx)} ${f1(pk-.1)} L ${f1(x0-.6)} ${f1(h+1)} Z`,"roof"));
-    P.push(part(`M ${f1(x0-.6)} ${f1(h+1)} L ${f1(cx)} ${f1(pk-.1)} L ${f1(x1+.6)} ${f1(h+1)} L ${f1(x1+.1)} ${f1(h+1.5)} L ${f1(cx)} ${f1(pk+.6)} L ${f1(x0-.1)} ${f1(h+1.5)} Z`,"trim",noSil));
-    if(mid)P.push(part(`M ${f1(cx-2.1)} -16.6 L ${f1(cx-2.1)} -21.6 A 2.1 2.1 0 0 1 ${f1(cx+2.1)} -21.6 L ${f1(cx+2.1)} -16.6 Z`,"glassUp"),
-      part(R4(cx-.86,-16.6,cx-.54,-21.4),"sash",noSil),part(R4(cx+.54,-16.6,cx+.86,-21.4),"sash",noSil));
-    else P.push(part(R4(cx-1.8,-17,cx+1.8,-21.6),"glassUp"),part(R4(cx-1.8,-19.12,cx+1.8,-19.48),"sash",noSil))}
-  /* boxwoods along the porch, a gap at the walk to the door */
-  for(const x of[2.6,7.4,12.2,17,21.4,31.8,36.4,41.2,46,50.8])P.push(pBlob([[x-1.9,.3],[x-2,-1.3],[x-1.1,-2.6],[x,-2.9],[x+1.1,-2.6],[x+2,-1.3],[x+1.9,.3]],"shrub"));
-  return P};
+const FARM_AT={pc:.52,pr:.27,bx:.2,hx:.395,hs:1.24,lift:13};
+const propFarmHouse=()=>{const F=FARM_HOUSE,noSil={noSil:true},soft={soft:true};
+  const[g0,g1]=F.garage,[d0,d1]=F.door,E=F.eave,R=F.ridge;
+  /* the garage wing first, behind the main block: its wall, its lower roof, two white doors in their frames and
+     a lantern either side of them */
+  const garage=[part(R4(g0,0,g1,-11.4),"wall"),part(`M ${f1(g0-2)} -11 L ${f1(g1+1.6)} -11 L ${f1(g1-1.2)} -22.8 L ${f1(g0+1)} -22.8 Z`,"roof")];
+  for(const[a,b]of[[g0+2.6,g0+11.8],[g0+13.8,g1-2.4]]){garage.push(part(R4(a-.3,0,b+.3,-8.9),"detail",noSil),part(R4(a,0,b,-8.6),"garage",noSil));
+    for(const y of[-2.15,-4.3,-6.45])garage.push(part(R4(a+.5,y+.16,b-.5,y-.16),"detail",noSil))}
+  for(const[x,y]of F.lamps.slice(2))garage.push(part(R4(x-.42,y+.7,x+.42,y-.7),"lantern",noSil),part(R4(x-.6,y-.7,x+.6,y-.95),"lampCap",noSil));
+  /* the main roof: down from the ridge and flaring out over the porch, far out over the wrap on the left. The porch's
+     own shallower plane is a shade lighter, which is all that says the pitch changes */
+  const body=[part(`M ${F.wrap} ${E} L ${f1(g0+2.4)} ${E} L ${f1(g0+2.4)} ${f1(E-.7)} Q ${f1(g0-.4)} ${f1(E-2)} ${f1(g0-1.1)} ${f1(E-4.2)} L ${f1(g0-3.2)} ${R} L 2.2 ${R} L .1 ${f1(E-4.2)} Q -.8 ${f1(E-1.8)} -5 ${f1(E-1)} L ${F.wrap} ${f1(E-.4)} Z`,"roof"),
+    part(`M ${F.wrap} ${f1(E-.05)} L ${f1(g0+2.4)} ${f1(E-.05)} L ${f1(g0+2.4)} ${f1(E-.7)} Q ${f1(g0-.2)} ${f1(E-1.8)} ${f1(g0-.9)} ${f1(E-3.4)} L 0 ${f1(E-3.4)} Q -1 ${f1(E-1.8)} -5 ${f1(E-1)} L ${F.wrap} ${f1(E-.4)} Z`,"roofLt",noSil),
+    part(R4(.6,-1.2,g0-.6,E+.6),"porchWall")];
+  /* the first floor: each window in its white trim between black shutters, the door in its trim with the oval of
+     glass, the lanterns and the round sign */
+  F.win.forEach(([a,b],i)=>{body.push(part(R4(a-.3,F.winB+.3,b+.3,F.winT-.3),"sash",noSil),part(R4(a-1.7,F.winB,a-.4,F.winT),"shutter",noSil),part(R4(b+.4,F.winB,b+1.7,F.winT),"shutter",noSil),part(R4(a,F.winB,b,F.winT),"glass"+i,noSil));
+    body.push(part(R4((a+b)/2-.15,F.winB,(a+b)/2+.15,F.winT),"sash",noSil),part(R4(a,(F.winT+F.winB)/2-.17,b,(F.winT+F.winB)/2+.17),"sash",noSil))});
+  const oval=(cx,cy,rx,ry,n=12)=>Array.from({length:n},(_,k)=>{const a=k/n*Math.PI*2;return[cx+Math.cos(a)*rx,cy+Math.sin(a)*ry]});
+  body.push(part(R4(d0-.4,-1.2,d1+.4,-10.7),"sash",noSil),part(R4(d0,-1.2,d1,-10.3),"door",noSil),pBlob(oval((d0+d1)/2,-7.3,1.15,2),"glassDoor",noSil));
+  for(const[x,y]of F.lamps.slice(0,2))body.push(part(R4(x-.42,y+.7,x+.42,y-.7),"lantern",noSil),part(R4(x-.6,y-.7,x+.6,y-.95),"lampCap",noSil));
+  body.push(pBlob(oval(F.lamps[0][0],-7.5,1.1,1.1,10),"sign",noSil),pBlob(oval(F.lamps[0][0],-7.5,.62,.62,8),"signLt",noSil));
+  /* the dormers, each its own unit: a white face and its gable, a charcoal cap along each rake over a white fascia,
+     and the window, the middle one tall under an arch between two side lights */
+  const dormers=F.dorm.map(([cx,w,mid],i)=>{const h=mid?-22.6:-22,pk=mid?-27.2:-25.8,y0=-15.6,x0=cx-w/2,x1=cx+w/2,g="glassUp"+i;
+    const P=[part(`M ${f1(x0)} ${y0} L ${f1(x0)} ${h} L ${f1(cx)} ${pk} L ${f1(x1)} ${h} L ${f1(x1)} ${y0} Z`,"wall"),
+      part(`M ${f1(x0-1.5)} ${f1(h+.7)} L ${f1(cx)} ${f1(pk-1.3)} L ${f1(x1+1.5)} ${f1(h+.7)} L ${f1(x1+.6)} ${f1(h+1)} L ${f1(cx)} ${f1(pk-.1)} L ${f1(x0-.6)} ${f1(h+1)} Z`,"roof"),
+      part(`M ${f1(x0-.6)} ${f1(h+1)} L ${f1(cx)} ${f1(pk-.1)} L ${f1(x1+.6)} ${f1(h+1)} L ${f1(x1+.1)} ${f1(h+1.5)} L ${f1(cx)} ${f1(pk+.6)} L ${f1(x0-.1)} ${f1(h+1.5)} Z`,"trim",noSil)];
+    if(mid)P.push(part(`M ${f1(cx-1.5)} -16.8 L ${f1(cx-1.5)} -21.6 A 1.5 1.5 0 0 1 ${f1(cx+1.5)} -21.6 L ${f1(cx+1.5)} -16.8 Z`,g,noSil),
+      part(R4(cx-3.5,-16.8,cx-2.1,-21.2),g,noSil),part(R4(cx+2.1,-16.8,cx+3.5,-21.2),g,noSil),part(R4(cx-1.5,-21.45,cx+1.5,-21.75),"sash",noSil));
+    else P.push(part(R4(cx-2,-16.7,cx+2,-21.5),"sash",noSil),part(R4(cx-1.7,-17,cx+1.7,-21.2),g,noSil),part(R4(cx-1.7,-18.95,cx+1.7,-19.25),"sash",noSil));
+    return{parts:P}});
+  /* the porch's furniture, in the family's own wood: the bench under the left windows, and the two rockers under the
+     right ones. Their backs are what shows over the boxwoods */
+  const seat=(x0,x1,top)=>part(`M ${f1(x0)} -1.3 L ${f1(x0)} ${f1(top+.6)} L ${f1(x0+.55)} ${top} L ${f1(x1-.55)} ${top} L ${f1(x1)} ${f1(top+.6)} L ${f1(x1)} -1.3 Z`,"chair");
+  const arms=(x0,x1)=>[part(R4(x0-.55,-3.3,x0+.1,-3.75),"chair"),part(R4(x1-.1,-3.3,x1+.55,-3.75),"chair")];
+  const chairs=[seat(6.5,12.7,-5.4),...arms(6.5,12.7),seat(36.2,39,-5.9),...arms(36.2,39),seat(44.9,47.7,-5.9),...arms(44.9,47.7)];
+  for(const x of[8.05,9.6,11.15])chairs.push(part(R4(x-.11,-3.3,x+.11,-5.2),"chairDk",noSil));
+  for(const x of[37.15,38.05,45.85,46.75])chairs.push(part(R4(x-.1,-3.3,x+.1,-5.7),"chairDk",noSil));
+  /* the porch's frame: the deck and its step, the fascia under the roof's edge, and the posts */
+  const frame=[part(R4(F.wrap+.7,0,g0-.2,-1.3),"deck"),part(R4(d0-1.9,.9,d1+1.9,-.1),"deck"),part(R4(F.wrap,E+.1,g0+2.4,E+1.3),"trim")];
+  for(const x of F.posts)frame.push(part(R4(x-.5,-1.2,x+.5,E+1.2),"trim"));
+  /* the walk from the step to the pad in front of the garage doors, flat on the lawn */
+  const walk=[part(`M ${f1(d0-.9)} .8 L ${f1(d1+.9)} .8 L ${f1(d1+1.6)} 2.1 L ${f1(g0+.6)} 2.3 L ${f1(g0+.6)} 3.5 L ${f1(d0-1.1)} 3.3 Z`,"walk",soft),
+    part(`M ${f1(g0+1.6)} .1 L ${f1(g1-1.2)} .1 L ${f1(g1+3.4)} 4.4 L ${f1(g0-.6)} 4.4 Z`,"walk",soft)];
+  /* boxwoods along the porch, from the wrap's corner to the step and from the step to the garage */
+  const box=[];for(const x of[-7.4,-2.73,1.94,6.61,11.28,15.95,20.62,32.4,37.15,41.9,46.65,51.4])
+    box.push(pBlob([[x-1.95,.3],[x-2.05,-1.3],[x-1.15,-2.65],[x,-2.95],[x+1.15,-2.65],[x+2.05,-1.3],[x+1.95,.3]],"shrub"));
+  return[{parts:garage},{parts:body},...dormers,{parts:chairs},{parts:frame},{parts:walk},{parts:box}]};
 /* ── Christmas at the farm (Josh, November 18 2026: "For West Virginia specifically, I know I'd like a little
    Christmas tree decorated somewhere. And my mom's always loved Herbie the Elf from the original Rudolph").
    A little fir at the barn's corner, where the corn shock stands in October, sits on y=0 at x=0 about twenty
@@ -3744,7 +3779,10 @@ const INK={
   wellPump:{pump:"#B3262A",stone:"#B7B1A4",mulch:"#7A4A34",shrub:"#56763F",twig:"#7C6A55",bloom:"#C67BC0"},
   rowboat:{hull:"#E9ECEA",inside:"#8E9C9F",rail:"#5F6B6E",stripe:"#4F6E7E",oar:"#B4884E"},
   oakBench:{wood:"#7A5636"},
-  farmHouse:{wall:"#F1F0EA",porchWall:"#D9D7CE",sash:"#F4F3EE",roof:"#3E4149",trim:"#FBFAF5",glass:"#5B6F7C",glassUp:"#5B6F7C",shutter:"#23272C",door:"#1F2328",lantern:"#1B1E22",deck:"#C9C6BC",garage:"#F7F6F1",shrub:"#4E6B3A",detail:"#9AA3A8"},
+  farmHouse:{wall:"#F1F0EA",porchWall:"#DAD8CF",sash:"#F6F5F0",roof:"#3E4149",roofLt:"#4B4F58",trim:"#FBFAF5",
+    glass0:"#5B6F7C",glass1:"#5B6F7C",glass2:"#5B6F7C",glass3:"#5B6F7C",glassDoor:"#6B7F8C",glassUp0:"#5B6F7C",glassUp1:"#5B6F7C",glassUp2:"#5B6F7C",
+    shutter:"#23272C",door:"#1F2328",lantern:"#2B2F35",lampCap:"#1B1E22",sign:"#8A5A34",signLt:"#B98A55",chair:"#A37A4A",chairDk:"#76532F",
+    deck:"#CFCCC2",walk:"#D6D2C6",garage:"#F8F7F2",shrub:"#4E6B3A",detail:"#A3ABAF"},
   farmTree:{fir:"#2F5E3C",firLt:"#4F8A55",trunk:"#5E4232",tinsel:"#E6C25A",star:"#F2C440"},
   hermey:{leg:"#3E5C8C",shoe:"#7A4A2E",tunic:"#7DB2DE",belt:"#2E3F66",skin:"#F1C7A3",collar:"#F6F2E8",handle:"#8E98A4",mirror:"#DCE4EC",detail:"#FFFFFF",hair:"#F3D35C",hairDk:"#C9A232",eye:"#1C1612",nose:"#E9A994",mark:"#7A3A2E"},
   trickOrTreater:{sheet:"#F3F0E8",fold:"#D6D0C4",eye:"#120D16",shoe:"#3B3247",sole:"#E6E0D4",skin:"#E8B48C",pail:"#F57A18",rib:"#C65A12",mark:"#2A160E",
@@ -10334,12 +10372,17 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
        and a desktop see the same mountain rather than differently cropped hill ribbons. */
     const rTop=(H-44)*.55;
     const winter=month===11||month<=1||snowing;
+    /* the leaves' own calendar (leafSeason): the hardwoods and the two near folds, which are hardwood forest, are bare
+       from early November to mid April, pale green in spring and in colour through October. The meadow keeps its own
+       (winter, above): grass goes tan later than the leaves come down */
+    const leafS=leafSeason(month,now.getDate()),bare=leafS==="bare"||snowing,leafC=LEAF[leafS==="bare"?"summer":leafS];
     /* The Blue Ridge is blue because of the air in front of it, so each fold is a day colour
        faded by its distance into the sky it stands against, lighter again where the hollow
        holds haze at its foot. The two near folds carry a line of treetops on their crests.
        In fog the far folds go first: the mountain view dissolves from the back forward. */
-    /* the two near folds are hardwood forest, so they go grey-brown when the leaves are down */
-    const FOLD=[["#9FB0CC",.72],["#8AA2B8",.55],[winter?"#7E8494":"#6F92A0",.34],[winter?"#8A7F72":"#5C8A58",.14]].map(([c,d],i)=>[snowing?mix(c,"#E8EEF2",[.3,.32,.38,.44][i]):c,d]);
+    /* the two near folds are hardwood forest, so they go grey-brown when the leaves are down, rust and gold in
+       October and a paler green when the leaves are new */
+    const FOLD=[["#9FB0CC",.72],["#8AA2B8",.55],[bare?"#7E8494":leafS==="fall"?"#9C8C84":"#6F92A0",.34],[bare?"#8A7F72":leafS==="fall"?"#B5803F":leafS==="spring"?"#78A05A":"#5C8A58",.14]].map(([c,d],i)=>[snowing?mix(c,"#E8EEF2",[.3,.32,.38,.44][i]):c,d]);
     const foldPts=ridgeProfiles.map((pr,i)=>{const[k,rel]=[[1,.42],[.78,.34],[.56,.27],[.34,.18]][i];
       return pr.map((v,j)=>[-12+j*(W+24)/(pr.length-1),base-rTop*k+v*rTop*rel])});
     const crestY=(i,x)=>{const P=foldPts[i],st=(W+24)/(P.length-1),j=clamp(Math.floor((x+12)/st),0,P.length-2),t=((x+12)-j*st)/st,e=t*t*(3-2*t);return P[j][1]+(P[j+1][1]-P[j][1])*e};
@@ -10361,7 +10404,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     const propAt=(parts,pal,x,y,s,d,keep=[])=>{const o={};for(const[k,v]of Object.entries(pal))o[k]=keep.includes(k)?v:air(v,d);
       Object.assign(o,{ink:inkAir(d),shade:shadeC,lit:litC,litOp:.5*litK,shadeOp:.32*shadeK});
       return inkAt(x,y,s,1,inkUnit(parts,o,{s,light:lightAt(x,y-30*s)}))};
-    const tree=(x,s,d,seed,extra="")=>`<g${treeAt(x)}>${propAt(propHardwood(seed,winter),{wood:"#5C4234",leaf:"#6E8F4A"},x,base+2,s,d)}${extra}</g>`;
+    const tree=(x,s,d,seed,extra="",ci=0)=>`<g${treeAt(x)}>${propAt(propHardwood(seed,bare),{wood:"#5C4234",leaf:leafC[ci]},x,base+2,s,d)}${extra}</g>`;
     /* In October a cheesecloth ghost hangs from the big left hardwood, from under its left-hand
        leaves beside the trunk, inside the tree's sway (ghostIn) */
     const farmGhost=halloween?inkAt(W*.055,base+2,1.3,1,ghostIn(-6.6,-12.6,.6,1.3,.08,W*.055-8.6,base-12)):"";
@@ -10382,9 +10425,11 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     const ptop=`M ${pondL.toFixed(1)} ${base+6} Q ${(pondL+prx*.5).toFixed(1)} ${base+2.5} ${pcx.toFixed(1)} ${base+5} Q ${(pcx+prx*.5).toFixed(1)} ${base+7.5} ${pondR.toFixed(1)} ${base+6}`;
     const MEADOW=snowing?["#F4F7F9","#DDE6EC"]:winter?["#A89E74","#7E7552"]:month>=9?["#9AA05A","#6E7440"]:["#8CA65A","#5F7A43"];
     const groundTop=air(MEADOW[0],.04),groundFoot=air(MEADOW[1],0);
+    /* the lawn is one piece from the homestead down to the pond: the band the barn and the house stand on (farmField)
+       and the meadow under it share one gradient and no line is drawn where they meet. Until November 26 2026 the old
+       ground line still ran straight across the field and the band had its own gradient, so the lawn read as a step */
     const pond=`<rect x="0" y="${base-2}" width="${W}" height="${H-base+2}" fill="url(#meadow)"/>
       ${texOn?`<rect x="0" y="${base-2}" width="${W}" height="${H-base+2}" fill="url(#paper)" opacity="${(.8*paperK).toFixed(2)}"/>`:""}
-      <path d="M 0 ${base-2} L ${W} ${base-2}" stroke="${mix(lineC,groundTop,.3)}" stroke-width="1" opacity=".55"/>
       <path d="${ptop} A ${prx.toFixed(1)} ${pry} 0 0 1 ${pondL.toFixed(1)} ${base+6} Z" fill="url(#waterband)"/>
       <path d="${ptop}" fill="none" stroke="${lineC}" stroke-width="1.1" opacity=".75"/>`;
 
@@ -10428,11 +10473,12 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
                                                        garage, never across the barn's front or the house's */
       fpts.push([x,base+2-g()*2.5]);
     }
-    /* The scarecrow stands out in the field between the barn and the chicken coop, a step in front of them, with a
-       crow on its arm by day when it is dry. It never moves. (Until the house came it stood across the pond, which is
-       the house's lawn now.) */
-    const coopX=houseX-8.5,coopS=1.18;
-    const scX=(barnX+23+coopX-7)/2,scY=base-lift+3.5,scS=.076,crow=!dark&&!wet&&!storm;
+    /* The scarecrow stands out in the near field in front of the barn, left of the pond, with a crow on its arm by
+       day when it is dry. It never moves. (It stood across the pond until the house came, then between the barn and
+       the coop until the porch's wrap took that gap.) */
+    /* the coop stands in the middle of the gap between the barn's eave and the porch's wrap */
+    const barnR=barnX+23.2,porchL=houseX+FARM_HOUSE.wrap*FA.hs,coopS=1.18,coopX=(barnR+porchL)/2+.9;
+    const scX=Math.min(barnX-4,pondL-14),scY=base+11.5,scS=.08,crow=!dark&&!wet&&!storm;
     const scarecrow=halloween?`<g class="decor" data-decor="scarecrow">${inkAt(scX,scY,scS,1,inkRig(propScarecrow(crow),decorPal(INK.scarecrow,.1),
       {s:scS,line:.6,heavy:.3,shade:.8,lit:.5,light:lightAt(scX,scY-16)}))}</g>`:"";
     /* The black cat sits on the top rail just right of the house, where the fence picks up again past the
@@ -10606,10 +10652,10 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     const dormant=month>=10||month<=2;
     const catPal={stalk:air(dormant?"#9C8358":"#5E6E3A",.04),head:air("#6A4430",.04),leaf:air(dormant?"#B39C6C":"#6E8A44",.04),ink:lineC,shade:shadeC,lit:litC,litOp:.4*litK,shadeOp:0};
     const leaf=(pts)=>pTaper(pts,"leaf");
-    const catsL=`<g${bandAt(bandOf(pondL+10))}>${inkUnit([...catParts(pondL+4,24,.9),...catParts(pondL+10,18,-.7),...catParts(pondL+15,27,1.1),
-      leaf([[pondL+6,base+9,1.6],[pondL+14,base-4,1.2],[pondL+19,base-15,.2]]),leaf([[pondL+8,base+9,1.5],[pondL,base-3,1.1],[pondL-4,base-10,.2]])],catPal,{light:lightAt(pondL,base)})}</g>`;
-    const catsR=`<g${bandAt(bandOf(pondR-9))}>${inkUnit([...catParts(pondR-12,20,-.9),...catParts(pondR-6,25,.8),
-      leaf([[pondR-9,base+9,1.5],[pondR-15,base-3,1.1],[pondR-20,base-12,.2]])],catPal,{light:lightAt(pondR,base)})}</g>`;
+    const catsL=`<g${bandAt(bandOf(pondL+10))}>${inkUnit([...catParts(pondL+4,19,.9),...catParts(pondL+10,14.5,-.7),...catParts(pondL+14.4,16.5,.3),
+      leaf([[pondL+6,base+9,1.6],[pondL+12.6,base-1,1.2],[pondL+16.8,base-9.5,.2]]),leaf([[pondL+8,base+9,1.5],[pondL+1,base-.5,1.1],[pondL-3,base-6,.2]])],catPal,{light:lightAt(pondL,base)})}</g>`;
+    /* no cattails at the right end: that bank is the oak's, mown to the water as in Josh's photograph, and a clump
+       there stood in front of the bench */
 
     /* a frog is out in warm rain, not in snow: below about 45 it is underground */
     const rainyFrog=(wet||storm)&&temp>=45?frogAt(pondR-30,base+8.4,1,1):"";
@@ -10633,9 +10679,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     const bats=batColony(8,(x0,x1)=>{let m=1e9;for(let x=x0;x<=x1+3;x+=6)m=Math.min(m,crestY(0,Math.min(x,x1)));return m-4},batKeep(witch));
     const owl=!wet&&!storm&&dark&&!showFlies?owlAt(rightTreeX-15,base-16,.74,1):"";
     /* Eyes in the dark at the edge of the woods behind the homestead: a gold pair up the fold between the barn
-       and the house, over the scarecrow, and a green pair at the woods' edge right of the garage, past the cat on
+       and the house, over the chicken coop, and a green pair at the woods' edge right of the garage, past the cat on
        the rail and short of the owl */
-    const farmEyes=nightEyes?darkEyes([[scX,base-lift-27,"gold",2.6,27,4],[rightTreeX-34,base-lift-15,"green",2.4,34,19]]):"";
+    const farmEyes=nightEyes?darkEyes([[coopX,base-lift-27,"gold",2.6,27,4],[rightTreeX-34,base-lift-15,"green",2.4,34,19]]):"";
     /* The resident, same rule as the marsh: always there, almost never moves. The cardinal
        turns up when it is cold, which is exactly when it is the only red in the field
        besides the barn.
@@ -10673,7 +10719,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
        and the little rowboat pulled up on the bank to its left, right side up with its oars across it (Josh's
        photograph has it upturned). The oak sways from its foot with the other trees; the bench and the boat do not */
     const oakY=base+3.4,oakS=1;
-    const pondOak=`<g data-scene-anchor="pond-oak"${treeAt(oakX)}>${propAt(propPondOak(7,winter),INK.pondOak,oakX,oakY,oakS,.03)}</g>`
+    const pondOak=`<g data-scene-anchor="pond-oak"${treeAt(oakX)}>${propAt(propPondOak(7,bare),{...INK.pondOak,leaf:leafS==="fall"?"#B5652E":leafS==="spring"?"#86AA52":INK.pondOak.leaf},oakX,oakY,oakS,.03)}</g>`
       +`<g data-prop="oak-bench">${propAt(propOakBench(),INK.oakBench,oakX+6.4,oakY-.2,1,.03)}</g>`
       +`<g data-prop="rowboat">${propAt(propRowboat(),INK.rowboat,oakX-16,base+5.4,1,.03)}</g>`;
     /* the chicken coop stands between the barn and the house at their depth, its nesting box toward the barn; the
@@ -10686,14 +10732,24 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
     const wellPump=`<g data-prop="well-pump">${propAt(propWellPump(pumpSeason),INK.wellPump,pumpX,pumpY,1.25,.03)}</g>`;
     let farmHouse="",farmField="";
     /* The house keeps the family's hours, the windows lit from sunset until 10:30 the way the house at Porters Neck
-       does (pnHouseLights), the dormers upstairs a softer lamp than the rooms downstairs, and the two porch lanterns
-       by the door lit with them */
-    {const hs=FA.hs,hx0=houseX,hP=propFarmHouse(),hPal={},on=pnHouseLights(sunAltDeg,localHour,localMin,rising).windows;
-      for(const[k,v]of Object.entries(INK.farmHouse))hPal[k]=on&&k==="glass"?"#FFC766":on&&k==="glassUp"?"#EBAE55":on&&k==="lantern"?"#FFE3A0":air(snowing&&k==="roof"?"#EEF3F6":v,.04);
+       does (pnHouseLights), and each lit window is its own room, the lesson of that house ("windows shouldn't glow the
+       exact same either"): a lamp in the front room's two windows, the kitchen's brighter light, the cool wash of a
+       television, the hall's light in the door's oval, a lamp in one dormer, a dimmer one in the middle and the third
+       dark. The four lanterns, either side of the front door and either side of the garage doors (Josh, November 26
+       2026: "there are lights on either side of the garage doors that should also be lit at night"), are outdoor
+       lights and burn from sunset to sunrise, each in its glow, and the porch wall takes a little of their warmth */
+    {const hs=FA.hs,hx0=houseX,hL=propFarmHouse(),hPal={},lamps=sunAltDeg< -.83,on=pnHouseLights(sunAltDeg,localHour,localMin,rising).windows;
+      const ROOM={glass0:"#FFC766",glass1:"#FFD68C",glass2:"#FFE4AC",glass3:"#B7CCE6",glassDoor:"#EDB35F",glassUp0:"#E9AC55",glassUp1:"#BF9459"};
+      for(const[k,v]of Object.entries(INK.farmHouse))hPal[k]=on&&ROOM[k]?ROOM[k]:lamps&&k==="lantern"?"#FFE6A8":air(snowing&&k==="roof"?"#EEF3F6":snowing&&k==="roofLt"?"#F7FAFB":snowing&&k==="walk"?"#E4EAEE":v,.04);
+      if(lamps)hPal.porchWall=mix(hPal.porchWall,"#F2C078",.22);
       Object.assign(hPal,{ink:lineC,shade:shadeC,lit:litC,litOp:.5*litK,shadeOp:.3*shadeK});
-      const[d0,d1]=FARM_HOUSE.door,glow=on?[d0-1.3,d1+1.3].map(x=>`<circle cx="${f1(hx0+x*hs)}" cy="${f1(base-8.2*hs)}" r="${fog?6:4.2}" fill="url(#lampglow)"/>`).join(""):"";
-      farmHouse=castShadow(hP,hx0,base+.86,hs,1)+`<g data-scene-anchor="farm-house" data-lit="${on?1:0}">${inkAt(hx0,base,hs,1,inkUnit(hP,hPal,{s:hs,light:lightAt(hx0+40*hs,base-20)}))}${glow}</g>`;
-      {const L=lift;farmField=`<path d="M -2 ${f1(base-L-1.5)} Q ${f1(W*.3)} ${f1(base-L-3)} ${f1(W*.55)} ${f1(base-L-1)} T ${W+2} ${f1(base-L-2)} L ${W+2} ${base} L -2 ${base} Z" fill="url(#meadow)" stroke="${mix(lineC,groundTop,.3)}" stroke-width=".8"/>`}}
+      /* each lantern in its halo; the two at the garage also lay their light down the white wall beside the doors, the
+         way they do in Josh's photograph at dusk, a still wash under the halo */
+      const glow=lamps?FARM_HOUSE.lamps.map(([x,y],j)=>{const g=j>1,cx=f1(hx0+x*hs),cy=base+y*hs;
+        return(g?`<ellipse cx="${cx}" cy="${f1(cy+3.1*hs)}" rx="${f1(2.5*hs)}" ry="${f1(4.4*hs)}" fill="url(#lampglow)" opacity=".6"/>`:"")+`<circle cx="${cx}" cy="${f1(cy)}" r="${fog?6:g?4.8:4}" fill="url(#lampglow)"/>`}).join(""):"";
+      farmHouse=castShadow(flatParts(hL),hx0,base+.86,hs,1)+`<g data-scene-anchor="farm-house" data-lit="${on?1:0}" data-lamps="${lamps?1:0}">${inkAt(hx0,base,hs,1,inkRig(hL,hPal,{s:hs,line:.75,heavy:.35,light:lightAt(hx0+40*hs,base-20)}))}${glow}</g>`;
+      {const L=lift,top=`M -2 ${f1(base-L-1.5)} Q ${f1(W*.3)} ${f1(base-L-3)} ${f1(W*.55)} ${f1(base-L-1)} T ${W+2} ${f1(base-L-2)}`,d=`${top} L ${W+2} ${base} L -2 ${base} Z`;
+        farmField=`<path d="${d}" fill="url(#meadow)"/>${texOn?`<path d="${d}" fill="url(#paper)" opacity="${(.8*paperK).toFixed(2)}"/>`:""}<path d="${top}" fill="none" stroke="${mix(lineC,groundTop,.3)}" stroke-width=".8"/>`}}
 
     document.getElementById("sceneSvg").setAttribute("viewBox",`0 0 ${W} ${H}`);
     document.getElementById("sceneSvg").innerHTML=`
@@ -10710,7 +10766,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
           <stop offset="1" stop-color="${dark?'#96ABB5':'#F5F3E8'}" stop-opacity=".06"/></linearGradient>
         ${foldDefs}
         <linearGradient id="mist" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${mix("#FFFFFF",hazeC,nightK*.7)}" stop-opacity="0"/><stop offset=".5" stop-color="${mix("#FFFFFF",hazeC,nightK*.7)}" stop-opacity=".8"/><stop offset="1" stop-color="${mix("#FFFFFF",hazeC,nightK*.7)}" stop-opacity="0"/></linearGradient>
-        <linearGradient id="meadow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${groundTop}"/><stop offset="1" stop-color="${groundFoot}"/></linearGradient>
+        <linearGradient id="meadow" gradientUnits="userSpaceOnUse" x1="0" y1="${f1(base-lift-3)}" x2="0" y2="${H}"><stop offset="0" stop-color="${groundTop}"/><stop offset="1" stop-color="${groundFoot}"/></linearGradient>
         <linearGradient id="blade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${bladeC[0]}"/><stop offset=".45" stop-color="${bladeC[1]}"/><stop offset="1" stop-color="${bladeC[2]}"/></linearGradient>
         <linearGradient id="cloudInk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${tone(mix("#FFFFFF",skyS[1],.25))}"/><stop offset=".6" stop-color="${tone(mix("#FFF4E6",skyS[2],.35))}"/><stop offset="1" stop-color="${mix(tone("#FFF4E6"),litC,.5*litK)}"/></linearGradient>
         <radialGradient id="bloom"><stop offset="0" stop-color="${litC}" stop-opacity=".55"/><stop offset=".5" stop-color="${litC}" stop-opacity=".16"/><stop offset="1" stop-color="${litC}" stop-opacity="0"/></radialGradient>
@@ -10745,9 +10801,9 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
       ${sparkle}${glint}${pondFx}
       ${nearRain}
       ${tufts.map((d,i)=>d?`<g${bandAt(i)}><path d="${d}" fill="${grassLine}" stroke="${grassLine}" stroke-width=".8" stroke-linejoin="round"/><path d="${d}" fill="url(#blade)"/></g>`:"").join("")}
-      ${catsL}${catsR}
+      ${catsL}
       ${pondOak}
-      ${tree(W*.055,1.3,.08,3,farmGhost)}${tree(W*.105,.72,.16,8)}${(owl||temp<48)?tree(rightTreeX,1.4,.04,5):""}
+      ${tree(W*.055,1.3,.08,3,farmGhost)}${tree(W*.09,.72,.16,8,"",1)}${tree(rightTreeX,1.4,.04,5,"",2)}
       ${ridgeResident}
       ${deer}
       ${owl}${rainyFrog}
@@ -15870,6 +15926,48 @@ function todaySky(c,dy,h,now){
   if(codes.every(v=>v<=1))return 0;
   return codes.filter(v=>v===3).length/codes.length>=.7?3:2;
 }
+/* TODAY's column is the rest of today, its odds as well as its sky. The daily code and the daily odds
+   are the whole day's worst, so on November 26 2026 at Porters Neck, after rain before dawn, a heavy
+   rain cloud and 89% stood under TODAY at 10:30 in the morning beside "Sunny, then cloudy.", with every
+   hour still to come at 0 to 4%. The hours read are the hour now is in through 11 pm, the hour now is
+   in taking the observed sky, and every one must be known: a gap keeps the day's own code and odds.
+   The odds are the highest still to come. A plain day's sky is todaySky's. A day whose code is wet or
+   fog shows the worst sky still to come: thunder at any odds, rain, snow or ice from 25% (the
+   headline's own line for naming rain) or falling now, fog while any is left, and with none of those
+   the daylight's plain sky by todaySky's rule, an hour wet on poorer odds counted as cloud. After the
+   last daylight hour the sky is the day's record and only the odds are what is left. Raining now keeps
+   the day's odds, because the run that missed the rain cannot lower them. Pure. */
+function todayRest(c,dy,h,now){
+  const has=v=>v!=null&&v!==""&&Number.isFinite(+v),nd=new Date(now),p=v=>String(v).padStart(2,"0");
+  const today=nd.getFullYear()+"-"+p(nd.getMonth()+1)+"-"+p(nd.getDate()),out={code:todaySky(c,dy,h,now),pop:null};
+  if((dy?.time||[]).indexOf(today)!==0)return out;
+  const T=h?.time||[],k0=T.indexOf(today+"T"+p(nd.getHours())+":00");
+  if(k0<0)return out;
+  const fresh=!!c&&String(c.time).slice(0,13)===T[k0].slice(0,13),codes=[],pops=[],hrs=[];
+  for(let i=k0;i<T.length&&String(T[i]).slice(0,10)===today;i++){
+    const hr=+String(T[i]).slice(11,13);
+    if(hrs.length&&hr!==hrs[hrs.length-1]+1)return out;
+    hrs.push(hr);
+    codes.push(i===k0&&fresh&&has(c.weather_code)?+c.weather_code:has(h.code?.[i])?+h.code[i]:NaN);
+    pops.push(has(h.pop?.[i])?+h.pop[i]:NaN)}
+  if(hrs[hrs.length-1]!==23||!pops.every(Number.isFinite))return out;
+  const top=Math.max(...pops),wetNow=fresh&&isWet(codes[0]);
+  if(!wetNow)out.pop=top;
+  const day=dy.weather_code?.[0];
+  if(!has(day)||+day<=3||!codes.every(Number.isFinite))return out;
+  const WORST=[45,48,51,53,55,61,80,63,81,65,82,77,71,85,73,75,86,56,57,66,67,95,96,99],rank=v=>WORST.indexOf(v);
+  const worst=l=>l.reduce((a,v)=>rank(v)>rank(a)?v:a,l[0]);
+  const thunder=codes.filter(v=>v>=95),wet=codes.filter(isWet),fog=codes.filter(v=>v===45||v===48);
+  if(thunder.length){out.code=worst(thunder);return out}
+  if(wet.length&&(wetNow||top>=25)){out.code=worst(wet);return out}
+  if(fog.length){out.code=worst(fog);return out}
+  const rise=dy.sunrise?.[0],set=dy.sunset?.[0];
+  if(!rise||!set)return out;
+  const sky=codes.filter((_,j)=>{const t=new Date(today+"T"+p(hrs[j])+":00").getTime();return t>=new Date(rise).getTime()&&t<new Date(set).getTime()}).map(v=>v<=3?v:3);
+  if(!sky.length)return out;
+  out.code=sky.every(v=>v<=1)?0:sky.filter(v=>v===3).length/sky.length>=.7?3:2;
+  return out;
+}
 function weekSpan(dy){
   const T=dy.time,dow=t=>new Date(t+"T12:00").getDay();
   const sun=T.findIndex((t,i)=>i>0&&dow(t)===0),sat=T.findIndex((t,i)=>i>0&&dow(t)===6);
@@ -17159,8 +17257,9 @@ function render(d,live,savedAt=0){
 
   paintAfter(gen,()=>{
   /* week: drawn before the tide because it sits above it, so its entrance is armed first */
-  const {wk,we}=weekSpan(dy),sky0=todaySky(c,dy,full,now);
-  if(sky0!=null)wk.weather_code[0]=sky0;      /* wk's series are its own slices */
+  const {wk,we}=weekSpan(dy),rest0=todayRest(c,dy,full,now);
+  if(rest0.code!=null)wk.weather_code[0]=rest0.code;      /* wk's series are its own slices */
+  if(rest0.pop!=null)wk.precipitation_probability_max[0]=rest0.pop;
   renderWeek(wk,css,we);
   document.getElementById("weekNote").textContent=weekendNote(wk,we);
 

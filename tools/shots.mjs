@@ -233,6 +233,19 @@ const CASES = [
     o: { baseTemp: 61, nowTemp: 65, feels: 65, rh: 55, isDay: 1, code: 1, cloud: 15, nowWind: 4, nowDir: 240, nowGust: 7, nowUv: 3, uvMax: 4,
       windAmp: 1, gustAmp: 2, sunrise: "07:25", sunset: "18:55", popCurve: () => 5, dailyPop: (p) => p.fill(10) },
     expect: { moon: true, fish: true, moonNote: /^waning crescent$/, chop: 0, say: null } },
+  // rain before dawn and a dry day after it: TODAY in the week is the rest of today, its sky and its odds
+  // (November 26 2026 at Porters Neck: a heavy rain cloud and 89% under TODAY at 10:30 beside "Sunny, then cloudy.")
+  { name: "31-after-the-rain-porters-neck", loc: "mb", when: "2026-11-26T10:30:00",
+    o: { baseTemp: 58, nowTemp: 60, feels: 60, rh: 70, isDay: 1, code: 1, cloud: 20, nowWind: 9, nowDir: 300, nowGust: 16, nowUv: 2.2, uvMax: 3,
+      windAmp: 7, gustAmp: 10, sunrise: "06:52", sunset: "17:03",
+      popCurve: (i) => (i < 6 ? 89 : i < 24 ? 3 : 6), hourlyCode: (i, hr) => (i < 6 ? 65 : i < 24 ? (hr < 13 ? 1 : 3) : 1) },
+    expect: { today: /^Today, Thursday, November 26\. Partly cloudy\. High \d+, low \d+\. 3 percent chance of rain\.$/ } },
+  // and the same morning with the rain still to come that afternoon: the cloud and its odds stay
+  { name: "32-rain-to-come-porters-neck", loc: "mb", when: "2026-11-26T10:30:00",
+    o: { baseTemp: 58, nowTemp: 60, feels: 60, rh: 70, isDay: 1, code: 3, cloud: 80, nowWind: 9, nowDir: 300, nowGust: 16, nowUv: 1.2, uvMax: 3,
+      windAmp: 7, gustAmp: 10, sunrise: "06:52", sunset: "17:03",
+      popCurve: (i) => (i < 6 ? 89 : i >= 14 && i < 18 ? 70 : i < 24 ? 10 : 6), hourlyCode: (i) => (i < 6 ? 65 : i >= 14 && i < 18 ? 61 : 3) },
+    expect: { today: /^Today, Thursday, November 26\. Light rain\. High \d+, low \d+\. 70 percent chance of rain\.$/ } },
   // October copy previews: ordinary afternoons and evenings that look ahead to a real change.
   // The temperature callback shapes the hourly run and its daily highs together.
   { name: "words-day-porters-neck", loc: "mb", when: "2026-10-10T14:20:00",
@@ -647,6 +660,8 @@ for (const cs of cases) {
           hourlyNote: T("hourlyNote"), weekNote: T("weekNote"),
           // the week's days, with the weekend's banded columns in brackets
           week: [...document.querySelectorAll("#weekRows .wk-day")].map((d) => { const n = d.querySelector(".wk-name").textContent; return d.classList.contains("we") ? `[${n}]` : n; }).join(" "),
+          // TODAY's column as the chart speaks it: the sky and the odds still to come today
+          today: XP.week?.D ? XP.week.D.read(0).said : null,
           /* each chart's pill where it starts (the hours and the water and the moon at now, the week
              tomorrow, the year this month), and the water an hour on, as the finger would read them */
           xp: Object.fromEntries(Object.entries(XP).filter(([, X]) => X.D).flatMap(([k, X]) => {
@@ -727,6 +742,7 @@ for (const cs of cases) {
       if (ex.sun && copy.sun !== ex.sun) fail(`sun card "${copy.sun}", expected "${ex.sun}"`);
       if (ex.uvBar && !ex.uvBar.test(copy.uvBar || "")) fail(`sun bar "${copy.uvBar}"`);
       if ("marine" in ex && marineAsks !== ex.marine) fail(`${marineAsks} marine requests, expected ${ex.marine}`);
+      if (ex.today && !ex.today.test(copy.today || "")) fail(`today in the week "${copy.today}"`);
       for (const [k, re] of Object.entries(ex.xp || {})) if (!re.test(copy.xp[k] || "")) fail(`${k} pill "${copy.xp[k]}"`);
       /* the storm card, the headline over it, the strip, and Tonight under it */
       const is = (v, want) => want instanceof RegExp ? want.test(v ?? "") : (v ?? null) === want, sc = copy.storm, cd = sc.card || {};

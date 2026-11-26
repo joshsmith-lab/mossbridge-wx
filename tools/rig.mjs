@@ -101,7 +101,7 @@ const PROPS = {
   "well-pump": ["wellPump", (c) => c.propWellPump("bloom"), {}, [12, 7, 6, 6], { phone: 1.3 }],
   rowboat: ["rowboat", (c) => c.propRowboat(), {}, [26, 10, 9, 8], { phone: 1.1 }],
   "oak-bench": ["oakBench", (c) => c.propOakBench(), {}, [10, 6, 5, 5], { phone: 1.1 }],
-  "farm-house": ["farmHouse", (c) => c.propFarmHouse(), {}, [90, 36, 4, 34], { phone: 1.44 }],
+  "farm-house": ["farmHouse", (c) => c.propFarmHouse(), {}, [100, 38, 14, 32], { phone: 1.5, o: { line: 0.7, heavy: 0.3 } }],
   /* More Halloween. The black cat, the cheesecloth ghost and the scarecrow are drawn at ten units to
      the unit the scene places them in, so each phone panel draws them at the scale the scene does,
      with its lines. The cat's night panel is the eyeshine it has from sunset, the ghost's is the
