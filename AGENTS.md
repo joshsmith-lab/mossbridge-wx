@@ -875,7 +875,12 @@ doors; a concrete walk from the step and a pad in front of the garage; and twelv
 seven left of the step and five right. The shutters are black, from the recent photographs (an older one has
 burgundy). The roof and the walk go white in the snow with the barn's. It is drawn in layers (the garage, the body,
 each dormer, the furniture, the porch's frame, the walk, the boxwoods), each its own inked unit, because as one unit
-the kit inked only the outer silhouette and the porch was lost in the wall.
+the kit inked only the outer silhouette and the porch was lost in the wall. The small layers (the dormers, the furniture and the
+porch's frame) are inked and take no shadow crescent or lit edge of their own (`FLAT`): each pair is two masks, and the
+farm paints as one sheet that WebKit repaints whole while anything moves. With all sixteen masks the farm's October night
+opened at 48 to 50 frames a second in `tools/webkit.mjs`'s WKWebView against the live version's 51 to 57; with six (the
+body, the garage and the boxwoods, which are the forms) it idles at 58 to 59 and opens at 52 to 55, level with the live
+version run alternately on the same Mac, and the house looks the same.
 
 Its lights keep two clocks. The four lanterns (`FARM_HOUSE.lamps`, two at the door and two at the garage) are
 outside lights: lit from sunset to sunrise, the barn lamps' rule, each in a small halo, with a little of their warmth

@@ -552,7 +552,8 @@ test("every motion is driven by a reading, not by decoration", async () => {
   // the two garage lanterns also light the wall beside the doors (Josh, November 26 2026)
   assert.match(html, /const glow=lamps\?FARM_HOUSE\.lamps\.map\(\(\[x,y\],j\)=>\{const g=j>1,/);
   assert.match(html, /const ROOM=\{glass0:"#FFC766",glass1:"#FFD68C",glass2:"#FFE4AC",glass3:"#B7CCE6",glassDoor:"#EDB35F",glassUp0:"#E9AC55",glassUp1:"#BF9459"\};/);
-  assert.match(html, /return\[\{parts:garage\},\{parts:body\},\.\.\.dormers,\{parts:chairs\},\{parts:frame\},\{parts:walk\},\{parts:box\}\]\};/);
+  // in layers, and the small ones take no crescent or lit edge of their own: each pair is two masks WebKit repaints
+  assert.match(html, /const FLAT=\{shade:0,lit:0\};\n\s*return\[\{parts:garage\},\{parts:body\},\.\.\.dormers\.map\(d=>\(\{\.\.\.d,o:FLAT\}\)\),\{parts:chairs,o:FLAT\},\{parts:frame,o:FLAT\},\{parts:walk\},\{parts:box\}\]\};/);
   // the lawn is one piece: one gradient from the homestead to the foot of the frame and no line across the field
   assert.match(html, /<linearGradient id="meadow" gradientUnits="userSpaceOnUse" x1="0" y1="\$\{f1\(base-lift-3\)\}" x2="0" y2="\$\{H\}">/);
   assert.doesNotMatch(html, /<path d="M 0 \$\{base-2\} L \$\{W\} \$\{base-2\}" stroke=/);

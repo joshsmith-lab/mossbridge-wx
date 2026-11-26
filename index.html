@@ -2525,7 +2525,11 @@ const propFarmHouse=()=>{const F=FARM_HOUSE,noSil={noSil:true},soft={soft:true};
   /* boxwoods along the porch, from the wrap's corner to the step and from the step to the garage */
   const box=[];for(const x of[-7.4,-2.73,1.94,6.61,11.28,15.95,20.62,32.4,37.15,41.9,46.65,51.4])
     box.push(pBlob([[x-1.95,.3],[x-2.05,-1.3],[x-1.15,-2.65],[x,-2.95],[x+1.15,-2.65],[x+2.05,-1.3],[x+1.95,.3]],"shrub"));
-  return[{parts:garage},{parts:body},...dormers,{parts:chairs},{parts:frame},{parts:walk},{parts:box}]};
+  /* the small pieces are inked and take no shadow crescent or lit edge of their own (FLAT): each pair is two masks, and
+     in a picture WebKit repaints whole while anything moves, sixteen of them on the house cost the farm's night three
+     frames a second in the iPhone's engine. The body, the garage and the boxwoods keep theirs: they are the forms */
+  const FLAT={shade:0,lit:0};
+  return[{parts:garage},{parts:body},...dormers.map(d=>({...d,o:FLAT})),{parts:chairs,o:FLAT},{parts:frame,o:FLAT},{parts:walk},{parts:box}]};
 /* ── Christmas at the farm (Josh, November 18 2026: "For West Virginia specifically, I know I'd like a little
    Christmas tree decorated somewhere. And my mom's always loved Herbie the Elf from the original Rudolph").
    A little fir at the barn's corner, where the corn shock stands in October, sits on y=0 at x=0 about twenty
