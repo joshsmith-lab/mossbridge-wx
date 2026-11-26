@@ -10478,7 +10478,7 @@ function renderScene(sunrise,sunset,now,weather,dark,tideDir,fishWins=[],andThen
        the coop until the porch's wrap took that gap.) */
     /* the coop stands in the middle of the gap between the barn's eave and the porch's wrap */
     const barnR=barnX+23.2,porchL=houseX+FARM_HOUSE.wrap*FA.hs,coopS=1.18,coopX=(barnR+porchL)/2+.9;
-    const scX=Math.min(barnX-4,pondL-14),scY=base+11.5,scS=.08,crow=!dark&&!wet&&!storm;
+    const scX=Math.min(barnX-4,pondL-14),scY=base+13,scS=.076,crow=!dark&&!wet&&!storm;
     const scarecrow=halloween?`<g class="decor" data-decor="scarecrow">${inkAt(scX,scY,scS,1,inkRig(propScarecrow(crow),decorPal(INK.scarecrow,.1),
       {s:scS,line:.6,heavy:.3,shade:.8,lit:.5,light:lightAt(scX,scY-16)}))}</g>`:"";
     /* The black cat sits on the top rail just right of the house, where the fence picks up again past the

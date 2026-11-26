@@ -1936,7 +1936,7 @@ test("eyes open in the dark at both places on October nights, blink once and go"
 test("a scarecrow stands in the farm's field in October with a crow on its arm by day, and never moves", async () => {
   const { html, scene, rig, agents, ctx, decorOf, farm, coast } = await moreHalloween();
   // the farm only, in the near field in front of the barn, left of the pond
-  assert.ok(farm.includes("const scX=Math.min(barnX-4,pondL-14),scY=base+11.5,scS=.08,crow=!dark&&!wet&&!storm;"), "the crow is gone at night and in the rain");
+  assert.ok(farm.includes("const scX=Math.min(barnX-4,pondL-14),scY=base+13,scS=.076,crow=!dark&&!wet&&!storm;"), "the crow is gone at night and in the rain");
   assert.ok(farm.includes("${scarecrow}") && !coast.includes("scarecrow"), "the farm only");
   // nothing of it moves: no class, style or animation but the decoration's own tag
   const line = farm.slice(farm.indexOf("const scarecrow=halloween?"), farm.indexOf("/* The black cat sits on the top rail"));
