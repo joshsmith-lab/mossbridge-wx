@@ -24,7 +24,7 @@ import { execSync } from "node:child_process";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PORT = Number(process.env.PORCH_PREVIEW_PORT || 8080);
-const MIME = { ".html": "text/html; charset=utf-8", ".js": "application/javascript", ".json": "application/json", ".png": "image/png" };
+const MIME = { ".html": "text/html; charset=utf-8", ".js": "application/javascript", ".json": "application/json", ".png": "image/png", ".svg": "image/svg+xml" };
 
 const server = createServer((req, res) => {
   let p = req.url.split("?")[0];
@@ -37,7 +37,8 @@ const server = createServer((req, res) => {
       "self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.map(c=>caches.delete(c)))).then(()=>self.clients.claim())));\n");
   }
   const f = path.join(ROOT, p);
-  if (!existsSync(f) || !f.startsWith(ROOT)) { res.writeHead(404); return res.end("not found"); }
+  // the separator keeps a sibling folder whose name starts with this one's out of reach from the LAN
+  if (!f.startsWith(ROOT + path.sep) || !existsSync(f)) { res.writeHead(404); return res.end("not found"); }
   res.writeHead(200, { "Content-Type": MIME[path.extname(f)] || "text/plain", "Cache-Control": "no-store" });
   res.end(readFileSync(f));
 });
