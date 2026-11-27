@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v152/);
+  assert.match(worker, /mbwx-shell-v153/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -6918,4 +6918,60 @@ test("the pond sliders keep to their table, and the dogs are not drawn", async (
   assert.deepEqual(turtles({ snowing: true }), { heads: 0, bask: false, dim: false });
   assert.doesNotMatch(html, /pnDogsPlan|propPnHerder|propPnSpaniel|pnDoorShape|PN_DOGS|PN_HERDER|PN_SPANIEL|merle-herder|blenheim-spaniel|data-dogs|pn-wag|pnWag/);
   assert.match(html, /data-turtles="1"/);
+});
+
+test("Open-Meteo down: the cached forecast paints with this refresh's own tides, water and house alerts", async () => {
+  const html=await readFile(new URL("index.html",root),"utf8");
+  const source=[
+    html.slice(html.indexOf('const cacheKey=id=>'),html.indexOf("async function fetchJSON(")),
+    html.slice(html.indexOf("let REFRESH_ID=0;"),html.indexOf("\nconst SWAP="))
+  ].join("\n");
+  let now=+new Date("2026-10-07T09:00"),meteoDown=false,tideDown=false,tideTable,alertList;
+  class Clock extends Date {constructor(...a){super(...(a.length?a:[now]))}static now(){return now}}
+  const store=new Map(),paints=[],loading=[],node={classList:{add(){},remove(){}},setAttribute(){},textContent:""};
+  const time=Array.from({length:48},(_,i)=>{const d=new Date("2026-10-07T00:00");d.setHours(i);
+    return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")+"T"+String(d.getHours()).padStart(2,"0")+":00"});
+  const forecast={current:{time:"2026-10-07T09:00",temperature_2m:66},daily:{time:["2026-10-07"],sunrise:["2026-10-07T07:11"],sunset:["2026-10-07T18:46"]},
+    hourly:{time,temperature_2m:time.map(()=>60),apparent_temperature:time.map(()=>59),precipitation_probability:time.map(()=>0),
+      weather_code:time.map(()=>1),wind_speed_10m:time.map(()=>5),wind_gusts_10m:time.map(()=>8),uv_index:time.map(()=>1)}};
+  const ctx=vm.createContext({Date:Clock,LOC:{id:"mb",lat:34.3,lon:-77.8,tz:"America/New_York",tide:"8658163",kind:"inland"},
+    locToday:()=>"2026-10-07",document:{getElementById:()=>node},navigator:{onLine:true},
+    localStorage:{getItem:k=>store.get(k),setItem:(k,v)=>store.set(k,v)},
+    fetchJSON:async url=>{
+      if(url.includes("open-meteo.com")){if(meteoDown)throw Error("connect timeout");return structuredClone(forecast)}
+      if(url.includes("alerts/active?point"))return{features:alertList};
+      if(url.includes("interval=hilo")){if(tideDown)throw Error("503");return{predictions:tideTable}}
+      if(url.includes("water_temperature"))return{data:[{t:new Clock().toISOString(),v:"61.2"}]};
+      throw Error("none")},
+    alertRow:f=>f.properties,alertLive:()=>true,isTropical:()=>false,stormWaits:()=>false,
+    paintLoadingState:()=>loading.push(now),finishLoadMark:()=>{},
+    stormLane:()=>Object.assign(Promise.resolve({storms:[],beach:null,wssi:null}),{beach:Promise.resolve(null),wssi:Promise.resolve(null)}),LAST:null,
+    render:(data,live,savedAt)=>paints.push({data:structuredClone(data),live,savedAt})});
+  vm.runInContext(source,ctx);
+  // a good morning refresh writes the cache
+  tideTable=[{t:"2026-10-07 11:02",v:"3.9",type:"H"}];alertList=[];
+  await ctx.refresh();
+  const first=paints.at(-1),saved=JSON.parse(store.get("mbwx-mb"));
+  assert.equal(first.live,true);
+  // two hours on, Open-Meteo is unreachable while NOAA and api.weather.gov answer
+  now+=2*36e5;meteoDown=true;
+  tideTable=[{t:"2026-10-07 23:20",v:"4.1",type:"H"}];
+  alertList=[{properties:{event:"Coastal Flood Advisory",ends:"2026-10-07T20:00:00-04:00"}}];
+  await ctx.refresh();
+  const down=paints.at(-1);
+  assert.equal(down.live,false,"still marked stale: the forecast is the cache's");
+  assert.equal(down.savedAt,saved.savedAt,"the forecast's age is not renewed");
+  assert.equal(down.data.current.temperature_2m,66,"the forecast is the cached one");
+  assert.deepEqual(down.data.tides,tideTable,"the tide table is this refresh's");
+  assert.deepEqual(down.data.alerts.map(a=>a.event),["Coastal Flood Advisory"],"a warning issued since the cache is on the strip");
+  assert.ok(!down.data.seen.carried,"the house's list is freshly seen, not carried");
+  assert.equal(down.data.seen.point,now);
+  assert.equal(store.get("mbwx-mb"),JSON.stringify(saved),"the cache is not rewritten under the old forecast");
+  // a source that fails too keeps the cache's own reading, never nothing
+  tideDown=true;await ctx.refresh();
+  assert.deepEqual(paints.at(-1).data.tides,saved.data.tides,"a failed tide request keeps the cached table");
+  // past six hours there is no cache, and the page still shows the unavailable state
+  now=saved.savedAt+6*36e5+1;const before=paints.length;await ctx.refresh();
+  assert.equal(paints.length,before,"no forecast and no cache paints nothing invented");
+  assert.equal(loading.length,1);
 });

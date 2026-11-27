@@ -1810,10 +1810,10 @@ If you add a location, give it a `tz` and a `tzLabel`. Nothing else needs to kno
 
 ## On file size
 
-`index.html` is about 1.2 MB of source (October 16 2026, with NOAA's daily normals, the Halloween cast, the storm card's readers, Beaufort's whole cast, its oak lit from behind and its fishing water baked in), and an early plan set
+`index.html` is about 1.5 MB of source (November 27 2026, after the farm's house, coop, oak and Milky Way and Christmas at every place; it was about 1.2 MB on October 16 with Beaufort's whole cast baked in), and an early plan set
 160 KB as a ceiling. That number was about the source file and it is not the
 number that matters. GitHub Pages serves the file gzipped, so what a phone
-actually downloads is **about 440 KB** (it was about 275 KB before Beaufort, and about 420 KB before its fishing water), once, and the service worker caches it
+actually downloads is **about 520 KB** (it was about 275 KB before Beaufort, about 440 KB in mid-October, and grew with the farm's cast in November), once, and the service worker caches it
 after that. Measure both rather than trusting this paragraph: `wc -c index.html`
 for the source and `gzip -6c index.html | wc -c` for roughly what is sent.
 
@@ -2906,6 +2906,12 @@ its points are (`weekAt`), not at even column centres. Request ordering and aler
   the marine host alone fails, the forecast still lands and the seas are left off the
   note (with the boat season on, `Seas unavailable.`, unless the wind alone decides it).
   That is the honest answer, not a bug. `api.weather.gov` and NOAA's CO-OPS answer
-  fine on the same network. The fix under discussion is an NWS gridpoint fallback
+  fine on the same network, and since November 27 2026 the cached paint uses them: the
+  forecast's fetch fails on its own, Promise.all still waits for the rest, and the cached
+  reading paints with this refresh's tide table, water, seas and house alerts in place of
+  the cache's, each only when it answered (`fresh` in `refresh()`). The house's list is then
+  freshly seen, not carried, so a warning issued since the cache was written is on the strip.
+  The cache is not rewritten, because its age is the forecast's. Past 6 hours there is still
+  no forecast to paint with, and the page shows the unavailable state as above. The fix under discussion is an NWS gridpoint fallback
   source: temperature, rain chance, wind, gusts and cloud all come through it, UV,
   the 15-minute nowcast and wave height do not.
