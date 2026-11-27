@@ -17667,6 +17667,9 @@ async function refresh(){
   /* Beaufort's coastal waters, in their own lane (zoneLane), asked first and never waited for: in by the
      paint, they join it (zoneIn); later, they paint again when they change what the chart shows (zoneRun) */
   const zoneP=zoneLane(L);let zoneIn;zoneP.then(z=>{zoneIn=z});
+  /* the forecast fails on its own (forecastErr): Promise.all still waits for the tides, the water and the
+     house's alerts, and what they answer is kept (fresh) for the cached paint in the catch below */
+  let fresh=null,forecastErr=null;
   /* the storm lane, in its own lane beside the forecast, and the beach's answer kept on its own the
      moment it is in (beachIn), for every paint, the first one too: a first open whose advisories were
      slow painted without the beach's tropical storm warning it already had. The farm's WSSI is asked for
@@ -17683,7 +17686,7 @@ async function refresh(){
     const yest=new Date(Date.now()-864e5);
     const bd=yest.toLocaleDateString("en-CA",{timeZone:L.tz}).replace(/-/g,"");
     const [wj,marine,tides,water,alerts]=await Promise.all([
-      fetchJSON(`https://api.open-meteo.com/v1/forecast?latitude=${L.lat}&longitude=${L.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,wind_speed_10m_max,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=${encodeURIComponent(L.tz)}&forecast_days=8&minutely_15=precipitation&forecast_minutely_15=12`,10000),
+      fetchJSON(`https://api.open-meteo.com/v1/forecast?latitude=${L.lat}&longitude=${L.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max,wind_speed_10m_max,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=${encodeURIComponent(L.tz)}&forecast_days=8&minutely_15=precipitation&forecast_minutely_15=12`,10000).catch(e=>{forecastErr=e;return null}),
       /* the seas every day of the year, hour by hour for two days, because after dark the boat's
          sentence speaks for tomorrow */
       L.marine?fetchJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${L.marine.lat}&longitude=${L.marine.lon}&hourly=wave_height&timezone=${encodeURIComponent(L.tz)}&forecast_days=2&length_unit=imperial`,6000).then(mj=>{
@@ -17705,6 +17708,8 @@ async function refresh(){
           return temp||level||buoy?{temp,level,pred:rows(pr?.predictions),buoy}:null}):Promise.resolve(null),
       alertsP
     ]);
+    fresh={marine,tides,water,alerts};
+    if(!wj)throw forecastErr||new Error("no forecast");
     const nowcast=wj.minutely_15||null;
     const hi=wj.hourly.time.findIndex(t=>t>=wj.current.time.slice(0,13)+":00");
     const i0=Math.max(0,hi),s={
@@ -17766,6 +17771,13 @@ async function refresh(){
   }catch(e){
     if(L!==LOC||request!==REFRESH_ID)return;
     const cached=readCache(L.id);
+    /* Open-Meteo unreachable while NOAA and api.weather.gov answer: the cached forecast paints with this
+       refresh's own tides, water, seas and house alerts in place of the cache's, each only when it answered.
+       The alerts are this request's list, freshly seen (not carried), so a warning issued since the cache was
+       written is on the strip. The cache itself is not rewritten: its age is the forecast's */
+    if(cached&&fresh){const d=cached.data;
+      for(const k of ["marine","tides","water"])if(fresh[k])d[k]=fresh[k];
+      if(fresh.alerts){const{carried,...seen}=d.seen||{};d.alerts=fresh.alerts;d.seen={...seen,point:pointAt??Date.now()}}}
     /* the coastal waters' answer goes into the cached reading too, and one still out lands on it: Open-Meteo
        unreachable while api.weather.gov answers is the known way this happens, and a zone that failed takes
        its bars down (zoneRun waits for the cached paint below before it looks) */
