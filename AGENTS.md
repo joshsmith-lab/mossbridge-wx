@@ -886,9 +886,12 @@ Its lights keep two clocks. The four lanterns (`FARM_HOUSE.lamps`, two at the do
 outside lights: lit from sunset to sunrise, the barn lamps' rule, each in a small halo, with a little of their warmth
 on the porch wall, and the two at the garage lay a still wash of their light down the white wall beside the doors, as
 they do in his photograph at dusk. The windows keep the house at Porters Neck's hours (`pnHouseLights`), lit from sunset to 10:30,
-and each is its own room (`ROOM`, one colour a pane: a warm lamp, a brighter one, a pale one, the cool of a
-television, the door's oval, two dormers softer than the rooms downstairs, and the third dormer dark), because every
-pane in one amber read as a house with its lights painted on. After 10:30 the windows are dark and the lanterns are
+and every one has the same soft glow: one pale warm colour on the glass (`WIN_GLOW`), the four downstairs, the door's
+oval and all three dormers, with the same faint halo over each (`winGlow`, the `winglow` gradient, fills only). Josh,
+November 26 2026, the evening the pass shipped: "At night, I'd like a soft glow through all the windows, not different
+color lighting". For a few hours before that each pane was its own room (a warm lamp, a brighter one, a television's
+blue, one dormer dark), borrowed from the Griswold house at Porters Neck, where he asked for exactly that; at the farm
+he wants them alike, so do not vary them again. After 10:30 the windows are dark and the lanterns are
 still on. `node tools/rig.mjs farm-house` shows it close up and at phone size.
 
 **The layout** is `FARM_AT`, fractions of the frame: the pond's centre (.52) and half-width (.27) in the middle of the
