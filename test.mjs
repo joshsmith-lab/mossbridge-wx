@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v151/);
+  assert.match(worker, /mbwx-shell-v152/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -544,14 +544,20 @@ test("every motion is driven by a reading, not by decoration", async () => {
   assert.match(html, /data-scene-anchor="farm-house"/);
   assert.match(html, /lamps=sunAltDeg< -\.83,on=pnHouseLights\(sunAltDeg,localHour,localMin,rising\)\.windows/);
   // the refinement of November 26 2026, off Josh's photographs: the porch wraps the left end, the roof flares over
-  // it, four lanterns (the front door's and the garage doors') burn from sunset to sunrise, each lit window is its
-  // own room, and the house is drawn in layers
+  // it, four lanterns (the front door's and the garage doors') burn from sunset to sunrise, and the house is drawn in
+  // layers
   assert.match(html, /wrap:-10\.6,posts:\[-9\.4,-\.1,18\.2,34\.8,53\.2\]/);
   assert.match(html, /lamps:\[\[22\.3,-10\],\[30\.7,-10\],\[55\.3,-7\.8\],\[78\.2,-7\.8\]\]/);
   assert.match(html, /const glow=lamps\?FARM_HOUSE\.lamps\.map\(/);
   // the two garage lanterns also light the wall beside the doors (Josh, November 26 2026)
   assert.match(html, /const glow=lamps\?FARM_HOUSE\.lamps\.map\(\(\[x,y\],j\)=>\{const g=j>1,/);
-  assert.match(html, /const ROOM=\{glass0:"#FFC766",glass1:"#FFD68C",glass2:"#FFE4AC",glass3:"#B7CCE6",glassDoor:"#EDB35F",glassUp0:"#E9AC55",glassUp1:"#BF9459"\};/);
+  // every window one soft glow, not a colour a room (Josh, November 26 2026: "a soft glow through all the windows,
+  // not different color lighting"): one colour on every pane, the third dormer too, and the same faint halo over each
+  assert.match(html, /const WIN_GLOW="#F6D398";\n\s*for\(const\[k,v\]of Object\.entries\(INK\.farmHouse\)\)hPal\[k\]=on&&k\.startsWith\("glass"\)\?WIN_GLOW:/);
+  assert.doesNotMatch(html, /const ROOM=\{glass0:/);
+  assert.match(html, /panes=\[\.\.\.F\.win\.map\(\(\[a,b\]\)=>\[\(a\+b\)\/2,wy,3\.6,4\.2\]\),\[\(F\.door\[0\]\+F\.door\[1\]\)\/2,-7\.3,2\.4,3\.4\],\.\.\.F\.dorm\.map\(/);
+  assert.match(html, /const winGlow=on\?panes\.map\(/);
+  assert.match(html, /<radialGradient id="winglow"><stop offset="0" stop-color="#F6D398" stop-opacity="\.34"\/>/);
   // in layers, and the small ones take no crescent or lit edge of their own: each pair is two masks WebKit repaints
   assert.match(html, /const FLAT=\{shade:0,lit:0\};\n\s*return\[\{parts:garage\},\{parts:body\},\.\.\.dormers\.map\(d=>\(\{\.\.\.d,o:FLAT\}\)\),\{parts:chairs,o:FLAT\},\{parts:frame,o:FLAT\},\{parts:walk\},\{parts:box\}\]\};/);
   // the lawn is one piece: one gradient from the homestead to the foot of the frame and no line across the field
