@@ -34,7 +34,7 @@ test("reliability guardrails stay in place", async () => {
   assert.match(html, /forecastDay\(cached\.data\)===todayET\(\)/);
   assert.doesNotMatch(html, /marine=\{wave_height_max:2\.5,wave_period_max:5\}/);
   assert.match(worker, /controller\.abort\(\),4000/);
-  assert.match(worker, /mbwx-shell-v152/);
+  assert.match(worker, /mbwx-shell-v154/);
   // the loading shell is the Mark: the hour's paper, the place, one still drawing, and the line
   assert.match(html, /<html lang="en" class="loading" data-theme="light">/);
   assert.match(html, /id="loadMark"/);
@@ -6888,7 +6888,17 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.doesNotMatch(fn, /openLast/);
   const houseFn = html.slice(html.indexOf("function pnBackHouse({"), html.indexOf("function pnBackHouseGlow("));
   assert.doesNotMatch(houseFn, /openLast|lastOpen|"room"/);
-  assert.match(houseFn, /B\.winR\.forEach\(\(\[w0,w1\],i\)=>R0\.parts\.push\(\.\.\.sashes\(w0,w1,i\+2\)\)\)/);
+  assert.match(houseFn, /for\(const\[w0,w1\]of B\.winR\)R0\.parts\.push\(\.\.\.sashes\(w0,w1\)\)/);
+  // Josh, November 27 2026: both rooms' windows glow the same soft colour, with no "super white" pane.
+  // Every lit pane is glassOn under the same two steps of glassDim, and no window is its own room
+  assert.match(houseFn, /const glassOf=\(\)=>lamps\?"glassOn":"glass";/);
+  assert.match(houseFn, /if\(lamps\)for\(const k of PN_WIN_FALL\)P\.push\(pnRect\(w0,t,w1,t\+\(b-t\)\*k,"glassDim",\{noSil:true,op:\.3\}\)\);/);
+  assert.doesNotMatch(html, /glassTv|glassHot|glassLow|curtain:"/);
+  assert.doesNotMatch(houseFn, /i===\d/);
+  assert.match(html, /const PN_WIN_GLOW=\["rgb\(244,200,132\)","rgb\(226,172,108\)"\],PN_WIN_GLOW_XMAS=\["rgb\(240,186,116\)","rgb\(220,158,94\)"\],PN_WIN_FALL=\[\.46,\.24\];/);
+  assert.match(html, /glassOn:PN_WIN_GLOW\[0\],glassDim:PN_WIN_GLOW\[1\],/);
+  // under the Griswolds' lights the glass is a deeper honey, so the rooms read against the gold wall
+  assert.match(fn, /if\(xmasOut&&lit\.griswold\)\[hPal\.glassOn,hPal\.glassDim\]=PN_WIN_GLOW_XMAS;/);
   assert.match(houseFn, /for\(const\[w0,w1\]of B\.winR\)cas\(w0,w1\)/);
   const peekFn = html.slice(html.indexOf("function pnPeekGhost("), html.indexOf("function pnWindowGhost("));
   assert.match(peekFn, /yT=Y\(t\)/);
