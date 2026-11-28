@@ -8914,7 +8914,7 @@ BFT["pn-tub"]={pal:INK.pnTub,box:[-12,-10,24,11],s:1,dist:.05,o:{line:.8,heavy:.
    the shakes and the roof are white. The scene hands those colours in.
    States: day, night (the windows, the porch and its panel lit, each a little different). */
 const PN_HA={l:-60,r:60,ridge:-66,eave:-30,roofL:-60,roofR:60,ridgeL:-52,ridgeR:52,geave:-30,gl:[-60,-19.2],gr:[19.2,60],peakL:[-39.6,-46],peakR:[39.6,-46],porch:[-19.2,19.2],porchEave:-27,porchTop:-41,
-  door:[-4.8,4.8],panel:[-15.8,-11.8],dial:[0,-19.4,4.1],winL:[[-50.2,-41.2],[-39.6,-30.6]],winR:[[21.6,28.4],[31.2,38],[40.8,47.6],[50.4,57.2]],winT:-27,winB:-3.4};
+  door:[-4.8,4.8],panel:[-15.8,-11.8],panelR:[11.8,15.8],dial:[0,-19.4,4.1],winL:[[-50.2,-41.2],[-39.6,-30.6]],winR:[[21.6,28.4],[31.2,38],[40.8,47.6],[50.4,57.2]],winT:-27,winB:-3.4};
 /* The pond frame is 320 by 194 and the house sits at 160, 138 (pnPondScene, with ox and oy at 0).
    The same polygon behindHouse uses: a moon in it would be drawn inside the roof. */
 function pnMoonInRoof(x,y){
@@ -8971,11 +8971,15 @@ function pnSunFit(y,visTop,squash,x){
   const floor=top+ray0*squash*s+pad;
   return{y:Math.max(y,floor),s};
 }
+/* the lit windows' one soft glow and the deeper shade at their heads, and how far down each pane the shade's two
+   steps come. Under the Griswolds' lights the wall outside is washed gold and brighter than any room, so there the
+   glass is a deeper honey (PN_WIN_GLOW_XMAS) and reads as rooms behind it, not pale holes in the gold */
+const PN_WIN_GLOW=["rgb(244,200,132)","rgb(226,172,108)"],PN_WIN_GLOW_XMAS=["rgb(240,186,116)","rgb(220,158,94)"],PN_WIN_FALL=[.46,.24];
 INK.pnBackHouse={
   wall:"#F2F0EA",wallShade:"#C6CBD2",siding:"#DDDAD2",shake:"#E4E0D6",shakeDk:"#B9B4AA",end:"#CDD2D8",roof:"#B4C2CC",roofDk:"#8F9DA8",seam:"#8A98A4",seamLit:"#E6EEF3",
   trim:"#FBFAF6",cast:"#5B6170",glass:"#34434E",glassUp:"#7F98A8",frame:"#FBFAF6",porchWall:"#E7E4DC",shiplap:"#CBC6BC",screen:"#4C525A",panel:"#8A8070",post:"#FBFAF6",
   iron:"#22304A",found:"#A39D94",flue:"#C9CED3",flueDk:"#8E959C",
-  glassOn:"rgb(255,206,132)",glassDim:"rgb(232,170,104)",glassHot:"rgb(255,236,190)",glassTv:"rgb(176,186,214)",glassTvHot:"rgb(206,226,255)",glassLow:"rgb(196,138,86)",curtain:"rgb(206,120,84)",porchOn:"rgb(250,186,112)",panelOn:"rgb(255,240,200)",glow:"rgb(255,186,100)",room:"#100E14",
+  glassOn:PN_WIN_GLOW[0],glassDim:PN_WIN_GLOW[1],porchOn:"rgb(250,186,112)",glow:"rgb(255,186,100)",room:"#100E14",
   ink:"#2A1B33",shade:"#3A2350",lit:"#FFF6E2",shadeOp:.32,litOp:.5};
 /* the house's outline for the paper grain laid over it: the big roof, the walls, the gables */
 function pnBackHouseSil(B=PN_HA){
@@ -9025,16 +9029,23 @@ function pnBackHouse({night=false,lit=null,shadowOp=1,B=PN_HA}={}){
       pnRect(mx-.58,f1-.7,mx-.38,f1,"flueDk",{noSil:true}),pnRect(mx+.38,f1-.7,mx+.58,f1,"flueDk",{noSil:true}),
       pTaper([[mx-.3,f0-.2,.22],[mx-.3,f1+.1,.22]],"seamLit",{capStart:false,capEnd:false},{noSil:true,op:.85})]},
       {parts:[pnRect(mx-1.55,f1-1.3,mx+1.55,f1-.65,"flue"),pnRect(mx-1.55,f1-.95,mx+1.55,f1-.65,"flueDk",{noSil:true,op:.6})]});}
-  /* the porch: a white shiplap wall behind dark screens, the tall lit panel, the dial behind the screen door */
+  /* the porch: a white shiplap wall behind dark screens, the dial behind the screen door, and a window either side
+     of the dial. Josh, November 27 2026, with a photo from inside the porch: "those are actually windows in there,
+     and they go to the same room". The left one (panel) was drawn as a lit panel and the right one (panelR) was
+     not drawn. By day both are pale behind the screen, the white shutters inside them. Lit, they are the other
+     windows' own soft glow, drawn over the screen under a light veil, because a lit window shines through a
+     screen where a wall does not */
   {const[p0,p1]=B.porch,top=B.porchEave+1.4,parts=[pnRect(p0,top,p1,0,lamps?"porchOn":"porchWall")];
     for(let y=top+2.2;y<-.5;y+=1.7)parts.push(pnRect(p0+.4,y-.1,p1-.4,y+.1,"shiplap",{noSil:true,op:night?.3:.45}));
     if(lamps)for(let i=0;i<5;i++){const k=1-i*.16;parts.push(pnHEll(0,-12,13*k,10*k,"glow",{soft:true,noSil:true,op:.1}))}
-    const[a0,a1]=B.panel;parts.push(pnRect(a0,top+2.2,a1,-4.2,lamps?"panelOn":"panel",{noSil:true}));
+    const panes=[B.panel,B.panelR],pt=top+2.2,pb=-4.2;
+    if(!lamps)for(const[a0,a1]of panes)parts.push(pnRect(a0,pt,a1,pb,"panel",{noSil:true}));
     const[dx,dy,dr]=B.dial;
     for(const p of propPnDial({r:dr,cx:dx,cy:dy}))parts.push({...p,role:p.role==="wall"?(lamps?"porchOn":"porchWall"):p.role,noSil:true});
     const[d0,d1]=B.door,sc={noSil:true,op:night?.45:.5};
     parts.push(pnRect(p0+1.2,top+1,d0-1.2,-4.6,"screen",sc),pnRect(d1+1.2,top+1,p1-1.2,-4.6,"screen",sc),pnRect(p0+1.2,-3.6,d0-1.2,-.4,"screen",{...sc,op:sc.op*.8}),pnRect(d1+1.2,-3.6,p1-1.2,-.4,"screen",{...sc,op:sc.op*.8}));
     parts.push(pnRect(d0+.9,top+2.2,d1-.9,-12.4,"screen",{noSil:true,op:night?.18:.22}),pnRect(d0+.9,-11.4,d1-.9,-4.4,"screen",sc),pnRect(d0+.9,-3.6,d1-.9,-1,"screen",{noSil:true,op:sc.op*.6}));
+    if(lamps)for(const[a0,a1]of panes)parts.push(pnRect(a0,pt,a1,pb,"glassOn",{noSil:true}),...PN_WIN_FALL.map(k=>pnRect(a0,pt,a1,pt+(pb-pt)*k,"glassDim",{noSil:true,op:.3})),pnRect(a0,pt,a1,pb,"screen",{noSil:true,op:.12}));
     /* the porch roof's shadow across the top third */
     parts.push(cast([[p0,top],[p1,top],[p1,top+8],[p0,top+6.5]],night?.12:.3));
     L.push({parts});
@@ -9067,28 +9078,25 @@ function pnBackHouse({night=false,lit=null,shadowOp=1,B=PN_HA}={}){
   const trims=(x0,x1,px,py)=>[strip([x0-2.2,ge+1.2],[px,py-.8],1.9),strip([px,py-.8],[x1+2.2,ge+1.2],1.9),pnRect(x0-2,ge-.4,x0+4,ge+1.3,"trim"),pnRect(x1-4,ge-.4,x1+2,ge+1.3,"trim"),
     pnRect(x0-.3,ge+1.2,x0+1.3,0,"trim"),pnRect(x1-1.3,ge+1.2,x1+.3,0,"trim")];
   /* a window: tall double-hung, one meeting rail; by day the upper sash holds the sky and the lower is dark,
-     under the head's shadow; at night it is lit, one dimmer, one with a lamp, one with a blind drawn */
-  /* Josh, November 18 2026: "windows shouldn't glow the exact same either", so each lit window is its own room:
-     a lamp low in the corner of the first, the second dimmer with its curtains half drawn, the third the cool
-     wash of a television, the fourth a lamp, the fifth a blind half down, and the last only a hall's light
-     through a door left open */
-  const glassOf=(i)=>lamps?(i===1||i===4?"glassDim":i===2?"glassTv":i===5?"glassLow":"glassOn"):"glass";
+     under the head's shadow; at night every one is lit alike */
+  /* Josh, November 27 2026, the day after the farm's windows: "Same request from a house in Wilmington. The 2
+     windows on the left are one room and the 4 windows on the right are another room, and so they should be
+     glowing the same color. I just don't like the super white lights. It should be soft". So every lit pane is
+     one soft warm colour (glassOn), a shade deeper toward its head where a room's light falls off (glassDim),
+     and nothing else. The rooms of November 18 (a lamp, curtains, the television's blue-white, a blind, a
+     hall's light) are gone: do not vary the panes again */
+  const glassOf=()=>lamps?"glassOn":"glass";
   /* every window, the rightmost east one included, is this same sash: one meeting rail, the
-     upper light by day, the night lamp and the blind only on the windows that already had them */
-  const sashes=(w0,w1,i)=>{const t=B.winT,b=B.winB,m=(t+b)/2,P=[];
-    P.push(pnRect(w0,t,w1,b,glassOf(i),{noSil:true}));
+     upper light by day, the same glow at night */
+  const sashes=(w0,w1)=>{const t=B.winT,b=B.winB,m=(t+b)/2,P=[];
+    P.push(pnRect(w0,t,w1,b,glassOf(),{noSil:true}));
     if(!night)P.push(pnRect(w0,t,w1,m,"glassUp",{noSil:true,op:.6}));
-    if(lamps&&i===3)for(let k=0;k<3;k++)P.push(pnHEll(w0+(w1-w0)*.65,b-4.6,3.4-k,3.4-k,"glassHot",{noSil:true,op:.35}));
-    if(lamps&&i===0)for(let k=0;k<3;k++)P.push(pnHEll(w0+(w1-w0)*.28,b-3.2,4.2-k*1.2,3.6-k,"glassHot",{noSil:true,op:.28}));
-    if(lamps&&i===1){const cw=(w1-w0)*.28;P.push(pnPoly([[w0,t],[w0+cw,t],[w0+cw*.7,b],[w0,b]],"curtain",{noSil:true,op:.85}),pnPoly([[w1-cw,t],[w1,t],[w1,b],[w1-cw*.7,b]],"curtain",{noSil:true,op:.85}))}
-    if(lamps&&i===2)for(let k=0;k<3;k++)P.push(pnHEll((w0+w1)/2+.6,b-6.4,3.2-k*.9,2.6-k*.7,"glassTvHot",{noSil:true,op:.3}));
-    if(lamps&&i===5)P.push(pnRect(w0+(w1-w0)*.55,t+2,w1,b,"glassOn",{noSil:true,op:.45}));
-    if(lamps&&i===4)P.push(pnRect(w0,t,w1,t+5.6,"glassDim",{noSil:true,op:.9}),pnRect(w0,t+5.4,w1,t+5.9,"frame",{noSil:true,op:.8}));
+    if(lamps)for(const k of PN_WIN_FALL)P.push(pnRect(w0,t,w1,t+(b-t)*k,"glassDim",{noSil:true,op:.3}));
     P.push(pnRect(w0,m-.32,w1,m+.32,"frame",{noSil:true}),cast([[w0,t],[w1,t],[w1,t+2.1],[w0,t+1.6]],night?.12:.38));
     return P};
   const L0=gable(B.gl,B.peakL,false),R0=gable(B.gr,B.peakR,true);
-  B.winL.forEach(([w0,w1],i)=>L0.parts.push(...sashes(w0,w1,i)));
-  B.winR.forEach(([w0,w1],i)=>R0.parts.push(...sashes(w0,w1,i+2)));
+  for(const[w0,w1]of B.winL)L0.parts.push(...sashes(w0,w1));
+  for(const[w0,w1]of B.winR)R0.parts.push(...sashes(w0,w1));
   const casing=[],cas=(w0,w1)=>{const t=B.winT,b=B.winB;casing.push(pnRect(w0-1.4,t-2.2,w1+1.4,t,"trim"),pnRect(w0-1.4,t,w0,b,"trim"),pnRect(w1,t,w1+1.4,b,"trim"),pnRect(w0-2,b,w1+2,b+1.3,"trim"));
     casing.push(cast([[w0-2,b+1.3],[w1+2,b+1.3],[w1+1.6,b+2.4],[w0-1.6,b+2.4]],.3))};
   cas(B.winL[0][0],B.winL[B.winL.length-1][1]);casing.push(pnRect(B.winL[0][1],B.winT,B.winL[1][0],B.winB,"trim"));
@@ -11461,8 +11469,8 @@ function pnGriswoldGlow(hx,hy,S,{fog=false}={}){
   const g=`<defs><radialGradient id="pnGrisSky"><stop offset="0" stop-color="#FFF0C4" stop-opacity="1"/><stop offset=".22" stop-color="#FFD27E" stop-opacity=".82"/><stop offset=".48" stop-color="#FFA36E" stop-opacity=".42"/><stop offset=".74" stop-color="#E58AB8" stop-opacity=".16"/><stop offset="1" stop-color="#B28AF0" stop-opacity="0"/></radialGradient>
     <linearGradient id="pnGrisWall" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="-68"><stop offset="0" stop-color="#FFD98E" stop-opacity=".64"/><stop offset=".6" stop-color="#FFCC78" stop-opacity=".5"/><stop offset="1" stop-color="#FFEFC4" stop-opacity=".56"/></linearGradient></defs>`;
   return{sky:g+`<ellipse data-light="griswold-sky" cx="${f1(hx)}" cy="${f1(hy-S*42)}" rx="${f1(S*(fog?150:132))}" ry="${f1(S*(fog?92:80))}" fill="url(#pnGrisSky)"/>`,
-    /* the gold is on the walls and the roof, never on the glass, so each window keeps its own room's light */
-    house:`<path data-light="griswold-walls" transform="translate(${f1(hx)} ${f1(hy)}) scale(${S})" fill-rule="evenodd" fill="url(#pnGrisWall)" d="${pnBackHouseSil(PN_HA)[0]} ${[...PN_HA.winL,...PN_HA.winR].map(([a,b])=>`M ${a} ${PN_HA.winT} L ${b} ${PN_HA.winT} L ${b} ${PN_HA.winB} L ${a} ${PN_HA.winB} Z`).join(" ")} M ${PN_HA.panel[0]} ${PN_HA.porchEave+3.6} L ${PN_HA.panel[1]} ${PN_HA.porchEave+3.6} L ${PN_HA.panel[1]} -4.8 L ${PN_HA.panel[0]} -4.8 Z"/>`,
+    /* the gold is on the walls and the roof, never on the glass, so the rooms keep their own soft glow */
+    house:`<path data-light="griswold-walls" transform="translate(${f1(hx)} ${f1(hy)}) scale(${S})" fill-rule="evenodd" fill="url(#pnGrisWall)" d="${pnBackHouseSil(PN_HA)[0]} ${[...PN_HA.winL,...PN_HA.winR].map(([a,b])=>`M ${a} ${PN_HA.winT} L ${b} ${PN_HA.winT} L ${b} ${PN_HA.winB} L ${a} ${PN_HA.winB} Z`).join(" ")} ${[PN_HA.panel,PN_HA.panelR].map(([a,b])=>`M ${a} ${PN_HA.porchEave+3.6} L ${b} ${PN_HA.porchEave+3.6} L ${b} -4.8 L ${a} -4.8 Z`).join(" ")}"/>`,
     lawn:`<ellipse data-light="griswold-lawn" cx="${f1(hx)}" cy="${f1(hy+S*7)}" rx="${f1(S*104)}" ry="${f1(S*15)}" fill="url(#pnGrisSky)" opacity=".9"/>`};
 }
 /* Shoulder line at the meeting rail, hood top just inside the top of the glass, head tipped the
@@ -11625,6 +11633,7 @@ function pnPondScene(c){
   hPal.seam=dark?mix(hPal.roof,"#152030",.4):"#C5CED6";
   hPal.seamLit=dark?"#D4DEE8":"#FFFFFF";
   hPal.room="#100E14";
+  if(xmasOut&&lit.griswold)[hPal.glassOn,hPal.glassDim]=PN_WIN_GLOW_XMAS;
   const sunSide=lightAt(hx,hy-u(40))[0]<0?-1:1,shadowOp=clamp(1-veil*.7-gloom*.8,.25,1);
   const sheen=`<defs><linearGradient id="pnSheen" x1="${sunSide<0?1:0}" y1="0" x2="${sunSide<0?0:1}" y2="0"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/><stop offset=".55" stop-color="#FFFFFF" stop-opacity="0"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="${(dark?.06:.22*(1-veil*.6)).toFixed(2)}"/></linearGradient></defs>`
     +`<path d="M ${BH.roofL} ${BH.eave} L ${BH.ridgeL} ${BH.ridge} L ${BH.ridgeR} ${BH.ridge} L ${BH.roofR} ${BH.eave} Z" fill="url(#pnSheen)"/>`

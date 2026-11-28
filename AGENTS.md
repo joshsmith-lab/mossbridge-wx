@@ -890,8 +890,8 @@ and every one has the same soft glow: one pale warm colour on the glass (`WIN_GL
 oval and all three dormers, with the same faint halo over each (`winGlow`, the `winglow` gradient, fills only). Josh,
 November 26 2026, the evening the pass shipped: "At night, I'd like a soft glow through all the windows, not different
 color lighting". For a few hours before that each pane was its own room (a warm lamp, a brighter one, a television's
-blue, one dormer dark), borrowed from the Griswold house at Porters Neck, where he asked for exactly that; at the farm
-he wants them alike, so do not vary them again. After 10:30 the windows are dark and the lanterns are
+blue, one dormer dark), borrowed from the Griswold house at Porters Neck; he wants them alike, so do not vary them
+again (the next day he asked for the same at Porters Neck, see The Griswolds' house). After 10:30 the windows are dark and the lanterns are
 still on. `node tools/rig.mjs farm-house` shows it close up and at phone size.
 
 **The layout** is `FARM_AT`, fractions of the frame: the pond's centre (.52) and half-width (.27) in the middle of the
@@ -1132,7 +1132,7 @@ at the gate, Ghostface a dim layer clipped inside the glass of the rightmost eas
 night the trick-or-treater at the gate, on its own rules. With nobody's cormorant on a dock, the kid is out
 from sunset (the marsh's raw-dusk case kept the kid off the dock; the house's, case 48, has it at the gate).
 
-**Christmas.** Josh, November 6 2026, with a screenshot and the tall panel beside the screen door circled: "add a
+**Christmas.** Josh, November 6 2026, with a screenshot and the tall panel beside the screen door circled (a window, the sun porch's left one, see The sun porch's two windows): "add a
 christmas tree (it's inside) in the window circled. glows soft white with many bulbs. it's up, so add it now." So
 from November 6 the family's tree stands inside that panel (`pnXmasTree`, `data-decor="christmas-tree"`, on
 `#sceneNear` right after the house, so the surfboards, the chairs and the strands stand in front of it and the pond
@@ -1172,9 +1172,28 @@ person did them. windows shouldn't glow the exact same either." So every run is 
 every few feet and sagging between the clips, each roof row a little crooked and its own length, the bulbs not quite
 evenly spaced, the drops down the walls each their own length and a little off plumb, now and then a loose end hanging
 off a rake, about one bulb in twelve burning dim and one in thirty out, every draw seeded off one hand
-(`mulberry(1225)`). And each lit window is its own room (`glassOf` in `pnBackHouse`): a lamp low in a corner, curtains
-half drawn, the cool wash of a television, a lamp, a blind half down, and a hall's light through a door left open. The
-gold wash is cut round the glass (evenodd), so it never evens them out.
+(`mulberry(1225)`). Each lit window was its own room for nine days (a lamp low in a corner, curtains half drawn, the
+cool wash of a television, a lamp, a blind half down, a hall's light through a door left open), until Josh, November
+27 2026, the day after the farm's windows: "Same request from a house in Wilmington. The 2 windows on the left are one
+room and the 4 windows on the right are another room, and so they should be glowing the same color. I just don't like
+the super white lights. It should be soft, but also consider that the entire outside is lit up as well, so play around
+with that." The super white one was the television's blue-white pane. So every lit pane, in both rooms, is one soft
+honey (`glassOn`, `PN_WIN_GLOW`) with a shade deeper toward its head in two steps, where a room's light falls off
+(`glassDim`, `PN_WIN_FALL`), and nothing else is drawn in the glass: do not vary the panes again. Under the Griswolds'
+lights the wall outside is washed gold and brighter than any room, so the same glow there is a little deeper
+(`PN_WIN_GLOW_XMAS`): three strengths were drawn, and at the ordinary night's colour the windows went pale and were lost
+in the gold, at the deepest they were heavy and orange, and the middle one reads as soft rooms behind the lights. The
+gold wash is still cut round the glass (evenodd), so it never lies over the rooms.
+
+**The sun porch's two windows.** While that was being built Josh sent a photo from inside the porch: "here's a close-up
+of the windows that are on my sun porch. You can see them on either side of the sundial ... those are actually windows
+in there, and they go to the same room. Might not be obvious now because the Christmas tree's in the left one". The
+left one had been drawn as a tall lit panel in a pale cream (`panelOn`, the nearest thing to white on the house at
+night) and the right one was not drawn at all. So the porch wall has a window either side of the dial (`PN_HA.panel`
+and `panelR`, mirrored about the door). By day both are the pale panel they were, behind the screen: the real ones
+have white shutters inside. Lit, both are the other windows' own glow and its two deeper steps, drawn over the porch
+screen under a light veil, because a lit window shines through a screen where a wall does not. The indoor tree still
+stands in the left one, and the gold wash is cut round both.
 
 A refinement pass the same evening, looked at on a phone at 3x (Josh: "details matter"). The gold wash is about a
 quarter lighter (`pnGrisWall`, .64 to .5), because at full strength the house went to one gold blob in which the roof's
