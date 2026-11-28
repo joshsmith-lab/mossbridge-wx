@@ -1688,7 +1688,7 @@ test("the scenes dress for the holidays and take it all down when they pass", as
   assert.match(html, /r="\$\{fog\?1\.6:1\.15\}" fill="\$\{c\}" opacity="\.4"/);
   assert.match(html, /const starLit=on\?/);
   assert.match(html, /\+miniGlow\(minis,\.62\)\+ties\.map/);
-  assert.match(html, / M \$\{PN_HA\.panel\[0\]\} \$\{PN_HA\.porchEave\+3\.6\}/);
+  assert.match(html, /\$\{\[PN_HA\.panel,PN_HA\.panelR\]\.map\(\(\[a,b\]\)=>`M \$\{a\} \$\{PN_HA\.porchEave\+3\.6\} L \$\{b\} \$\{PN_HA\.porchEave\+3\.6\} L \$\{b\} -4\.8 L \$\{a\} -4\.8 Z`\)/);
   assert.match(html, /const wreathLit=on\?/);
   assert.match(html, /cols:\["#FF3B2F","#2ED158","#2F80FF","#FFB020","#FFF1D6"\],r:\.38,halo:2\.1\}/);
   assert.match(html, /function bftDockXmas\(/);
@@ -6897,6 +6897,13 @@ test("Porters Neck is the house from across the pond: it looks north, and its li
   assert.doesNotMatch(houseFn, /i===\d/);
   assert.match(html, /const PN_WIN_GLOW=\["rgb\(244,200,132\)","rgb\(226,172,108\)"\],PN_WIN_GLOW_XMAS=\["rgb\(240,186,116\)","rgb\(220,158,94\)"\],PN_WIN_FALL=\[\.46,\.24\];/);
   assert.match(html, /glassOn:PN_WIN_GLOW\[0\],glassDim:PN_WIN_GLOW\[1\],/);
+  // the sun porch has a window either side of the dial, into one room (Josh's photo, November 27 2026): the
+  // left one was a pale lit panel and the right one was not drawn. Lit, both are the other windows' glow
+  assert.match(html, /panel:\[-15\.8,-11\.8\],panelR:\[11\.8,15\.8\],/);
+  assert.match(houseFn, /const panes=\[B\.panel,B\.panelR\],pt=top\+2\.2,pb=-4\.2;/);
+  assert.match(houseFn, /if\(!lamps\)for\(const\[a0,a1\]of panes\)parts\.push\(pnRect\(a0,pt,a1,pb,"panel",\{noSil:true\}\)\);/);
+  assert.match(houseFn, /if\(lamps\)for\(const\[a0,a1\]of panes\)parts\.push\(pnRect\(a0,pt,a1,pb,"glassOn",\{noSil:true\}\),\.\.\.PN_WIN_FALL\.map\(/);
+  assert.doesNotMatch(html, /panelOn/);
   // under the Griswolds' lights the glass is a deeper honey, so the rooms read against the gold wall
   assert.match(fn, /if\(xmasOut&&lit\.griswold\)\[hPal\.glassOn,hPal\.glassDim\]=PN_WIN_GLOW_XMAS;/);
   assert.match(houseFn, /for\(const\[w0,w1\]of B\.winR\)cas\(w0,w1\)/);
